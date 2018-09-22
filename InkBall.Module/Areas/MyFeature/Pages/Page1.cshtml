@@ -1,0 +1,26 @@
+﻿@page
+@model InkBall.Module.Pages.Page1Model
+@{
+	ViewData["Title"] = "Page1";
+}
+@{
+	DefineSection(InkBall.Module.CommonUIConfigureOptions.HeadElementsSectionName, async () =>
+	{
+		WriteLiteral($"<link rel='stylesheet' href='{Url.Content("~/css/demo.css")}' />");
+	});
+}
+<h1>
+	This is from InkBall.Module.Pages.Page1
+</h1>
+<p class="blue-paragraph">
+	I amd SOO BLUEEEE
+</p>
+<p>
+	<img src="~/images/image.png" alt="image" />
+</p>
+@{
+	DefineSection(InkBall.Module.CommonUIConfigureOptions.ScriptsSectionName, async () =>
+	{
+		WriteLiteral($"<script type='text/javascript' src='{Url.Content("~/js/script.js")}'></script>");
+	});
+}
