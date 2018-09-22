@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Project Include="../InkBall.Module/InkBall.Module.csproj"/>
+    <Project Include="../src/InkBall.Module/InkBall.Module.csproj"/>
   </ItemGroup>
 
 </Project>
