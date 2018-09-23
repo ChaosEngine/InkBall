@@ -1,16 +1,15 @@
 ﻿@page
-@model InkBall.Module.Pages.Page1Model
+@model InkBall.Module.Pages.IndexModel
 @{
-	ViewData["Title"] = "Page1";
-}
-@{
+	ViewData["Title"] = "Index";
+
 	DefineSection(InkBall.Module.CommonUIConfigureOptions.HeadElementsSectionName, async () =>
 	{
 		WriteLiteral($"<link rel='stylesheet' href='{Url.Content("~/css/demo.css")}' />");
 	});
 }
 <h1>
-	This is from InkBall.Module.Pages.Page1
+	This is from InkBall.Module.Pages.Index
 </h1>
 <p class="blue-paragraph">
 	I amd SOO BLUEEEE

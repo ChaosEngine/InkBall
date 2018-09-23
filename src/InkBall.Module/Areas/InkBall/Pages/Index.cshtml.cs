@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace InkBall.Module.Pages
 {
-    public class Page1Model : PageModel
+    public class IndexModel : PageModel
     {
         public void OnGet()
         {
