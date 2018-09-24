@@ -1,21 +1,15 @@
 ﻿@page
-@model IndexModel
+@model HomeModel
 @{
-	ViewData["Title"] = "Index";
+	ViewData["Title"] = "Home";
 
 	DefineSection(InkBall.Module.CommonUIConfigureOptions.HeadElementsSectionName, async () =>
 	{
 		WriteLiteral($"<link rel='stylesheet' href='{Url.Content("~/css/demo.css")}' />");
 	});
 }
-<h1>
-	This is from InkBall.Module.Pages.Index
-</h1>
 <p class="blue-paragraph">
-	I amd SOO BLUEEEE
-</p>
-<p>
-	<img src="~/images/image.png" alt="image" />
+	homik
 </p>
 @{
 	DefineSection(InkBall.Module.CommonUIConfigureOptions.ScriptsSectionName, async () =>
