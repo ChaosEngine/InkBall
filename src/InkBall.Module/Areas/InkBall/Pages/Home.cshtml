@@ -9,7 +9,22 @@
 	});
 }
 <p class="blue-paragraph">
-	homik
+	<strong>Server variables</strong><br /><br />
+
+	Request Method: @HttpContext.Request.Method <br />
+	Request Scheme: @HttpContext.Request.Scheme <br />
+	Request Path: @HttpContext.Request.Path <br /><br />
+
+	<strong>Request Headers</strong><br />
+	@{
+		foreach (var header in HttpContext.Request.Headers)
+		{
+			WriteLiteral($"{header.Key}: {header.Value}<br />");
+		}
+	}
+	<br />
+
+	Request RemoteIp: @HttpContext.Connection.RemoteIpAddress <br />
 </p>
 @{
 	DefineSection(InkBall.Module.CommonUIConfigureOptions.ScriptsSectionName, async () =>
