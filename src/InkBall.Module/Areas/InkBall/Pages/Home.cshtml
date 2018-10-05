@@ -8,24 +8,23 @@
 		WriteLiteral($"<link rel='stylesheet' href='{Url.Content("~/css/demo.css")}' />");
 	});
 }
-<p class="blue-paragraph">
-	<strong>Server variables</strong><br /><br />
 
-	Request Method: @HttpContext.Request.Method <br />
-	Request Scheme: @HttpContext.Request.Scheme <br />
-	Request Path: @HttpContext.Request.Path <br /><br />
+<p><strong>Server variables</strong></p>
 
-	<strong>Request Headers</strong><br />
-	@{
-		foreach (var header in HttpContext.Request.Headers)
-		{
-			WriteLiteral($"{header.Key}: {header.Value}<br />");
-		}
+<p>Request Method: <span class='blue-paragraph'>@HttpContext.Request.Method</span></p>
+<p>Request Scheme: <span class='blue-paragraph'>@HttpContext.Request.Scheme</span></p>
+<p>Request Path: <span class='blue-paragraph'>@HttpContext.Request.Path</span></p><br />
+
+<strong>Request Headers</strong><br />
+@{
+	foreach (var header in HttpContext.Request.Headers)
+	{
+		WriteLiteral($"<p>{header.Key}: <span class='blue-paragraph'>{header.Value}</span></p>");
 	}
-	<br />
+}
 
-	Request RemoteIp: @HttpContext.Connection.RemoteIpAddress <br />
-</p>
+<p>Request RemoteIp: <span class='blue-paragraph'>@HttpContext.Connection.RemoteIpAddress</span></p>
+
 @{
 	DefineSection(InkBall.Module.CommonUIConfigureOptions.ScriptsSectionName, async () =>
 	{
