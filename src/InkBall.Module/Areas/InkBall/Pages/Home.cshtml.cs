@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace InkBall.Module.Pages
 {
-    [Authorize]
+    [Authorize(Policy = "InkBallPlayer")]
     public class HomeModel : PageModel
     {
         public void OnGet()
