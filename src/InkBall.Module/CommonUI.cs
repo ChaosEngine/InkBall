@@ -46,7 +46,7 @@ namespace InkBall.Module
 	public static class CommonUIServiceCollectionExtensions
 	{
 		public static void AddCommonUI(this IServiceCollection services,
-			string headElementsSectionName = "headElements", string scriptsSectionName = "Scripts", string wwwRoot = "wwwroot")
+			string headElementsSectionName = "badbad", string scriptsSectionName = "ecmascript_bad", string wwwRoot = "wrongwrongwrong")
 		{
 			CommonUIConfigureOptions.HeadElementsSectionName = headElementsSectionName;
 			CommonUIConfigureOptions.ScriptsSectionName = scriptsSectionName;
