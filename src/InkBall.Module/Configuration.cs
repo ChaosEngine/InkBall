@@ -2,26 +2,24 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 
 namespace InkBall.Module
 {
-	public class CommonUIConfigureOptions : IPostConfigureOptions<StaticFileOptions>
+	public class InkBallOptions : IPostConfigureOptions<StaticFileOptions>
 	{
-		public static string WwwRoot { get; internal set; }
+		internal IFileProvider WebRootFileProvider { get; set; }
 
-		public IHostingEnvironment Environment { get; }
+		public string WwwRoot { get; set; } = "wwwroot";
 
-		public static string HeadElementsSectionName { get; internal set; }
+		public string HeadElementsSectionName { get; set; } = "headElements";
 
-		public static string ScriptsSectionName { get; internal set; }
+		public string ScriptsSectionName { get; set; } = "Scripts";
 
-		public CommonUIConfigureOptions(IHostingEnvironment environment)
-		{
-			Environment = environment;
-		}
+		public string AuthorizationPolicyName { get; set; }
 
 		public void PostConfigure(string name, StaticFileOptions options)
 		{
@@ -30,12 +28,12 @@ namespace InkBall.Module
 
 			// Basic initialization in case the options weren't initialized by any other component
 			options.ContentTypeProvider = options.ContentTypeProvider ?? new FileExtensionContentTypeProvider();
-			if (options.FileProvider == null && Environment.WebRootFileProvider == null)
+			if (options.FileProvider == null && WebRootFileProvider == null)
 			{
 				throw new InvalidOperationException("Missing FileProvider.");
 			}
 
-			options.FileProvider = options.FileProvider ?? Environment.WebRootFileProvider;
+			options.FileProvider = options.FileProvider ?? WebRootFileProvider;
 
 			// Add our provider
 			var filesProvider = new ManifestEmbeddedFileProvider(GetType().Assembly, WwwRoot);
@@ -45,14 +43,16 @@ namespace InkBall.Module
 
 	public static class CommonUIServiceCollectionExtensions
 	{
-		public static void AddCommonUI(this IServiceCollection services,
-			string headElementsSectionName = "badbad", string scriptsSectionName = "ecmascript_bad", string wwwRoot = "wrongwrongwrong")
+		public static void AddInkBallCommonUI<TGamesDBContext>(this IServiceCollection services, IHostingEnvironment environment,
+			Action<InkBallOptions> configureOptions) where TGamesDBContext : IGamesContext
 		{
-			CommonUIConfigureOptions.HeadElementsSectionName = headElementsSectionName;
-			CommonUIConfigureOptions.ScriptsSectionName = scriptsSectionName;
-			CommonUIConfigureOptions.WwwRoot = wwwRoot;
+			InkBallOptions options = new InkBallOptions();
+			options.WebRootFileProvider = environment.WebRootFileProvider;
 
-			services.ConfigureOptions<CommonUIConfigureOptions>();
+			configureOptions?.Invoke(options);
+
+			services.ConfigureOptions(options);
+			services.AddSingleton<IOptions<InkBallOptions>>(Options.Create(options));
 		}
 	}
 }

@@ -1,6 +1,7 @@
-﻿header
+﻿@inject Microsoft.Extensions.Options.IOptions<InkBallOptions> commonUIConfigureOptions
+header
 @{
-	DefineSection(InkBall.Module.CommonUIConfigureOptions.HeadElementsSectionName, async () =>
+	DefineSection(commonUIConfigureOptions.Value.HeadElementsSectionName, async () =>
 	{
 		WriteLiteral($"<link rel='stylesheet' href='{Url.Content("~/css/demo.css")}' />");
 	});

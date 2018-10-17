@@ -3,9 +3,9 @@ using System.Collections.Generic;
 
 namespace InkBall.Module
 {
-    public partial class Users
+    public partial class InkBallUser
     {
-        public Users()
+        public InkBallUser()
         {
             InkBallPlayer = new HashSet<InkBallPlayer>();
         }

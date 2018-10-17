@@ -21,7 +21,7 @@ namespace InkBall.Module
         public int iDrawCount { get; set; }
         public DateTime TimeStamp { get; set; }
 
-        public Users User { get; set; }
+        public InkBallUser User { get; set; }
         public ICollection<InkBallGame> InkBallGameIPlayer1 { get; set; }
         public ICollection<InkBallGame> InkBallGameIPlayer2 { get; set; }
         public ICollection<InkBallPath> InkBallPath { get; set; }

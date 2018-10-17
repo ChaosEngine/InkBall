@@ -8,7 +8,7 @@ namespace InkBall.Module.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "users",
+                name: "InkBallUsers",
                 columns: table => new
                 {
                     iID = table.Column<uint>(nullable: false)
@@ -29,8 +29,8 @@ namespace InkBall.Module.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_users", x => x.iID);
-                    table.UniqueConstraint("AK_users_id", x => x.id);
+                    table.PrimaryKey("PK_InkBallUsers", x => x.iID);
+                    table.UniqueConstraint("AK_InkBallUsers_id", x => x.id);
                 });
 
             migrationBuilder.CreateTable(
@@ -55,7 +55,7 @@ namespace InkBall.Module.Migrations
                     table.ForeignKey(
                         name: "InkBallPlayer_ibfk_1",
                         column: x => x.iUserID,
-                        principalTable: "users",
+                        principalTable: "InkBallUsers",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -238,13 +238,13 @@ namespace InkBall.Module.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "id",
-                table: "users",
+                table: "InkBallUsers",
                 column: "id",
                 unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "ByCheckersLoginFields",
-                table: "users",
+                table: "InkBallUsers",
                 columns: new[] { "poczta", "haslo", "potwierdzenie" });
         }
 
@@ -266,7 +266,7 @@ namespace InkBall.Module.Migrations
                 name: "InkBallPlayer");
 
             migrationBuilder.DropTable(
-                name: "users");
+                name: "InkBallUsers");
         }
     }
 }

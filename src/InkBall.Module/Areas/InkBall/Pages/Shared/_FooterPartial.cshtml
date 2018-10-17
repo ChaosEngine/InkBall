@@ -1,6 +1,7 @@
-﻿footer
+﻿@inject Microsoft.Extensions.Options.IOptions<InkBallOptions> commonUIConfigureOptions
+footer
 @{
-	DefineSection(InkBall.Module.CommonUIConfigureOptions.ScriptsSectionName, async () =>
+	DefineSection(commonUIConfigureOptions.Value.ScriptsSectionName, async () =>
 	{
 		WriteLiteral($"<script type='text/javascript' src='{Url.Content("~/js/script.js")}'></script>");
 	});

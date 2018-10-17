@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace InkBall.Module.Pages
 {
-	[Authorize(Policy = "InkBallPlayerRole")]
+	[Authorize(Policy = "InkBallPlayerPolicy")]
 	public class HomeModel : PageModel
 	{
 		public string UserData { get; set; }

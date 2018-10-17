@@ -7,23 +7,28 @@ using Microsoft.Extensions.Configuration;
 
 namespace InkBall.Module
 {
-	public partial class GamesContext : DbContext
+	public interface IGamesContext
 	{
-		// public GamesContext()
-		// {
-		// }
+		DbSet<InkBallGame> InkBallGame { get; set; }
+		DbSet<InkBallPath> InkBallPath { get; set; }
+		DbSet<InkBallPlayer> InkBallPlayer { get; set; }
+		DbSet<InkBallPoint> InkBallPoint { get; set; }
+		DbSet<InkBallPointsInPath> InkBallPointsInPath { get; set; }
+		DbSet<InkBallUser> InkBallUsers { get; set; }
+	}
 
-		public GamesContext(DbContextOptions<GamesContext> options)
-			: base(options)
-		{
-		}
-
+	public partial class GamesContext : DbContext, IGamesContext
+	{
 		public virtual DbSet<InkBallGame> InkBallGame { get; set; }
 		public virtual DbSet<InkBallPath> InkBallPath { get; set; }
 		public virtual DbSet<InkBallPlayer> InkBallPlayer { get; set; }
 		public virtual DbSet<InkBallPoint> InkBallPoint { get; set; }
 		public virtual DbSet<InkBallPointsInPath> InkBallPointsInPath { get; set; }
-		public virtual DbSet<Users> Users { get; set; }
+		public virtual DbSet<InkBallUser> InkBallUsers { get; set; }
+
+		public GamesContext(DbContextOptions<GamesContext> options) : base(options)
+		{
+		}
 
 		/*protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -253,11 +258,9 @@ namespace InkBall.Module
 					.HasConstraintName("InkBallPointsInPath_ibfk_2");
 			});
 
-			modelBuilder.Entity<Users>(entity =>
+			modelBuilder.Entity<InkBallUser>(entity =>
 			{
 				entity.HasKey(e => e.iId);
-
-				entity.ToTable("users");
 
 				entity.HasIndex(e => e.id)
 					.HasName("id")

@@ -13,37 +13,13 @@ using Microsoft.Extensions.Options;
 
 namespace InkBall.Module
 {
-	public sealed class InkBallOptions : IConfigureOptions<InkBallOptions>
-	{
-		public string AuthorizationPolicyName { get; set; }
-
-		public void Configure(InkBallOptions options)
-		{
-		}
-
-		//public GamesContext DB { get; set; }
-	}
-
-	public static class SetupExtensions
-	{
-		public static IServiceCollection SetupInkBall<GContextType>(this IServiceCollection services, Action<InkBallOptions> configureAction = null)
-			where GContextType : DbContext
-		{
-			InkBallOptions options = new InkBallOptions();
-
-			if (configureAction != null)
-				configureAction?.Invoke(options);
-
-			services.ConfigureOptions(options);
-
-			return services;
-		}
-	}
-
 	public class MinimumAgeRequirement : AuthorizationHandler<MinimumAgeRequirement>, IAuthorizationRequirement
 	{
+		private readonly int _minimumAge;
+
 		public MinimumAgeRequirement(int minimumAge)
 		{
+			_minimumAge = minimumAge;
 		}
 
 		protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, MinimumAgeRequirement requirement)

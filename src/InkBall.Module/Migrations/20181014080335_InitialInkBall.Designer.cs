@@ -204,7 +204,7 @@ namespace InkBall.Module.Migrations
                     b.ToTable("InkBallPointsInPath");
                 });
 
-            modelBuilder.Entity("InkBall.Module.Users", b =>
+            modelBuilder.Entity("InkBall.Module.InkBallUser", b =>
                 {
                     b.Property<uint>("iId")
                         .ValueGeneratedOnAdd()
@@ -273,7 +273,7 @@ namespace InkBall.Module.Migrations
                     b.HasIndex("poczta", "haslo", "potwierdzenie")
                         .HasName("ByCheckersLoginFields");
 
-                    b.ToTable("users");
+                    b.ToTable("InkBallUsers");
                 });
 
             modelBuilder.Entity("InkBall.Module.InkBallGame", b =>
@@ -304,7 +304,7 @@ namespace InkBall.Module.Migrations
 
             modelBuilder.Entity("InkBall.Module.InkBallPlayer", b =>
                 {
-                    b.HasOne("InkBall.Module.Users", "User")
+                    b.HasOne("InkBall.Module.InkBallUser", "User")
                         .WithMany("InkBallPlayer")
                         .HasForeignKey("iUserId")
                         .HasConstraintName("InkBallPlayer_ibfk_1")

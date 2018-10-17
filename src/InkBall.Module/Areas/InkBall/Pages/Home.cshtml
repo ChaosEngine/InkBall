@@ -1,9 +1,10 @@
 ﻿@page
+@inject Microsoft.Extensions.Options.IOptions<InkBallOptions> commonUIConfigureOptions
 @model HomeModel
 @{
 	ViewData["Title"] = "Home";
 
-	DefineSection(InkBall.Module.CommonUIConfigureOptions.HeadElementsSectionName, async () =>
+	DefineSection(commonUIConfigureOptions.Value.HeadElementsSectionName, async () =>
 	{
 		WriteLiteral($"<link rel='stylesheet' href='{Url.Content("~/css/demo.css")}' />");
 	});
@@ -27,7 +28,7 @@
 <p>Request RemoteIp: <span class='blue-paragraph'>@HttpContext.Connection.RemoteIpAddress</span></p>
 
 @{
-	DefineSection(InkBall.Module.CommonUIConfigureOptions.ScriptsSectionName, async () =>
+	DefineSection(commonUIConfigureOptions.Value.ScriptsSectionName, async () =>
 	{
 		WriteLiteral($"<script type='text/javascript' src='{Url.Content("~/js/script.js")}'></script>");
 	});
