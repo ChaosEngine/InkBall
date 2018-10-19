@@ -174,8 +174,8 @@ namespace InkBall.Module
 
 				entity.HasOne(d => d.User)
 					.WithMany(p => p.InkBallPlayer)
-					.HasPrincipalKey(p => p.id)
-					.HasForeignKey(d => d.iUserId)
+					.HasPrincipalKey(u => u.iId)
+					.HasForeignKey(pd => pd.iUserId)
 					.HasConstraintName("InkBallPlayer_ibfk_1");
 			});
 
@@ -262,8 +262,8 @@ namespace InkBall.Module
 			{
 				entity.HasKey(e => e.iId);
 
-				entity.HasIndex(e => e.id)
-					.HasName("id")
+				entity.HasIndex(e => e.sExternalId)
+					.HasName("sExternalId")
 					.IsUnique();
 
 				entity.HasIndex(e => new { e.poczta, e.haslo, e.potwierdzenie })
@@ -281,8 +281,8 @@ namespace InkBall.Module
 					.HasColumnType("tinyint(4)")
 					.HasDefaultValueSql("'0'");
 
-				entity.Property(e => e.id)
-					.HasColumnName("id")
+				entity.Property(e => e.iId)
+					.HasColumnName("iId")
 					.HasColumnType("bigint(4)");
 
 				entity.Property(e => e.ksywa)

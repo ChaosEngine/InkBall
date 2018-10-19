@@ -14,13 +14,12 @@ namespace InkBall.Module.Pages
 	{
 		public string UserData { get; set; }
 
-		public void OnGet(
-			// [FromServices]UserManager<IdentityUser> userManager
-			)
+		public void OnGet()
 		{
-			//var userManager = serviceProvider.GetService(typeof(UserManager<IdentityUser>));
+			var inkBall_user = User.Claims.FirstOrDefault(x => x.Type == "InkBallClaimType");
 
 			UserData = User.Claims.Select(x => x.Value).Aggregate((a, b) => a.ToString() + " " + b.ToString());
+			UserData += inkBall_user != null ? $"InkBallUser ID = {inkBall_user} zoom" : "";
 		}
 	}
 }

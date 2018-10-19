@@ -14,7 +14,7 @@ namespace InkBall.Module
         }
 
         public uint iId { get; set; }
-        public long? iUserId { get; set; }
+        public uint? iUserId { get; set; }
         public string sLastMoveCode { get; set; }
         public int iWinCount { get; set; }
         public int iLossCount { get; set; }

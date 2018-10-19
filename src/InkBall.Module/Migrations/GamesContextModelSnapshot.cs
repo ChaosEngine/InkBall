@@ -219,9 +219,8 @@ namespace InkBall.Module.Migrations
                         .HasColumnType("tinyint(4)")
                         .HasDefaultValueSql("'0'");
 
-                    b.Property<long>("id")
-                        .HasColumnName("id")
-                        .HasColumnType("bigint(4)");
+                    b.Property<string>("sExternalId")
+                        .HasColumnName("sExternalId");
 
                     b.Property<string>("ksywa")
                         .IsRequired()
@@ -264,9 +263,9 @@ namespace InkBall.Module.Migrations
 
                     b.HasKey("iId");
 
-                    b.HasIndex("id")
+                    b.HasIndex("sExternalId")
                         .IsUnique()
-                        .HasName("id");
+                        .HasName("sExternalId");
 
                     b.HasIndex("poczta", "haslo", "potwierdzenie")
                         .HasName("ByCheckersLoginFields");
@@ -306,7 +305,7 @@ namespace InkBall.Module.Migrations
                         .WithMany("InkBallPlayer")
                         .HasForeignKey("iUserId")
                         .HasConstraintName("InkBallPlayer_ibfk_1")
-                        .HasPrincipalKey("id");
+                        .HasPrincipalKey("iId");
                 });
 
             modelBuilder.Entity("InkBall.Module.InkBallPoint", b =>

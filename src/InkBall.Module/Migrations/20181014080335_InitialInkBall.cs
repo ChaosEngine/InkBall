@@ -20,7 +20,7 @@ namespace InkBall.Module.Migrations
                     sSurname = table.Column<string>(type: "varchar(255)", nullable: true),
                     iPrivileges = table.Column<sbyte>(type: "tinyint(4)", nullable: false, defaultValueSql: "'0'")
                         .Annotation("Sqlite:Autoincrement", true),
-                    id = table.Column<long>(type: "bigint(4)", nullable: false),
+                    sExternalId = table.Column<string>(nullable: false),
                     ksywa = table.Column<string>(type: "char(15)", nullable: false),
                     poczta = table.Column<string>(type: "varchar(40)", nullable: false),
                     haslo = table.Column<string>(type: "varchar(20)", nullable: false),
@@ -30,7 +30,7 @@ namespace InkBall.Module.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_InkBallUsers", x => x.iID);
-                    table.UniqueConstraint("AK_InkBallUsers_id", x => x.id);
+                    table.UniqueConstraint("AK_InkBallUsers_id", x => x.sExternalId);
                 });
 
             migrationBuilder.CreateTable(
@@ -39,7 +39,7 @@ namespace InkBall.Module.Migrations
                 {
                     iID = table.Column<uint>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    iUserID = table.Column<long>(type: "bigint(10)", nullable: true),
+                    iUserID = table.Column<uint>(type: "bigint(10)", nullable: true),
                     sLastMoveCode = table.Column<string>(type: "varchar(1000)", nullable: true),
                     iWinCount = table.Column<int>(type: "int(11)", nullable: false, defaultValueSql: "'0'")
                         .Annotation("Sqlite:Autoincrement", true),
@@ -56,7 +56,7 @@ namespace InkBall.Module.Migrations
                         name: "InkBallPlayer_ibfk_1",
                         column: x => x.iUserID,
                         principalTable: "InkBallUsers",
-                        principalColumn: "id",
+                        principalColumn: "iId",
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -237,9 +237,9 @@ namespace InkBall.Module.Migrations
                 column: "iPointID");
 
             migrationBuilder.CreateIndex(
-                name: "id",
+                name: "sExternalId",
                 table: "InkBallUsers",
-                column: "id",
+                column: "sExternalId",
                 unique: true);
 
             migrationBuilder.CreateIndex(
