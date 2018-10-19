@@ -126,13 +126,11 @@ namespace InkBall.Module.Migrations
                     b.Property<int>("iDrawCount")
                         .ValueGeneratedOnAdd()
                         .HasColumnName("iDrawCount")
-                        .HasColumnType("int(11)")
                         .HasDefaultValueSql("'0'");
 
                     b.Property<int>("iLossCount")
                         .ValueGeneratedOnAdd()
                         .HasColumnName("iLossCount")
-                        .HasColumnType("int(11)")
                         .HasDefaultValueSql("'0'");
 
                     b.Property<int?>("iUserId")
@@ -141,7 +139,6 @@ namespace InkBall.Module.Migrations
                     b.Property<int>("iWinCount")
                         .ValueGeneratedOnAdd()
                         .HasColumnName("iWinCount")
-                        .HasColumnType("int(11)")
                         .HasDefaultValueSql("'0'");
 
                     b.Property<string>("sLastMoveCode")

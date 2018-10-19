@@ -38,11 +38,11 @@ namespace InkBall.Module.Migrations
 						.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
                     iUserID = table.Column<int>(nullable: true),
                     sLastMoveCode = table.Column<string>(type: "varchar(1000)", nullable: true),
-                    iWinCount = table.Column<int>(type: "int(11)", nullable: false, defaultValueSql: "'0'")
+                    iWinCount = table.Column<int>(nullable: false, defaultValueSql: "'0'")
                         .Annotation("Sqlite:Autoincrement", true),
-                    iLossCount = table.Column<int>(type: "int(11)", nullable: false, defaultValueSql: "'0'")
+                    iLossCount = table.Column<int>(nullable: false, defaultValueSql: "'0'")
                         .Annotation("Sqlite:Autoincrement", true),
-                    iDrawCount = table.Column<int>(type: "int(11)", nullable: false, defaultValueSql: "'0'")
+                    iDrawCount = table.Column<int>(nullable: false, defaultValueSql: "'0'")
                         .Annotation("Sqlite:Autoincrement", true),
                     TimeStamp = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP")
                 },
