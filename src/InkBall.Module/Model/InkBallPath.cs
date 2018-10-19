@@ -11,9 +11,9 @@ namespace InkBall.Module
             InkBallPointsInPath = new HashSet<InkBallPointsInPath>();
         }
 
-        public uint iId { get; set; }
-        public uint iGameId { get; set; }
-        public uint iPlayerId { get; set; }
+        public int iId { get; set; }
+        public int iGameId { get; set; }
+        public int iPlayerId { get; set; }
 
         public InkBallGame Game { get; set; }
         public InkBallPlayer Player { get; set; }

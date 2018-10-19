@@ -10,18 +10,19 @@ namespace InkBall.Module
 			InkBallPlayer = new HashSet<InkBallPlayer>();
 		}
 
-		public uint iId { get; set; }
-		public string sUserName { get; set; }
-		public string sPassword { get; set; }
-		public string sPasswordSalt { get; set; }
-		public string sName { get; set; }
-		public string sSurname { get; set; }
-		public sbyte iPrivileges { get; set; }
+		public int iId { get; set; }
+		public int iPrivileges { get; set; }
 		public string sExternalId { get; set; }
-		public string ksywa { get; set; }
-		public string poczta { get; set; }
-		public string haslo { get; set; }
-		public int potwierdzenie { get; set; }
+
+		// public string sUserName { get; set; }
+		// public string sPassword { get; set; }
+		// public string sPasswordSalt { get; set; }
+		// public string sName { get; set; }
+		// public string sSurname { get; set; }
+		// public string ksywa { get; set; }
+		// public string poczta { get; set; }
+		// public string haslo { get; set; }
+		// public int potwierdzenie { get; set; }
 
 		public ICollection<InkBallPlayer> InkBallPlayer { get; set; }
 	}

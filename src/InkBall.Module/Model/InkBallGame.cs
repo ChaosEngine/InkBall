@@ -27,13 +27,13 @@ namespace InkBall.Module
 			InkBallPoint = new HashSet<InkBallPoint>();
 		}
 
-		public uint iId { get; set; }
-		public uint iPlayer1Id { get; set; }
-		public uint? iPlayer2Id { get; set; }
-		public byte bIsPlayer1Active { get; set; }
-		public uint iGridSize { get; set; }
-		public uint iBoardWidth { get; set; }
-		public uint iBoardHeight { get; set; }
+		public int iId { get; set; }
+		public int iPlayer1Id { get; set; }
+		public int? iPlayer2Id { get; set; }
+		public bool bIsPlayer1Active { get; set; }
+		public int iGridSize { get; set; }
+		public int iBoardWidth { get; set; }
+		public int iBoardHeight { get; set; }
 		//`GameType` enum('FIRST_CAPTURE','FIRST_5_CAPTURES','FIRST_5_PATHS','FIRST_5_ADVANTAGE_PATHS') NOT NULL DEFAULT 'FIRST_CAPTURE' COMMENT 'Game win type'
 		public GameTypeEnum GameType { get; set; }
 		//`GameState` enum('INACTIVE','ACTIVE','AWAITING','FINISHED') NOT NULL DEFAULT 'INACTIVE' COMMENT 'State of this game',

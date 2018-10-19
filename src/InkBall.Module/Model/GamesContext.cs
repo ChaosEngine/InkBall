@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.Extensions.Configuration;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace InkBall.Module
 {
@@ -51,7 +52,12 @@ namespace InkBall.Module
 				entity.HasIndex(e => e.iPlayer2Id)
 					.HasName("ByPlayer2");
 
-				entity.Property(e => e.iId).HasColumnName("iID");
+				entity.Property(e => e.iId).HasColumnName("iId")
+					.ValueGeneratedOnAdd()
+					.HasAnnotation("Sqlite:Autoincrement", true)
+					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
+					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
 
 				entity.Property(e => e.bIsPlayer1Active)
 					.HasColumnName("bIsPlayer1Active")
@@ -91,7 +97,7 @@ namespace InkBall.Module
 
 				entity.Property(e => e.TimeStamp)
 					.HasColumnType("timestamp")
-					.HasDefaultValueSql("'CURRENT_TIMESTAMP'")
+					.HasDefaultValueSql("CURRENT_TIMESTAMP")
 					.ValueGeneratedOnAddOrUpdate();
 
 				entity.HasOne(d => d.Player1)
@@ -111,12 +117,17 @@ namespace InkBall.Module
 				entity.HasKey(e => e.iId);
 
 				entity.HasIndex(e => e.iGameId)
-					.HasName("ByGame");
+					.HasName("IDX_InkBallPath_ByGame");
 
 				entity.HasIndex(e => e.iPlayerId)
-					.HasName("ByPlayer");
+					.HasName("IDX_InkBallPath_ByPlayer");
 
-				entity.Property(e => e.iId).HasColumnName("iID");
+				entity.Property(e => e.iId).HasColumnName("iId")
+					.ValueGeneratedOnAdd()
+					.HasAnnotation("Sqlite:Autoincrement", true)
+					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
+					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
 
 				entity.Property(e => e.iGameId).HasColumnName("iGameID");
 
@@ -142,7 +153,15 @@ namespace InkBall.Module
 				entity.HasIndex(e => e.iUserId)
 					.HasName("ByUser");
 
-				entity.Property(e => e.iId).HasColumnName("iID");
+				entity.Property(e => e.iId).HasColumnName("iId")
+					.ValueGeneratedOnAdd()
+					.HasAnnotation("Sqlite:Autoincrement", true)
+					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
+					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
+
+				entity.Property(e => e.iUserId)
+					.HasColumnName("iUserID");
 
 				entity.Property(e => e.iDrawCount)
 					.HasColumnName("iDrawCount")
@@ -153,10 +172,6 @@ namespace InkBall.Module
 					.HasColumnName("iLossCount")
 					.HasColumnType("int(11)")
 					.HasDefaultValueSql("'0'");
-
-				entity.Property(e => e.iUserId)
-					.HasColumnName("iUserID")
-					.HasColumnType("bigint(10)");
 
 				entity.Property(e => e.iWinCount)
 					.HasColumnName("iWinCount")
@@ -169,7 +184,7 @@ namespace InkBall.Module
 
 				entity.Property(e => e.TimeStamp)
 					.HasColumnType("timestamp")
-					.HasDefaultValueSql("'CURRENT_TIMESTAMP'")
+					.HasDefaultValueSql("CURRENT_TIMESTAMP")
 					.ValueGeneratedOnAddOrUpdate();
 
 				entity.HasOne(d => d.User)
@@ -187,14 +202,14 @@ namespace InkBall.Module
 					.HasName("ByEnclosingPath");
 
 				entity.HasIndex(e => e.iGameId)
-					.HasName("ByGame");
+					.HasName("IDX_InkBallPoint_ByGame");
 
 				entity.HasIndex(e => e.iPlayerId)
-					.HasName("ByPlayer");
+					.HasName("IDX_InkBallPoint_ByPlayer");
 
-				entity.Property(e => e.iId).HasColumnName("iID");
+				entity.Property(e => e.iId).HasColumnName("iId");
 
-				entity.Property(e => e.iEnclosingPathId).HasColumnName("iEnclosingPathID");
+				entity.Property(e => e.iEnclosingPathId).HasColumnName("iEnclosingPathId");
 
 				entity.Property(e => e.iGameId).HasColumnName("iGameID");
 
@@ -205,8 +220,6 @@ namespace InkBall.Module
 				entity.Property(e => e.iY).HasColumnName("iY");
 
 				entity.Property(e => e.Status)
-					//.HasMaxLength(50)
-					//.IsUnicode(false)
 					.HasConversion(
 						v => v.ToString(),
 						v => (InkBallPoint.StatusEnum)Enum.Parse(typeof(InkBallPoint.StatusEnum), v));
@@ -239,11 +252,16 @@ namespace InkBall.Module
 				entity.HasIndex(e => e.iPointId)
 					.HasName("ByPoint");
 
-				entity.Property(e => e.iId).HasColumnName("iID");
+				entity.Property(e => e.iId).HasColumnName("iId")
+					.ValueGeneratedOnAdd()
+					.HasAnnotation("Sqlite:Autoincrement", true)
+					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
+					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
 
-				entity.Property(e => e.iPathId).HasColumnName("iPathID");
+				entity.Property(e => e.iPathId).HasColumnName("iPathId");
 
-				entity.Property(e => e.iPointId).HasColumnName("iPointID");
+				entity.Property(e => e.iPointId).HasColumnName("iPointId");
 
 				entity.HasOne(d => d.Path)
 					.WithMany(p => p.InkBallPointsInPath)
@@ -266,62 +284,63 @@ namespace InkBall.Module
 					.HasName("sExternalId")
 					.IsUnique();
 
-				entity.HasIndex(e => new { e.poczta, e.haslo, e.potwierdzenie })
-					.HasName("ByCheckersLoginFields");
-
-				entity.Property(e => e.iId).HasColumnName("iID");
-
-				entity.Property(e => e.haslo)
-					.IsRequired()
-					.HasColumnName("haslo")
-					.HasColumnType("varchar(20)");
+				entity.Property(e => e.iId)
+					.HasColumnName("iId")
+					.ValueGeneratedOnAdd()
+					.HasAnnotation("Sqlite:Autoincrement", true)
+					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
+					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
 
 				entity.Property(e => e.iPrivileges)
 					.HasColumnName("iPrivileges")
-					.HasColumnType("tinyint(4)")
 					.HasDefaultValueSql("'0'");
 
-				entity.Property(e => e.iId)
-					.HasColumnName("iId")
-					.HasColumnType("bigint(4)");
+				// entity.HasIndex(e => new { e.poczta, e.haslo, e.potwierdzenie })
+				// 	.HasName("ByCheckersLoginFields");
 
-				entity.Property(e => e.ksywa)
-					.IsRequired()
-					.HasColumnName("ksywa")
-					.HasColumnType("char(15)");
+				// entity.Property(e => e.haslo)
+				// 	.IsRequired()
+				// 	.HasColumnName("haslo")
+				// 	.HasColumnType("varchar(20)");
 
-				entity.Property(e => e.poczta)
-					.IsRequired()
-					.HasColumnName("poczta")
-					.HasColumnType("varchar(40)");
+				// entity.Property(e => e.ksywa)
+				// 	.IsRequired()
+				// 	.HasColumnName("ksywa")
+				// 	.HasColumnType("char(15)");
 
-				entity.Property(e => e.potwierdzenie)
-					.HasColumnName("potwierdzenie")
-					.HasColumnType("int(11)")
-					.HasDefaultValueSql("'0'");
+				// entity.Property(e => e.poczta)
+				// 	.IsRequired()
+				// 	.HasColumnName("poczta")
+				// 	.HasColumnType("varchar(40)");
 
-				entity.Property(e => e.sName)
-					.HasColumnName("sName")
-					.HasColumnType("varchar(255)");
+				// entity.Property(e => e.potwierdzenie)
+				// 	.HasColumnName("potwierdzenie")
+				// 	.HasColumnType("int(11)")
+				// 	.HasDefaultValueSql("'0'");
 
-				entity.Property(e => e.sPassword)
-					.IsRequired()
-					.HasColumnName("sPassword")
-					.HasColumnType("varchar(255)");
+				// entity.Property(e => e.sName)
+				// 	.HasColumnName("sName")
+				// 	.HasColumnType("varchar(255)");
 
-				entity.Property(e => e.sPasswordSalt)
-					.IsRequired()
-					.HasColumnName("sPasswordSalt")
-					.HasColumnType("varchar(10)");
+				// entity.Property(e => e.sPassword)
+				// 	.IsRequired()
+				// 	.HasColumnName("sPassword")
+				// 	.HasColumnType("varchar(255)");
 
-				entity.Property(e => e.sSurname)
-					.HasColumnName("sSurname")
-					.HasColumnType("varchar(255)");
+				// entity.Property(e => e.sPasswordSalt)
+				// 	.IsRequired()
+				// 	.HasColumnName("sPasswordSalt")
+				// 	.HasColumnType("varchar(10)");
 
-				entity.Property(e => e.sUserName)
-					.IsRequired()
-					.HasColumnName("sUserName")
-					.HasColumnType("varchar(50)");
+				// entity.Property(e => e.sSurname)
+				// 	.HasColumnName("sSurname")
+				// 	.HasColumnType("varchar(255)");
+
+				// entity.Property(e => e.sUserName)
+				// 	.IsRequired()
+				// 	.HasColumnName("sUserName")
+				// 	.HasColumnType("varchar(50)");
 			});
 		}
 	}

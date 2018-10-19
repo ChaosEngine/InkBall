@@ -3,7 +3,9 @@ using System;
 using InkBall.Module;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace InkBall.Module.Migrations
 {
@@ -18,9 +20,13 @@ namespace InkBall.Module.Migrations
 
             modelBuilder.Entity("InkBall.Module.InkBallGame", b =>
                 {
-                    b.Property<uint>("iId")
+                    b.Property<int>("iId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("iID");
+                        .HasColumnName("iId")
+                        .HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
+                        .HasAnnotation("Sqlite:Autoincrement", true)
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<DateTime>("CreateTime")
                         .HasColumnType("datetime");
@@ -34,32 +40,32 @@ namespace InkBall.Module.Migrations
                     b.Property<DateTime>("TimeStamp")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("timestamp")
-                        .HasDefaultValueSql("'CURRENT_TIMESTAMP'");
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<byte>("bIsPlayer1Active")
+                    b.Property<bool>("bIsPlayer1Active")
                         .ValueGeneratedOnAdd()
                         .HasColumnName("bIsPlayer1Active")
                         .HasDefaultValueSql("'1'");
 
-                    b.Property<uint>("iBoardHeight")
+                    b.Property<int>("iBoardHeight")
                         .ValueGeneratedOnAdd()
                         .HasColumnName("iBoardHeight")
                         .HasDefaultValueSql("'800'");
 
-                    b.Property<uint>("iBoardWidth")
+                    b.Property<int>("iBoardWidth")
                         .ValueGeneratedOnAdd()
                         .HasColumnName("iBoardWidth")
                         .HasDefaultValueSql("'600'");
 
-                    b.Property<uint>("iGridSize")
+                    b.Property<int>("iGridSize")
                         .ValueGeneratedOnAdd()
                         .HasColumnName("iGridSize")
                         .HasDefaultValueSql("'15'");
 
-                    b.Property<uint>("iPlayer1Id")
+                    b.Property<int>("iPlayer1Id")
                         .HasColumnName("iPlayer1ID");
 
-                    b.Property<uint?>("iPlayer2Id")
+                    b.Property<int?>("iPlayer2Id")
                         .HasColumnName("iPlayer2ID");
 
                     b.HasKey("iId");
@@ -75,37 +81,45 @@ namespace InkBall.Module.Migrations
 
             modelBuilder.Entity("InkBall.Module.InkBallPath", b =>
                 {
-                    b.Property<uint>("iId")
+                    b.Property<int>("iId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("iID");
+                        .HasColumnName("iId")
+                        .HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
+                        .HasAnnotation("Sqlite:Autoincrement", true)
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<uint>("iGameId")
+                    b.Property<int>("iGameId")
                         .HasColumnName("iGameID");
 
-                    b.Property<uint>("iPlayerId")
+                    b.Property<int>("iPlayerId")
                         .HasColumnName("iPlayerID");
 
                     b.HasKey("iId");
 
                     b.HasIndex("iGameId")
-                        .HasName("PathByGame");
+                        .HasName("IDX_InkBallPath_ByGame");
 
                     b.HasIndex("iPlayerId")
-                        .HasName("PathByPlayer");
+                        .HasName("IDX_InkBallPath_ByPlayer");
 
                     b.ToTable("InkBallPath");
                 });
 
             modelBuilder.Entity("InkBall.Module.InkBallPlayer", b =>
                 {
-                    b.Property<uint>("iId")
+                    b.Property<int>("iId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("iID");
+                        .HasColumnName("iId")
+                        .HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
+                        .HasAnnotation("Sqlite:Autoincrement", true)
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<DateTime>("TimeStamp")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("timestamp")
-                        .HasDefaultValueSql("'CURRENT_TIMESTAMP'");
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<int>("iDrawCount")
                         .ValueGeneratedOnAdd()
@@ -119,9 +133,8 @@ namespace InkBall.Module.Migrations
                         .HasColumnType("int(11)")
                         .HasDefaultValueSql("'0'");
 
-                    b.Property<long?>("iUserId")
-                        .HasColumnName("iUserID")
-                        .HasColumnType("bigint(10)");
+                    b.Property<int?>("iUserId")
+                        .HasColumnName("iUserID");
 
                     b.Property<int>("iWinCount")
                         .ValueGeneratedOnAdd()
@@ -143,26 +156,26 @@ namespace InkBall.Module.Migrations
 
             modelBuilder.Entity("InkBall.Module.InkBallPoint", b =>
                 {
-                    b.Property<uint>("iId")
+                    b.Property<int>("iId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("iID");
+                        .HasColumnName("iId");
 
                     b.Property<string>("Status")
                         .IsRequired();
 
-                    b.Property<uint?>("iEnclosingPathId")
-                        .HasColumnName("iEnclosingPathID");
+                    b.Property<int?>("iEnclosingPathId")
+                        .HasColumnName("iEnclosingPathId");
 
-                    b.Property<uint>("iGameId")
+                    b.Property<int>("iGameId")
                         .HasColumnName("iGameID");
 
-                    b.Property<uint>("iPlayerId")
+                    b.Property<int>("iPlayerId")
                         .HasColumnName("iPlayerID");
 
-                    b.Property<uint>("iX")
+                    b.Property<int>("iX")
                         .HasColumnName("iX");
 
-                    b.Property<uint>("iY")
+                    b.Property<int>("iY")
                         .HasColumnName("iY");
 
                     b.HasKey("iId");
@@ -171,25 +184,29 @@ namespace InkBall.Module.Migrations
                         .HasName("ByEnclosingPath");
 
                     b.HasIndex("iGameId")
-                        .HasName("PointByGame");
+                        .HasName("IDX_InkBallPoint_ByGame");
 
                     b.HasIndex("iPlayerId")
-                        .HasName("PointByPlayer");
+                        .HasName("IDX_InkBallPoint_ByPlayer");
 
                     b.ToTable("InkBallPoint");
                 });
 
             modelBuilder.Entity("InkBall.Module.InkBallPointsInPath", b =>
                 {
-                    b.Property<uint>("iId")
+                    b.Property<int>("iId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("iID");
+                        .HasColumnName("iId")
+                        .HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
+                        .HasAnnotation("Sqlite:Autoincrement", true)
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<uint>("iPathId")
-                        .HasColumnName("iPathID");
+                    b.Property<int>("iPathId")
+                        .HasColumnName("iPathId");
 
-                    b.Property<uint>("iPointId")
-                        .HasColumnName("iPointID");
+                    b.Property<int>("iPointId")
+                        .HasColumnName("iPointId");
 
                     b.HasKey("iId");
 
@@ -204,71 +221,26 @@ namespace InkBall.Module.Migrations
 
             modelBuilder.Entity("InkBall.Module.InkBallUser", b =>
                 {
-                    b.Property<uint>("iId")
+                    b.Property<int>("iId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnName("iID");
+                        .HasColumnName("iId")
+                        .HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
+                        .HasAnnotation("Sqlite:Autoincrement", true)
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<string>("haslo")
-                        .IsRequired()
-                        .HasColumnName("haslo")
-                        .HasColumnType("varchar(20)");
-
-                    b.Property<sbyte>("iPrivileges")
+                    b.Property<int>("iPrivileges")
                         .ValueGeneratedOnAdd()
                         .HasColumnName("iPrivileges")
-                        .HasColumnType("tinyint(4)")
                         .HasDefaultValueSql("'0'");
 
-                    b.Property<string>("sExternalId")
-                        .HasColumnName("sExternalId");
-
-                    b.Property<string>("ksywa")
-                        .IsRequired()
-                        .HasColumnName("ksywa")
-                        .HasColumnType("char(15)");
-
-                    b.Property<string>("poczta")
-                        .IsRequired()
-                        .HasColumnName("poczta")
-                        .HasColumnType("varchar(40)");
-
-                    b.Property<int>("potwierdzenie")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnName("potwierdzenie")
-                        .HasColumnType("int(11)")
-                        .HasDefaultValueSql("'0'");
-
-                    b.Property<string>("sName")
-                        .HasColumnName("sName")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<string>("sPassword")
-                        .IsRequired()
-                        .HasColumnName("sPassword")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<string>("sPasswordSalt")
-                        .IsRequired()
-                        .HasColumnName("sPasswordSalt")
-                        .HasColumnType("varchar(10)");
-
-                    b.Property<string>("sSurname")
-                        .HasColumnName("sSurname")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<string>("sUserName")
-                        .IsRequired()
-                        .HasColumnName("sUserName")
-                        .HasColumnType("varchar(50)");
+                    b.Property<string>("sExternalId");
 
                     b.HasKey("iId");
 
                     b.HasIndex("sExternalId")
                         .IsUnique()
                         .HasName("sExternalId");
-
-                    b.HasIndex("poczta", "haslo", "potwierdzenie")
-                        .HasName("ByCheckersLoginFields");
 
                     b.ToTable("InkBallUsers");
                 });
@@ -304,8 +276,7 @@ namespace InkBall.Module.Migrations
                     b.HasOne("InkBall.Module.InkBallUser", "User")
                         .WithMany("InkBallPlayer")
                         .HasForeignKey("iUserId")
-                        .HasConstraintName("InkBallPlayer_ibfk_1")
-                        .HasPrincipalKey("iId");
+                        .HasConstraintName("InkBallPlayer_ibfk_1");
                 });
 
             modelBuilder.Entity("InkBall.Module.InkBallPoint", b =>

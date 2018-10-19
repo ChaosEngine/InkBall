@@ -1,5 +1,7 @@
 ﻿using System;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace InkBall.Module.Migrations
 {
@@ -11,35 +13,30 @@ namespace InkBall.Module.Migrations
                 name: "InkBallUsers",
                 columns: table => new
                 {
-                    iID = table.Column<uint>(nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    sUserName = table.Column<string>(type: "varchar(50)", nullable: false),
-                    sPassword = table.Column<string>(type: "varchar(255)", nullable: false),
-                    sPasswordSalt = table.Column<string>(type: "varchar(10)", nullable: false),
-                    sName = table.Column<string>(type: "varchar(255)", nullable: true),
-                    sSurname = table.Column<string>(type: "varchar(255)", nullable: true),
-                    iPrivileges = table.Column<sbyte>(type: "tinyint(4)", nullable: false, defaultValueSql: "'0'")
-                        .Annotation("Sqlite:Autoincrement", true),
-                    sExternalId = table.Column<string>(nullable: false),
-                    ksywa = table.Column<string>(type: "char(15)", nullable: false),
-                    poczta = table.Column<string>(type: "varchar(40)", nullable: false),
-                    haslo = table.Column<string>(type: "varchar(20)", nullable: false),
-                    potwierdzenie = table.Column<int>(type: "int(11)", nullable: false, defaultValueSql: "'0'")
+                    iId = table.Column<int>(nullable: false)
                         .Annotation("Sqlite:Autoincrement", true)
+						.Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+						.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
+						.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
+                    iPrivileges = table.Column<int>(nullable: false, defaultValueSql: "'0'")
+                        .Annotation("Sqlite:Autoincrement", true),
+                    sExternalId = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_InkBallUsers", x => x.iID);
-                    table.UniqueConstraint("AK_InkBallUsers_id", x => x.sExternalId);
+                    table.PrimaryKey("PK_InkBallUsers", x => x.iId);
                 });
 
             migrationBuilder.CreateTable(
                 name: "InkBallPlayer",
                 columns: table => new
                 {
-                    iID = table.Column<uint>(nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    iUserID = table.Column<uint>(type: "bigint(10)", nullable: true),
+                    iId = table.Column<int>(nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true)
+						.Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+						.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
+						.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
+                    iUserID = table.Column<int>(nullable: true),
                     sLastMoveCode = table.Column<string>(type: "varchar(1000)", nullable: true),
                     iWinCount = table.Column<int>(type: "int(11)", nullable: false, defaultValueSql: "'0'")
                         .Annotation("Sqlite:Autoincrement", true),
@@ -47,11 +44,11 @@ namespace InkBall.Module.Migrations
                         .Annotation("Sqlite:Autoincrement", true),
                     iDrawCount = table.Column<int>(type: "int(11)", nullable: false, defaultValueSql: "'0'")
                         .Annotation("Sqlite:Autoincrement", true),
-                    TimeStamp = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "'CURRENT_TIMESTAMP'")
+                    TimeStamp = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_InkBallPlayer", x => x.iID);
+                    table.PrimaryKey("PK_InkBallPlayer", x => x.iId);
                     table.ForeignKey(
                         name: "InkBallPlayer_ibfk_1",
                         column: x => x.iUserID,
@@ -64,37 +61,39 @@ namespace InkBall.Module.Migrations
                 name: "InkBallGame",
                 columns: table => new
                 {
-                    iID = table.Column<uint>(nullable: false)
+                    iId = table.Column<int>(nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true)
+						.Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+						.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
+						.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
+                    iPlayer1ID = table.Column<int>(nullable: false),
+                    iPlayer2ID = table.Column<int>(nullable: true),
+                    bIsPlayer1Active = table.Column<bool>(nullable: false, defaultValueSql: "'1'"),
+                    iGridSize = table.Column<int>(nullable: false, defaultValueSql: "'15'")
                         .Annotation("Sqlite:Autoincrement", true),
-                    iPlayer1ID = table.Column<uint>(nullable: false),
-                    iPlayer2ID = table.Column<uint>(nullable: true),
-                    bIsPlayer1Active = table.Column<byte>(nullable: false, defaultValueSql: "'1'")
+                    iBoardWidth = table.Column<int>(nullable: false, defaultValueSql: "'600'")
                         .Annotation("Sqlite:Autoincrement", true),
-                    iGridSize = table.Column<uint>(nullable: false, defaultValueSql: "'15'")
-                        .Annotation("Sqlite:Autoincrement", true),
-                    iBoardWidth = table.Column<uint>(nullable: false, defaultValueSql: "'600'")
-                        .Annotation("Sqlite:Autoincrement", true),
-                    iBoardHeight = table.Column<uint>(nullable: false, defaultValueSql: "'800'")
+                    iBoardHeight = table.Column<int>(nullable: false, defaultValueSql: "'800'")
                         .Annotation("Sqlite:Autoincrement", true),
                     GameType = table.Column<string>(nullable: false),
                     GameState = table.Column<string>(nullable: false),
-                    TimeStamp = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "'CURRENT_TIMESTAMP'"),
+                    TimeStamp = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
                     CreateTime = table.Column<DateTime>(type: "datetime", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_InkBallGame", x => x.iID);
+                    table.PrimaryKey("PK_InkBallGame", x => x.iId);
                     table.ForeignKey(
                         name: "InkBallGame_ibfk_1",
                         column: x => x.iPlayer1ID,
                         principalTable: "InkBallPlayer",
-                        principalColumn: "iID",
+                        principalColumn: "iId",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "InkBallGame_ibfk_2",
                         column: x => x.iPlayer2ID,
                         principalTable: "InkBallPlayer",
-                        principalColumn: "iID",
+                        principalColumn: "iId",
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -102,25 +101,28 @@ namespace InkBall.Module.Migrations
                 name: "InkBallPath",
                 columns: table => new
                 {
-                    iID = table.Column<uint>(nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    iGameID = table.Column<uint>(nullable: false),
-                    iPlayerID = table.Column<uint>(nullable: false)
+                    iId = table.Column<int>(nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true)
+						.Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+						.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
+						.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
+                    iGameID = table.Column<int>(nullable: false),
+                    iPlayerID = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_InkBallPath", x => x.iID);
+                    table.PrimaryKey("PK_InkBallPath", x => x.iId);
                     table.ForeignKey(
                         name: "InkBallPath_ibfk_1",
                         column: x => x.iGameID,
                         principalTable: "InkBallGame",
-                        principalColumn: "iID",
+                        principalColumn: "iId",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "InkBallPath_ibfk_2",
                         column: x => x.iPlayerID,
                         principalTable: "InkBallPlayer",
-                        principalColumn: "iID",
+                        principalColumn: "iId",
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -128,35 +130,38 @@ namespace InkBall.Module.Migrations
                 name: "InkBallPoint",
                 columns: table => new
                 {
-                    iID = table.Column<uint>(nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    iGameID = table.Column<uint>(nullable: false),
-                    iPlayerID = table.Column<uint>(nullable: false),
-                    iX = table.Column<uint>(nullable: false),
-                    iY = table.Column<uint>(nullable: false),
+                    iId = table.Column<int>(nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true)
+						.Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+						.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
+						.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
+                    iGameID = table.Column<int>(nullable: false),
+                    iPlayerID = table.Column<int>(nullable: false),
+                    iX = table.Column<int>(nullable: false),
+                    iY = table.Column<int>(nullable: false),
                     Status = table.Column<string>(nullable: false),
-                    iEnclosingPathID = table.Column<uint>(nullable: true)
+                    iEnclosingPathId = table.Column<int>(nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_InkBallPoint", x => x.iID);
+                    table.PrimaryKey("PK_InkBallPoint", x => x.iId);
                     table.ForeignKey(
                         name: "InkBallPoint_ibfk_5",
-                        column: x => x.iEnclosingPathID,
+                        column: x => x.iEnclosingPathId,
                         principalTable: "InkBallPath",
-                        principalColumn: "iID",
+                        principalColumn: "iId",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "InkBallPoint_ibfk_3",
                         column: x => x.iGameID,
                         principalTable: "InkBallGame",
-                        principalColumn: "iID",
+                        principalColumn: "iId",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "InkBallPoint_ibfk_4",
                         column: x => x.iPlayerID,
                         principalTable: "InkBallPlayer",
-                        principalColumn: "iID",
+                        principalColumn: "iId",
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -164,25 +169,28 @@ namespace InkBall.Module.Migrations
                 name: "InkBallPointsInPath",
                 columns: table => new
                 {
-                    iID = table.Column<uint>(nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    iPathID = table.Column<uint>(nullable: false),
-                    iPointID = table.Column<uint>(nullable: false)
+                    iId = table.Column<int>(nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true)
+						.Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+						.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
+						.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
+                    iPathId = table.Column<int>(nullable: false),
+                    iPointId = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_InkBallPointsInPath", x => x.iID);
+                    table.PrimaryKey("PK_InkBallPointsInPath", x => x.iId);
                     table.ForeignKey(
                         name: "InkBallPointsInPath_ibfk_1",
-                        column: x => x.iPathID,
+                        column: x => x.iPathId,
                         principalTable: "InkBallPath",
-                        principalColumn: "iID",
+                        principalColumn: "iId",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "InkBallPointsInPath_ibfk_2",
-                        column: x => x.iPointID,
+                        column: x => x.iPointId,
                         principalTable: "InkBallPoint",
-                        principalColumn: "iID",
+                        principalColumn: "iId",
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -197,12 +205,12 @@ namespace InkBall.Module.Migrations
                 column: "iPlayer2ID");
 
             migrationBuilder.CreateIndex(
-                name: "PathByGame",
+                name: "IDX_InkBallPath_ByGame",
                 table: "InkBallPath",
                 column: "iGameID");
 
             migrationBuilder.CreateIndex(
-                name: "PathByPlayer",
+                name: "IDX_InkBallPath_ByPlayer",
                 table: "InkBallPath",
                 column: "iPlayerID");
 
@@ -214,38 +222,33 @@ namespace InkBall.Module.Migrations
             migrationBuilder.CreateIndex(
                 name: "ByEnclosingPath",
                 table: "InkBallPoint",
-                column: "iEnclosingPathID");
+                column: "iEnclosingPathId");
 
             migrationBuilder.CreateIndex(
-                name: "PointByGame",
+                name: "IDX_InkBallPoint_ByGame",
                 table: "InkBallPoint",
                 column: "iGameID");
 
             migrationBuilder.CreateIndex(
-                name: "PointByPlayer",
+                name: "IDX_InkBallPoint_ByPlayer",
                 table: "InkBallPoint",
                 column: "iPlayerID");
 
             migrationBuilder.CreateIndex(
                 name: "ByPath",
                 table: "InkBallPointsInPath",
-                column: "iPathID");
+                column: "iPathId");
 
             migrationBuilder.CreateIndex(
                 name: "ByPoint",
                 table: "InkBallPointsInPath",
-                column: "iPointID");
+                column: "iPointId");
 
             migrationBuilder.CreateIndex(
                 name: "sExternalId",
                 table: "InkBallUsers",
                 column: "sExternalId",
                 unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "ByCheckersLoginFields",
-                table: "InkBallUsers",
-                columns: new[] { "poczta", "haslo", "potwierdzenie" });
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
