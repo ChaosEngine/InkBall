@@ -19,7 +19,7 @@ namespace InkBall.Module.Pages
 			var inkBall_user = User.Claims.FirstOrDefault(x => x.Type == "InkBallClaimType");
 
 			UserData = User.Claims.Select(x => x.Value).Aggregate((a, b) => a.ToString() + " " + b.ToString());
-			UserData += inkBall_user != null ? $"InkBallUser ID = {inkBall_user} zoom" : "";
+			UserData += inkBall_user != null ? $"InkBallUser ID = {inkBall_user}" : "";
 		}
 	}
 }

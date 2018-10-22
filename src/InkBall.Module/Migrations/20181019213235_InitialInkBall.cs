@@ -44,7 +44,7 @@ namespace InkBall.Module.Migrations
                         .Annotation("Sqlite:Autoincrement", true),
                     iDrawCount = table.Column<int>(nullable: false, defaultValueSql: "'0'")
                         .Annotation("Sqlite:Autoincrement", true),
-                    TimeStamp = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP")
+                    TimeStamp = table.Column<DateTime>(type: "timestamp", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -77,7 +77,7 @@ namespace InkBall.Module.Migrations
                         .Annotation("Sqlite:Autoincrement", true),
                     GameType = table.Column<string>(nullable: false),
                     GameState = table.Column<string>(nullable: false),
-                    TimeStamp = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
+                    TimeStamp = table.Column<DateTime>(type: "timestamp", nullable: false),
                     CreateTime = table.Column<DateTime>(type: "datetime", nullable: false)
                 },
                 constraints: table =>

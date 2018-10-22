@@ -97,7 +97,6 @@ namespace InkBall.Module
 
 				entity.Property(e => e.TimeStamp)
 					.HasColumnType("timestamp")
-					.HasDefaultValueSql("CURRENT_TIMESTAMP")
 					.ValueGeneratedOnAddOrUpdate();
 
 				entity.HasOne(d => d.Player1)
@@ -184,7 +183,6 @@ namespace InkBall.Module
 
 				entity.Property(e => e.TimeStamp)
 					.HasColumnType("timestamp")
-					.HasDefaultValueSql("CURRENT_TIMESTAMP")
 					.ValueGeneratedOnAddOrUpdate();
 
 				entity.HasOne(d => d.User)
