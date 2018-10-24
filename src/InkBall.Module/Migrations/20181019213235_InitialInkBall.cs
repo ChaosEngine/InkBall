@@ -18,7 +18,7 @@ namespace InkBall.Module.Migrations
 						.Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
 						.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
 						.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
-                    iPrivileges = table.Column<int>(nullable: false, defaultValueSql: "'0'")
+                    iPrivileges = table.Column<int>(nullable: false, defaultValue: 0)
                         .Annotation("Sqlite:Autoincrement", true),
                     sExternalId = table.Column<string>(nullable: true)
                 },
@@ -38,13 +38,13 @@ namespace InkBall.Module.Migrations
 						.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
                     iUserID = table.Column<int>(nullable: true),
                     sLastMoveCode = table.Column<string>(type: "varchar(1000)", nullable: true),
-                    iWinCount = table.Column<int>(nullable: false, defaultValueSql: "'0'")
+                    iWinCount = table.Column<int>(nullable: false, defaultValue: 0)
                         .Annotation("Sqlite:Autoincrement", true),
-                    iLossCount = table.Column<int>(nullable: false, defaultValueSql: "'0'")
+                    iLossCount = table.Column<int>(nullable: false, defaultValue: 0)
                         .Annotation("Sqlite:Autoincrement", true),
-                    iDrawCount = table.Column<int>(nullable: false, defaultValueSql: "'0'")
+                    iDrawCount = table.Column<int>(nullable: false, defaultValue: 0)
                         .Annotation("Sqlite:Autoincrement", true),
-                    TimeStamp = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP")
+                    TimeStamp = table.Column<DateTime>(type: "timestamp", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -68,17 +68,17 @@ namespace InkBall.Module.Migrations
 						.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
                     iPlayer1ID = table.Column<int>(nullable: false),
                     iPlayer2ID = table.Column<int>(nullable: true),
-                    bIsPlayer1Active = table.Column<bool>(nullable: false, defaultValueSql: "'1'"),
-                    iGridSize = table.Column<int>(nullable: false, defaultValueSql: "'15'")
+                    bIsPlayer1Active = table.Column<bool>(nullable: false, defaultValue: true),
+                    iGridSize = table.Column<int>(nullable: false, defaultValue: 15)
                         .Annotation("Sqlite:Autoincrement", true),
-                    iBoardWidth = table.Column<int>(nullable: false, defaultValueSql: "'600'")
+                    iBoardWidth = table.Column<int>(nullable: false, defaultValue: 600)
                         .Annotation("Sqlite:Autoincrement", true),
-                    iBoardHeight = table.Column<int>(nullable: false, defaultValueSql: "'800'")
+                    iBoardHeight = table.Column<int>(nullable: false, defaultValue: 800)
                         .Annotation("Sqlite:Autoincrement", true),
                     GameType = table.Column<string>(nullable: false),
                     GameState = table.Column<string>(nullable: false),
-                    TimeStamp = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
-                    CreateTime = table.Column<DateTime>(type: "datetime", nullable: false)
+                    TimeStamp = table.Column<DateTime>(type: "timestamp", nullable: false),
+                    CreateTime = table.Column<DateTime>(nullable: false)
                 },
                 constraints: table =>
                 {

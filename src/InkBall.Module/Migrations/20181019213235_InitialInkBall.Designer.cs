@@ -30,8 +30,7 @@ namespace InkBall.Module.Migrations
                         .HasAnnotation("Sqlite:Autoincrement", true)
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<DateTime>("CreateTime")
-                        .HasColumnType("datetime");
+                    b.Property<DateTime>("CreateTime");
 
                     b.Property<string>("GameState")
                         .IsRequired();
@@ -41,28 +40,27 @@ namespace InkBall.Module.Migrations
 
                     b.Property<DateTime>("TimeStamp")
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                        .HasColumnType("timestamp");
 
                     b.Property<bool>("bIsPlayer1Active")
                         .ValueGeneratedOnAdd()
                         .HasColumnName("bIsPlayer1Active")
-                        .HasDefaultValueSql("'1'");
+                        .HasDefaultValue(1);
 
                     b.Property<int>("iBoardHeight")
                         .ValueGeneratedOnAdd()
                         .HasColumnName("iBoardHeight")
-                        .HasDefaultValueSql("'800'");
+                        .HasDefaultValue(800);
 
                     b.Property<int>("iBoardWidth")
                         .ValueGeneratedOnAdd()
                         .HasColumnName("iBoardWidth")
-                        .HasDefaultValueSql("'600'");
+                        .HasDefaultValue(600);
 
                     b.Property<int>("iGridSize")
                         .ValueGeneratedOnAdd()
                         .HasColumnName("iGridSize")
-                        .HasDefaultValueSql("'15'");
+                        .HasDefaultValue(15);
 
                     b.Property<int>("iPlayer1Id")
                         .HasColumnName("iPlayer1ID");
@@ -120,18 +118,17 @@ namespace InkBall.Module.Migrations
 
                     b.Property<DateTime>("TimeStamp")
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                        .HasColumnType("timestamp");
 
                     b.Property<int>("iDrawCount")
                         .ValueGeneratedOnAdd()
                         .HasColumnName("iDrawCount")
-                        .HasDefaultValueSql("'0'");
+                        .HasDefaultValue(0);
 
                     b.Property<int>("iLossCount")
                         .ValueGeneratedOnAdd()
                         .HasColumnName("iLossCount")
-                        .HasDefaultValueSql("'0'");
+                        .HasDefaultValue(0);
 
                     b.Property<int?>("iUserId")
                         .HasColumnName("iUserID");
@@ -139,7 +136,7 @@ namespace InkBall.Module.Migrations
                     b.Property<int>("iWinCount")
                         .ValueGeneratedOnAdd()
                         .HasColumnName("iWinCount")
-                        .HasDefaultValueSql("'0'");
+                        .HasDefaultValue(0);
 
                     b.Property<string>("sLastMoveCode")
                         .HasColumnName("sLastMoveCode")
@@ -231,7 +228,7 @@ namespace InkBall.Module.Migrations
                     b.Property<int>("iPrivileges")
                         .ValueGeneratedOnAdd()
                         .HasColumnName("iPrivileges")
-                        .HasDefaultValueSql("'0'");
+                        .HasDefaultValue(0);
 
                     b.Property<string>("sExternalId");
 

@@ -61,17 +61,17 @@ namespace InkBall.Module
 
 				entity.Property(e => e.bIsPlayer1Active)
 					.HasColumnName("bIsPlayer1Active")
-					.HasDefaultValueSql("'1'");
+					.HasDefaultValue(true);
 
 				entity.Property(e => e.CreateTime).HasColumnType("datetime");
 
 				entity.Property(e => e.iBoardHeight)
 					.HasColumnName("iBoardHeight")
-					.HasDefaultValueSql("'800'");
+					.HasDefaultValue(800);
 
 				entity.Property(e => e.iBoardWidth)
 					.HasColumnName("iBoardWidth")
-					.HasDefaultValueSql("'600'");
+					.HasDefaultValue(600);
 
 				entity.Property(e => e.GameType)
 					//.HasMaxLength(50)
@@ -89,7 +89,7 @@ namespace InkBall.Module
 
 				entity.Property(e => e.iGridSize)
 					.HasColumnName("iGridSize")
-					.HasDefaultValueSql("'15'");
+					.HasDefaultValue(15);
 
 				entity.Property(e => e.iPlayer1Id).HasColumnName("iPlayer1ID");
 
@@ -97,7 +97,6 @@ namespace InkBall.Module
 
 				entity.Property(e => e.TimeStamp)
 					.HasColumnType("timestamp")
-					.HasDefaultValueSql("CURRENT_TIMESTAMP")
 					.ValueGeneratedOnAddOrUpdate();
 
 				entity.HasOne(d => d.Player1)
@@ -166,17 +165,17 @@ namespace InkBall.Module
 				entity.Property(e => e.iDrawCount)
 					.HasColumnName("iDrawCount")
 					.HasColumnType("int(11)")
-					.HasDefaultValueSql("'0'");
+					.HasDefaultValue(0);
 
 				entity.Property(e => e.iLossCount)
 					.HasColumnName("iLossCount")
 					.HasColumnType("int(11)")
-					.HasDefaultValueSql("'0'");
+					.HasDefaultValue(0);
 
 				entity.Property(e => e.iWinCount)
 					.HasColumnName("iWinCount")
 					.HasColumnType("int(11)")
-					.HasDefaultValueSql("'0'");
+					.HasDefaultValue(0);
 
 				entity.Property(e => e.sLastMoveCode)
 					.HasColumnName("sLastMoveCode")
@@ -184,7 +183,6 @@ namespace InkBall.Module
 
 				entity.Property(e => e.TimeStamp)
 					.HasColumnType("timestamp")
-					.HasDefaultValueSql("CURRENT_TIMESTAMP")
 					.ValueGeneratedOnAddOrUpdate();
 
 				entity.HasOne(d => d.User)
@@ -294,53 +292,7 @@ namespace InkBall.Module
 
 				entity.Property(e => e.iPrivileges)
 					.HasColumnName("iPrivileges")
-					.HasDefaultValueSql("'0'");
-
-				// entity.HasIndex(e => new { e.poczta, e.haslo, e.potwierdzenie })
-				// 	.HasName("ByCheckersLoginFields");
-
-				// entity.Property(e => e.haslo)
-				// 	.IsRequired()
-				// 	.HasColumnName("haslo")
-				// 	.HasColumnType("varchar(20)");
-
-				// entity.Property(e => e.ksywa)
-				// 	.IsRequired()
-				// 	.HasColumnName("ksywa")
-				// 	.HasColumnType("char(15)");
-
-				// entity.Property(e => e.poczta)
-				// 	.IsRequired()
-				// 	.HasColumnName("poczta")
-				// 	.HasColumnType("varchar(40)");
-
-				// entity.Property(e => e.potwierdzenie)
-				// 	.HasColumnName("potwierdzenie")
-				// 	.HasColumnType("int(11)")
-				// 	.HasDefaultValueSql("'0'");
-
-				// entity.Property(e => e.sName)
-				// 	.HasColumnName("sName")
-				// 	.HasColumnType("varchar(255)");
-
-				// entity.Property(e => e.sPassword)
-				// 	.IsRequired()
-				// 	.HasColumnName("sPassword")
-				// 	.HasColumnType("varchar(255)");
-
-				// entity.Property(e => e.sPasswordSalt)
-				// 	.IsRequired()
-				// 	.HasColumnName("sPasswordSalt")
-				// 	.HasColumnType("varchar(10)");
-
-				// entity.Property(e => e.sSurname)
-				// 	.HasColumnName("sSurname")
-				// 	.HasColumnType("varchar(255)");
-
-				// entity.Property(e => e.sUserName)
-				// 	.IsRequired()
-				// 	.HasColumnName("sUserName")
-				// 	.HasColumnType("varchar(50)");
+					.HasDefaultValue(0);
 			});
 		}
 	}

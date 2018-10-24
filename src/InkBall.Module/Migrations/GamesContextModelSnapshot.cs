@@ -28,8 +28,7 @@ namespace InkBall.Module.Migrations
                         .HasAnnotation("Sqlite:Autoincrement", true)
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<DateTime>("CreateTime")
-                        .HasColumnType("datetime");
+                    b.Property<DateTime>("CreateTime");
 
                     b.Property<string>("GameState")
                         .IsRequired();
@@ -39,13 +38,12 @@ namespace InkBall.Module.Migrations
 
                     b.Property<DateTime>("TimeStamp")
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                        .HasColumnType("timestamp");
 
                     b.Property<bool>("bIsPlayer1Active")
                         .ValueGeneratedOnAdd()
                         .HasColumnName("bIsPlayer1Active")
-                        .HasDefaultValueSql("'1'");
+                        .HasDefaultValueSql("1");
 
                     b.Property<int>("iBoardHeight")
                         .ValueGeneratedOnAdd()
@@ -118,8 +116,7 @@ namespace InkBall.Module.Migrations
 
                     b.Property<DateTime>("TimeStamp")
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                        .HasColumnType("timestamp");
 
                     b.Property<int>("iDrawCount")
                         .ValueGeneratedOnAdd()
