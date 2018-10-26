@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -24,14 +25,22 @@ namespace InkBall.Module
 
 		protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, MinimumAgeRequirement requirement)
 		{
-			if (!context.User.HasClaim(c => c.Type == ClaimTypes.Name))
+			var external_id = context.User.FindFirstValue("InkBallClaimType");
+			if (string.IsNullOrEmpty(external_id))
 				return Task.CompletedTask;
 
-			var name = context.User.FindFirst(c => c.Type == ClaimTypes.Name).Value;
+			var birth_str = context.User.FindFirstValue(ClaimTypes.DateOfBirth);
+			if (string.IsNullOrEmpty(birth_str))
+				return Task.CompletedTask;
 
-			if (!string.IsNullOrEmpty(name))
+			if (DateTime.TryParseExact(birth_str, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var birth))
 			{
-				context.Succeed(requirement);
+				if ((DateTime.UtcNow.Year - birth.Year) < 18)
+				{
+					return Task.CompletedTask;
+				}
+				else
+					context.Succeed(requirement);
 			}
 
 			return Task.CompletedTask;

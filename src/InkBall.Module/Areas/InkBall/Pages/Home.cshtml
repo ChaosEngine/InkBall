@@ -9,7 +9,13 @@
 		WriteLiteral($"<link rel='stylesheet' href='{Url.Content("~/css/demo.css")}' />");
 	});
 }
-<p>@Model.UserData</p>
+<ul>
+	@foreach(var claim in Model.UserData)
+	{
+		<li>@claim</li>
+	}
+</ul>
+@Model.InkBallID
 
 <p><strong>Server variables</strong></p>
 
