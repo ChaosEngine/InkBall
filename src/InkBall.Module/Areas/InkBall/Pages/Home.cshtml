@@ -9,29 +9,81 @@
 		WriteLiteral($"<link rel='stylesheet' href='{Url.Content("~/css/demo.css")}' />");
 	});
 }
-<ul>
-	@foreach(var claim in Model.UserData)
-	{
-		<li>@claim</li>
-	}
-</ul>
-@Model.InkBallID
 
-<p><strong>Server variables</strong></p>
 
-<p>Request Method: <span class='blue-paragraph'>@HttpContext.Request.Method</span></p>
-<p>Request Scheme: <span class='blue-paragraph'>@HttpContext.Request.Scheme</span></p>
-<p>Request Path: <span class='blue-paragraph'>@HttpContext.Request.Path</span></p><br />
 
-<strong>Request Headers</strong><br />
 @{
-	foreach (var header in HttpContext.Request.Headers)
-	{
-		WriteLiteral($"<p>{header.Key}: <span class='blue-paragraph'>{header.Value}</span></p>");
-	}
+	var bIsLoggedIn = (Model.GameUser != null) ? true : false;
+	var bIsCurrentGameOk = Model.Game != null ? true : false;
+}
+@if (bIsLoggedIn)
+{
+	<p>Welcome <span>@Model.UserName</span></p>
+}
+else
+{
+	<p>Login to play</p>
 }
 
-<p>Request RemoteIp: <span class='blue-paragraph'>@HttpContext.Connection.RemoteIpAddress</span></p>
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+	var statusMessageClass = Model.Message.Contains("Error") ? "danger" : "success";
+	<div class="alert alert-@statusMessageClass alert-dismissible" role="alert">
+		<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+		@Model.Message
+	</div>
+}
+
+<form method='post'>
+	<div class="btn-group-vertical" role="group" aria-label="Vertical button group">
+		@if (bIsLoggedIn)
+		{
+			if (bIsCurrentGameOk)
+			{
+				//continue
+				<input type='submit' name='action' value='Continue' class="btn btn-primary btn-lg" />
+			}
+			else
+			{
+				//new game
+				<input type='submit' name='action' value='New game' class="btn btn-primary btn-lg" />
+
+				<select name='GameType' id='GameType'>
+					<option value='0' selected='selected'>First capture wins</option>
+					<option value='1'>First 5 captures wins</option>
+					<option value='2'>First 5 paths wins</option>
+					<option value='3'>Advantage of 5 paths wins</option>
+				</select>
+			}
+			<input type='submit' name='action' value='Game list' class="btn btn-primary" />
+			<input type='submit' name='action' value='Best' class="btn btn-primary" />
+			<input type='submit' name='action' value='Game rules' class="btn btn-primary" />
+			<input type='submit' name='action' value='Logout' class="btn btn-warning" />
+		}
+		else
+		{
+			<input type='submit' name='action' value='Game rules' class="btn btn-primary" />
+			<input type='submit' name='action' value='Login' class="btn btn-primary" />
+			<input type='submit' name='action' value='Register' class="btn btn-primary" />
+		}
+	</div>
+</form>
+
+
+
+
+
+
+<br />
+<p>TODO: add stuff:</p>
+<ol>
+	<li>If "not logged go to, login"</li>
+	<li>Show links to other rules, game list, register, home page</li>
+	<li>Handle postback</li>
+</ol>
+
+
+
 
 @{
 	DefineSection(commonUIConfigureOptions.Value.ScriptsSectionName, async () =>

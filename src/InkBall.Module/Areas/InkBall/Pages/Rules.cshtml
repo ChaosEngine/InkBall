@@ -1,0 +1,49 @@
+@page
+@inject Microsoft.Extensions.Options.IOptions<InkBallOptions> commonUIConfigureOptions
+@model RulesModel
+@{
+	ViewData["Title"] = "Rules";
+
+	DefineSection(commonUIConfigureOptions.Value.HeadElementsSectionName, async () =>
+	{
+		WriteLiteral($"<link rel='stylesheet' href='{Url.Content("~/css/demo.css")}' />");
+	});
+}
+
+@{
+	var bIsLoggedIn = (Model.GameUser != null) ? true : false;
+	var bIsCurrentGameOk = Model.Game != null ? true : false;
+}
+@if (bIsLoggedIn)
+{
+	<p>Welcome <span>@Model.UserName</span></p>
+}
+else
+{
+	<p>Login to play</p>
+}
+
+
+
+
+
+
+<ol>
+	<li>Player put dots on the grid one after another</li>
+	<li>When player wants to surround oponents dots, one choses <span style='color:red; font-weight:bold'>Draw lines</span> and draws surrounding line; to put dots again - click <span style='color:red; font-weight:bold'>Draw dots</span></li>
+	<li><span style='color:red; font-weight:bold'>Cancel path</span> reverts already drawn line</li>
+	<li>One can not put dots inside surrounded groups</li>
+	<li>There must be at least one oponent dots to surround</li>
+</ol>
+
+
+
+
+
+
+@{
+	DefineSection(commonUIConfigureOptions.Value.ScriptsSectionName, async () =>
+	{
+		WriteLiteral($"<script type='text/javascript' src='{Url.Content("~/js/script.js")}'></script>");
+	});
+}

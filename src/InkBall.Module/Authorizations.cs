@@ -25,7 +25,7 @@ namespace InkBall.Module
 
 		protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, MinimumAgeRequirement requirement)
 		{
-			var external_id = context.User.FindFirstValue("InkBallClaimType");
+			var external_id = context.User.FindFirstValue("InkBallUserId");
 			if (string.IsNullOrEmpty(external_id))
 				return Task.CompletedTask;
 

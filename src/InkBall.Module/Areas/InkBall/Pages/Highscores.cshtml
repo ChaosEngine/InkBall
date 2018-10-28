@@ -1,0 +1,20 @@
+@page
+@inject Microsoft.Extensions.Options.IOptions<InkBallOptions> commonUIConfigureOptions
+@model Highscores
+@{
+	ViewData["Title"] = "Highscores";
+
+	DefineSection(commonUIConfigureOptions.Value.HeadElementsSectionName, async () =>
+	{
+		WriteLiteral($"<link rel='stylesheet' href='{Url.Content("~/css/demo.css")}' />");
+	});
+}
+
+highscores
+
+@{
+	DefineSection(commonUIConfigureOptions.Value.ScriptsSectionName, async () =>
+	{
+		WriteLiteral($"<script type='text/javascript' src='{Url.Content("~/js/script.js")}'></script>");
+	});
+}

@@ -31,6 +31,23 @@ namespace InkBall.Module
 		{
 		}
 
+		internal static string TimeStampInitialValueFromProvider(string activeProvider)
+		{
+			switch (activeProvider)
+			{
+				case "Microsoft.EntityFrameworkCore.Sqlite":
+					return "CURRENT_TIMESTAMP";
+				case "Microsoft.EntityFrameworkCore.SqlServer":
+					return null;
+				case "Pomelo.EntityFrameworkCore.MySql":
+					return "CURRENT_TIMESTAMP";
+				case "Npgsql.EntityFrameworkCore.PostgreSQL":
+					return "CURRENT_TIMESTAMP";
+				default:
+					throw new NotSupportedException($"Bad DBKind name");
+			}
+		}
+
 		/*protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
@@ -183,7 +200,8 @@ namespace InkBall.Module
 
 				entity.Property(e => e.TimeStamp)
 					.HasColumnType("timestamp")
-					.ValueGeneratedOnAddOrUpdate();
+					.ValueGeneratedOnAddOrUpdate()
+					.HasDefaultValueSql(TimeStampInitialValueFromProvider(Database.ProviderName));
 
 				entity.HasOne(d => d.User)
 					.WithMany(p => p.InkBallPlayer)
