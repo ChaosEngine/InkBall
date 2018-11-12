@@ -17,14 +17,6 @@ namespace InkBall.Module
 
 	public partial class InkBallPlayer : IPlayer
 	{
-		public InkBallPlayer()
-		{
-			InkBallGameIPlayer1 = new HashSet<InkBallGame>();
-			InkBallGameIPlayer2 = new HashSet<InkBallGame>();
-			InkBallPath = new HashSet<InkBallPath>();
-			InkBallPoint = new HashSet<InkBallPoint>();
-		}
-
 		public int iId { get; set; }
 		public int? iUserId { get; set; }
 		public string sLastMoveCode { get; set; }
@@ -38,6 +30,14 @@ namespace InkBall.Module
 		public ICollection<InkBallGame> InkBallGameIPlayer2 { get; set; }
 		public ICollection<InkBallPath> InkBallPath { get; set; }
 		public ICollection<InkBallPoint> InkBallPoint { get; set; }
+
+		public InkBallPlayer()
+		{
+			InkBallGameIPlayer1 = new HashSet<InkBallGame>();
+			InkBallGameIPlayer2 = new HashSet<InkBallGame>();
+			InkBallPath = new HashSet<InkBallPath>();
+			InkBallPoint = new HashSet<InkBallPoint>();
+		}
 	}
 
 	[Serializable]

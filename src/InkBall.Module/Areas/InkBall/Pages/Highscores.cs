@@ -16,9 +16,9 @@ namespace InkBall.Module.Pages
 		{
 		}
 
-		public override void OnGet()
+		public override Task OnGet()
 		{
-			base.OnGet();
+			return base.OnGet();
 		}
 	}
 }

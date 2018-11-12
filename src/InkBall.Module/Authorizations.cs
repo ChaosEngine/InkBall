@@ -16,6 +16,8 @@ namespace InkBall.Module
 {
 	public class MinimumAgeRequirement : AuthorizationHandler<MinimumAgeRequirement>, IAuthorizationRequirement
 	{
+		public const int MinimumAge = 18;
+
 		private readonly int _minimumAge;
 
 		public MinimumAgeRequirement(int minimumAge)
@@ -25,7 +27,7 @@ namespace InkBall.Module
 
 		protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, MinimumAgeRequirement requirement)
 		{
-			var external_id = context.User.FindFirstValue("InkBallUserId");
+			var external_id = context.User.FindFirstValue(nameof(InkBall.Module.Pages.HomeModel.InkBallUserId));
 			if (string.IsNullOrEmpty(external_id))
 				return Task.CompletedTask;
 
@@ -35,7 +37,7 @@ namespace InkBall.Module
 
 			if (DateTime.TryParseExact(birth_str, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var birth))
 			{
-				if ((DateTime.UtcNow.Year - birth.Year) < 18)
+				if ((DateTime.UtcNow.Year - birth.Year) < MinimumAge)
 				{
 					return Task.CompletedTask;
 				}

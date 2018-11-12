@@ -1,10 +1,11 @@
 ﻿using System;
-using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.Extensions.Configuration;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+using System.Threading;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace InkBall.Module
 {
@@ -20,6 +21,8 @@ namespace InkBall.Module
 
 	public partial class GamesContext : DbContext, IGamesContext
 	{
+		private static DateTimeToBytesConverter _sqlServerDateTimeToBytesConverter;
+
 		public virtual DbSet<InkBallGame> InkBallGame { get; set; }
 		public virtual DbSet<InkBallPath> InkBallPath { get; set; }
 		public virtual DbSet<InkBallPlayer> InkBallPlayer { get; set; }
@@ -31,18 +34,41 @@ namespace InkBall.Module
 		{
 		}
 
+		#region Helpers
+
 		internal static string TimeStampInitialValueFromProvider(string activeProvider)
 		{
 			switch (activeProvider)
 			{
-				case "Microsoft.EntityFrameworkCore.Sqlite":
-					return "CURRENT_TIMESTAMP";
 				case "Microsoft.EntityFrameworkCore.SqlServer":
 					return null;
+
 				case "Pomelo.EntityFrameworkCore.MySql":
-					return "CURRENT_TIMESTAMP";
+					return "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP";
+
+				case "Microsoft.EntityFrameworkCore.Sqlite":
 				case "Npgsql.EntityFrameworkCore.PostgreSQL":
 					return "CURRENT_TIMESTAMP";
+
+				default:
+					throw new NotSupportedException($"Bad DBKind name");
+			}
+		}
+
+		internal ValueConverter TimeStampValueConverterFromProvider(string activeProvider)
+		{
+			switch (activeProvider)
+			{
+				case "Microsoft.EntityFrameworkCore.SqlServer":
+					if (_sqlServerDateTimeToBytesConverter == null)
+						_sqlServerDateTimeToBytesConverter = new DateTimeToBytesConverter();
+					return _sqlServerDateTimeToBytesConverter;
+
+				case "Microsoft.EntityFrameworkCore.Sqlite":
+				case "Pomelo.EntityFrameworkCore.MySql":
+				case "Npgsql.EntityFrameworkCore.PostgreSQL":
+					return null;
+
 				default:
 					throw new NotSupportedException($"Bad DBKind name");
 			}
@@ -56,6 +82,8 @@ namespace InkBall.Module
                 optionsBuilder.UseMySql("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
             }
         }*/
+
+		#endregion Helpers
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
@@ -114,7 +142,9 @@ namespace InkBall.Module
 
 				entity.Property(e => e.TimeStamp)
 					.HasColumnType("timestamp")
-					.ValueGeneratedOnAddOrUpdate();
+					.ValueGeneratedOnAddOrUpdate()
+					.HasDefaultValueSql(TimeStampInitialValueFromProvider(Database.ProviderName))
+					.HasConversion(TimeStampValueConverterFromProvider(Database.ProviderName));
 
 				entity.HasOne(d => d.Player1)
 					.WithMany(p => p.InkBallGameIPlayer1)
@@ -201,7 +231,8 @@ namespace InkBall.Module
 				entity.Property(e => e.TimeStamp)
 					.HasColumnType("timestamp")
 					.ValueGeneratedOnAddOrUpdate()
-					.HasDefaultValueSql(TimeStampInitialValueFromProvider(Database.ProviderName));
+					.HasDefaultValueSql(TimeStampInitialValueFromProvider(Database.ProviderName))
+					.HasConversion(TimeStampValueConverterFromProvider(Database.ProviderName));
 
 				entity.HasOne(d => d.User)
 					.WithMany(p => p.InkBallPlayer)
@@ -313,5 +344,170 @@ namespace InkBall.Module
 					.HasDefaultValue(0);
 			});
 		}
+
+
+
+
+
+
+
+
+
+
+
+
+
+		#region WIP
+
+		public async Task<InkBallGame> CreateNewGameFromExternalUserID(string sPlayer1ExternaUserID, InkBallGame.GameStateEnum gameState, InkBallGame.GameTypeEnum gameType,
+			int gridSize, int width, int height, bool bIsPlayer1Active = true, CancellationToken token = default)
+		{
+			try
+			{
+				if (!string.IsNullOrEmpty(sPlayer1ExternaUserID))
+				{
+					var dbPlayer1 = await CreateNewPlayerFromExternalUserID(sPlayer1ExternaUserID, "", token);
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception("Could not create user of that ID", ex);
+			}
+
+
+
+			int game_id = await PrivInkBallGameInsert(null, sPlayer1ExternaUserID, null, null, gridSize, width, height, bIsPlayer1Active, gameState, gameType);
+
+			if (game_id <= -1)
+				throw new Exception("Could not create new game");
+
+			var new_game = await GetGameFromDatabase(game_id, true);
+			return new_game;
+
+
+			async Task<int> PrivInkBallGameInsert(
+				int? iPlayer1ID, string iPlayer1ExternalUserID,
+				int? iPlayer2ID, string iPlayer2ExternalUserID,
+				int iGridSize, int iBoardWidth, int iBoardHeight, bool bIsPlayer1ActiveHere,
+				InkBallGame.GameStateEnum GameState, InkBallGame.GameTypeEnum GameType)
+			{
+				var cp1_query = from cp1 in this.InkBallPlayer.Include(u => u.User)
+								where ((!iPlayer1ID.HasValue || cp1.iId == iPlayer1ID.Value)
+								&& (string.IsNullOrEmpty(iPlayer1ExternalUserID) || cp1.User.sExternalId == iPlayer1ExternalUserID)
+								&& (iPlayer1ID.HasValue || !string.IsNullOrEmpty(iPlayer1ExternalUserID)))
+								&& !InkBallGame.Any(tmp => (tmp.iPlayer1Id == cp1.iId || tmp.iPlayer2Id == cp1.iId)
+									&& (tmp.GameState == Module.InkBallGame.GameStateEnum.ACTIVE || tmp.GameState == Module.InkBallGame.GameStateEnum.AWAITING))
+
+								select (int?)cp1.iId;
+				int? p1 = await cp1_query.FirstOrDefaultAsync(token);
+
+				var cp2_query = from cp2 in this.InkBallPlayer.Include(u => u.User)
+								where ((!iPlayer2ID.HasValue || cp2.iId == iPlayer2ID.Value)
+								&& (string.IsNullOrEmpty(iPlayer2ExternalUserID) || cp2.User.sExternalId == iPlayer2ExternalUserID)
+								&& (iPlayer2ID.HasValue || !string.IsNullOrEmpty(iPlayer2ExternalUserID)))
+								&& !InkBallGame.Any(tmp => (tmp.iPlayer1Id == cp2.iId || tmp.iPlayer2Id == cp2.iId)
+									&& (tmp.GameState == Module.InkBallGame.GameStateEnum.ACTIVE || tmp.GameState == Module.InkBallGame.GameStateEnum.AWAITING))
+
+								select (int?)cp2.iId;
+				int? p2 = await cp2_query.FirstOrDefaultAsync(token);
+
+
+				//check for proper IDs
+				if (p1.HasValue/* || p2.HasValue*/)
+				{
+					// insert into InkBallGame(iPlayer1ID, iPlayer2ID, iGridSize, iBoardWidth, iBoardHeight,
+					// 	bIsPlayer1Active, GameState, CreateTime, GameType)
+					// select p1, p2, iGridSize, iBoardWidth, iBoardHeight, bIsPlayer1Active, GameState, now(),
+					// 	GameType;
+					var gm = new InkBallGame
+					{
+						iPlayer1Id = p1.Value,
+						iPlayer2Id = p2,
+						bIsPlayer1Active = bIsPlayer1ActiveHere,
+						iGridSize = iGridSize,
+						iBoardWidth = iBoardWidth,
+						iBoardHeight = iBoardHeight,
+						GameType = gameType,
+						GameState = gameState,
+						//TimeStamp = DateTime.UtcNow,
+						CreateTime = DateTime.UtcNow,
+					};
+					await InkBallGame.AddAsync(gm, token);
+
+					await SaveChangesAsync(true, token);
+
+					// select LAST_INSERT_ID() as iGameID, p1 as iPlayer1ID, p2 as iPlayer2ID, iGridSize,
+					// 	iBoardWidth, iBoardHeight, bIsPlayer1Active, GameState;
+					return gm.iId;
+				}
+				else
+				{
+					// select -1 as iGameID, p1 as iPlayer1ID, p2 as iPlayer2ID, iGridSize, iBoardWidth, iBoardHeight,
+					// 	bIsPlayer1Active, GameState;
+					return -1;
+				}
+			}
+		}
+
+		public async Task<InkBallGame> GetGameFromDatabase(int iID, bool bIsPlayer1, CancellationToken token = default)
+		{
+			var query = from g in InkBallGame
+							.Include(gp1 => gp1.Player1)
+								.ThenInclude(p1 => p1.User)
+							.Include(gp2 => gp2.Player2)
+								.ThenInclude(p2 => p2.User)
+							.Include(pt => pt.InkBallPoint)
+							.Include(pa => pa.InkBallPath)
+						where g.iId == iID
+						select g;
+
+			return await query.FirstOrDefaultAsync(token);
+		}
+
+		private async Task<InkBallPlayer> CreateNewPlayerFromExternalUserID(string sExternalId, string sLastMoveCode, CancellationToken token = default)
+		{
+			var query = from p in this.InkBallPlayer.Include(x => x.User)
+						where p.User.sExternalId == sExternalId
+						select p;
+			var player = await query.FirstOrDefaultAsync(token);
+			if (player == null)
+			{
+				var new_user_id = await this.InkBallUsers.FirstOrDefaultAsync(x => x.sExternalId == sExternalId, token);
+				player = new InkBallPlayer
+				{
+					iUserId = new_user_id.iId,
+					sLastMoveCode = sLastMoveCode,
+					iWinCount = 0,
+					iLossCount = 0,
+					iDrawCount = 0,
+					//TimeStamp = DateTime.UtcNow
+				};
+				await this.InkBallPlayer.AddAsync(player, token);
+			}
+			else
+			{
+				player.sLastMoveCode = sLastMoveCode;
+			}
+			await this.SaveChangesAsync(true, token);
+
+			return player;
+		}
+
+		public void SurrenderGameFromPlayer<P>(IGame<P> game) where P : IPlayer
+		{
+			//TODO: implement this
+		}
+
+		#endregion WIP
+
+
+
+
+
+
+
+
+
+
 	}
 }

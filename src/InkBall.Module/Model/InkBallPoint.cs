@@ -14,12 +14,7 @@ namespace InkBall.Module
 			POINT_OWNED_BY_RED,
 			POINT_OWNED_BY_BLUE
 		}
-
-		public InkBallPoint()
-        {
-            InkBallPointsInPath = new HashSet<InkBallPointsInPath>();
-        }
-
+		
         public int iId { get; set; }
         public int iGameId { get; set; }
         public int iPlayerId { get; set; }
@@ -33,5 +28,10 @@ namespace InkBall.Module
         public InkBallGame Game { get; set; }
         public InkBallPlayer Player { get; set; }
         public ICollection<InkBallPointsInPath> InkBallPointsInPath { get; set; }
-    }
+
+		public InkBallPoint()
+		{
+			InkBallPointsInPath = new HashSet<InkBallPointsInPath>();
+		}
+	}
 }
