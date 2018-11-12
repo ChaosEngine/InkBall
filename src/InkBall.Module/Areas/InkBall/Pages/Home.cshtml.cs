@@ -15,98 +15,21 @@ using System.Threading;
 namespace InkBall.Module.Pages
 {
 	[AllowAnonymous]
-	public class HomeModel : PageModel
+	public class HomeModel : BasePageModel
 	{
-		private readonly GamesContext _dbContext;
-		private readonly ILogger<HomeModel> _logger;
-
-		public int InkBallUserId { get; private set; }
-
-		public InkBallUserViewModel GameUser { get; private set; }
-
-		public InkBallPlayerViewModel Player { get; private set; }
-
-		public string UserName => base.User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-		public InkBallGameViewModel Game { get; private set; }
-
-		[TempData]
-		public string Message { get; set; }
-
-
-
-		private InkBallUserViewModel GetUser()
+		public HomeModel(GamesContext dbContext, ILogger<HomeModel> logger) : base(dbContext, logger)
 		{
-			InkBallUserViewModel user = null;
-			if (int.TryParse(User.FindFirstValue(nameof(InkBallUserId)), out var ink_user_id) && ink_user_id > 0)
-			{
-				InkBallUserId = ink_user_id;
-				user = HttpContext.Session.Get<InkBallUserViewModel>(nameof(InkBallUserViewModel));
-				if (user == null)
-				{
-					InkBallUser dbuser = _dbContext.InkBallUsers.Include(x => x.InkBallPlayer).FirstOrDefault(f => f.iId == InkBallUserId);
-					user = new InkBallUserViewModel(dbuser);
-					HttpContext.Session.Set<InkBallUserViewModel>(nameof(InkBallUserViewModel), user);
-				}
-			}
-			return user;
 		}
 
-		private InkBallGameViewModel GetGame()
-		{
-			InkBallGameViewModel game = null;
-			if (base.HttpContext.Session.IsAvailable && (game = base.HttpContext.Session.Get<InkBallGameViewModel>(nameof(InkBallGame))) != null)
-			{
-				return game;
-			}
-			return null;
-		}
-
-		private async Task<InkBallPlayerViewModel> GetPlayer(InkBallUserViewModel user, CancellationToken cancellationToken)
-		{
-			InkBallPlayer player;
-
-			if (user.InkBallPlayer != null)
-			{
-				return user.InkBallPlayer.FirstOrDefault();
-			}
-
-			var query = from p in _dbContext.InkBallPlayer.Include(x => x.User)
-						where p.iUserId == user.iId
-						select p;
-			player = await query.FirstOrDefaultAsync();
-
-			if (player == null)
-			{
-				player = new InkBallPlayer
-				{
-					// User = user,
-					iUserId = user.iId,
-					iDrawCount = 0,
-					iWinCount = 0,
-					iLossCount = 0,
-					TimeStamp = new DateTime(),
-				};
-
-				await _dbContext.InkBallPlayer.AddAsync(player, cancellationToken);
-				await _dbContext.SaveChangesAsync(cancellationToken);
-			}
-
-			return new InkBallPlayerViewModel(player);
-		}
-
-		public HomeModel(GamesContext dbContext, ILogger<HomeModel> logger)
-		{
-			_dbContext = dbContext;
-			_logger = logger;
-		}
-
-		public virtual void OnGet()
+		public virtual async Task OnGet()
 		{
 			InkBallUserViewModel user = GetUser();
 			GameUser = user;
 
-			InkBallGameViewModel game = GetGame();
+			InkBallPlayerViewModel player = await GetPlayer(user, HttpContext.RequestAborted);
+			Player = player;
+
+			InkBallGameViewModel game = await GetGame(player, HttpContext.RequestAborted);
 			Game = game;
 		}
 
@@ -115,10 +38,10 @@ namespace InkBall.Module.Pages
 			InkBallUserViewModel user = GetUser();
 			GameUser = user;
 
-			InkBallGameViewModel game = GetGame();
-			Game = game;
-
 			InkBallPlayerViewModel player = await GetPlayer(GameUser, HttpContext.RequestAborted);
+
+			InkBallGameViewModel game = await GetGame(player, HttpContext.RequestAborted);
+			Game = game;
 
 			var bIsLoggedIn = (player != null && !string.IsNullOrEmpty(user.sExternalId)) ? true : false;
 			string msg = string.Empty;
@@ -161,18 +84,23 @@ namespace InkBall.Module.Pages
 						//{
 						//	width = 600;	height = 800;
 						//}
+						var trans = await _dbContext.Database.BeginTransactionAsync(HttpContext.RequestAborted);
 						try
 						{
-							var new_game = InkBallGame.CreateNewGameFromExternalUserID(user.sExternalId, "AWAITING", GameType, 15/*grid size*/, width, height);
-							Game = new InkBallGameViewModel(new_game);
+							var dbGame = await _dbContext.CreateNewGameFromExternalUserID(user.sExternalId, InkBallGame.GameStateEnum.AWAITING,
+								GameType, 15/*grid size*/, width, height);
+							Game = new InkBallGameViewModel(dbGame);
 
-							HttpContext.Session.Set("InkBall", Game);
+							HttpContext.Session.Set(nameof(InkBallGameViewModel), Game);
 
+							trans.Commit();
 							return Redirect("Index");
 						}
-						catch (Exception)
+						catch (Exception ex)
 						{
+							trans.Rollback();
 							msg = "Could not create new game for this user";
+							_logger.LogError(ex, msg);
 						}
 						break;
 
@@ -198,29 +126,34 @@ namespace InkBall.Module.Pages
 						return Redirect("Rules");
 
 					case "Login":
-						return Redirect("~/Identity/Pages/Account/Login");
+						return Redirect("~/Identity/Account/Login");
 
 					case "Logout":
 						if (Game != null)
 						{
+							trans = await _dbContext.Database.BeginTransactionAsync(HttpContext.RequestAborted);
 							try
 							{
-								Game.SurrenderGameFromPlayer();
+								_dbContext.SurrenderGameFromPlayer(game);
+
+								trans.Commit();
 							}
-							catch (Exception)
+							catch (Exception ex)
 							{
+								trans.Rollback();
+								_logger.LogError(ex, "SurrenderGameFromPlayer");
 								throw;
 							}
-							HttpContext.Session.Set<InkBallGame>("InkBall", null);
+							HttpContext.Session.Set<InkBallGameViewModel>(nameof(InkBallGameViewModel), null);
 						}
 						//delete cookies
 						//SetCookie("id_cookie", '');
 						//SetCookie("email_cookie", '');
 						//SetCookie("haslo_cookie", '');
-						return Redirect("Home");
+						return Redirect("~/Identity/Account/Logout");
 
 					case "Register":
-						return Redirect("~/Identity/Pages/Account/Register");
+						return Redirect("~/Identity/Account/Register");
 
 					default:
 						break;

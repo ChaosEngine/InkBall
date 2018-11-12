@@ -3,7 +3,6 @@ using System.Collections.Generic;
 
 namespace InkBall.Module
 {
-
 	[Serializable]
     public partial class InkBallPointsInPath
     {

@@ -21,7 +21,7 @@ namespace InkBall.Module
 		P Player2 { get; set; }
 		DateTime TimeStamp { get; set; }
 
-		void SurrenderGameFromPlayer();
+		// void SurrenderGameFromPlayer();
 	}
 
 	public partial class InkBallGame : IGame<InkBallPlayer>
@@ -42,12 +42,6 @@ namespace InkBall.Module
 			FINISHED
 		}
 
-		public InkBallGame()
-		{
-			InkBallPath = new HashSet<InkBallPath>();
-			InkBallPoint = new HashSet<InkBallPoint>();
-		}
-
 		public int iId { get; set; }
 		public int iPlayer1Id { get; set; }
 		public int? iPlayer2Id { get; set; }
@@ -61,40 +55,16 @@ namespace InkBall.Module
 		public GameStateEnum GameState { get; set; }
 		public DateTime TimeStamp { get; set; }
 		public DateTime CreateTime { get; set; }
-
 		public InkBallPlayer Player1 { get; set; }
 		public InkBallPlayer Player2 { get; set; }
 		public ICollection<InkBallPath> InkBallPath { get; set; }
 		public ICollection<InkBallPoint> InkBallPoint { get; set; }
 
-
-
-		#region WIP
-
-		public static InkBallGame CreateNewGameFromExternalUserID(string sExternalId, string state, InkBallGame.GameTypeEnum gameType,
-			int gridSize, int width, int height)
+		public InkBallGame()
 		{
-			//TODO: implement this
-
-			return new InkBallGame
-			{
-				GameType = gameType,
-				iBoardWidth = width,
-				iBoardHeight = height,
-				iGridSize = gridSize,
-				CreateTime = DateTime.Now,
-				TimeStamp = DateTime.Now
-			};
+			InkBallPath = new HashSet<InkBallPath>();
+			InkBallPoint = new HashSet<InkBallPoint>();
 		}
-
-		public void SurrenderGameFromPlayer()
-		{
-			//TODO: implement this
-		}
-
-		#endregion WIP
-
-
 	}
 
 	[Serializable]
@@ -135,10 +105,10 @@ namespace InkBall.Module
 			iPlayer1Id = game.iPlayer1Id;
 			iPlayer2Id = game.iPlayer2Id;
 			Player1 = new InkBallPlayerViewModel(game.Player1);
-			Player2 = new InkBallPlayerViewModel(game.Player2);
+			if (game.Player2 != null)
+				Player2 = new InkBallPlayerViewModel(game.Player2);
 			TimeStamp = game.TimeStamp;
 		}
-
 
 		public InkBallGameViewModel(InkBallGameViewModel game)
 		{
@@ -159,9 +129,9 @@ namespace InkBall.Module
 			TimeStamp = game.TimeStamp;
 		}
 
-		public void SurrenderGameFromPlayer()
-		{
-			//TODO: implement this
-		}
+		// public void SurrenderGameFromPlayer()
+		// {
+		// 	//TODO: implement this
+		// }
 	}
 }

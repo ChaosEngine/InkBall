@@ -16,11 +16,14 @@
 	I amd SOO BLUEEEE
 </p>
 <p>
-	<img src="~/images/image.png" alt="image" />
+	<img src="~/img/image.png" alt="image" />
 </p>
+<div id="screen" style="position:relative; width:@(Model.Game.iBoardWidth)px; height:@(Model.Game.iBoardHeight)px; border:1px solid red; background-image:url('../img/plansza1.gif')">
+</div>
 @{
 	DefineSection(commonUIConfigureOptions.Value.ScriptsSectionName, async () =>
 	{
-		WriteLiteral($"<script type='text/javascript' src='{Url.Content("~/js/script.js")}'></script>");
+		WriteLiteral($"<script type='text/javascript' src='{Url.Content("~/js/script.js")}'></script>" +
+		$"<script type='text/javascript' src='{Url.Content("~/js/svgvml.js")}'></script>");
 	});
 }

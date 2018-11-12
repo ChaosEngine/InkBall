@@ -16,16 +16,16 @@ namespace InkBall.Module
 
 	public partial class InkBallUser : IUser<InkBallPlayer>
 	{
-		public InkBallUser()
-		{
-			InkBallPlayer = new HashSet<InkBallPlayer>();
-		}
-
 		public int iId { get; set; }
 		public int iPrivileges { get; set; }
 		public string sExternalId { get; set; }
 
 		public ICollection<InkBallPlayer> InkBallPlayer { get; set; }
+
+		public InkBallUser()
+		{
+			InkBallPlayer = new HashSet<InkBallPlayer>();
+		}
 	}
 
 	[Serializable]
