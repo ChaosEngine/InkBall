@@ -1,4 +1,5 @@
 ﻿using System;
+using InkBall.Module.Model;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;

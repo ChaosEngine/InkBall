@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace InkBall.Module
+namespace InkBall.Module.Model
 {
 	public interface IGame<P> where P : IPlayer
 	{

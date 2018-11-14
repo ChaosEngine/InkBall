@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace InkBall.Module
+namespace InkBall.Module.Model
 {
 	public interface IPlayer
 	{

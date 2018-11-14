@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using System.Threading;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
-namespace InkBall.Module
+namespace InkBall.Module.Model
 {
 	public interface IGamesContext
 	{
@@ -396,7 +396,7 @@ namespace InkBall.Module
 								&& (string.IsNullOrEmpty(iPlayer1ExternalUserID) || cp1.User.sExternalId == iPlayer1ExternalUserID)
 								&& (iPlayer1ID.HasValue || !string.IsNullOrEmpty(iPlayer1ExternalUserID)))
 								&& !InkBallGame.Any(tmp => (tmp.iPlayer1Id == cp1.iId || tmp.iPlayer2Id == cp1.iId)
-									&& (tmp.GameState == Module.InkBallGame.GameStateEnum.ACTIVE || tmp.GameState == Module.InkBallGame.GameStateEnum.AWAITING))
+									&& (tmp.GameState == Module.Model.InkBallGame.GameStateEnum.ACTIVE || tmp.GameState == Module.Model.InkBallGame.GameStateEnum.AWAITING))
 
 								select (int?)cp1.iId;
 				int? p1 = await cp1_query.FirstOrDefaultAsync(token);
@@ -406,7 +406,7 @@ namespace InkBall.Module
 								&& (string.IsNullOrEmpty(iPlayer2ExternalUserID) || cp2.User.sExternalId == iPlayer2ExternalUserID)
 								&& (iPlayer2ID.HasValue || !string.IsNullOrEmpty(iPlayer2ExternalUserID)))
 								&& !InkBallGame.Any(tmp => (tmp.iPlayer1Id == cp2.iId || tmp.iPlayer2Id == cp2.iId)
-									&& (tmp.GameState == Module.InkBallGame.GameStateEnum.ACTIVE || tmp.GameState == Module.InkBallGame.GameStateEnum.AWAITING))
+									&& (tmp.GameState == Module.Model.InkBallGame.GameStateEnum.ACTIVE || tmp.GameState == Module.Model.InkBallGame.GameStateEnum.AWAITING))
 
 								select (int?)cp2.iId;
 				int? p2 = await cp2_query.FirstOrDefaultAsync(token);

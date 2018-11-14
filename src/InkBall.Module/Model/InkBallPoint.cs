@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace InkBall.Module
+namespace InkBall.Module.Model
 {
 	[Serializable]
     public partial class InkBallPoint

@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using System;
 
-namespace InkBall.Module
+namespace InkBall.Module.Model
 {
 	/// <summary>
 	///     Converts <see cref="DateTime" /> using <see cref="DateTime.ToBinary" />. This

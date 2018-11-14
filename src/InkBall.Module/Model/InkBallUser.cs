@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace InkBall.Module
+namespace InkBall.Module.Model
 {
 	public interface IUser<P> where P : IPlayer
 	{
