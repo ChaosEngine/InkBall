@@ -6,7 +6,7 @@ namespace InkBall.Module
 {
 	public static class SessionExtensions
 	{
-		public static readonly JsonSerializerSettings _jsonSerializerSettings = new JsonSerializerSettings
+		static readonly JsonSerializerSettings _jsonSerializerSettings = new JsonSerializerSettings
 		{
 			TypeNameHandling = TypeNameHandling.All,
 		};

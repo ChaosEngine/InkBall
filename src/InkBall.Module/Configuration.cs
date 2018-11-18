@@ -20,6 +20,8 @@ namespace InkBall.Module
 
 		public string ScriptsSectionName { get; set; } = "Scripts";
 
+		public string AppRootPath { get; set; } = "/";
+
 		public string AuthorizationPolicyName { get; set; }
 
 		public void PostConfigure(string name, StaticFileOptions options)

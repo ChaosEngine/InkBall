@@ -1,4 +1,3 @@
-using System.Threading;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
@@ -6,11 +5,23 @@ using System.Security.Claims;
 
 namespace InkBall.Module.Hubs
 {
-	public class ChatHub : Hub
+	public interface IChatClient
 	{
+		Task ReceiveMessage(string user, string message);
+	}
+
+	public interface IChatSever
+	{
+		Task SendMessage(string user, string message);
+	}
+
+	public class ChatHub : Hub<IChatClient>, IChatSever
+	{
+		public const string HubName = "chatHub";
+
 		public async Task SendMessage(string user, string message)
 		{
-			CancellationToken token = this.Context.ConnectionAborted;
+			//CancellationToken token = this.Context.ConnectionAborted;
 
 			string ident = this.Context.UserIdentifier;
 			var claimsPrincipal = this.Context.User;
@@ -31,10 +42,12 @@ namespace InkBall.Module.Hubs
 			}
 			else
 			{
-				value = "more than 1";
+				System.Type t = typeof(System.Net.WebSockets.WebSocketProtocol);
+				value = "more than 1 " + t.ToString();
 			}
 
-			await Clients.Others.SendAsync("ReceiveMessage", user, $"{message} {value}", token);
+			// await Clients.All.SendAsync("ReceiveMessage", user, $"{message} {value}", token);
+			await Clients.All.ReceiveMessage(user, $"{message} {value}");
 		}
 	}
 }
