@@ -3,7 +3,6 @@ using System.Collections.Generic;
 
 namespace InkBall.Module.Model
 {
-	[Serializable]
     public partial class InkBallPath
     {
         public int iId { get; set; }

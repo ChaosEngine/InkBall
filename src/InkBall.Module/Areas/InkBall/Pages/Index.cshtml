@@ -1,4 +1,5 @@
 ﻿@page
+@inject Microsoft.AspNetCore.Hosting.IHostingEnvironment env
 @inject Microsoft.Extensions.Options.IOptions<InkBallOptions> commonUIConfigureOptions
 @model IndexModel
 @{
@@ -6,7 +7,7 @@
 
 	DefineSection(commonUIConfigureOptions.Value.HeadElementsSectionName, async () =>
 	{
-		WriteLiteral($"<link rel='stylesheet' href='{Url.Content("~/css/demo.css")}' />");
+		WriteLiteral($"<link rel='stylesheet' href='{Url.Content("~/css/inkball.css")}' />");
 	});
 }
 <h1>
@@ -53,7 +54,16 @@
 	DefineSection(commonUIConfigureOptions.Value.ScriptsSectionName, async () =>
 	{
 		WriteLiteral(
+			(env.IsDevelopment() ?
 			$"<script src='{Url.Content("~/lib/signalr/dist/browser/signalr.js")}'></script>\r" +
+			$"<script src='{Url.Content("~/lib/msgpack5/dist/msgpack5.js")}'></script>\r" +
+			$"<script src='{Url.Content("~/lib/signalr-protocol-msgpack/dist/browser/signalr-protocol-msgpack.js")}'></script>\r"
+			:
+			@"<script src='https://cdn.jsdelivr.net/npm/@aspnet/signalr@1.0.4/dist/browser/signalr.min.js' integrity='sha256-51sQPE7Pj6aicVoT5i+HOaNgW7s+3i9xGiEUCwhVvVM=' crossorigin='anonymous'></script>
+			<script src='https://cdn.jsdelivr.net/npm/msgpack5@4.2.1/dist/msgpack5.min.js' integrity='sha256-mY/RhkCJfd98j3c5s1EcUDJdRzffTeKzEzFIaI/2KQg=' crossorigin='anonymous'></script>
+			<script src='https://cdn.jsdelivr.net/npm/@aspnet/signalr-protocol-msgpack@1.0.4/dist/browser/signalr-protocol-msgpack.min.js' integrity='sha256-9nFv+8Bx/7mIxVAZlMXIa8/Kh79KtIxwAKRSp2RhvRk=' crossorigin='anonymous'></script>") +
+
+
 			$"<script type='text/javascript' src='{Url.Content("~/js/svgvml.js")}'></script>\r" +
 			$"<script type='text/javascript' src='{Url.Content("~/js/inkball.js")}'></script>\r" +
 			@"<script>
@@ -63,7 +73,11 @@
 
 					var inkBallHubName = '" + commonUIConfigureOptions.Value.AppRootPath + InkBall.Module.Hubs.ChatHub.HubName + @"';
 
-					buildSignalR(inkBallHubName);
+					buildSignalR(inkBallHubName, signalR.LogLevel.Warning,
+						//new signalR.protocols.msgpack.MessagePackHubProtocol()
+						new signalR.JsonHubProtocol(),
+						signalR.HttpTransportType.None
+					);
 					startSignalRConnection();
 				});
 			</script>"
