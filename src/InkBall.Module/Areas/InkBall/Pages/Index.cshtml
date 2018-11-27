@@ -29,8 +29,8 @@
 	<div class="row">
 		<div class="col-6">&nbsp;</div>
 		<div class="col-6">
-			User..........<input type="text" id="userInput" />
-			<br />
+			@*User..........<input type="text" id="userInput" />
+			<br />*@
 			Message...<input type="text" id="messageInput" />
 			<input type="button" id="sendButton" value="Send Message" />
 		</div>
@@ -73,14 +73,14 @@
 
 					var inkBallHubName = '" + commonUIConfigureOptions.Value.AppRootPath + InkBall.Module.Hubs.ChatHub.HubName + @"';
 
-					buildSignalR(inkBallHubName, signalR.LogLevel.Warning,
+					BuildSignalR(inkBallHubName, signalR.LogLevel.Warning,
 						//new signalR.protocols.msgpack.MessagePackHubProtocol()
 						new signalR.JsonHubProtocol(),
 						signalR.HttpTransportType.None
 					);
-					startSignalRConnection();
+					StartSignalRConnection(" + Model.Game.iId + ", " + Model.Player.iId + @");
 				});
 			</script>"
-        );
+		);
 	});
 }
