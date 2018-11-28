@@ -1,5 +1,6 @@
 ﻿"use strict";
 
+/******** funcs-n-classes ********/
 const StatusEnum = Object.freeze({
 	"POINT_FREE": -1,
 	"POINT_STARTING": 0,
@@ -8,33 +9,43 @@ const StatusEnum = Object.freeze({
 	"POINT_OWNED_BY_BLU": 3
 });
 
-function InkBallPointViewModel(iId, iGameId, iPlayerId, iX, iY, Status, iEnclosingPathId, sMessage) {
-	var This = this;
+class InkBallPointViewModel {
 
-	this.iId = iId;
-	this.iGameId = iGameId;
-	this.iPlayerId = iPlayerId;
-	this.iX = iX;
-	this.iY = iY;
-	this.Status = Status;
-	this.iEnclosingPathId = iEnclosingPathId;
-	this.Message = sMessage;
+	constructor(iId = 0, iGameId = 0, iPlayerId = 0, iX = 0, iY = 0, Status = StatusEnum.POINT_FREE, iEnclosingPathId = 0, sMessage = '') {
+		this.iId = iId;
+		this.iGameId = iGameId;
+		this.iPlayerId = iPlayerId;
+		this.iX = iX;
+		this.iY = iY;
+		this.Status = Status;
+		this.iEnclosingPathId = iEnclosingPathId;
+		this.Message = sMessage;
+	}
+
+	static Format(sUser, point) {
+		let msg = /*htmlEncode*/(point.Message);
+
+		return sUser + " says " + msg;
+	}
 }
 
-//static methods
-InkBallPointViewModel.Format = function (sUser, point) {
-	let msg = point.Message.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
-	return sUser + " says " + msg;
-};
+function htmlEncode(html) {
+	//return html.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+	return document.createElement('a').appendChild(
+		document.createTextNode(html)).parentNode.innerHTML;
+}
+/******** /funcs-n-classes ********/
 
 var g_SignalRConnection = null, g_iGameID = null, g_iPlayerID = null;
 
-function BuildSignalR(hubName, loggingLevel, hubProtocol, transportType) {
+function BuildSignalR(hubName, loggingLevel, hubProtocol, transportType, tokenFactory) {
 	if (hubName === null || hubName === "") return;
 
 	g_SignalRConnection = new signalR.HubConnectionBuilder()
-		.withUrl(hubName, { transport: transportType })
+		.withUrl(hubName, {
+			transport: transportType,
+			accessTokenFactory: tokenFactory
+		})
 		.withHubProtocol(hubProtocol)
 		.configureLogging(loggingLevel)
 		.build();
@@ -45,8 +56,7 @@ function StartSignalRConnection(iGameID, iPlayerID) {
 	g_iGameID = iGameID;
 	g_iPlayerID = iPlayerID;
 
-
-	g_SignalRConnection.on("ReceiveMessage", function (point, user/*, message*/) {
+	g_SignalRConnection.on("ReceiveMessage", function (point, user) {
 		let encodedMsg = InkBallPointViewModel.Format(user, point);
 
 		let li = document.createElement("li");
@@ -54,20 +64,36 @@ function StartSignalRConnection(iGameID, iPlayerID) {
 		document.getElementById("messagesList").appendChild(li);
 	});
 
-	g_SignalRConnection.start().catch(function (err) {
-		return console.error(err.toString());
-	});
-
 	document.getElementById("sendButton").addEventListener("click", function (event) {
 		let message = document.getElementById("messageInput").value;
-		//let user = document.getElementById("userInput").value;
-
-		let point = new InkBallPointViewModel(0, g_iGameID, g_iPlayerID, 1, 2,
+		
+		let fake_point = new InkBallPointViewModel(0, g_iGameID, g_iPlayerID, 1, 2,
 			StatusEnum.POINT_IN_PATH, 0, message);
 
-		g_SignalRConnection.invoke("SendMessage", point/*, user, message*/).catch(function (err) {
+		g_SignalRConnection.invoke("SendMessage", fake_point).catch(function (err) {
 			return console.error(err.toString());
 		});
 		event.preventDefault();
 	});
+
+	g_SignalRConnection.onclose(async (err) => {
+		if (err != null) {
+			console.log(err);
+			setTimeout(() => start(), 5000);
+		}
+		else
+			await start();
+	});
+
+	async function start() {
+		try {
+			await g_SignalRConnection.start();
+			console.log('connected');
+		}
+		catch (err) {
+			console.log(err);
+			setTimeout(() => start(), 5000);
+		}
+	}
+	start();
 }
