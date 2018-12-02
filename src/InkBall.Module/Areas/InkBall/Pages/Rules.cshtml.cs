@@ -19,7 +19,7 @@ namespace InkBall.Module.Pages
 
 		public override Task OnGet()
 		{
-			return base.OnGet();
+			return base.LoadUserPlayerAndGame();
 		}
 	}
 }

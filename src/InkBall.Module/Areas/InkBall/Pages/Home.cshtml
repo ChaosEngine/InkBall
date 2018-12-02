@@ -8,13 +8,14 @@
 	{
 		WriteLiteral($"<link rel='stylesheet' href='{Url.Content("~/css/inkball.css")}' />");
 	});
-}
 
 
 
-@{
+
+
 	var bIsLoggedIn = (Model.GameUser != null) ? true : false;
 	var bIsCurrentGameOk = Model.Game != null ? true : false;
+
 }
 @if (bIsLoggedIn)
 {
@@ -84,10 +85,11 @@ else
 
 
 
-
-@{
-	DefineSection(commonUIConfigureOptions.Value.ScriptsSectionName, async () =>
-	{
-		WriteLiteral($"<script type='text/javascript' src='{Url.Content("~/js/inkball.js")}'></script>");
-	});
-}
+@*
+	@{
+		DefineSection(commonUIConfigureOptions.Value.ScriptsSectionName, async () =>
+		{
+			WriteLiteral($"<script type='text/javascript' src='{Url.Content("~/js/inkball.js")}'></script>");
+		});
+	}
+*@

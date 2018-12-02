@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using System.Threading;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using System.Collections.Generic;
+using static InkBall.Module.Model.InkBallGame;
 
 namespace InkBall.Module.Model
 {
@@ -359,14 +361,14 @@ namespace InkBall.Module.Model
 
 		#region WIP
 
-		public async Task<InkBallGame> CreateNewGameFromExternalUserID(string sPlayer1ExternaUserID, InkBallGame.GameStateEnum gameState, InkBallGame.GameTypeEnum gameType,
+		public async Task<InkBallGame> CreateNewGameFromExternalUserIDAsync(string sPlayer1ExternaUserID, InkBallGame.GameStateEnum gameState, InkBallGame.GameTypeEnum gameType,
 			int gridSize, int width, int height, bool bIsPlayer1Active = true, CancellationToken token = default)
 		{
 			try
 			{
 				if (!string.IsNullOrEmpty(sPlayer1ExternaUserID))
 				{
-					var dbPlayer1 = await CreateNewPlayerFromExternalUserID(sPlayer1ExternaUserID, "", token);
+					var dbPlayer1 = await CreateNewPlayerFromExternalUserIDAsync(sPlayer1ExternaUserID, "", token);
 				}
 			}
 			catch (Exception ex)
@@ -376,16 +378,16 @@ namespace InkBall.Module.Model
 
 
 
-			int game_id = await PrivInkBallGameInsert(null, sPlayer1ExternaUserID, null, null, gridSize, width, height, bIsPlayer1Active, gameState, gameType);
+			int game_id = await PrivInkBallGameInsertAsync(null, sPlayer1ExternaUserID, null, null, gridSize, width, height, bIsPlayer1Active, gameState, gameType);
 
 			if (game_id <= -1)
 				throw new Exception("Could not create new game");
 
-			var new_game = await GetGameFromDatabase(game_id, true);
+			var new_game = await GetGameFromDatabaseAsync(game_id, true);
 			return new_game;
 
 
-			async Task<int> PrivInkBallGameInsert(
+			async Task<int> PrivInkBallGameInsertAsync(
 				int? iPlayer1ID, string iPlayer1ExternalUserID,
 				int? iPlayer2ID, string iPlayer2ExternalUserID,
 				int iGridSize, int iBoardWidth, int iBoardHeight, bool bIsPlayer1ActiveHere,
@@ -449,7 +451,7 @@ namespace InkBall.Module.Model
 			}
 		}
 
-		public async Task<InkBallGame> GetGameFromDatabase(int iID, bool bIsPlayer1, CancellationToken token = default)
+		public async Task<InkBallGame> GetGameFromDatabaseAsync(int iID, bool bIsPlayer1, CancellationToken token = default)
 		{
 			var query = from g in InkBallGame
 							.Include(gp1 => gp1.Player1)
@@ -464,7 +466,7 @@ namespace InkBall.Module.Model
 			return await query.FirstOrDefaultAsync(token);
 		}
 
-		private async Task<InkBallPlayer> CreateNewPlayerFromExternalUserID(string sExternalId, string sLastMoveCode, CancellationToken token = default)
+		private async Task<InkBallPlayer> CreateNewPlayerFromExternalUserIDAsync(string sExternalId, string sLastMoveCode, CancellationToken token = default)
 		{
 			var query = from p in this.InkBallPlayer.Include(x => x.User)
 						where p.User.sExternalId == sExternalId
@@ -496,6 +498,28 @@ namespace InkBall.Module.Model
 		public void SurrenderGameFromPlayer<P>(IGame<P> game) where P : IPlayer
 		{
 			//TODO: implement this
+		}
+
+		public async Task<IEnumerable<InkBallGame>> GetGamesForRegistrationAsSelectTableRowsAsync(
+			int? iGameID = null, int? iUserID = null, string sExternalUserId = null, bool? bShowOnlyActive = true,
+			CancellationToken token = default)
+		{
+			var query = from ig in InkBallGame
+						.Include(ip1 => ip1.Player1)
+							.ThenInclude(u1 => u1.User)
+						.Include(ip2 => ip2.Player2)
+							.ThenInclude(u2 => u2.User)
+						where (!iGameID.HasValue || ig.iId == iGameID.Value)
+							&& (!bShowOnlyActive.HasValue ||
+								(bShowOnlyActive.Value == true && (ig.GameState == GameStateEnum.ACTIVE || ig.GameState == GameStateEnum.AWAITING)))
+							&& (!iUserID.HasValue ||
+								(iUserID.Value == ig.Player1.iUserId || (ig.Player2.iUserId.HasValue && iUserID == ig.Player2.iUserId)))
+							&& (string.IsNullOrEmpty(sExternalUserId) ||
+								(sExternalUserId == ig.Player1.User.sExternalId || (ig.Player2.iUserId.HasValue && sExternalUserId == ig.Player2.User.sExternalId)))
+						orderby ig.iId
+						select ig;
+
+			return await query.ToListAsync(token);
 		}
 
 		#endregion WIP

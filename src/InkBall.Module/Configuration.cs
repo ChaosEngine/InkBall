@@ -2,6 +2,7 @@
 using InkBall.Module.Model;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,6 +24,8 @@ namespace InkBall.Module
 		public string AppRootPath { get; set; } = "/";
 
 		public string AuthorizationPolicyName { get; set; }
+
+		public Type ApplicationUserType { get; set; }
 
 		public void PostConfigure(string name, StaticFileOptions options)
 		{
@@ -46,11 +49,14 @@ namespace InkBall.Module
 
 	public static class CommonUIServiceCollectionExtensions
 	{
-		public static void AddInkBallCommonUI<TGamesDBContext>(this IServiceCollection services, IHostingEnvironment environment,
-			Action<InkBallOptions> configureOptions) where TGamesDBContext : IGamesContext
+		public static void AddInkBallCommonUI<TGamesDBContext, TIdentUser>(this IServiceCollection services, IHostingEnvironment environment,
+			Action<InkBallOptions> configureOptions)
+			where TGamesDBContext : IGamesContext
+			where TIdentUser : IdentityUser
 		{
 			InkBallOptions options = new InkBallOptions();
 			options.WebRootFileProvider = environment.WebRootFileProvider;
+			options.ApplicationUserType = typeof(TIdentUser);
 
 			configureOptions?.Invoke(options);
 

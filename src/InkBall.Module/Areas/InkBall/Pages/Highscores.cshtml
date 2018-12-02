@@ -1,6 +1,6 @@
 @page
 @inject Microsoft.Extensions.Options.IOptions<InkBallOptions> commonUIConfigureOptions
-@model Highscores
+@model HighscoresModel
 @{
 	ViewData["Title"] = "Highscores";
 
@@ -12,9 +12,11 @@
 
 highscores
 
+@*
 @{
 	DefineSection(commonUIConfigureOptions.Value.ScriptsSectionName, async () =>
 	{
 		WriteLiteral($"<script type='text/javascript' src='{Url.Content("~/js/inkball.js")}'></script>");
 	});
 }
+*@

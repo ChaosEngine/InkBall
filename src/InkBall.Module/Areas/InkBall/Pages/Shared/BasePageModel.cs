@@ -23,7 +23,7 @@ namespace InkBall.Module.Pages
 
 		public InkBallPlayerViewModel Player { get; protected set; }
 
-		public string UserName => base.User.FindFirstValue(ClaimTypes.NameIdentifier);
+		public virtual string UserName => base.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
 		public InkBallGameViewModel Game { get; protected set; }
 
@@ -36,7 +36,7 @@ namespace InkBall.Module.Pages
 			_logger = logger;
 		}
 
-		protected InkBallUserViewModel GetUser()
+		protected virtual InkBallUserViewModel GetUser()
 		{
 			InkBallUserViewModel user = null;
 			if (int.TryParse(User.FindFirstValue(nameof(InkBallUserId)), out var inkBallUserId) && inkBallUserId > 0)
@@ -53,7 +53,7 @@ namespace InkBall.Module.Pages
 			return user;
 		}
 
-		protected async Task<InkBallGameViewModel> GetGame(InkBallPlayerViewModel player, CancellationToken token = default)
+		protected virtual async Task<InkBallGameViewModel> GetGame(InkBallPlayerViewModel player, CancellationToken token = default)
 		{
 			InkBallGameViewModel game = null;
 			if (base.HttpContext.Session.IsAvailable &&
@@ -77,7 +77,7 @@ namespace InkBall.Module.Pages
 			return game;
 		}
 
-		protected async Task<InkBallPlayerViewModel> GetPlayer(InkBallUserViewModel user, CancellationToken token)
+		protected virtual async Task<InkBallPlayerViewModel> GetPlayer(InkBallUserViewModel user, CancellationToken token)
 		{
 			if (user == null)
 				return null;
@@ -116,6 +116,20 @@ namespace InkBall.Module.Pages
 			HttpContext.Session.Set<InkBallUserViewModel>(nameof(InkBallUserViewModel), user);
 
 			return player;
+		}
+
+		public virtual async Task LoadUserPlayerAndGame()
+		{
+			InkBallUserViewModel user = GetUser();
+			GameUser = user;
+
+			var token = HttpContext.RequestAborted;
+
+			InkBallPlayerViewModel player = await GetPlayer(user, token);
+			Player = player;
+
+			InkBallGameViewModel game = await GetGame(player, token);
+			Game = game;
 		}
 	}
 }

@@ -66,7 +66,7 @@ function StartSignalRConnection(iGameID, iPlayerID) {
 
 	document.getElementById("sendButton").addEventListener("click", function (event) {
 		let message = document.getElementById("messageInput").value;
-		
+
 		let fake_point = new InkBallPointViewModel(0, g_iGameID, g_iPlayerID, 1, 2,
 			StatusEnum.POINT_IN_PATH, 0, message);
 
@@ -77,7 +77,7 @@ function StartSignalRConnection(iGameID, iPlayerID) {
 	});
 
 	g_SignalRConnection.onclose(async (err) => {
-		if (err != null) {
+		if (err !== null) {
 			console.log(err);
 			setTimeout(() => start(), 5000);
 		}

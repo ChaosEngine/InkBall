@@ -21,6 +21,8 @@ namespace InkBall.Module.Model
 		P Player2 { get; set; }
 		DateTime TimeStamp { get; set; }
 
+		bool IsThisPlayer1();
+
 		// void SurrenderGameFromPlayer();
 	}
 
@@ -64,6 +66,16 @@ namespace InkBall.Module.Model
 		{
 			InkBallPath = new HashSet<InkBallPath>();
 			InkBallPoint = new HashSet<InkBallPoint>();
+		}
+
+		//public void SurrenderGameFromPlayer()
+		// {
+		// 	//TODO: implement this
+		// }
+
+		public bool IsThisPlayer1()
+		{
+			return this.bIsPlayer1Active;
 		}
 	}
 
@@ -133,5 +145,10 @@ namespace InkBall.Module.Model
 		// {
 		// 	//TODO: implement this
 		// }
+
+		public bool IsThisPlayer1()
+		{
+			return this.bIsPlayer1Active;
+		}
 	}
 }

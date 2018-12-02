@@ -24,14 +24,7 @@ namespace InkBall.Module.Pages
 
 		public virtual async Task OnGet()
 		{
-			InkBallUserViewModel user = GetUser();
-			GameUser = user;
-
-			InkBallPlayerViewModel player = await GetPlayer(user, HttpContext.RequestAborted);
-			Player = player;
-
-			InkBallGameViewModel game = await GetGame(player, HttpContext.RequestAborted);
-			Game = game;
+			await LoadUserPlayerAndGame();
 		}
 
 		public async Task<IActionResult> OnPostAsync(string action, string gameType)
@@ -88,7 +81,7 @@ namespace InkBall.Module.Pages
 						var trans = await _dbContext.Database.BeginTransactionAsync(HttpContext.RequestAborted);
 						try
 						{
-							var dbGame = await _dbContext.CreateNewGameFromExternalUserID(user.sExternalId, InkBallGame.GameStateEnum.AWAITING,
+							var dbGame = await _dbContext.CreateNewGameFromExternalUserIDAsync(user.sExternalId, InkBallGame.GameStateEnum.AWAITING,
 								GameType, 15/*grid size*/, width, height);
 							Game = new InkBallGameViewModel(dbGame);
 

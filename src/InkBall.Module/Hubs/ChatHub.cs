@@ -16,12 +16,12 @@ namespace InkBall.Module.Hubs
 {
 	public interface IChatClient
 	{
-		Task ReceiveMessage(IPoint point, string user/*, string message*/);
+		Task ReceiveMessage(IPoint point, string user);
 	}
 
 	public interface IChatServer
 	{
-		Task SendMessage(JObject jPoint/*, string user, string message*/);
+		Task SendMessage(JObject jPoint);
 	}
 
 	[Authorize(Policy = "InkBallPlayerPolicy")]

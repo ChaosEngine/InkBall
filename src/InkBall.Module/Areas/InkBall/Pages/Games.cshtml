@@ -1,0 +1,133 @@
+@page
+@inject Microsoft.Extensions.Options.IOptions<InkBallOptions> commonUIConfigureOptions
+@model GamesModel
+@{
+	ViewData["Title"] = "Games";
+
+	DefineSection(commonUIConfigureOptions.Value.HeadElementsSectionName, async () =>
+	{
+		WriteLiteral($"<link rel='stylesheet' href='{Url.Content("~/css/inkball.css")}' />");
+	});
+
+
+
+
+	var sExternalUserID = Model.GameUser.sExternalId;
+	var bIsCurrentGameOk = Model.Game != null;
+
+}
+
+<div class='content'>
+	<table class='game_tab'>
+		<tr>
+			<th class='gth'>Player 1</th>
+			<th class='gth'>Player 2</th>
+			<th class='gth'>Game state</th>
+			<th class='gth'>Action</th>
+			<th>Game type</th>
+		</tr>
+		@{
+			foreach (var game in Model.GamesList)
+			{
+				<tr>
+					<td class='gtd'>@game?.P1UserName</td>
+					<td class='gtd'>@game?.P2UserName</td>
+					@{
+						bool bIsMyOwnGame;
+						if (bIsCurrentGameOk &&
+							(game.Player1ExternalId == sExternalUserID ||
+							(game.Player2ExternalId != null && game.Player2ExternalId == sExternalUserID)))
+						{
+							bIsMyOwnGame = true;
+						}
+						else
+						{
+							bIsMyOwnGame = false;
+						}
+
+						switch (game.GameState)
+						{
+							case InkBall.Module.Model.InkBallGame.GameStateEnum.AWAITING:
+								<td class='gtd'>waiting for another player</td>
+								<td class='gtd'>
+									<form method='post'>
+										<input type='hidden' name='GameID' value='@game.iId' />
+										@if (bIsMyOwnGame)
+										{
+											<input type='submit' name='action' value='continue' class='btn btn-outline-primary' />
+										}
+										else
+										{
+											if (!bIsCurrentGameOk)
+											{
+												<input type='submit' name='action' value='join' class='btn btn-outline-primary' />
+											}
+										}
+									</form>
+								</td>
+								break;
+
+							case InkBall.Module.Model.InkBallGame.GameStateEnum.ACTIVE:
+								<td class='gtd'>game in progress</td>
+								<td class='gtd'>
+									<form method='post'>
+										<input type='hidden' name='GameID' value='@game.iId' />
+										@if (bIsMyOwnGame)
+										{
+											<input type='submit' name='action' value='continue' class="btn btn-outline-primary" />
+										}
+										else
+										{
+											if (!bIsCurrentGameOk)
+											{
+												<a href='view.php?GameID=@game.iId'>view</a>
+											}
+										}
+									</form>
+								</td>
+								break;
+
+							case InkBall.Module.Model.InkBallGame.GameStateEnum.INACTIVE:
+								<td class='gtd'>game inactive</td>
+								<td class='gtd'></td>
+								break;
+							case InkBall.Module.Model.InkBallGame.GameStateEnum.FINISHED:
+								<td class='gtd'>game finished</td>
+								<td class='gtd'></td>
+								break;
+							default:
+								throw new NotSupportedException("bad game state");
+						}
+
+						switch (game.GameType)
+						{
+							case InkBall.Module.Model.InkBallGame.GameTypeEnum.FIRST_5_ADVANTAGE_PATHS:
+								<td class='gtd'>FIRST 5 ADVANTAGE PATHS</td>
+								break;
+							case InkBall.Module.Model.InkBallGame.GameTypeEnum.FIRST_5_CAPTURES:
+								<td class='gtd'>FIRST 5 CAPTURES</td>
+								break;
+							case InkBall.Module.Model.InkBallGame.GameTypeEnum.FIRST_5_PATHS:
+								<td class='gtd'>FIRST 5 PATHS</td>
+								break;
+							case InkBall.Module.Model.InkBallGame.GameTypeEnum.FIRST_CAPTURE:
+								<td class='gtd'>FIRST CAPTURE</td>
+								break;
+							default:
+								throw new NotSupportedException("bad game type");
+						}
+					}
+				</tr>
+			}
+		}
+	</table>
+</div>
+
+@*
+	@{
+		DefineSection(commonUIConfigureOptions.Value.ScriptsSectionName, async () =>
+		{
+			WriteLiteral($"<script type='text/javascript' src='{Url.Content("~/js/inkball.js")}'></script>");
+		});
+	}
+*@
