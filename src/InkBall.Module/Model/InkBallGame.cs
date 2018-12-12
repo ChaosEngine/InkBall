@@ -77,6 +77,16 @@ namespace InkBall.Module.Model
 		{
 			return this.bIsPlayer1Active;
 		}
+
+		internal static void DeactivateDeadGamezFromExternalUserID(string sExternalUserID)
+		{
+			//TODO: implement this
+		}
+
+		internal static void WipeAllDeadGamez()
+		{
+			//TODO: implement this
+		}
 	}
 
 	[Serializable]

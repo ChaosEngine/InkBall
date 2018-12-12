@@ -17,6 +17,16 @@
 
 }
 
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+	var statusMessageClass = Model.Message.Contains("Error") ? "danger" : "success";
+	<div class="alert alert-@statusMessageClass alert-dismissible" role="alert">
+		<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+		@Model.Message
+	</div>
+}
+
 <div class='content'>
 	<table class='game_tab'>
 		<tr>
@@ -26,7 +36,8 @@
 			<th class='gth'>Action</th>
 			<th>Game type</th>
 		</tr>
-		@{
+		@if(Model.GamesList != null)
+		{
 			foreach (var game in Model.GamesList)
 			{
 				<tr>
@@ -121,6 +132,26 @@
 			}
 		}
 	</table>
+
+
+	<div class='buttonz2'>
+		<form method='post'>
+			@if (!bIsCurrentGameOk)
+			{
+				@:Game type
+				<select name='GameType' id='GameType'>
+					<option value='0' selected='selected'>First capture wins</option>
+					<option value='1'>First 5 captures wins</option>
+					<option value='2'>First 5 paths wins</option>
+					<option value='3'>Advantage of 5 paths wins</option>
+				</select>
+				<input type='submit' name='action' value='New game' class="btn btn-outline-primary" />
+			}
+			<input type='submit' name='action' value='Home' class="btn btn-outline-primary" />
+		</form>
+	</div>
+
+
 </div>
 
 @*

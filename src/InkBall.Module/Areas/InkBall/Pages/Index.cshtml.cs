@@ -21,13 +21,13 @@ namespace InkBall.Module.Pages
 			else
 				ChatHub.WebSocketAllowedOrigins.AddOrUpdate($"{Request.Scheme}://{Request.Host}");
 
-			InkBallUserViewModel user = GetUser();
+			InkBallUserViewModel user = await GetUserAsync();
 			GameUser = user;
 
-			InkBallPlayerViewModel player = await GetPlayer(user, HttpContext.RequestAborted);
+			InkBallPlayerViewModel player = await GetPlayerAsync(user, HttpContext.RequestAborted);
 			Player = player;
 
-			InkBallGameViewModel game = await GetGame(player, HttpContext.RequestAborted);
+			InkBallGameViewModel game = await GetGameAsync(player, HttpContext.RequestAborted);
 			Game = game;
 
 			if (game == null)

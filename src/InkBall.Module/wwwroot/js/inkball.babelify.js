@@ -104,7 +104,7 @@ function StartSignalRConnection(iGameID, iPlayerID) {
         while (1) {
           switch (_context.prev = _context.next) {
             case 0:
-              if (!(err != null)) {
+              if (!(err !== null)) {
                 _context.next = 5;
                 break;
               }

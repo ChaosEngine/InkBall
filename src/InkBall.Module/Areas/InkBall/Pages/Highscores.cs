@@ -11,15 +11,15 @@ using Microsoft.Extensions.Logging;
 namespace InkBall.Module.Pages
 {
 	[Authorize(Policy = "InkBallPlayerPolicy")]
-	public class HighscoresModel : HomeModel
+	public class HighscoresModel : BasePageModel
 	{
 		public HighscoresModel(GamesContext dbContext, ILogger<RulesModel> logger) : base(dbContext, logger)
 		{
 		}
 
-		public override Task OnGet()
+		public Task OnGet()
 		{
-			return base.LoadUserPlayerAndGame();
+			return base.LoadUserPlayerAndGameAsync();
 		}
 	}
 }

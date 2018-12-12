@@ -22,19 +22,19 @@ namespace InkBall.Module.Pages
 		{
 		}
 
-		public virtual async Task OnGet()
+		public async Task OnGet()
 		{
-			await LoadUserPlayerAndGame();
+			await LoadUserPlayerAndGameAsync();
 		}
 
 		public async Task<IActionResult> OnPostAsync(string action, string gameType)
 		{
-			InkBallUserViewModel user = GetUser();
+			InkBallUserViewModel user = await GetUserAsync();
 			GameUser = user;
 
-			InkBallPlayerViewModel player = await GetPlayer(GameUser, HttpContext.RequestAborted);
+			InkBallPlayerViewModel player = await GetPlayerAsync(GameUser, HttpContext.RequestAborted);
 
-			InkBallGameViewModel game = await GetGame(player, HttpContext.RequestAborted);
+			InkBallGameViewModel game = await GetGameAsync(player, HttpContext.RequestAborted);
 			Game = game;
 
 			var bIsLoggedIn = (player != null && !string.IsNullOrEmpty(user.sExternalId)) ? true : false;

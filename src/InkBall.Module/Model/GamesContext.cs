@@ -368,7 +368,7 @@ namespace InkBall.Module.Model
 			{
 				if (!string.IsNullOrEmpty(sPlayer1ExternaUserID))
 				{
-					var dbPlayer1 = await CreateNewPlayerFromExternalUserIDAsync(sPlayer1ExternaUserID, "", token);
+					var dbPlayer1 = await CreateNewPlayerFromExternalUserIdAsync(sPlayer1ExternaUserID, "", token);
 				}
 			}
 			catch (Exception ex)
@@ -466,7 +466,7 @@ namespace InkBall.Module.Model
 			return await query.FirstOrDefaultAsync(token);
 		}
 
-		private async Task<InkBallPlayer> CreateNewPlayerFromExternalUserIDAsync(string sExternalId, string sLastMoveCode, CancellationToken token = default)
+		private async Task<InkBallPlayer> CreateNewPlayerFromExternalUserIdAsync(string sExternalId, string sLastMoveCode, CancellationToken token = default)
 		{
 			var query = from p in this.InkBallPlayer.Include(x => x.User)
 						where p.User.sExternalId == sExternalId
@@ -474,10 +474,10 @@ namespace InkBall.Module.Model
 			var player = await query.FirstOrDefaultAsync(token);
 			if (player == null)
 			{
-				var new_user_id = await this.InkBallUsers.FirstOrDefaultAsync(x => x.sExternalId == sExternalId, token);
+				var ib_user = await this.InkBallUsers.FirstOrDefaultAsync(x => x.sExternalId == sExternalId, token);
 				player = new InkBallPlayer
 				{
-					iUserId = new_user_id.iId,
+					iUserId = ib_user.iId,
 					sLastMoveCode = sLastMoveCode,
 					iWinCount = 0,
 					iLossCount = 0,
@@ -493,6 +493,81 @@ namespace InkBall.Module.Model
 			await this.SaveChangesAsync(true, token);
 
 			return player;
+		}
+
+		// protected async Task<InkBallPlayer> CreateNewPlayerFromExternalUserIdAsync(int iUserId, string sLastMoveCode, CancellationToken token = default)
+		// {
+		// 	//$sLastMoveCode = DBase::AddSlashes($sLastMoveCode, $Connection);
+		// 	// $sQuery = "call InkBallPlayerInsert(" . (int)$iPlayerExternaUserID . ", '$sLastMoveCode')";
+		// 	// $Result = mysqli_query($Connection, $sQuery);
+		// 	// if($Result == false)	throw new Exception("Query2 failed: " . mysqli_error($Connection));
+
+		// 	InkBallPlayer p = await this.InkBallPlayer.FirstOrDefaultAsync(x => x.iUserId == iUserId, token);
+		// 	if (p == null)
+		// 	{
+		// 		p = new InkBallPlayer
+		// 		{
+		// 			iUserId = iUserId,
+		// 			sLastMoveCode = sLastMoveCode
+		// 		};
+		// 		await this.AddAsync(p, token);
+		// 	}
+		// 	else
+		// 	{
+		// 		p.sLastMoveCode = sLastMoveCode;
+		// 	}
+		// 	await this.SaveChangesAsync(token);
+
+		// 	// $Row = mysqli_fetch_array($Result, MYSQLI_ASSOC);
+
+		// 	// var iPlayerID = (int)$Row['iID'];
+		// 	// var sPlayerName = (string)$Row['sPlayerName'];
+		// 	// var iPlayerExternalUserID = (int)$Row['iUserID'];
+		// 	// var sLastMove = (string)$Row['sLastMoveCode'];
+		// 	// var iWinCount = (int)$Row['iWinCount'];
+		// 	// var iLossCount = (int)$Row['iLossCount'];
+		// 	// var iDrawCount = (int)$Row['iDrawCount'];
+		// 	// var TimeStamp = $Row['UnixTimeStamp'];
+
+		// 	// mysqli_next_result($Connection);
+		// 	// mysqli_free_result($Result);
+
+		// 	// $InkBallPlayer = new InkBallPlayer($iPlayerID, $sPlayerName, $iPlayerExternalUserID,
+		// 	// 	$sLastMove, $iWinCount, $iLossCount, $iDrawCount, $TimeStamp);
+
+		// 	return p;
+		// }
+
+		internal async Task<bool> JoinGameFromExternalUserIdAsync(InkBallGame game, string sPlayer2ExternaUserID, CancellationToken token = default)
+		{
+			if (game.GameState != GameStateEnum.AWAITING || game.Player2 != null ||
+				game.Player1 == null || game.Player1.User.sExternalId == sPlayer2ExternaUserID)
+			{
+				throw new Exception("Wrong game state 2 join");
+			}
+
+			InkBallPlayer player2;
+			try
+			{
+				player2 = await CreateNewPlayerFromExternalUserIdAsync(sPlayer2ExternaUserID, "", token);
+			}
+			catch (Exception ex)
+			{
+				throw new Exception("Could not create user of that ID", ex);
+			}
+
+			// $sQuery = "call InkBallGameUpdate({$this->GetGameID()}, null, {$player2->GetPlayerID()}, null, null, null, null, 'ACTIVE')";
+			// $Result = mysqli_query($Connection, $sQuery);
+			// if($Result != true)	throw new Exception("Query4 failed: " . mysqli_error($Connection));
+
+			game.Player2 = player2;
+			game.GameState = GameStateEnum.ACTIVE;
+			game.bIsPlayer1Active = false;
+			// game.bIsPlayer1Active = true;
+
+			await this.SaveChangesAsync(true, token);
+
+			return true;
 		}
 
 		public void SurrenderGameFromPlayer<P>(IGame<P> game) where P : IPlayer

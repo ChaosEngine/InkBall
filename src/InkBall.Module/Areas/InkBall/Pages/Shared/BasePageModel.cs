@@ -36,7 +36,7 @@ namespace InkBall.Module.Pages
 			_logger = logger;
 		}
 
-		protected virtual InkBallUserViewModel GetUser()
+		protected virtual async Task<InkBallUserViewModel> GetUserAsync(CancellationToken token = default)
 		{
 			InkBallUserViewModel user = null;
 			if (int.TryParse(User.FindFirstValue(nameof(InkBallUserId)), out var inkBallUserId) && inkBallUserId > 0)
@@ -45,7 +45,8 @@ namespace InkBall.Module.Pages
 				user = HttpContext.Session.Get<InkBallUserViewModel>(nameof(InkBallUserViewModel));
 				if (user == null)
 				{
-					InkBallUser dbuser = _dbContext.InkBallUsers.Include(x => x.InkBallPlayer).FirstOrDefault(f => f.iId == InkBallUserId);
+					InkBallUser dbuser = await _dbContext.InkBallUsers.Include(x => x.InkBallPlayer)
+						.FirstOrDefaultAsync(f => f.iId == InkBallUserId, token);
 					user = new InkBallUserViewModel(dbuser);
 					HttpContext.Session.Set<InkBallUserViewModel>(nameof(InkBallUserViewModel), user);
 				}
@@ -53,7 +54,7 @@ namespace InkBall.Module.Pages
 			return user;
 		}
 
-		protected virtual async Task<InkBallGameViewModel> GetGame(InkBallPlayerViewModel player, CancellationToken token = default)
+		protected virtual async Task<InkBallGameViewModel> GetGameAsync(InkBallPlayerViewModel player, CancellationToken token = default)
 		{
 			InkBallGameViewModel game = null;
 			if (base.HttpContext.Session.IsAvailable &&
@@ -77,7 +78,7 @@ namespace InkBall.Module.Pages
 			return game;
 		}
 
-		protected virtual async Task<InkBallPlayerViewModel> GetPlayer(InkBallUserViewModel user, CancellationToken token)
+		protected virtual async Task<InkBallPlayerViewModel> GetPlayerAsync(InkBallUserViewModel user, CancellationToken token)
 		{
 			if (user == null)
 				return null;
@@ -118,17 +119,17 @@ namespace InkBall.Module.Pages
 			return player;
 		}
 
-		public virtual async Task LoadUserPlayerAndGame()
+		public virtual async Task LoadUserPlayerAndGameAsync()
 		{
-			InkBallUserViewModel user = GetUser();
+			InkBallUserViewModel user = await GetUserAsync();
 			GameUser = user;
 
 			var token = HttpContext.RequestAborted;
 
-			InkBallPlayerViewModel player = await GetPlayer(user, token);
+			InkBallPlayerViewModel player = await GetPlayerAsync(user, token);
 			Player = player;
 
-			InkBallGameViewModel game = await GetGame(player, token);
+			InkBallGameViewModel game = await GetGameAsync(player, token);
 			Game = game;
 		}
 	}

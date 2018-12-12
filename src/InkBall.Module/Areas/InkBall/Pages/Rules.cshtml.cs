@@ -11,15 +11,15 @@ using InkBall.Module.Model;
 namespace InkBall.Module.Pages
 {
 	[Authorize(Policy = "InkBallPlayerPolicy")]
-	public class RulesModel : HomeModel
+	public class RulesModel : BasePageModel
 	{
 		public RulesModel(GamesContext dbContext, ILogger<RulesModel> logger) : base(dbContext, logger)
 		{
 		}
 
-		public override Task OnGet()
+		public Task OnGet()
 		{
-			return base.LoadUserPlayerAndGame();
+			return base.LoadUserPlayerAndGameAsync();
 		}
 	}
 }
