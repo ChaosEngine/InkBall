@@ -11,7 +11,7 @@
 	});
 }
 <h1>
-	This is from InkBall.Module.Pages.Index
+	This is from @(typeof(IndexModel).FullName)
 </h1>
 <p class="blue-paragraph">
 	I amd SOO BLUEEEE
@@ -19,20 +19,47 @@
 <p>
 	<img src="~/img/image.png" alt="image" />
 </p>
+
+<span id="debug0"></span>
+<span id="debug1"></span>
+<span id="debug2"></span>
+<div class="buttony">
+	<form action="games.php" method="post">
+		<input type='hidden' name='GameID' value='@Model.Game.iId' class='gameidbutton' />
+		<input type='submit' name='action' value='pause' class='btn btn-outline-primary' />
+		<input id='SurrenderButton' type='submit' name='action'
+
+			@if(Model.Game.Player2 != null)
+			{
+				if(Model.Game.GetOtherPlayer().IsLastMoveOverdue() && Model.Game.IsThisPlayerActive())
+				{
+					@:value='win'
+				}
+				else
+				{
+					@:value='surrender'
+				}
+			}
+			else
+			{
+				@:value='cancel'
+			}
+
+		class='btn btn-outline-primary' />
+	</form>
+</div>
+<br />
+
 <div id="screen" style="position:relative; width:@(Model.Game.iBoardWidth)px; height:@(Model.Game.iBoardHeight)px; border:1px solid red; background-image:url('../img/plansza1.gif')">
 </div>
-
-
 
 <div class="container">
 	<div class="row">&nbsp;</div>
 	<div class="row">
 		<div class="col-6">&nbsp;</div>
 		<div class="col-6">
-			@*User..........<input type="text" id="userInput" />
-			<br />*@
 			Message...<input type="text" id="messageInput" />
-			<input type="button" id="sendButton" value="Send Message" />
+			<input type="button" id="sendButton" value="Send Message" class="btn btn-primary" />
 		</div>
 	</div>
 	<div class="row">

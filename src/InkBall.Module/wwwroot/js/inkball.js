@@ -75,6 +75,15 @@ function StartSignalRConnection(iGameID, iPlayerID) {
 		});
 		event.preventDefault();
 	});
+	// Execute a function when the user releases a key on the keyboard
+	document.getElementById("messageInput").addEventListener("keyup", function (event) {
+		event.preventDefault();// Cancel the default action, if needed
+		// Number 13 is the "Enter" key on the keyboard
+		if (event.keyCode === 13) {//enter key
+			// Trigger the button element with a click
+			document.getElementById("sendButton").click();
+		}
+	});
 
 	g_SignalRConnection.onclose(async (err) => {
 		if (err !== null) {

@@ -23,11 +23,17 @@ namespace InkBall.Module.Model
 
 		bool IsThisPlayer1();
 
+		P GetOtherPlayer();
+
+		bool IsThisPlayerActive();
+
 		// void SurrenderGameFromPlayer();
 	}
 
 	public partial class InkBallGame : IGame<InkBallPlayer>
 	{
+		protected internal static TimeSpan _deactivationDelayInSeconds = TimeSpan.FromSeconds(120);
+
 		public enum GameTypeEnum
 		{
 			FIRST_CAPTURE,
@@ -77,6 +83,28 @@ namespace InkBall.Module.Model
 		{
 			return this.bIsPlayer1Active;
 		}
+
+		public InkBallPlayer GetOtherPlayer()
+		{
+			if (bIsPlayer1Active == false)
+				return Player1;
+			else
+				return Player2;
+		}
+
+		public bool IsThisPlayerActive()
+		{
+			if (bIsPlayer1Active)
+			{
+				return bIsPlayer1Active ? true : false;
+			}
+			else
+			{
+				return bIsPlayer1Active ? false : true;
+			}
+		}
+
+		public static TimeSpan GetDeactivationDelayInSeconds() => InkBallGame._deactivationDelayInSeconds;
 
 		internal static void DeactivateDeadGamezFromExternalUserID(string sExternalUserID)
 		{
@@ -159,6 +187,26 @@ namespace InkBall.Module.Model
 		public bool IsThisPlayer1()
 		{
 			return this.bIsPlayer1Active;
+		}
+
+		public InkBallPlayerViewModel GetOtherPlayer()
+		{
+			if (bIsPlayer1Active == false)
+				return Player1;
+			else
+				return Player2;
+		}
+
+		public bool IsThisPlayerActive()
+		{
+			if (bIsPlayer1Active)
+			{
+				return bIsPlayer1Active ? true : false;
+			}
+			else
+			{
+				return bIsPlayer1Active ? false : true;
+			}
 		}
 	}
 }

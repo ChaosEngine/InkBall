@@ -490,7 +490,7 @@ namespace InkBall.Module.Model
 			{
 				player.sLastMoveCode = sLastMoveCode;
 				player.TimeStamp = DateTime.UtcNow;
-				this.InkBallPlayer.Attach(player);
+				this.Entry(player).State = EntityState.Modified;
 			}
 			await this.SaveChangesAsync(token);
 
@@ -520,7 +520,7 @@ namespace InkBall.Module.Model
 			game.bIsPlayer1Active = false;
 			// game.bIsPlayer1Active = true;
 			game.TimeStamp = DateTime.UtcNow;//sqlite can not timestamp on update
-			this.InkBallGame.Attach(game);
+			this.Entry(game).State = EntityState.Modified;
 
 			await this.SaveChangesAsync(token);
 

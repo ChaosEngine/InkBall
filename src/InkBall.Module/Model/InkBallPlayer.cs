@@ -13,6 +13,8 @@ namespace InkBall.Module.Model
 		int iLossCount { get; set; }
 		int iDrawCount { get; set; }
 		DateTime TimeStamp { get; set; }
+
+		bool IsLastMoveOverdue();
 	}
 
 	public partial class InkBallPlayer : IPlayer
@@ -37,6 +39,14 @@ namespace InkBall.Module.Model
 			InkBallGameIPlayer2 = new HashSet<InkBallGame>();
 			InkBallPath = new HashSet<InkBallPath>();
 			InkBallPoint = new HashSet<InkBallPoint>();
+		}
+
+		public bool IsLastMoveOverdue()
+		{
+			TimeSpan last_move = DateTime.UtcNow - this.TimeStamp;
+			if(last_move > InkBallGame.GetDeactivationDelayInSeconds())
+				return true;
+			return false;
 		}
 	}
 
@@ -76,6 +86,14 @@ namespace InkBall.Module.Model
 			iLossCount = player.iLossCount;
 			iDrawCount = player.iDrawCount;
 			TimeStamp = player.TimeStamp;
+		}
+
+		public bool IsLastMoveOverdue()
+		{
+			TimeSpan last_move = DateTime.UtcNow - this.TimeStamp;
+			if(last_move > InkBallGame.GetDeactivationDelayInSeconds())
+				return true;
+			return false;
 		}
 	}
 }
