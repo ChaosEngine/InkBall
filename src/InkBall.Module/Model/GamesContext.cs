@@ -431,12 +431,12 @@ namespace InkBall.Module.Model
 						iBoardHeight = iBoardHeight,
 						GameType = gameType,
 						GameState = gameState,
-						//TimeStamp = DateTime.UtcNow,
+						TimeStamp = DateTime.UtcNow,
 						CreateTime = DateTime.UtcNow,
 					};
 					await InkBallGame.AddAsync(gm, token);
 
-					await SaveChangesAsync(true, token);
+					await SaveChangesAsync(token);
 
 					// select LAST_INSERT_ID() as iGameID, p1 as iPlayer1ID, p2 as iPlayer2ID, iGridSize,
 					// 	iBoardWidth, iBoardHeight, bIsPlayer1Active, GameState;
@@ -482,61 +482,20 @@ namespace InkBall.Module.Model
 					iWinCount = 0,
 					iLossCount = 0,
 					iDrawCount = 0,
-					//TimeStamp = DateTime.UtcNow
+					TimeStamp = DateTime.UtcNow
 				};
 				await this.InkBallPlayer.AddAsync(player, token);
 			}
 			else
 			{
 				player.sLastMoveCode = sLastMoveCode;
+				player.TimeStamp = DateTime.UtcNow;
+				this.InkBallPlayer.Attach(player);
 			}
-			await this.SaveChangesAsync(true, token);
+			await this.SaveChangesAsync(token);
 
 			return player;
 		}
-
-		// protected async Task<InkBallPlayer> CreateNewPlayerFromExternalUserIdAsync(int iUserId, string sLastMoveCode, CancellationToken token = default)
-		// {
-		// 	//$sLastMoveCode = DBase::AddSlashes($sLastMoveCode, $Connection);
-		// 	// $sQuery = "call InkBallPlayerInsert(" . (int)$iPlayerExternaUserID . ", '$sLastMoveCode')";
-		// 	// $Result = mysqli_query($Connection, $sQuery);
-		// 	// if($Result == false)	throw new Exception("Query2 failed: " . mysqli_error($Connection));
-
-		// 	InkBallPlayer p = await this.InkBallPlayer.FirstOrDefaultAsync(x => x.iUserId == iUserId, token);
-		// 	if (p == null)
-		// 	{
-		// 		p = new InkBallPlayer
-		// 		{
-		// 			iUserId = iUserId,
-		// 			sLastMoveCode = sLastMoveCode
-		// 		};
-		// 		await this.AddAsync(p, token);
-		// 	}
-		// 	else
-		// 	{
-		// 		p.sLastMoveCode = sLastMoveCode;
-		// 	}
-		// 	await this.SaveChangesAsync(token);
-
-		// 	// $Row = mysqli_fetch_array($Result, MYSQLI_ASSOC);
-
-		// 	// var iPlayerID = (int)$Row['iID'];
-		// 	// var sPlayerName = (string)$Row['sPlayerName'];
-		// 	// var iPlayerExternalUserID = (int)$Row['iUserID'];
-		// 	// var sLastMove = (string)$Row['sLastMoveCode'];
-		// 	// var iWinCount = (int)$Row['iWinCount'];
-		// 	// var iLossCount = (int)$Row['iLossCount'];
-		// 	// var iDrawCount = (int)$Row['iDrawCount'];
-		// 	// var TimeStamp = $Row['UnixTimeStamp'];
-
-		// 	// mysqli_next_result($Connection);
-		// 	// mysqli_free_result($Result);
-
-		// 	// $InkBallPlayer = new InkBallPlayer($iPlayerID, $sPlayerName, $iPlayerExternalUserID,
-		// 	// 	$sLastMove, $iWinCount, $iLossCount, $iDrawCount, $TimeStamp);
-
-		// 	return p;
-		// }
 
 		internal async Task<bool> JoinGameFromExternalUserIdAsync(InkBallGame game, string sPlayer2ExternaUserID, CancellationToken token = default)
 		{
@@ -556,16 +515,14 @@ namespace InkBall.Module.Model
 				throw new Exception("Could not create user of that ID", ex);
 			}
 
-			// $sQuery = "call InkBallGameUpdate({$this->GetGameID()}, null, {$player2->GetPlayerID()}, null, null, null, null, 'ACTIVE')";
-			// $Result = mysqli_query($Connection, $sQuery);
-			// if($Result != true)	throw new Exception("Query4 failed: " . mysqli_error($Connection));
-
 			game.Player2 = player2;
 			game.GameState = GameStateEnum.ACTIVE;
 			game.bIsPlayer1Active = false;
 			// game.bIsPlayer1Active = true;
+			game.TimeStamp = DateTime.UtcNow;//sqlite can not timestamp on update
+			this.InkBallGame.Attach(game);
 
-			await this.SaveChangesAsync(true, token);
+			await this.SaveChangesAsync(token);
 
 			return true;
 		}

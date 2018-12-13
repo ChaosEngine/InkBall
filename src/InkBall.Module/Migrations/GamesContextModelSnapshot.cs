@@ -16,9 +16,9 @@ namespace InkBall.Module.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "2.1.4-rtm-31024");
+                .HasAnnotation("ProductVersion", "2.2.0-rtm-35687");
 
-            modelBuilder.Entity("InkBall.Module.InkBallGame", b =>
+            modelBuilder.Entity("InkBall.Module.Model.InkBallGame", b =>
                 {
                     b.Property<int>("iId")
                         .ValueGeneratedOnAdd()
@@ -77,7 +77,7 @@ namespace InkBall.Module.Migrations
                     b.ToTable("InkBallGame");
                 });
 
-            modelBuilder.Entity("InkBall.Module.InkBallPath", b =>
+            modelBuilder.Entity("InkBall.Module.Model.InkBallPath", b =>
                 {
                     b.Property<int>("iId")
                         .ValueGeneratedOnAdd()
@@ -104,7 +104,7 @@ namespace InkBall.Module.Migrations
                     b.ToTable("InkBallPath");
                 });
 
-            modelBuilder.Entity("InkBall.Module.InkBallPlayer", b =>
+            modelBuilder.Entity("InkBall.Module.Model.InkBallPlayer", b =>
                 {
                     b.Property<int>("iId")
                         .ValueGeneratedOnAdd()
@@ -148,7 +148,7 @@ namespace InkBall.Module.Migrations
                     b.ToTable("InkBallPlayer");
                 });
 
-            modelBuilder.Entity("InkBall.Module.InkBallPoint", b =>
+            modelBuilder.Entity("InkBall.Module.Model.InkBallPoint", b =>
                 {
                     b.Property<int>("iId")
                         .ValueGeneratedOnAdd()
@@ -186,7 +186,7 @@ namespace InkBall.Module.Migrations
                     b.ToTable("InkBallPoint");
                 });
 
-            modelBuilder.Entity("InkBall.Module.InkBallPointsInPath", b =>
+            modelBuilder.Entity("InkBall.Module.Model.InkBallPointsInPath", b =>
                 {
                     b.Property<int>("iId")
                         .ValueGeneratedOnAdd()
@@ -213,7 +213,7 @@ namespace InkBall.Module.Migrations
                     b.ToTable("InkBallPointsInPath");
                 });
 
-            modelBuilder.Entity("InkBall.Module.InkBallUser", b =>
+            modelBuilder.Entity("InkBall.Module.Model.InkBallUser", b =>
                 {
                     b.Property<int>("iId")
                         .ValueGeneratedOnAdd()
@@ -239,66 +239,66 @@ namespace InkBall.Module.Migrations
                     b.ToTable("InkBallUsers");
                 });
 
-            modelBuilder.Entity("InkBall.Module.InkBallGame", b =>
+            modelBuilder.Entity("InkBall.Module.Model.InkBallGame", b =>
                 {
-                    b.HasOne("InkBall.Module.InkBallPlayer", "Player1")
+                    b.HasOne("InkBall.Module.Model.InkBallPlayer", "Player1")
                         .WithMany("InkBallGameIPlayer1")
                         .HasForeignKey("iPlayer1Id")
                         .HasConstraintName("InkBallGame_ibfk_1");
 
-                    b.HasOne("InkBall.Module.InkBallPlayer", "Player2")
+                    b.HasOne("InkBall.Module.Model.InkBallPlayer", "Player2")
                         .WithMany("InkBallGameIPlayer2")
                         .HasForeignKey("iPlayer2Id")
                         .HasConstraintName("InkBallGame_ibfk_2");
                 });
 
-            modelBuilder.Entity("InkBall.Module.InkBallPath", b =>
+            modelBuilder.Entity("InkBall.Module.Model.InkBallPath", b =>
                 {
-                    b.HasOne("InkBall.Module.InkBallGame", "Game")
+                    b.HasOne("InkBall.Module.Model.InkBallGame", "Game")
                         .WithMany("InkBallPath")
                         .HasForeignKey("iGameId")
                         .HasConstraintName("InkBallPath_ibfk_1");
 
-                    b.HasOne("InkBall.Module.InkBallPlayer", "Player")
+                    b.HasOne("InkBall.Module.Model.InkBallPlayer", "Player")
                         .WithMany("InkBallPath")
                         .HasForeignKey("iPlayerId")
                         .HasConstraintName("InkBallPath_ibfk_2");
                 });
 
-            modelBuilder.Entity("InkBall.Module.InkBallPlayer", b =>
+            modelBuilder.Entity("InkBall.Module.Model.InkBallPlayer", b =>
                 {
-                    b.HasOne("InkBall.Module.InkBallUser", "User")
+                    b.HasOne("InkBall.Module.Model.InkBallUser", "User")
                         .WithMany("InkBallPlayer")
                         .HasForeignKey("iUserId")
                         .HasConstraintName("InkBallPlayer_ibfk_1");
                 });
 
-            modelBuilder.Entity("InkBall.Module.InkBallPoint", b =>
+            modelBuilder.Entity("InkBall.Module.Model.InkBallPoint", b =>
                 {
-                    b.HasOne("InkBall.Module.InkBallPath", "EnclosingPath")
+                    b.HasOne("InkBall.Module.Model.InkBallPath", "EnclosingPath")
                         .WithMany("InkBallPoint")
                         .HasForeignKey("iEnclosingPathId")
                         .HasConstraintName("InkBallPoint_ibfk_5");
 
-                    b.HasOne("InkBall.Module.InkBallGame", "Game")
+                    b.HasOne("InkBall.Module.Model.InkBallGame", "Game")
                         .WithMany("InkBallPoint")
                         .HasForeignKey("iGameId")
                         .HasConstraintName("InkBallPoint_ibfk_3");
 
-                    b.HasOne("InkBall.Module.InkBallPlayer", "Player")
+                    b.HasOne("InkBall.Module.Model.InkBallPlayer", "Player")
                         .WithMany("InkBallPoint")
                         .HasForeignKey("iPlayerId")
                         .HasConstraintName("InkBallPoint_ibfk_4");
                 });
 
-            modelBuilder.Entity("InkBall.Module.InkBallPointsInPath", b =>
+            modelBuilder.Entity("InkBall.Module.Model.InkBallPointsInPath", b =>
                 {
-                    b.HasOne("InkBall.Module.InkBallPath", "Path")
+                    b.HasOne("InkBall.Module.Model.InkBallPath", "Path")
                         .WithMany("InkBallPointsInPath")
                         .HasForeignKey("iPathId")
                         .HasConstraintName("InkBallPointsInPath_ibfk_1");
 
-                    b.HasOne("InkBall.Module.InkBallPoint", "Point")
+                    b.HasOne("InkBall.Module.Model.InkBallPoint", "Point")
                         .WithMany("InkBallPointsInPath")
                         .HasForeignKey("iPointId")
                         .HasConstraintName("InkBallPointsInPath_ibfk_2");
