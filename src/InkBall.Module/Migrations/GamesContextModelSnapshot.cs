@@ -155,7 +155,10 @@ namespace InkBall.Module.Migrations
                         .HasColumnName("iId");
 
                     b.Property<string>("Status")
-                        .IsRequired();
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("varchar(50)")
+                        .HasDefaultValue("POINT_FREE");
 
                     b.Property<int?>("iEnclosingPathId")
                         .HasColumnName("iEnclosingPathId");

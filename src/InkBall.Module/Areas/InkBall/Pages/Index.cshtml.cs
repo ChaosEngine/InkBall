@@ -2,7 +2,9 @@ using InkBall.Module.Hubs;
 using InkBall.Module.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Threading.Tasks;
 
 namespace InkBall.Module.Pages
@@ -21,16 +23,9 @@ namespace InkBall.Module.Pages
 			else
 				ChatHub.WebSocketAllowedOrigins.AddOrUpdate($"{Request.Scheme}://{Request.Host}");
 
-			InkBallUserViewModel user = await GetUserAsync();
-			GameUser = user;
+			await base.LoadUserPlayerAndGameAsync();
 
-			InkBallPlayerViewModel player = await GetPlayerAsync(user, HttpContext.RequestAborted);
-			Player = player;
-
-			InkBallGameViewModel game = await GetGameAsync(player, HttpContext.RequestAborted);
-			Game = game;
-
-			if (game == null)
+			if (Game == null)
 				return Redirect("Home");
 
 			return Page();

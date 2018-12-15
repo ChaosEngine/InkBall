@@ -24,7 +24,7 @@
 <span id="debug1"></span>
 <span id="debug2"></span>
 <div class="buttony">
-	<form action="games.php" method="post">
+	<form action="Games" method="post" asp-antiforgery="true">
 		<input type='hidden' name='GameID' value='@Model.Game.iId' class='gameidbutton' />
 		<input type='submit' name='action' value='pause' class='btn btn-outline-primary' />
 		<input id='SurrenderButton' type='submit' name='action'

@@ -269,6 +269,8 @@ namespace InkBall.Module.Model
 				entity.Property(e => e.iY).HasColumnName("iY");
 
 				entity.Property(e => e.Status)
+					.HasDefaultValue(InkBall.Module.Model.InkBallPoint.StatusEnum.POINT_FREE)
+					.HasColumnType("varchar(50)")
 					.HasConversion(
 						v => v.ToString(),
 						v => (InkBallPoint.StatusEnum)Enum.Parse(typeof(InkBallPoint.StatusEnum), v));
@@ -525,7 +527,10 @@ namespace InkBall.Module.Model
 			return true;
 		}
 
-		public void SurrenderGameFromPlayer<P>(IGame<P> game) where P : IPlayer
+		public void SurrenderGameFromPlayer<Player, Point, Path>(IGame<Player, Point, Path> game)
+			where Player : IPlayer
+			where Point : IPoint
+			where Path : IPath
 		{
 			//TODO: implement this
 		}

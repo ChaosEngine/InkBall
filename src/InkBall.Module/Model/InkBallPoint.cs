@@ -10,7 +10,6 @@ namespace InkBall.Module.Model
 		int iPlayerId { get; set; }
 		int iX { get; set; }
 		int iY { get; set; }
-
 		InkBallPoint.StatusEnum Status { get; set; }
 		int? iEnclosingPathId { get; set; }
 	}
@@ -31,7 +30,6 @@ namespace InkBall.Module.Model
 		public int iPlayerId { get; set; }
 		public int iX { get; set; }
 		public int iY { get; set; }
-
 		public StatusEnum Status { get; set; }
 		public int? iEnclosingPathId { get; set; }
 
@@ -54,9 +52,10 @@ namespace InkBall.Module.Model
 		public int iPlayerId { get; set; }
 		public int iX { get; set; }
 		public int iY { get; set; }
-
 		public InkBallPoint.StatusEnum Status { get; set; }
 		public int? iEnclosingPathId { get; set; }
+
+		//TODO: remove this
 		public string Message { get; set; }
 
 		public InkBallPointViewModel()
@@ -70,7 +69,6 @@ namespace InkBall.Module.Model
 			this.iPlayerId = point.iPlayerId;
 			this.iX = point.iX;
 			this.iY = point.iY;
-
 			this.Status = point.Status;
 			this.iEnclosingPathId = point.iEnclosingPathId;
 			this.Message = message;
@@ -84,7 +82,6 @@ namespace InkBall.Module.Model
 			this.iPlayerId = point.iPlayerId;
 			this.iX = point.iX;
 			this.iY = point.iY;
-
 			this.Status = point.Status;
 			this.iEnclosingPathId = point.iEnclosingPathId;
 			this.Message = message;

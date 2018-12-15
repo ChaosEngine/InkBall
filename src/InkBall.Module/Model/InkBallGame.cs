@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace InkBall.Module.Model
 {
-	public interface IGame<P> where P : IPlayer
+	public interface IGame<Player, Point, Path>
+		where Player : IPlayer
+		where Point : IPoint
+		where Path : IPath
 	{
 		bool bIsPlayer1Active { get; set; }
 		DateTime CreateTime { get; set; }
@@ -13,24 +17,24 @@ namespace InkBall.Module.Model
 		int iBoardWidth { get; set; }
 		int iGridSize { get; set; }
 		int iId { get; set; }
-		ICollection<InkBallPath> InkBallPath { get; set; }
-		ICollection<InkBallPoint> InkBallPoint { get; set; }
+		ICollection<Path> InkBallPath { get; set; }
+		ICollection<Point> InkBallPoint { get; set; }
 		int iPlayer1Id { get; set; }
 		int? iPlayer2Id { get; set; }
-		P Player1 { get; set; }
-		P Player2 { get; set; }
+		Player Player1 { get; set; }
+		Player Player2 { get; set; }
 		DateTime TimeStamp { get; set; }
 
 		bool IsThisPlayer1();
 
-		P GetOtherPlayer();
+		Player GetOtherPlayer();
 
 		bool IsThisPlayerActive();
 
 		// void SurrenderGameFromPlayer();
 	}
 
-	public partial class InkBallGame : IGame<InkBallPlayer>
+	public partial class InkBallGame : IGame<InkBallPlayer, InkBallPoint, InkBallPath>
 	{
 		protected internal static TimeSpan _deactivationDelayInSeconds = TimeSpan.FromSeconds(120);
 
@@ -118,7 +122,7 @@ namespace InkBall.Module.Model
 	}
 
 	[Serializable]
-	public class InkBallGameViewModel : IGame<InkBallPlayerViewModel>
+	public class InkBallGameViewModel : IGame<InkBallPlayerViewModel, InkBallPointViewModel, InkBallPathViewModel>
 	{
 		public bool bIsPlayer1Active { get; set; }
 		public DateTime CreateTime { get; set; }
@@ -128,8 +132,8 @@ namespace InkBall.Module.Model
 		public int iBoardWidth { get; set; }
 		public int iGridSize { get; set; }
 		public int iId { get; set; }
-		public ICollection<InkBallPath> InkBallPath { get; set; }
-		public ICollection<InkBallPoint> InkBallPoint { get; set; }
+		public ICollection<InkBallPathViewModel> InkBallPath { get; set; }
+		public ICollection<InkBallPointViewModel> InkBallPoint { get; set; }
 		public int iPlayer1Id { get; set; }
 		public int? iPlayer2Id { get; set; }
 		public InkBallPlayerViewModel Player1 { get; set; }
@@ -150,8 +154,16 @@ namespace InkBall.Module.Model
 			iBoardWidth = game.iBoardWidth;
 			iGridSize = game.iGridSize;
 			iId = game.iId;
-			InkBallPath = game.InkBallPath;
-			InkBallPoint = game.InkBallPoint;
+
+			if (game.InkBallPath != null && game.InkBallPath.Count > 0)
+			{
+				InkBallPath = game.InkBallPath.Select(p => new InkBallPathViewModel(p)).ToArray();
+			}
+			if (game.InkBallPoint != null && game.InkBallPoint.Count > 0)
+			{
+				InkBallPoint = game.InkBallPoint.Select(p => new InkBallPointViewModel(p, "")).ToArray();
+			}
+
 			iPlayer1Id = game.iPlayer1Id;
 			iPlayer2Id = game.iPlayer2Id;
 			Player1 = new InkBallPlayerViewModel(game.Player1);
@@ -170,8 +182,16 @@ namespace InkBall.Module.Model
 			iBoardWidth = game.iBoardWidth;
 			iGridSize = game.iGridSize;
 			iId = game.iId;
-			InkBallPath = game.InkBallPath;
-			InkBallPoint = game.InkBallPoint;
+
+			if (game.InkBallPath != null && game.InkBallPath.Count > 0)
+			{
+				InkBallPath = game.InkBallPath;
+			}
+			if (game.InkBallPoint != null && game.InkBallPoint.Count > 0)
+			{
+				InkBallPoint = game.InkBallPoint;
+			}
+
 			iPlayer1Id = game.iPlayer1Id;
 			iPlayer2Id = game.iPlayer2Id;
 			Player1 = game.Player1;

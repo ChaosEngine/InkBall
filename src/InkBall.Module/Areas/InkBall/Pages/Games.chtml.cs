@@ -102,7 +102,7 @@ namespace InkBall.Module.Pages
 			GamesList = await games;
 		}
 
-		public async Task<IActionResult> OnPostAsync(string action, int gameID, string sGameType)
+		public async Task<IActionResult> OnPostAsync(string action, int gameID, string gameType)
 		{
 			await base.LoadUserPlayerAndGameAsync();
 
@@ -180,7 +180,7 @@ namespace InkBall.Module.Pages
 							break;
 						}
 
-						if (!Enum.TryParse<InkBallGame.GameTypeEnum>(sGameType, true, out var GameType))
+						if (!Enum.TryParse<InkBallGame.GameTypeEnum>(gameType, true, out var GameType))
 							throw new NotSupportedException("Wrong game type");
 
 						int width = 0, height = 0;
