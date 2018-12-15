@@ -139,22 +139,24 @@ namespace InkBall.Module.Pages
 						}
 						else
 						{
-							trans = await _dbContext.Database.BeginTransactionAsync(token);
-							try
+							using (trans = await _dbContext.Database.BeginTransactionAsync(token))
 							{
-								await _dbContext.JoinGameFromExternalUserIdAsync(new_game, sExternalUserID, token);
-								Game = new InkBallGameViewModel(new_game);
-								HttpContext.Session.Set(nameof(InkBallGameViewModel), Game);
+								try
+								{
+									await _dbContext.JoinGameFromExternalUserIdAsync(new_game, sExternalUserID, token);
+									Game = new InkBallGameViewModel(new_game);
+									HttpContext.Session.Set(nameof(InkBallGameViewModel), Game);
 
-								trans.Commit();
-								//TODO:	notify 1st player (or other player) with SignalrR hub (ChatHub) about new player joining in
-								return Redirect("Index");
-							}
-							catch (Exception ex)
-							{
-								trans.Rollback();
-								_logger.LogError(ex, msg);
-								throw ex;
+									trans.Commit();
+									//TODO:	notify 1st player (or other player) with SignalrR hub (ChatHub) about new player joining in
+									return Redirect("Index");
+								}
+								catch (Exception ex)
+								{
+									trans.Rollback();
+									_logger.LogError(ex, msg);
+									throw ex;
+								}
 							}
 						}
 						break;

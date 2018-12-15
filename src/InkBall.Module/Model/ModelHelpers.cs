@@ -51,7 +51,7 @@ namespace InkBall.Module.Model
 $@"CREATE TRIGGER {tableName}_update_{timeStampColumnName}_Trigger
 AFTER UPDATE On {tableName}
 BEGIN
-   UPDATE {tableName} SET {timeStampColumnName} = STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW') WHERE {primaryKey} = NEW.{primaryKey};
+	UPDATE {tableName} SET {timeStampColumnName} = datetime(CURRENT_TIMESTAMP, 'localtime') WHERE {primaryKey} = NEW.{primaryKey};
 END;";
 					//Console.Error.WriteLine($"executing '{command}'");
 					migrationBuilder.Sql(command);

@@ -431,7 +431,7 @@ namespace InkBall.Module.Model
 						iBoardHeight = iBoardHeight,
 						GameType = gameType,
 						GameState = gameState,
-						TimeStamp = DateTime.UtcNow,
+						TimeStamp = DateTime.Now,
 						CreateTime = DateTime.UtcNow,
 					};
 					await InkBallGame.AddAsync(gm, token);
@@ -482,15 +482,14 @@ namespace InkBall.Module.Model
 					iWinCount = 0,
 					iLossCount = 0,
 					iDrawCount = 0,
-					TimeStamp = DateTime.UtcNow
+					TimeStamp = DateTime.Now
 				};
 				await this.InkBallPlayer.AddAsync(player, token);
 			}
 			else
 			{
-				player.sLastMoveCode = sLastMoveCode;
-				player.TimeStamp = DateTime.UtcNow;
-				this.Entry(player).State = EntityState.Modified;
+				player.sLastMoveCode = sLastMoveCode + "dbg" + DateTime.UtcNow;
+				player.TimeStamp = DateTime.Now;//sqlite can not timestamp on update
 			}
 			await this.SaveChangesAsync(token);
 
@@ -519,8 +518,7 @@ namespace InkBall.Module.Model
 			game.GameState = GameStateEnum.ACTIVE;
 			game.bIsPlayer1Active = false;
 			// game.bIsPlayer1Active = true;
-			game.TimeStamp = DateTime.UtcNow;//sqlite can not timestamp on update
-			this.Entry(game).State = EntityState.Modified;
+			game.TimeStamp = DateTime.Now;//sqlite can not timestamp on update
 
 			await this.SaveChangesAsync(token);
 

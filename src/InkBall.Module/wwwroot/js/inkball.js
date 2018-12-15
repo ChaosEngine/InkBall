@@ -78,8 +78,8 @@ function StartSignalRConnection(iGameID, iPlayerID) {
 	// Execute a function when the user releases a key on the keyboard
 	document.getElementById("messageInput").addEventListener("keyup", function (event) {
 		event.preventDefault();// Cancel the default action, if needed
-		// Number 13 is the "Enter" key on the keyboard
-		if (event.keyCode === 13) {//enter key
+
+		if (event.keyCode === 13) {// Number 13 is the "Enter" key on the keyboard
 			// Trigger the button element with a click
 			document.getElementById("sendButton").click();
 		}

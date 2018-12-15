@@ -329,3 +329,4 @@ ASALocalRun/
 
 # MFractors (Xamarin productivity tool) working folder 
 .mfractor/
+src/InkBall.Module/wwwroot/js/inkball.babelify.js

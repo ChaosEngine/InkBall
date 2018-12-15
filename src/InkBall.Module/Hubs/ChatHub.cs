@@ -27,21 +27,35 @@ namespace InkBall.Module.Hubs
 	[Authorize(Policy = "InkBallPlayerPolicy")]
 	public class ChatHub : Hub<IChatClient>, IChatServer
 	{
+		#region Fields
+
 		public const string HubName = "chatHub";
 
 		//Allowed origins here
 		internal static readonly SynchronizedCache<string> WebSocketAllowedOrigins = new SynchronizedCache<string>();
+
 		//temporary randomizer object
 		private static readonly Random _randomizer = new Random(Environment.TickCount);
 
 		private readonly GamesContext _dbContext;
 
+		#endregion Fields
+
+		#region Properties
+
 		public IPlayer ThisPlayer { get; private set; }
+
 		public IPlayer OtherPlayer { get; private set; }
+
 		public int? ThisGameID { get; private set; }
+
 		public InkBallGameViewModel ThisGame { get; private set; }
+
 		public string OtherUserIdentifier { get; private set; }
+
 		public string ThisUserName { get; private set; }
+		
+		#endregion Properties
 
 		private int? GetGameIDFromAccessToken(StringValues access_token)
 		{
@@ -89,6 +103,7 @@ namespace InkBall.Module.Hubs
 				ThisGameID = game_id;
 			}
 		}
+
 		private async Task LoadUserAndPLayerStructures(CancellationToken token)
 		{
 			var claimsPrincipal = this.Context.User;
