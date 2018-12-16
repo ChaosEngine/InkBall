@@ -97,7 +97,7 @@
 			@"<script type='text/javascript'>
 				var ie = !(navigator.userAgent.indexOf('Trident') < 0);
 				if(ie == false) {
-					document.write(""<script src='" + Url.Content("~/js/inkball.js") + @"'></scr""+""ipt>"");
+					document.write(""<script src='" + (env.IsDevelopment() ? Url.Content("~/js/inkball.js") : Url.Content("~/js/inkball.min.js")) + @"'></scr""+""ipt>"");
 				} else {
 					document.write(""<script src='https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/7.0.0/polyfill.min.js' integrity='sha256-KLt4XkpH4F3e5FHHsQMk9iPOhen2S4g/Lpu4nanttL0=' crossorigin='anonymous'></scr""+""ipt>"");
 					document.write(""<script src='" + Url.Content("~/js/inkball.babelify.js") + @"'></scr""+""ipt>"");

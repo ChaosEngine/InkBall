@@ -78,7 +78,7 @@ namespace InkBall.Module.Model
 			InkBallPoint = new HashSet<InkBallPoint>();
 		}
 
-		//public void SurrenderGameFromPlayer()
+		// public void SurrenderGameFromPlayer()
 		// {
 		// 	//TODO: implement this
 		// }
