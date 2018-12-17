@@ -9,9 +9,18 @@ const StatusEnum = Object.freeze({
 	"POINT_OWNED_BY_BLU": 3
 });
 
-class InkBallPointViewModel {
+const CommandKindEnum = Object.freeze({
+	"UNKNOWN": -1,
+	"PING": 0,
+	"POINT": 1,
+	"PATH": 2,
+	"PLAYER_JOINING": 3,
+	"PLAYER_SURRENDE": 4
+});
 
-	constructor(iId = 0, iGameId = 0, iPlayerId = 0, iX = 0, iY = 0, Status = StatusEnum.POINT_FREE, iEnclosingPathId = 0, sMessage = '') {
+class InkBallPointViewModel {
+	constructor(iId = 0, iGameId = 0, iPlayerId = 0, iX = 0, iY = 0, Status = StatusEnum.POINT_FREE, iEnclosingPathId = 0) {
+
 		this.iId = iId;
 		this.iGameId = iGameId;
 		this.iPlayerId = iPlayerId;
@@ -19,15 +28,30 @@ class InkBallPointViewModel {
 		this.iY = iY;
 		this.Status = Status;
 		this.iEnclosingPathId = iEnclosingPathId;
-		this.Message = sMessage;
 	}
 
 	static Format(sUser, point) {
-		let msg = /*htmlEncode*/(point.Message);
+		let msg = point.iX + ' ' + point.iY + ' ' + point.Status;
+
+		return sUser + " places " + msg + " point";
+	}
+}
+
+class PingCommand {
+	get getMessage() { return this.Message; }
+	set setMessage(value) { this.Message = value; }
+
+	constructor(message = '') {
+		this.Message = message;
+	}
+
+	static Format(sUser, ping) {
+		let msg = ping.Message;
 
 		return sUser + " says " + msg;
 	}
 }
+
 
 function htmlEncode(html) {
 	//return html.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -56,21 +80,32 @@ function StartSignalRConnection(iGameID, iPlayerID) {
 	g_iGameID = iGameID;
 	g_iPlayerID = iPlayerID;
 
-	g_SignalRConnection.on("ReceiveMessage", function (point, user) {
-		let encodedMsg = InkBallPointViewModel.Format(user, point);
+	g_SignalRConnection.on("ServerToClientPoint", function (point, user) {
 
+		let encodedMsg = null;
+		encodedMsg = InkBallPointViewModel.Format(user, point);
+		
+		let li = document.createElement("li");
+		li.textContent = encodedMsg;
+		document.getElementById("messagesList").appendChild(li);
+	});
+	g_SignalRConnection.on("ServerToClientPing", function (ping, user) {
+
+		let encodedMsg = null;
+		encodedMsg = PingCommand.Format(user, ping);
+		
 		let li = document.createElement("li");
 		li.textContent = encodedMsg;
 		document.getElementById("messagesList").appendChild(li);
 	});
 
+
 	document.getElementById("sendButton").addEventListener("click", function (event) {
 		let message = document.getElementById("messageInput").value;
 
-		let fake_point = new InkBallPointViewModel(0, g_iGameID, g_iPlayerID, 1, 2,
-			StatusEnum.POINT_IN_PATH, 0, message);
+		let ping = new PingCommand(message);
 
-		g_SignalRConnection.invoke("SendMessage", fake_point).catch(function (err) {
+		g_SignalRConnection.invoke("ClientToServerPing", ping).catch(function (err) {
 			return console.error(err.toString());
 		});
 		event.preventDefault();

@@ -27,11 +27,11 @@ namespace InkBall.Module.Model
 
 		bool IsThisPlayer1();
 
+		Player GetPlayer();
+
 		Player GetOtherPlayer();
 
 		bool IsThisPlayerActive();
-
-		// void SurrenderGameFromPlayer();
 	}
 
 	public partial class InkBallGame : IGame<InkBallPlayer, InkBallPoint, InkBallPath>
@@ -78,14 +78,17 @@ namespace InkBall.Module.Model
 			InkBallPoint = new HashSet<InkBallPoint>();
 		}
 
-		// public void SurrenderGameFromPlayer()
-		// {
-		// 	//TODO: implement this
-		// }
-
 		public bool IsThisPlayer1()
 		{
 			return this.bIsPlayer1Active;
+		}
+
+		public InkBallPlayer GetPlayer()
+		{
+			if (this.bIsPlayer1Active == true)
+				return this.Player1;
+			else
+				return this.Player2;
 		}
 
 		public InkBallPlayer GetOtherPlayer()
@@ -161,7 +164,7 @@ namespace InkBall.Module.Model
 			}
 			if (game.InkBallPoint != null && game.InkBallPoint.Count > 0)
 			{
-				InkBallPoint = game.InkBallPoint.Select(p => new InkBallPointViewModel(p, "")).ToArray();
+				InkBallPoint = game.InkBallPoint.Select(p => new InkBallPointViewModel(p)).ToArray();
 			}
 
 			iPlayer1Id = game.iPlayer1Id;
@@ -199,14 +202,17 @@ namespace InkBall.Module.Model
 			TimeStamp = game.TimeStamp;
 		}
 
-		// public void SurrenderGameFromPlayer()
-		// {
-		// 	//TODO: implement this
-		// }
-
 		public bool IsThisPlayer1()
 		{
 			return this.bIsPlayer1Active;
+		}
+
+		public InkBallPlayerViewModel GetPlayer()
+		{
+			if (this.bIsPlayer1Active == true)
+				return this.Player1;
+			else
+				return this.Player2;
 		}
 
 		public InkBallPlayerViewModel GetOtherPlayer()

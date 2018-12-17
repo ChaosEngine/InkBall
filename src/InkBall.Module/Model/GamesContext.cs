@@ -8,6 +8,7 @@ using System.Threading;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using System.Collections.Generic;
 using static InkBall.Module.Model.InkBallGame;
+using Microsoft.AspNetCore.Http;
 
 namespace InkBall.Module.Model
 {
@@ -527,12 +528,59 @@ namespace InkBall.Module.Model
 			return true;
 		}
 
-		public void SurrenderGameFromPlayer<Player, Point, Path>(IGame<Player, Point, Path> game)
-			where Player : IPlayer
-			where Point : IPoint
-			where Path : IPath
+		public void SurrenderGameFromPlayerAsync(InkBallGame game, ISession session, bool bForcePlayerLoose = false, CancellationToken token = default)
 		{
-			//TODO: implement this
+
+			switch (game.GameState)
+			{
+				case GameStateEnum.ACTIVE:
+					//update game(deactivate)...
+					game.GameState = GameStateEnum.FINISHED;
+
+					var last_move = DateTime.Now - game.GetOtherPlayer().TimeStamp;
+					if (!bForcePlayerLoose && game.IsThisPlayerActive() && last_move > InkBall.Module.Model.InkBallGame.GetDeactivationDelayInSeconds())
+					{
+						//...and update players statistics(highscores)
+						//$sQuery = "call InkBallPlayerUpdate({$this->GetGameID()}, {$this->GetPlayer()->GetPlayerID()}, null, {$this->GetPlayer()->GetWinCount()}, null, null)";
+						game.GetPlayer().iWinCount = game.GetPlayer().iWinCount + 1;
+
+						//$sQuery = "call InkBallPlayerUpdate({$this->GetGameID()}, {$this->GetOtherPlayer()->GetPlayerID()}, null, null, {$this->GetOtherPlayer()->GetLossCount()}, null)";
+						game.GetOtherPlayer().iLossCount = game.GetOtherPlayer().iLossCount + 1;
+					}
+					else
+					{
+						//...and update players statistics(highscores)
+						//$sQuery = "call InkBallPlayerUpdate({$this->GetGameID()}, {$this->GetPlayer()->GetPlayerID()}, null, null, {$this->GetPlayer()->GetLossCount()}, null)";
+						game.GetPlayer().iLossCount = game.GetPlayer().iLossCount + 1;
+
+						//$sQuery = "call InkBallPlayerUpdate({$this->GetGameID()}, {$this->GetOtherPlayer()->GetPlayerID()}, null, {$this->GetOtherPlayer()->GetWinCount()}, null, null)";
+						game.GetOtherPlayer().iWinCount = game.GetOtherPlayer().iWinCount + 1;
+					}
+
+					this.SaveChangesAsync(token);
+
+					//remove this game in session
+					session.Remove(nameof(InkBallGameViewModel));
+					break;
+
+				case GameStateEnum.AWAITING:
+					//update game(deactivate)...
+					game.GameState = InkBall.Module.Model.InkBallGame.GameStateEnum.INACTIVE;
+
+					this.SaveChangesAsync(token);
+
+					//remove this game in session
+					session.Remove(nameof(InkBallGameViewModel));
+					break;
+
+				case GameStateEnum.INACTIVE:
+				case GameStateEnum.FINISHED:
+				default:
+					//remove this game in session
+					session.Remove(nameof(InkBallGameViewModel));
+					break;
+			}
+
 		}
 
 		public async Task<IEnumerable<InkBallGame>> GetGamesForRegistrationAsSelectTableRowsAsync(

@@ -41,10 +41,13 @@ namespace InkBall.Module.Model
 			InkBallPoint = new HashSet<InkBallPoint>();
 		}
 
+		///
+		// TODO: Remove duplication
+		///
 		public bool IsLastMoveOverdue()
 		{
-			TimeSpan last_move = DateTime.UtcNow - this.TimeStamp;
-			if(last_move > InkBallGame.GetDeactivationDelayInSeconds())
+			TimeSpan last_move = DateTime.Now - this.TimeStamp;
+			if (last_move > InkBallGame.GetDeactivationDelayInSeconds())
 				return true;
 			return false;
 		}
@@ -75,7 +78,7 @@ namespace InkBall.Module.Model
 			iDrawCount = player.iDrawCount;
 			TimeStamp = player.TimeStamp;
 		}
-		
+
 		//[JsonConstructor]
 		public InkBallPlayerViewModel(InkBallPlayerViewModel player)
 		{
@@ -88,10 +91,13 @@ namespace InkBall.Module.Model
 			TimeStamp = player.TimeStamp;
 		}
 
+		///
+		// TODO: Remove duplication
+		///
 		public bool IsLastMoveOverdue()
 		{
-			TimeSpan last_move = DateTime.UtcNow - this.TimeStamp;
-			if(last_move > InkBallGame.GetDeactivationDelayInSeconds())
+			TimeSpan last_move = DateTime.Now - this.TimeStamp;
+			if (last_move > InkBallGame.GetDeactivationDelayInSeconds())
 				return true;
 			return false;
 		}

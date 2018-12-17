@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Data.Common;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,6 +7,7 @@ using InkBall.Module.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -226,7 +226,14 @@ namespace InkBall.Module.Pages
 						trans = await _dbContext.Database.BeginTransactionAsync(token);
 						try
 						{
-							_dbContext.SurrenderGameFromPlayer(Game);
+							gameID = Game.iId;
+
+							var db_game = (from ig in _dbContext.InkBallGame
+											.Include(ip1 => ip1.Player1).Include(ip2 => ip2.Player2)
+										   where ig.iId == gameID
+										   select ig).FirstOrDefaultAsync(token);
+
+							_dbContext.SurrenderGameFromPlayerAsync(await db_game, base.HttpContext.Session, false, token);
 
 							trans.Commit();
 						}

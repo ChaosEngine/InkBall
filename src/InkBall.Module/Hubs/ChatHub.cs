@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using Microsoft.Net.Http.Headers;
 using Newtonsoft.Json.Linq;
@@ -16,12 +17,17 @@ namespace InkBall.Module.Hubs
 {
 	public interface IChatClient
 	{
-		Task ReceiveMessage(IPoint point, string user);
+		Task ServerToClientPoint(InkBallPointViewModel point, string user);
+
+		Task ServerToClientPing(PingCommand ping, string user);
 	}
 
 	public interface IChatServer
 	{
-		Task SendMessage(JObject jPoint);
+		Task ClientToServerPoint(InkBallPointViewModel point);
+
+		Task ClientToServerPing(PingCommand ping);
+
 	}
 
 	[Authorize(Policy = "InkBallPlayerPolicy")]
@@ -38,6 +44,7 @@ namespace InkBall.Module.Hubs
 		private static readonly Random _randomizer = new Random(Environment.TickCount);
 
 		private readonly GamesContext _dbContext;
+		private readonly ILogger<ChatHub> _logger;
 
 		#endregion Fields
 
@@ -54,7 +61,7 @@ namespace InkBall.Module.Hubs
 		public string OtherUserIdentifier { get; private set; }
 
 		public string ThisUserName { get; private set; }
-		
+
 		#endregion Properties
 
 		private int? GetGameIDFromAccessToken(StringValues access_token)
@@ -189,9 +196,10 @@ namespace InkBall.Module.Hubs
 
 		}
 
-		public ChatHub(GamesContext dbContext)
+		public ChatHub(GamesContext dbContext, ILogger<ChatHub> logger)
 		{
 			_dbContext = dbContext;
+			_logger = logger;
 		}
 
 		public override async Task OnConnectedAsync()
@@ -203,87 +211,96 @@ namespace InkBall.Module.Hubs
 			await base.OnConnectedAsync();
 		}
 
-		public async Task SendMessage(JObject jPoint)
+		public async Task ClientToServerPoint(InkBallPointViewModel point)
 		{
 			CancellationToken token = this.Context.ConnectionAborted;
 
-			await LoadUserAndPLayerStructures(this.Context.ConnectionAborted);
+			await LoadUserAndPLayerStructures(token);
 
 
-
-			InkBallPointViewModel point = jPoint.ToObject<InkBallPointViewModel>();
-			if (point.iPlayerId <= 0 || point.iGameId <= 0)
-				throw new NullReferenceException("point.iPlayerId <= 0 || point.iGameId <= 0");
-
-			#region Old code
-
-			/*var claimsPrincipal = this.Context.User;
-			var this_UserIdentifier = this.Context.UserIdentifier;
-			var this_UserName = claimsPrincipal.FindFirstValue(ClaimTypes.Name);
-
-			//get player from db
-			InkBallPlayer this_Player = await _dbContext.InkBallPlayer
-				//.Include(u => u.User)
-				.FirstOrDefaultAsync(p => p.iId == point.iPlayerId, token);
-			if (this_Player == null)
-				throw new NullReferenceException("no player");
-
-			//additional validation
-			string value = claimsPrincipal.FindFirstValue(nameof(InkBall.Module.Pages.HomeModel.InkBallUserId));
-			int.TryParse(value, out int this_UserId);
-			if (this_UserId != this_Player.iUserId)
-				throw new ApplicationException("this_UserId != this_Player.iUserId");
-
-			//get game from db
-			InkBallGame game = await _dbContext.InkBallGame
-				.Include(gp1 => gp1.Player1)
-					.ThenInclude(p1 => p1.User)
-				.Include(gp2 => gp2.Player2)
-					.ThenInclude(p2 => p2.User)
-				.FirstOrDefaultAsync(
-					w => w.iId == point.iGameId && (w.iPlayer1Id == this_Player.iId || w.iPlayer2Id == this_Player.iId)
-					&& (w.Player1.User.sExternalId == this_UserIdentifier || w.Player2.User.sExternalId == this_UserIdentifier)
-				, token);
-			if (game == null)
-				throw new NullReferenceException("game == null");
-			if (!(game.iPlayer1Id == point.iPlayerId || (game.iPlayer2Id.HasValue && game.iPlayer2Id.Value == point.iPlayerId)))
-				throw new ApplicationException("no player exist in that game");
-
-			//obtain another player; co-player
-			InkBallPlayer other_Player = game.Player1.User.sExternalId == this_UserIdentifier ? game.Player2 : game.Player1;
-			if (other_Player == null)
-				return;
-			string other_UserIdentifier = other_Player.User.sExternalId;*/
-
-			#endregion Old code
 
 			if (ThisGame == null || ThisPlayer == null || OtherPlayer == null || string.IsNullOrEmpty(OtherUserIdentifier)
 				|| string.IsNullOrEmpty(ThisUserName))
 				return;
 
-
-
 			var claimsPrincipal = this.Context.User;
-			string value = claimsPrincipal.FindFirstValue(nameof(InkBall.Module.Pages.HomeModel.InkBallUserId));
+			string userId = claimsPrincipal.FindFirstValue(nameof(InkBall.Module.Pages.HomeModel.InkBallUserId));
 			if (this.Context.Items.Count > 1)
 			{
 				System.Type t = typeof(System.Net.WebSockets.WebSocketProtocol);
-				value = "more than 1 " + t.ToString();
+				userId = "more than 1 " + t.ToString();
 			}
 
-			var new_point = new InkBallPointViewModel
-			{
-				iId = 0,
-				iGameId = ThisGame.iId,
-				iPlayerId = ThisPlayer.iId,
-				iX = _randomizer.Next(100),
-				iY = _randomizer.Next(100),
-				Status = InkBallPoint.StatusEnum.POINT_FREE,
-				iEnclosingPathId = 0,
-				Message = point.Message
-			};
 
-			await Clients.User(OtherUserIdentifier).ReceiveMessage(new_point, ThisUserName);
+			try
+			{
+				if (point == null || point.iPlayerId <= 0 || point.iGameId <= 0)
+					throw new NullReferenceException("point.iPlayerId <= 0 || point.iGameId <= 0");
+
+				var db_point = new InkBallPoint
+				{
+					// iId = 0,
+					iGameId = ThisGame.iId,
+					iPlayerId = ThisPlayer.iId,
+					iX = _randomizer.Next(100),
+					iY = _randomizer.Next(100),
+					Status = InkBallPoint.StatusEnum.POINT_FREE,
+					// iEnclosingPathId = 0
+				};
+
+				await _dbContext.InkBallPoint.AddAsync(db_point, token);
+				await _dbContext.SaveChangesAsync(token);
+
+				var new_point = new InkBallPointViewModel(db_point);
+
+				await Clients.User(OtherUserIdentifier).ServerToClientPoint(new_point, ThisUserName);
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex.Message);
+				//throw;
+			}
+
+
+		}
+
+		public async Task ClientToServerPing(PingCommand ping)
+		{
+			CancellationToken token = this.Context.ConnectionAborted;
+
+			await LoadUserAndPLayerStructures(token);
+
+
+
+			if (ThisGame == null || ThisPlayer == null || OtherPlayer == null || string.IsNullOrEmpty(OtherUserIdentifier)
+				|| string.IsNullOrEmpty(ThisUserName))
+				return;
+
+			var claimsPrincipal = this.Context.User;
+			string userId = claimsPrincipal.FindFirstValue(nameof(InkBall.Module.Pages.HomeModel.InkBallUserId));
+			if (this.Context.Items.Count > 1)
+			{
+				System.Type t = typeof(System.Net.WebSockets.WebSocketProtocol);
+				userId = "more than 1 " + t.ToString();
+			}
+
+
+			try
+			{
+				if (ping == null)
+					throw new NullReferenceException("ping == null");
+
+				var new_ping = new PingCommand(ping);
+
+				await Clients.User(OtherUserIdentifier).ServerToClientPing(new_ping, ThisUserName);
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex.Message);
+				//throw;
+			}
+
+
 		}
 	}
 }

@@ -6,11 +6,17 @@ namespace InkBall.Module.Model
 	public interface IPoint
 	{
 		int iId { get; set; }
+
 		int iGameId { get; set; }
+
 		int iPlayerId { get; set; }
+
 		int iX { get; set; }
+
 		int iY { get; set; }
+
 		InkBallPoint.StatusEnum Status { get; set; }
+
 		int? iEnclosingPathId { get; set; }
 	}
 
@@ -25,17 +31,28 @@ namespace InkBall.Module.Model
 			POINT_OWNED_BY_BLUE
 		}
 
+
 		public int iId { get; set; }
+
 		public int iGameId { get; set; }
+
 		public int iPlayerId { get; set; }
+
 		public int iX { get; set; }
+
 		public int iY { get; set; }
+
 		public StatusEnum Status { get; set; }
+
 		public int? iEnclosingPathId { get; set; }
 
+
 		public InkBallPath EnclosingPath { get; set; }
+
 		public InkBallGame Game { get; set; }
+
 		public InkBallPlayer Player { get; set; }
+
 		public ICollection<InkBallPointsInPath> InkBallPointsInPath { get; set; }
 
 		public InkBallPoint()
@@ -48,21 +65,24 @@ namespace InkBall.Module.Model
 	public class InkBallPointViewModel : IPoint
 	{
 		public int iId { get; set; }
-		public int iGameId { get; set; }
-		public int iPlayerId { get; set; }
-		public int iX { get; set; }
-		public int iY { get; set; }
-		public InkBallPoint.StatusEnum Status { get; set; }
-		public int? iEnclosingPathId { get; set; }
 
-		//TODO: remove this
-		public string Message { get; set; }
+		public int iGameId { get; set; }
+
+		public int iPlayerId { get; set; }
+
+		public int iX { get; set; }
+
+		public int iY { get; set; }
+
+		public InkBallPoint.StatusEnum Status { get; set; }
+
+		public int? iEnclosingPathId { get; set; }
 
 		public InkBallPointViewModel()
 		{
 		}
 
-		public InkBallPointViewModel(InkBallPoint point, string message)
+		public InkBallPointViewModel(InkBallPoint point)
 		{
 			this.iId = point.iId;
 			this.iGameId = point.iGameId;
@@ -71,11 +91,10 @@ namespace InkBall.Module.Model
 			this.iY = point.iY;
 			this.Status = point.Status;
 			this.iEnclosingPathId = point.iEnclosingPathId;
-			this.Message = message;
 		}
 
 		//[JsonConstructor]
-		public InkBallPointViewModel(InkBallPointViewModel point, string message)
+		public InkBallPointViewModel(InkBallPointViewModel point)
 		{
 			this.iId = point.iId;
 			this.iGameId = point.iGameId;
@@ -84,7 +103,6 @@ namespace InkBall.Module.Model
 			this.iY = point.iY;
 			this.Status = point.Status;
 			this.iEnclosingPathId = point.iEnclosingPathId;
-			this.Message = message;
 		}
 	}
 }

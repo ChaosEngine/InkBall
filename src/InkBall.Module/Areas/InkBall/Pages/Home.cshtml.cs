@@ -29,17 +29,12 @@ namespace InkBall.Module.Pages
 
 		public async Task<IActionResult> OnPostAsync(string action, string gameType)
 		{
-			InkBallUserViewModel user = await GetUserAsync();
-			GameUser = user;
+			await LoadUserPlayerAndGameAsync();
 
-			InkBallPlayerViewModel player = await GetPlayerAsync(GameUser, HttpContext.RequestAborted);
-
-			InkBallGameViewModel game = await GetGameAsync(player, HttpContext.RequestAborted);
-			Game = game;
-
-			var bIsLoggedIn = (player != null && !string.IsNullOrEmpty(user.sExternalId)) ? true : false;
+			var bIsLoggedIn = (Player != null && !string.IsNullOrEmpty(GameUser.sExternalId)) ? true : false;
 			string msg = string.Empty;
 			action = !string.IsNullOrEmpty(action) ? action : string.Empty;
+
 			try
 			{
 				switch (action)
@@ -81,7 +76,7 @@ namespace InkBall.Module.Pages
 						var trans = await _dbContext.Database.BeginTransactionAsync(HttpContext.RequestAborted);
 						try
 						{
-							var dbGame = await _dbContext.CreateNewGameFromExternalUserIDAsync(user.sExternalId, InkBallGame.GameStateEnum.AWAITING,
+							var dbGame = await _dbContext.CreateNewGameFromExternalUserIDAsync(GameUser.sExternalId, InkBallGame.GameStateEnum.AWAITING,
 								GameType, 15/*grid size*/, width, height);
 							Game = new InkBallGameViewModel(dbGame);
 
@@ -128,22 +123,29 @@ namespace InkBall.Module.Pages
 							trans = await _dbContext.Database.BeginTransactionAsync(HttpContext.RequestAborted);
 							try
 							{
-								_dbContext.SurrenderGameFromPlayer(game);
+								var gameID = Game.iId;
+
+								var db_game = (from ig in _dbContext.InkBallGame
+												.Include(ip1 => ip1.Player1).Include(ip2 => ip2.Player2)
+											   where ig.iId == gameID
+											   select ig).FirstOrDefaultAsync(HttpContext.RequestAborted);
+
+								_dbContext.SurrenderGameFromPlayerAsync(await db_game, base.HttpContext.Session, false, HttpContext.RequestAborted);
 
 								trans.Commit();
 							}
 							catch (Exception ex)
 							{
 								trans.Rollback();
-								_logger.LogError(ex, "SurrenderGameFromPlayer");
+								_logger.LogError(ex, nameof(_dbContext.SurrenderGameFromPlayerAsync));
 								throw;
 							}
 							HttpContext.Session.Set<InkBallGameViewModel>(nameof(InkBallGameViewModel), null);
 						}
 						//delete cookies
-						//SetCookie("id_cookie", '');
-						//SetCookie("email_cookie", '');
-						//SetCookie("haslo_cookie", '');
+						HttpContext.Session.Remove(nameof(InkBallUserViewModel));
+						HttpContext.Session.Remove(nameof(InkBallGameViewModel));
+						HttpContext.Session.Remove(nameof(InkBallUserViewModel));
 						return Redirect("~/Identity/Account/Logout");
 
 					case "Register":

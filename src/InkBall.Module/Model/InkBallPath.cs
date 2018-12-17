@@ -40,7 +40,9 @@ namespace InkBall.Module.Model
 	public class InkBallPathViewModel : IPath
 	{
 		public int iId { get; set; }
+
 		public int iGameId { get; set; }
+
 		public int iPlayerId { get; set; }
 
 		public InkBallPathViewModel()
