@@ -38,8 +38,8 @@ class InkBallPointViewModel {
 }
 
 class PingCommand {
-	get getMessage() { return this.Message; }
-	set setMessage(value) { this.Message = value; }
+	get Message() { return this.message; }
+	set Message(value) { this.message = value; }
 
 	constructor(message = '') {
 		this.Message = message;
@@ -60,6 +60,7 @@ function htmlEncode(html) {
 }
 /******** /funcs-n-classes ********/
 
+//TODO: enapculate belows inside some class or so
 var g_SignalRConnection = null, g_iGameID = null, g_iPlayerID = null;
 
 function BuildSignalR(hubName, loggingLevel, hubProtocol, transportType, tokenFactory) {
@@ -76,6 +77,7 @@ function BuildSignalR(hubName, loggingLevel, hubProtocol, transportType, tokenFa
 }
 
 function StartSignalRConnection(iGameID, iPlayerID) {
+	let iConnErrCount = 0;
 	if (g_SignalRConnection === null) return;
 	g_iGameID = iGameID;
 	g_iPlayerID = iPlayerID;
@@ -84,16 +86,17 @@ function StartSignalRConnection(iGameID, iPlayerID) {
 
 		let encodedMsg = null;
 		encodedMsg = InkBallPointViewModel.Format(user, point);
-		
+
 		let li = document.createElement("li");
 		li.textContent = encodedMsg;
 		document.getElementById("messagesList").appendChild(li);
+		//TODO: addd drawing point on SVG board
 	});
 	g_SignalRConnection.on("ServerToClientPing", function (ping, user) {
 
 		let encodedMsg = null;
 		encodedMsg = PingCommand.Format(user, ping);
-		
+
 		let li = document.createElement("li");
 		li.textContent = encodedMsg;
 		document.getElementById("messagesList").appendChild(li);
@@ -104,7 +107,7 @@ function StartSignalRConnection(iGameID, iPlayerID) {
 		let message = document.getElementById("messageInput").value;
 
 		let ping = new PingCommand(message);
-
+		//TODO: capture click/draw event and send it to server as point
 		g_SignalRConnection.invoke("ClientToServerPing", ping).catch(function (err) {
 			return console.error(err.toString());
 		});
@@ -123,7 +126,10 @@ function StartSignalRConnection(iGameID, iPlayerID) {
 	g_SignalRConnection.onclose(async (err) => {
 		if (err !== null) {
 			console.log(err);
-			setTimeout(() => start(), 5000);
+
+			if (iConnErrCount < 5)
+				iConnErrCount++;
+			setTimeout(() => start(), 4000 + (2000 * iConnErrCount));
 		}
 		else
 			await start();
@@ -132,11 +138,15 @@ function StartSignalRConnection(iGameID, iPlayerID) {
 	async function start() {
 		try {
 			await g_SignalRConnection.start();
-			console.log('connected');
+			iConnErrCount = 0;
+			console.log('connected; iConnErrCount = ' + iConnErrCount);
 		}
 		catch (err) {
-			console.log(err);
-			setTimeout(() => start(), 5000);
+			console.log(err + '; iConnErrCount = ' + iConnErrCount);
+
+			if (iConnErrCount < 5)
+				iConnErrCount++;
+			setTimeout(() => start(), 4000 + (2000 * iConnErrCount));
 		}
 	}
 	start();
