@@ -1,1 +1,1042 @@
-"use strict";function asyncGeneratorStep(a,b,c,d,e,f,g){try{var h=a[f](g),i=h.value}catch(a){return void c(a)}h.done?b(i):Promise.resolve(i).then(d,e)}function _asyncToGenerator(a){return function(){var b=this,c=arguments;return new Promise(function(d,e){function f(a){asyncGeneratorStep(h,d,e,f,g,"next",a)}function g(a){asyncGeneratorStep(h,d,e,f,g,"throw",a)}var h=a.apply(b,c);f(void 0)})}}function _classCallCheck(a,b){if(!(a instanceof b))throw new TypeError("Cannot call a class as a function")}function _defineProperties(a,b){for(var c,d=0;d<b.length;d++)c=b[d],c.enumerable=c.enumerable||!1,c.configurable=!0,"value"in c&&(c.writable=!0),Object.defineProperty(a,c.key,c)}function _createClass(a,b,c){return b&&_defineProperties(a.prototype,b),c&&_defineProperties(a,c),a}var StatusEnum=Object.freeze({POINT_FREE:-1,POINT_STARTING:0,POINT_IN_PATH:1,POINT_OWNED_BY_RED:2,POINT_OWNED_BY_BLU:3}),CommandKindEnum=Object.freeze({UNKNOWN:-1,PING:0,POINT:1,PATH:2,PLAYER_JOINING:3,PLAYER_SURRENDE:4}),InkBallPointViewModel=function(){function a(){var b=0<arguments.length&&void 0!==arguments[0]?arguments[0]:0,c=1<arguments.length&&void 0!==arguments[1]?arguments[1]:0,d=2<arguments.length&&void 0!==arguments[2]?arguments[2]:0,e=3<arguments.length&&void 0!==arguments[3]?arguments[3]:0,f=4<arguments.length&&void 0!==arguments[4]?arguments[4]:0,g=5<arguments.length&&void 0!==arguments[5]?arguments[5]:StatusEnum.POINT_FREE,h=6<arguments.length&&void 0!==arguments[6]?arguments[6]:0;_classCallCheck(this,a),this.iId=b,this.iGameId=c,this.iPlayerId=d,this.iX=e,this.iY=f,this.Status=g,this.iEnclosingPathId=h}return _createClass(a,null,[{key:"Format",value:function d(a,b){var c=b.iX+" "+b.iY+" "+b.Status;return a+" places "+c+" point"}}]),a}(),PingCommand=function(){function a(){var b=0<arguments.length&&void 0!==arguments[0]?arguments[0]:"";_classCallCheck(this,a),this.Message=b}return _createClass(a,[{key:"Message",get:function a(){return this.sMessage},set:function b(a){this.sMessage=a}}]),_createClass(a,null,[{key:"Format",value:function d(a,b){var c=b.Message;return a+" says "+c}}]),a}();function htmlEncode(a){return document.createElement("a").appendChild(document.createTextNode(a)).parentNode.innerHTML}var InkBallGame=function(){function a(b,c,d,e,f){var g=!(5<arguments.length&&void 0!==arguments[5])||arguments[5],h=!(6<arguments.length&&void 0!==arguments[6])||arguments[6],i=7<arguments.length&&void 0!==arguments[7]?arguments[7]:125,j=!(8<arguments.length&&void 0!==arguments[8])||arguments[8],k=!!(9<arguments.length&&void 0!==arguments[9])&&arguments[9];_classCallCheck(this,a),self=this,this.g_iGameID=null,this.g_iPlayerID=null,this.iConnErrCount=0,this.iExponentialBackOffMillis=2e3,this.COLOR_RED="red",this.COLOR_BLUE="blue",this.COLOR_OWNED_RED="pink",this.COLOR_OWNED_BLUE="#8A2BE2",this.POINT_FREE_RED=-3,this.POINT_FREE_BLUE=-2,this.POINT_FREE=-1,this.POINT_STARTING=0,this.POINT_IN_PATH=1,this.POINT_OWNED_BY_RED=2,this.POINT_OWNED_BY_BLUE=3,this.m_bIsWon=!1,this.m_iDelayBetweenMultiCaptures=4e3,this.m_iTimerInterval=2e3,this.m_iTooLong2Duration=i,this.m_iTimerID=null,this.m_bIsTimerRunning=!1,this.m_WaitStartTime=null,this.m_iSlowdownLevel=0,this.m_iGridSize=15,this.m_iGridWidth=0,this.m_iGridHeight=0,this.m_iLastX=-1,this.m_iLastY=-1,this.m_iMouseX=0,this.m_iMouseY=0,this.m_iPosX=0,this.m_iPosY=0,this.m_iScrollX=0,this.m_iScrollY=0,this.m_iClientWidth=0,this.m_iClientHeight=0,this.m_Debug=null,this.m_Player2Name=null,this.m_SurrenderButton=null,this.m_bMouseDown=!1,this.m_bDrawLines=!1,this.m_bIsMobile=j,this.m_sMessage="",this.m_bIsPlayingWithRed=g,this.m_bIsPlayerActive=h,this.m_sDotColor=this.m_bIsPlayingWithRed?this.COLOR_RED:this.COLOR_BLUE,this.m_Line=null,this.m_Lines=[],this.m_Points=[],this.m_bViewOnly=k,null===b||""===b||(this.g_SignalRConnection=new signalR.HubConnectionBuilder().withUrl(b,{transport:e,accessTokenFactory:f}).withHubProtocol(d).configureLogging(c).build(),this.g_SignalRConnection.onclose(function(){var a=_asyncToGenerator(regeneratorRuntime.mark(function a(b){return regeneratorRuntime.wrap(function(a){for(;;)switch(a.prev=a.next){case 0:if(null===b){a.next=6;break}console.log(b),5>self.iConnErrCount&&self.iConnErrCount++,setTimeout(function(){return self.start()},4e3+self.iExponentialBackOffMillis*self.iConnErrCount),a.next=8;break;case 6:return a.next=8,self.start();case 8:case"end":return a.stop();}},a,this)}));return function(){return a.apply(this,arguments)}}()))}var b=Math.abs;return _createClass(a,[{key:"start",value:function(){var a=_asyncToGenerator(regeneratorRuntime.mark(function a(){return regeneratorRuntime.wrap(function(a){for(;;)switch(a.prev=a.next){case 0:return a.prev=0,a.next=3,self.g_SignalRConnection.start();case 3:self.iConnErrCount=0,console.log("connected; iConnErrCount = "+self.iConnErrCount),a.next=12;break;case 7:a.prev=7,a.t0=a["catch"](0),console.log(a.t0+"; iConnErrCount = "+self.iConnErrCount),5>self.iConnErrCount&&self.iConnErrCount++,setTimeout(function(){return self.start()},4e3+self.iExponentialBackOffMillis*self.iConnErrCount);case 12:case"end":return a.stop();}},a,this,[[0,7]])}));return function b(){return a.apply(this,arguments)}}()},{key:"StartSignalRConnection",value:function f(a,b,c,d,e){null===self.g_SignalRConnection||(self.g_iGameID=a,self.g_iPlayerID=b,self.g_SignalRConnection.on("ServerToClientPoint",function(a,b){var d=null;d=InkBallPointViewModel.Format(b,a);var e=document.createElement("li");e.textContent=d,document.getElementById(c).appendChild(e)}),self.g_SignalRConnection.on("ServerToClientPing",function(a,b){var d=null;d=PingCommand.Format(b,a);var e=document.createElement("li");e.textContent=d,document.getElementById(c).appendChild(e)}),document.getElementById(d).addEventListener("click",function(a){var b=document.getElementById(e).value,c=new PingCommand(b);self.g_SignalRConnection.invoke("ClientToServerPing",c).catch(function(a){return console.error(a.toString())}),a.preventDefault()}),document.getElementById(e).addEventListener("keyup",function(a){a.preventDefault(),13===a.keyCode&&document.getElementById(d).click()}),self.start())}},{key:"Debug",value:function b(){switch(self.Debug.arguments.length){case 1:self.m_Debug.innerHTML=self.Debug.arguments[0];break;case 2:var a=document.getElementById("debug"+self.Debug.arguments[1]);a.innerHTML=self.Debug.arguments[0];break;default:}}},{key:"SetTimer",value:function c(a){if(!1==a)!0==self.m_bIsTimerRunning&&clearInterval(self.m_iTimerID),self.m_bIsTimerRunning=!1;else{!0==self.m_bIsTimerRunning?clearInterval(self.m_iTimerID):self.m_WaitStartTime=new Date;var b=self.m_iTimerInterval*(1+.5*self.m_iSlowdownLevel);self.m_iTimerID=setInterval(self.GameLoop,b),self.m_bIsTimerRunning=!0}}},{key:"DisableSelection",value:function b(a){"undefined"==typeof a.onselectstart?"undefined"==typeof a.style.MozUserSelect?a.onmousedown=function(){return!1}:a.style.MozUserSelect="none":a.onselectstart=function(){return!1},a.style.cursor="default"}},{key:"f_clientWidth",value:function a(){return self.f_filterResults(window.innerWidth?window.innerWidth:0,document.documentElement?document.documentElement.clientWidth:0,document.body?document.body.clientWidth:0)}},{key:"f_clientHeight",value:function a(){return self.f_filterResults(window.innerHeight?window.innerHeight:0,document.documentElement?document.documentElement.clientHeight:0,document.body?document.body.clientHeight:0)}},{key:"f_scrollLeft",value:function a(){return self.f_filterResults(window.pageXOffset?window.pageXOffset:0,document.documentElement?document.documentElement.scrollLeft:0,document.body?document.body.scrollLeft:0)}},{key:"f_scrollTop",value:function a(){return self.f_filterResults(window.pageYOffset?window.pageYOffset:0,document.documentElement?document.documentElement.scrollTop:0,document.body?document.body.scrollTop:0)}},{key:"f_filterResults",value:function e(a,b,c){var d=a?a:0;return b&&(!d||d>b)&&(d=b),c&&(!d||d>c)?c:d}},{key:"SetPoint",value:function i(a,b,c){var d=a*self.m_iGridSize,e=b*self.m_iGridSize,f=4,g=$createOval(f,"true");g.$move(d,e,f);var h;c===self.POINT_FREE_RED?(h=self.COLOR_RED,g.$SetStatus(self.POINT_FREE)):c===self.POINT_FREE_BLUE?(h=self.COLOR_BLUE,g.$SetStatus(self.POINT_FREE)):c===self.POINT_FREE?(h=self.m_sDotColor,g.$SetStatus(self.POINT_FREE)):c===self.POINT_STARTING?(h=self.m_sDotColor,g.$SetStatus(self.POINT_IN_PATH)):c===self.POINT_IN_PATH?(h=self.m_sDotColor,g.$SetStatus(c)):c===self.POINT_OWNED_BY_RED?(h=self.COLOR_OWNED_RED,g.$SetStatus(c)):c===self.POINT_OWNED_BY_BLUE?(h=self.COLOR_OWNED_BLUE,g.$SetStatus(c)):alert("bad point"),g.$SetFillColor(h),g.$strokeColor(h),self.m_Points[b*self.m_iGridWidth+a]=g}},{key:"SetPath",value:function k(a,b,c){a=a.split(" ");for(var d=a.length,e="",f=null,g="",h=0;h<d;++h)f=a[h].split(","),x=parseInt(f[0]),y=parseInt(f[1]),x*=self.m_iGridSize,y*=self.m_iGridSize,g=g+e+x+","+y,e=" ",f=self.m_Points[y*self.m_iGridWidth+x],null!=f&&f.$SetStatus(self.POINT_IN_PATH);f=a[0].split(","),x=parseInt(f[0]),y=parseInt(f[1]),x*=self.m_iGridSize,y*=self.m_iGridSize,g=g+e+x+","+y,f=self.m_Points[y*self.m_iGridWidth+x],null!=f&&f.$SetStatus(self.POINT_IN_PATH);var j=$createPolyline(3,g,c?self.m_sDotColor:b?self.COLOR_BLUE:self.COLOR_RED);self.m_Lines[self.m_Lines.length]=j}},{key:"IsPointBelongingToLine",value:function j(a,b,c){for(var d,e,f,g=a.length,h=0;h<g;++h)if(f=a[h].split(","),d=f[0],e=f[1],d==b&&e==c)return!0;return!1}},{key:"pnpoly",value:function l(a,b,d,e,f){var g,h,k=0;for(g=0,h=a-1;g<a;h=g++)(d[g]<=f&&f<d[h]||d[h]<=f&&f<d[g])&&e<(b[h]-b[g])*(f-d[g])/(d[h]-d[g])+b[g]&&(k=!k);return k}},{key:"SurroundOponentPoints",value:function t(){var a,b=self.m_Line.$GetPoints();a=b.length;for(var c,d,e=[],f=[],g="",h="",j=0,l=0;l<a;l+=2)c=b[l],d=b[l+1],null==c||null==d||(c/=self.m_iGridSize,d/=self.m_iGridSize,e[j]=c,f[j]=d,g=g+h+c+","+d,h=" ",++j);if(e[0]!=e[e.length-1]||f[0]!=f[f.length-1])return{owned:"",path:""};var m=self.m_Points.length,n=self.m_sDotColor==self.COLOR_RED?self.COLOR_BLUE:self.COLOR_RED,o=self.m_sDotColor==self.COLOR_RED?self.POINT_OWNED_BY_RED:self.POINT_OWNED_BY_BLUE,p=self.m_sDotColor==self.COLOR_RED?self.COLOR_OWNED_RED:self.COLOR_OWNED_BLUE,q="";h="";for(var r,l=0;l<m;++l)if(r=self.m_Points[l],null!=r&&r.$GetStatus()==self.POINT_FREE&&r.$GetFillColor()==n){var s=r.$GetPosition();c=s.x,d=s.y,c/=self.m_iGridSize,d/=self.m_iGridSize,0!=self.pnpoly(a,e,f,c,d)&&(r.$SetStatus(o),r.$SetFillColor(p),r.$strokeColor(p),q=q+h+c+","+d,h=" ")}return{owned:q,path:g}}},{key:"IsPointOutsideAllPaths",value:function p(a,b){for(var c=self.m_Lines.length,d=0;d<c;++d){var e,f=self.m_Lines[d].$GetPoints();e=f.length;for(var g,h,l=[],m=[],n=0,o=0;o<e;o+=2)g=f[o],h=f[o+1],null==g||null==h||(g/=self.m_iGridSize,h/=self.m_iGridSize,l[n]=g,m[n]=h,++n);if(0!=self.pnpoly(e,l,m,a,b))return!1}return!0}},{key:"CreateXMLWaitForPlayerRequest",value:function b(){var a="<WaitForPlayer>"+(0<self.CreateXMLWaitForPlayerRequest.arguments.length&&!0==self.CreateXMLWaitForPlayerRequest.arguments[0]?"<ShowP2Name />":"")+"</WaitForPlayer>";return a}},{key:"CreateXMLPutPointRequest",value:function c(a,b){return"<PutPoint><Point x='"+a+"' y='"+b+"' /></PutPoint>"}},{key:"CreateXMLPutPathRequest",value:function c(a,b){return"<PutPath><Path>"+a+"</Path><Owned>"+b+"</Owned></PutPath>"}},{key:"SendAsyncData",value:function b(a){0==a.length}},{key:"AjaxResponseCallBack",value:function w(){if(null!=g_XmlHttp&&(4==g_XmlHttp.readyState||"complete"==g_XmlHttp.readyState)&&200==g_XmlHttp.status){var a=g_XmlHttp.responseXML,b=a.firstChild;1!=b.nodeType&&(b=b.nextSibling);var c=b.nodeName;switch(c){case"WaitForPlayer":var d=0<b.getElementsByTagName("P2Name").length?b.getElementsByTagName("P2Name")[0].firstChild.data:"",e="true"==b.getElementsByTagName("Active")[0].firstChild.data;if(e){""!=d&&(self.m_Player2Name.innerHTML=d,self.m_SurrenderButton.value="surrender"),"win"==self.m_SurrenderButton.value&&(self.m_SurrenderButton.value="surrender");var f=b.getElementsByTagName("LastMove")[0];switch(f=f.firstChild,f.nodeName){case"Point":var g=parseInt(f.getAttribute("x")),h=parseInt(f.getAttribute("y")),j=parseInt(f.getAttribute("status"));self.SetPoint(g,h,j),self.m_bIsPlayerActive=!0,self.SetTimer(!1),self.m_bIsMobile?self.ShowMobileStatus():self.Debug("Oponent has moved, your turn");break;case"Path":var k=f.firstChild.data,l=b.getElementsByTagName("Owned")[0].firstChild.data;self.SetPath(k,self.m_sDotColor==self.COLOR_RED,!1);for(var m=l.split(" "),n=m.length,o=null,q=self.m_sDotColor==self.COLOR_RED?self.POINT_OWNED_BY_RED:self.POINT_OWNED_BY_BLUE,r=self.m_sDotColor==self.COLOR_RED?self.COLOR_OWNED_BLUE:self.COLOR_OWNED_RED,s=0;s<n;++s)o=m[s].split(","),g=parseInt(o[0]),h=parseInt(o[1]),o=self.m_Points[h*self.m_iGridWidth+g],null!=o&&(o.$SetStatus(q),o.$SetFillColor(r),o.$strokeColor(r));self.m_bIsPlayerActive=!0,self.SetTimer(!1),self.m_bIsMobile?self.ShowMobileStatus():self.Debug("Oponent has moved, your turn");break;default:}}else self.m_sMessage="Waiting for oponent move",""!=d&&(self.m_Player2Name.innerHTML=d,self.m_SurrenderButton.value="surrender",self.m_bIsMobile&&self.ShowMobileStatus());break;case"PutPoint":self.m_bIsPlayerActive=!1,self.m_iSlowdownLevel=0,self.SetTimer(!0);break;case"PutPath":var t=self.m_Line.$GetPoints(),g=t[s],h=t[s+1];g/=self.m_iGridSize,h/=self.m_iGridSize;var u=self.m_Points[h*self.m_iGridWidth+g];null!=u&&u.$SetStatus(self.POINT_IN_PATH),self.m_Lines[self.m_Lines.length]=self.m_Line,self.m_iLastX=self.m_iLastY=-1,self.m_Line=null,self.m_bIsPlayerActive=!1,self.m_iSlowdownLevel=0,self.SetTimer(!0);break;case"InterruptGame":self.SetTimer(!1);var v=0<b.getElementsByTagName("msg").length?b.getElementsByTagName("msg")[0].firstChild.data:"";""==v?alert("Game interrupted!"):alert(v),window.location.href="games.php"+(self.m_bIsMobile?"?IsMobile=true":"");break;case"WaitingForSecondPlayer":self.m_sMessage="Waiting for other player to connect";break;case"Err":var v=0<b.getElementsByTagName("msg").length?b.getElementsByTagName("msg")[0].firstChild.data:"unknown error";alert(v),self.OnCancelClick();break;default:}}}},{key:"GameLoop",value:function c(){var a="???"==self.m_Player2Name.innerHTML;self.SendAsyncData(self.CreateXMLWaitForPlayerRequest(a));var b=parseInt((new Date-self.m_WaitStartTime)/1e3);if(0>=self.m_iSlowdownLevel&&b>=.25*self.m_iTooLong2Duration)self.m_iSlowdownLevel=1,self.SetTimer(!0);else if(1>=self.m_iSlowdownLevel&&b>=.5*self.m_iTooLong2Duration)self.m_iSlowdownLevel=2,self.SetTimer(!0);else if(2>=self.m_iSlowdownLevel&&b>=.75*self.m_iTooLong2Duration)self.m_iSlowdownLevel=4,self.SetTimer(!0);else if(b>=self.m_iTooLong2Duration)if(!a)self.SetTimer(!1),self.m_SurrenderButton.value="win",alert("Second player is not responding for quiet long. To walkover win click win - or continue to wait for oponent move"),self.SetTimer(!0);else if(self.SetTimer(!1),!0==confirm("Second player is still not connecting. Continue waiting?"))self.SetTimer(!0);else return void(window.location.href="Games");self.m_bIsMobile?self.ShowMobileStatus(b):""!=self.m_sMessage&&self.Debug(self.m_sMessage+"("+b+")")}},{key:"ShowMobileStatus",value:function c(a){var b=document.getElementById("GameStatus");"???"==self.m_Player2Name.innerHTML?-1==b.style.backgroundImage.indexOf("pjonbgcurrent.gif")?b.style.backgroundImage="url(img/pjonbgcurrent.gif)":b.style.backgroundImage="url(img/pjonbgcurrent2.gif)":self.m_bIsPlayerActive?(b.style.backgroundImage=self.m_bIsPlayingWithRed?"url(img/pjonbgcurrent.gif)":"url(img/pjonbgcurrent2.gif)",self.Debug("",0)):(b.style.backgroundImage=self.m_bIsPlayingWithRed?"url(img/pjonbgcurrent2.gif)":"url(img/pjonbgcurrent.gif)","undefined"!=a&&null!=a&&self.Debug(a))}},{key:"OnMouseMove",value:function l(a){if(self.m_bIsPlayerActive){var c=(a?a.clientX:window.event.clientX)-self.m_iPosX+self.m_iScrollX+.5*self.m_iGridSize,d=(a?a.clientY:window.event.clientY)-self.m_iPosY+self.m_iScrollY+.5*self.m_iGridSize;if(c=parseInt(c/self.m_iGridSize),d=parseInt(d/self.m_iGridSize),self.m_bDrawLines&&!0==self.m_bMouseDown&&(self.m_iLastX!=c||self.m_iLastY!=d)&&1>=b(parseInt(self.m_iLastX-c))&&1>=b(parseInt(self.m_iLastY-d))&&0<=self.m_iLastX&&0<=self.m_iLastY)if(null!=self.m_Line){var e=self.m_Points[self.m_iLastY*self.m_iGridWidth+self.m_iLastX],f=self.m_Points[d*self.m_iGridWidth+c];if(null!=e&&null!=f&&f.$GetStatus()!=self.POINT_IN_PATH&&e.$GetFillColor()==self.m_sDotColor&&f.$GetFillColor()==self.m_sDotColor){var g=c*self.m_iGridSize,h=d*self.m_iGridSize;if(self.m_Line.$AppendPoints(g+","+h),f.$GetStatus()!=self.POINT_STARTING)f.$SetStatus(self.POINT_IN_PATH);else{var i=self.SurroundOponentPoints();0<i.owned.length?(self.m_Line.$SetIsClosed(!0),self.Debug("Closing path",0),self.SendAsyncData(self.CreateXMLPutPathRequest(i.path,i.owned))):self.Debug("Wrong path, cancell it or refresh page",0)}self.m_iLastX=c,self.m_iLastY=d}}else{var e=self.m_Points[self.m_iLastY*self.m_iGridWidth+self.m_iLastX],f=self.m_Points[d*self.m_iGridWidth+c];if(null!=e&&null!=f&&e.$GetStatus()!=self.POINT_IN_PATH&&f.$GetStatus()!=self.POINT_IN_PATH&&e.$GetFillColor()==self.m_sDotColor&&f.$GetFillColor()==self.m_sDotColor){var j=self.m_iLastX*self.m_iGridSize,k=self.m_iLastY*self.m_iGridSize,g=c*self.m_iGridSize,h=d*self.m_iGridSize;self.m_Line=$createPolyline(3,j+","+k+" "+g+","+h,self.m_sDotColor),e.$GetStatus()!=self.POINT_IN_PATH&&e.$SetStatus(self.POINT_STARTING),f.$GetStatus()!=self.POINT_IN_PATH&&f.$SetStatus(self.POINT_STARTING),self.m_iLastX=c,self.m_iLastY=d}}}}},{key:"OnMouseDown",value:function o(a){if(self.m_bIsPlayerActive){var c=(a?a.clientX:window.event.clientX)-self.m_iPosX+self.m_iScrollX+.5*self.m_iGridSize,d=(a?a.clientY:window.event.clientY)-self.m_iPosY+self.m_iScrollY+.5*self.m_iGridSize;if(c=self.m_iMouseX=parseInt(c/self.m_iGridSize),d=self.m_iMouseY=parseInt(d/self.m_iGridSize),self.m_bMouseDown=!0,!self.m_bDrawLines){self.m_iLastX=c,self.m_iLastY=d;var e=c,f=d;if(c=e*self.m_iGridSize,d=f*self.m_iGridSize,null!=self.m_Points[f*self.m_iGridWidth+e])return;if(!self.IsPointOutsideAllPaths(e,f))return;var g=$createOval(4,"true");g.$SetFillColor(self.m_sDotColor),g.$strokeColor(self.m_sDotColor),g.$move(c,d,4),self.m_Points[f*self.m_iGridWidth+e]=g,self.SendAsyncData(self.CreateXMLPutPointRequest(e,f))}else if((self.m_iLastX!=c||self.m_iLastY!=d)&&1>=b(parseInt(self.m_iLastX-c))&&1>=b(parseInt(self.m_iLastY-d))&&0<=self.m_iLastX&&0<=self.m_iLastY){if(null!=self.m_Line){var h=self.m_Points[self.m_iLastY*self.m_iGridWidth+self.m_iLastX],i=self.m_Points[d*self.m_iGridWidth+c];if(null!=h&&null!=i&&i.$GetStatus()!=self.POINT_IN_PATH&&h.$GetFillColor()==self.m_sDotColor&&i.$GetFillColor()==self.m_sDotColor){var j=c*self.m_iGridSize,k=d*self.m_iGridSize;if(self.m_Line.$AppendPoints(j+","+k),i.$GetStatus()!=self.POINT_STARTING)i.$SetStatus(self.POINT_IN_PATH);else{var l=self.SurroundOponentPoints();0<l.owned.length?(self.m_Line.$SetIsClosed(!0),self.Debug("Closing path",0),self.SendAsyncData(self.CreateXMLPutPathRequest(l.path,l.owned))):self.Debug("Wrong path, cancell it or refresh page",0)}self.m_iLastX=c,self.m_iLastY=d}}else{var h=self.m_Points[self.m_iLastY*self.m_iGridWidth+self.m_iLastX],i=self.m_Points[d*self.m_iGridWidth+c];if(null!=h&&null!=i&&h.$GetStatus()!=self.POINT_IN_PATH&&i.$GetStatus()!=self.POINT_IN_PATH&&h.$GetFillColor()==self.m_sDotColor&&i.$GetFillColor()==self.m_sDotColor){var m=self.m_iLastX*self.m_iGridSize,n=self.m_iLastY*self.m_iGridSize,j=c*self.m_iGridSize,k=d*self.m_iGridSize;self.m_Line=$createPolyline(3,m+","+n+" "+j+","+k,self.m_sDotColor),h.$GetStatus()!=self.POINT_IN_PATH&&h.$SetStatus(self.POINT_STARTING),i.$GetStatus()!=self.POINT_IN_PATH&&i.$SetStatus(self.POINT_STARTING)}self.m_iLastX=c,self.m_iLastY=d}}else if(0>self.m_iLastX||0>self.m_iLastY){var i=self.m_Points[d*self.m_iGridWidth+c];null!=i&&i.$GetStatus()==self.POINT_FREE&&i.$GetFillColor()==self.m_sDotColor&&(self.m_iLastX=c,self.m_iLastY=d)}}}},{key:"OnMouseUp",value:function a(){self.m_bMouseDown=!1}},{key:"OnScroll",value:function a(){self.m_iScrollX=self.f_scrollLeft(),self.m_iScrollY=self.f_scrollTop()}},{key:"OnDrawModeClick",value:function b(){self.m_bDrawLines=!self.m_bDrawLines;var a=document.getElementById("DrawMode");a.value=self.m_bDrawLines?"Draw dots":"Draw lines",self.m_iLastX=self.m_iLastY=-1,self.m_Line=null}},{key:"OnCancelClick",value:function f(){if(self.m_bDrawLines){if(null!=self.m_Line){for(var a=self.m_Line.$GetPoints(),b=0;b<a.length;b+=2){var c=a[b],d=a[b+1];if(null!=c&&null!=d){c/=self.m_iGridSize,d/=self.m_iGridSize;var e=self.m_Points[d*self.m_iGridWidth+c];null!=e&&e.$SetStatus(self.POINT_FREE)}}$RemovePolyline(self.m_Line),self.m_Line=null}self.m_iLastX=self.m_iLastY=-1}}},{key:"OnTestClick",value:function d(){if(!self.m_bDrawLines){var a=self.m_Points[self.m_iLastY*self.m_iGridWidth+self.m_iLastX],b=a.$GetPosition();self.Debug(a.$GetFillColor()+" posX = "+b.x+" posY = "+b.y,1)}else if(null!=self.m_Line){var c=self.SurroundOponentPoints();0<c.owned.length&&(self.m_iLastX=self.m_iLastY=-1,self.m_Line=null)}}},{key:"PrepareDrawing",value:function i(a){var b=1<arguments.length&&void 0!==arguments[1]?arguments[1]:15,c=!!(2<arguments.length&&void 0!==arguments[2])&&arguments[2],d=!(3<arguments.length&&void 0!==arguments[3])||arguments[3],e=4<arguments.length&&void 0!==arguments[4]?arguments[4]:125,f=!(5<arguments.length&&void 0!==arguments[5])||arguments[5],g=!!(6<arguments.length&&void 0!==arguments[6])&&arguments[6];self.COLOR_RED="red",self.COLOR_BLUE="blue",self.COLOR_OWNED_RED="pink",self.COLOR_OWNED_BLUE="#8A2BE2",self.POINT_FREE_RED=-3,self.POINT_FREE_BLUE=-2,self.POINT_FREE=-1,self.POINT_STARTING=0,self.POINT_IN_PATH=1,self.POINT_OWNED_BY_RED=2,self.POINT_OWNED_BY_BLUE=3,self.m_bIsWon=!1,self.m_iDelayBetweenMultiCaptures=4e3,self.m_iTimerInterval=2e3,self.m_iTooLong2Duration=e,self.m_iTimerID=null,self.m_bIsTimerRunning=!1,self.m_WaitStartTime=null,self.m_iSlowdownLevel=0,self.m_iGridSize=b,self.m_iGridWidth=0,self.m_iGridHeight=0,self.m_iLastX=-1,self.m_iLastY=-1,self.m_iMouseX=0,self.m_iMouseY=0,self.m_iPosX=0,self.m_iPosY=0,self.m_iScrollX=0,self.m_iScrollY=0,self.m_iClientWidth=0,self.m_iClientHeight=0,self.m_Debug=null,self.m_Player2Name=null,self.m_SurrenderButton=null,self.m_bMouseDown=!1,self.m_bDrawLines=!1,self.m_bIsMobile=f,self.m_sMessage="",self.m_bIsPlayingWithRed=c,self.m_bIsPlayerActive=d,self.m_sDotColor=self.m_bIsPlayingWithRed?self.COLOR_RED:self.COLOR_BLUE,self.m_Line=null,self.m_Lines=[],self.m_Points=[],self.m_Debug=document.getElementById("debug0"),self.m_Player2Name=document.getElementById("Player2Name"),self.m_SurrenderButton=document.getElementById("SurrenderButton");var h=document.getElementById(a);if(!h)return void alert("no board");if(self.m_iPosX=h.offsetLeft,self.m_iPosY=h.offsetTop,self.m_iClientWidth=h.clientWidth,self.m_iClientHeight=h.clientHeight,self.m_iGridWidth=parseInt(self.m_iClientWidth/self.m_iGridSize),self.m_iGridHeight=parseInt(self.m_iClientHeight/self.m_iGridSize),self.m_iScrollX=self.f_scrollLeft(),self.m_iScrollY=self.f_scrollTop(),cont=$createSVGVML(h,h.style.width,h.style.height,!1),self.DisableSelection(h),!self.m_bViewOnly){h.onmousedown=self.OnMouseDown,h.onmousemove=self.OnMouseMove,h.onmouseup=self.OnMouseUp,window.onscroll=self.OnScroll;var j=document.getElementById("DrawMode");j.onclick=self.OnDrawModeClick,j=document.getElementById("Cancel"),j.onclick=self.OnCancelClick}}}]),a}();
+"use strict";
+
+function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
+
+function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+var StatusEnum = Object.freeze({
+  "POINT_FREE": -1,
+  "POINT_STARTING": 0,
+  "POINT_IN_PATH": 1,
+  "POINT_OWNED_BY_RED": 2,
+  "POINT_OWNED_BY_BLU": 3
+});
+var CommandKindEnum = Object.freeze({
+  "UNKNOWN": -1,
+  "PING": 0,
+  "POINT": 1,
+  "PATH": 2,
+  "PLAYER_JOINING": 3,
+  "PLAYER_SURRENDE": 4
+});
+
+var InkBallPointViewModel = function () {
+  function InkBallPointViewModel() {
+    var iId = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
+    var iGameId = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+    var iPlayerId = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
+    var iX = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;
+    var iY = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 0;
+    var Status = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : StatusEnum.POINT_FREE;
+    var iEnclosingPathId = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : 0;
+
+    _classCallCheck(this, InkBallPointViewModel);
+
+    this.iId = iId;
+    this.iGameId = iGameId;
+    this.iPlayerId = iPlayerId;
+    this.iX = iX;
+    this.iY = iY;
+    this.Status = Status;
+    this.iEnclosingPathId = iEnclosingPathId;
+  }
+
+  _createClass(InkBallPointViewModel, null, [{
+    key: "Format",
+    value: function Format(sUser, point) {
+      var msg = point.iX + ' ' + point.iY + ' ' + point.Status;
+      return sUser + " places " + msg + " point";
+    }
+  }]);
+
+  return InkBallPointViewModel;
+}();
+
+var PingCommand = function () {
+  _createClass(PingCommand, [{
+    key: "Message",
+    get: function get() {
+      return this.message;
+    },
+    set: function set(value) {
+      this.message = value;
+    }
+  }]);
+
+  function PingCommand() {
+    var message = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
+
+    _classCallCheck(this, PingCommand);
+
+    this.Message = message;
+  }
+
+  _createClass(PingCommand, null, [{
+    key: "Format",
+    value: function Format(sUser, ping) {
+      var msg = ping.Message;
+      return sUser + " says " + msg;
+    }
+  }]);
+
+  return PingCommand;
+}();
+
+function htmlEncode(html) {
+  return document.createElement('a').appendChild(document.createTextNode(html)).parentNode.innerHTML;
+}
+
+var InkBallGame = function () {
+  function InkBallGame(hubName, loggingLevel, hubProtocol, transportType, tokenFactory) {
+    var _this = this;
+
+    var bIsPlayingWithRed = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : true;
+    var bIsPlayerActive = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : true;
+    var iTooLong2Duration = arguments.length > 7 && arguments[7] !== undefined ? arguments[7] : 125;
+    var bIsMobile = arguments.length > 8 && arguments[8] !== undefined ? arguments[8] : true;
+    var bViewOnly = arguments.length > 9 && arguments[9] !== undefined ? arguments[9] : false;
+
+    _classCallCheck(this, InkBallGame);
+
+    this.g_iGameID = null;
+    this.g_iPlayerID = null;
+    this.iConnErrCount = 0;
+    this.iExponentialBackOffMillis = 2000;
+    this.COLOR_RED = 'red';
+    this.COLOR_BLUE = 'blue';
+    this.COLOR_OWNED_RED = 'pink';
+    this.COLOR_OWNED_BLUE = '#8A2BE2';
+    this.POINT_FREE_RED = -3;
+    this.POINT_FREE_BLUE = -2;
+    this.POINT_FREE = -1;
+    this.POINT_STARTING = 0;
+    this.POINT_IN_PATH = 1;
+    this.POINT_OWNED_BY_RED = 2;
+    this.POINT_OWNED_BY_BLUE = 3;
+    this.m_bIsWon = false;
+    this.m_iDelayBetweenMultiCaptures = 4000;
+    this.m_iTimerInterval = 2000;
+    this.m_iTooLong2Duration = iTooLong2Duration;
+    this.m_iTimerID = null;
+    this.m_bIsTimerRunning = false;
+    this.m_WaitStartTime = null;
+    this.m_iSlowdownLevel = 0;
+    this.m_iGridSize = 15;
+    this.m_iGridWidth = 0;
+    this.m_iGridHeight = 0;
+    this.m_iLastX = -1;
+    this.m_iLastY = -1;
+    this.m_iMouseX = 0;
+    this.m_iMouseY = 0;
+    this.m_iPosX = 0;
+    this.m_iPosY = 0;
+    this.m_iScrollX = 0;
+    this.m_iScrollY = 0;
+    this.m_iClientWidth = 0;
+    this.m_iClientHeight = 0;
+    this.m_Debug = null;
+    this.m_Player2Name = null;
+    this.m_SurrenderButton = null;
+    this.m_bMouseDown = false;
+    this.m_bDrawLines = !true;
+    this.m_bIsMobile = bIsMobile;
+    this.m_sMessage = '';
+    this.m_bIsPlayingWithRed = bIsPlayingWithRed;
+    this.m_bIsPlayerActive = bIsPlayerActive;
+    this.m_sDotColor = this.m_bIsPlayingWithRed ? this.COLOR_RED : this.COLOR_BLUE;
+    this.m_Line = null;
+    this.m_Lines = new Array();
+    this.m_Points = new Array();
+    this.m_bViewOnly = bViewOnly;
+    if (hubName === null || hubName === "") return;
+    this.g_SignalRConnection = new signalR.HubConnectionBuilder().withUrl(hubName, {
+      transport: transportType,
+      accessTokenFactory: tokenFactory
+    }).withHubProtocol(hubProtocol).configureLogging(loggingLevel).build();
+    this.g_SignalRConnection.onclose(function () {
+      var _ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(err) {
+        return regeneratorRuntime.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                if (!(err !== null)) {
+                  _context.next = 6;
+                  break;
+                }
+
+                console.log(err);
+                if (_this.iConnErrCount < 5) _this.iConnErrCount++;
+                setTimeout(function () {
+                  return _this.start();
+                }, 4000 + _this.iExponentialBackOffMillis * _this.iConnErrCount);
+                _context.next = 8;
+                break;
+
+              case 6:
+                _context.next = 8;
+                return _this.start();
+
+              case 8:
+              case "end":
+                return _context.stop();
+            }
+          }
+        }, _callee, this);
+      }));
+
+      return function (_x) {
+        return _ref.apply(this, arguments);
+      };
+    }());
+  }
+
+  _createClass(InkBallGame, [{
+    key: "start",
+    value: function () {
+      var _start = _asyncToGenerator(regeneratorRuntime.mark(function _callee2() {
+        var _this2 = this;
+
+        return regeneratorRuntime.wrap(function _callee2$(_context2) {
+          while (1) {
+            switch (_context2.prev = _context2.next) {
+              case 0:
+                _context2.prev = 0;
+                _context2.next = 3;
+                return this.g_SignalRConnection.start();
+
+              case 3:
+                this.iConnErrCount = 0;
+                console.log('connected; iConnErrCount = ' + this.iConnErrCount);
+                _context2.next = 12;
+                break;
+
+              case 7:
+                _context2.prev = 7;
+                _context2.t0 = _context2["catch"](0);
+                console.log(_context2.t0 + '; iConnErrCount = ' + this.iConnErrCount);
+                if (this.iConnErrCount < 5) this.iConnErrCount++;
+                setTimeout(function () {
+                  return _this2.start();
+                }, 4000 + this.iExponentialBackOffMillis * this.iConnErrCount);
+
+              case 12:
+              case "end":
+                return _context2.stop();
+            }
+          }
+        }, _callee2, this, [[0, 7]]);
+      }));
+
+      function start() {
+        return _start.apply(this, arguments);
+      }
+
+      return start;
+    }()
+  }, {
+    key: "StartSignalRConnection",
+    value: function StartSignalRConnection(iGameID, iPlayerID, ulMessagesList, inpSendButton, inpMessageInput) {
+      if (this.g_SignalRConnection === null) return;
+      this.g_iGameID = iGameID;
+      this.g_iPlayerID = iPlayerID;
+      this.g_SignalRConnection.on("ServerToClientPoint", function (point, user) {
+        var encodedMsg = null;
+        encodedMsg = InkBallPointViewModel.Format(user, point);
+        var li = document.createElement("li");
+        li.textContent = encodedMsg;
+        document.getElementById(ulMessagesList).appendChild(li);
+      });
+      this.g_SignalRConnection.on("ServerToClientPing", function (ping, user) {
+        var encodedMsg = null;
+        encodedMsg = PingCommand.Format(user, ping);
+        var li = document.createElement("li");
+        li.textContent = encodedMsg;
+        document.getElementById(ulMessagesList).appendChild(li);
+      });
+      document.getElementById(inpSendButton).addEventListener("click", function (event) {
+        var message = document.getElementById(inpMessageInput).value;
+        var ping = new PingCommand(message);
+        this.g_SignalRConnection.invoke("ClientToServerPing", ping).catch(function (err) {
+          return console.error(err.toString());
+        });
+        event.preventDefault();
+      }.bind(this), false);
+      document.getElementById(inpMessageInput).addEventListener("keyup", function (event) {
+        event.preventDefault();
+
+        if (event.keyCode === 13) {
+          document.getElementById(inpSendButton).click();
+        }
+      }.bind(this), false);
+      this.start();
+    }
+  }, {
+    key: "Debug",
+    value: function Debug() {
+      switch (arguments.length) {
+        case 1:
+          this.m_Debug.innerHTML = arguments.length <= 0 ? undefined : arguments[0];
+          break;
+
+        case 2:
+          var d = document.getElementById('debug' + (arguments.length <= 1 ? undefined : arguments[1]));
+          d.innerHTML = arguments.length <= 0 ? undefined : arguments[0];
+          break;
+
+        default:
+          break;
+      }
+    }
+  }, {
+    key: "SetTimer",
+    value: function SetTimer(bStartTimer) {
+      if (bStartTimer == false) {
+        if (this.m_bIsTimerRunning == true) clearInterval(this.m_iTimerID);
+        this.m_bIsTimerRunning = false;
+      } else {
+        if (this.m_bIsTimerRunning == true) clearInterval(this.m_iTimerID);else this.m_WaitStartTime = new Date();
+        var interval = this.m_iTimerInterval * (1 + this.m_iSlowdownLevel * 0.5);
+        this.m_iTimerID = setInterval(this.GameLoop, interval);
+        this.m_bIsTimerRunning = true;
+      }
+    }
+  }, {
+    key: "DisableSelection",
+    value: function DisableSelection(Target) {
+      if (typeof Target.onselectstart != "undefined") Target.onselectstart = function () {
+          return false;
+        };else if (typeof Target.style.MozUserSelect != "undefined") Target.style.MozUserSelect = "none";else Target.onmousedown = function () {
+          return false;
+        };
+      Target.style.cursor = "default";
+    }
+  }, {
+    key: "f_clientWidth",
+    value: function f_clientWidth() {
+      return this.f_filterResults(window.innerWidth ? window.innerWidth : 0, document.documentElement ? document.documentElement.clientWidth : 0, document.body ? document.body.clientWidth : 0);
+    }
+  }, {
+    key: "f_clientHeight",
+    value: function f_clientHeight() {
+      return this.f_filterResults(window.innerHeight ? window.innerHeight : 0, document.documentElement ? document.documentElement.clientHeight : 0, document.body ? document.body.clientHeight : 0);
+    }
+  }, {
+    key: "f_scrollLeft",
+    value: function f_scrollLeft() {
+      return this.f_filterResults(window.pageXOffset ? window.pageXOffset : 0, document.documentElement ? document.documentElement.scrollLeft : 0, document.body ? document.body.scrollLeft : 0);
+    }
+  }, {
+    key: "f_scrollTop",
+    value: function f_scrollTop() {
+      return this.f_filterResults(window.pageYOffset ? window.pageYOffset : 0, document.documentElement ? document.documentElement.scrollTop : 0, document.body ? document.body.scrollTop : 0);
+    }
+  }, {
+    key: "f_filterResults",
+    value: function f_filterResults(n_win, n_docel, n_body) {
+      var n_result = n_win ? n_win : 0;
+      if (n_docel && (!n_result || n_result > n_docel)) n_result = n_docel;
+      return n_body && (!n_result || n_result > n_body) ? n_body : n_result;
+    }
+  }, {
+    key: "SetPoint",
+    value: function SetPoint(iX, iY, iStatus) {
+      var x = iX * this.m_iGridSize;
+      var y = iY * this.m_iGridSize;
+      var radius = 4;
+      var oval = $createOval(radius, 'true');
+      oval.$move(x, y, radius);
+      var color;
+
+      switch (iStatus) {
+        case this.POINT_FREE_RED:
+          color = this.COLOR_RED;
+          oval.$SetStatus(this.POINT_FREE);
+          break;
+
+        case this.POINT_FREE_BLUE:
+          color = this.COLOR_BLUE;
+          oval.$SetStatus(this.POINT_FREE);
+          break;
+
+        case this.POINT_FREE:
+          color = this.m_sDotColor;
+          oval.$SetStatus(this.POINT_FREE);
+          break;
+
+        case this.POINT_STARTING:
+          color = this.m_sDotColor;
+          oval.$SetStatus(this.POINT_IN_PATH);
+          break;
+
+        case this.POINT_IN_PATH:
+          color = this.m_sDotColor;
+          oval.$SetStatus(iStatus);
+          break;
+
+        case this.POINT_OWNED_BY_RED:
+          color = this.COLOR_OWNED_RED;
+          oval.$SetStatus(iStatus);
+          break;
+
+        case this.POINT_OWNED_BY_BLUE:
+          color = this.COLOR_OWNED_BLUE;
+          oval.$SetStatus(iStatus);
+          break;
+
+        default:
+          alert('bad point');
+          break;
+      }
+
+      oval.$SetFillColor(color);
+      oval.$strokeColor(color);
+      this.m_Points[iY * this.m_iGridWidth + iX] = oval;
+    }
+  }, {
+    key: "SetPath",
+    value: function SetPath(Points, bIsRed, bBelong2ThisPlayer) {
+      Points = Points.split(" ");
+      var count = Points.length,
+          sDelimiter = "",
+          p = null,
+          sPathPoints = "";
+
+      for (var _i = 0; _i < count; ++_i) {
+        p = Points[_i].split(",");
+        x = parseInt(p[0]);
+        y = parseInt(p[1]);
+        x *= this.m_iGridSize;
+        y *= this.m_iGridSize;
+        sPathPoints = sPathPoints + sDelimiter + x + "," + y;
+        sDelimiter = " ";
+        p = this.m_Points[y * this.m_iGridWidth + x];
+        if (p != null) p.$SetStatus(this.POINT_IN_PATH);
+      }
+
+      p = Points[0].split(",");
+      x = parseInt(p[0]);
+      y = parseInt(p[1]);
+      x *= this.m_iGridSize;
+      y *= this.m_iGridSize;
+      sPathPoints = sPathPoints + sDelimiter + x + "," + y;
+      p = this.m_Points[y * this.m_iGridWidth + x];
+      if (p != null) p.$SetStatus(this.POINT_IN_PATH);
+      var line = $createPolyline(3, sPathPoints, bBelong2ThisPlayer ? this.m_sDotColor : bIsRed ? this.COLOR_BLUE : this.COLOR_RED);
+      this.m_Lines[this.m_Lines.length] = line;
+    }
+  }, {
+    key: "IsPointBelongingToLine",
+    value: function IsPointBelongingToLine(sPoints, iX, iY) {
+      var count = sPoints.length,
+          x,
+          y,
+          pnt;
+
+      for (var _i2 = 0; _i2 < count; ++_i2) {
+        pnt = sPoints[_i2].split(",");
+        x = pnt[0];
+        y = pnt[1];
+        if (x == iX && y == iY) return true;
+      }
+
+      return false;
+    }
+  }, {
+    key: "pnpoly",
+    value: function pnpoly(npol, xp, yp, x, y) {
+      var i,
+          j,
+          c = 0;
+
+      for (i = 0, j = npol - 1; i < npol; j = i++) {
+        if ((yp[i] <= y && y < yp[j] || yp[j] <= y && y < yp[i]) && x < (xp[j] - xp[i]) * (y - yp[i]) / (yp[j] - yp[i]) + xp[i]) c = !c;
+      }
+
+      return c;
+    }
+  }, {
+    key: "SurroundOponentPoints",
+    value: function SurroundOponentPoints() {
+      var count,
+          points = this.m_Line.$GetPoints();
+      count = points.length;
+      var xs = Array(),
+          ys = Array(),
+          x,
+          y,
+          sPathPoints = "",
+          sDelimiter = "",
+          k = 0;
+
+      for (var _i3 = 0; _i3 < count; _i3 += 2) {
+        x = points[_i3];
+        y = points[_i3 + 1];
+        if (x == null || y == null) continue;
+        x /= this.m_iGridSize;
+        y /= this.m_iGridSize;
+        xs[k] = x;
+        ys[k] = y;
+        sPathPoints = sPathPoints + sDelimiter + x + "," + y;
+        sDelimiter = " ";
+        ++k;
+      }
+
+      if (!(xs[0] == xs[xs.length - 1] && ys[0] == ys[ys.length - 1])) return {
+        owned: "",
+        path: ""
+      };
+      var count1 = this.m_Points.length;
+      var sColor = this.m_sDotColor == this.COLOR_RED ? this.COLOR_BLUE : this.COLOR_RED;
+      var owned_by = this.m_sDotColor == this.COLOR_RED ? this.POINT_OWNED_BY_RED : this.POINT_OWNED_BY_BLUE;
+      var sOwnedCol = this.m_sDotColor == this.COLOR_RED ? this.COLOR_OWNED_RED : this.COLOR_OWNED_BLUE;
+      var sOwnedPoints = "";
+      sDelimiter = "";
+
+      for (var _i4 = 0; _i4 < count1; ++_i4) {
+        var p0 = this.m_Points[_i4];
+
+        if (p0 != null && p0.$GetStatus() == this.POINT_FREE && p0.$GetFillColor() == sColor) {
+          var pos = p0.$GetPosition();
+          x = pos.x;
+          y = pos.y;
+          x /= this.m_iGridSize;
+          y /= this.m_iGridSize;
+
+          if (0 != this.pnpoly(count, xs, ys, x, y)) {
+            p0.$SetStatus(owned_by);
+            p0.$SetFillColor(sOwnedCol);
+            p0.$strokeColor(sOwnedCol);
+            sOwnedPoints = sOwnedPoints + sDelimiter + x + "," + y;
+            sDelimiter = " ";
+          }
+        }
+      }
+
+      return {
+        owned: sOwnedPoints,
+        path: sPathPoints
+      };
+    }
+  }, {
+    key: "IsPointOutsideAllPaths",
+    value: function IsPointOutsideAllPaths(iX, iY) {
+      var count1 = this.m_Lines.length;
+
+      for (var j = 0; j < count1; ++j) {
+        var count = void 0,
+            points = this.m_Lines[j].$GetPoints();
+        count = points.length;
+
+        var xs = Array(),
+            ys = Array(),
+            _x2 = void 0,
+            _y = void 0,
+            k = 0;
+
+        for (var _i5 = 0; _i5 < count; _i5 += 2) {
+          _x2 = points[_i5];
+          _y = points[_i5 + 1];
+          if (_x2 == null || _y == null) continue;
+          _x2 /= this.m_iGridSize;
+          _y /= this.m_iGridSize;
+          xs[k] = _x2;
+          ys[k] = _y;
+          ++k;
+        }
+
+        if (0 != this.pnpoly(count, xs, ys, iX, iY)) return false;
+      }
+
+      return true;
+    }
+  }, {
+    key: "CreateXMLWaitForPlayerRequest",
+    value: function CreateXMLWaitForPlayerRequest() {
+      var sRet = "<WaitForPlayer>" + (arguments.length > 0 && (arguments.length <= 0 ? undefined : arguments[0]) == true ? "<ShowP2Name />" : "") + "</WaitForPlayer>";
+      return sRet;
+    }
+  }, {
+    key: "CreateXMLPutPointRequest",
+    value: function CreateXMLPutPointRequest(iX, iY) {
+      var sRet = "<PutPoint>" + "<Point x='" + iX + "' y='" + iY + "' />" + "</PutPoint>";
+      return sRet;
+    }
+  }, {
+    key: "CreateXMLPutPathRequest",
+    value: function CreateXMLPutPathRequest(sPathPoints, sOwnedPoints) {
+      var sRet = "<PutPath><Path>" + sPathPoints + "</Path>" + "<Owned>" + sOwnedPoints + "</Owned>" + "</PutPath>";
+      return sRet;
+    }
+  }, {
+    key: "SendAsyncData",
+    value: function SendAsyncData(sData) {
+      if (sData.length == 0) return;
+    }
+  }, {
+    key: "AjaxResponseCallBack",
+    value: function AjaxResponseCallBack() {
+      if (g_XmlHttp != null && (g_XmlHttp.readyState == 4 || g_XmlHttp.readyState == "complete") && g_XmlHttp.status == 200) {
+        var xml = g_XmlHttp.responseXML;
+        var response = xml.firstChild;
+        if (response.nodeType != 1) response = response.nextSibling;
+        var resp_type = response.nodeName;
+
+        switch (resp_type) {
+          case 'WaitForPlayer':
+            var sP2Name = response.getElementsByTagName('P2Name').length > 0 ? response.getElementsByTagName('P2Name')[0].firstChild.data : '';
+            var bActive = response.getElementsByTagName('Active')[0].firstChild.data == 'true' ? true : false;
+
+            if (bActive) {
+              if (sP2Name != '') {
+                this.m_Player2Name.innerHTML = sP2Name;
+                this.m_SurrenderButton.value = 'surrender';
+              }
+
+              if (this.m_SurrenderButton.value == 'win') this.m_SurrenderButton.value = 'surrender';
+              var last_move = response.getElementsByTagName('LastMove')[0];
+              last_move = last_move.firstChild;
+
+              switch (last_move.nodeName) {
+                case 'Point':
+                  var _x4 = parseInt(last_move.getAttribute('x'));
+
+                  var _y3 = parseInt(last_move.getAttribute('y'));
+
+                  var iStatus = parseInt(last_move.getAttribute('status'));
+                  this.SetPoint(_x4, _y3, iStatus);
+                  this.m_bIsPlayerActive = true;
+                  this.SetTimer(false);
+                  if (!this.m_bIsMobile) this.Debug('Oponent has moved, your turn');else this.ShowMobileStatus();
+                  break;
+
+                case 'Path':
+                  var path = last_move.firstChild.data;
+                  var owned = response.getElementsByTagName('Owned')[0].firstChild.data;
+                  this.SetPath(path, this.m_sDotColor == this.COLOR_RED ? true : false, false);
+                  var Points = owned.split(" ");
+                  var count = Points.length,
+                      p = null;
+                  var point_status = this.m_sDotColor == this.COLOR_RED ? this.POINT_OWNED_BY_RED : this.POINT_OWNED_BY_BLUE;
+                  var sOwnedCol = this.m_sDotColor == this.COLOR_RED ? this.COLOR_OWNED_BLUE : this.COLOR_OWNED_RED;
+
+                  for (var _i6 = 0; _i6 < count; ++_i6) {
+                    p = Points[_i6].split(",");
+                    _x4 = parseInt(p[0]);
+                    _y3 = parseInt(p[1]);
+                    p = this.m_Points[_y3 * this.m_iGridWidth + _x4];
+
+                    if (p != null) {
+                      p.$SetStatus(point_status);
+                      p.$SetFillColor(sOwnedCol);
+                      p.$strokeColor(sOwnedCol);
+                    }
+                  }
+
+                  this.m_bIsPlayerActive = true;
+                  this.SetTimer(false);
+                  if (!this.m_bIsMobile) this.Debug('Oponent has moved, your turn');else this.ShowMobileStatus();
+                  break;
+
+                default:
+                  break;
+              }
+            } else {
+              this.m_sMessage = 'Waiting for oponent move';
+
+              if (sP2Name != '') {
+                this.m_Player2Name.innerHTML = sP2Name;
+                this.m_SurrenderButton.value = 'surrender';
+                if (this.m_bIsMobile) this.ShowMobileStatus();
+              }
+            }
+
+            break;
+
+          case 'PutPoint':
+            this.m_bIsPlayerActive = false;
+            this.m_iSlowdownLevel = 0;
+            this.SetTimer(true);
+            break;
+
+          case 'PutPath':
+            var points = this.m_Line.$GetPoints();
+            var _x3 = points[i];
+            var _y2 = points[i + 1];
+            _x3 /= this.m_iGridSize;
+            _y2 /= this.m_iGridSize;
+            var p0 = this.m_Points[_y2 * this.m_iGridWidth + _x3];
+            if (p0 != null) p0.$SetStatus(this.POINT_IN_PATH);
+            this.m_Lines[this.m_Lines.length] = this.m_Line;
+            this.m_iLastX = this.m_iLastY = -1;
+            this.m_Line = null;
+            this.m_bIsPlayerActive = false;
+            this.m_iSlowdownLevel = 0;
+            this.SetTimer(true);
+            break;
+
+          case 'InterruptGame':
+            this.SetTimer(false);
+            var msg = response.getElementsByTagName('msg').length > 0 ? response.getElementsByTagName('msg')[0].firstChild.data : '';
+            if (msg == '') alert('Game interrupted!');else alert(msg);
+            window.location.href = "Games";
+            break;
+
+          case 'WaitingForSecondPlayer':
+            this.m_sMessage = 'Waiting for other player to connect';
+            break;
+
+          case 'Err':
+            msg = response.getElementsByTagName('msg').length > 0 ? response.getElementsByTagName('msg')[0].firstChild.data : 'unknown error';
+            alert(msg);
+            this.OnCancelClick();
+            break;
+
+          default:
+            break;
+        }
+      }
+    }
+  }, {
+    key: "GameLoop",
+    value: function GameLoop() {
+      var bP2NameUnknown = this.m_Player2Name.innerHTML == '???' ? true : false;
+      this.SendAsyncData(this.CreateXMLWaitForPlayerRequest(bP2NameUnknown));
+      var d = parseInt((new Date() - this.m_WaitStartTime) / 1000);
+
+      if (this.m_iSlowdownLevel <= 0 && d >= this.m_iTooLong2Duration * 0.25) {
+        this.m_iSlowdownLevel = 1;
+        this.SetTimer(true);
+      } else if (this.m_iSlowdownLevel <= 1 && d >= this.m_iTooLong2Duration * 0.5) {
+        this.m_iSlowdownLevel = 2;
+        this.SetTimer(true);
+      } else if (this.m_iSlowdownLevel <= 2 && d >= this.m_iTooLong2Duration * 0.75) {
+        this.m_iSlowdownLevel = 4;
+        this.SetTimer(true);
+      } else if (d >= this.m_iTooLong2Duration) {
+        if (bP2NameUnknown) {
+          this.SetTimer(false);
+          if (confirm('Second player is still not connecting. Continue waiting?') == true) this.SetTimer(true);else {
+            window.location.href = "Games";
+            return;
+          }
+        } else {
+          this.SetTimer(false);
+          this.m_SurrenderButton.value = 'win';
+          alert('Second player is not responding for quiet long. To walkover win click win - or continue to wait for oponent move');
+          this.SetTimer(true);
+        }
+      }
+
+      if (!this.m_bIsMobile) {
+        if (this.m_sMessage != '') this.Debug(this.m_sMessage + '(' + d + ')');
+      } else {
+        this.ShowMobileStatus(d);
+      }
+    }
+  }, {
+    key: "ShowMobileStatus",
+    value: function ShowMobileStatus(iWaitTime) {
+      var gameStatus = document.getElementById('GameStatus');
+
+      if (this.m_Player2Name.innerHTML == '???') {
+        if (gameStatus.style.backgroundImage.indexOf('pjonbgcurrent.gif') != -1) gameStatus.style.backgroundImage = 'url(img/pjonbgcurrent2.gif)';else gameStatus.style.backgroundImage = 'url(img/pjonbgcurrent.gif)';
+      } else if (this.m_bIsPlayerActive) {
+        if (this.m_bIsPlayingWithRed) gameStatus.style.backgroundImage = 'url(img/pjonbgcurrent.gif)';else gameStatus.style.backgroundImage = 'url(img/pjonbgcurrent2.gif)';
+        this.Debug('', 0);
+      } else {
+        if (this.m_bIsPlayingWithRed) gameStatus.style.backgroundImage = 'url(img/pjonbgcurrent2.gif)';else gameStatus.style.backgroundImage = 'url(img/pjonbgcurrent.gif)';
+        if (iWaitTime != 'undefined' && iWaitTime != null) this.Debug(iWaitTime);
+      }
+    }
+  }, {
+    key: "OnMouseMove",
+    value: function OnMouseMove(event) {
+      if (!this.m_bIsPlayerActive) return;
+      var x = (event ? event.clientX : window.event.clientX) - this.m_iPosX + this.m_iScrollX + 0.5 * this.m_iGridSize;
+      var y = (event ? event.clientY : window.event.clientY) - this.m_iPosY + this.m_iScrollY + 0.5 * this.m_iGridSize;
+      x = parseInt(x / this.m_iGridSize);
+      y = parseInt(y / this.m_iGridSize);
+
+      if (this.m_bDrawLines) {
+        if (this.m_bMouseDown == true && (this.m_iLastX != x || this.m_iLastY != y) && Math.abs(parseInt(this.m_iLastX - x)) <= 1 && Math.abs(parseInt(this.m_iLastY - y)) <= 1 && this.m_iLastX >= 0 && this.m_iLastY >= 0) {
+          if (this.m_Line != null) {
+            var p0 = this.m_Points[this.m_iLastY * this.m_iGridWidth + this.m_iLastX];
+            var p1 = this.m_Points[y * this.m_iGridWidth + x];
+
+            if (p0 != null && p1 != null && p1.$GetStatus() != this.POINT_IN_PATH && p0.$GetFillColor() == this.m_sDotColor && p1.$GetFillColor() == this.m_sDotColor) {
+              var tox = x * this.m_iGridSize;
+              var toy = y * this.m_iGridSize;
+              this.m_Line.$AppendPoints(tox + "," + toy);
+              if (p1.$GetStatus() != this.POINT_STARTING) p1.$SetStatus(this.POINT_IN_PATH);else {
+                var val = this.SurroundOponentPoints();
+
+                if (val.owned.length > 0) {
+                  this.m_Line.$SetIsClosed(true);
+                  this.Debug('Closing path', 0);
+                  this.SendAsyncData(this.CreateXMLPutPathRequest(val.path, val.owned));
+                } else this.Debug('Wrong path, cancell it or refresh page', 0);
+              }
+              this.m_iLastX = x;
+              this.m_iLastY = y;
+            }
+          } else {
+            var _p = this.m_Points[this.m_iLastY * this.m_iGridWidth + this.m_iLastX];
+            var _p2 = this.m_Points[y * this.m_iGridWidth + x];
+
+            if (_p != null && _p2 != null && _p.$GetStatus() != this.POINT_IN_PATH && _p2.$GetStatus() != this.POINT_IN_PATH && _p.$GetFillColor() == this.m_sDotColor && _p2.$GetFillColor() == this.m_sDotColor) {
+              var fromx = this.m_iLastX * this.m_iGridSize;
+              var fromy = this.m_iLastY * this.m_iGridSize;
+
+              var _tox = x * this.m_iGridSize;
+
+              var _toy = y * this.m_iGridSize;
+
+              this.m_Line = $createPolyline(3, fromx + "," + fromy + " " + _tox + "," + _toy, this.m_sDotColor);
+              if (_p.$GetStatus() != this.POINT_IN_PATH) _p.$SetStatus(this.POINT_STARTING);
+              if (_p2.$GetStatus() != this.POINT_IN_PATH) _p2.$SetStatus(this.POINT_STARTING);
+              this.m_iLastX = x;
+              this.m_iLastY = y;
+            }
+          }
+        }
+      }
+    }
+  }, {
+    key: "OnMouseDown",
+    value: function OnMouseDown(event) {
+      if (!this.m_bIsPlayerActive) return;
+      var x = (event ? event.clientX : window.event.clientX) - this.m_iPosX + this.m_iScrollX + 0.5 * this.m_iGridSize;
+      var y = (event ? event.clientY : window.event.clientY) - this.m_iPosY + this.m_iScrollY + 0.5 * this.m_iGridSize;
+      x = this.m_iMouseX = parseInt(x / this.m_iGridSize);
+      y = this.m_iMouseY = parseInt(y / this.m_iGridSize);
+      this.m_bMouseDown = true;
+
+      if (!this.m_bDrawLines) {
+        this.m_iLastX = x;
+        this.m_iLastY = y;
+        var loc_x = x;
+        var loc_y = y;
+        x = loc_x * this.m_iGridSize;
+        y = loc_y * this.m_iGridSize;
+        if (this.m_Points[loc_y * this.m_iGridWidth + loc_x] != null) return;
+        if (!this.IsPointOutsideAllPaths(loc_x, loc_y)) return;
+        var radius = 4;
+        var oval = $createOval(radius, 'true');
+        oval.$SetFillColor(this.m_sDotColor);
+        oval.$strokeColor(this.m_sDotColor);
+        oval.$move(x, y, radius);
+        this.m_Points[loc_y * this.m_iGridWidth + loc_x] = oval;
+        this.SendAsyncData(this.CreateXMLPutPointRequest(loc_x, loc_y));
+      } else {
+        if ((this.m_iLastX != x || this.m_iLastY != y) && Math.abs(parseInt(this.m_iLastX - x)) <= 1 && Math.abs(parseInt(this.m_iLastY - y)) <= 1 && this.m_iLastX >= 0 && this.m_iLastY >= 0) {
+          if (this.m_Line != null) {
+            var p0 = this.m_Points[this.m_iLastY * this.m_iGridWidth + this.m_iLastX];
+            var p1 = this.m_Points[y * this.m_iGridWidth + x];
+
+            if (p0 != null && p1 != null && p1.$GetStatus() != this.POINT_IN_PATH && p0.$GetFillColor() == this.m_sDotColor && p1.$GetFillColor() == this.m_sDotColor) {
+              var tox = x * this.m_iGridSize;
+              var toy = y * this.m_iGridSize;
+              this.m_Line.$AppendPoints(tox + "," + toy);
+              if (p1.$GetStatus() != this.POINT_STARTING) p1.$SetStatus(this.POINT_IN_PATH);else {
+                var val = this.SurroundOponentPoints();
+
+                if (val.owned.length > 0) {
+                  this.m_Line.$SetIsClosed(true);
+                  this.Debug('Closing path', 0);
+                  this.SendAsyncData(this.CreateXMLPutPathRequest(val.path, val.owned));
+                } else this.Debug('Wrong path, cancell it or refresh page', 0);
+              }
+              this.m_iLastX = x;
+              this.m_iLastY = y;
+            }
+          } else {
+            var _p3 = this.m_Points[this.m_iLastY * this.m_iGridWidth + this.m_iLastX];
+            var _p4 = this.m_Points[y * this.m_iGridWidth + x];
+
+            if (_p3 != null && _p4 != null && _p3.$GetStatus() != this.POINT_IN_PATH && _p4.$GetStatus() != this.POINT_IN_PATH && _p3.$GetFillColor() == this.m_sDotColor && _p4.$GetFillColor() == this.m_sDotColor) {
+              var fromx = this.m_iLastX * this.m_iGridSize;
+              var fromy = this.m_iLastY * this.m_iGridSize;
+
+              var _tox2 = x * this.m_iGridSize;
+
+              var _toy2 = y * this.m_iGridSize;
+
+              this.m_Line = $createPolyline(3, fromx + "," + fromy + " " + _tox2 + "," + _toy2, this.m_sDotColor);
+              if (_p3.$GetStatus() != this.POINT_IN_PATH) _p3.$SetStatus(this.POINT_STARTING);
+              if (_p4.$GetStatus() != this.POINT_IN_PATH) _p4.$SetStatus(this.POINT_STARTING);
+            }
+
+            this.m_iLastX = x;
+            this.m_iLastY = y;
+          }
+        } else if (this.m_iLastX < 0 || this.m_iLastY < 0) {
+          var _p5 = this.m_Points[y * this.m_iGridWidth + x];
+
+          if (_p5 != null && _p5.$GetStatus() == this.POINT_FREE && _p5.$GetFillColor() == this.m_sDotColor) {
+            this.m_iLastX = x;
+            this.m_iLastY = y;
+          }
+        }
+      }
+    }
+  }, {
+    key: "OnMouseUp",
+    value: function OnMouseUp(event) {
+      this.m_bMouseDown = false;
+    }
+  }, {
+    key: "OnScroll",
+    value: function OnScroll() {
+      this.m_iScrollX = this.f_scrollLeft();
+      this.m_iScrollY = this.f_scrollTop();
+    }
+  }, {
+    key: "OnDrawModeClick",
+    value: function OnDrawModeClick() {
+      this.m_bDrawLines = !this.m_bDrawLines;
+      var draw_mode = document.getElementById('DrawMode');
+
+      if (!this.m_bDrawLines) {
+        draw_mode.value = 'Draw lines';
+      } else {
+        draw_mode.value = 'Draw dots';
+      }
+
+      this.m_iLastX = this.m_iLastY = -1;
+      this.m_Line = null;
+    }
+  }, {
+    key: "OnCancelClick",
+    value: function OnCancelClick() {
+      if (this.m_bDrawLines) {
+        if (this.m_Line != null) {
+          var points = this.m_Line.$GetPoints();
+
+          for (var _i7 = 0; _i7 < points.length; _i7 += 2) {
+            var _x5 = points[_i7];
+            var _y4 = points[_i7 + 1];
+            if (_x5 == null || _y4 == null) continue;
+            _x5 /= this.m_iGridSize;
+            _y4 /= this.m_iGridSize;
+            var p0 = this.m_Points[_y4 * this.m_iGridWidth + _x5];
+            if (p0 != null) p0.$SetStatus(this.POINT_FREE);
+          }
+
+          $RemovePolyline(this.m_Line);
+          this.m_Line = null;
+        }
+
+        this.m_iLastX = this.m_iLastY = -1;
+      }
+    }
+  }, {
+    key: "OnTestClick",
+    value: function OnTestClick() {
+      if (this.m_bDrawLines) {
+        if (this.m_Line != null) {
+          var val = this.SurroundOponentPoints();
+
+          if (val.owned.length > 0) {
+            this.m_iLastX = this.m_iLastY = -1;
+            this.m_Line = null;
+          }
+        }
+      } else {
+        var p0 = this.m_Points[this.m_iLastY * this.m_iGridWidth + this.m_iLastX];
+        var pos = p0.$GetPosition();
+        this.Debug("".concat(p0.$GetFillColor(), " posX = ").concat(pos.x, " posY = ").concat(pos.y), 1);
+      }
+    }
+  }, {
+    key: "PrepareDrawing",
+    value: function PrepareDrawing(divScreen) {
+      var iGridSize = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 15;
+      var bIsPlayingWithRed = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+      var bIsPlayerActive = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : true;
+      var iTooLong2Duration = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 125;
+      this.COLOR_RED = 'red';
+      this.COLOR_BLUE = 'blue';
+      this.COLOR_OWNED_RED = 'pink';
+      this.COLOR_OWNED_BLUE = '#8A2BE2';
+      this.POINT_FREE_RED = -3;
+      this.POINT_FREE_BLUE = -2;
+      this.POINT_FREE = -1;
+      this.POINT_STARTING = 0;
+      this.POINT_IN_PATH = 1;
+      this.POINT_OWNED_BY_RED = 2;
+      this.POINT_OWNED_BY_BLUE = 3;
+      this.m_bIsWon = false;
+      this.m_iDelayBetweenMultiCaptures = 4000;
+      this.m_iTimerInterval = 2000;
+      this.m_iTooLong2Duration = iTooLong2Duration;
+      this.m_iTimerID = null;
+      this.m_bIsTimerRunning = false;
+      this.m_WaitStartTime = null;
+      this.m_iSlowdownLevel = 0;
+      this.m_iGridSize = iGridSize;
+      this.m_iGridWidth = 0;
+      this.m_iGridHeight = 0;
+      this.m_iLastX = -1;
+      this.m_iLastY = -1;
+      this.m_iMouseX = 0;
+      this.m_iMouseY = 0;
+      this.m_iPosX = 0;
+      this.m_iPosY = 0;
+      this.m_iScrollX = 0;
+      this.m_iScrollY = 0;
+      this.m_iClientWidth = 0;
+      this.m_iClientHeight = 0;
+      this.m_Debug = null;
+      this.m_Player2Name = null;
+      this.m_SurrenderButton = null;
+      this.m_bMouseDown = false;
+      this.m_bDrawLines = !true;
+      this.m_sMessage = '';
+      this.m_bIsPlayingWithRed = bIsPlayingWithRed;
+      this.m_bIsPlayerActive = bIsPlayerActive;
+      this.m_sDotColor = this.m_bIsPlayingWithRed ? this.COLOR_RED : this.COLOR_BLUE;
+      this.m_Line = null;
+      this.m_Lines = new Array();
+      this.m_Points = new Array();
+      this.m_Debug = document.getElementById('debug0');
+      this.m_Player2Name = document.getElementById('Player2Name');
+      this.m_SurrenderButton = document.getElementById('SurrenderButton');
+      var screen = document.getElementById(divScreen);
+
+      if (!screen) {
+        alert("no board");
+        return;
+      }
+
+      this.m_iPosX = screen.offsetLeft;
+      this.m_iPosY = screen.offsetTop;
+      this.m_iClientWidth = screen.clientWidth;
+      this.m_iClientHeight = screen.clientHeight;
+      this.m_iGridWidth = parseInt(this.m_iClientWidth / this.m_iGridSize);
+      this.m_iGridHeight = parseInt(this.m_iClientHeight / this.m_iGridSize);
+      this.m_iScrollX = this.f_scrollLeft();
+      this.m_iScrollY = this.f_scrollTop();
+      cont = $createSVGVML(screen, screen.style.width, screen.style.height, false);
+      this.DisableSelection(screen);
+
+      if (!this.m_bViewOnly) {
+        screen.onmousedown = this.OnMouseDown.bind(this);
+        screen.onmousemove = this.OnMouseMove.bind(this);
+        screen.onmouseup = this.OnMouseUp.bind(this);
+        window.onscroll = this.OnScroll.bind(this);
+        var button = document.getElementById('DrawMode');
+        button.onclick = this.OnDrawModeClick.bind(this);
+        button = document.getElementById('Cancel');
+        button.onclick = this.OnCancelClick.bind(this);
+      }
+    }
+  }]);
+
+  return InkBallGame;
+}();

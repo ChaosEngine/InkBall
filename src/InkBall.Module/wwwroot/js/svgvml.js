@@ -185,19 +185,19 @@ if (SVG) {
 		o.style.width = diam + "px";
 		o.style.height = diam + "px";
 		o.$move = function(x1, y1, radius) {
-			with (this.style) {
-				left = Math.round(x1 - radius) + "px";
-				top = Math.round(y1 - radius) + "px";
-				width = Math.round(radius * 2) + "px";
-				height = Math.round(radius * 2) + "px";
-			}
+			this.style.left = Math.round(x1 - radius) + "px";
+			this.style.top = Math.round(y1 - radius) + "px";
+			this.style.width = Math.round(radius * 2) + "px";
+			this.style.height = Math.round(radius * 2) + "px";
 		}
 		o.$strokeColor = function(col) { this.strokecolor = col; }
 		//ch_added/changed start
 		o.$GetPosition = function()
 		{
-			return { x: parseInt(this.style.left) + parseInt(this.style.width) * 0.5,
-					 y: parseInt(this.style.top) + parseInt(this.style.height) * 0.5 }
+			return {
+				x: parseInt(this.style.left) + parseInt(this.style.width) * 0.5,
+				y: parseInt(this.style.top) + parseInt(this.style.height) * 0.5
+			}
 		}
 		o.$GetFillColor = function() { return this.fillcolor; }
 		o.$SetFillColor = function(col) { this.fillcolor = col; }
