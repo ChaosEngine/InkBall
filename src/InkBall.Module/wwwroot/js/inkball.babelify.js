@@ -11,19 +11,19 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
 var StatusEnum = Object.freeze({
-  "POINT_FREE": -1,
-  "POINT_STARTING": 0,
-  "POINT_IN_PATH": 1,
-  "POINT_OWNED_BY_RED": 2,
-  "POINT_OWNED_BY_BLU": 3
+  POINT_FREE: -1,
+  POINT_STARTING: 0,
+  POINT_IN_PATH: 1,
+  POINT_OWNED_BY_RED: 2,
+  POINT_OWNED_BY_BLU: 3
 });
 var CommandKindEnum = Object.freeze({
-  "UNKNOWN": -1,
-  "PING": 0,
-  "POINT": 1,
-  "PATH": 2,
-  "PLAYER_JOINING": 3,
-  "PLAYER_SURRENDE": 4
+  UNKNOWN: -1,
+  PING: 0,
+  POINT: 1,
+  PATH: 2,
+  PLAYER_JOINING: 3,
+  PLAYER_SURRENDE: 4
 });
 
 var InkBallPointViewModel = function () {
@@ -241,7 +241,7 @@ var InkBallGame = function () {
     }()
   }, {
     key: "StartSignalRConnection",
-    value: function StartSignalRConnection(iGameID, iPlayerID, ulMessagesList, inpSendButton, inpMessageInput) {
+    value: function StartSignalRConnection(iGameID, iPlayerID, sMessageListSel, sSendButtonSel, sMessageInputSel) {
       if (this.g_SignalRConnection === null) return;
       this.g_iGameID = iGameID;
       this.g_iPlayerID = iPlayerID;
@@ -250,28 +250,28 @@ var InkBallGame = function () {
         encodedMsg = InkBallPointViewModel.Format(user, point);
         var li = document.createElement("li");
         li.textContent = encodedMsg;
-        document.getElementById(ulMessagesList).appendChild(li);
+        document.querySelector(sMessageListSel).appendChild(li);
       });
       this.g_SignalRConnection.on("ServerToClientPing", function (ping, user) {
         var encodedMsg = null;
         encodedMsg = PingCommand.Format(user, ping);
         var li = document.createElement("li");
         li.textContent = encodedMsg;
-        document.getElementById(ulMessagesList).appendChild(li);
+        document.querySelector(sMessageListSel).appendChild(li);
       });
-      document.getElementById(inpSendButton).addEventListener("click", function (event) {
-        var message = document.getElementById(inpMessageInput).value;
+      document.querySelector(sSendButtonSel).addEventListener("click", function (event) {
+        var message = document.querySelector(sMessageInputSel).value;
         var ping = new PingCommand(message);
         this.g_SignalRConnection.invoke("ClientToServerPing", ping).catch(function (err) {
           return console.error(err.toString());
         });
         event.preventDefault();
       }.bind(this), false);
-      document.getElementById(inpMessageInput).addEventListener("keyup", function (event) {
+      document.querySelector(sMessageInputSel).addEventListener("keyup", function (event) {
         event.preventDefault();
 
         if (event.keyCode === 13) {
-          document.getElementById(inpSendButton).click();
+          document.querySelector(sSendButtonSel).click();
         }
       }.bind(this), false);
       this.start();
@@ -1007,7 +1007,7 @@ var InkBallGame = function () {
       this.m_Debug = document.getElementById('debug0');
       this.m_Player2Name = document.getElementById('Player2Name');
       this.m_SurrenderButton = document.getElementById('SurrenderButton');
-      var screen = document.getElementById(divScreen);
+      var screen = document.querySelector(divScreen);
 
       if (!screen) {
         alert("no board");
@@ -1022,7 +1022,7 @@ var InkBallGame = function () {
       this.m_iGridHeight = parseInt(this.m_iClientHeight / this.m_iGridSize);
       this.m_iScrollX = this.f_scrollLeft();
       this.m_iScrollY = this.f_scrollTop();
-      cont = $createSVGVML(screen, screen.style.width, screen.style.height, false);
+      $createSVGVML(screen, screen.style.width, screen.style.height, false);
       this.DisableSelection(screen);
 
       if (!this.m_bViewOnly) {

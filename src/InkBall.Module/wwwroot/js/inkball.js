@@ -2,20 +2,20 @@
 
 /******** funcs-n-classes ********/
 const StatusEnum = Object.freeze({
-	"POINT_FREE": -1,
-	"POINT_STARTING": 0,
-	"POINT_IN_PATH": 1,
-	"POINT_OWNED_BY_RED": 2,
-	"POINT_OWNED_BY_BLU": 3
+	POINT_FREE: -1,
+	POINT_STARTING: 0,
+	POINT_IN_PATH: 1,
+	POINT_OWNED_BY_RED: 2,
+	POINT_OWNED_BY_BLU: 3
 });
 
 const CommandKindEnum = Object.freeze({
-	"UNKNOWN": -1,
-	"PING": 0,
-	"POINT": 1,
-	"PATH": 2,
-	"PLAYER_JOINING": 3,
-	"PLAYER_SURRENDE": 4
+	UNKNOWN: -1,
+	PING: 0,
+	POINT: 1,
+	PATH: 2,
+	PLAYER_JOINING: 3,
+	PLAYER_SURRENDE: 4
 });
 
 class InkBallPointViewModel {
@@ -184,7 +184,15 @@ class InkBallGame {
 		}
 	}
 
-	StartSignalRConnection(iGameID, iPlayerID, ulMessagesList, inpSendButton, inpMessageInput) {
+	/**
+	 * Start connection to SignalR
+	 * @param {number} iGameID ID of a game
+	 * @param {number} iPlayerID player ID
+	 * @param {string} sMessageListSel ul html element selector
+	 * @param {string} sSendButtonSel input button html element selector
+	 * @param {string} sMessageInputSel input textbox html element selector
+	 */
+	StartSignalRConnection(iGameID, iPlayerID, sMessageListSel, sSendButtonSel, sMessageInputSel) {
 		if (this.g_SignalRConnection === null) return;
 		this.g_iGameID = iGameID;
 		this.g_iPlayerID = iPlayerID;
@@ -196,7 +204,7 @@ class InkBallGame {
 
 			let li = document.createElement("li");
 			li.textContent = encodedMsg;
-			document.getElementById(ulMessagesList).appendChild(li);
+			document.querySelector(sMessageListSel).appendChild(li);
 			//TODO: addd drawing point on SVG board
 		});
 		this.g_SignalRConnection.on("ServerToClientPing", function (ping, user) {
@@ -206,12 +214,12 @@ class InkBallGame {
 
 			let li = document.createElement("li");
 			li.textContent = encodedMsg;
-			document.getElementById(ulMessagesList).appendChild(li);
+			document.querySelector(sMessageListSel).appendChild(li);
 		});
 
 
-		document.getElementById(inpSendButton).addEventListener("click", function (event) {
-			let message = document.getElementById(inpMessageInput).value;
+		document.querySelector(sSendButtonSel).addEventListener("click", function (event) {
+			let message = document.querySelector(sMessageInputSel).value;
 
 			let ping = new PingCommand(message);
 			//TODO: capture click/draw event and send it to server as point
@@ -221,12 +229,12 @@ class InkBallGame {
 			event.preventDefault();
 		}.bind(this), false);
 		// Execute a function when the user releases a key on the keyboard
-		document.getElementById(inpMessageInput).addEventListener("keyup", function (event) {
+		document.querySelector(sMessageInputSel).addEventListener("keyup", function (event) {
 			event.preventDefault();// Cancel the default action, if needed
 
 			if (event.keyCode === 13) {// Number 13 is the "Enter" key on the keyboard
 				// Trigger the button element with a click
-				document.getElementById(inpSendButton).click();
+				document.querySelector(sSendButtonSel).click();
 			}
 		}.bind(this), false);
 
@@ -1000,7 +1008,7 @@ class InkBallGame {
 
 	/**
 	 * Start drawing routines
-	 * @param {HTMLDivElement} divScreen screen dontainer
+	 * @param {HTMLDivElement} divScreen screen dontainer selector
 	 * @param {number} iGridSize grid size (number of rows and cols equal)
 	 * @param {boolean} bIsPlayingWithRed is playing with red
 	 * @param {boolean} bIsPlayerActive is player active
@@ -1061,7 +1069,7 @@ class InkBallGame {
 		this.m_Debug = document.getElementById('debug0');
 		this.m_Player2Name = document.getElementById('Player2Name');
 		this.m_SurrenderButton = document.getElementById('SurrenderButton');
-		var screen = document.getElementById(divScreen);
+		var screen = document.querySelector(divScreen);
 		if (!screen) {
 			alert("no board");
 			return;
@@ -1075,7 +1083,7 @@ class InkBallGame {
 		this.m_iScrollX = this.f_scrollLeft();
 		this.m_iScrollY = this.f_scrollTop();
 
-		cont = $createSVGVML(screen, screen.style.width, screen.style.height, false);
+		$createSVGVML(screen, screen.style.width, screen.style.height, false);
 
 		this.DisableSelection(screen);
 		if (!this.m_bViewOnly) {

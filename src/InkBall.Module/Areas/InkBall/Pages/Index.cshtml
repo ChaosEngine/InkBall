@@ -89,8 +89,8 @@
 				return 'iGameID=' + iGameID;
 			}
 		);
-		game.StartSignalRConnection(iGameID, iPlayerID, 'messagesList', 'sendButton', 'messageInput');
-		game.PrepareDrawing('screen', 15);
+		game.StartSignalRConnection(iGameID, iPlayerID, '#messagesList', '#sendButton', '#messageInput');
+		game.PrepareDrawing('#screen', 15);
 	});
 </script>
 
@@ -112,10 +112,10 @@
 
 			@"<script type='text/javascript'>
 			if(navigator.userAgent.indexOf('Trident') < 0) {
-				document.write(""<script src='" + (env.IsDevelopment() ? Url.Content("~/js/inkball.js") : Url.Content("~/js/inkball.min.js")) + @"'></scr""+""ipt>"");
+				document.write(""<script src='" + (env.IsDevelopment() ? Url.Content("~/js/inkball.js") : Url.Content("~/js/inkball.min.js")) + @"'><\/script>"");
 			} else {
-				document.write(""<script src='https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/7.0.0-beta.3/polyfill.min.js' integrity='sha256-L8MORrEU27Ep+vSMEvACaPFX68pNXK+LXb+EBqnzFK4=' crossorigin='anonymous'></scr""+""ipt>"" +
-				""<script src='" + (env.IsDevelopment() ? Url.Content("~/js/inkball.babelify.js"): Url.Content("~/js/inkball.babelify.min.js")) + @"'></scr""+""ipt>"");
+				document.write(""<script src='https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/7.0.0-beta.3/polyfill.min.js' integrity='sha256-L8MORrEU27Ep+vSMEvACaPFX68pNXK+LXb+EBqnzFK4=' crossorigin='anonymous'><\/script>"" +
+				""<script src='" + (env.IsDevelopment() ? Url.Content("~/js/inkball.babelify.js"): Url.Content("~/js/inkball.babelify.min.js")) + @"'><\/script>"");
 			}
 			</script>"
 		);
