@@ -2,11 +2,13 @@
 
 /******** funcs-n-classes ********/
 const StatusEnum = Object.freeze({
+	POINT_FREE_RED: -3,
+	POINT_FREE_BLUE: -2,
 	POINT_FREE: -1,
 	POINT_STARTING: 0,
 	POINT_IN_PATH: 1,
 	POINT_OWNED_BY_RED: 2,
-	POINT_OWNED_BY_BLU: 3
+	POINT_OWNED_BY_BLUE: 3
 });
 
 const CommandKindEnum = Object.freeze({
@@ -15,7 +17,7 @@ const CommandKindEnum = Object.freeze({
 	POINT: 1,
 	PATH: 2,
 	PLAYER_JOINING: 3,
-	PLAYER_SURRENDE: 4
+	PLAYER_SURRENDER: 4
 });
 
 class InkBallPointViewModel {
@@ -33,7 +35,33 @@ class InkBallPointViewModel {
 	static Format(sUser, point) {
 		let msg = point.iX + ' ' + point.iY + ' ' + point.Status;
 
-		return sUser + " places " + msg + " point";
+		return sUser + " places [" + msg + "] point";
+	}
+}
+
+class InkBallPathViewModel {
+	constructor(iId = 0, iGameId = 0, iPlayerId = 0, sPointsAsString = '', sOwnedPointsAsString = '') {
+
+		this.iId = iId;
+		this.iGameId = iGameId;
+		this.iPlayerId = iPlayerId;
+		this.sPointsAsString = sPointsAsString;
+		this.sOwnedPointsAsString = sOwnedPointsAsString;
+	}
+
+	static Format(sUser, path) {
+		let msg = path.iPlayerID + "    " + path.sPointsAsString + "     " + path.sOwnedPointsAsString;
+
+		return sUser + " places [" + msg + "] path";
+	}
+}
+
+class WaitForPlayerCommand {
+	get ShowP2Name() { return this.showP2Name; }
+	set ShowP2Name(value) { this.showP2Name = value; }
+
+	constructor(showP2Name = false) {
+		this.ShowP2Name = showP2Name;
 	}
 }
 
@@ -57,7 +85,23 @@ function htmlEncode(html) {
 	return document.createElement('a').appendChild(
 		document.createTextNode(html)).parentNode.innerHTML;
 }
-/******** /funcs-n-classes ********/
+
+function CountPointsDebug() {
+	let svgs = $("svg"), totalChildren = 0, childCounts = [];
+
+	for (let i = 0; i < svgs.length; i++) {
+		let svg = svgs[i];
+		totalChildren += svg.childElementCount;
+		childCounts.push(svg.childElementCount);
+	}
+
+	let tags = ["circle", "path"], tagMessage = "";
+	tags.forEach(tagName => {
+		tagMessage += (tagName + ": " + $(tagName).length + " ");
+	});
+
+	$("#debug2").text('SVG elements - totalChildren:' + totalChildren + ' SVG childElements:' + childCounts + ' by tag:' + tagMessage);
+}
 
 class InkBallGame {
 
@@ -349,30 +393,37 @@ class InkBallGame {
 		let color;
 		switch (iStatus) {
 			case this.POINT_FREE_RED:
+			case StatusEnum.POINT_FREE_RED:
 				color = this.COLOR_RED;
 				oval.$SetStatus(this.POINT_FREE);
 				break;
 			case this.POINT_FREE_BLUE:
+			case StatusEnum.POINT_FREE_BLUE:
 				color = this.COLOR_BLUE;
 				oval.$SetStatus(this.POINT_FREE);
 				break;
 			case this.POINT_FREE:
+			case StatusEnum.POINT_FREE:
 				color = this.m_sDotColor;
 				oval.$SetStatus(this.POINT_FREE);
 				break;
 			case this.POINT_STARTING:
+			case StatusEnum.POINT_STARTING:
 				color = this.m_sDotColor;
 				oval.$SetStatus(/*iStatus*/this.POINT_IN_PATH);
 				break;
 			case this.POINT_IN_PATH:
+			case StatusEnum.POINT_IN_PATH:
 				color = this.m_sDotColor;
 				oval.$SetStatus(iStatus);
 				break;
 			case this.POINT_OWNED_BY_RED:
+			case StatusEnum.POINT_OWNED_BY_RED:
 				color = this.COLOR_OWNED_RED;
 				oval.$SetStatus(iStatus);
 				break;
 			case this.POINT_OWNED_BY_BLUE:
+			case StatusEnum.POINT_OWNED_BY_BLUE:
 				color = this.COLOR_OWNED_BLUE;
 				oval.$SetStatus(iStatus);
 				break;
@@ -522,28 +573,28 @@ class InkBallGame {
 	}
 
 	CreateXMLWaitForPlayerRequest(...args) {
-		let sRet = "<WaitForPlayer>" +
-			((args.length > 0 && args[0] == true) ? "<ShowP2Name />" : "") +
-			"</WaitForPlayer>";
-		return sRet;
+		//let sRet = `<WaitForPlayer>${((args.length > 0 && args[0] == true) ? "<ShowP2Name />" : "")}</WaitForPlayer>`;
+		//return sRet;
+		let cmd = new WaitForPlayerCommand((args.length > 0 && args[0] == true) ? true : false);
+		return cmd;
 	}
 
 	CreateXMLPutPointRequest(iX, iY) {
-		let sRet = "<PutPoint>" +
-			"<Point x='" + iX + "' y='" + iY + "' />" +
-			"</PutPoint>";
-		return sRet;
+		//let sRet = `<PutPoint><Point x='${iX}' y='${iY}' /></PutPoint>`;
+		//return sRet;
+		let cmd = new InkBallPointViewModel(0, this.g_iGameID, this.g_iPlayerID, iX, iY, StatusEnum.POINT_FREE, 0);
+		return cmd;
 	}
 
 	CreateXMLPutPathRequest(sPathPoints, sOwnedPoints) {
-		let sRet = "<PutPath><Path>" + sPathPoints + "</Path>" +
-			"<Owned>" + sOwnedPoints + "</Owned>" +
-			"</PutPath>";
-		return sRet;
+		//let sRet = `<PutPath><Path>${sPathPoints}</Path><Owned>${sOwnedPoints}</Owned></PutPath>`;
+		//return sRet;
+		let cmd = new InkBallPathViewModel(0, this.g_iGameID, this.g_iPlayerID, sPathPoints, sOwnedPoints);
+		return cmd;
 	}
 
-	SendAsyncData(sData) {
-		if (sData.length == 0) return;
+	SendAsyncData(payload) {
+		//if (sData.length == 0) return;
 		// if(g_XmlHttp == null)
 		// {
 		// 	g_XmlHttp = GetXmlHttpObject();
@@ -558,6 +609,21 @@ class InkBallGame {
 		// g_XmlHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 		// g_XmlHttp.onreadystatechange = this.AjaxResponseCallBack;
 		// g_XmlHttp.send("action=<?php echo("<?xml version='1.0' encoding='utf-8'?>"); ?>" + sData);
+
+		switch (payload.constructor.name) {
+
+			case "InkBallPointViewModel":
+				console.log(InkBallPointViewModel.Format('some player', payload));
+
+				this.g_SignalRConnection.invoke("ClientToServerPoint", payload).catch(function (err) {
+					return console.error(err.toString());
+				});
+
+				break;
+
+			default:
+				break;
+		}
 	}
 
 	AjaxResponseCallBack() {
@@ -1014,18 +1080,18 @@ class InkBallGame {
 	 * @param {boolean} bIsPlayerActive is player active
 	 * @param {number} iTooLong2Duration how long waiting is too long
 	 */
-	PrepareDrawing(divScreen, iGridSize = 15, bIsPlayingWithRed = false, bIsPlayerActive = true, iTooLong2Duration = 125) {
-		this.COLOR_RED = 'red';
-		this.COLOR_BLUE = 'blue';
-		this.COLOR_OWNED_RED = 'pink';
-		this.COLOR_OWNED_BLUE = '#8A2BE2';
-		this.POINT_FREE_RED = -3;
-		this.POINT_FREE_BLUE = -2;
-		this.POINT_FREE = -1;
-		this.POINT_STARTING = 0;
-		this.POINT_IN_PATH = 1;
-		this.POINT_OWNED_BY_RED = 2;
-		this.POINT_OWNED_BY_BLUE = 3;
+	PrepareDrawing(divScreen, iGridSize = 15, iTooLong2Duration = 125) {
+		// this.COLOR_RED = 'red';
+		// this.COLOR_BLUE = 'blue';
+		// this.COLOR_OWNED_RED = 'pink';
+		// this.COLOR_OWNED_BLUE = '#8A2BE2';
+		// this.POINT_FREE_RED = -3;
+		// this.POINT_FREE_BLUE = -2;
+		// this.POINT_FREE = -1;
+		// this.POINT_STARTING = 0;
+		// this.POINT_IN_PATH = 1;
+		// this.POINT_OWNED_BY_RED = 2;
+		// this.POINT_OWNED_BY_BLUE = 3;
 		this.m_bIsWon = false;
 		this.m_iDelayBetweenMultiCaptures = 4000;
 		this.m_iTimerInterval = 2000;
@@ -1054,8 +1120,8 @@ class InkBallGame {
 		this.m_bDrawLines = !true;
 		//this.m_bIsMobile = bIsMobile;
 		this.m_sMessage = '';
-		this.m_bIsPlayingWithRed = bIsPlayingWithRed;
-		this.m_bIsPlayerActive = bIsPlayerActive;
+		// this.m_bIsPlayingWithRed = bIsPlayingWithRed;
+		// this.m_bIsPlayerActive = bIsPlayerActive;
 		this.m_sDotColor = this.m_bIsPlayingWithRed ? this.COLOR_RED : this.COLOR_BLUE;
 		this.m_Line = null;
 		this.m_Lines = new Array();
@@ -1096,10 +1162,10 @@ class InkBallGame {
 			button = document.getElementById('Cancel');
 			button.onclick = this.OnCancelClick.bind(this);
 
-	/**
-	 * [Old-legacy code]
-	 * TODO: commented; reanable in some sort
-	 */
+			/**
+			 * [Old-legacy code]
+			 * TODO: commented; re-anable logic in some way
+			 */
 			/*if(!this.m_bIsPlayerActive)
 			{
 				this.SetTimer(true);
@@ -1109,10 +1175,11 @@ class InkBallGame {
 				if(!this.m_bIsMobile)	this.Debug('Your move', 0);
 				else					this.ShowMobileStatus();
 			}*/
-	
-	/**
-	 * [/Old-legacy code]
-	 */
+
+			/**
+			 * [/Old-legacy code]
+			 */
 		}
 	}
 }
+/******** /funcs-n-classes ********/

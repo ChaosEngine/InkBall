@@ -56,9 +56,8 @@ namespace InkBall.Module.Pages
 
 		protected virtual async Task<InkBallGameViewModel> GetGameAsync(InkBallPlayerViewModel player, CancellationToken token = default)
 		{
-			InkBallGameViewModel game = null;
-			if (base.HttpContext.Session.IsAvailable &&
-				(game = base.HttpContext.Session.Get<InkBallGameViewModel>(nameof(InkBallGameViewModel))) != null)
+			InkBallGameViewModel game = base.HttpContext.Session.Get<InkBallGameViewModel>(nameof(InkBallGameViewModel));
+			if (game != null)
 			{
 			}
 			else if (player != null)
@@ -70,6 +69,15 @@ namespace InkBall.Module.Pages
 				var dbGame = await query.FirstOrDefaultAsync(token);
 				if (dbGame != null)
 				{
+					bool bIsPlayer1;
+					if (player.iId == dbGame.iPlayer1Id)
+						bIsPlayer1 = true;
+					else if (player.iId == dbGame.iPlayer2Id)
+						bIsPlayer1 = false;
+					else
+						throw new NotSupportedException("player not found");
+					dbGame.bIsPlayer1 = bIsPlayer1;
+
 					game = new InkBallGameViewModel(dbGame);
 					HttpContext.Session.Set<InkBallGameViewModel>(nameof(InkBallGameViewModel), game);
 				}
@@ -83,7 +91,6 @@ namespace InkBall.Module.Pages
 			if (user == null)
 				return null;
 
-			InkBallPlayer dbPlayer;
 			if (user.InkBallPlayer != null)
 			{
 				return user.InkBallPlayer.FirstOrDefault();
@@ -92,7 +99,7 @@ namespace InkBall.Module.Pages
 			var query = from p in _dbContext.InkBallPlayer.Include(x => x.User)
 						where p.iUserId == user.iId
 						select p;
-			dbPlayer = await query.FirstOrDefaultAsync(token);
+			InkBallPlayer dbPlayer = await query.FirstOrDefaultAsync(token);
 
 			if (dbPlayer == null)
 			{

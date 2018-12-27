@@ -1,14 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using Newtonsoft.Json;
 
 namespace InkBall.Module.Model
 {
 	public interface IGame<Player, Point, Path>
-		where Player : IPlayer
+		where Player : IPlayer<Point, Path>
 		where Point : IPoint
-		where Path : IPath
+		where Path : IPath<Point>
 	{
+		//bool bIsPlayer1 { get; set; }
 		bool bIsPlayer1Active { get; set; }
 		DateTime CreateTime { get; set; }
 		InkBallGame.GameStateEnum GameState { get; set; }
@@ -32,6 +35,8 @@ namespace InkBall.Module.Model
 		Player GetOtherPlayer();
 
 		bool IsThisPlayerActive();
+
+		bool IsThisPlayerPlayingWithRed();
 	}
 
 	public partial class InkBallGame : IGame<InkBallPlayer, InkBallPoint, InkBallPath>
@@ -54,6 +59,9 @@ namespace InkBall.Module.Model
 			FINISHED
 		}
 
+		[NotMapped]//Hide it from EF Core
+		[JsonProperty]//allow to serialize it
+		protected internal bool bIsPlayer1 { get; set; }
 		public int iId { get; set; }
 		public int iPlayer1Id { get; set; }
 		public int? iPlayer2Id { get; set; }
@@ -78,14 +86,9 @@ namespace InkBall.Module.Model
 			InkBallPoint = new HashSet<InkBallPoint>();
 		}
 
-		public bool IsThisPlayer1()
-		{
-			return this.bIsPlayer1Active;
-		}
-
 		public InkBallPlayer GetPlayer()
 		{
-			if (this.bIsPlayer1Active == true)
+			if (this.bIsPlayer1 == true)
 				return this.Player1;
 			else
 				return this.Player2;
@@ -93,22 +96,71 @@ namespace InkBall.Module.Model
 
 		public InkBallPlayer GetOtherPlayer()
 		{
-			if (bIsPlayer1Active == false)
-				return Player1;
+			if (this.bIsPlayer1 == false)
+				return this.Player1;
 			else
-				return Player2;
+				return this.Player2;
+		}
+
+		public InkBallPlayer GetPlayer1()
+		{
+			return this.Player1;
+		}
+
+		public InkBallPlayer GetPlayer2()
+		{
+			return this.Player2;
+		}
+
+		public bool IsThisPlayer1()
+		{
+			return this.bIsPlayer1;
+		}
+
+		/*public string IsThisPlayer1AsString()
+		{
+			if (this.bIsPlayer1)
+				return "true";
+			else
+				return "false";
+		}
+
+		public string IsThisPlayer2AsString()
+		{
+			if (this.bIsPlayer1)
+				return "false";
+			else
+				return "true";
+		}*/
+
+		public bool IsPlayer1Active()
+		{
+			return this.bIsPlayer1Active;
 		}
 
 		public bool IsThisPlayerActive()
 		{
-			if (bIsPlayer1Active)
+			if (this.bIsPlayer1)
 			{
-				return bIsPlayer1Active ? true : false;
+				return this.bIsPlayer1Active ? true : false;
 			}
 			else
 			{
-				return bIsPlayer1Active ? false : true;
+				return this.bIsPlayer1Active ? false : true;
 			}
+		}
+
+		/*public string IsPlayer1ActiveAsString()
+		{
+			if (this.bIsPlayer1Active)
+				return "true";
+			else
+				return "false";
+		}*/
+
+		public bool IsThisPlayerPlayingWithRed()
+		{
+			return this.bIsPlayer1;
 		}
 
 		public static TimeSpan GetDeactivationDelayInSeconds() => InkBallGame._deactivationDelayInSeconds;
@@ -127,6 +179,8 @@ namespace InkBall.Module.Model
 	[Serializable]
 	public class InkBallGameViewModel : IGame<InkBallPlayerViewModel, InkBallPointViewModel, InkBallPathViewModel>
 	{
+		[JsonProperty]
+		protected internal bool bIsPlayer1 { get; set; }
 		public bool bIsPlayer1Active { get; set; }
 		public DateTime CreateTime { get; set; }
 		public InkBallGame.GameStateEnum GameState { get; set; }
@@ -150,6 +204,7 @@ namespace InkBall.Module.Model
 		public InkBallGameViewModel(InkBallGame game)
 		{
 			bIsPlayer1Active = game.bIsPlayer1Active;
+			bIsPlayer1 = game.bIsPlayer1;
 			CreateTime = game.CreateTime;
 			GameState = game.GameState;
 			GameType = game.GameType;
@@ -178,6 +233,7 @@ namespace InkBall.Module.Model
 		public InkBallGameViewModel(InkBallGameViewModel game)
 		{
 			bIsPlayer1Active = game.bIsPlayer1Active;
+			bIsPlayer1 = game.bIsPlayer1;
 			CreateTime = game.CreateTime;
 			GameState = game.GameState;
 			GameType = game.GameType;
@@ -202,14 +258,9 @@ namespace InkBall.Module.Model
 			TimeStamp = game.TimeStamp;
 		}
 
-		public bool IsThisPlayer1()
-		{
-			return this.bIsPlayer1Active;
-		}
-
 		public InkBallPlayerViewModel GetPlayer()
 		{
-			if (this.bIsPlayer1Active == true)
+			if (this.bIsPlayer1 == true)
 				return this.Player1;
 			else
 				return this.Player2;
@@ -217,22 +268,71 @@ namespace InkBall.Module.Model
 
 		public InkBallPlayerViewModel GetOtherPlayer()
 		{
-			if (bIsPlayer1Active == false)
-				return Player1;
+			if (this.bIsPlayer1 == false)
+				return this.Player1;
 			else
-				return Player2;
+				return this.Player2;
+		}
+
+		public InkBallPlayerViewModel GetPlayer1()
+		{
+			return this.Player1;
+		}
+
+		public InkBallPlayerViewModel GetPlayer2()
+		{
+			return this.Player2;
+		}
+
+		public bool IsThisPlayer1()
+		{
+			return this.bIsPlayer1;
+		}
+
+		/*public string IsThisPlayer1AsString()
+		{
+			if (this.bIsPlayer1)
+				return "true";
+			else
+				return "false";
+		}
+
+		public string IsThisPlayer2AsString()
+		{
+			if (this.bIsPlayer1)
+				return "false";
+			else
+				return "true";
+		}*/
+
+		public bool IsPlayer1Active()
+		{
+			return this.bIsPlayer1Active;
 		}
 
 		public bool IsThisPlayerActive()
 		{
-			if (bIsPlayer1Active)
+			if (this.bIsPlayer1)
 			{
-				return bIsPlayer1Active ? true : false;
+				return this.bIsPlayer1Active ? true : false;
 			}
 			else
 			{
-				return bIsPlayer1Active ? false : true;
+				return this.bIsPlayer1Active ? false : true;
 			}
+		}
+
+		/*public string IsPlayer1ActiveAsString()
+		{
+			if (this.bIsPlayer1Active)
+				return "true";
+			else
+				return "false";
+		}*/
+
+		public bool IsThisPlayerPlayingWithRed()
+		{
+			return this.bIsPlayer1;
 		}
 	}
 }

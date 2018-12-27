@@ -10,13 +10,15 @@
 		WriteLiteral($"<link rel='stylesheet' href='{Url.Content("~/css/inkball.css")}' />");
 	});
 }
-<h1>
+<h3>
 	This is from @(typeof(IndexModel).FullName)
-</h1>
-<p class="blue-paragraph">
-	I amd SOO BLUEEEE
-</p>
+</h3>
 <p>
+	iGameID=@Model.Game.iId
+	iPlayerID=@Model.Player.iId
+	IsThisPlayer1=@(Model.Game.IsThisPlayer1() ? "P1" : "P2")
+	<span class="whichColor">Play color</span>
+
 	<img src="~/img/image.png" alt="image" />
 </p>
 
@@ -74,23 +76,32 @@
 
 
 <script type='text/javascript'>
+"use strict";
+
 	window.addEventListener('load', function() {
 		//alert('a QQ');
-		$('.blue-paragraph').css('color', 'blue');
+		$('.whichColor').css('color', '@(Model.Game.IsThisPlayerPlayingWithRed() ? "red" : "blue")');
 
 		let inkBallHubName = '@(commonUIConfigureOptions.Value.AppRootPath + InkBall.Module.Hubs.ChatHub.HubName)';
 		let iGameID = @Model.Game.iId;
 		let iPlayerID = @Model.Player.iId;
+		let bPlayingWithRed = @(Model.Game.IsThisPlayerPlayingWithRed().ToString().ToLowerInvariant());
+		let bPlayerActive = @(Model.Game.IsThisPlayerActive() ? "false" : "true");
 		var game = new InkBallGame(inkBallHubName, signalR.LogLevel.Warning,
 			//new signalR.protocols.msgpack.MessagePackHubProtocol()
 			new signalR.JsonHubProtocol(),
 			signalR.HttpTransportType.None,
 			function () {
-				return 'iGameID=' + iGameID;
-			}
+				return 'iGameID=' + iGameID + '&iPlayerID=' + iPlayerID;
+			},
+			bPlayingWithRed, bPlayerActive
 		);
 		game.StartSignalRConnection(iGameID, iPlayerID, '#messagesList', '#sendButton', '#messageInput');
 		game.PrepareDrawing('#screen', 15);
+
+@Html.Raw(await Model.GetPointsAndPathsAsInitScriptAsync("\t\tgame.SetPoint", "\t\tgame.SetPath", "StatusEnum."))
+
+		CountPointsDebug();
 	});
 </script>
 
@@ -104,9 +115,9 @@
 			$"<script src='{Url.Content("~/lib/signalr-protocol-msgpack/dist/browser/signalr-protocol-msgpack.js")}'></script>\r" +
 			$"<script type='text/javascript' src='{Url.Content("~/js/svgvml.js")}'></script>\r"
 			:
-			@"<script src='https://cdn.jsdelivr.net/npm/@aspnet/signalr@1.1.0/dist/browser/signalr.min.js' integrity='sha256-QMSkR/7232j790y/zuvuopBbJS14B9e4hLLuz7KC9Fk=' crossorigin='anonymous'></script>\r
-			<script src='https://cdn.jsdelivr.net/npm/msgpack5@4.2.1/dist/msgpack5.min.js' integrity='sha256-mY/RhkCJfd98j3c5s1EcUDJdRzffTeKzEzFIaI/2KQg=' crossorigin='anonymous'></script>\r
-			<script src='https://cdn.jsdelivr.net/npm/@aspnet/signalr-protocol-msgpack@1.1.0/dist/browser/signalr-protocol-msgpack.min.js' integrity='sha256-/nN8c30tnA8AmQMPV0efnlYrEOhPNNo7v4Y6JgHSPac=' crossorigin='anonymous'></script>\r" +
+			@"<script src='https://cdn.jsdelivr.net/npm/@aspnet/signalr@1.1.0/dist/browser/signalr.min.js' integrity='sha256-QMSkR/7232j790y/zuvuopBbJS14B9e4hLLuz7KC9Fk=' crossorigin='anonymous'></script>
+			<script src='https://cdn.jsdelivr.net/npm/msgpack5@4.2.1/dist/msgpack5.min.js' integrity='sha256-mY/RhkCJfd98j3c5s1EcUDJdRzffTeKzEzFIaI/2KQg=' crossorigin='anonymous'></script>
+			<script src='https://cdn.jsdelivr.net/npm/@aspnet/signalr-protocol-msgpack@1.1.0/dist/browser/signalr-protocol-msgpack.min.js' integrity='sha256-/nN8c30tnA8AmQMPV0efnlYrEOhPNNo7v4Y6JgHSPac=' crossorigin='anonymous'></script>" +
 			$"<script type='text/javascript' src='{Url.Content("~/js/svgvml.min.js")}'></script>") +
 
 

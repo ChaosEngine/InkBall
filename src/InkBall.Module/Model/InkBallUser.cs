@@ -5,16 +5,19 @@ using System.Linq;
 
 namespace InkBall.Module.Model
 {
-	public interface IUser<P> where P : IPlayer
+	public interface IUser<Player, Point, Path>
+		where Player : IPlayer<Point, Path>
+		where Point : IPoint
+		where Path : IPath<Point>
 	{
 		int iId { get; set; }
 		int iPrivileges { get; set; }
 		string sExternalId { get; set; }
 
-		ICollection<P> InkBallPlayer { get; set; }
+		ICollection<Player> InkBallPlayer { get; set; }
 	}
 
-	public partial class InkBallUser : IUser<InkBallPlayer>
+	public partial class InkBallUser : IUser<InkBallPlayer, InkBallPoint, InkBallPath>
 	{
 		public int iId { get; set; }
 		public int iPrivileges { get; set; }
@@ -29,16 +32,16 @@ namespace InkBall.Module.Model
 	}
 
 	[Serializable]
-	public sealed class InkBallUserViewModel : IUser<InkBallPlayerViewModel>
+	public sealed class InkBallUserViewModel : IUser<InkBallPlayerViewModel, InkBallPointViewModel, InkBallPathViewModel>
 	{
 		public int iId { get; set; }
 		public int iPrivileges { get; set; }
 		public string sExternalId { get; set; }
+
 		public ICollection<InkBallPlayerViewModel> InkBallPlayer { get; set; }
 
 		public InkBallUserViewModel()
-		{
-		}
+		{ }
 
 		public InkBallUserViewModel(InkBallUser user)
 		{

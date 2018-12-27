@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 
 namespace InkBall.Module.Model
 {
-	public interface IPlayer
+	public interface IPlayer<Point, Path>
+		where Point : IPoint
+		where Path : IPath<Point>
 	{
 		int iId { get; set; }
 		int? iUserId { get; set; }
@@ -14,10 +17,13 @@ namespace InkBall.Module.Model
 		int iDrawCount { get; set; }
 		DateTime TimeStamp { get; set; }
 
+		ICollection<Path> InkBallPath { get; set; }
+		ICollection<Point> InkBallPoint { get; set; }
+
 		bool IsLastMoveOverdue();
 	}
 
-	public partial class InkBallPlayer : IPlayer
+	public partial class InkBallPlayer : IPlayer<InkBallPoint, InkBallPath>
 	{
 		public int iId { get; set; }
 		public int? iUserId { get; set; }
@@ -54,7 +60,7 @@ namespace InkBall.Module.Model
 	}
 
 	[Serializable]
-	public class InkBallPlayerViewModel : IPlayer
+	public class InkBallPlayerViewModel : IPlayer<InkBallPointViewModel, InkBallPathViewModel>
 	{
 		public int iId { get; set; }
 		public int? iUserId { get; set; }
@@ -63,6 +69,9 @@ namespace InkBall.Module.Model
 		public int iLossCount { get; set; }
 		public int iDrawCount { get; set; }
 		public DateTime TimeStamp { get; set; }
+
+		public ICollection<InkBallPathViewModel> InkBallPath { get; set; }
+		public ICollection<InkBallPointViewModel> InkBallPoint { get; set; }
 
 		public InkBallPlayerViewModel()
 		{
@@ -77,6 +86,15 @@ namespace InkBall.Module.Model
 			iLossCount = player.iLossCount;
 			iDrawCount = player.iDrawCount;
 			TimeStamp = player.TimeStamp;
+
+			if (player?.InkBallPath?.Count > 0)
+			{
+				InkBallPath = player.InkBallPath.Select(p => new InkBallPathViewModel(p)).ToArray();
+			}
+			if (player?.InkBallPoint?.Count > 0)
+			{
+				InkBallPoint = player.InkBallPoint.Select(p => new InkBallPointViewModel(p)).ToArray();
+			}
 		}
 
 		//[JsonConstructor]
@@ -89,6 +107,15 @@ namespace InkBall.Module.Model
 			iLossCount = player.iLossCount;
 			iDrawCount = player.iDrawCount;
 			TimeStamp = player.TimeStamp;
+
+			if (player?.InkBallPath?.Count > 0)
+			{
+				InkBallPath = player.InkBallPath;
+			}
+			if (player?.InkBallPoint?.Count > 0)
+			{
+				InkBallPoint = player.InkBallPoint;
+			}
 		}
 
 		///

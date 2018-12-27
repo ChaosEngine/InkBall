@@ -33,6 +33,7 @@ namespace InkBall.Module.Pages
 
 			var bIsLoggedIn = (Player != null && !string.IsNullOrEmpty(GameUser.sExternalId)) ? true : false;
 			string msg = string.Empty;
+			var token = HttpContext.RequestAborted;
 			action = !string.IsNullOrEmpty(action) ? action : string.Empty;
 
 			try
@@ -73,11 +74,11 @@ namespace InkBall.Module.Pages
 						//{
 						//	width = 600;	height = 800;
 						//}
-						var trans = await _dbContext.Database.BeginTransactionAsync(HttpContext.RequestAborted);
+						var trans = await _dbContext.Database.BeginTransactionAsync(token);
 						try
 						{
 							var dbGame = await _dbContext.CreateNewGameFromExternalUserIDAsync(GameUser.sExternalId, InkBallGame.GameStateEnum.AWAITING,
-								GameType, 15/*grid size*/, width, height);
+								GameType, 15/*grid size*/, width, height, true, token);
 							Game = new InkBallGameViewModel(dbGame);
 
 							HttpContext.Session.Set(nameof(InkBallGameViewModel), Game);
@@ -120,7 +121,7 @@ namespace InkBall.Module.Pages
 					case "Logout":
 						if (Game != null)
 						{
-							trans = await _dbContext.Database.BeginTransactionAsync(HttpContext.RequestAborted);
+							trans = await _dbContext.Database.BeginTransactionAsync(token);
 							try
 							{
 								var gameID = Game.iId;
@@ -128,9 +129,9 @@ namespace InkBall.Module.Pages
 								var db_game = (from ig in _dbContext.InkBallGame
 												.Include(ip1 => ip1.Player1).Include(ip2 => ip2.Player2)
 											   where ig.iId == gameID
-											   select ig).FirstOrDefaultAsync(HttpContext.RequestAborted);
+											   select ig).FirstOrDefaultAsync(token);
 
-								_dbContext.SurrenderGameFromPlayerAsync(await db_game, base.HttpContext.Session, false, HttpContext.RequestAborted);
+								_dbContext.SurrenderGameFromPlayerAsync(await db_game, base.HttpContext.Session, false, token);
 
 								trans.Commit();
 							}

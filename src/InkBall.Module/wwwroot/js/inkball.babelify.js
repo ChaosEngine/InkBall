@@ -11,11 +11,13 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
 var StatusEnum = Object.freeze({
+  POINT_FREE_RED: -3,
+  POINT_FREE_BLUE: -2,
   POINT_FREE: -1,
   POINT_STARTING: 0,
   POINT_IN_PATH: 1,
   POINT_OWNED_BY_RED: 2,
-  POINT_OWNED_BY_BLU: 3
+  POINT_OWNED_BY_BLUE: 3
 });
 var CommandKindEnum = Object.freeze({
   UNKNOWN: -1,
@@ -23,7 +25,7 @@ var CommandKindEnum = Object.freeze({
   POINT: 1,
   PATH: 2,
   PLAYER_JOINING: 3,
-  PLAYER_SURRENDE: 4
+  PLAYER_SURRENDER: 4
 });
 
 var InkBallPointViewModel = function () {
@@ -51,11 +53,61 @@ var InkBallPointViewModel = function () {
     key: "Format",
     value: function Format(sUser, point) {
       var msg = point.iX + ' ' + point.iY + ' ' + point.Status;
-      return sUser + " places " + msg + " point";
+      return sUser + " places [" + msg + "] point";
     }
   }]);
 
   return InkBallPointViewModel;
+}();
+
+var InkBallPathViewModel = function () {
+  function InkBallPathViewModel() {
+    var iId = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
+    var iGameId = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+    var iPlayerId = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
+    var sPointsAsString = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : '';
+    var sOwnedPointsAsString = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : '';
+
+    _classCallCheck(this, InkBallPathViewModel);
+
+    this.iId = iId;
+    this.iGameId = iGameId;
+    this.iPlayerId = iPlayerId;
+    this.sPointsAsString = sPointsAsString;
+    this.sOwnedPointsAsString = sOwnedPointsAsString;
+  }
+
+  _createClass(InkBallPathViewModel, null, [{
+    key: "Format",
+    value: function Format(sUser, path) {
+      var msg = path.iPlayerID + "    " + path.sPointsAsString + "     " + path.sOwnedPointsAsString;
+      return sUser + " places [" + msg + "] path";
+    }
+  }]);
+
+  return InkBallPathViewModel;
+}();
+
+var WaitForPlayerCommand = function () {
+  _createClass(WaitForPlayerCommand, [{
+    key: "ShowP2Name",
+    get: function get() {
+      return this.showP2Name;
+    },
+    set: function set(value) {
+      this.showP2Name = value;
+    }
+  }]);
+
+  function WaitForPlayerCommand() {
+    var showP2Name = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+
+    _classCallCheck(this, WaitForPlayerCommand);
+
+    this.ShowP2Name = showP2Name;
+  }
+
+  return WaitForPlayerCommand;
 }();
 
 var PingCommand = function () {
@@ -90,6 +142,25 @@ var PingCommand = function () {
 
 function htmlEncode(html) {
   return document.createElement('a').appendChild(document.createTextNode(html)).parentNode.innerHTML;
+}
+
+function CountPointsDebug() {
+  var svgs = $("svg"),
+      totalChildren = 0,
+      childCounts = [];
+
+  for (var _i = 0; _i < svgs.length; _i++) {
+    var svg = svgs[_i];
+    totalChildren += svg.childElementCount;
+    childCounts.push(svg.childElementCount);
+  }
+
+  var tags = ["circle", "path"],
+      tagMessage = "";
+  tags.forEach(function (tagName) {
+    tagMessage += tagName + ": " + $(tagName).length + " ";
+  });
+  $("#debug2").text('SVG elements - totalChildren:' + totalChildren + ' SVG childElements:' + childCounts + ' by tag:' + tagMessage);
 }
 
 var InkBallGame = function () {
@@ -355,36 +426,43 @@ var InkBallGame = function () {
 
       switch (iStatus) {
         case this.POINT_FREE_RED:
+        case StatusEnum.POINT_FREE_RED:
           color = this.COLOR_RED;
           oval.$SetStatus(this.POINT_FREE);
           break;
 
         case this.POINT_FREE_BLUE:
+        case StatusEnum.POINT_FREE_BLUE:
           color = this.COLOR_BLUE;
           oval.$SetStatus(this.POINT_FREE);
           break;
 
         case this.POINT_FREE:
+        case StatusEnum.POINT_FREE:
           color = this.m_sDotColor;
           oval.$SetStatus(this.POINT_FREE);
           break;
 
         case this.POINT_STARTING:
+        case StatusEnum.POINT_STARTING:
           color = this.m_sDotColor;
           oval.$SetStatus(this.POINT_IN_PATH);
           break;
 
         case this.POINT_IN_PATH:
+        case StatusEnum.POINT_IN_PATH:
           color = this.m_sDotColor;
           oval.$SetStatus(iStatus);
           break;
 
         case this.POINT_OWNED_BY_RED:
+        case StatusEnum.POINT_OWNED_BY_RED:
           color = this.COLOR_OWNED_RED;
           oval.$SetStatus(iStatus);
           break;
 
         case this.POINT_OWNED_BY_BLUE:
+        case StatusEnum.POINT_OWNED_BY_BLUE:
           color = this.COLOR_OWNED_BLUE;
           oval.$SetStatus(iStatus);
           break;
@@ -407,8 +485,8 @@ var InkBallGame = function () {
           p = null,
           sPathPoints = "";
 
-      for (var _i = 0; _i < count; ++_i) {
-        p = Points[_i].split(",");
+      for (var _i2 = 0; _i2 < count; ++_i2) {
+        p = Points[_i2].split(",");
         x = parseInt(p[0]);
         y = parseInt(p[1]);
         x *= this.m_iGridSize;
@@ -438,8 +516,8 @@ var InkBallGame = function () {
           y,
           pnt;
 
-      for (var _i2 = 0; _i2 < count; ++_i2) {
-        pnt = sPoints[_i2].split(",");
+      for (var _i3 = 0; _i3 < count; ++_i3) {
+        pnt = sPoints[_i3].split(",");
         x = pnt[0];
         y = pnt[1];
         if (x == iX && y == iY) return true;
@@ -474,9 +552,9 @@ var InkBallGame = function () {
           sDelimiter = "",
           k = 0;
 
-      for (var _i3 = 0; _i3 < count; _i3 += 2) {
-        x = points[_i3];
-        y = points[_i3 + 1];
+      for (var _i4 = 0; _i4 < count; _i4 += 2) {
+        x = points[_i4];
+        y = points[_i4 + 1];
         if (x == null || y == null) continue;
         x /= this.m_iGridSize;
         y /= this.m_iGridSize;
@@ -498,8 +576,8 @@ var InkBallGame = function () {
       var sOwnedPoints = "";
       sDelimiter = "";
 
-      for (var _i4 = 0; _i4 < count1; ++_i4) {
-        var p0 = this.m_Points[_i4];
+      for (var _i5 = 0; _i5 < count1; ++_i5) {
+        var p0 = this.m_Points[_i5];
 
         if (p0 != null && p0.$GetStatus() == this.POINT_FREE && p0.$GetFillColor() == sColor) {
           var pos = p0.$GetPosition();
@@ -539,9 +617,9 @@ var InkBallGame = function () {
             _y = void 0,
             k = 0;
 
-        for (var _i5 = 0; _i5 < count; _i5 += 2) {
-          _x2 = points[_i5];
-          _y = points[_i5 + 1];
+        for (var _i6 = 0; _i6 < count; _i6 += 2) {
+          _x2 = points[_i6];
+          _y = points[_i6 + 1];
           if (_x2 == null || _y == null) continue;
           _x2 /= this.m_iGridSize;
           _y /= this.m_iGridSize;
@@ -558,25 +636,35 @@ var InkBallGame = function () {
   }, {
     key: "CreateXMLWaitForPlayerRequest",
     value: function CreateXMLWaitForPlayerRequest() {
-      var sRet = "<WaitForPlayer>" + (arguments.length > 0 && (arguments.length <= 0 ? undefined : arguments[0]) == true ? "<ShowP2Name />" : "") + "</WaitForPlayer>";
-      return sRet;
+      var cmd = new WaitForPlayerCommand(arguments.length > 0 && (arguments.length <= 0 ? undefined : arguments[0]) == true ? true : false);
+      return cmd;
     }
   }, {
     key: "CreateXMLPutPointRequest",
     value: function CreateXMLPutPointRequest(iX, iY) {
-      var sRet = "<PutPoint>" + "<Point x='" + iX + "' y='" + iY + "' />" + "</PutPoint>";
-      return sRet;
+      var cmd = new InkBallPointViewModel(0, this.g_iGameID, this.g_iPlayerID, iX, iY, StatusEnum.POINT_FREE, 0);
+      return cmd;
     }
   }, {
     key: "CreateXMLPutPathRequest",
     value: function CreateXMLPutPathRequest(sPathPoints, sOwnedPoints) {
-      var sRet = "<PutPath><Path>" + sPathPoints + "</Path>" + "<Owned>" + sOwnedPoints + "</Owned>" + "</PutPath>";
-      return sRet;
+      var cmd = new InkBallPathViewModel(0, this.g_iGameID, this.g_iPlayerID, sPathPoints, sOwnedPoints);
+      return cmd;
     }
   }, {
     key: "SendAsyncData",
-    value: function SendAsyncData(sData) {
-      if (sData.length == 0) return;
+    value: function SendAsyncData(payload) {
+      switch (payload.constructor.name) {
+        case "InkBallPointViewModel":
+          console.log(InkBallPointViewModel.Format('some player', payload));
+          this.g_SignalRConnection.invoke("ClientToServerPoint", payload).catch(function (err) {
+            return console.error(err.toString());
+          });
+          break;
+
+        default:
+          break;
+      }
     }
   }, {
     key: "AjaxResponseCallBack",
@@ -625,8 +713,8 @@ var InkBallGame = function () {
                   var point_status = this.m_sDotColor == this.COLOR_RED ? this.POINT_OWNED_BY_RED : this.POINT_OWNED_BY_BLUE;
                   var sOwnedCol = this.m_sDotColor == this.COLOR_RED ? this.COLOR_OWNED_BLUE : this.COLOR_OWNED_RED;
 
-                  for (var _i6 = 0; _i6 < count; ++_i6) {
-                    p = Points[_i6].split(",");
+                  for (var _i7 = 0; _i7 < count; ++_i7) {
+                    p = Points[_i7].split(",");
                     _x4 = parseInt(p[0]);
                     _y3 = parseInt(p[1]);
                     p = this.m_Points[_y3 * this.m_iGridWidth + _x4];
@@ -918,9 +1006,9 @@ var InkBallGame = function () {
         if (this.m_Line != null) {
           var points = this.m_Line.$GetPoints();
 
-          for (var _i7 = 0; _i7 < points.length; _i7 += 2) {
-            var _x5 = points[_i7];
-            var _y4 = points[_i7 + 1];
+          for (var _i8 = 0; _i8 < points.length; _i8 += 2) {
+            var _x5 = points[_i8];
+            var _y4 = points[_i8 + 1];
             if (_x5 == null || _y4 == null) continue;
             _x5 /= this.m_iGridSize;
             _y4 /= this.m_iGridSize;
@@ -957,20 +1045,7 @@ var InkBallGame = function () {
     key: "PrepareDrawing",
     value: function PrepareDrawing(divScreen) {
       var iGridSize = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 15;
-      var bIsPlayingWithRed = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
-      var bIsPlayerActive = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : true;
-      var iTooLong2Duration = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 125;
-      this.COLOR_RED = 'red';
-      this.COLOR_BLUE = 'blue';
-      this.COLOR_OWNED_RED = 'pink';
-      this.COLOR_OWNED_BLUE = '#8A2BE2';
-      this.POINT_FREE_RED = -3;
-      this.POINT_FREE_BLUE = -2;
-      this.POINT_FREE = -1;
-      this.POINT_STARTING = 0;
-      this.POINT_IN_PATH = 1;
-      this.POINT_OWNED_BY_RED = 2;
-      this.POINT_OWNED_BY_BLUE = 3;
+      var iTooLong2Duration = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 125;
       this.m_bIsWon = false;
       this.m_iDelayBetweenMultiCaptures = 4000;
       this.m_iTimerInterval = 2000;
@@ -998,8 +1073,6 @@ var InkBallGame = function () {
       this.m_bMouseDown = false;
       this.m_bDrawLines = !true;
       this.m_sMessage = '';
-      this.m_bIsPlayingWithRed = bIsPlayingWithRed;
-      this.m_bIsPlayerActive = bIsPlayerActive;
       this.m_sDotColor = this.m_bIsPlayingWithRed ? this.COLOR_RED : this.COLOR_BLUE;
       this.m_Line = null;
       this.m_Lines = new Array();

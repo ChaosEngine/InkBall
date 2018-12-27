@@ -28,6 +28,19 @@ namespace InkBall.Module.Model
 		}
 	}
 
+	public sealed class WaitForPlayerCommand
+	{
+		public bool ShowP2Name { get; private set; }
+
+		public WaitForPlayerCommand() : this(false)
+		{ }
+
+		public WaitForPlayerCommand(bool showP2Name)
+		{
+			ShowP2Name = showP2Name;
+		}
+	}
+
 	public sealed class PlayerJoiningCommand
 	{
 		public int OtherPlayerId { get; private set; }

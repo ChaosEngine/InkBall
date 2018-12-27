@@ -24,11 +24,13 @@ namespace InkBall.Module.Model
 	{
 		public enum StatusEnum
 		{
-			POINT_FREE,
-			POINT_STARTING,
-			POINT_IN_PATH,
-			POINT_OWNED_BY_RED,
-			POINT_OWNED_BY_BLUE
+			POINT_FREE_RED = -3,
+			POINT_FREE_BLUE = -2,
+			POINT_FREE = -1,
+			POINT_STARTING = 0,
+			POINT_IN_PATH = 2,
+			POINT_OWNED_BY_RED = 3,
+			POINT_OWNED_BY_BLUE = 4
 		}
 
 

@@ -197,7 +197,7 @@ namespace InkBall.Module.Pages
 						{
 
 							new_game = await _dbContext.CreateNewGameFromExternalUserIDAsync(sExternalUserID, InkBallGame.GameStateEnum.AWAITING,
-								GameType, 15/*grid size*/, width, height);
+								GameType, 15/*grid size*/, width, height, true, token);
 							Game = new InkBallGameViewModel(new_game);
 							HttpContext.Session.Set(nameof(InkBallGameViewModel), Game);
 
@@ -260,7 +260,7 @@ namespace InkBall.Module.Pages
 			if (!string.IsNullOrEmpty(msg))
 				Message = msg;
 
-			var games = GetGameList(HttpContext.RequestAborted);
+			var games = GetGameList(token);
 
 			GamesList = await games;
 

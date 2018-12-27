@@ -7,8 +7,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using System.Threading;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using System.Collections.Generic;
-using static InkBall.Module.Model.InkBallGame;
 using Microsoft.AspNetCore.Http;
+using static InkBall.Module.Model.InkBallGame;
 
 namespace InkBall.Module.Model
 {
@@ -389,7 +389,9 @@ namespace InkBall.Module.Model
 			var new_game = await GetGameFromDatabaseAsync(game_id, true);
 			return new_game;
 
-
+			//
+			// private functions
+			//
 			async Task<int> PrivInkBallGameInsertAsync(
 				int? iPlayer1ID, string iPlayer1ExternalUserID,
 				int? iPlayer2ID, string iPlayer2ExternalUserID,
@@ -466,7 +468,9 @@ namespace InkBall.Module.Model
 						where g.iId == iID
 						select g;
 
-			return await query.FirstOrDefaultAsync(token);
+			var game = await query.FirstOrDefaultAsync(token);
+			game.bIsPlayer1 = bIsPlayer1;
+			return game;
 		}
 
 		private async Task<InkBallPlayer> CreateNewPlayerFromExternalUserIdAsync(string sExternalId, string sLastMoveCode, CancellationToken token = default)
@@ -519,8 +523,8 @@ namespace InkBall.Module.Model
 
 			game.Player2 = player2;
 			game.GameState = GameStateEnum.ACTIVE;
-			game.bIsPlayer1Active = false;
-			// game.bIsPlayer1Active = true;
+			game.bIsPlayer1 = false;
+			game.bIsPlayer1Active = true;
 			game.TimeStamp = DateTime.Now;//sqlite can not timestamp on update
 
 			await this.SaveChangesAsync(token);
@@ -603,6 +607,43 @@ namespace InkBall.Module.Model
 						select ig;
 
 			return await query.ToListAsync(token);
+		}
+
+		private async Task<IEnumerable<InkBallPath>> GetPathsFromDatabaseAsync(int iGameID, int iPlayerID, IEnumerable<InkBallPoint> points, CancellationToken token = default)
+		{
+			/*var query = from ip in InkBallPath
+						where ip.iGameId == iGameID && ip.iPlayerId == iPlayerID
+						select ip;
+			var paths = await query.ToListAsync(token);*/
+
+			var query1 = from ip in InkBallPath.Include(x => x.InkBallPointsInPath).Include(y => y.InkBallPoint)
+						 where ip.iGameId == iGameID && ip.iPlayerId == iPlayerID
+						 select ip;
+
+			var paths = await query1.ToArrayAsync(token);
+			// foreach (var path in paths)
+			// {
+			// }
+
+			return paths;
+		}
+
+		private async Task<IEnumerable<InkBallPoint>> GetPointsFromDatabaseAsync(int iGameID, int iPlayerID, CancellationToken token = default)
+		{
+			var query = from ip in InkBallPoint
+						where ip.iGameId == iGameID && ip.iPlayerId == iPlayerID
+						select ip;
+
+			return await query.ToArrayAsync(token);
+		}
+
+		public async Task<(IEnumerable<InkBallPath> paths, IEnumerable<InkBallPoint> points)> LoadPointsAndPathsAsync(int iGameID, int iPlayerID,
+			CancellationToken token = default)
+		{
+			var points = await GetPointsFromDatabaseAsync(iGameID, iPlayerID, token);
+			var paths = await GetPathsFromDatabaseAsync(iGameID, iPlayerID, points, token);
+
+			return (paths, points);
 		}
 
 		#endregion WIP
