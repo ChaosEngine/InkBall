@@ -164,6 +164,7 @@ class InkBallGame {
 		this.m_iScrollY = 0;
 		this.m_iClientWidth = 0;
 		this.m_iClientHeight = 0;
+		this.m_Screen = null;
 		this.m_Debug = null;
 		this.m_Player2Name = null;
 		this.m_SurrenderButton = null;
@@ -843,8 +844,8 @@ class InkBallGame {
 	OnMouseMove(event) {
 		if (!this.m_bIsPlayerActive) return;
 
-		let x = (event ? event.clientX : window.event.clientX) - this.m_iPosX + this.m_iScrollX + 0.5 * this.m_iGridSize;
-		let y = (event ? event.clientY : window.event.clientY) - this.m_iPosY + this.m_iScrollY + 0.5 * this.m_iGridSize;
+		let x = (event ? event.clientX : window.event.clientX) - this.m_Screen.offsetLeft + this.f_scrollLeft() + 0.5 * this.m_iGridSize;
+		let y = (event ? event.clientY : window.event.clientY) - this.m_Screen.offsetTop + this.f_scrollTop() + 0.5 * this.m_iGridSize;
 		x = parseInt(x / this.m_iGridSize);
 		y = parseInt(y / this.m_iGridSize);
 
@@ -909,9 +910,9 @@ class InkBallGame {
 
 	OnMouseDown(event) {
 		if (!this.m_bIsPlayerActive) return;
-
-		let x = (event ? event.clientX : window.event.clientX) - this.m_iPosX + this.m_iScrollX + 0.5 * this.m_iGridSize;
-		let y = (event ? event.clientY : window.event.clientY) - this.m_iPosY + this.m_iScrollY + 0.5 * this.m_iGridSize;
+		
+		let x = (event ? event.clientX : window.event.clientX) - this.m_Screen.offsetLeft + this.f_scrollLeft() + 0.5 * this.m_iGridSize;
+		let y = (event ? event.clientY : window.event.clientY) - this.m_Screen.offsetTop + this.f_scrollTop() + 0.5 * this.m_iGridSize;
 		x = this.m_iMouseX = parseInt(x / this.m_iGridSize);
 		y = this.m_iMouseY = parseInt(y / this.m_iGridSize);
 
@@ -1135,27 +1136,27 @@ class InkBallGame {
 		this.m_Debug = document.getElementById('debug0');
 		this.m_Player2Name = document.getElementById('Player2Name');
 		this.m_SurrenderButton = document.getElementById('SurrenderButton');
-		var screen = document.querySelector(divScreen);
-		if (!screen) {
+		this.m_Screen = document.querySelector(divScreen);
+		if (!this.m_Screen) {
 			alert("no board");
 			return;
 		}
-		this.m_iPosX = screen.offsetLeft;
-		this.m_iPosY = screen.offsetTop;
-		this.m_iClientWidth = screen.clientWidth;
-		this.m_iClientHeight = screen.clientHeight;
+		this.m_iPosX = this.m_Screen.offsetLeft;
+		this.m_iPosY = this.m_Screen.offsetTop;
+		this.m_iClientWidth = this.m_Screen.clientWidth;
+		this.m_iClientHeight = this.m_Screen.clientHeight;
 		this.m_iGridWidth = parseInt(this.m_iClientWidth / this.m_iGridSize);
 		this.m_iGridHeight = parseInt(this.m_iClientHeight / this.m_iGridSize);
 		this.m_iScrollX = this.f_scrollLeft();
 		this.m_iScrollY = this.f_scrollTop();
 
-		$createSVGVML(screen, screen.style.width, screen.style.height, false);
+		$createSVGVML(this.m_Screen, this.m_Screen.style.width, this.m_Screen.style.height, true);
 
-		this.DisableSelection(screen);
+		this.DisableSelection(this.m_Screen);
 		if (!this.m_bViewOnly) {
-			screen.onmousedown = this.OnMouseDown.bind(this);
-			screen.onmousemove = this.OnMouseMove.bind(this);
-			screen.onmouseup = this.OnMouseUp.bind(this);
+			this.m_Screen.onmousedown = this.OnMouseDown.bind(this);
+			this.m_Screen.onmousemove = this.OnMouseMove.bind(this);
+			this.m_Screen.onmouseup = this.OnMouseUp.bind(this);
 			window.onscroll = this.OnScroll.bind(this);
 			let button = document.getElementById('DrawMode');
 			button.onclick = this.OnDrawModeClick.bind(this);
