@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using Microsoft.Net.Http.Headers;
+using Newtonsoft.Json;
 using System;
 using System.Linq;
 using System.Security.Claims;
@@ -169,15 +170,15 @@ namespace InkBall.Module.Hubs
 				if (!(dbGame.iPlayer1Id == this_Player.iId || (dbGame.iPlayer2Id.HasValue && dbGame.iPlayer2Id.Value == this_Player.iId)))
 					throw new ArgumentException("no player exist in that game");
 
-					bool bIsPlayer1;
-					if (this_Player.iId == dbGame.iPlayer1Id)
-						bIsPlayer1 = true;
-					else if (this_Player.iId == dbGame.iPlayer2Id)
-						bIsPlayer1 = false;
-					else
-						throw new NotSupportedException("player not found");
-					dbGame.bIsPlayer1 = bIsPlayer1;
-					
+				bool bIsPlayer1;
+				if (this_Player.iId == dbGame.iPlayer1Id)
+					bIsPlayer1 = true;
+				else if (this_Player.iId == dbGame.iPlayer2Id)
+					bIsPlayer1 = false;
+				else
+					throw new NotSupportedException("player not found");
+				dbGame.bIsPlayer1 = bIsPlayer1;
+
 				game = new InkBallGameViewModel(dbGame);
 				this.Context.Items[nameof(ThisGame)] = game;
 
@@ -243,8 +244,6 @@ namespace InkBall.Module.Hubs
 
 			await LoadUserAndPLayerStructures(token);
 
-
-
 			if (ThisGame == null || ThisPlayer == null || OtherPlayer == null || string.IsNullOrEmpty(OtherUserIdentifier)
 				|| string.IsNullOrEmpty(ThisUserName))
 				return;
@@ -256,44 +255,87 @@ namespace InkBall.Module.Hubs
 				if (point.iPlayerId != ThisPlayer.iId && point.iPlayerId != OtherPlayer.iId)
 					throw new ArgumentException("bad Player ID");
 
-				var already_placed = await (from pts in _dbContext.InkBallPoint
-											where pts.iGameId == this.ThisGame.iId
-											&& (pts.iPlayerId == ThisPlayer.iId || pts.iPlayerId == OtherPlayer.iId)
-											&& pts.iX == point.iX && pts.iY == point.iY
-											select 1)
-									.AnyAsync(token);
-				if (!already_placed)
+				var query = await (from pl in _dbContext.InkBallPlayer
+								   let gm = (_dbContext.InkBallGame.FirstOrDefault(
+									   w => w.iId == point.iGameId
+									   && (w.GameState == InkBallGame.GameStateEnum.ACTIVE || w.GameState == InkBallGame.GameStateEnum.AWAITING)
+									   && (w.iPlayer1Id == point.iPlayerId || w.iPlayer2Id == point.iPlayerId)
+								   ))
+								   let point_exist = (_dbContext.InkBallPoint.Any(pts =>
+									   pts.iGameId == ThisGame.iId && pts.iPlayerId == point.iPlayerId
+									   && pts.iX == point.iX && pts.iY == point.iY
+								   ))
+								   where pl.iId == point.iPlayerId
+								   select new
+								   {
+									   Game = gm,
+									   Exist = point_exist,
+									   Player = pl
+								   }
+							).FirstOrDefaultAsync(token);
+
+				var point_already_placed = query.Exist;
+				var db_point_game = query.Game;
+				var db_point_player = query.Player;
+				if (point_already_placed || db_point_game == null)
+					return;
+
+				var db_point = new InkBallPoint
 				{
-					var db_point = new InkBallPoint
+					//iId = point.iId,
+					iGameId = ThisGame.iId,
+					iPlayerId = point.iPlayerId,
+					iX = point.iX,
+					iY = point.iY,
+					Status = point.Status,
+					iEnclosingPathId = point.iEnclosingPathId <= 0 ? null : point.iEnclosingPathId
+				};
+				InkBallPointViewModel new_point;
+
+				using (var trans = await _dbContext.Database.BeginTransactionAsync(token))
+				{
+					try
 					{
-						//iId = point.iId,
-						iGameId = ThisGame.iId,
-						iPlayerId = point.iPlayerId,
-						iX = point.iX,
-						iY = point.iY,
-						Status = point.Status,
-						iEnclosingPathId = point.iEnclosingPathId <= 0 ? null : point.iEnclosingPathId
-					};
+						await _dbContext.InkBallPoint.AddAsync(db_point, token);
+						db_point_game.bIsPlayer1Active = !db_point_game.bIsPlayer1Active;
 
-					await _dbContext.InkBallPoint.AddAsync(db_point, token);
-					await _dbContext.SaveChangesAsync(token);
+						new_point = new InkBallPointViewModel(db_point);
+						db_point_player.sLastMoveCode = JsonConvert.SerializeObject(new_point);
+						await _dbContext.SaveChangesAsync(token);
 
-					var new_point = new InkBallPointViewModel(db_point);
+						trans.Commit();
 
-					// await Clients.User(OtherUserIdentifier).ServerToClientPoint(new_point, ThisUserName);
-
-					var this_UserIdentifier = this.Context.UserIdentifier;
-
-					await base.Clients.Clients(this_UserIdentifier, OtherUserIdentifier).ServerToClientPoint(new_point, ThisUserName);
+						ThisGame.bIsPlayer1Active = db_point_game.bIsPlayer1Active;
+						if (ThisPlayer.iId == db_point_player.iId)
+						{
+							ThisPlayer.sLastMoveCode = db_point_player.sLastMoveCode;
+							this.Context.Items[nameof(ThisPlayer)] = ThisPlayer;
+						}
+						else
+						{
+							OtherPlayer.sLastMoveCode = db_point_player.sLastMoveCode;
+							this.Context.Items[nameof(OtherPlayer)] = OtherPlayer;
+						}
+						this.Context.Items[nameof(ThisGame)] = ThisGame;
+					}
+					catch (Exception ex)
+					{
+						trans.Rollback();
+						_logger.LogError(ex, nameof(_dbContext.SurrenderGameFromPlayerAsync));
+						throw;
+					}
 				}
+
+				var this_UserIdentifier = this.Context.UserIdentifier;
+
+				// await Clients.User(OtherUserIdentifier).ServerToClientPoint(new_point, ThisUserName);
+				await base.Clients.Users(this_UserIdentifier, OtherUserIdentifier).ServerToClientPoint(new_point, ThisUserName);
 			}
 			catch (Exception ex)
 			{
 				_logger.LogError(ex.Message);
-				//throw;
+				throw;
 			}
-
-
 		}
 
 		public async Task ClientToServerPath(InkBallPathViewModel path)
@@ -310,8 +352,11 @@ namespace InkBall.Module.Hubs
 
 			try
 			{
-				if (path == null)
-					throw new NullReferenceException("path == null");
+				if (path == null || path.iPlayerId <= 0 || path.iGameId <= 0 || path.iGameId != ThisGame.iId)
+					throw new ArgumentException("bad path");
+				if (path.iPlayerId != ThisPlayer.iId && path.iPlayerId != OtherPlayer.iId)
+					throw new ArgumentException("bad Player ID");
+
 
 				var new_path = new InkBallPathViewModel(path);
 
@@ -320,10 +365,8 @@ namespace InkBall.Module.Hubs
 			catch (Exception ex)
 			{
 				_logger.LogError(ex.Message);
-				//throw;
+				throw;
 			}
-
-
 		}
 
 		public async Task ClientToServerPing(PingCommand ping)
@@ -359,10 +402,8 @@ namespace InkBall.Module.Hubs
 			catch (Exception ex)
 			{
 				_logger.LogError(ex.Message);
-				//throw;
+				throw;
 			}
-
-
 		}
 
 		#endregion IChatServer implementation

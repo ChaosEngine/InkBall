@@ -70,6 +70,7 @@ namespace InkBall.Module.Model
 		public int iDrawCount { get; set; }
 		public DateTime TimeStamp { get; set; }
 
+		public InkBallUserViewModel User { get; set; }
 		public ICollection<InkBallPathViewModel> InkBallPath { get; set; }
 		public ICollection<InkBallPointViewModel> InkBallPoint { get; set; }
 
@@ -77,7 +78,7 @@ namespace InkBall.Module.Model
 		{
 		}
 
-		public InkBallPlayerViewModel(InkBallPlayer player)
+		public InkBallPlayerViewModel(InkBallPlayer player, bool loadUser = true)
 		{
 			iId = player.iId;
 			iUserId = player.iUserId;
@@ -87,6 +88,10 @@ namespace InkBall.Module.Model
 			iDrawCount = player.iDrawCount;
 			TimeStamp = player.TimeStamp;
 
+			if (loadUser && player.User != null)
+			{
+				User = new InkBallUserViewModel(player.User);
+			}
 			if (player?.InkBallPath?.Count > 0)
 			{
 				InkBallPath = player.InkBallPath.Select(p => new InkBallPathViewModel(p)).ToArray();
@@ -108,6 +113,10 @@ namespace InkBall.Module.Model
 			iDrawCount = player.iDrawCount;
 			TimeStamp = player.TimeStamp;
 
+			if (player.User != null)
+			{
+				User = player.User;
+			}
 			if (player?.InkBallPath?.Count > 0)
 			{
 				InkBallPath = player.InkBallPath;

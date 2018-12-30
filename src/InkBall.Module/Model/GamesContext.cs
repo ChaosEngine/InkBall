@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -347,6 +347,9 @@ namespace InkBall.Module.Model
 				entity.Property(e => e.iPrivileges)
 					.HasColumnName("iPrivileges")
 					.HasDefaultValue(0);
+
+				entity.Property(e => e.UserName)
+					.HasColumnName("UserName");
 			});
 		}
 
@@ -606,7 +609,7 @@ namespace InkBall.Module.Model
 						orderby ig.iId
 						select ig;
 
-			return await query.ToListAsync(token);
+			return await query.ToArrayAsync(token);
 		}
 
 		private async Task<IEnumerable<InkBallPath>> GetPathsFromDatabaseAsync(int iGameID, int iPlayerID, IEnumerable<InkBallPoint> points, CancellationToken token = default)

@@ -107,27 +107,25 @@ class InkBallGame {
 
 	/**
 	 * InkBallGame contructor
-	 * @param {string} hubName SignalR hub name
+	 * @param {string} sHubName SignalR hub name
 	 * @param {enum} loggingLevel log level for SignalR
 	 * @param {enum} hubProtocol Json or messagePack
 	 * @param {enum} transportType websocket, server events or long polling
 	 * @param {function} tokenFactory auth token factory
 	 * @param {bool} bIsPlayingWithRed true - red, false - blue
 	 * @param {bool} bIsPlayerActive is this player acive now
+	 * @param {number} iGridSize grid size (number of rows and cols equal)
 	 * @param {number} iTooLong2Duration too long wait duration
 	 * @param {bool} bIsMobile always true?, legacy stuff
 	 * @param {bool} bViewOnly only viewing the game no interaction
 	 */
-	constructor(hubName, loggingLevel, hubProtocol, transportType, tokenFactory,
-		bIsPlayingWithRed = true, bIsPlayerActive = true, iTooLong2Duration = 125, bIsMobile = true, bViewOnly = false) {
-		//self = this;
+	constructor(sHubName, loggingLevel, hubProtocol, transportType, tokenFactory,
+		bIsPlayingWithRed = true, bIsPlayerActive = true, iGridSize = 15, iTooLong2Duration = 125, bIsMobile = true, bViewOnly = false) {
+
 		this.g_iGameID = null;
 		this.g_iPlayerID = null;
 		this.iConnErrCount = 0;
 		this.iExponentialBackOffMillis = 2000;
-
-
-
 
 		/**
 		 * [Old-legacy code]
@@ -151,7 +149,7 @@ class InkBallGame {
 		this.m_bIsTimerRunning = false;
 		this.m_WaitStartTime = null;
 		this.m_iSlowdownLevel = 0;
-		this.m_iGridSize = 15;
+		this.m_iGridSize = iGridSize;
 		this.m_iGridWidth = 0;
 		this.m_iGridHeight = 0;
 		this.m_iLastX = -1;
@@ -183,17 +181,10 @@ class InkBallGame {
 		 * [/Old-legacy code]
 		 */
 
-
-
-
-
-
-
-
-		if (hubName === null || hubName === "") return;
+		if (sHubName === null || sHubName === "") return;
 
 		this.g_SignalRConnection = new signalR.HubConnectionBuilder()
-			.withUrl(hubName, {
+			.withUrl(sHubName, {
 				transport: transportType,
 				accessTokenFactory: tokenFactory
 			})
@@ -285,13 +276,6 @@ class InkBallGame {
 
 		this.start();
 	}
-
-
-
-
-
-
-
 
 	/**
 	 * [Old-legacy code]
@@ -776,17 +760,14 @@ class InkBallGame {
 		this.SendAsyncData(this.CreateXMLWaitForPlayerRequest(bP2NameUnknown));
 		let d = parseInt(((new Date()) - this.m_WaitStartTime) / 1000);
 		if (this.m_iSlowdownLevel <= 0 && d >= (this.m_iTooLong2Duration * 0.25)) {
-			//alert('1/4');
 			this.m_iSlowdownLevel = 1;
 			this.SetTimer(true);
 		}
 		else if (this.m_iSlowdownLevel <= 1 && d >= (this.m_iTooLong2Duration * 0.5)) {
-			//alert('1/2');
 			this.m_iSlowdownLevel = 2;
 			this.SetTimer(true);
 		}
 		else if (this.m_iSlowdownLevel <= 2 && d >= (this.m_iTooLong2Duration * 0.75)) {
-			//alert('3/4');
 			this.m_iSlowdownLevel = 4;
 			this.SetTimer(true);
 		}
@@ -1071,28 +1052,13 @@ class InkBallGame {
 	 * [/Old-legacy code]
 	 */
 
-
-
 	/**
 	 * Start drawing routines
-	 * @param {HTMLDivElement} divScreen screen dontainer selector
-	 * @param {number} iGridSize grid size (number of rows and cols equal)
-	 * @param {boolean} bIsPlayingWithRed is playing with red
-	 * @param {boolean} bIsPlayerActive is player active
+	 * @param {HTMLElement} sScreen screen dontainer selector
+	 * @param {HTMLElement} Player2Name displaying element selector
 	 * @param {number} iTooLong2Duration how long waiting is too long
 	 */
-	PrepareDrawing(divScreen, iGridSize = 15, iTooLong2Duration = 125) {
-		// this.COLOR_RED = 'red';
-		// this.COLOR_BLUE = 'blue';
-		// this.COLOR_OWNED_RED = 'pink';
-		// this.COLOR_OWNED_BLUE = '#8A2BE2';
-		// this.POINT_FREE_RED = -3;
-		// this.POINT_FREE_BLUE = -2;
-		// this.POINT_FREE = -1;
-		// this.POINT_STARTING = 0;
-		// this.POINT_IN_PATH = 1;
-		// this.POINT_OWNED_BY_RED = 2;
-		// this.POINT_OWNED_BY_BLUE = 3;
+	PrepareDrawing(sScreen, sPlayer2Name, iTooLong2Duration = 125) {
 		this.m_bIsWon = false;
 		this.m_iDelayBetweenMultiCaptures = 4000;
 		this.m_iTimerInterval = 2000;
@@ -1101,7 +1067,6 @@ class InkBallGame {
 		this.m_bIsTimerRunning = false;
 		this.m_WaitStartTime = null;
 		this.m_iSlowdownLevel = 0;
-		this.m_iGridSize = iGridSize;
 		this.m_iGridWidth = 0;
 		this.m_iGridHeight = 0;
 		this.m_iLastX = -1;
@@ -1115,28 +1080,19 @@ class InkBallGame {
 		this.m_iClientWidth = 0;
 		this.m_iClientHeight = 0;
 		this.m_Debug = null;
-		this.m_Player2Name = null;
 		this.m_SurrenderButton = null;
 		this.m_bMouseDown = false;
 		this.m_bDrawLines = !true;
-		//this.m_bIsMobile = bIsMobile;
 		this.m_sMessage = '';
-		// this.m_bIsPlayingWithRed = bIsPlayingWithRed;
-		// this.m_bIsPlayerActive = bIsPlayerActive;
 		this.m_sDotColor = this.m_bIsPlayingWithRed ? this.COLOR_RED : this.COLOR_BLUE;
 		this.m_Line = null;
 		this.m_Lines = new Array();
 		this.m_Points = new Array();
 
-
-
-
-
-
 		this.m_Debug = document.getElementById('debug0');
-		this.m_Player2Name = document.getElementById('Player2Name');
+		this.m_Player2Name = document.querySelector(sPlayer2Name);
 		this.m_SurrenderButton = document.getElementById('SurrenderButton');
-		this.m_Screen = document.querySelector(divScreen);
+		this.m_Screen = document.querySelector(sScreen);
 		if (!this.m_Screen) {
 			alert("no board");
 			return;

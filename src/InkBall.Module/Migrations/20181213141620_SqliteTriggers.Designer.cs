@@ -240,6 +240,9 @@ namespace InkBall.Module.Migrations
 					.IsUnique()
 					.HasName("sExternalId");
 
+				b.Property<string>("UserName")
+					.HasColumnName("UserName");
+
 				b.ToTable("InkBallUsers");
 			});
 

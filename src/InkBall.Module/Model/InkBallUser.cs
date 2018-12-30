@@ -13,6 +13,7 @@ namespace InkBall.Module.Model
 		int iId { get; set; }
 		int iPrivileges { get; set; }
 		string sExternalId { get; set; }
+		string UserName { get; set; }
 
 		ICollection<Player> InkBallPlayer { get; set; }
 	}
@@ -22,6 +23,7 @@ namespace InkBall.Module.Model
 		public int iId { get; set; }
 		public int iPrivileges { get; set; }
 		public string sExternalId { get; set; }
+		public string UserName { get; set; }
 
 		public ICollection<InkBallPlayer> InkBallPlayer { get; set; }
 
@@ -37,6 +39,7 @@ namespace InkBall.Module.Model
 		public int iId { get; set; }
 		public int iPrivileges { get; set; }
 		public string sExternalId { get; set; }
+		public string UserName { get; set; }
 
 		public ICollection<InkBallPlayerViewModel> InkBallPlayer { get; set; }
 
@@ -48,10 +51,11 @@ namespace InkBall.Module.Model
 			iId = user.iId;
 			iPrivileges = user.iPrivileges;
 			sExternalId = user.sExternalId;
+			UserName = user.UserName;
 
-			if (user.InkBallPlayer != null && user.InkBallPlayer.Count > 0)
+			if (user?.InkBallPlayer?.Count > 0)
 			{
-				InkBallPlayer = user.InkBallPlayer.Select(p => new InkBallPlayerViewModel(p)).ToArray();
+				InkBallPlayer = user.InkBallPlayer.Select(p => new InkBallPlayerViewModel(p, false)).ToArray();
 			}
 		}
 
@@ -61,8 +65,9 @@ namespace InkBall.Module.Model
 			iId = user.iId;
 			iPrivileges = user.iPrivileges;
 			sExternalId = user.sExternalId;
+			UserName = user.UserName;
 
-			if (user.InkBallPlayer != null && user.InkBallPlayer.Count > 0)
+			if (user?.InkBallPlayer?.Count > 0)
 			{
 				InkBallPlayer = user.InkBallPlayer;
 			}

@@ -21,7 +21,8 @@ namespace InkBall.Module.Migrations
 						.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
 					iPrivileges = table.Column<int>(nullable: false, defaultValue: 0)
 						.Annotation("Sqlite:Autoincrement", true),
-					sExternalId = table.Column<string>(nullable: true)
+					sExternalId = table.Column<string>(nullable: true),
+					UserName = table.Column<string>(maxLength: 256, nullable: true),
 				},
 				constraints: table =>
 				{

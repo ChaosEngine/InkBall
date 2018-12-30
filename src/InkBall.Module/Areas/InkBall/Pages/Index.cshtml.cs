@@ -38,13 +38,13 @@ namespace InkBall.Module.Pages
 				{
 					switch (value.Status)
 					{
-						case Module.Model.InkBallPoint.StatusEnum.POINT_FREE:
-						case Module.Model.InkBallPoint.StatusEnum.POINT_STARTING:
-						case Module.Model.InkBallPoint.StatusEnum.POINT_IN_PATH:
+						case InkBallPoint.StatusEnum.POINT_FREE:
+						case InkBallPoint.StatusEnum.POINT_STARTING:
+						case InkBallPoint.StatusEnum.POINT_IN_PATH:
 							if (isThisPlayerPlayingWithRed)
 							{
 								//builder.Append("-2");
-								builder.Append((int)Module.Model.InkBallPoint.StatusEnum.POINT_FREE_BLUE)
+								builder.Append((int)InkBallPoint.StatusEnum.POINT_FREE_BLUE)
 #if DEBUG
 									.Append("/*red*/")
 #endif
@@ -53,15 +53,15 @@ namespace InkBall.Module.Pages
 							else
 							{
 								//builder.Append("-3");
-								builder.Append((int)Module.Model.InkBallPoint.StatusEnum.POINT_FREE_RED)
+								builder.Append((int)InkBallPoint.StatusEnum.POINT_FREE_RED)
 #if DEBUG
 									.Append("/*blue*/")
 #endif
 									;
 							}
 							break;
-						case Module.Model.InkBallPoint.StatusEnum.POINT_OWNED_BY_RED:
-						case Module.Model.InkBallPoint.StatusEnum.POINT_OWNED_BY_BLUE:
+						case InkBallPoint.StatusEnum.POINT_OWNED_BY_RED:
+						case InkBallPoint.StatusEnum.POINT_OWNED_BY_BLUE:
 							builder/*.Append(pointPrefix)*/.Append((int)value.Status)
 #if DEBUG
 								.Append("/*theirs*/")

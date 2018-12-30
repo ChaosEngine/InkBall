@@ -11,7 +11,6 @@ namespace InkBall.Module.Model
 		where Point : IPoint
 		where Path : IPath<Point>
 	{
-		//bool bIsPlayer1 { get; set; }
 		bool bIsPlayer1Active { get; set; }
 		DateTime CreateTime { get; set; }
 		InkBallGame.GameStateEnum GameState { get; set; }
@@ -69,9 +68,7 @@ namespace InkBall.Module.Model
 		public int iGridSize { get; set; }
 		public int iBoardWidth { get; set; }
 		public int iBoardHeight { get; set; }
-		//`GameType` enum('FIRST_CAPTURE','FIRST_5_CAPTURES','FIRST_5_PATHS','FIRST_5_ADVANTAGE_PATHS') NOT NULL DEFAULT 'FIRST_CAPTURE' COMMENT 'Game win type'
 		public GameTypeEnum GameType { get; set; }
-		//`GameState` enum('INACTIVE','ACTIVE','AWAITING','FINISHED') NOT NULL DEFAULT 'INACTIVE' COMMENT 'State of this game',
 		public GameStateEnum GameState { get; set; }
 		public DateTime TimeStamp { get; set; }
 		public DateTime CreateTime { get; set; }
@@ -117,22 +114,6 @@ namespace InkBall.Module.Model
 			return this.bIsPlayer1;
 		}
 
-		/*public string IsThisPlayer1AsString()
-		{
-			if (this.bIsPlayer1)
-				return "true";
-			else
-				return "false";
-		}
-
-		public string IsThisPlayer2AsString()
-		{
-			if (this.bIsPlayer1)
-				return "false";
-			else
-				return "true";
-		}*/
-
 		public bool IsPlayer1Active()
 		{
 			return this.bIsPlayer1Active;
@@ -149,14 +130,6 @@ namespace InkBall.Module.Model
 				return this.bIsPlayer1Active ? false : true;
 			}
 		}
-
-		/*public string IsPlayer1ActiveAsString()
-		{
-			if (this.bIsPlayer1Active)
-				return "true";
-			else
-				return "false";
-		}*/
 
 		public bool IsThisPlayerPlayingWithRed()
 		{
@@ -213,11 +186,11 @@ namespace InkBall.Module.Model
 			iGridSize = game.iGridSize;
 			iId = game.iId;
 
-			if (game.InkBallPath != null && game.InkBallPath.Count > 0)
+			if (game?.InkBallPath?.Count > 0)
 			{
 				InkBallPath = game.InkBallPath.Select(p => new InkBallPathViewModel(p)).ToArray();
 			}
-			if (game.InkBallPoint != null && game.InkBallPoint.Count > 0)
+			if (game?.InkBallPoint?.Count > 0)
 			{
 				InkBallPoint = game.InkBallPoint.Select(p => new InkBallPointViewModel(p)).ToArray();
 			}
@@ -242,11 +215,11 @@ namespace InkBall.Module.Model
 			iGridSize = game.iGridSize;
 			iId = game.iId;
 
-			if (game.InkBallPath != null && game.InkBallPath.Count > 0)
+			if (game?.InkBallPath?.Count > 0)
 			{
 				InkBallPath = game.InkBallPath;
 			}
-			if (game.InkBallPoint != null && game.InkBallPoint.Count > 0)
+			if (game?.InkBallPoint?.Count > 0)
 			{
 				InkBallPoint = game.InkBallPoint;
 			}
@@ -289,22 +262,6 @@ namespace InkBall.Module.Model
 			return this.bIsPlayer1;
 		}
 
-		/*public string IsThisPlayer1AsString()
-		{
-			if (this.bIsPlayer1)
-				return "true";
-			else
-				return "false";
-		}
-
-		public string IsThisPlayer2AsString()
-		{
-			if (this.bIsPlayer1)
-				return "false";
-			else
-				return "true";
-		}*/
-
 		public bool IsPlayer1Active()
 		{
 			return this.bIsPlayer1Active;
@@ -321,14 +278,6 @@ namespace InkBall.Module.Model
 				return this.bIsPlayer1Active ? false : true;
 			}
 		}
-
-		/*public string IsPlayer1ActiveAsString()
-		{
-			if (this.bIsPlayer1Active)
-				return "true";
-			else
-				return "false";
-		}*/
 
 		public bool IsThisPlayerPlayingWithRed()
 		{

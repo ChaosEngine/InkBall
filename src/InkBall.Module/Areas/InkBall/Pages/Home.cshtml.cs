@@ -74,23 +74,25 @@ namespace InkBall.Module.Pages
 						//{
 						//	width = 600;	height = 800;
 						//}
-						var trans = await _dbContext.Database.BeginTransactionAsync(token);
-						try
+						using (var trans = await _dbContext.Database.BeginTransactionAsync(token))
 						{
-							var dbGame = await _dbContext.CreateNewGameFromExternalUserIDAsync(GameUser.sExternalId, InkBallGame.GameStateEnum.AWAITING,
-								GameType, 15/*grid size*/, width, height, true, token);
-							Game = new InkBallGameViewModel(dbGame);
+							try
+							{
+								var dbGame = await _dbContext.CreateNewGameFromExternalUserIDAsync(GameUser.sExternalId, InkBallGame.GameStateEnum.AWAITING,
+									GameType, 15/*grid size*/, width, height, true, token);
+								Game = new InkBallGameViewModel(dbGame);
 
-							HttpContext.Session.Set(nameof(InkBallGameViewModel), Game);
+								HttpContext.Session.Set(nameof(InkBallGameViewModel), Game);
 
-							trans.Commit();
-							return Redirect("Index");
-						}
-						catch (Exception ex)
-						{
-							trans.Rollback();
-							msg = "Could not create new game for this user";
-							_logger.LogError(ex, msg);
+								trans.Commit();
+								return Redirect("Index");
+							}
+							catch (Exception ex)
+							{
+								trans.Rollback();
+								msg = "Could not create new game for this user";
+								_logger.LogError(ex, msg);
+							}
 						}
 						break;
 
@@ -121,25 +123,27 @@ namespace InkBall.Module.Pages
 					case "Logout":
 						if (Game != null)
 						{
-							trans = await _dbContext.Database.BeginTransactionAsync(token);
-							try
+							using (var trans = await _dbContext.Database.BeginTransactionAsync(token))
 							{
-								var gameID = Game.iId;
+								try
+								{
+									var gameID = Game.iId;
 
-								var db_game = (from ig in _dbContext.InkBallGame
-												.Include(ip1 => ip1.Player1).Include(ip2 => ip2.Player2)
-											   where ig.iId == gameID
-											   select ig).FirstOrDefaultAsync(token);
+									var db_game = (from ig in _dbContext.InkBallGame
+													.Include(ip1 => ip1.Player1).Include(ip2 => ip2.Player2)
+												   where ig.iId == gameID
+												   select ig).FirstOrDefaultAsync(token);
 
-								_dbContext.SurrenderGameFromPlayerAsync(await db_game, base.HttpContext.Session, false, token);
+									_dbContext.SurrenderGameFromPlayerAsync(await db_game, base.HttpContext.Session, false, token);
 
-								trans.Commit();
-							}
-							catch (Exception ex)
-							{
-								trans.Rollback();
-								_logger.LogError(ex, nameof(_dbContext.SurrenderGameFromPlayerAsync));
-								throw;
+									trans.Commit();
+								}
+								catch (Exception ex)
+								{
+									trans.Rollback();
+									_logger.LogError(ex, nameof(_dbContext.SurrenderGameFromPlayerAsync));
+									throw;
+								}
 							}
 							HttpContext.Session.Set<InkBallGameViewModel>(nameof(InkBallGameViewModel), null);
 						}

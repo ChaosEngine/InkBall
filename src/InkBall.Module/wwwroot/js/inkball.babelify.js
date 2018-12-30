@@ -164,14 +164,15 @@ function CountPointsDebug() {
 }
 
 var InkBallGame = function () {
-  function InkBallGame(hubName, loggingLevel, hubProtocol, transportType, tokenFactory) {
+  function InkBallGame(sHubName, loggingLevel, hubProtocol, transportType, tokenFactory) {
     var _this = this;
 
     var bIsPlayingWithRed = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : true;
     var bIsPlayerActive = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : true;
-    var iTooLong2Duration = arguments.length > 7 && arguments[7] !== undefined ? arguments[7] : 125;
-    var bIsMobile = arguments.length > 8 && arguments[8] !== undefined ? arguments[8] : true;
-    var bViewOnly = arguments.length > 9 && arguments[9] !== undefined ? arguments[9] : false;
+    var iGridSize = arguments.length > 7 && arguments[7] !== undefined ? arguments[7] : 15;
+    var iTooLong2Duration = arguments.length > 8 && arguments[8] !== undefined ? arguments[8] : 125;
+    var bIsMobile = arguments.length > 9 && arguments[9] !== undefined ? arguments[9] : true;
+    var bViewOnly = arguments.length > 10 && arguments[10] !== undefined ? arguments[10] : false;
 
     _classCallCheck(this, InkBallGame);
 
@@ -198,7 +199,7 @@ var InkBallGame = function () {
     this.m_bIsTimerRunning = false;
     this.m_WaitStartTime = null;
     this.m_iSlowdownLevel = 0;
-    this.m_iGridSize = 15;
+    this.m_iGridSize = iGridSize;
     this.m_iGridWidth = 0;
     this.m_iGridHeight = 0;
     this.m_iLastX = -1;
@@ -226,8 +227,8 @@ var InkBallGame = function () {
     this.m_Lines = new Array();
     this.m_Points = new Array();
     this.m_bViewOnly = bViewOnly;
-    if (hubName === null || hubName === "") return;
-    this.g_SignalRConnection = new signalR.HubConnectionBuilder().withUrl(hubName, {
+    if (sHubName === null || sHubName === "") return;
+    this.g_SignalRConnection = new signalR.HubConnectionBuilder().withUrl(sHubName, {
       transport: transportType,
       accessTokenFactory: tokenFactory
     }).withHubProtocol(hubProtocol).configureLogging(loggingLevel).build();
@@ -1044,8 +1045,7 @@ var InkBallGame = function () {
     }
   }, {
     key: "PrepareDrawing",
-    value: function PrepareDrawing(divScreen) {
-      var iGridSize = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 15;
+    value: function PrepareDrawing(sScreen, sPlayer2Name) {
       var iTooLong2Duration = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 125;
       this.m_bIsWon = false;
       this.m_iDelayBetweenMultiCaptures = 4000;
@@ -1055,7 +1055,6 @@ var InkBallGame = function () {
       this.m_bIsTimerRunning = false;
       this.m_WaitStartTime = null;
       this.m_iSlowdownLevel = 0;
-      this.m_iGridSize = iGridSize;
       this.m_iGridWidth = 0;
       this.m_iGridHeight = 0;
       this.m_iLastX = -1;
@@ -1069,7 +1068,6 @@ var InkBallGame = function () {
       this.m_iClientWidth = 0;
       this.m_iClientHeight = 0;
       this.m_Debug = null;
-      this.m_Player2Name = null;
       this.m_SurrenderButton = null;
       this.m_bMouseDown = false;
       this.m_bDrawLines = !true;
@@ -1079,9 +1077,9 @@ var InkBallGame = function () {
       this.m_Lines = new Array();
       this.m_Points = new Array();
       this.m_Debug = document.getElementById('debug0');
-      this.m_Player2Name = document.getElementById('Player2Name');
+      this.m_Player2Name = document.querySelector(sPlayer2Name);
       this.m_SurrenderButton = document.getElementById('SurrenderButton');
-      this.m_Screen = document.querySelector(divScreen);
+      this.m_Screen = document.querySelector(sScreen);
 
       if (!this.m_Screen) {
         alert("no board");

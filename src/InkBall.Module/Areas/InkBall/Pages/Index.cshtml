@@ -21,7 +21,21 @@
 
 	<img src="~/img/image.png" alt="image" />
 </p>
-
+<span>
+	@Model.Game.Player1?.User?.UserName
+</span>vs
+<span id='Player2Name'>
+@{
+	if(Model.Game.Player2 != null)
+	{
+		@Model.Game.Player2?.User?.UserName
+	}
+	else
+	{
+		@:???
+	}
+}
+</span>
 <div class="buttony">
 	<form action="Games" method="post" asp-antiforgery="true">
 		<input type='hidden' name='GameID' value='@Model.Game.iId' class='gameidbutton' />
@@ -94,10 +108,10 @@
 			function () {
 				return 'iGameID=' + iGameID + '&iPlayerID=' + iPlayerID;
 			},
-			bPlayingWithRed, bPlayerActive
+			bPlayingWithRed, bPlayerActive, 15
 		);
 		game.StartSignalRConnection(iGameID, iPlayerID, '#messagesList', '#sendButton', '#messageInput');
-		game.PrepareDrawing('#screen', 15);
+		game.PrepareDrawing('#screen', '#Player2Name');
 
 @Html.Raw(await Model.GetPointsAndPathsAsInitScriptAsync("\t\tgame.SetPoint", "\t\tgame.SetPath", "StatusEnum."))
 

@@ -1,4 +1,5 @@
 @page
+@using InkBall.Module.Model
 @inject Microsoft.Extensions.Options.IOptions<InkBallOptions> commonUIConfigureOptions
 @model GamesModel
 @{
@@ -42,13 +43,13 @@
 			foreach (var game in Model.GamesList)
 			{
 				<tr>
-					<td class='gtd'>@game?.P1UserName</td>
-					<td class='gtd'>@game?.P2UserName</td>
+					<td class='gtd'>@game?.Player1.User.UserName</td>
+					<td class='gtd'>@game?.Player2?.User?.UserName</td>
 					@{
 						bool bIsMyOwnGame;
 						if (bIsCurrentGameOk &&
-							(game.Player1ExternalId == sExternalUserID ||
-							(game.Player2ExternalId != null && game.Player2ExternalId == sExternalUserID)))
+							(game.Player1.User.sExternalId == sExternalUserID ||
+							(game?.Player2?.User != null && game.Player2.User.sExternalId == sExternalUserID)))
 						{
 							bIsMyOwnGame = true;
 						}
@@ -59,7 +60,7 @@
 
 						switch (game.GameState)
 						{
-							case InkBall.Module.Model.InkBallGame.GameStateEnum.AWAITING:
+							case InkBallGame.GameStateEnum.AWAITING:
 								<td class='gtd' style='font-style: italic'>waiting for another player</td>
 								<td class='gtd'>
 									<form method='post'>
@@ -79,7 +80,7 @@
 								</td>
 								break;
 
-							case InkBall.Module.Model.InkBallGame.GameStateEnum.ACTIVE:
+							case InkBallGame.GameStateEnum.ACTIVE:
 								<td class='gtd' style='font-style: italic'>game in progress</td>
 								<td class='gtd'>
 									<form method='post'>
@@ -99,11 +100,11 @@
 								</td>
 								break;
 
-							case InkBall.Module.Model.InkBallGame.GameStateEnum.INACTIVE:
+							case InkBallGame.GameStateEnum.INACTIVE:
 								<td class='gtd' style='font-style: italic'>game inactive</td>
 								<td class='gtd'></td>
 								break;
-							case InkBall.Module.Model.InkBallGame.GameStateEnum.FINISHED:
+							case InkBallGame.GameStateEnum.FINISHED:
 								<td class='gtd' style='font-style: italic'>game finished</td>
 								<td class='gtd'></td>
 								break;
@@ -113,16 +114,16 @@
 
 						switch (game.GameType)
 						{
-							case InkBall.Module.Model.InkBallGame.GameTypeEnum.FIRST_5_ADVANTAGE_PATHS:
+							case InkBallGame.GameTypeEnum.FIRST_5_ADVANTAGE_PATHS:
 								<td class='gtd' style='font-style: italic'>FIRST 5 ADVANTAGE PATHS</td>
 								break;
-							case InkBall.Module.Model.InkBallGame.GameTypeEnum.FIRST_5_CAPTURES:
+							case InkBallGame.GameTypeEnum.FIRST_5_CAPTURES:
 								<td class='gtd' style='font-style: italic'>FIRST 5 CAPTURES</td>
 								break;
-							case InkBall.Module.Model.InkBallGame.GameTypeEnum.FIRST_5_PATHS:
+							case InkBallGame.GameTypeEnum.FIRST_5_PATHS:
 								<td class='gtd' style='font-style: italic'>FIRST 5 PATHS</td>
 								break;
-							case InkBall.Module.Model.InkBallGame.GameTypeEnum.FIRST_CAPTURE:
+							case InkBallGame.GameTypeEnum.FIRST_CAPTURE:
 								<td class='gtd' style='font-style: italic'>FIRST CAPTURE</td>
 								break;
 							default:

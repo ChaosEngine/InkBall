@@ -62,7 +62,9 @@ namespace InkBall.Module.Pages
 			}
 			else if (player != null)
 			{
-				var query = from g in _dbContext.InkBallGame.Include(p1 => p1.Player1).Include(p2 => p2.Player2)
+				var query = from g in _dbContext.InkBallGame
+								.Include(p1 => p1.Player1).ThenInclude(x => x.User)
+								.Include(p2 => p2.Player2).ThenInclude(x => x.User)
 							where (g.iPlayer1Id == player.iId || g.iPlayer2Id == player.iId)
 							&& (g.GameState == InkBallGame.GameStateEnum.ACTIVE || g.GameState == InkBallGame.GameStateEnum.AWAITING)
 							select g;
