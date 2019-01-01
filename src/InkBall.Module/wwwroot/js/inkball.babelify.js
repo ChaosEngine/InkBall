@@ -110,6 +110,78 @@ var WaitForPlayerCommand = function () {
   return WaitForPlayerCommand;
 }();
 
+var PlayerJoiningCommand = function () {
+  _createClass(PlayerJoiningCommand, [{
+    key: "OtherPlayerId",
+    get: function get() {
+      return this.otherPlayerId;
+    }
+  }, {
+    key: "OtherPlayerName",
+    get: function get() {
+      return this.otherPlayerName;
+    }
+  }, {
+    key: "Message",
+    get: function get() {
+      return this.message;
+    }
+  }]);
+
+  function PlayerJoiningCommand(locOtherPlayerId, locOtherPlayerName, locMessage) {
+    _classCallCheck(this, PlayerJoiningCommand);
+
+    this.otherPlayerId = locOtherPlayerId;
+    this.otherPlayerName = locOtherPlayerName;
+    this.message = locMessage;
+  }
+
+  _createClass(PlayerJoiningCommand, null, [{
+    key: "Format",
+    value: function Format(join) {
+      return join.Message;
+    }
+  }]);
+
+  return PlayerJoiningCommand;
+}();
+
+var PlayerSurrenderingCommand = function () {
+  _createClass(PlayerSurrenderingCommand, [{
+    key: "OtherPlayerId",
+    get: function get() {
+      return this.otherPlayerId;
+    }
+  }, {
+    key: "ThisOrOtherPlayerSurrenders",
+    get: function get() {
+      return this.thisOrOtherPlayerSurrenders;
+    }
+  }, {
+    key: "Message",
+    get: function get() {
+      return this.message;
+    }
+  }]);
+
+  function PlayerSurrenderingCommand(locOtherPlayerId, locThisOrOtherPlayerSurrenders, locMessage) {
+    _classCallCheck(this, PlayerSurrenderingCommand);
+
+    this.otherPlayerId = locOtherPlayerId;
+    this.thisOrOtherPlayerSurrenders = locThisOrOtherPlayerSurrenders;
+    this.message = locMessage;
+  }
+
+  _createClass(PlayerSurrenderingCommand, null, [{
+    key: "Format",
+    value: function Format(surrender) {
+      return surrender.Message;
+    }
+  }]);
+
+  return PlayerSurrenderingCommand;
+}();
+
 var PingCommand = function () {
   _createClass(PingCommand, [{
     key: "Message",
@@ -144,8 +216,9 @@ function htmlEncode(html) {
   return document.createElement('a').appendChild(document.createTextNode(html)).parentNode.innerHTML;
 }
 
-function CountPointsDebug() {
-  var svgs = $("svg"),
+function CountPointsDebug(sSelector2Set) {
+  var sSvgSelector = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'svg';
+  var svgs = $(sSvgSelector),
       totalChildren = 0,
       childCounts = [];
 
@@ -160,7 +233,7 @@ function CountPointsDebug() {
   tags.forEach(function (tagName) {
     tagMessage += tagName + ": " + $(tagName).length + " ";
   });
-  $("#debug2").text('SVG elements - totalChildren:' + totalChildren + ' SVG childElements:' + childCounts + ' by tag:' + tagMessage);
+  $(sSelector2Set).text('SVG elements - totalChildren:' + totalChildren + ' SVG childElements:' + childCounts + ' by tag:' + tagMessage);
 }
 
 var InkBallGame = function () {
@@ -171,8 +244,7 @@ var InkBallGame = function () {
     var bIsPlayerActive = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : true;
     var iGridSize = arguments.length > 7 && arguments[7] !== undefined ? arguments[7] : 15;
     var iTooLong2Duration = arguments.length > 8 && arguments[8] !== undefined ? arguments[8] : 125;
-    var bIsMobile = arguments.length > 9 && arguments[9] !== undefined ? arguments[9] : true;
-    var bViewOnly = arguments.length > 10 && arguments[10] !== undefined ? arguments[10] : false;
+    var bViewOnly = arguments.length > 9 && arguments[9] !== undefined ? arguments[9] : false;
 
     _classCallCheck(this, InkBallGame);
 
@@ -217,8 +289,8 @@ var InkBallGame = function () {
     this.m_Player2Name = null;
     this.m_SurrenderButton = null;
     this.m_bMouseDown = false;
+    this.m_bHandlingEvent = false;
     this.m_bDrawLines = !true;
-    this.m_bIsMobile = bIsMobile;
     this.m_sMessage = '';
     this.m_bIsPlayingWithRed = bIsPlayingWithRed;
     this.m_bIsPlayerActive = bIsPlayerActive;
@@ -314,37 +386,57 @@ var InkBallGame = function () {
     }()
   }, {
     key: "StartSignalRConnection",
-    value: function StartSignalRConnection(iGameID, iPlayerID, sMessageListSel, sSendButtonSel, sMessageInputSel) {
+    value: function StartSignalRConnection(iGameID, iPlayerID, sMsgListSel, sMsgSendButtonSel, sMsgInputSel) {
       if (this.g_SignalRConnection === null) return;
       this.g_iGameID = iGameID;
       this.g_iPlayerID = iPlayerID;
       this.g_SignalRConnection.on("ServerToClientPoint", function (point, user) {
-        var encodedMsg = null;
-        encodedMsg = InkBallPointViewModel.Format(user, point);
+        var encodedMsg = InkBallPointViewModel.Format(user, point);
         var li = document.createElement("li");
         li.textContent = encodedMsg;
-        document.querySelector(sMessageListSel).appendChild(li);
-      });
+        document.querySelector(sMsgListSel).appendChild(li);
+        var x = point.iX;
+        var y = point.iY;
+        var iStatus = point.Status;
+        this.SetPoint(x, y, iStatus);
+        this.m_bIsPlayerActive = this.g_iPlayerID != point.iPlayerId;
+        this.ShowMobileStatus(null, 'Oponent has moved, your turn');
+        this.m_bHandlingEvent = false;
+      }.bind(this));
+      this.g_SignalRConnection.on("ServerToClientPlayerJoin", function (join) {
+        var encodedMsg = PlayerJoiningCommand.Format(join);
+        var li = document.createElement("li");
+        li.textContent = encodedMsg;
+        document.querySelector(sMsgListSel).appendChild(li);
+        this.m_Player2Name.innerHTML = join.OtherPlayerName;
+        this.m_bHandlingEvent = false;
+      }.bind(this));
+      this.g_SignalRConnection.on("ServerToClientPlayerSurrender", function (surrender) {
+        var encodedMsg = PlayerSurrenderingCommand.Format(surrender);
+        var li = document.createElement("li");
+        li.textContent = encodedMsg;
+        document.querySelector(sMsgListSel).appendChild(li);
+        this.m_bHandlingEvent = false;
+      }.bind(this));
       this.g_SignalRConnection.on("ServerToClientPing", function (ping, user) {
-        var encodedMsg = null;
-        encodedMsg = PingCommand.Format(user, ping);
+        var encodedMsg = PingCommand.Format(user, ping);
         var li = document.createElement("li");
         li.textContent = encodedMsg;
-        document.querySelector(sMessageListSel).appendChild(li);
-      });
-      document.querySelector(sSendButtonSel).addEventListener("click", function (event) {
-        var message = document.querySelector(sMessageInputSel).value;
+        document.querySelector(sMsgListSel).appendChild(li);
+      }.bind(this));
+      document.querySelector(sMsgSendButtonSel).addEventListener("click", function (event) {
+        var message = document.querySelector(sMsgInputSel).value;
         var ping = new PingCommand(message);
         this.g_SignalRConnection.invoke("ClientToServerPing", ping).catch(function (err) {
           return console.error(err.toString());
         });
         event.preventDefault();
       }.bind(this), false);
-      document.querySelector(sMessageInputSel).addEventListener("keyup", function (event) {
+      document.querySelector(sMsgInputSel).addEventListener("keyup", function (event) {
         event.preventDefault();
 
         if (event.keyCode === 13) {
-          document.querySelector(sSendButtonSel).click();
+          document.querySelector(sMsgSendButtonSel).click();
         }
       }.bind(this), false);
       this.start();
@@ -644,7 +736,7 @@ var InkBallGame = function () {
   }, {
     key: "CreateXMLPutPointRequest",
     value: function CreateXMLPutPointRequest(iX, iY) {
-      var cmd = new InkBallPointViewModel(0, this.g_iGameID, this.g_iPlayerID, iX, iY, StatusEnum.POINT_FREE, 0);
+      var cmd = new InkBallPointViewModel(0, this.g_iGameID, this.g_iPlayerID, iX, iY, this.m_bIsPlayingWithRed ? StatusEnum.POINT_FREE_RED : StatusEnum.POINT_FREE_BLUE, 0);
       return cmd;
     }
   }, {
@@ -659,6 +751,7 @@ var InkBallGame = function () {
       switch (payload.constructor.name) {
         case "InkBallPointViewModel":
           console.log(InkBallPointViewModel.Format('some player', payload));
+          this.m_bHandlingEvent = true;
           this.g_SignalRConnection.invoke("ClientToServerPoint", payload).catch(function (err) {
             return console.error(err.toString());
           });
@@ -702,7 +795,7 @@ var InkBallGame = function () {
                   this.SetPoint(_x4, _y3, iStatus);
                   this.m_bIsPlayerActive = true;
                   this.SetTimer(false);
-                  if (!this.m_bIsMobile) this.Debug('Oponent has moved, your turn');else this.ShowMobileStatus();
+                  this.ShowMobileStatus(null, 'Oponent has moved, your turn');
                   break;
 
                 case 'Path':
@@ -730,7 +823,7 @@ var InkBallGame = function () {
 
                   this.m_bIsPlayerActive = true;
                   this.SetTimer(false);
-                  if (!this.m_bIsMobile) this.Debug('Oponent has moved, your turn');else this.ShowMobileStatus();
+                  this.ShowMobileStatus(null, 'Oponent has moved, your turn');
                   break;
 
                 default:
@@ -742,7 +835,7 @@ var InkBallGame = function () {
               if (sP2Name != '') {
                 this.m_Player2Name.innerHTML = sP2Name;
                 this.m_SurrenderButton.value = 'surrender';
-                if (this.m_bIsMobile) this.ShowMobileStatus();
+                this.ShowMobileStatus();
               }
             }
 
@@ -823,31 +916,28 @@ var InkBallGame = function () {
         }
       }
 
-      if (!this.m_bIsMobile) {
-        if (this.m_sMessage != '') this.Debug(this.m_sMessage + '(' + d + ')');
-      } else {
-        this.ShowMobileStatus(d);
-      }
+      this.ShowMobileStatus(d, this.m_sMessage);
     }
   }, {
     key: "ShowMobileStatus",
-    value: function ShowMobileStatus(iWaitTime) {
+    value: function ShowMobileStatus(iWaitTime, sMessage) {
       var gameStatus = document.getElementById('GameStatus');
 
       if (this.m_Player2Name.innerHTML == '???') {
         if (gameStatus.style.backgroundImage.indexOf('pjonbgcurrent.gif') != -1) gameStatus.style.backgroundImage = 'url(img/pjonbgcurrent2.gif)';else gameStatus.style.backgroundImage = 'url(img/pjonbgcurrent.gif)';
       } else if (this.m_bIsPlayerActive) {
         if (this.m_bIsPlayingWithRed) gameStatus.style.backgroundImage = 'url(img/pjonbgcurrent.gif)';else gameStatus.style.backgroundImage = 'url(img/pjonbgcurrent2.gif)';
-        this.Debug('', 0);
       } else {
         if (this.m_bIsPlayingWithRed) gameStatus.style.backgroundImage = 'url(img/pjonbgcurrent2.gif)';else gameStatus.style.backgroundImage = 'url(img/pjonbgcurrent.gif)';
         if (iWaitTime != 'undefined' && iWaitTime != null) this.Debug(iWaitTime);
       }
+
+      if (sMessage != null) this.Debug(sMessage, 0);else this.Debug('', 0);
     }
   }, {
     key: "OnMouseMove",
     value: function OnMouseMove(event) {
-      if (!this.m_bIsPlayerActive) return;
+      if (!this.m_bIsPlayerActive || this.m_Player2Name.innerHTML == '???' || this.m_bHandlingEvent == true) return;
       var x = (event ? event.clientX : window.event.clientX) - this.m_Screen.offsetLeft + this.f_scrollLeft() + 0.5 * this.m_iGridSize;
       var y = (event ? event.clientY : window.event.clientY) - this.m_Screen.offsetTop + this.f_scrollTop() + 0.5 * this.m_iGridSize;
       x = parseInt(x / this.m_iGridSize);
@@ -900,7 +990,7 @@ var InkBallGame = function () {
   }, {
     key: "OnMouseDown",
     value: function OnMouseDown(event) {
-      if (!this.m_bIsPlayerActive) return;
+      if (!this.m_bIsPlayerActive || this.m_Player2Name.innerHTML == '???' || this.m_bHandlingEvent == true) return;
       var x = (event ? event.clientX : window.event.clientX) - this.m_Screen.offsetLeft + this.f_scrollLeft() + 0.5 * this.m_iGridSize;
       var y = (event ? event.clientY : window.event.clientY) - this.m_Screen.offsetTop + this.f_scrollTop() + 0.5 * this.m_iGridSize;
       x = this.m_iMouseX = parseInt(x / this.m_iGridSize);
@@ -916,12 +1006,6 @@ var InkBallGame = function () {
         y = loc_y * this.m_iGridSize;
         if (this.m_Points[loc_y * this.m_iGridWidth + loc_x] != null) return;
         if (!this.IsPointOutsideAllPaths(loc_x, loc_y)) return;
-        var radius = 4;
-        var oval = $createOval(radius, 'true');
-        oval.$SetFillColor(this.m_sDotColor);
-        oval.$strokeColor(this.m_sDotColor);
-        oval.$move(x, y, radius);
-        this.m_Points[loc_y * this.m_iGridWidth + loc_x] = oval;
         this.SendAsyncData(this.CreateXMLPutPointRequest(loc_x, loc_y));
       } else {
         if ((this.m_iLastX != x || this.m_iLastY != y) && Math.abs(parseInt(this.m_iLastX - x)) <= 1 && Math.abs(parseInt(this.m_iLastY - y)) <= 1 && this.m_iLastX >= 0 && this.m_iLastY >= 0) {
@@ -1070,6 +1154,7 @@ var InkBallGame = function () {
       this.m_Debug = null;
       this.m_SurrenderButton = null;
       this.m_bMouseDown = false;
+      this.m_bHandlingEvent = false;
       this.m_bDrawLines = !true;
       this.m_sMessage = '';
       this.m_sDotColor = this.m_bIsPlayingWithRed ? this.COLOR_RED : this.COLOR_BLUE;
@@ -1106,6 +1191,10 @@ var InkBallGame = function () {
         button.onclick = this.OnDrawModeClick.bind(this);
         button = document.getElementById('Cancel');
         button.onclick = this.OnCancelClick.bind(this);
+
+        if (!this.m_bIsPlayerActive) {} else {
+          this.ShowMobileStatus(null, 'Your move');
+        }
       }
     }
   }]);

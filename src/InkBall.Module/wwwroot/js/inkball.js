@@ -65,6 +65,38 @@ class WaitForPlayerCommand {
 	}
 }
 
+class PlayerJoiningCommand {
+	get OtherPlayerId() { return this.otherPlayerId; }
+	get OtherPlayerName() { return this.otherPlayerName; }
+	get Message() { return this.message; }
+
+	constructor(locOtherPlayerId, locOtherPlayerName, locMessage) {
+		this.otherPlayerId = locOtherPlayerId;
+		this.otherPlayerName = locOtherPlayerName;
+		this.message = locMessage;
+	}
+
+	static Format(join) {
+		return join.Message;
+	}
+}
+
+class PlayerSurrenderingCommand {
+	get OtherPlayerId() { return this.otherPlayerId; }
+	get ThisOrOtherPlayerSurrenders() { return this.thisOrOtherPlayerSurrenders; }
+	get Message() { return this.message; }
+
+	constructor(locOtherPlayerId, locThisOrOtherPlayerSurrenders, locMessage) {
+		this.otherPlayerId = locOtherPlayerId;
+		this.thisOrOtherPlayerSurrenders = locThisOrOtherPlayerSurrenders;
+		this.message = locMessage;
+	}
+
+	static Format(surrender) {
+		return surrender.Message;
+	}
+}
+
 class PingCommand {
 	get Message() { return this.message; }
 	set Message(value) { this.message = value; }
@@ -86,8 +118,8 @@ function htmlEncode(html) {
 		document.createTextNode(html)).parentNode.innerHTML;
 }
 
-function CountPointsDebug() {
-	let svgs = $("svg"), totalChildren = 0, childCounts = [];
+function CountPointsDebug(sSelector2Set, sSvgSelector = 'svg') {
+	let svgs = $(sSvgSelector), totalChildren = 0, childCounts = [];
 
 	for (let i = 0; i < svgs.length; i++) {
 		let svg = svgs[i];
@@ -100,7 +132,7 @@ function CountPointsDebug() {
 		tagMessage += (tagName + ": " + $(tagName).length + " ");
 	});
 
-	$("#debug2").text('SVG elements - totalChildren:' + totalChildren + ' SVG childElements:' + childCounts + ' by tag:' + tagMessage);
+	$(sSelector2Set).text('SVG elements - totalChildren:' + totalChildren + ' SVG childElements:' + childCounts + ' by tag:' + tagMessage);
 }
 
 class InkBallGame {
@@ -116,11 +148,10 @@ class InkBallGame {
 	 * @param {bool} bIsPlayerActive is this player acive now
 	 * @param {number} iGridSize grid size (number of rows and cols equal)
 	 * @param {number} iTooLong2Duration too long wait duration
-	 * @param {bool} bIsMobile always true?, legacy stuff
 	 * @param {bool} bViewOnly only viewing the game no interaction
 	 */
 	constructor(sHubName, loggingLevel, hubProtocol, transportType, tokenFactory,
-		bIsPlayingWithRed = true, bIsPlayerActive = true, iGridSize = 15, iTooLong2Duration = 125, bIsMobile = true, bViewOnly = false) {
+		bIsPlayingWithRed = true, bIsPlayerActive = true, iGridSize = 15, iTooLong2Duration = 125, bViewOnly = false) {
 
 		this.g_iGameID = null;
 		this.g_iPlayerID = null;
@@ -167,8 +198,8 @@ class InkBallGame {
 		this.m_Player2Name = null;
 		this.m_SurrenderButton = null;
 		this.m_bMouseDown = false;
+		this.m_bHandlingEvent = false;
 		this.m_bDrawLines = !true;
-		this.m_bIsMobile = bIsMobile;
 		this.m_sMessage = '';
 		this.m_bIsPlayingWithRed = bIsPlayingWithRed;
 		this.m_bIsPlayerActive = bIsPlayerActive;
@@ -224,38 +255,70 @@ class InkBallGame {
 	 * Start connection to SignalR
 	 * @param {number} iGameID ID of a game
 	 * @param {number} iPlayerID player ID
-	 * @param {string} sMessageListSel ul html element selector
-	 * @param {string} sSendButtonSel input button html element selector
-	 * @param {string} sMessageInputSel input textbox html element selector
+	 * @param {string} sMsgListSel ul html element selector
+	 * @param {string} sMsgSendButtonSel input button html element selector
+	 * @param {string} sMsgInputSel input textbox html element selector
 	 */
-	StartSignalRConnection(iGameID, iPlayerID, sMessageListSel, sSendButtonSel, sMessageInputSel) {
+	StartSignalRConnection(iGameID, iPlayerID, sMsgListSel, sMsgSendButtonSel, sMsgInputSel) {
 		if (this.g_SignalRConnection === null) return;
 		this.g_iGameID = iGameID;
 		this.g_iPlayerID = iPlayerID;
 
 		this.g_SignalRConnection.on("ServerToClientPoint", function (point, user) {
 
-			let encodedMsg = null;
-			encodedMsg = InkBallPointViewModel.Format(user, point);
+			let encodedMsg = InkBallPointViewModel.Format(user, point);
 
 			let li = document.createElement("li");
 			li.textContent = encodedMsg;
-			document.querySelector(sMessageListSel).appendChild(li);
-			//TODO: addd drawing point on SVG board
-		});
+			document.querySelector(sMsgListSel).appendChild(li);
+
+
+			let x = point.iX;
+			let y = point.iY;
+			let iStatus = point.Status;
+
+			this.SetPoint(x, y, iStatus);
+			this.m_bIsPlayerActive = this.g_iPlayerID != point.iPlayerId;
+			//this.SetTimer(false);
+			this.ShowMobileStatus(null, 'Oponent has moved, your turn');
+			this.m_bHandlingEvent = false;
+
+		}.bind(this));
+		this.g_SignalRConnection.on("ServerToClientPlayerJoin", function (join) {
+
+			let encodedMsg = PlayerJoiningCommand.Format(join);
+
+			let li = document.createElement("li");
+			li.textContent = encodedMsg;
+			document.querySelector(sMsgListSel).appendChild(li);
+			//TODO: implement some UI logic
+			this.m_Player2Name.innerHTML = join.OtherPlayerName;
+			this.m_bHandlingEvent = false;
+
+		}.bind(this));
+		this.g_SignalRConnection.on("ServerToClientPlayerSurrender", function (surrender) {
+
+			let encodedMsg = PlayerSurrenderingCommand.Format(surrender);
+
+			let li = document.createElement("li");
+			li.textContent = encodedMsg;
+			document.querySelector(sMsgListSel).appendChild(li);
+			//TODO: implement some UI logic
+			this.m_bHandlingEvent = false;
+
+		}.bind(this));
 		this.g_SignalRConnection.on("ServerToClientPing", function (ping, user) {
 
-			let encodedMsg = null;
-			encodedMsg = PingCommand.Format(user, ping);
+			let encodedMsg = PingCommand.Format(user, ping);
 
 			let li = document.createElement("li");
 			li.textContent = encodedMsg;
-			document.querySelector(sMessageListSel).appendChild(li);
-		});
+			document.querySelector(sMsgListSel).appendChild(li);
+		}.bind(this));
 
 
-		document.querySelector(sSendButtonSel).addEventListener("click", function (event) {
-			let message = document.querySelector(sMessageInputSel).value;
+		document.querySelector(sMsgSendButtonSel).addEventListener("click", function (event) {
+			let message = document.querySelector(sMsgInputSel).value;
 
 			let ping = new PingCommand(message);
 			//TODO: capture click/draw event and send it to server as point
@@ -265,12 +328,12 @@ class InkBallGame {
 			event.preventDefault();
 		}.bind(this), false);
 		// Execute a function when the user releases a key on the keyboard
-		document.querySelector(sMessageInputSel).addEventListener("keyup", function (event) {
+		document.querySelector(sMsgInputSel).addEventListener("keyup", function (event) {
 			event.preventDefault();// Cancel the default action, if needed
 
 			if (event.keyCode === 13) {// Number 13 is the "Enter" key on the keyboard
 				// Trigger the button element with a click
-				document.querySelector(sSendButtonSel).click();
+				document.querySelector(sMsgSendButtonSel).click();
 			}
 		}.bind(this), false);
 
@@ -567,7 +630,9 @@ class InkBallGame {
 	CreateXMLPutPointRequest(iX, iY) {
 		//let sRet = `<PutPoint><Point x='${iX}' y='${iY}' /></PutPoint>`;
 		//return sRet;
-		let cmd = new InkBallPointViewModel(0, this.g_iGameID, this.g_iPlayerID, iX, iY, StatusEnum.POINT_FREE, 0);
+		let cmd = new InkBallPointViewModel(0, this.g_iGameID, this.g_iPlayerID, iX, iY,
+			this.m_bIsPlayingWithRed ? StatusEnum.POINT_FREE_RED : StatusEnum.POINT_FREE_BLUE,
+			0);
 		return cmd;
 	}
 
@@ -599,6 +664,7 @@ class InkBallGame {
 
 			case "InkBallPointViewModel":
 				console.log(InkBallPointViewModel.Format('some player', payload));
+				this.m_bHandlingEvent = true;
 
 				this.g_SignalRConnection.invoke("ClientToServerPoint", payload).catch(function (err) {
 					return console.error(err.toString());
@@ -645,8 +711,7 @@ class InkBallGame {
 
 								this.m_bIsPlayerActive = true;
 								this.SetTimer(false);
-								if (!this.m_bIsMobile) this.Debug('Oponent has moved, your turn');
-								else this.ShowMobileStatus();
+								this.ShowMobileStatus(null, 'Oponent has moved, your turn');
 								break;
 
 							case 'Path':
@@ -674,8 +739,7 @@ class InkBallGame {
 
 								this.m_bIsPlayerActive = true;
 								this.SetTimer(false);
-								if (!this.m_bIsMobile) this.Debug('Oponent has moved, your turn');
-								else this.ShowMobileStatus();
+								this.ShowMobileStatus(null, 'Oponent has moved, your turn');
 								break;
 
 							default:
@@ -687,7 +751,7 @@ class InkBallGame {
 						if (sP2Name != '') {
 							this.m_Player2Name.innerHTML = sP2Name;
 							this.m_SurrenderButton.value = 'surrender';
-							if (this.m_bIsMobile) this.ShowMobileStatus();
+							this.ShowMobileStatus();
 						}
 					}
 					break;
@@ -788,16 +852,11 @@ class InkBallGame {
 				this.SetTimer(true);
 			}
 		}
-		if (!this.m_bIsMobile) {
-			if (this.m_sMessage != '')
-				this.Debug(this.m_sMessage + '(' + d + ')');
-		}
-		else {
-			this.ShowMobileStatus(d);
-		}
+
+		this.ShowMobileStatus(d, this.m_sMessage);
 	}
 
-	ShowMobileStatus(iWaitTime) {
+	ShowMobileStatus(iWaitTime, sMessage) {
 		///TODO: uncomment this if mobile version will be true
 		let gameStatus = document.getElementById('GameStatus');
 		if (this.m_Player2Name.innerHTML == '???') {
@@ -811,7 +870,6 @@ class InkBallGame {
 				gameStatus.style.backgroundImage = 'url(img/pjonbgcurrent.gif)';
 			else
 				gameStatus.style.backgroundImage = 'url(img/pjonbgcurrent2.gif)';
-			this.Debug('', 0);
 		}
 		else {
 			if (this.m_bIsPlayingWithRed)
@@ -820,10 +878,14 @@ class InkBallGame {
 				gameStatus.style.backgroundImage = 'url(img/pjonbgcurrent.gif)';
 			if (iWaitTime != 'undefined' && iWaitTime != null) this.Debug(iWaitTime);
 		}
+		if (sMessage != null)
+			this.Debug(sMessage, 0);
+		else
+			this.Debug('', 0);
 	}
 
 	OnMouseMove(event) {
-		if (!this.m_bIsPlayerActive) return;
+		if (!this.m_bIsPlayerActive || this.m_Player2Name.innerHTML == '???' || this.m_bHandlingEvent == true) return;
 
 		let x = (event ? event.clientX : window.event.clientX) - this.m_Screen.offsetLeft + this.f_scrollLeft() + 0.5 * this.m_iGridSize;
 		let y = (event ? event.clientY : window.event.clientY) - this.m_Screen.offsetTop + this.f_scrollTop() + 0.5 * this.m_iGridSize;
@@ -890,8 +952,8 @@ class InkBallGame {
 	}
 
 	OnMouseDown(event) {
-		if (!this.m_bIsPlayerActive) return;
-		
+		if (!this.m_bIsPlayerActive || this.m_Player2Name.innerHTML == '???' || this.m_bHandlingEvent == true) return;
+
 		let x = (event ? event.clientX : window.event.clientX) - this.m_Screen.offsetLeft + this.f_scrollLeft() + 0.5 * this.m_iGridSize;
 		let y = (event ? event.clientY : window.event.clientY) - this.m_Screen.offsetTop + this.f_scrollTop() + 0.5 * this.m_iGridSize;
 		x = this.m_iMouseX = parseInt(x / this.m_iGridSize);
@@ -910,15 +972,6 @@ class InkBallGame {
 
 			if (this.m_Points[loc_y * this.m_iGridWidth + loc_x] != null) return;
 			if (!this.IsPointOutsideAllPaths(loc_x, loc_y)) return;
-
-			let radius = 4;
-			let oval = $createOval(radius, 'true');
-			oval.$SetFillColor(this.m_sDotColor);
-			oval.$strokeColor(this.m_sDotColor);
-			oval.$move(x, y, radius);
-
-			this.m_Points[loc_y * this.m_iGridWidth + loc_x] = oval;
-			//this.Debug('created p0int loc_x = '+loc_x+' loc_y = '+loc_y+' addr = '+(loc_y * this.m_iGridWidth + loc_x)+' length = '+this.m_Points.length, 1);
 
 			this.SendAsyncData(this.CreateXMLPutPointRequest(loc_x, loc_y));
 		}
@@ -1082,6 +1135,7 @@ class InkBallGame {
 		this.m_Debug = null;
 		this.m_SurrenderButton = null;
 		this.m_bMouseDown = false;
+		this.m_bHandlingEvent = false;
 		this.m_bDrawLines = !true;
 		this.m_sMessage = '';
 		this.m_sDotColor = this.m_bIsPlayingWithRed ? this.COLOR_RED : this.COLOR_BLUE;
@@ -1123,15 +1177,12 @@ class InkBallGame {
 			 * [Old-legacy code]
 			 * TODO: commented; re-anable logic in some way
 			 */
-			/*if(!this.m_bIsPlayerActive)
-			{
-				this.SetTimer(true);
+			if (!this.m_bIsPlayerActive) {
+				// this.SetTimer(true);
 			}
-			else
-			{
-				if(!this.m_bIsMobile)	this.Debug('Your move', 0);
-				else					this.ShowMobileStatus();
-			}*/
+			else {
+				this.ShowMobileStatus(null, 'Your move');
+			}
 
 			/**
 			 * [/Old-legacy code]

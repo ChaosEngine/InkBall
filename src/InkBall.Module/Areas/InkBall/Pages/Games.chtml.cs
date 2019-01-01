@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using InkBall.Module.Hubs;
 using InkBall.Module.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -16,14 +18,16 @@ namespace InkBall.Module.Pages
 	public class GamesModel : BasePageModel
 	{
 		private readonly IOptions<InkBallOptions> _commonUIConfigureOptions;
+		private readonly IHubContext<ChatHub, IChatClient> _inkballHubContext;
 
 		// public IEnumerable<IGame<IPlayer<IPoint, IPath<IPoint>>, IPoint, IPath<IPoint>>> GamesList { get; private set; }
 		public IEnumerable<InkBallGame> GamesList { get; private set; }
 
-		public GamesModel(GamesContext dbContext, ILogger<RulesModel> logger,
-			IOptions<InkBallOptions> commonUIConfigureOptions) : base(dbContext, logger)
+		public GamesModel(GamesContext dbContext, ILogger<RulesModel> logger, IOptions<InkBallOptions> commonUIConfigureOptions,
+			IHubContext<Hubs.ChatHub, Hubs.IChatClient> inkballHubContext) : base(dbContext, logger)
 		{
 			_commonUIConfigureOptions = commonUIConfigureOptions;
+			_inkballHubContext = inkballHubContext;
 		}
 
 		private async Task<IEnumerable<InkBallGame>> GetGameList(CancellationToken token)
@@ -83,11 +87,31 @@ namespace InkBall.Module.Pages
 								try
 								{
 									await _dbContext.JoinGameFromExternalUserIdAsync(new_game, sExternalUserID, token);
-									Game = new InkBallGameViewModel(new_game);
-									HttpContext.Session.Set(nameof(InkBallGameViewModel), Game);
 
 									trans.Commit();
-									//TODO:	notify 1st player (or other player) with SignalrR hub (ChatHub) about new player joining in
+
+									if (_inkballHubContext != null)
+									{
+										var tsk = Task.Factory.StartNew(async (payload) =>
+										{
+											try
+											{
+												var recipient_id_joiner = payload as Tuple<string, int, string>;
+												//delay for some signalr connction to be established. Is it really needed?
+												await Task.Delay(1_000);
+
+												await _inkballHubContext.Clients.User(recipient_id_joiner.Item1).ServerToClientPlayerJoin(
+													new PlayerJoiningCommand(recipient_id_joiner.Item2, recipient_id_joiner.Item3, $"Player {recipient_id_joiner.Item3} joining"));
+											}
+											catch (Exception ex)
+											{
+												_logger.LogError(ex.Message);
+											}
+										},
+										Tuple.Create(new_game.GetOtherPlayer().User.sExternalId, new_game.GetOtherPlayer().iId, this.GameUser.UserName),
+										token);
+									}
+
 									return Redirect("Index");
 								}
 								catch (Exception ex)
@@ -137,8 +161,6 @@ namespace InkBall.Module.Pages
 							{
 								new_game = await _dbContext.CreateNewGameFromExternalUserIDAsync(sExternalUserID, InkBallGame.GameStateEnum.AWAITING,
 									GameType, 15/*grid size*/, width, height, true, token);
-								Game = new InkBallGameViewModel(new_game);
-								HttpContext.Session.Set(nameof(InkBallGameViewModel), Game);
 
 								trans.Commit();
 								return Redirect("Index");
@@ -167,16 +189,31 @@ namespace InkBall.Module.Pages
 						{
 							try
 							{
-								gameID = Game.iId;
-
-								var db_game = (from ig in _dbContext.InkBallGame
-												.Include(ip1 => ip1.Player1).Include(ip2 => ip2.Player2)
-											   where ig.iId == gameID
-											   select ig).FirstOrDefaultAsync(token);
-
-								_dbContext.SurrenderGameFromPlayerAsync(await db_game, base.HttpContext.Session, false, token);
+								await _dbContext.SurrenderGameFromPlayerAsync(Game, base.HttpContext.Session, false, token);
 
 								trans.Commit();
+
+								if (_inkballHubContext != null)
+								{
+									var tsk = Task.Factory.StartNew(async (payload) =>
+									{
+										try
+										{
+											var recipient_id_looser = payload as Tuple<string, int, string>;
+											//delay for some signalr connction to be established. Is it really needed?
+											await Task.Delay(1_000);
+
+											await _inkballHubContext.Clients.User(recipient_id_looser.Item1).ServerToClientPlayerSurrender(
+												new PlayerSurrenderingCommand(recipient_id_looser.Item2, true, $"Player {recipient_id_looser.Item3} surrenders"));
+										}
+										catch (Exception ex)
+										{
+											_logger.LogError(ex.Message);
+										}
+									},
+									Tuple.Create(Game.GetOtherPlayer().User.sExternalId, Game.GetOtherPlayer().iId, this.GameUser.UserName),
+									token);
+								}
 							}
 							catch (Exception ex)
 							{
@@ -184,7 +221,6 @@ namespace InkBall.Module.Pages
 								_logger.LogError(ex, msg);
 							}
 						}
-						HttpContext.Session.Remove(nameof(InkBallGameViewModel));
 						return Redirect("Games");
 
 					case "Home":
@@ -196,7 +232,7 @@ namespace InkBall.Module.Pages
 			}
 			catch (Exception ex)
 			{
-				msg += ($"Exception: {ex.Message}");
+				msg += $"Exception: {ex.Message}";
 			}
 
 			if (!string.IsNullOrEmpty(msg))

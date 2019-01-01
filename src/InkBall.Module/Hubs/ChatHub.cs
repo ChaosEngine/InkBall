@@ -23,6 +23,11 @@ namespace InkBall.Module.Hubs
 		Task ServerToClientPath(InkBallPathViewModel path, string user);
 
 		Task ServerToClientPing(PingCommand ping, string user);
+
+		Task ServerToClientPlayerJoin(PlayerJoiningCommand join);
+
+		Task ServerToClientPlayerSurrender(PlayerSurrenderingCommand surrender);
+
 	}
 
 	public interface IChatServer
@@ -55,13 +60,41 @@ namespace InkBall.Module.Hubs
 
 		#region Properties
 
-		public IPlayer<InkBallPointViewModel, InkBallPathViewModel> ThisPlayer { get; private set; }
+		public InkBallPlayer ThisPlayer { get; private set; }
 
-		public IPlayer<InkBallPointViewModel, InkBallPathViewModel> OtherPlayer { get; private set; }
+		public InkBallPlayer OtherPlayer { get; private set; }
 
-		public int? ThisGameID { get; private set; }
+		public int? ThisGameID
+		{
+			get
+			{
+				if (base.Context.Items.TryGetValue(nameof(ThisGameID), out object oObj) && oObj is int iVal)
+					return iVal;
+				return null;
+			}
+			private set
+			{
+				base.Context.Items[nameof(ThisGameID)] = value.GetValueOrDefault(0);
+			}
+		}
 
-		public InkBallGameViewModel ThisGame { get; private set; }
+		public int? ThisPlayerID
+		{
+			get
+			{
+				if (base.Context.Items.TryGetValue(nameof(ThisPlayerID), out object oObj) && oObj is int iVal)
+					return iVal;
+				return null;
+			}
+			private set
+			{
+				base.Context.Items[nameof(ThisPlayerID)] = value.GetValueOrDefault(0);
+			}
+		}
+
+		public InkBallGame ThisGame { get; private set; }
+
+		internal string ThisUserIdentifier => base.Context.UserIdentifier;
 
 		public string OtherUserIdentifier { get; private set; }
 
@@ -71,64 +104,164 @@ namespace InkBall.Module.Hubs
 
 		#region Private methods
 
-		private (int gameID, int playerID) GetGameIDFromAccessToken(StringValues access_token)
-		{
-			string value = access_token.FirstOrDefault();
-			if (value.StartsWith("bearer ", StringComparison.InvariantCultureIgnoreCase))
-				value = value.Substring("bearer ".Length);
-
-			var queryDictionary = QueryHelpers.ParseQuery(value);
-
-			if (!queryDictionary.TryGetValue("iGameID", out StringValues str) || !int.TryParse(str, out int game_id))
-			{
-				game_id = 0;
-			}
-			if (!queryDictionary.TryGetValue("iPlayerID", out str) || !int.TryParse(str, out int player_id))
-			{
-				player_id = 0;
-			}
-
-			return (game_id, player_id);
-		}
-
 		private void ValidateOriginHeaderAndAccessToken(HttpContext ctx)
 		{
-			if (ctx?.Request != null)
+			//Index page populates WebSocketAllowedOrigins
+			if (WebSocketAllowedOrigins.Any() && ctx.Request.Headers.TryGetValue(HeaderNames.Origin, out var origin)
+				&& ctx.Request.Headers.TryGetValue(HeaderNames.Upgrade, out var upgrade))
 			{
-				//Index page populates WebSocketAllowedOrigins
-				if (WebSocketAllowedOrigins.Any() && ctx.Request.Headers.TryGetValue(HeaderNames.Origin, out var origin)
-					&& ctx.Request.Headers.TryGetValue(HeaderNames.Upgrade, out var upgrade))
+				if (string.Equals(upgrade, "websocket", StringComparison.InvariantCultureIgnoreCase))
 				{
-					if (string.Equals(upgrade, "websocket", StringComparison.InvariantCultureIgnoreCase))
+					if (!string.IsNullOrEmpty(origin) && !WebSocketAllowedOrigins.ContainsValue(origin))
 					{
-						if (!string.IsNullOrEmpty(origin) && !WebSocketAllowedOrigins.ContainsValue(origin))
-						{
-							throw new UnauthorizedAccessException("Origin not allowed!");
-						}
+						throw new UnauthorizedAccessException("Origin not allowed!");
 					}
 				}
-
-				//Authorization: Bearer iGameID=123
-				//or Query: iGameID=123
-				if (!(ctx.Request.Headers.TryGetValue(HeaderNames.Authorization, out var access_token)
-					|| ctx.Request.Query.TryGetValue("access_token", out access_token))
-					|| string.IsNullOrEmpty(access_token))
-				{
-					throw new UnauthorizedAccessException($"{nameof(access_token)} not passed!");
-				}
-
-				var token_vars = GetGameIDFromAccessToken(access_token);
-				ThisGameID = token_vars.gameID;
 			}
 		}
 
-		private async Task LoadUserAndPLayerStructures(CancellationToken token)
+		private (int gameID, int playerID) GetGameIdAndPlayerIDFromContext(HttpContext ctx)
+		{
+			//Authorization: Bearer iGameID=123 or Query: iGameID=123&iPlayerID=456
+			if (!(ctx.Request.Headers.TryGetValue(HeaderNames.Authorization, out var access_token)
+				|| ctx.Request.Query.TryGetValue("access_token", out access_token))
+				|| string.IsNullOrEmpty(access_token))
+			{
+				throw new UnauthorizedAccessException($"{nameof(access_token)} not passed!");
+			}
+
+			var token_vars = GetGameIDFromAccessToken();
+			return token_vars;
+
+			//
+			// private internal function
+			//
+			(int gameID, int playerID) GetGameIDFromAccessToken()
+			{
+				string value = access_token.FirstOrDefault();
+				if (value.StartsWith("bearer ", StringComparison.InvariantCultureIgnoreCase))
+					value = value.Substring("bearer ".Length);
+
+				var queryDictionary = QueryHelpers.ParseQuery(value);
+
+				if (!queryDictionary.TryGetValue("iGameID", out StringValues str) || !int.TryParse(str, out int game_id))
+					game_id = 0;
+
+				if (!queryDictionary.TryGetValue("iPlayerID", out str) || !int.TryParse(str, out int player_id))
+					player_id = 0;
+
+				return (game_id, player_id);
+			}
+		}
+
+		private async Task LoadGameAndPlayerStructures(CancellationToken token)
 		{
 			var claimsPrincipal = this.Context.User;
-			var this_UserIdentifier = this.Context.UserIdentifier;
-			ThisUserName = claimsPrincipal.FindFirstValue(ClaimTypes.Name);
+			var this_UserIdentifier = ThisUserIdentifier;
 
-			if (!(this.Context.Items.TryGetValue(nameof(ThisPlayer), out object pobj) && pobj is IPlayer<InkBallPointViewModel, InkBallPathViewModel> this_Player))
+			//IPlayer<InkBallPoint, InkBallPath> this_Player = await GetPlayer(claimsPrincipal, this_UserIdentifier, token);
+			//ThisPlayer = this_Player;
+
+			(InkBallGame game, InkBallPlayer this_Player) = await GetGameAndThisPlayer(claimsPrincipal, this_UserIdentifier,
+				ThisGameID.Value, ThisPlayerID.Value, token);
+			ThisGame = game;
+			ThisPlayer = this_Player;
+
+			ThisUserName = ThisPlayer.User.UserName;
+
+			(InkBallPlayer other_Player, string other_UserIdentifier) = GetOtherPlayer(ThisGame, this_UserIdentifier, this_Player);
+			OtherPlayer = other_Player;
+			OtherUserIdentifier = other_UserIdentifier;
+		}
+
+		private (InkBallPlayer other_Player, string other_UserIdentifier) GetOtherPlayer(InkBallGame game,
+			string this_UserIdentifier, IPlayer<InkBallPoint, InkBallPath> this_Player)
+		{
+			InkBallPlayer other_Player;
+			string other_UserIdentifier;
+			//if (
+			//	!(this.Context.Items.TryGetValue(nameof(OtherPlayer), out var opObj) && opObj is IPlayer<InkBallPointViewModel, InkBallPathViewModel> other_Player)
+			//	|| !(this.Context.Items.TryGetValue(nameof(OtherUserIdentifier), out var ouidenObj) && ouidenObj is string other_UserIdentifier)
+			//	)
+			{
+				//obtain another player; co-player
+				InkBallPlayer otherDbPlayer = game.Player1.User.sExternalId == this_UserIdentifier ? game.Player2 : game.Player1;
+				if (otherDbPlayer != null)
+				{
+					if (otherDbPlayer.iId == this_Player.iId || OtherUserIdentifier == this_UserIdentifier)
+						throw new ArgumentException("both game players ar the same");
+					other_Player = otherDbPlayer;
+					other_UserIdentifier = otherDbPlayer.User.sExternalId;
+				}
+				else
+				{
+					other_Player = null;
+					other_UserIdentifier = null;
+				}
+				//this.Context.Items[nameof(OtherPlayer)] = other_Player;
+				//this.Context.Items[nameof(OtherUserIdentifier)] = other_UserIdentifier;
+			}
+
+			return (other_Player, other_UserIdentifier);
+		}
+
+		private async Task<(InkBallGame, InkBallPlayer)> GetGameAndThisPlayer(ClaimsPrincipal claimsPrincipal, string this_UserIdentifier,
+			int gameID, int playerID, CancellationToken token)
+		{
+			InkBallGame game;
+			InkBallPlayer this_Player;
+			//if (!(this.Context.Items.TryGetValue(nameof(ThisGame), out object gObj) && gObj is InkBallGameViewModel game))
+			{
+				//get game from db
+				InkBallGame dbGame = await _dbContext.InkBallGame
+				.Include(gp1 => gp1.Player1)
+					.ThenInclude(p1 => p1.User)
+				.Include(gp2 => gp2.Player2)
+					.ThenInclude(p2 => p2.User)
+				.FirstOrDefaultAsync(
+					w => w.iId == gameID
+					&& (w.iPlayer1Id == playerID || w.iPlayer2Id == playerID)
+					&& (w.Player1.User.sExternalId == this_UserIdentifier || w.Player2.User.sExternalId == this_UserIdentifier)
+					&& (w.GameState == InkBallGame.GameStateEnum.ACTIVE || w.GameState == InkBallGame.GameStateEnum.AWAITING)
+				, token);
+				if (dbGame == null)
+					throw new NullReferenceException("game == null");
+				if (!(dbGame.iPlayer1Id == ThisPlayerID || (dbGame.iPlayer2Id.HasValue && dbGame.iPlayer2Id.Value == ThisPlayerID)))
+					throw new ArgumentException("no player exist in that game");
+
+				bool bIsPlayer1;
+				if (this_UserIdentifier == dbGame.Player1.User.sExternalId)
+				{
+					this_Player = dbGame.Player1;
+					bIsPlayer1 = true;
+				}
+				else if (this_UserIdentifier == dbGame.Player2.User.sExternalId)
+				{
+					this_Player = dbGame.Player2;
+					bIsPlayer1 = false;
+				}
+				else
+					throw new NotSupportedException("player not found");
+				dbGame.bIsPlayer1 = bIsPlayer1;
+
+				//additional validation
+				string value = claimsPrincipal.FindFirstValue(nameof(Pages.BasePageModel.InkBallUserId));
+				int.TryParse(value, out int this_UserId);
+				if (this_UserId != this_Player.iUserId)
+					throw new ArgumentException("this_UserId != this_Player.iUserId");
+
+				game = dbGame;
+				//this.Context.Items[nameof(ThisGame)] = game;
+				//this.Context.Items[nameof(ThisPlayer)] = this_Player;
+			}
+			return (game, this_Player);
+		}
+
+		private async Task<IPlayer<InkBallPoint, InkBallPath>> GetPlayer(ClaimsPrincipal claimsPrincipal, string this_UserIdentifier,
+			CancellationToken token)
+		{
+			IPlayer<InkBallPoint, InkBallPath> this_Player;
+			//if (!(this.Context.Items.TryGetValue(nameof(ThisPlayer), out object pobj) && pobj is IPlayer<InkBallPointViewModel, InkBallPathViewModel> this_Player))
 			{
 				//get player from db
 				InkBallPlayer dbPlayer = await _dbContext.InkBallPlayer.Include(u => u.User).FirstOrDefaultAsync(p => p.User.sExternalId == this_UserIdentifier, token);
@@ -136,87 +269,15 @@ namespace InkBall.Module.Hubs
 					throw new NullReferenceException("no player");
 
 				//additional validation
-				string value = claimsPrincipal.FindFirstValue(nameof(InkBall.Module.Pages.HomeModel.InkBallUserId));
+				string value = claimsPrincipal.FindFirstValue(nameof(Pages.BasePageModel.InkBallUserId));
 				int.TryParse(value, out int this_UserId);
 				if (this_UserId != dbPlayer.iUserId)
 					throw new ArgumentException("this_UserId != this_Player.iUserId");
 
-				this_Player = new InkBallPlayerViewModel(dbPlayer);
+				this_Player = dbPlayer;
 				this.Context.Items[nameof(ThisPlayer)] = this_Player;
 			}
-			ThisPlayer = this_Player;
-
-
-			if (
-				!(this.Context.Items.TryGetValue(nameof(ThisGame), out object gObj) && gObj is InkBallGameViewModel game)
-				|| !(this.Context.Items.TryGetValue(nameof(OtherPlayer), out object opObj) && opObj is IPlayer<InkBallPointViewModel, InkBallPathViewModel> other_Player_cached)
-				|| !(this.Context.Items.TryGetValue(nameof(OtherUserIdentifier), out var ouidenObj) && ouidenObj is string other_UserIdentifier_cached)
-				)
-			{
-				//get game from db
-				InkBallGame dbGame = await _dbContext.InkBallGame
-					.Include(gp1 => gp1.Player1)
-						.ThenInclude(p1 => p1.User)
-					.Include(gp2 => gp2.Player2)
-						.ThenInclude(p2 => p2.User)
-					.FirstOrDefaultAsync(
-						w => (!ThisGameID.HasValue || w.iId == ThisGameID.Value)
-						&& (w.iPlayer1Id == this_Player.iId || w.iPlayer2Id == this_Player.iId)
-						&& (w.Player1.User.sExternalId == this_UserIdentifier || w.Player2.User.sExternalId == this_UserIdentifier)
-						&& (w.GameState == InkBallGame.GameStateEnum.ACTIVE || w.GameState == InkBallGame.GameStateEnum.AWAITING)
-					, token);
-				if (dbGame == null)
-					throw new NullReferenceException("game == null");
-				if (!(dbGame.iPlayer1Id == this_Player.iId || (dbGame.iPlayer2Id.HasValue && dbGame.iPlayer2Id.Value == this_Player.iId)))
-					throw new ArgumentException("no player exist in that game");
-
-				bool bIsPlayer1;
-				if (this_Player.iId == dbGame.iPlayer1Id)
-					bIsPlayer1 = true;
-				else if (this_Player.iId == dbGame.iPlayer2Id)
-					bIsPlayer1 = false;
-				else
-					throw new NotSupportedException("player not found");
-				dbGame.bIsPlayer1 = bIsPlayer1;
-
-				game = new InkBallGameViewModel(dbGame);
-				this.Context.Items[nameof(ThisGame)] = game;
-
-
-
-				other_Player_cached = null;
-				other_UserIdentifier_cached = null;
-				if (
-					!(this.Context.Items.TryGetValue(nameof(OtherPlayer), out opObj) && opObj is IPlayer<InkBallPointViewModel, InkBallPathViewModel> other_Player)
-					|| !(this.Context.Items.TryGetValue(nameof(OtherUserIdentifier), out ouidenObj) && ouidenObj is string other_UserIdentifier)
-					)
-				{
-					//obtain another player; co-player
-					InkBallPlayer otherDbPlayer = dbGame.Player1.User.sExternalId == this_UserIdentifier ? dbGame.Player2 : dbGame.Player1;
-					if (otherDbPlayer != null)
-					{
-						if (otherDbPlayer.iId == this_Player.iId || OtherUserIdentifier == this_UserIdentifier)
-							throw new ArgumentException("other_Player_db.iId == this_Player.iId || other_UserIdentifier == this_UserIdentifier");
-						other_Player = other_Player_cached = new InkBallPlayerViewModel(otherDbPlayer);
-						other_UserIdentifier = other_UserIdentifier_cached = otherDbPlayer.User.sExternalId;
-					}
-					else
-					{
-						other_Player = other_Player_cached = null;
-						other_UserIdentifier = other_UserIdentifier_cached = null;
-					}
-					this.Context.Items[nameof(OtherPlayer)] = other_Player;
-					this.Context.Items[nameof(OtherUserIdentifier)] = other_UserIdentifier;
-				}
-				OtherPlayer = other_Player;
-				OtherUserIdentifier = other_UserIdentifier;
-
-
-			}
-			ThisGame = game;
-			OtherPlayer = other_Player_cached;
-			OtherUserIdentifier = other_UserIdentifier_cached;
-
+			return this_Player;
 		}
 
 		#endregion Private methods
@@ -229,9 +290,13 @@ namespace InkBall.Module.Hubs
 
 		public override async Task OnConnectedAsync()
 		{
-			ValidateOriginHeaderAndAccessToken(this.Context.GetHttpContext());
+			var ctx = this.Context.GetHttpContext();
 
-			await LoadUserAndPLayerStructures(this.Context.ConnectionAborted);
+			ValidateOriginHeaderAndAccessToken(ctx);
+
+			(int gameID, int playerID) = GetGameIdAndPlayerIDFromContext(ctx);
+			ThisGameID = gameID;
+			ThisPlayerID = playerID;
 
 			await base.OnConnectedAsync();
 		}
@@ -242,42 +307,31 @@ namespace InkBall.Module.Hubs
 		{
 			CancellationToken token = this.Context.ConnectionAborted;
 
-			await LoadUserAndPLayerStructures(token);
+			await LoadGameAndPlayerStructures(token);
 
 			if (ThisGame == null || ThisPlayer == null || OtherPlayer == null || string.IsNullOrEmpty(OtherUserIdentifier)
 				|| string.IsNullOrEmpty(ThisUserName))
+			{
+				_logger.LogWarning("something bad ThisGame == null || ThisPlayer == null || OtherPlayer == null || " +
+					"string.IsNullOrEmpty(OtherUserIdentifier) || string.IsNullOrEmpty(ThisUserName)");
 				return;
+			}
 
 			try
 			{
-				if (point == null || point.iPlayerId <= 0 || point.iGameId <= 0 || point.iGameId != ThisGame.iId)
+				var current_player_color = ThisGame.IsThisPlayerPlayingWithRed() ? InkBallPoint.StatusEnum.POINT_FREE_RED : InkBallPoint.StatusEnum.POINT_FREE_BLUE;
+
+				if (point == null || point.iGameId != ThisGame.iId || point.Status != current_player_color)
 					throw new ArgumentException("bad point");
 				if (point.iPlayerId != ThisPlayer.iId && point.iPlayerId != OtherPlayer.iId)
 					throw new ArgumentException("bad Player ID");
 
-				var query = await (from pl in _dbContext.InkBallPlayer
-								   let gm = (_dbContext.InkBallGame.FirstOrDefault(
-									   w => w.iId == point.iGameId
-									   && (w.GameState == InkBallGame.GameStateEnum.ACTIVE || w.GameState == InkBallGame.GameStateEnum.AWAITING)
-									   && (w.iPlayer1Id == point.iPlayerId || w.iPlayer2Id == point.iPlayerId)
-								   ))
-								   let point_exist = (_dbContext.InkBallPoint.Any(pts =>
-									   pts.iGameId == ThisGame.iId && pts.iPlayerId == point.iPlayerId
-									   && pts.iX == point.iX && pts.iY == point.iY
-								   ))
-								   where pl.iId == point.iPlayerId
-								   select new
-								   {
-									   Game = gm,
-									   Exist = point_exist,
-									   Player = pl
-								   }
-							).FirstOrDefaultAsync(token);
-
-				var point_already_placed = query.Exist;
-				var db_point_game = query.Game;
-				var db_point_player = query.Player;
-				if (point_already_placed || db_point_game == null)
+				var already_placed = await _dbContext.InkBallPoint.AnyAsync(pts =>
+									pts.iGameId == ThisGame.iId && pts.iPlayerId == point.iPlayerId
+									&& pts.iX == point.iX && pts.iY == point.iY
+									, token);
+				var db_point_player = ThisPlayer.iId == point.iPlayerId ? ThisPlayer : OtherPlayer;
+				if (already_placed)
 					return;
 
 				var db_point = new InkBallPoint
@@ -297,26 +351,13 @@ namespace InkBall.Module.Hubs
 					try
 					{
 						await _dbContext.InkBallPoint.AddAsync(db_point, token);
-						db_point_game.bIsPlayer1Active = !db_point_game.bIsPlayer1Active;
+						ThisGame.bIsPlayer1Active = !ThisGame.bIsPlayer1Active;
 
 						new_point = new InkBallPointViewModel(db_point);
 						db_point_player.sLastMoveCode = JsonConvert.SerializeObject(new_point);
 						await _dbContext.SaveChangesAsync(token);
 
 						trans.Commit();
-
-						ThisGame.bIsPlayer1Active = db_point_game.bIsPlayer1Active;
-						if (ThisPlayer.iId == db_point_player.iId)
-						{
-							ThisPlayer.sLastMoveCode = db_point_player.sLastMoveCode;
-							this.Context.Items[nameof(ThisPlayer)] = ThisPlayer;
-						}
-						else
-						{
-							OtherPlayer.sLastMoveCode = db_point_player.sLastMoveCode;
-							this.Context.Items[nameof(OtherPlayer)] = OtherPlayer;
-						}
-						this.Context.Items[nameof(ThisGame)] = ThisGame;
 					}
 					catch (Exception ex)
 					{
@@ -326,10 +367,8 @@ namespace InkBall.Module.Hubs
 					}
 				}
 
-				var this_UserIdentifier = this.Context.UserIdentifier;
-
 				// await Clients.User(OtherUserIdentifier).ServerToClientPoint(new_point, ThisUserName);
-				await base.Clients.Users(this_UserIdentifier, OtherUserIdentifier).ServerToClientPoint(new_point, ThisUserName);
+				await base.Clients.Users(ThisUserIdentifier, OtherUserIdentifier).ServerToClientPoint(new_point, ThisUserName);
 			}
 			catch (Exception ex)
 			{
@@ -342,7 +381,7 @@ namespace InkBall.Module.Hubs
 		{
 			CancellationToken token = this.Context.ConnectionAborted;
 
-			await LoadUserAndPLayerStructures(token);
+			await LoadGameAndPlayerStructures(token);
 
 
 
@@ -373,7 +412,7 @@ namespace InkBall.Module.Hubs
 		{
 			CancellationToken token = this.Context.ConnectionAborted;
 
-			await LoadUserAndPLayerStructures(token);
+			await LoadGameAndPlayerStructures(token);
 
 
 
@@ -382,7 +421,7 @@ namespace InkBall.Module.Hubs
 				return;
 
 			var claimsPrincipal = this.Context.User;
-			string userId = claimsPrincipal.FindFirstValue(nameof(InkBall.Module.Pages.HomeModel.InkBallUserId));
+			string userId = claimsPrincipal.FindFirstValue(nameof(Pages.BasePageModel.InkBallUserId));
 			if (this.Context.Items.Count > 1)
 			{
 				System.Type t = typeof(System.Net.WebSockets.WebSocketProtocol);

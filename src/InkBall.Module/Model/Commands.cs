@@ -45,9 +45,15 @@ namespace InkBall.Module.Model
 	{
 		public int OtherPlayerId { get; private set; }
 
-		public PlayerJoiningCommand(int otherPlayerId)
+		public string OtherPlayerName { get; set; }
+
+		public string Message { get; set; }
+
+		public PlayerJoiningCommand(int otherPlayerId, string otherPlayerName, string message)
 		{
 			OtherPlayerId = otherPlayerId;
+			OtherPlayerName = otherPlayerName;
+			Message = message;
 		}
 	}
 
@@ -57,10 +63,13 @@ namespace InkBall.Module.Model
 
 		public bool ThisOrOtherPlayerSurrenders { get; private set; }
 
-		public PlayerSurrenderingCommand(int otherPlayerId, bool thisOrOtherPlayerSurrenders)
+		public string Message { get; set; }
+
+		public PlayerSurrenderingCommand(int otherPlayerId, bool thisOrOtherPlayerSurrenders, string message)
 		{
 			OtherPlayerId = otherPlayerId;
 			ThisOrOtherPlayerSurrenders = thisOrOtherPlayerSurrenders;
+			Message = message;
 		}
 	}
 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -535,9 +535,8 @@ namespace InkBall.Module.Model
 			return true;
 		}
 
-		public void SurrenderGameFromPlayerAsync(InkBallGame game, ISession session, bool bForcePlayerLoose = false, CancellationToken token = default)
+		public async Task SurrenderGameFromPlayerAsync(InkBallGame game, ISession session, bool bForcePlayerLoose = false, CancellationToken token = default)
 		{
-
 			switch (game.GameState)
 			{
 				case GameStateEnum.ACTIVE:
@@ -564,27 +563,27 @@ namespace InkBall.Module.Model
 						game.GetOtherPlayer().iWinCount = game.GetOtherPlayer().iWinCount + 1;
 					}
 
-					this.SaveChangesAsync(token);
+					await this.SaveChangesAsync(token);
 
-					//remove this game in session
-					session.Remove(nameof(InkBallGameViewModel));
+					// //remove this game in session
+					// session.Remove(nameof(InkBallGameViewModel));
 					break;
 
 				case GameStateEnum.AWAITING:
 					//update game(deactivate)...
 					game.GameState = InkBall.Module.Model.InkBallGame.GameStateEnum.INACTIVE;
 
-					this.SaveChangesAsync(token);
+					await this.SaveChangesAsync(token);
 
-					//remove this game in session
-					session.Remove(nameof(InkBallGameViewModel));
+					// //remove this game in session
+					// session.Remove(nameof(InkBallGameViewModel));
 					break;
 
 				case GameStateEnum.INACTIVE:
 				case GameStateEnum.FINISHED:
 				default:
-					//remove this game in session
-					session.Remove(nameof(InkBallGameViewModel));
+					// //remove this game in session
+					// session.Remove(nameof(InkBallGameViewModel));
 					break;
 			}
 
@@ -614,21 +613,30 @@ namespace InkBall.Module.Model
 
 		private async Task<IEnumerable<InkBallPath>> GetPathsFromDatabaseAsync(int iGameID, int iPlayerID, IEnumerable<InkBallPoint> points, CancellationToken token = default)
 		{
-			/*var query = from ip in InkBallPath
-						where ip.iGameId == iGameID && ip.iPlayerId == iPlayerID
-						select ip;
-			var paths = await query.ToListAsync(token);*/
-
 			var query1 = from ip in InkBallPath.Include(x => x.InkBallPointsInPath).Include(y => y.InkBallPoint)
 						 where ip.iGameId == iGameID && ip.iPlayerId == iPlayerID
-						 select ip;
+						 select new
+						 {
+							 PathID = ip.iId,
+							 Points = ip.InkBallPoint,
+							 PointsInPath = ip.InkBallPointsInPath,
+						 };
+			var paths_combined = await query1.ToArrayAsync(token);
 
-			var paths = await query1.ToArrayAsync(token);
-			// foreach (var path in paths)
-			// {
-			// }
+			var lst = new List<InkBallPath>(paths_combined.Length);
+			foreach (var pc in paths_combined)
+			{
+				var newpath = new InkBallPath
+				{
+					iId = pc.PathID,
+					iGameId = iGameID,
+					iPlayerId = iPlayerID,
+					InkBallPoint = pc.Points,
+					InkBallPointsInPath = pc.PointsInPath
+				};
+			}
 
-			return paths;
+			return lst;
 		}
 
 		private async Task<IEnumerable<InkBallPoint>> GetPointsFromDatabaseAsync(int iGameID, int iPlayerID, CancellationToken token = default)

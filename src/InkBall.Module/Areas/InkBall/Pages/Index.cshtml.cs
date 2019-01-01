@@ -17,7 +17,7 @@ namespace InkBall.Module.Pages
 	[Authorize(Policy = "InkBallPlayerPolicy")]
 	public class IndexModel : BasePageModel
 	{
-		public InkBallPlayerViewModel OtherPlayer { get; protected set; }
+		public InkBallPlayer OtherPlayer { get; protected set; }
 
 		public void GetPointsAsJavaScriptInitScript(IEnumerable<InkBallPoint> points, string jsMethodCall, string pointPrefix,
 			bool isThisPlayerPlayingWithRed, bool isMainPlayerPoints, ref StringBuilder builder)
@@ -39,6 +39,8 @@ namespace InkBall.Module.Pages
 					switch (value.Status)
 					{
 						case InkBallPoint.StatusEnum.POINT_FREE:
+						case InkBallPoint.StatusEnum.POINT_FREE_RED:
+						case InkBallPoint.StatusEnum.POINT_FREE_BLUE:
 						case InkBallPoint.StatusEnum.POINT_STARTING:
 						case InkBallPoint.StatusEnum.POINT_IN_PATH:
 							if (isThisPlayerPlayingWithRed)
@@ -112,7 +114,7 @@ namespace InkBall.Module.Pages
 			if (Game == null)
 				return Redirect("Home");
 
-			InkBallPlayerViewModel otherPlayer = Game.GetOtherPlayer();
+			InkBallPlayer otherPlayer = Game.GetOtherPlayer();
 			OtherPlayer = otherPlayer;
 
 			return Page();

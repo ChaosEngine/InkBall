@@ -1,25 +1,24 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Identity;
-using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using System.Threading;
 using InkBall.Module.Model;
+using Microsoft.AspNetCore.SignalR;
+using InkBall.Module.Hubs;
 
 namespace InkBall.Module.Pages
 {
 	[AllowAnonymous]
 	public class HomeModel : BasePageModel
 	{
-		public HomeModel(GamesContext dbContext, ILogger<HomeModel> logger) : base(dbContext, logger)
+		private readonly IHubContext<ChatHub, IChatClient> _inkballHubContext;
+
+		public HomeModel(GamesContext dbContext, ILogger<HomeModel> logger,
+			IHubContext<Hubs.ChatHub, Hubs.IChatClient> inkballHubContext) : base(dbContext, logger)
 		{
+			_inkballHubContext = inkballHubContext;
 		}
 
 		public async Task OnGet()
@@ -80,9 +79,6 @@ namespace InkBall.Module.Pages
 							{
 								var dbGame = await _dbContext.CreateNewGameFromExternalUserIDAsync(GameUser.sExternalId, InkBallGame.GameStateEnum.AWAITING,
 									GameType, 15/*grid size*/, width, height, true, token);
-								Game = new InkBallGameViewModel(dbGame);
-
-								HttpContext.Session.Set(nameof(InkBallGameViewModel), Game);
 
 								trans.Commit();
 								return Redirect("Index");
@@ -127,16 +123,29 @@ namespace InkBall.Module.Pages
 							{
 								try
 								{
-									var gameID = Game.iId;
-
-									var db_game = (from ig in _dbContext.InkBallGame
-													.Include(ip1 => ip1.Player1).Include(ip2 => ip2.Player2)
-												   where ig.iId == gameID
-												   select ig).FirstOrDefaultAsync(token);
-
-									_dbContext.SurrenderGameFromPlayerAsync(await db_game, base.HttpContext.Session, false, token);
+									await _dbContext.SurrenderGameFromPlayerAsync(Game, base.HttpContext.Session, false, token);
 
 									trans.Commit();
+
+									if (_inkballHubContext != null)
+									{
+										var tsk = Task.Factory.StartNew(async (payload) =>
+										{
+											try
+											{
+												var recipient_id_looser = payload as Tuple<string, int, string>;
+
+												await _inkballHubContext.Clients.User(recipient_id_looser.Item1).ServerToClientPlayerSurrender(
+														new PlayerSurrenderingCommand(recipient_id_looser.Item2, true, $"Player {recipient_id_looser.Item3} logged out"));
+											}
+											catch (Exception ex)
+											{
+												_logger.LogError(ex.Message);
+											}
+										},
+										Tuple.Create(Game.GetOtherPlayer().User.sExternalId, Game.GetOtherPlayer().iId, this.GameUser.UserName),
+										token);
+									}
 								}
 								catch (Exception ex)
 								{
@@ -145,12 +154,8 @@ namespace InkBall.Module.Pages
 									throw;
 								}
 							}
-							HttpContext.Session.Set<InkBallGameViewModel>(nameof(InkBallGameViewModel), null);
+
 						}
-						//delete cookies
-						HttpContext.Session.Remove(nameof(InkBallUserViewModel));
-						HttpContext.Session.Remove(nameof(InkBallGameViewModel));
-						HttpContext.Session.Remove(nameof(InkBallUserViewModel));
 						return Redirect("~/Identity/Account/Logout");
 
 					case "Register":
