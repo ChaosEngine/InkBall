@@ -118,6 +118,7 @@ function htmlEncode(html) {
 		document.createTextNode(html)).parentNode.innerHTML;
 }
 
+//Debug function
 function CountPointsDebug(sSelector2Set, sSvgSelector = 'svg') {
 	let svgs = $(sSvgSelector), totalChildren = 0, childCounts = [];
 
@@ -278,9 +279,14 @@ class InkBallGame {
 			let iStatus = point.Status;
 
 			this.SetPoint(x, y, iStatus);
-			this.m_bIsPlayerActive = this.g_iPlayerID != point.iPlayerId;
-			//this.SetTimer(false);
-			this.ShowMobileStatus(null, 'Oponent has moved, your turn');
+			if (this.g_iPlayerID != point.iPlayerId) {
+				this.m_bIsPlayerActive = true;
+				this.ShowMobileStatus('Oponent has moved, your turn');
+			}
+			else {
+				this.m_bIsPlayerActive = false;
+				this.ShowMobileStatus('Waiting for oponent move');
+			}
 			this.m_bHandlingEvent = false;
 
 		}.bind(this));
@@ -303,8 +309,11 @@ class InkBallGame {
 			let li = document.createElement("li");
 			li.textContent = encodedMsg;
 			document.querySelector(sMsgListSel).appendChild(li);
-			//TODO: implement some UI logic
+
+
 			this.m_bHandlingEvent = false;
+			alert(encodedMsg == '' ? 'Game interrupted!' : encodedMsg);
+			window.location.href = "Games";
 
 		}.bind(this));
 		this.g_SignalRConnection.on("ServerToClientPing", function (ping, user) {
@@ -711,7 +720,7 @@ class InkBallGame {
 
 								this.m_bIsPlayerActive = true;
 								this.SetTimer(false);
-								this.ShowMobileStatus(null, 'Oponent has moved, your turn');
+								this.ShowMobileStatus('Oponent has moved, your turn');
 								break;
 
 							case 'Path':
@@ -739,7 +748,7 @@ class InkBallGame {
 
 								this.m_bIsPlayerActive = true;
 								this.SetTimer(false);
-								this.ShowMobileStatus(null, 'Oponent has moved, your turn');
+								this.ShowMobileStatus('Oponent has moved, your turn');
 								break;
 
 							default:
@@ -853,30 +862,27 @@ class InkBallGame {
 			}
 		}
 
-		this.ShowMobileStatus(d, this.m_sMessage);
+		this.ShowMobileStatus(this.m_sMessage);
 	}
 
-	ShowMobileStatus(iWaitTime, sMessage) {
-		///TODO: uncomment this if mobile version will be true
-		let gameStatus = document.getElementById('GameStatus');
+	ShowMobileStatus(sMessage) {
 		if (this.m_Player2Name.innerHTML == '???') {
-			if (gameStatus.style.backgroundImage.indexOf('pjonbgcurrent.gif') != -1)
-				gameStatus.style.backgroundImage = 'url(img/pjonbgcurrent2.gif)';
+			if (this.m_bIsPlayerActive)
+				this.m_GameStatus.style.color = this.COLOR_RED;
 			else
-				gameStatus.style.backgroundImage = 'url(img/pjonbgcurrent.gif)';
+				this.m_GameStatus.style.color = this.COLOR_BLUE;
 		}
 		else if (this.m_bIsPlayerActive) {
 			if (this.m_bIsPlayingWithRed)
-				gameStatus.style.backgroundImage = 'url(img/pjonbgcurrent.gif)';
+				this.m_GameStatus.style.color = this.COLOR_RED;
 			else
-				gameStatus.style.backgroundImage = 'url(img/pjonbgcurrent2.gif)';
+				this.m_GameStatus.style.color = this.COLOR_BLUE;
 		}
 		else {
 			if (this.m_bIsPlayingWithRed)
-				gameStatus.style.backgroundImage = 'url(img/pjonbgcurrent2.gif)';
+				this.m_GameStatus.style.color = this.COLOR_BLUE;
 			else
-				gameStatus.style.backgroundImage = 'url(img/pjonbgcurrent.gif)';
-			if (iWaitTime != 'undefined' && iWaitTime != null) this.Debug(iWaitTime);
+				this.m_GameStatus.style.color = this.COLOR_RED;
 		}
 		if (sMessage != null)
 			this.Debug(sMessage, 0);
@@ -885,7 +891,9 @@ class InkBallGame {
 	}
 
 	OnMouseMove(event) {
-		if (!this.m_bIsPlayerActive || this.m_Player2Name.innerHTML == '???' || this.m_bHandlingEvent == true) return;
+		if (!this.m_bIsPlayerActive || this.m_Player2Name.innerHTML == '???' || this.m_bHandlingEvent == true
+			|| this.iConnErrCount > 0)
+			return;
 
 		let x = (event ? event.clientX : window.event.clientX) - this.m_Screen.offsetLeft + this.f_scrollLeft() + 0.5 * this.m_iGridSize;
 		let y = (event ? event.clientY : window.event.clientY) - this.m_Screen.offsetTop + this.f_scrollTop() + 0.5 * this.m_iGridSize;
@@ -952,7 +960,9 @@ class InkBallGame {
 	}
 
 	OnMouseDown(event) {
-		if (!this.m_bIsPlayerActive || this.m_Player2Name.innerHTML == '???' || this.m_bHandlingEvent == true) return;
+		if (!this.m_bIsPlayerActive || this.m_Player2Name.innerHTML == '???' || this.m_bHandlingEvent == true
+			|| this.iConnErrCount > 0)
+			return;
 
 		let x = (event ? event.clientX : window.event.clientX) - this.m_Screen.offsetLeft + this.f_scrollLeft() + 0.5 * this.m_iGridSize;
 		let y = (event ? event.clientY : window.event.clientY) - this.m_Screen.offsetTop + this.f_scrollTop() + 0.5 * this.m_iGridSize;
@@ -1108,10 +1118,11 @@ class InkBallGame {
 	/**
 	 * Start drawing routines
 	 * @param {HTMLElement} sScreen screen dontainer selector
-	 * @param {HTMLElement} Player2Name displaying element selector
+	 * @param {HTMLElement} sPlayer2Name displaying element selector
+	 * @param {HTMLElement} sGameStatus game stat element selector
 	 * @param {number} iTooLong2Duration how long waiting is too long
 	 */
-	PrepareDrawing(sScreen, sPlayer2Name, iTooLong2Duration = 125) {
+	PrepareDrawing(sScreen, sPlayer2Name, sGameStatus, iTooLong2Duration = 125) {
 		this.m_bIsWon = false;
 		this.m_iDelayBetweenMultiCaptures = 4000;
 		this.m_iTimerInterval = 2000;
@@ -1145,6 +1156,7 @@ class InkBallGame {
 
 		this.m_Debug = document.getElementById('debug0');
 		this.m_Player2Name = document.querySelector(sPlayer2Name);
+		this.m_GameStatus = document.querySelector(sGameStatus);
 		this.m_SurrenderButton = document.getElementById('SurrenderButton');
 		this.m_Screen = document.querySelector(sScreen);
 		if (!this.m_Screen) {
@@ -1173,20 +1185,10 @@ class InkBallGame {
 			button = document.getElementById('Cancel');
 			button.onclick = this.OnCancelClick.bind(this);
 
-			/**
-			 * [Old-legacy code]
-			 * TODO: commented; re-anable logic in some way
-			 */
-			if (!this.m_bIsPlayerActive) {
-				// this.SetTimer(true);
-			}
-			else {
-				this.ShowMobileStatus(null, 'Your move');
-			}
-
-			/**
-			 * [/Old-legacy code]
-			 */
+			if (this.m_bIsPlayerActive)
+				this.ShowMobileStatus('Your move');
+			else
+				this.ShowMobileStatus('Waiting for oponent move');
 		}
 	}
 }

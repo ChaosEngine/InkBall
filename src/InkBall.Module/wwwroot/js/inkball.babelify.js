@@ -399,8 +399,15 @@ var InkBallGame = function () {
         var y = point.iY;
         var iStatus = point.Status;
         this.SetPoint(x, y, iStatus);
-        this.m_bIsPlayerActive = this.g_iPlayerID != point.iPlayerId;
-        this.ShowMobileStatus(null, 'Oponent has moved, your turn');
+
+        if (this.g_iPlayerID != point.iPlayerId) {
+          this.m_bIsPlayerActive = true;
+          this.ShowMobileStatus('Oponent has moved, your turn');
+        } else {
+          this.m_bIsPlayerActive = false;
+          this.ShowMobileStatus('Waiting for oponent move');
+        }
+
         this.m_bHandlingEvent = false;
       }.bind(this));
       this.g_SignalRConnection.on("ServerToClientPlayerJoin", function (join) {
@@ -417,6 +424,8 @@ var InkBallGame = function () {
         li.textContent = encodedMsg;
         document.querySelector(sMsgListSel).appendChild(li);
         this.m_bHandlingEvent = false;
+        alert(encodedMsg == '' ? 'Game interrupted!' : encodedMsg);
+        window.location.href = "Games";
       }.bind(this));
       this.g_SignalRConnection.on("ServerToClientPing", function (ping, user) {
         var encodedMsg = PingCommand.Format(user, ping);
@@ -795,7 +804,7 @@ var InkBallGame = function () {
                   this.SetPoint(_x4, _y3, iStatus);
                   this.m_bIsPlayerActive = true;
                   this.SetTimer(false);
-                  this.ShowMobileStatus(null, 'Oponent has moved, your turn');
+                  this.ShowMobileStatus('Oponent has moved, your turn');
                   break;
 
                 case 'Path':
@@ -823,7 +832,7 @@ var InkBallGame = function () {
 
                   this.m_bIsPlayerActive = true;
                   this.SetTimer(false);
-                  this.ShowMobileStatus(null, 'Oponent has moved, your turn');
+                  this.ShowMobileStatus('Oponent has moved, your turn');
                   break;
 
                 default:
@@ -916,20 +925,17 @@ var InkBallGame = function () {
         }
       }
 
-      this.ShowMobileStatus(d, this.m_sMessage);
+      this.ShowMobileStatus(this.m_sMessage);
     }
   }, {
     key: "ShowMobileStatus",
-    value: function ShowMobileStatus(iWaitTime, sMessage) {
-      var gameStatus = document.getElementById('GameStatus');
-
+    value: function ShowMobileStatus(sMessage) {
       if (this.m_Player2Name.innerHTML == '???') {
-        if (gameStatus.style.backgroundImage.indexOf('pjonbgcurrent.gif') != -1) gameStatus.style.backgroundImage = 'url(img/pjonbgcurrent2.gif)';else gameStatus.style.backgroundImage = 'url(img/pjonbgcurrent.gif)';
+        if (this.m_bIsPlayerActive) this.m_GameStatus.style.color = this.COLOR_RED;else this.m_GameStatus.style.color = this.COLOR_BLUE;
       } else if (this.m_bIsPlayerActive) {
-        if (this.m_bIsPlayingWithRed) gameStatus.style.backgroundImage = 'url(img/pjonbgcurrent.gif)';else gameStatus.style.backgroundImage = 'url(img/pjonbgcurrent2.gif)';
+        if (this.m_bIsPlayingWithRed) this.m_GameStatus.style.color = this.COLOR_RED;else this.m_GameStatus.style.color = this.COLOR_BLUE;
       } else {
-        if (this.m_bIsPlayingWithRed) gameStatus.style.backgroundImage = 'url(img/pjonbgcurrent2.gif)';else gameStatus.style.backgroundImage = 'url(img/pjonbgcurrent.gif)';
-        if (iWaitTime != 'undefined' && iWaitTime != null) this.Debug(iWaitTime);
+        if (this.m_bIsPlayingWithRed) this.m_GameStatus.style.color = this.COLOR_BLUE;else this.m_GameStatus.style.color = this.COLOR_RED;
       }
 
       if (sMessage != null) this.Debug(sMessage, 0);else this.Debug('', 0);
@@ -937,7 +943,7 @@ var InkBallGame = function () {
   }, {
     key: "OnMouseMove",
     value: function OnMouseMove(event) {
-      if (!this.m_bIsPlayerActive || this.m_Player2Name.innerHTML == '???' || this.m_bHandlingEvent == true) return;
+      if (!this.m_bIsPlayerActive || this.m_Player2Name.innerHTML == '???' || this.m_bHandlingEvent == true || this.iConnErrCount > 0) return;
       var x = (event ? event.clientX : window.event.clientX) - this.m_Screen.offsetLeft + this.f_scrollLeft() + 0.5 * this.m_iGridSize;
       var y = (event ? event.clientY : window.event.clientY) - this.m_Screen.offsetTop + this.f_scrollTop() + 0.5 * this.m_iGridSize;
       x = parseInt(x / this.m_iGridSize);
@@ -990,7 +996,7 @@ var InkBallGame = function () {
   }, {
     key: "OnMouseDown",
     value: function OnMouseDown(event) {
-      if (!this.m_bIsPlayerActive || this.m_Player2Name.innerHTML == '???' || this.m_bHandlingEvent == true) return;
+      if (!this.m_bIsPlayerActive || this.m_Player2Name.innerHTML == '???' || this.m_bHandlingEvent == true || this.iConnErrCount > 0) return;
       var x = (event ? event.clientX : window.event.clientX) - this.m_Screen.offsetLeft + this.f_scrollLeft() + 0.5 * this.m_iGridSize;
       var y = (event ? event.clientY : window.event.clientY) - this.m_Screen.offsetTop + this.f_scrollTop() + 0.5 * this.m_iGridSize;
       x = this.m_iMouseX = parseInt(x / this.m_iGridSize);
@@ -1129,8 +1135,8 @@ var InkBallGame = function () {
     }
   }, {
     key: "PrepareDrawing",
-    value: function PrepareDrawing(sScreen, sPlayer2Name) {
-      var iTooLong2Duration = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 125;
+    value: function PrepareDrawing(sScreen, sPlayer2Name, sGameStatus) {
+      var iTooLong2Duration = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 125;
       this.m_bIsWon = false;
       this.m_iDelayBetweenMultiCaptures = 4000;
       this.m_iTimerInterval = 2000;
@@ -1163,6 +1169,7 @@ var InkBallGame = function () {
       this.m_Points = new Array();
       this.m_Debug = document.getElementById('debug0');
       this.m_Player2Name = document.querySelector(sPlayer2Name);
+      this.m_GameStatus = document.querySelector(sGameStatus);
       this.m_SurrenderButton = document.getElementById('SurrenderButton');
       this.m_Screen = document.querySelector(sScreen);
 
@@ -1191,10 +1198,7 @@ var InkBallGame = function () {
         button.onclick = this.OnDrawModeClick.bind(this);
         button = document.getElementById('Cancel');
         button.onclick = this.OnCancelClick.bind(this);
-
-        if (!this.m_bIsPlayerActive) {} else {
-          this.ShowMobileStatus(null, 'Your move');
-        }
+        if (this.m_bIsPlayerActive) this.ShowMobileStatus('Your move');else this.ShowMobileStatus('Waiting for oponent move');
       }
     }
   }]);

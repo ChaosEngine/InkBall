@@ -53,11 +53,10 @@
 		<input id="Cancel" type="button" value="Cancel path" class='btn btn-primary' />
 	</form>
 </div>
-<div id='GameStatus'>
-	<span id="debug0"></span>
-	<span id="debug1"></span>
-	<span id="debug2"></span>
-</div>
+<span id="gameStatus" style="font-size:2em">•</span>
+<span id="debug0"></span>
+<span id="debug1"></span>
+<span id="debug2"></span>
 
 <div class="container">
 	<div class="row">&nbsp;</div>
@@ -101,13 +100,12 @@
 			bPlayingWithRed, bPlayerActive, 15
 		);
 		game.StartSignalRConnection(iGameID, iPlayerID, '#messagesList', '#sendButton', '#messageInput');
-		game.PrepareDrawing('#screen', '#Player2Name');
+		game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus');
 
 @Html.Raw(await Model.GetPointsAndPathsAsInitScriptAsync("\t\tgame.SetPoint", "\t\tgame.SetPath", "StatusEnum."))
 
-		CountPointsDebug("#debug2");
-		$('#debug1').text((bPlayerActive ? "player Active" : "player INactive"));
-
+		//CountPointsDebug("#debug2");
+		//$('#debug1').text((bPlayerActive ? "player Active" : "player INactive"));
 	});
 </script>
 

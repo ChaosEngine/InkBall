@@ -88,36 +88,40 @@ namespace InkBall.Module.Pages
 								{
 									await _dbContext.JoinGameFromExternalUserIdAsync(new_game, sExternalUserID, token);
 
-									trans.Commit();
-
-									if (_inkballHubContext != null)
+									if (_inkballHubContext != null && new_game.GetOtherPlayer() != null)
 									{
 										var tsk = Task.Factory.StartNew(async (payload) =>
 										{
 											try
 											{
-												var recipient_id_joiner = payload as Tuple<string, int, string>;
-												//delay for some signalr connction to be established. Is it really needed?
-												await Task.Delay(1_000);
+												var recipient_id_joiner = payload as Tuple<string, int?, string>;
+												if (!string.IsNullOrEmpty(recipient_id_joiner.Item1))
+												{
+													//delay for some signalr connction to be established. Is it really needed?
+													await Task.Delay(1_000);
 
-												await _inkballHubContext.Clients.User(recipient_id_joiner.Item1).ServerToClientPlayerJoin(
-													new PlayerJoiningCommand(recipient_id_joiner.Item2, recipient_id_joiner.Item3, $"Player {recipient_id_joiner.Item3} joining"));
+													await _inkballHubContext.Clients.User(recipient_id_joiner.Item1).ServerToClientPlayerJoin(
+														new PlayerJoiningCommand(recipient_id_joiner.Item2.GetValueOrDefault(0),
+														recipient_id_joiner.Item3,
+														$"Player {recipient_id_joiner.Item3 ?? ""} joining"));
+												}
 											}
 											catch (Exception ex)
 											{
 												_logger.LogError(ex.Message);
 											}
 										},
-										Tuple.Create(new_game.GetOtherPlayer().User.sExternalId, new_game.GetOtherPlayer().iId, this.GameUser.UserName),
+										Tuple.Create(new_game.GetOtherPlayer()?.User?.sExternalId, new_game.GetOtherPlayer()?.iId, this.GameUser.UserName),
 										token);
 									}
 
+									trans.Commit();
 									return Redirect("Index");
 								}
 								catch (Exception ex)
 								{
 									trans.Rollback();
-									_logger.LogError(ex, msg);
+									_logger.LogError(ex, ex.Message);
 									throw ex;
 								}
 							}
@@ -191,37 +195,40 @@ namespace InkBall.Module.Pages
 							{
 								await _dbContext.SurrenderGameFromPlayerAsync(Game, base.HttpContext.Session, false, token);
 
-								trans.Commit();
-
-								if (_inkballHubContext != null)
+								if (_inkballHubContext != null && Game.GetOtherPlayer() != null)
 								{
 									var tsk = Task.Factory.StartNew(async (payload) =>
 									{
 										try
 										{
-											var recipient_id_looser = payload as Tuple<string, int, string>;
-											//delay for some signalr connction to be established. Is it really needed?
-											await Task.Delay(1_000);
+											var recipient_id_looser = payload as Tuple<string, int?, string>;
 
-											await _inkballHubContext.Clients.User(recipient_id_looser.Item1).ServerToClientPlayerSurrender(
-												new PlayerSurrenderingCommand(recipient_id_looser.Item2, true, $"Player {recipient_id_looser.Item3} surrenders"));
+											if (!string.IsNullOrEmpty(recipient_id_looser.Item1))
+											{
+												await _inkballHubContext.Clients.User(recipient_id_looser.Item1).ServerToClientPlayerSurrender(
+													new PlayerSurrenderingCommand(recipient_id_looser.Item2.GetValueOrDefault(0),
+													true, $"Player {recipient_id_looser.Item3 ?? ""} surrenders"));
+											}
 										}
 										catch (Exception ex)
 										{
-											_logger.LogError(ex.Message);
+											_logger.LogError(ex, ex.Message);
 										}
 									},
-									Tuple.Create(Game.GetOtherPlayer().User.sExternalId, Game.GetOtherPlayer().iId, this.GameUser.UserName),
+									Tuple.Create(Game.GetOtherPlayer()?.User?.sExternalId, Game.GetOtherPlayer()?.iId, this.GameUser.UserName),
 									token);
 								}
+
+								trans.Commit();
+								return Redirect("Games");
 							}
 							catch (Exception ex)
 							{
 								trans.Rollback();
-								_logger.LogError(ex, msg);
+								_logger.LogError(ex, ex.Message);
 							}
 						}
-						return Redirect("Games");
+						break;
 
 					case "Home":
 						return Redirect("Home");

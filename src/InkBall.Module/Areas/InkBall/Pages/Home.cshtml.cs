@@ -125,27 +125,31 @@ namespace InkBall.Module.Pages
 								{
 									await _dbContext.SurrenderGameFromPlayerAsync(Game, base.HttpContext.Session, false, token);
 
-									trans.Commit();
-
-									if (_inkballHubContext != null)
+									if (_inkballHubContext != null && Game.GetOtherPlayer() != null)
 									{
 										var tsk = Task.Factory.StartNew(async (payload) =>
 										{
 											try
 											{
-												var recipient_id_looser = payload as Tuple<string, int, string>;
-
-												await _inkballHubContext.Clients.User(recipient_id_looser.Item1).ServerToClientPlayerSurrender(
-														new PlayerSurrenderingCommand(recipient_id_looser.Item2, true, $"Player {recipient_id_looser.Item3} logged out"));
+												var recipient_id_looser = payload as Tuple<string, int?, string>;
+												if (!string.IsNullOrEmpty(recipient_id_looser.Item1))
+												{
+													await _inkballHubContext.Clients.User(recipient_id_looser.Item1).ServerToClientPlayerSurrender(
+														new PlayerSurrenderingCommand(recipient_id_looser.Item2.GetValueOrDefault(0), true,
+														$"Player {recipient_id_looser.Item3 ?? ""} logged out"));
+												}
 											}
 											catch (Exception ex)
 											{
 												_logger.LogError(ex.Message);
 											}
 										},
-										Tuple.Create(Game.GetOtherPlayer().User.sExternalId, Game.GetOtherPlayer().iId, this.GameUser.UserName),
+										Tuple.Create(Game.GetOtherPlayer()?.User?.sExternalId, Game.GetOtherPlayer()?.iId, this.GameUser.UserName),
 										token);
 									}
+
+									trans.Commit();
+									return Redirect("~/Identity/Account/Logout");
 								}
 								catch (Exception ex)
 								{
@@ -154,9 +158,8 @@ namespace InkBall.Module.Pages
 									throw;
 								}
 							}
-
 						}
-						return Redirect("~/Identity/Account/Logout");
+						break;
 
 					case "Register":
 						return Redirect("~/Identity/Account/Register");
