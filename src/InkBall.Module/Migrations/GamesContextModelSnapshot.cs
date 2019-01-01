@@ -154,11 +154,10 @@ namespace InkBall.Module.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnName("iId");
 
-                    b.Property<string>("Status")
+                    b.Property<int>("Status")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("varchar(50)")
-                        .HasDefaultValue("POINT_FREE");
+                        .HasDefaultValue((int)InkBallPoint.StatusEnum.POINT_FREE);
 
                     b.Property<int?>("iEnclosingPathId")
                         .HasColumnName("iEnclosingPathId");

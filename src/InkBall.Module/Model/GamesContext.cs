@@ -270,11 +270,8 @@ namespace InkBall.Module.Model
 				entity.Property(e => e.iY).HasColumnName("iY");
 
 				entity.Property(e => e.Status)
-					.HasDefaultValue(InkBall.Module.Model.InkBallPoint.StatusEnum.POINT_FREE)
-					.HasColumnType("varchar(50)")
-					.HasConversion(
-						v => v.ToString(),
-						v => (InkBallPoint.StatusEnum)Enum.Parse(typeof(InkBallPoint.StatusEnum), v));
+					.HasDefaultValue(Module.Model.InkBallPoint.StatusEnum.POINT_FREE)
+					.HasConversion(new EnumToNumberConverter<InkBallPoint.StatusEnum, int>());
 
 				entity.HasOne(d => d.EnclosingPath)
 					.WithMany(p => p.InkBallPoint)

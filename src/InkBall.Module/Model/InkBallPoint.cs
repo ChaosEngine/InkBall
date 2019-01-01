@@ -106,5 +106,11 @@ namespace InkBall.Module.Model
 			this.Status = point.Status;
 			this.iEnclosingPathId = point.iEnclosingPathId;
 		}
+
+		public bool ShouldSerializeiId()
+		{
+			// don't serialize the iId property if <= 0
+			return (iId > 0);
+		}
 	}
 }

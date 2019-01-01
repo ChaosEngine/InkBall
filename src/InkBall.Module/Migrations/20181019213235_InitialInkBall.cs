@@ -143,7 +143,7 @@ namespace InkBall.Module.Migrations
 					iPlayerID = table.Column<int>(nullable: false),
 					iX = table.Column<int>(nullable: false),
 					iY = table.Column<int>(nullable: false),
-					Status = table.Column<string>(nullable: false, type: "varchar(50)", defaultValue: "POINT_FREE"),
+					Status = table.Column<int>(nullable: false, defaultValue: (int)InkBallPoint.StatusEnum.POINT_FREE),
 					iEnclosingPathId = table.Column<int>(nullable: true)
 				},
 				constraints: table =>
