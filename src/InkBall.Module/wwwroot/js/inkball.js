@@ -158,10 +158,6 @@ class InkBallGame {
 		this.g_iPlayerID = null;
 		this.iConnErrCount = 0;
 		this.iExponentialBackOffMillis = 2000;
-
-		/**
-		 * [Old-legacy code]
-		 */
 		this.COLOR_RED = 'red';
 		this.COLOR_BLUE = 'blue';
 		this.COLOR_OWNED_RED = 'pink';
@@ -190,8 +186,6 @@ class InkBallGame {
 		this.m_iMouseY = 0;
 		this.m_iPosX = 0;
 		this.m_iPosY = 0;
-		this.m_iScrollX = 0;
-		this.m_iScrollY = 0;
 		this.m_iClientWidth = 0;
 		this.m_iClientHeight = 0;
 		this.m_Screen = null;
@@ -205,13 +199,12 @@ class InkBallGame {
 		this.m_bIsPlayingWithRed = bIsPlayingWithRed;
 		this.m_bIsPlayerActive = bIsPlayerActive;
 		this.m_sDotColor = this.m_bIsPlayingWithRed ? this.COLOR_RED : this.COLOR_BLUE;
+		this.m_PointRadius = 4;
 		this.m_Line = null;
 		this.m_Lines = new Array();
 		this.m_Points = new Array();
 		this.m_bViewOnly = bViewOnly;
-		/**
-		 * [/Old-legacy code]
-		 */
+		this.m_MouseOval = null;
 
 		if (sHubName === null || sHubName === "") return;
 
@@ -282,10 +275,12 @@ class InkBallGame {
 			if (this.g_iPlayerID != point.iPlayerId) {
 				this.m_bIsPlayerActive = true;
 				this.ShowMobileStatus('Oponent has moved, your turn');
+				this.m_Screen.style.cursor = 'crosshair';
 			}
 			else {
 				this.m_bIsPlayerActive = false;
 				this.ShowMobileStatus('Waiting for oponent move');
+				this.m_Screen.style.cursor = 'not-allowed';
 			}
 			this.m_bHandlingEvent = false;
 
@@ -349,9 +344,6 @@ class InkBallGame {
 		this.start();
 	}
 
-	/**
-	 * [Old-legacy code]
-	 */
 	Debug(...args) {
 		switch (args.length) {
 			case 1:
@@ -443,9 +435,8 @@ class InkBallGame {
 		let x = iX * this.m_iGridSize;
 		let y = iY * this.m_iGridSize;
 
-		let radius = 4;
-		let oval = $createOval(radius, 'true');
-		oval.$move(x, y, radius);
+		let oval = $createOval(this.m_PointRadius, 'true');
+		oval.$move(x, y, this.m_PointRadius);
 
 		let color;
 		switch (iStatus) {
@@ -895,10 +886,21 @@ class InkBallGame {
 			|| this.iConnErrCount > 0)
 			return;
 
-		let x = (event ? event.clientX : window.event.clientX) - this.m_Screen.offsetLeft + this.f_scrollLeft() + 0.5 * this.m_iGridSize;
-		let y = (event ? event.clientY : window.event.clientY) - this.m_Screen.offsetTop + this.f_scrollTop() + 0.5 * this.m_iGridSize;
-		x = parseInt(x / this.m_iGridSize);
-		y = parseInt(y / this.m_iGridSize);
+
+		let x = (event ? event.clientX : window.event.clientX) - this.m_Screen.offsetLeft + this.f_scrollLeft();
+		let y = (event ? event.clientY : window.event.clientY) - this.m_Screen.offsetTop + this.f_scrollTop();
+
+		if (this.m_MouseOval == null) {
+			this.m_MouseOval = $createOval(this.m_PointRadius, 'true');
+			this.m_MouseOval.$SetFillColor(this.m_sDotColor);
+			this.m_MouseOval.$strokeColor(this.m_sDotColor);
+		}
+		x = parseInt(x / this.m_iGridSize + 0.5) * this.m_iGridSize;
+		y = parseInt(y / this.m_iGridSize + 0.5) * this.m_iGridSize;
+
+		this.m_MouseOval.$move(x, y, this.m_PointRadius);
+		//this.Debug(`OnMouseOver x = ${(x)} y = ${(y)}`, 1);
+		this.m_Screen.style.cursor = 'crosshair';
 
 		if (this.m_bDrawLines) {
 			//lines
@@ -1054,11 +1056,6 @@ class InkBallGame {
 		this.m_bMouseDown = false;
 	}
 
-	OnScroll() {
-		this.m_iScrollX = this.f_scrollLeft();
-		this.m_iScrollY = this.f_scrollTop();
-	}
-
 	OnDrawModeClick() {
 		this.m_bDrawLines = !this.m_bDrawLines;
 		let draw_mode = document.getElementById('DrawMode');
@@ -1111,9 +1108,6 @@ class InkBallGame {
 			this.Debug(`${p0.$GetFillColor()} posX = ${pos.x} posY = ${pos.y}`, 1);
 		}
 	}
-	/**
-	 * [/Old-legacy code]
-	 */
 
 	/**
 	 * Start drawing routines
@@ -1139,8 +1133,6 @@ class InkBallGame {
 		this.m_iMouseY = 0;
 		this.m_iPosX = 0;
 		this.m_iPosY = 0;
-		this.m_iScrollX = 0;
-		this.m_iScrollY = 0;
 		this.m_iClientWidth = 0;
 		this.m_iClientHeight = 0;
 		this.m_Debug = null;
@@ -1169,8 +1161,6 @@ class InkBallGame {
 		this.m_iClientHeight = this.m_Screen.clientHeight;
 		this.m_iGridWidth = parseInt(this.m_iClientWidth / this.m_iGridSize);
 		this.m_iGridHeight = parseInt(this.m_iClientHeight / this.m_iGridSize);
-		this.m_iScrollX = this.f_scrollLeft();
-		this.m_iScrollY = this.f_scrollTop();
 
 		$createSVGVML(this.m_Screen, this.m_Screen.style.width, this.m_Screen.style.height, true);
 
@@ -1179,16 +1169,20 @@ class InkBallGame {
 			this.m_Screen.onmousedown = this.OnMouseDown.bind(this);
 			this.m_Screen.onmousemove = this.OnMouseMove.bind(this);
 			this.m_Screen.onmouseup = this.OnMouseUp.bind(this);
-			window.onscroll = this.OnScroll.bind(this);
+
 			let button = document.getElementById('DrawMode');
 			button.onclick = this.OnDrawModeClick.bind(this);
 			button = document.getElementById('Cancel');
 			button.onclick = this.OnCancelClick.bind(this);
 
-			if (this.m_bIsPlayerActive)
+			if (this.m_bIsPlayerActive) {
 				this.ShowMobileStatus('Your move');
-			else
+				this.m_Screen.style.cursor = 'crosshair';
+			}
+			else {
 				this.ShowMobileStatus('Waiting for oponent move');
+				this.m_Screen.style.cursor = 'not-allowed';
+			}
 		}
 	}
 }
