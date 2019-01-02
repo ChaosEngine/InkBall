@@ -3,7 +3,7 @@
 @inject Microsoft.Extensions.Options.IOptions<InkBallOptions> commonUIConfigureOptions
 @model GamesModel
 @{
-	ViewData["Title"] = "Games";
+	ViewData["Title"] = "Game list";
 
 	DefineSection(commonUIConfigureOptions.Value.HeadElementsSectionName, async () =>
 	{
