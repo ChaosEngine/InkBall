@@ -204,7 +204,7 @@ class InkBallGame {
 		this.m_Lines = new Array();
 		this.m_Points = new Array();
 		this.m_bViewOnly = bViewOnly;
-		this.m_MouseOval = null;
+		this.m_MouseCursorOval = null;
 
 		if (sHubName === null || sHubName === "") return;
 
@@ -218,15 +218,16 @@ class InkBallGame {
 			.build();
 
 		this.g_SignalRConnection.onclose(async (err) => {
-			if (err !== null) {
+			if (err !== null && err !== undefined) {
 				console.log(err);
 
+				this.m_Screen.style.cursor = "not-allowed";
 				if (this.iConnErrCount < 5)//exponential back-off
 					this.iConnErrCount++;
 				setTimeout(() => this.start(), 4000 + (this.iExponentialBackOffMillis * this.iConnErrCount));
 			}
-			else
-				await this.start();
+			// else
+			// 	await this.start();
 		});
 	}
 
@@ -239,6 +240,7 @@ class InkBallGame {
 		catch (err) {
 			console.log(err + '; iConnErrCount = ' + this.iConnErrCount);
 
+			this.m_Screen.style.cursor = "not-allowed";
 			if (this.iConnErrCount < 5)//exponential back-off
 				this.iConnErrCount++;
 			setTimeout(() => this.start(), 4000 + (this.iExponentialBackOffMillis * this.iConnErrCount));
@@ -275,12 +277,12 @@ class InkBallGame {
 			if (this.g_iPlayerID != point.iPlayerId) {
 				this.m_bIsPlayerActive = true;
 				this.ShowMobileStatus('Oponent has moved, your turn');
-				this.m_Screen.style.cursor = 'crosshair';
+				this.m_Screen.style.cursor = "crosshair";
 			}
 			else {
 				this.m_bIsPlayerActive = false;
 				this.ShowMobileStatus('Waiting for oponent move');
-				this.m_Screen.style.cursor = 'not-allowed';
+				this.m_Screen.style.cursor = "wait";
 			}
 			this.m_bHandlingEvent = false;
 
@@ -342,6 +344,13 @@ class InkBallGame {
 		}.bind(this), false);
 
 		this.start();
+	}
+
+	StopSignalRConnection() {
+		if (this.g_SignalRConnection !== null) {
+			this.g_SignalRConnection.stop();
+			console.log('Stopped SignalR connection');
+		}
 	}
 
 	Debug(...args) {
@@ -890,17 +899,17 @@ class InkBallGame {
 		let x = (event ? event.clientX : window.event.clientX) - this.m_Screen.offsetLeft + this.f_scrollLeft();
 		let y = (event ? event.clientY : window.event.clientY) - this.m_Screen.offsetTop + this.f_scrollTop();
 
-		if (this.m_MouseOval == null) {
-			this.m_MouseOval = $createOval(this.m_PointRadius, 'true');
-			this.m_MouseOval.$SetFillColor(this.m_sDotColor);
-			this.m_MouseOval.$strokeColor(this.m_sDotColor);
+		if (this.m_MouseCursorOval == null) {
+			this.m_MouseCursorOval = $createOval(this.m_PointRadius, 'true');
+			this.m_MouseCursorOval.$SetFillColor(this.m_sDotColor);
+			this.m_MouseCursorOval.$strokeColor(this.m_sDotColor);
+			this.m_MouseCursorOval.$SetZIndex(-1);
 		}
 		x = parseInt(x / this.m_iGridSize + 0.5) * this.m_iGridSize;
 		y = parseInt(y / this.m_iGridSize + 0.5) * this.m_iGridSize;
 
-		this.m_MouseOval.$move(x, y, this.m_PointRadius);
-		//this.Debug(`OnMouseOver x = ${(x)} y = ${(y)}`, 1);
-		this.m_Screen.style.cursor = 'crosshair';
+		this.m_MouseCursorOval.$move(x, y, this.m_PointRadius);
+		this.m_Screen.style.cursor = "crosshair";
 
 		if (this.m_bDrawLines) {
 			//lines
@@ -1177,11 +1186,11 @@ class InkBallGame {
 
 			if (this.m_bIsPlayerActive) {
 				this.ShowMobileStatus('Your move');
-				this.m_Screen.style.cursor = 'crosshair';
+				this.m_Screen.style.cursor = "crosshair";
 			}
 			else {
 				this.ShowMobileStatus('Waiting for oponent move');
-				this.m_Screen.style.cursor = 'not-allowed';
+				this.m_Screen.style.cursor = "wait";
 			}
 		}
 	}

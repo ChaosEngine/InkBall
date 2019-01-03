@@ -77,7 +77,7 @@ if (SVG) {
 		var o = document.createElementNS(svgNS, "circle");
 		o.setAttribute("shape-rendering", svgAntialias ? "auto" : "optimizeSpeed");
 		o.setAttribute("stroke-width", 0);
-		o.setAttribute("r", Math.round(diam / 2));
+		o.setAttribute("r", Math.round(diam > 1));
 		//ch_commented o.style.cursor = "pointer";
 		//ch_added
 		o.m_iStatus = -1;
@@ -95,6 +95,8 @@ if (SVG) {
 		o.$SetFillColor = function (col) { this.setAttribute("fill", col); };
 		o.$SetStatus = function (iStatus) { this.m_iStatus = iStatus; };
 		o.$GetStatus = function () { return this.m_iStatus; };
+		o.$GetZIndex = function () { return this.getAttribute("z-index"); };
+		o.$SetZIndex = function (val) { this.setAttribute("z-index", val); };
 		//ch_added/changed end
 		o.$strokeWeight = function (sw) { this.setAttribute("stroke-width", sw); };
 		cont.appendChild(o);
@@ -194,6 +196,8 @@ if (SVG) {
 		o.$SetFillColor = function (col) { this.fillcolor = col; };
 		o.$SetStatus = function (iStatus) { this.m_iStatus = iStatus; };
 		o.$GetStatus = function () { return this.m_iStatus; };
+		o.$GetZIndex = function () { return this.getAttribute("z-index"); };
+		o.$SetZIndex = function (val) { this.setAttribute("z-index", val); };
 		//ch_added/changed end
 		o.$strokeWeight = function (sw) { this.strokeweight = sw; };
 		cont.appendChild(o);

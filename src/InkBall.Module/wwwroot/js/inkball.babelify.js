@@ -298,7 +298,7 @@ var InkBallGame = function () {
     this.m_Lines = new Array();
     this.m_Points = new Array();
     this.m_bViewOnly = bViewOnly;
-    this.m_MouseOval = null;
+    this.m_MouseCursorOval = null;
     if (sHubName === null || sHubName === "") return;
     this.g_SignalRConnection = new signalR.HubConnectionBuilder().withUrl(sHubName, {
       transport: transportType,
@@ -310,24 +310,16 @@ var InkBallGame = function () {
           while (1) {
             switch (_context.prev = _context.next) {
               case 0:
-                if (!(err !== null)) {
-                  _context.next = 6;
-                  break;
+                if (err !== null && err !== undefined) {
+                  console.log(err);
+                  _this.m_Screen.style.cursor = "not-allowed";
+                  if (_this.iConnErrCount < 5) _this.iConnErrCount++;
+                  setTimeout(function () {
+                    return _this.start();
+                  }, 4000 + _this.iExponentialBackOffMillis * _this.iConnErrCount);
                 }
 
-                console.log(err);
-                if (_this.iConnErrCount < 5) _this.iConnErrCount++;
-                setTimeout(function () {
-                  return _this.start();
-                }, 4000 + _this.iExponentialBackOffMillis * _this.iConnErrCount);
-                _context.next = 8;
-                break;
-
-              case 6:
-                _context.next = 8;
-                return _this.start();
-
-              case 8:
+              case 1:
               case "end":
                 return _context.stop();
             }
@@ -358,19 +350,20 @@ var InkBallGame = function () {
               case 3:
                 this.iConnErrCount = 0;
                 console.log('connected; iConnErrCount = ' + this.iConnErrCount);
-                _context2.next = 12;
+                _context2.next = 13;
                 break;
 
               case 7:
                 _context2.prev = 7;
                 _context2.t0 = _context2["catch"](0);
                 console.log(_context2.t0 + '; iConnErrCount = ' + this.iConnErrCount);
+                this.m_Screen.style.cursor = "not-allowed";
                 if (this.iConnErrCount < 5) this.iConnErrCount++;
                 setTimeout(function () {
                   return _this2.start();
                 }, 4000 + this.iExponentialBackOffMillis * this.iConnErrCount);
 
-              case 12:
+              case 13:
               case "end":
                 return _context2.stop();
             }
@@ -403,11 +396,11 @@ var InkBallGame = function () {
         if (this.g_iPlayerID != point.iPlayerId) {
           this.m_bIsPlayerActive = true;
           this.ShowMobileStatus('Oponent has moved, your turn');
-          this.m_Screen.style.cursor = 'crosshair';
+          this.m_Screen.style.cursor = "crosshair";
         } else {
           this.m_bIsPlayerActive = false;
           this.ShowMobileStatus('Waiting for oponent move');
-          this.m_Screen.style.cursor = 'not-allowed';
+          this.m_Screen.style.cursor = "wait";
         }
 
         this.m_bHandlingEvent = false;
@@ -451,6 +444,14 @@ var InkBallGame = function () {
         }
       }.bind(this), false);
       this.start();
+    }
+  }, {
+    key: "StopSignalRConnection",
+    value: function StopSignalRConnection() {
+      if (this.g_SignalRConnection !== null) {
+        this.g_SignalRConnection.stop();
+        console.log('Stopped SignalR connection');
+      }
     }
   }, {
     key: "Debug",
@@ -948,16 +949,17 @@ var InkBallGame = function () {
       var x = (event ? event.clientX : window.event.clientX) - this.m_Screen.offsetLeft + this.f_scrollLeft();
       var y = (event ? event.clientY : window.event.clientY) - this.m_Screen.offsetTop + this.f_scrollTop();
 
-      if (this.m_MouseOval == null) {
-        this.m_MouseOval = $createOval(this.m_PointRadius, 'true');
-        this.m_MouseOval.$SetFillColor(this.m_sDotColor);
-        this.m_MouseOval.$strokeColor(this.m_sDotColor);
+      if (this.m_MouseCursorOval == null) {
+        this.m_MouseCursorOval = $createOval(this.m_PointRadius, 'true');
+        this.m_MouseCursorOval.$SetFillColor(this.m_sDotColor);
+        this.m_MouseCursorOval.$strokeColor(this.m_sDotColor);
+        this.m_MouseCursorOval.$SetZIndex(-1);
       }
 
       x = parseInt(x / this.m_iGridSize + 0.5) * this.m_iGridSize;
       y = parseInt(y / this.m_iGridSize + 0.5) * this.m_iGridSize;
-      this.m_MouseOval.$move(x, y, this.m_PointRadius);
-      this.m_Screen.style.cursor = 'crosshair';
+      this.m_MouseCursorOval.$move(x, y, this.m_PointRadius);
+      this.m_Screen.style.cursor = "crosshair";
 
       if (this.m_bDrawLines) {
         if (this.m_bMouseDown == true && (this.m_iLastX != x || this.m_iLastY != y) && Math.abs(parseInt(this.m_iLastX - x)) <= 1 && Math.abs(parseInt(this.m_iLastY - y)) <= 1 && this.m_iLastX >= 0 && this.m_iLastY >= 0) {
@@ -1200,10 +1202,10 @@ var InkBallGame = function () {
 
         if (this.m_bIsPlayerActive) {
           this.ShowMobileStatus('Your move');
-          this.m_Screen.style.cursor = 'crosshair';
+          this.m_Screen.style.cursor = "crosshair";
         } else {
           this.ShowMobileStatus('Waiting for oponent move');
-          this.m_Screen.style.cursor = 'not-allowed';
+          this.m_Screen.style.cursor = "wait";
         }
       }
     }

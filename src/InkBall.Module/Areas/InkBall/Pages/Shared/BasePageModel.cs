@@ -93,7 +93,7 @@ namespace InkBall.Module.Pages
 			if (user == null)
 				return null;
 
-			if (user.InkBallPlayer != null)
+			if (user.InkBallPlayer?.Count > 0)
 			{
 				return user.InkBallPlayer.FirstOrDefault();
 			}
