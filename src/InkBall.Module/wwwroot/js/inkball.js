@@ -22,7 +22,6 @@ const CommandKindEnum = Object.freeze({
 
 class InkBallPointViewModel {
 	constructor(iId = 0, iGameId = 0, iPlayerId = 0, iX = 0, iY = 0, Status = StatusEnum.POINT_FREE, iEnclosingPathId = 0) {
-
 		this.iId = iId;
 		this.iGameId = iGameId;
 		this.iPlayerId = iPlayerId;
@@ -41,7 +40,6 @@ class InkBallPointViewModel {
 
 class InkBallPathViewModel {
 	constructor(iId = 0, iGameId = 0, iPlayerId = 0, sPointsAsString = '', sOwnedPointsAsString = '') {
-
 		this.iId = iId;
 		this.iGameId = iGameId;
 		this.iPlayerId = iPlayerId;
@@ -50,7 +48,7 @@ class InkBallPathViewModel {
 	}
 
 	static Format(sUser, path) {
-		let msg = path.iPlayerID + "    " + path.sPointsAsString + "     " + path.sOwnedPointsAsString;
+		let msg = path.iPlayerID + " " + path.sPointsAsString + " " + path.sOwnedPointsAsString;
 
 		return sUser + " places [" + msg + "] path";
 	}
@@ -269,9 +267,7 @@ class InkBallGame {
 			document.querySelector(sMsgListSel).appendChild(li);
 
 
-			let x = point.iX;
-			let y = point.iY;
-			let iStatus = point.Status;
+			let x = point.iX, y = point.iY, iStatus = point.Status;
 
 			this.SetPoint(x, y, iStatus);
 			if (this.g_iPlayerID != point.iPlayerId) {
@@ -285,8 +281,68 @@ class InkBallGame {
 				this.m_Screen.style.cursor = "wait";
 			}
 			this.m_bHandlingEvent = false;
-
 		}.bind(this));
+
+		this.g_SignalRConnection.on("ServerToClientPath", function (path, user) {
+
+			let encodedMsg = InkBallPathViewModel.Format(user, path);
+
+			let li = document.createElement("li");
+			li.textContent = encodedMsg;
+			document.querySelector(sMsgListSel).appendChild(li);
+
+			if (this.g_iPlayerID != path.iPlayerId) {
+
+				let str_path = path.sPointsAsString, owned = path.sOwnedPointsAsString;
+
+				this.SetPath(str_path,
+					(this.m_sDotColor == this.COLOR_RED ? true : false), false);
+
+				let points = owned.split(" ");
+				let count = points.length;
+				let point_status = (this.m_sDotColor == this.COLOR_RED ? this.POINT_OWNED_BY_RED : this.POINT_OWNED_BY_BLUE);
+				let sOwnedCol = (this.m_sDotColor == this.COLOR_RED ? this.COLOR_OWNED_BLUE : this.COLOR_OWNED_RED);
+				for (let i = 0; i < count; ++i) {
+					let p = points[i].split(",");
+					let x = parseInt(p[0]), y = parseInt(p[1]);
+					p = this.m_Points[y * this.m_iGridWidth + x];
+					if (p != null) {
+						p.$SetStatus(point_status);
+						p.$SetFillColor(sOwnedCol);
+						p.$strokeColor(sOwnedCol);
+					}
+				}
+
+
+				this.m_bIsPlayerActive = true;
+				this.ShowMobileStatus('Oponent has moved, your turn');
+				this.m_Screen.style.cursor = "crosshair";
+			}
+			else {
+
+				//set starting point to POINT_IN_PATH to block further path closing with it
+				let points = this.m_Line.$GetPoints();
+				//var y = points[0].split(",");
+				//var x = y[0];	y = y[1];
+				let i = 0;
+				let x = points[i], y = points[i + 1];
+				x /= this.m_iGridSize; y /= this.m_iGridSize;
+				let p0 = this.m_Points[y * this.m_iGridWidth + x];
+				if (p0 != null)
+					p0.$SetStatus(this.POINT_IN_PATH);
+
+				this.m_Lines[this.m_Lines.length] = this.m_Line;
+				this.m_iLastX = this.m_iLastY = -1;
+				this.m_Line = null;
+
+
+				this.m_bIsPlayerActive = false;
+				this.ShowMobileStatus('Waiting for oponent move');
+				this.m_Screen.style.cursor = "wait";
+			}
+			this.m_bHandlingEvent = false;
+		}.bind(this));
+
 		this.g_SignalRConnection.on("ServerToClientPlayerJoin", function (join) {
 
 			let encodedMsg = PlayerJoiningCommand.Format(join);
@@ -297,8 +353,8 @@ class InkBallGame {
 			//TODO: implement some UI logic
 			this.m_Player2Name.innerHTML = join.OtherPlayerName;
 			this.m_bHandlingEvent = false;
-
 		}.bind(this));
+
 		this.g_SignalRConnection.on("ServerToClientPlayerSurrender", function (surrender) {
 
 			let encodedMsg = PlayerSurrenderingCommand.Format(surrender);
@@ -311,8 +367,8 @@ class InkBallGame {
 			this.m_bHandlingEvent = false;
 			alert(encodedMsg == '' ? 'Game interrupted!' : encodedMsg);
 			window.location.href = "Games";
-
 		}.bind(this));
+
 		this.g_SignalRConnection.on("ServerToClientPing", function (ping, user) {
 
 			let encodedMsg = PingCommand.Format(user, ping);
@@ -321,7 +377,6 @@ class InkBallGame {
 			li.textContent = encodedMsg;
 			document.querySelector(sMsgListSel).appendChild(li);
 		}.bind(this));
-
 
 		document.querySelector(sMsgSendButtonSel).addEventListener("click", function (event) {
 			let message = document.querySelector(sMsgInputSel).value;
@@ -333,6 +388,7 @@ class InkBallGame {
 			});
 			event.preventDefault();
 		}.bind(this), false);
+
 		// Execute a function when the user releases a key on the keyboard
 		document.querySelector(sMsgInputSel).addEventListener("keyup", function (event) {
 			event.preventDefault();// Cancel the default action, if needed
@@ -495,11 +551,17 @@ class InkBallGame {
 		this.m_Points[iY * this.m_iGridWidth + iX] = oval;
 	}
 
-	SetPath(Points, bIsRed, bBelong2ThisPlayer) {
-		Points = Points.split(" ");
-		let count = Points.length, sDelimiter = "", p = null, sPathPoints = "";
+	SetAllPoints(points) {
+		points.forEach(p => {
+			this.SetPoint(p[0], p[1], p[2])
+		});
+	}
+
+	SetPath(sPoints, bIsRed, bBelong2ThisPlayer) {
+		sPoints = sPoints.split(" ");
+		let count = sPoints.length, sDelimiter = "", sPathPoints = "", p = null, x, y;
 		for (let i = 0; i < count; ++i) {
-			p = Points[i].split(",");
+			p = sPoints[i].split(",");
 			x = parseInt(p[0]); y = parseInt(p[1]);
 			x *= this.m_iGridSize; y *= this.m_iGridSize;
 			sPathPoints = sPathPoints + sDelimiter + x + "," + y;
@@ -508,7 +570,7 @@ class InkBallGame {
 			p = this.m_Points[y * this.m_iGridWidth + x];
 			if (p != null) p.$SetStatus(this.POINT_IN_PATH);
 		}
-		p = Points[0].split(",");
+		p = sPoints[0].split(",");
 		x = parseInt(p[0]); y = parseInt(p[1]);
 		x *= this.m_iGridSize; y *= this.m_iGridSize;
 		sPathPoints = sPathPoints + sDelimiter + x + "," + y;
@@ -518,6 +580,12 @@ class InkBallGame {
 		let line = $createPolyline(3, sPathPoints,
 			(bBelong2ThisPlayer ? this.m_sDotColor : (bIsRed ? this.COLOR_BLUE : this.COLOR_RED)));
 		this.m_Lines[this.m_Lines.length] = line;
+	}
+
+	SetAllPaths(paths) {
+		paths.forEach(p => {
+			this.SetPath(p[0], p[1], p[2]);
+		});
 	}
 
 	IsPointBelongingToLine(sPoints, iX, iY) {
@@ -563,14 +631,12 @@ class InkBallGame {
 		//alert('s' + points + 'e' + ' count = ' + count);
 		let xs = Array(), ys = Array(), x, y, sPathPoints = "", sDelimiter = "", k = 0;
 		for (let i = 0; i < count; i += 2) {
-			//y = points[i].split(",");
-			//x = y[0];	y = y[1];
 			x = points[i];
 			y = points[i + 1];
-			//alert('x = ' + x + ' y = ' + y);
 			if (x == null || y == null) continue;
 			x /= this.m_iGridSize; y /= this.m_iGridSize;
 			xs[k] = x; ys[k] = y;
+
 			sPathPoints = sPathPoints + sDelimiter + x + "," + y;
 			sDelimiter = " ";
 			++k;
@@ -596,6 +662,7 @@ class InkBallGame {
 					p0.$SetStatus(owned_by);
 					p0.$SetFillColor(sOwnedCol);
 					p0.$strokeColor(sOwnedCol);
+
 					sOwnedPoints = sOwnedPoints + sDelimiter + x + "," + y;
 					sDelimiter = " ";
 				}
@@ -637,21 +704,27 @@ class InkBallGame {
 	}
 
 	CreateXMLPutPointRequest(iX, iY) {
-		//let sRet = `<PutPoint><Point x='${iX}' y='${iY}' /></PutPoint>`;
-		//return sRet;
 		let cmd = new InkBallPointViewModel(0, this.g_iGameID, this.g_iPlayerID, iX, iY,
 			this.m_bIsPlayingWithRed ? StatusEnum.POINT_FREE_RED : StatusEnum.POINT_FREE_BLUE,
 			0);
 		return cmd;
 	}
 
-	CreateXMLPutPathRequest(sPathPoints, sOwnedPoints) {
+	/**
+	 * Create transferable object holding path points creating it as well as owned points by it
+	 * @param {object} dto with path, owned
+	 */
+	CreateXMLPutPathRequest(dto) {
 		//let sRet = `<PutPath><Path>${sPathPoints}</Path><Owned>${sOwnedPoints}</Owned></PutPath>`;
 		//return sRet;
-		let cmd = new InkBallPathViewModel(0, this.g_iGameID, this.g_iPlayerID, sPathPoints, sOwnedPoints);
+		let cmd = new InkBallPathViewModel(0, this.g_iGameID, this.g_iPlayerID, dto.path, dto.owned);
 		return cmd;
 	}
 
+	/**
+	 * Send data through signalR
+	 * @param {object} payload transferrableObject (DTO)
+	 */
 	SendAsyncData(payload) {
 		//if (sData.length == 0) return;
 		// if(g_XmlHttp == null)
@@ -672,16 +745,25 @@ class InkBallGame {
 		switch (payload.constructor.name) {
 
 			case "InkBallPointViewModel":
-				console.log(InkBallPointViewModel.Format('some player', payload));
+				//console.log(InkBallPointViewModel.Format('some player', payload));
 				this.m_bHandlingEvent = true;
 
 				this.g_SignalRConnection.invoke("ClientToServerPoint", payload).catch(function (err) {
 					return console.error(err.toString());
 				});
+				break;
 
+			case "InkBallPathViewModel":
+				console.log(InkBallPathViewModel.Format('some player', payload));
+				this.m_bHandlingEvent = true;
+
+				this.g_SignalRConnection.invoke("ClientToServerPath", payload).catch(function (err) {
+					return console.error(err.toString());
+				});
 				break;
 
 			default:
+				console.log('unknown object');
 				break;
 		}
 	}
@@ -896,8 +978,8 @@ class InkBallGame {
 			return;
 
 
-		let x = (event ? event.clientX : window.event.clientX) - this.m_Screen.offsetLeft + this.f_scrollLeft();
-		let y = (event ? event.clientY : window.event.clientY) - this.m_Screen.offsetTop + this.f_scrollTop();
+		let x = (event ? event.clientX : window.event.clientX) - this.m_Screen.offsetLeft + this.f_scrollLeft() + 0.5 * this.m_iGridSize;
+		let y = (event ? event.clientY : window.event.clientY) - this.m_Screen.offsetTop + this.f_scrollTop() + 0.5 * this.m_iGridSize;
 
 		if (this.m_MouseCursorOval == null) {
 			this.m_MouseCursorOval = $createOval(this.m_PointRadius, 'true');
@@ -905,27 +987,25 @@ class InkBallGame {
 			this.m_MouseCursorOval.$strokeColor(this.m_sDotColor);
 			this.m_MouseCursorOval.$SetZIndex(-1);
 		}
-		x = parseInt(x / this.m_iGridSize + 0.5) * this.m_iGridSize;
-		y = parseInt(y / this.m_iGridSize + 0.5) * this.m_iGridSize;
+		x = parseInt(x / this.m_iGridSize);
+		y = parseInt(y / this.m_iGridSize);
+		let tox = x * this.m_iGridSize;
+		let toy = y * this.m_iGridSize;
 
-		this.m_MouseCursorOval.$move(x, y, this.m_PointRadius);
+		this.m_MouseCursorOval.$move(tox, toy, this.m_PointRadius);
 		this.m_Screen.style.cursor = "crosshair";
 
 		if (this.m_bDrawLines) {
 			//lines
 			if (this.m_bMouseDown == true && (this.m_iLastX != x || this.m_iLastY != y) &&
-				(Math.abs(parseInt(this.m_iLastX - x)) <= 1 &&
-					Math.abs(parseInt(this.m_iLastY - y)) <= 1) &&
+				(Math.abs(parseInt(this.m_iLastX - x)) <= 1 && Math.abs(parseInt(this.m_iLastY - y)) <= 1) &&
 				this.m_iLastX >= 0 && this.m_iLastY >= 0) {
 				if (this.m_Line != null) {
 					let p0 = this.m_Points[this.m_iLastY * this.m_iGridWidth + this.m_iLastX];
 					let p1 = this.m_Points[y * this.m_iGridWidth + x];
 
 					if (p0 != null && p1 != null && (p1.$GetStatus() != this.POINT_IN_PATH) &&
-						p0.$GetFillColor() == this.m_sDotColor &&
-						p1.$GetFillColor() == this.m_sDotColor) {
-						let tox = x * this.m_iGridSize;
-						let toy = y * this.m_iGridSize;
+						p0.$GetFillColor() == this.m_sDotColor && p1.$GetFillColor() == this.m_sDotColor) {
 						this.m_Line.$AppendPoints(tox + "," + toy);
 						if (p1.$GetStatus() != this.POINT_STARTING)
 							p1.$SetStatus(this.POINT_IN_PATH);
@@ -934,7 +1014,7 @@ class InkBallGame {
 							if (val.owned.length > 0) {
 								this.m_Line.$SetIsClosed(true);
 								this.Debug('Closing path', 0);
-								this.SendAsyncData(this.CreateXMLPutPathRequest(val.path, val.owned));
+								this.SendAsyncData(this.CreateXMLPutPathRequest(val));
 							}
 							else
 								this.Debug('Wrong path, cancell it or refresh page', 0);
@@ -948,14 +1028,11 @@ class InkBallGame {
 					let p0 = this.m_Points[this.m_iLastY * this.m_iGridWidth + this.m_iLastX];
 					let p1 = this.m_Points[y * this.m_iGridWidth + x];
 
-					if (p0 != null && p1 != null && (p0.$GetStatus() != this.POINT_IN_PATH &&
-						p1.$GetStatus() != this.POINT_IN_PATH) &&
-						p0.$GetFillColor() == this.m_sDotColor &&
-						p1.$GetFillColor() == this.m_sDotColor) {
+					if (p0 != null && p1 != null &&
+						(p0.$GetStatus() != this.POINT_IN_PATH && p1.$GetStatus() != this.POINT_IN_PATH) &&
+						p0.$GetFillColor() == this.m_sDotColor && p1.$GetFillColor() == this.m_sDotColor) {
 						let fromx = this.m_iLastX * this.m_iGridSize;
 						let fromy = this.m_iLastY * this.m_iGridSize;
-						let tox = x * this.m_iGridSize;
-						let toy = y * this.m_iGridSize;
 						this.m_Line = $createPolyline(3, fromx + "," + fromy + " " + tox + "," + toy, this.m_sDotColor);
 						if (p0.$GetStatus() != this.POINT_IN_PATH)
 							p0.$SetStatus(this.POINT_STARTING);
@@ -1000,16 +1077,14 @@ class InkBallGame {
 			//lines
 			//this.Debug('m_iMouseX = '+this.m_iMouseX+' m_iMouseY = '+this.m_iMouseY, 1);
 			if ( /*this.m_bMouseDown == true && */(this.m_iLastX != x || this.m_iLastY != y) &&
-				(Math.abs(parseInt(this.m_iLastX - x)) <= 1 &&
-					Math.abs(parseInt(this.m_iLastY - y)) <= 1) &&
+				(Math.abs(parseInt(this.m_iLastX - x)) <= 1 && Math.abs(parseInt(this.m_iLastY - y)) <= 1) &&
 				this.m_iLastX >= 0 && this.m_iLastY >= 0) {
 				if (this.m_Line != null) {
 					let p0 = this.m_Points[this.m_iLastY * this.m_iGridWidth + this.m_iLastX];
 					let p1 = this.m_Points[y * this.m_iGridWidth + x];
 
 					if (p0 != null && p1 != null && (p1.$GetStatus() != this.POINT_IN_PATH) &&
-						p0.$GetFillColor() == this.m_sDotColor &&
-						p1.$GetFillColor() == this.m_sDotColor) {
+						p0.$GetFillColor() == this.m_sDotColor && p1.$GetFillColor() == this.m_sDotColor) {
 						let tox = x * this.m_iGridSize;
 						let toy = y * this.m_iGridSize;
 						this.m_Line.$AppendPoints(tox + "," + toy);
@@ -1020,7 +1095,7 @@ class InkBallGame {
 							if (val.owned.length > 0) {
 								this.m_Line.$SetIsClosed(true);
 								this.Debug('Closing path', 0);
-								this.SendAsyncData(this.CreateXMLPutPathRequest(val.path, val.owned));
+								this.SendAsyncData(this.CreateXMLPutPathRequest(val));
 							}
 							else
 								this.Debug('Wrong path, cancell it or refresh page', 0);
@@ -1036,8 +1111,7 @@ class InkBallGame {
 
 					if (p0 != null && p1 != null && (p0.$GetStatus() != this.POINT_IN_PATH &&
 						p1.$GetStatus() != this.POINT_IN_PATH) &&
-						p0.$GetFillColor() == this.m_sDotColor &&
-						p1.$GetFillColor() == this.m_sDotColor) {
+						p0.$GetFillColor() == this.m_sDotColor && p1.$GetFillColor() == this.m_sDotColor) {
 						let fromx = this.m_iLastX * this.m_iGridSize;
 						let fromy = this.m_iLastY * this.m_iGridSize;
 						let tox = x * this.m_iGridSize;

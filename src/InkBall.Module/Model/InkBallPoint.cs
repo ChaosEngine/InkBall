@@ -81,8 +81,7 @@ namespace InkBall.Module.Model
 		public int? iEnclosingPathId { get; set; }
 
 		public InkBallPointViewModel()
-		{
-		}
+		{ }
 
 		public InkBallPointViewModel(InkBallPoint point)
 		{

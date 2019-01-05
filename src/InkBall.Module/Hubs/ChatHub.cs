@@ -383,14 +383,18 @@ namespace InkBall.Module.Hubs
 
 			await LoadGameAndPlayerStructures(token);
 
-
-
 			if (ThisGame == null || ThisPlayer == null || OtherPlayer == null || string.IsNullOrEmpty(OtherUserIdentifier)
 				|| string.IsNullOrEmpty(ThisUserName))
+			{
+				_logger.LogWarning("something bad ThisGame == null || ThisPlayer == null || OtherPlayer == null || " +
+					"string.IsNullOrEmpty(OtherUserIdentifier) || string.IsNullOrEmpty(ThisUserName)");
 				return;
+			}
 
 			try
 			{
+				var current_player_color = ThisGame.IsThisPlayerPlayingWithRed() ? InkBallPoint.StatusEnum.POINT_FREE_RED : InkBallPoint.StatusEnum.POINT_FREE_BLUE;
+
 				if (path == null || path.iPlayerId <= 0 || path.iGameId <= 0 || path.iGameId != ThisGame.iId)
 					throw new ArgumentException("bad path");
 				if (path.iPlayerId != ThisPlayer.iId && path.iPlayerId != OtherPlayer.iId)

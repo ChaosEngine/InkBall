@@ -80,7 +80,7 @@ var InkBallPathViewModel = function () {
   _createClass(InkBallPathViewModel, null, [{
     key: "Format",
     value: function Format(sUser, path) {
-      var msg = path.iPlayerID + "    " + path.sPointsAsString + "     " + path.sOwnedPointsAsString;
+      var msg = path.iPlayerID + " " + path.sPointsAsString + " " + path.sOwnedPointsAsString;
       return sUser + " places [" + msg + "] path";
     }
   }]);
@@ -388,9 +388,9 @@ var InkBallGame = function () {
         var li = document.createElement("li");
         li.textContent = encodedMsg;
         document.querySelector(sMsgListSel).appendChild(li);
-        var x = point.iX;
-        var y = point.iY;
-        var iStatus = point.Status;
+        var x = point.iX,
+            y = point.iY,
+            iStatus = point.Status;
         this.SetPoint(x, y, iStatus);
 
         if (this.g_iPlayerID != point.iPlayerId) {
@@ -398,6 +398,58 @@ var InkBallGame = function () {
           this.ShowMobileStatus('Oponent has moved, your turn');
           this.m_Screen.style.cursor = "crosshair";
         } else {
+          this.m_bIsPlayerActive = false;
+          this.ShowMobileStatus('Waiting for oponent move');
+          this.m_Screen.style.cursor = "wait";
+        }
+
+        this.m_bHandlingEvent = false;
+      }.bind(this));
+      this.g_SignalRConnection.on("ServerToClientPath", function (path, user) {
+        var encodedMsg = InkBallPathViewModel.Format(user, path);
+        var li = document.createElement("li");
+        li.textContent = encodedMsg;
+        document.querySelector(sMsgListSel).appendChild(li);
+
+        if (this.g_iPlayerID != path.iPlayerId) {
+          var str_path = path.sPointsAsString,
+              owned = path.sOwnedPointsAsString;
+          this.SetPath(str_path, this.m_sDotColor == this.COLOR_RED ? true : false, false);
+          var points = owned.split(" ");
+          var count = points.length;
+          var point_status = this.m_sDotColor == this.COLOR_RED ? this.POINT_OWNED_BY_RED : this.POINT_OWNED_BY_BLUE;
+          var sOwnedCol = this.m_sDotColor == this.COLOR_RED ? this.COLOR_OWNED_BLUE : this.COLOR_OWNED_RED;
+
+          for (var _i2 = 0; _i2 < count; ++_i2) {
+            var p = points[_i2].split(",");
+
+            var x = parseInt(p[0]),
+                y = parseInt(p[1]);
+            p = this.m_Points[y * this.m_iGridWidth + x];
+
+            if (p != null) {
+              p.$SetStatus(point_status);
+              p.$SetFillColor(sOwnedCol);
+              p.$strokeColor(sOwnedCol);
+            }
+          }
+
+          this.m_bIsPlayerActive = true;
+          this.ShowMobileStatus('Oponent has moved, your turn');
+          this.m_Screen.style.cursor = "crosshair";
+        } else {
+          var _points = this.m_Line.$GetPoints();
+
+          var _i3 = 0;
+          var _x2 = _points[_i3],
+              _y = _points[_i3 + 1];
+          _x2 /= this.m_iGridSize;
+          _y /= this.m_iGridSize;
+          var p0 = this.m_Points[_y * this.m_iGridWidth + _x2];
+          if (p0 != null) p0.$SetStatus(this.POINT_IN_PATH);
+          this.m_Lines[this.m_Lines.length] = this.m_Line;
+          this.m_iLastX = this.m_iLastY = -1;
+          this.m_Line = null;
           this.m_bIsPlayerActive = false;
           this.ShowMobileStatus('Waiting for oponent move');
           this.m_Screen.style.cursor = "wait";
@@ -582,16 +634,27 @@ var InkBallGame = function () {
       this.m_Points[iY * this.m_iGridWidth + iX] = oval;
     }
   }, {
-    key: "SetPath",
-    value: function SetPath(Points, bIsRed, bBelong2ThisPlayer) {
-      Points = Points.split(" ");
-      var count = Points.length,
-          sDelimiter = "",
-          p = null,
-          sPathPoints = "";
+    key: "SetAllPoints",
+    value: function SetAllPoints(points) {
+      var _this3 = this;
 
-      for (var _i2 = 0; _i2 < count; ++_i2) {
-        p = Points[_i2].split(",");
+      points.forEach(function (p) {
+        _this3.SetPoint(p[0], p[1], p[2]);
+      });
+    }
+  }, {
+    key: "SetPath",
+    value: function SetPath(sPoints, bIsRed, bBelong2ThisPlayer) {
+      sPoints = sPoints.split(" ");
+      var count = sPoints.length,
+          sDelimiter = "",
+          sPathPoints = "",
+          p = null,
+          x,
+          y;
+
+      for (var _i4 = 0; _i4 < count; ++_i4) {
+        p = sPoints[_i4].split(",");
         x = parseInt(p[0]);
         y = parseInt(p[1]);
         x *= this.m_iGridSize;
@@ -602,7 +665,7 @@ var InkBallGame = function () {
         if (p != null) p.$SetStatus(this.POINT_IN_PATH);
       }
 
-      p = Points[0].split(",");
+      p = sPoints[0].split(",");
       x = parseInt(p[0]);
       y = parseInt(p[1]);
       x *= this.m_iGridSize;
@@ -614,6 +677,15 @@ var InkBallGame = function () {
       this.m_Lines[this.m_Lines.length] = line;
     }
   }, {
+    key: "SetAllPaths",
+    value: function SetAllPaths(paths) {
+      var _this4 = this;
+
+      paths.forEach(function (p) {
+        _this4.SetPath(p[0], p[1], p[2]);
+      });
+    }
+  }, {
     key: "IsPointBelongingToLine",
     value: function IsPointBelongingToLine(sPoints, iX, iY) {
       var count = sPoints.length,
@@ -621,8 +693,8 @@ var InkBallGame = function () {
           y,
           pnt;
 
-      for (var _i3 = 0; _i3 < count; ++_i3) {
-        pnt = sPoints[_i3].split(",");
+      for (var _i5 = 0; _i5 < count; ++_i5) {
+        pnt = sPoints[_i5].split(",");
         x = pnt[0];
         y = pnt[1];
         if (x == iX && y == iY) return true;
@@ -657,9 +729,9 @@ var InkBallGame = function () {
           sDelimiter = "",
           k = 0;
 
-      for (var _i4 = 0; _i4 < count; _i4 += 2) {
-        x = points[_i4];
-        y = points[_i4 + 1];
+      for (var _i6 = 0; _i6 < count; _i6 += 2) {
+        x = points[_i6];
+        y = points[_i6 + 1];
         if (x == null || y == null) continue;
         x /= this.m_iGridSize;
         y /= this.m_iGridSize;
@@ -681,8 +753,8 @@ var InkBallGame = function () {
       var sOwnedPoints = "";
       sDelimiter = "";
 
-      for (var _i5 = 0; _i5 < count1; ++_i5) {
-        var p0 = this.m_Points[_i5];
+      for (var _i7 = 0; _i7 < count1; ++_i7) {
+        var p0 = this.m_Points[_i7];
 
         if (p0 != null && p0.$GetStatus() == this.POINT_FREE && p0.$GetFillColor() == sColor) {
           var pos = p0.$GetPosition();
@@ -715,21 +787,20 @@ var InkBallGame = function () {
         var count = void 0,
             points = this.m_Lines[j].$GetPoints();
         count = points.length;
-
         var xs = Array(),
             ys = Array(),
-            _x2 = void 0,
-            _y = void 0,
+            x = void 0,
+            y = void 0,
             k = 0;
 
-        for (var _i6 = 0; _i6 < count; _i6 += 2) {
-          _x2 = points[_i6];
-          _y = points[_i6 + 1];
-          if (_x2 == null || _y == null) continue;
-          _x2 /= this.m_iGridSize;
-          _y /= this.m_iGridSize;
-          xs[k] = _x2;
-          ys[k] = _y;
+        for (var _i8 = 0; _i8 < count; _i8 += 2) {
+          x = points[_i8];
+          y = points[_i8 + 1];
+          if (x == null || y == null) continue;
+          x /= this.m_iGridSize;
+          y /= this.m_iGridSize;
+          xs[k] = x;
+          ys[k] = y;
           ++k;
         }
 
@@ -752,8 +823,8 @@ var InkBallGame = function () {
     }
   }, {
     key: "CreateXMLPutPathRequest",
-    value: function CreateXMLPutPathRequest(sPathPoints, sOwnedPoints) {
-      var cmd = new InkBallPathViewModel(0, this.g_iGameID, this.g_iPlayerID, sPathPoints, sOwnedPoints);
+    value: function CreateXMLPutPathRequest(dto) {
+      var cmd = new InkBallPathViewModel(0, this.g_iGameID, this.g_iPlayerID, dto.path, dto.owned);
       return cmd;
     }
   }, {
@@ -761,14 +832,22 @@ var InkBallGame = function () {
     value: function SendAsyncData(payload) {
       switch (payload.constructor.name) {
         case "InkBallPointViewModel":
-          console.log(InkBallPointViewModel.Format('some player', payload));
           this.m_bHandlingEvent = true;
           this.g_SignalRConnection.invoke("ClientToServerPoint", payload).catch(function (err) {
             return console.error(err.toString());
           });
           break;
 
+        case "InkBallPathViewModel":
+          console.log(InkBallPathViewModel.Format('some player', payload));
+          this.m_bHandlingEvent = true;
+          this.g_SignalRConnection.invoke("ClientToServerPath", payload).catch(function (err) {
+            return console.error(err.toString());
+          });
+          break;
+
         default:
+          console.log('unknown object');
           break;
       }
     }
@@ -798,12 +877,12 @@ var InkBallGame = function () {
 
               switch (last_move.nodeName) {
                 case 'Point':
-                  var _x4 = parseInt(last_move.getAttribute('x'));
+                  var _x3 = parseInt(last_move.getAttribute('x'));
 
-                  var _y3 = parseInt(last_move.getAttribute('y'));
+                  var _y2 = parseInt(last_move.getAttribute('y'));
 
                   var iStatus = parseInt(last_move.getAttribute('status'));
-                  this.SetPoint(_x4, _y3, iStatus);
+                  this.SetPoint(_x3, _y2, iStatus);
                   this.m_bIsPlayerActive = true;
                   this.SetTimer(false);
                   this.ShowMobileStatus('Oponent has moved, your turn');
@@ -819,11 +898,11 @@ var InkBallGame = function () {
                   var point_status = this.m_sDotColor == this.COLOR_RED ? this.POINT_OWNED_BY_RED : this.POINT_OWNED_BY_BLUE;
                   var sOwnedCol = this.m_sDotColor == this.COLOR_RED ? this.COLOR_OWNED_BLUE : this.COLOR_OWNED_RED;
 
-                  for (var _i7 = 0; _i7 < count; ++_i7) {
-                    p = Points[_i7].split(",");
-                    _x4 = parseInt(p[0]);
-                    _y3 = parseInt(p[1]);
-                    p = this.m_Points[_y3 * this.m_iGridWidth + _x4];
+                  for (var _i9 = 0; _i9 < count; ++_i9) {
+                    p = Points[_i9].split(",");
+                    _x3 = parseInt(p[0]);
+                    _y2 = parseInt(p[1]);
+                    p = this.m_Points[_y2 * this.m_iGridWidth + _x3];
 
                     if (p != null) {
                       p.$SetStatus(point_status);
@@ -860,11 +939,11 @@ var InkBallGame = function () {
 
           case 'PutPath':
             var points = this.m_Line.$GetPoints();
-            var _x3 = points[i];
-            var _y2 = points[i + 1];
-            _x3 /= this.m_iGridSize;
-            _y2 /= this.m_iGridSize;
-            var p0 = this.m_Points[_y2 * this.m_iGridWidth + _x3];
+            var x = points[i];
+            var y = points[i + 1];
+            x /= this.m_iGridSize;
+            y /= this.m_iGridSize;
+            var p0 = this.m_Points[y * this.m_iGridWidth + x];
             if (p0 != null) p0.$SetStatus(this.POINT_IN_PATH);
             this.m_Lines[this.m_Lines.length] = this.m_Line;
             this.m_iLastX = this.m_iLastY = -1;
@@ -946,8 +1025,8 @@ var InkBallGame = function () {
     key: "OnMouseMove",
     value: function OnMouseMove(event) {
       if (!this.m_bIsPlayerActive || this.m_Player2Name.innerHTML == '???' || this.m_bHandlingEvent == true || this.iConnErrCount > 0) return;
-      var x = (event ? event.clientX : window.event.clientX) - this.m_Screen.offsetLeft + this.f_scrollLeft();
-      var y = (event ? event.clientY : window.event.clientY) - this.m_Screen.offsetTop + this.f_scrollTop();
+      var x = (event ? event.clientX : window.event.clientX) - this.m_Screen.offsetLeft + this.f_scrollLeft() + 0.5 * this.m_iGridSize;
+      var y = (event ? event.clientY : window.event.clientY) - this.m_Screen.offsetTop + this.f_scrollTop() + 0.5 * this.m_iGridSize;
 
       if (this.m_MouseCursorOval == null) {
         this.m_MouseCursorOval = $createOval(this.m_PointRadius, 'true');
@@ -956,9 +1035,11 @@ var InkBallGame = function () {
         this.m_MouseCursorOval.$SetZIndex(-1);
       }
 
-      x = parseInt(x / this.m_iGridSize + 0.5) * this.m_iGridSize;
-      y = parseInt(y / this.m_iGridSize + 0.5) * this.m_iGridSize;
-      this.m_MouseCursorOval.$move(x, y, this.m_PointRadius);
+      x = parseInt(x / this.m_iGridSize);
+      y = parseInt(y / this.m_iGridSize);
+      var tox = x * this.m_iGridSize;
+      var toy = y * this.m_iGridSize;
+      this.m_MouseCursorOval.$move(tox, toy, this.m_PointRadius);
       this.m_Screen.style.cursor = "crosshair";
 
       if (this.m_bDrawLines) {
@@ -968,8 +1049,6 @@ var InkBallGame = function () {
             var p1 = this.m_Points[y * this.m_iGridWidth + x];
 
             if (p0 != null && p1 != null && p1.$GetStatus() != this.POINT_IN_PATH && p0.$GetFillColor() == this.m_sDotColor && p1.$GetFillColor() == this.m_sDotColor) {
-              var tox = x * this.m_iGridSize;
-              var toy = y * this.m_iGridSize;
               this.m_Line.$AppendPoints(tox + "," + toy);
               if (p1.$GetStatus() != this.POINT_STARTING) p1.$SetStatus(this.POINT_IN_PATH);else {
                 var val = this.SurroundOponentPoints();
@@ -977,7 +1056,7 @@ var InkBallGame = function () {
                 if (val.owned.length > 0) {
                   this.m_Line.$SetIsClosed(true);
                   this.Debug('Closing path', 0);
-                  this.SendAsyncData(this.CreateXMLPutPathRequest(val.path, val.owned));
+                  this.SendAsyncData(this.CreateXMLPutPathRequest(val));
                 } else this.Debug('Wrong path, cancell it or refresh page', 0);
               }
               this.m_iLastX = x;
@@ -990,12 +1069,7 @@ var InkBallGame = function () {
             if (_p != null && _p2 != null && _p.$GetStatus() != this.POINT_IN_PATH && _p2.$GetStatus() != this.POINT_IN_PATH && _p.$GetFillColor() == this.m_sDotColor && _p2.$GetFillColor() == this.m_sDotColor) {
               var fromx = this.m_iLastX * this.m_iGridSize;
               var fromy = this.m_iLastY * this.m_iGridSize;
-
-              var _tox = x * this.m_iGridSize;
-
-              var _toy = y * this.m_iGridSize;
-
-              this.m_Line = $createPolyline(3, fromx + "," + fromy + " " + _tox + "," + _toy, this.m_sDotColor);
+              this.m_Line = $createPolyline(3, fromx + "," + fromy + " " + tox + "," + toy, this.m_sDotColor);
               if (_p.$GetStatus() != this.POINT_IN_PATH) _p.$SetStatus(this.POINT_STARTING);
               if (_p2.$GetStatus() != this.POINT_IN_PATH) _p2.$SetStatus(this.POINT_STARTING);
               this.m_iLastX = x;
@@ -1041,7 +1115,7 @@ var InkBallGame = function () {
                 if (val.owned.length > 0) {
                   this.m_Line.$SetIsClosed(true);
                   this.Debug('Closing path', 0);
-                  this.SendAsyncData(this.CreateXMLPutPathRequest(val.path, val.owned));
+                  this.SendAsyncData(this.CreateXMLPutPathRequest(val));
                 } else this.Debug('Wrong path, cancell it or refresh page', 0);
               }
               this.m_iLastX = x;
@@ -1055,11 +1129,11 @@ var InkBallGame = function () {
               var fromx = this.m_iLastX * this.m_iGridSize;
               var fromy = this.m_iLastY * this.m_iGridSize;
 
-              var _tox2 = x * this.m_iGridSize;
+              var _tox = x * this.m_iGridSize;
 
-              var _toy2 = y * this.m_iGridSize;
+              var _toy = y * this.m_iGridSize;
 
-              this.m_Line = $createPolyline(3, fromx + "," + fromy + " " + _tox2 + "," + _toy2, this.m_sDotColor);
+              this.m_Line = $createPolyline(3, fromx + "," + fromy + " " + _tox + "," + _toy, this.m_sDotColor);
               if (_p3.$GetStatus() != this.POINT_IN_PATH) _p3.$SetStatus(this.POINT_STARTING);
               if (_p4.$GetStatus() != this.POINT_IN_PATH) _p4.$SetStatus(this.POINT_STARTING);
             }
@@ -1104,13 +1178,13 @@ var InkBallGame = function () {
         if (this.m_Line != null) {
           var points = this.m_Line.$GetPoints();
 
-          for (var _i8 = 0; _i8 < points.length; _i8 += 2) {
-            var _x5 = points[_i8];
-            var _y4 = points[_i8 + 1];
-            if (_x5 == null || _y4 == null) continue;
-            _x5 /= this.m_iGridSize;
-            _y4 /= this.m_iGridSize;
-            var p0 = this.m_Points[_y4 * this.m_iGridWidth + _x5];
+          for (var _i10 = 0; _i10 < points.length; _i10 += 2) {
+            var x = points[_i10];
+            var y = points[_i10 + 1];
+            if (x == null || y == null) continue;
+            x /= this.m_iGridSize;
+            y /= this.m_iGridSize;
+            var p0 = this.m_Points[y * this.m_iGridWidth + x];
             if (p0 != null) p0.$SetStatus(this.POINT_FREE);
           }
 
