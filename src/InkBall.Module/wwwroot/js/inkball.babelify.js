@@ -388,74 +388,14 @@ var InkBallGame = function () {
         var li = document.createElement("li");
         li.textContent = encodedMsg;
         document.querySelector(sMsgListSel).appendChild(li);
-        var x = point.iX,
-            y = point.iY,
-            iStatus = point.Status;
-        this.SetPoint(x, y, iStatus);
-
-        if (this.g_iPlayerID != point.iPlayerId) {
-          this.m_bIsPlayerActive = true;
-          this.ShowMobileStatus('Oponent has moved, your turn');
-          this.m_Screen.style.cursor = "crosshair";
-        } else {
-          this.m_bIsPlayerActive = false;
-          this.ShowMobileStatus('Waiting for oponent move');
-          this.m_Screen.style.cursor = "wait";
-        }
-
-        this.m_bHandlingEvent = false;
+        this.ReceivedPointProcessing(point);
       }.bind(this));
       this.g_SignalRConnection.on("ServerToClientPath", function (path, user) {
         var encodedMsg = InkBallPathViewModel.Format(user, path);
         var li = document.createElement("li");
         li.textContent = encodedMsg;
         document.querySelector(sMsgListSel).appendChild(li);
-
-        if (this.g_iPlayerID != path.iPlayerId) {
-          var str_path = path.sPointsAsString,
-              owned = path.sOwnedPointsAsString;
-          this.SetPath(str_path, this.m_sDotColor == this.COLOR_RED ? true : false, false);
-          var points = owned.split(" ");
-          var count = points.length;
-          var point_status = this.m_sDotColor == this.COLOR_RED ? this.POINT_OWNED_BY_RED : this.POINT_OWNED_BY_BLUE;
-          var sOwnedCol = this.m_sDotColor == this.COLOR_RED ? this.COLOR_OWNED_BLUE : this.COLOR_OWNED_RED;
-
-          for (var _i2 = 0; _i2 < count; ++_i2) {
-            var p = points[_i2].split(",");
-
-            var x = parseInt(p[0]),
-                y = parseInt(p[1]);
-            p = this.m_Points[y * this.m_iGridWidth + x];
-
-            if (p != null) {
-              p.$SetStatus(point_status);
-              p.$SetFillColor(sOwnedCol);
-              p.$strokeColor(sOwnedCol);
-            }
-          }
-
-          this.m_bIsPlayerActive = true;
-          this.ShowMobileStatus('Oponent has moved, your turn');
-          this.m_Screen.style.cursor = "crosshair";
-        } else {
-          var _points = this.m_Line.$GetPoints();
-
-          var _i3 = 0;
-          var _x2 = _points[_i3],
-              _y = _points[_i3 + 1];
-          _x2 /= this.m_iGridSize;
-          _y /= this.m_iGridSize;
-          var p0 = this.m_Points[_y * this.m_iGridWidth + _x2];
-          if (p0 != null) p0.$SetStatus(this.POINT_IN_PATH);
-          this.m_Lines[this.m_Lines.length] = this.m_Line;
-          this.m_iLastX = this.m_iLastY = -1;
-          this.m_Line = null;
-          this.m_bIsPlayerActive = false;
-          this.ShowMobileStatus('Waiting for oponent move');
-          this.m_Screen.style.cursor = "wait";
-        }
-
-        this.m_bHandlingEvent = false;
+        this.ReceivedPathProcessing(path);
       }.bind(this));
       this.g_SignalRConnection.on("ServerToClientPlayerJoin", function (join) {
         var encodedMsg = PlayerJoiningCommand.Format(join);
@@ -653,8 +593,8 @@ var InkBallGame = function () {
           x,
           y;
 
-      for (var _i4 = 0; _i4 < count; ++_i4) {
-        p = sPoints[_i4].split(",");
+      for (var _i2 = 0; _i2 < count; ++_i2) {
+        p = sPoints[_i2].split(",");
         x = parseInt(p[0]);
         y = parseInt(p[1]);
         x *= this.m_iGridSize;
@@ -693,8 +633,8 @@ var InkBallGame = function () {
           y,
           pnt;
 
-      for (var _i5 = 0; _i5 < count; ++_i5) {
-        pnt = sPoints[_i5].split(",");
+      for (var _i3 = 0; _i3 < count; ++_i3) {
+        pnt = sPoints[_i3].split(",");
         x = pnt[0];
         y = pnt[1];
         if (x == iX && y == iY) return true;
@@ -729,9 +669,9 @@ var InkBallGame = function () {
           sDelimiter = "",
           k = 0;
 
-      for (var _i6 = 0; _i6 < count; _i6 += 2) {
-        x = points[_i6];
-        y = points[_i6 + 1];
+      for (var _i4 = 0; _i4 < count; _i4 += 2) {
+        x = points[_i4];
+        y = points[_i4 + 1];
         if (x == null || y == null) continue;
         x /= this.m_iGridSize;
         y /= this.m_iGridSize;
@@ -753,8 +693,8 @@ var InkBallGame = function () {
       var sOwnedPoints = "";
       sDelimiter = "";
 
-      for (var _i7 = 0; _i7 < count1; ++_i7) {
-        var p0 = this.m_Points[_i7];
+      for (var _i5 = 0; _i5 < count1; ++_i5) {
+        var p0 = this.m_Points[_i5];
 
         if (p0 != null && p0.$GetStatus() == this.POINT_FREE && p0.$GetFillColor() == sColor) {
           var pos = p0.$GetPosition();
@@ -793,9 +733,9 @@ var InkBallGame = function () {
             y = void 0,
             k = 0;
 
-        for (var _i8 = 0; _i8 < count; _i8 += 2) {
-          x = points[_i8];
-          y = points[_i8 + 1];
+        for (var _i6 = 0; _i6 < count; _i6 += 2) {
+          x = points[_i6];
+          y = points[_i6 + 1];
           if (x == null || y == null) continue;
           x /= this.m_iGridSize;
           y /= this.m_iGridSize;
@@ -833,15 +773,18 @@ var InkBallGame = function () {
       switch (payload.constructor.name) {
         case "InkBallPointViewModel":
           this.m_bHandlingEvent = true;
-          this.g_SignalRConnection.invoke("ClientToServerPoint", payload).catch(function (err) {
+          this.g_SignalRConnection.invoke("ClientToServerPoint", payload).then(function (point) {
+            this.ReceivedPointProcessing(point);
+          }.bind(this)).catch(function (err) {
             return console.error(err.toString());
           });
           break;
 
         case "InkBallPathViewModel":
-          console.log(InkBallPathViewModel.Format('some player', payload));
           this.m_bHandlingEvent = true;
-          this.g_SignalRConnection.invoke("ClientToServerPath", payload).catch(function (err) {
+          this.g_SignalRConnection.invoke("ClientToServerPath", payload).then(function (path) {
+            this.ReceivedPathProcessing(path);
+          }.bind(this)).catch(function (err) {
             return console.error(err.toString());
           });
           break;
@@ -877,12 +820,12 @@ var InkBallGame = function () {
 
               switch (last_move.nodeName) {
                 case 'Point':
-                  var _x3 = parseInt(last_move.getAttribute('x'));
+                  var _x2 = parseInt(last_move.getAttribute('x'));
 
-                  var _y2 = parseInt(last_move.getAttribute('y'));
+                  var _y = parseInt(last_move.getAttribute('y'));
 
                   var iStatus = parseInt(last_move.getAttribute('status'));
-                  this.SetPoint(_x3, _y2, iStatus);
+                  this.SetPoint(_x2, _y, iStatus);
                   this.m_bIsPlayerActive = true;
                   this.SetTimer(false);
                   this.ShowMobileStatus('Oponent has moved, your turn');
@@ -898,11 +841,11 @@ var InkBallGame = function () {
                   var point_status = this.m_sDotColor == this.COLOR_RED ? this.POINT_OWNED_BY_RED : this.POINT_OWNED_BY_BLUE;
                   var sOwnedCol = this.m_sDotColor == this.COLOR_RED ? this.COLOR_OWNED_BLUE : this.COLOR_OWNED_RED;
 
-                  for (var _i9 = 0; _i9 < count; ++_i9) {
-                    p = Points[_i9].split(",");
-                    _x3 = parseInt(p[0]);
-                    _y2 = parseInt(p[1]);
-                    p = this.m_Points[_y2 * this.m_iGridWidth + _x3];
+                  for (var _i7 = 0; _i7 < count; ++_i7) {
+                    p = Points[_i7].split(",");
+                    _x2 = parseInt(p[0]);
+                    _y = parseInt(p[1]);
+                    p = this.m_Points[_y * this.m_iGridWidth + _x2];
 
                     if (p != null) {
                       p.$SetStatus(point_status);
@@ -974,6 +917,75 @@ var InkBallGame = function () {
             break;
         }
       }
+    }
+  }, {
+    key: "ReceivedPointProcessing",
+    value: function ReceivedPointProcessing(point) {
+      var x = point.iX,
+          y = point.iY,
+          iStatus = point.Status;
+      this.SetPoint(x, y, iStatus);
+
+      if (this.g_iPlayerID != point.iPlayerId) {
+        this.m_bIsPlayerActive = true;
+        this.ShowMobileStatus('Oponent has moved, your turn');
+        this.m_Screen.style.cursor = "crosshair";
+      } else {
+        this.m_bIsPlayerActive = false;
+        this.ShowMobileStatus('Waiting for oponent move');
+        this.m_Screen.style.cursor = "wait";
+      }
+
+      this.m_bHandlingEvent = false;
+    }
+  }, {
+    key: "ReceivedPathProcessing",
+    value: function ReceivedPathProcessing(path) {
+      if (this.g_iPlayerID != path.iPlayerId) {
+        var str_path = path.sPointsAsString,
+            owned = path.sOwnedPointsAsString;
+        this.SetPath(str_path, this.m_sDotColor == this.COLOR_RED ? true : false, false);
+        var points = owned.split(" ");
+        var count = points.length;
+        var point_status = this.m_sDotColor == this.COLOR_RED ? this.POINT_OWNED_BY_RED : this.POINT_OWNED_BY_BLUE;
+        var sOwnedCol = this.m_sDotColor == this.COLOR_RED ? this.COLOR_OWNED_BLUE : this.COLOR_OWNED_RED;
+
+        for (var _i8 = 0; _i8 < count; ++_i8) {
+          var p = points[_i8].split(",");
+
+          var x = parseInt(p[0]),
+              y = parseInt(p[1]);
+          p = this.m_Points[y * this.m_iGridWidth + x];
+
+          if (p != null) {
+            p.$SetStatus(point_status);
+            p.$SetFillColor(sOwnedCol);
+            p.$strokeColor(sOwnedCol);
+          }
+        }
+
+        this.m_bIsPlayerActive = true;
+        this.ShowMobileStatus('Oponent has moved, your turn');
+        this.m_Screen.style.cursor = "crosshair";
+      } else {
+        var _points = this.m_Line.$GetPoints();
+
+        var _i9 = 0;
+        var _x3 = _points[_i9],
+            _y2 = _points[_i9 + 1];
+        _x3 /= this.m_iGridSize;
+        _y2 /= this.m_iGridSize;
+        var p0 = this.m_Points[_y2 * this.m_iGridWidth + _x3];
+        if (p0 != null) p0.$SetStatus(this.POINT_IN_PATH);
+        this.m_Lines[this.m_Lines.length] = this.m_Line;
+        this.m_iLastX = this.m_iLastY = -1;
+        this.m_Line = null;
+        this.m_bIsPlayerActive = false;
+        this.ShowMobileStatus('Waiting for oponent move');
+        this.m_Screen.style.cursor = "wait";
+      }
+
+      this.m_bHandlingEvent = false;
     }
   }, {
     key: "GameLoop",

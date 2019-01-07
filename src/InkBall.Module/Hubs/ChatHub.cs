@@ -32,9 +32,9 @@ namespace InkBall.Module.Hubs
 
 	public interface IChatServer
 	{
-		Task ClientToServerPoint(InkBallPointViewModel point);
+		Task<InkBallPointViewModel> ClientToServerPoint(InkBallPointViewModel point);
 
-		Task ClientToServerPath(InkBallPathViewModel path);
+		Task<InkBallPathViewModel> ClientToServerPath(InkBallPathViewModel path);
 
 		Task ClientToServerPing(PingCommand ping);
 
@@ -303,7 +303,7 @@ namespace InkBall.Module.Hubs
 
 		#region IChatServer implementation
 
-		public async Task ClientToServerPoint(InkBallPointViewModel point)
+		public async Task<InkBallPointViewModel> ClientToServerPoint(InkBallPointViewModel point)
 		{
 			CancellationToken token = this.Context.ConnectionAborted;
 
@@ -314,7 +314,7 @@ namespace InkBall.Module.Hubs
 			{
 				_logger.LogWarning("something bad ThisGame == null || ThisPlayer == null || OtherPlayer == null || " +
 					"string.IsNullOrEmpty(OtherUserIdentifier) || string.IsNullOrEmpty(ThisUserName)");
-				return;
+				throw new ArgumentException("bad player or game");
 			}
 
 			try
@@ -332,7 +332,7 @@ namespace InkBall.Module.Hubs
 									, token);
 				var db_point_player = ThisPlayer.iId == point.iPlayerId ? ThisPlayer : OtherPlayer;
 				if (already_placed)
-					return;
+					throw new ArgumentException("point already placed");
 
 				var db_point = new InkBallPoint
 				{
@@ -367,8 +367,10 @@ namespace InkBall.Module.Hubs
 					}
 				}
 
-				// await Clients.User(OtherUserIdentifier).ServerToClientPoint(new_point, ThisUserName);
-				await base.Clients.Users(ThisUserIdentifier, OtherUserIdentifier).ServerToClientPoint(new_point, ThisUserName);
+				await Clients.User(OtherUserIdentifier).ServerToClientPoint(new_point, ThisUserName);
+				// await Clients.Users(ThisUserIdentifier, OtherUserIdentifier).ServerToClientPoint(new_point, ThisUserName);
+
+				return new_point;
 			}
 			catch (Exception ex)
 			{
@@ -377,7 +379,7 @@ namespace InkBall.Module.Hubs
 			}
 		}
 
-		public async Task ClientToServerPath(InkBallPathViewModel path)
+		public async Task<InkBallPathViewModel> ClientToServerPath(InkBallPathViewModel path)
 		{
 			CancellationToken token = this.Context.ConnectionAborted;
 
@@ -388,7 +390,7 @@ namespace InkBall.Module.Hubs
 			{
 				_logger.LogWarning("something bad ThisGame == null || ThisPlayer == null || OtherPlayer == null || " +
 					"string.IsNullOrEmpty(OtherUserIdentifier) || string.IsNullOrEmpty(ThisUserName)");
-				return;
+				throw new ArgumentException("bad game or player");
 			}
 
 			try
@@ -402,8 +404,12 @@ namespace InkBall.Module.Hubs
 
 
 				var new_path = new InkBallPathViewModel(path);
+				new_path.GetOwnedPoints(ThisGame.IsThisPlayerPlayingWithRed() ? InkBallPoint.StatusEnum.POINT_OWNED_BY_RED : InkBallPoint.StatusEnum.POINT_OWNED_BY_BLUE);
 
 				await Clients.User(OtherUserIdentifier).ServerToClientPath(new_path, ThisUserName);
+				// await Clients.User(OtherUserIdentifier).ServerToClientPath(new_path, ThisUserName);
+
+				return new_path;
 			}
 			catch (Exception ex)
 			{

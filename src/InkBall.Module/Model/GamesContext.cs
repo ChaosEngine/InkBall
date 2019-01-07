@@ -610,7 +610,7 @@ namespace InkBall.Module.Model
 
 		private async Task<IEnumerable<InkBallPath>> GetPathsFromDatabaseAsync(int iGameID, int iPlayerID, IEnumerable<InkBallPoint> points, CancellationToken token = default)
 		{
-			var query1 = from ip in InkBallPath.Include(x => x.InkBallPointsInPath).Include(y => y.InkBallPoint)
+			var query1 = from ip in InkBallPath//.Include(x => x.InkBallPointsInPath).Include(y => y.InkBallPoint)
 						 where ip.iGameId == iGameID && ip.iPlayerId == iPlayerID
 						 select new
 						 {
