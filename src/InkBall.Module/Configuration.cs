@@ -27,6 +27,8 @@ namespace InkBall.Module
 
 		public Type ApplicationUserType { get; set; }
 
+		public bool UseMessagePackBinaryTransport { get; set; } = false;
+
 		public void PostConfigure(string name, StaticFileOptions options)
 		{
 			name = name ?? throw new ArgumentNullException(nameof(name));

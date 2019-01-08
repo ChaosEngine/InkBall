@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MessagePack;
+using System;
 using System.Collections.Generic;
 
 namespace InkBall.Module.Model
@@ -63,7 +64,8 @@ namespace InkBall.Module.Model
 		}
 	}
 
-	[Serializable]
+	//[Serializable]
+	[MessagePackObject(true)]
 	public class InkBallPointViewModel : IPoint
 	{
 		public int iId { get; set; }

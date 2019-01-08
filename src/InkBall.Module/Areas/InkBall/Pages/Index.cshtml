@@ -91,10 +91,8 @@
 		let iPlayerID = @Model.Player.iId;
 		let bPlayingWithRed = @(Model.Game.IsThisPlayerPlayingWithRed() ? "true" : "false");
 		let bPlayerActive = @(Model.Game.IsThisPlayerActive() ? "true" : "false");
-		game = new InkBallGame(inkBallHubName, signalR.LogLevel.Warning,
-			//new signalR.protocols.msgpack.MessagePackHubProtocol()
-			new signalR.JsonHubProtocol(),
-			signalR.HttpTransportType.None,
+		let protocol = @(commonUIConfigureOptions.Value.UseMessagePackBinaryTransport ? "new signalR.protocols.msgpack.MessagePackHubProtocol()" : "new signalR.JsonHubProtocol()");
+		game = new InkBallGame(inkBallHubName, signalR.LogLevel.Warning, protocol, signalR.HttpTransportType.None,
 			function () {
 				return 'iGameID=' + iGameID + '&iPlayerID=' + iPlayerID;
 			},
@@ -106,7 +104,7 @@
 		game.SetAllPoints(@(Model.GetPointsAsJavaScriptArray(Model.ThisPlayerPointsAndPaths.points, Model.Game.IsThisPlayerPlayingWithRed(), true)));
 		game.SetAllPaths(@(Model.GetPathsAsJavaScriptArray(Model.ThisPlayerPointsAndPaths.paths, Model.Game.IsThisPlayerPlayingWithRed(), true)));
 		@if(Model.OtherPlayer != null)
-		{ 
+		{
 		@:game.SetAllPoints(@Model.GetPointsAsJavaScriptArray(Model.OtherPlayerPointsAndPaths.points, Model.Game.IsThisPlayerPlayingWithRed(), false));
 		@:game.SetAllPaths(@Model.GetPathsAsJavaScriptArray(Model.OtherPlayerPointsAndPaths.paths, Model.Game.IsThisPlayerPlayingWithRed(), false));
 		}
@@ -128,22 +126,22 @@
 		WriteLiteral(
 			(env.IsDevelopment() ?
 			$"<script src='{Url.Content("~/lib/signalr/dist/browser/signalr.js")}'></script>\r" +
-			$"<script src='{Url.Content("~/lib/msgpack5/dist/msgpack5.js")}'></script>\r" +
-			$"<script src='{Url.Content("~/lib/signalr-protocol-msgpack/dist/browser/signalr-protocol-msgpack.js")}'></script>\r" +
-			$"<script type='text/javascript' src='{Url.Content("~/js/svgvml.js")}'></script>\r"
+			(commonUIConfigureOptions.Value.UseMessagePackBinaryTransport ? $"<script src='{Url.Content("~/lib/msgpack5/dist/msgpack5.js")}'></script>\r" +
+			$"<script src='{Url.Content("~/lib/signalr-protocol-msgpack/dist/browser/signalr-protocol-msgpack.js")}'></script>\r" : "") +
+			$"<script async type='text/javascript' src='{Url.Content("~/js/svgvml.js")}'></script>\r"
 			:
-			@"<script src='https://cdn.jsdelivr.net/npm/@aspnet/signalr@1.1.0/dist/browser/signalr.min.js' integrity='sha256-QMSkR/7232j790y/zuvuopBbJS14B9e4hLLuz7KC9Fk=' crossorigin='anonymous'></script>
-			<script src='https://cdn.jsdelivr.net/npm/msgpack5@4.2.1/dist/msgpack5.min.js' integrity='sha256-mY/RhkCJfd98j3c5s1EcUDJdRzffTeKzEzFIaI/2KQg=' crossorigin='anonymous'></script>
-			<script src='https://cdn.jsdelivr.net/npm/@aspnet/signalr-protocol-msgpack@1.1.0/dist/browser/signalr-protocol-msgpack.min.js' integrity='sha256-/nN8c30tnA8AmQMPV0efnlYrEOhPNNo7v4Y6JgHSPac=' crossorigin='anonymous'></script>" +
-			$"<script type='text/javascript' src='{Url.Content("~/js/svgvml.min.js")}'></script>") +
+			@"<script src='https://cdn.jsdelivr.net/npm/@aspnet/signalr@1.1.0/dist/browser/signalr.min.js' integrity='sha256-QMSkR/7232j790y/zuvuopBbJS14B9e4hLLuz7KC9Fk=' crossorigin='anonymous'></script>" +
+			(commonUIConfigureOptions.Value.UseMessagePackBinaryTransport ? @"<script src='https://cdn.jsdelivr.net/npm/msgpack5@4.2.1/dist/msgpack5.min.js' integrity='sha256-mY/RhkCJfd98j3c5s1EcUDJdRzffTeKzEzFIaI/2KQg=' crossorigin='anonymous'></script>
+			<script src='https://cdn.jsdelivr.net/npm/@aspnet/signalr-protocol-msgpack@1.1.0/dist/browser/signalr-protocol-msgpack.min.js' integrity='sha256-/nN8c30tnA8AmQMPV0efnlYrEOhPNNo7v4Y6JgHSPac=' crossorigin='anonymous'></script>" : "") +
+			$"<script async type='text/javascript' src='{Url.Content("~/js/svgvml.min.js")}'></script>") +
 
 
 			@"<script type='text/javascript'>
 			if(navigator.userAgent.indexOf('Trident') < 0) {
-				document.write(""<script src='" + (env.IsDevelopment() ? Url.Content("~/js/inkball.js") : Url.Content("~/js/inkball.min.js")) + @"'><\/script>"");
+				document.write(""<script async src='" + (env.IsDevelopment() ? Url.Content("~/js/inkball.js") : Url.Content("~/js/inkball.min.js")) + @"'><\/script>"");
 			} else {
 				document.write(""<script src='https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/7.0.0-beta.3/polyfill.min.js' integrity='sha256-L8MORrEU27Ep+vSMEvACaPFX68pNXK+LXb+EBqnzFK4=' crossorigin='anonymous'><\/script>"" +
-				""<script src='" + (env.IsDevelopment() ? Url.Content("~/js/inkball.babelify.js"): Url.Content("~/js/inkball.babelify.min.js")) + @"'><\/script>"");
+				""<script async src='" + (env.IsDevelopment() ? Url.Content("~/js/inkball.babelify.js"): Url.Content("~/js/inkball.babelify.min.js")) + @"'><\/script>"");
 			}
 			</script>"
 		);

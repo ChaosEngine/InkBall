@@ -59,7 +59,7 @@ namespace InkBall.Module.Model
 		}
 	}
 
-	[Serializable]
+	//[Serializable]
 	public class InkBallPlayerViewModel : IPlayer<InkBallPointViewModel, InkBallPathViewModel>
 	{
 		public int iId { get; set; }

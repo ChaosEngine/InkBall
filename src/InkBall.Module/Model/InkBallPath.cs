@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using MessagePack;
 using Newtonsoft.Json;
 
 namespace InkBall.Module.Model
@@ -34,6 +35,7 @@ namespace InkBall.Module.Model
 		}
 	}
 
+	[MessagePackObject(true)]
 	public class InkBallPathViewModel : IPath<InkBallPointViewModel>
 	{
 		#region Fields
@@ -55,6 +57,7 @@ namespace InkBall.Module.Model
 
 		///Points creating the path; path points
 		[JsonIgnore]
+		[IgnoreMember]
 		public ICollection<InkBallPointViewModel> InkBallPoint
 		{
 			get

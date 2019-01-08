@@ -4,6 +4,18 @@ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
+function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
+
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
+
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
@@ -28,8 +40,27 @@ var CommandKindEnum = Object.freeze({
   PLAYER_SURRENDER: 4
 });
 
-var InkBallPointViewModel = function () {
+var DtoMsg = function () {
+  function DtoMsg() {
+    _classCallCheck(this, DtoMsg);
+  }
+
+  _createClass(DtoMsg, [{
+    key: "GetType",
+    value: function GetType() {
+      throw new Exception("no GetType() method!");
+    }
+  }]);
+
+  return DtoMsg;
+}();
+
+var InkBallPointViewModel = function (_DtoMsg) {
+  _inherits(InkBallPointViewModel, _DtoMsg);
+
   function InkBallPointViewModel() {
+    var _this;
+
     var iId = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
     var iGameId = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
     var iPlayerId = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
@@ -40,16 +71,23 @@ var InkBallPointViewModel = function () {
 
     _classCallCheck(this, InkBallPointViewModel);
 
-    this.iId = iId;
-    this.iGameId = iGameId;
-    this.iPlayerId = iPlayerId;
-    this.iX = iX;
-    this.iY = iY;
-    this.Status = Status;
-    this.iEnclosingPathId = iEnclosingPathId;
+    _this = _possibleConstructorReturn(this, _getPrototypeOf(InkBallPointViewModel).call(this));
+    _this.iId = iId;
+    _this.iGameId = iGameId;
+    _this.iPlayerId = iPlayerId;
+    _this.iX = iX;
+    _this.iY = iY;
+    _this.Status = Status;
+    _this.iEnclosingPathId = iEnclosingPathId;
+    return _this;
   }
 
-  _createClass(InkBallPointViewModel, null, [{
+  _createClass(InkBallPointViewModel, [{
+    key: "GetType",
+    value: function GetType() {
+      return "InkBallPointViewModel";
+    }
+  }], [{
     key: "Format",
     value: function Format(sUser, point) {
       var msg = point.iX + ' ' + point.iY + ' ' + point.Status;
@@ -58,10 +96,14 @@ var InkBallPointViewModel = function () {
   }]);
 
   return InkBallPointViewModel;
-}();
+}(DtoMsg);
 
-var InkBallPathViewModel = function () {
+var InkBallPathViewModel = function (_DtoMsg2) {
+  _inherits(InkBallPathViewModel, _DtoMsg2);
+
   function InkBallPathViewModel() {
+    var _this2;
+
     var iId = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
     var iGameId = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
     var iPlayerId = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
@@ -70,73 +112,77 @@ var InkBallPathViewModel = function () {
 
     _classCallCheck(this, InkBallPathViewModel);
 
-    this.iId = iId;
-    this.iGameId = iGameId;
-    this.iPlayerId = iPlayerId;
-    this.sPointsAsString = sPointsAsString;
-    this.sOwnedPointsAsString = sOwnedPointsAsString;
+    _this2 = _possibleConstructorReturn(this, _getPrototypeOf(InkBallPathViewModel).call(this));
+    _this2.iId = iId;
+    _this2.iGameId = iGameId;
+    _this2.iPlayerId = iPlayerId;
+    _this2.sPointsAsString = sPointsAsString;
+    _this2.sOwnedPointsAsString = sOwnedPointsAsString;
+    return _this2;
   }
 
-  _createClass(InkBallPathViewModel, null, [{
+  _createClass(InkBallPathViewModel, [{
+    key: "GetType",
+    value: function GetType() {
+      return "InkBallPathViewModel";
+    }
+  }], [{
     key: "Format",
     value: function Format(sUser, path) {
-      var msg = path.iPlayerID + " " + path.sPointsAsString + " " + path.sOwnedPointsAsString;
+      var msg = path.iPlayerId + " " + path.sPointsAsString + " " + path.sOwnedPointsAsString;
       return sUser + " places [" + msg + "] path";
     }
   }]);
 
   return InkBallPathViewModel;
-}();
+}(DtoMsg);
 
-var WaitForPlayerCommand = function () {
-  _createClass(WaitForPlayerCommand, [{
-    key: "ShowP2Name",
-    get: function get() {
-      return this.showP2Name;
-    },
-    set: function set(value) {
-      this.showP2Name = value;
-    }
-  }]);
+var WaitForPlayerCommand = function (_DtoMsg3) {
+  _inherits(WaitForPlayerCommand, _DtoMsg3);
 
   function WaitForPlayerCommand() {
+    var _this3;
+
     var showP2Name = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
 
     _classCallCheck(this, WaitForPlayerCommand);
 
-    this.ShowP2Name = showP2Name;
+    _this3 = _possibleConstructorReturn(this, _getPrototypeOf(WaitForPlayerCommand).call(this));
+    _this3.ShowP2Name = showP2Name;
+    return _this3;
   }
 
-  return WaitForPlayerCommand;
-}();
-
-var PlayerJoiningCommand = function () {
-  _createClass(PlayerJoiningCommand, [{
-    key: "OtherPlayerId",
-    get: function get() {
-      return this.otherPlayerId;
-    }
-  }, {
-    key: "OtherPlayerName",
-    get: function get() {
-      return this.otherPlayerName;
-    }
-  }, {
-    key: "Message",
-    get: function get() {
-      return this.message;
+  _createClass(WaitForPlayerCommand, [{
+    key: "GetType",
+    value: function GetType() {
+      return "WaitForPlayerCommand";
     }
   }]);
 
-  function PlayerJoiningCommand(locOtherPlayerId, locOtherPlayerName, locMessage) {
+  return WaitForPlayerCommand;
+}(DtoMsg);
+
+var PlayerJoiningCommand = function (_DtoMsg4) {
+  _inherits(PlayerJoiningCommand, _DtoMsg4);
+
+  function PlayerJoiningCommand(otherPlayerId, otherPlayerName, message) {
+    var _this4;
+
     _classCallCheck(this, PlayerJoiningCommand);
 
-    this.otherPlayerId = locOtherPlayerId;
-    this.otherPlayerName = locOtherPlayerName;
-    this.message = locMessage;
+    _this4 = _possibleConstructorReturn(this, _getPrototypeOf(PlayerJoiningCommand).call(this));
+    _this4.OtherPlayerId = otherPlayerId;
+    _this4.OtherPlayerName = otherPlayerName;
+    _this4.Message = message;
+    return _this4;
   }
 
-  _createClass(PlayerJoiningCommand, null, [{
+  _createClass(PlayerJoiningCommand, [{
+    key: "GetType",
+    value: function GetType() {
+      return "PlayerJoiningCommand";
+    }
+  }], [{
     key: "Format",
     value: function Format(join) {
       return join.Message;
@@ -144,35 +190,29 @@ var PlayerJoiningCommand = function () {
   }]);
 
   return PlayerJoiningCommand;
-}();
+}(DtoMsg);
 
-var PlayerSurrenderingCommand = function () {
-  _createClass(PlayerSurrenderingCommand, [{
-    key: "OtherPlayerId",
-    get: function get() {
-      return this.otherPlayerId;
-    }
-  }, {
-    key: "ThisOrOtherPlayerSurrenders",
-    get: function get() {
-      return this.thisOrOtherPlayerSurrenders;
-    }
-  }, {
-    key: "Message",
-    get: function get() {
-      return this.message;
-    }
-  }]);
+var PlayerSurrenderingCommand = function (_DtoMsg5) {
+  _inherits(PlayerSurrenderingCommand, _DtoMsg5);
 
-  function PlayerSurrenderingCommand(locOtherPlayerId, locThisOrOtherPlayerSurrenders, locMessage) {
+  function PlayerSurrenderingCommand(otherPlayerId, thisOrOtherPlayerSurrenders, message) {
+    var _this5;
+
     _classCallCheck(this, PlayerSurrenderingCommand);
 
-    this.otherPlayerId = locOtherPlayerId;
-    this.thisOrOtherPlayerSurrenders = locThisOrOtherPlayerSurrenders;
-    this.message = locMessage;
+    _this5 = _possibleConstructorReturn(this, _getPrototypeOf(PlayerSurrenderingCommand).call(this));
+    _this5.OtherPlayerId = otherPlayerId;
+    _this5.thisOrOtherPlayerSurrenders = thisOrOtherPlayerSurrenders;
+    _this5.Message = message;
+    return _this5;
   }
 
-  _createClass(PlayerSurrenderingCommand, null, [{
+  _createClass(PlayerSurrenderingCommand, [{
+    key: "GetType",
+    value: function GetType() {
+      return "PlayerSurrenderingCommand";
+    }
+  }], [{
     key: "Format",
     value: function Format(surrender) {
       return surrender.Message;
@@ -180,37 +220,38 @@ var PlayerSurrenderingCommand = function () {
   }]);
 
   return PlayerSurrenderingCommand;
-}();
+}(DtoMsg);
 
-var PingCommand = function () {
-  _createClass(PingCommand, [{
-    key: "Message",
-    get: function get() {
-      return this.message;
-    },
-    set: function set(value) {
-      this.message = value;
-    }
-  }]);
+var PingCommand = function (_DtoMsg6) {
+  _inherits(PingCommand, _DtoMsg6);
 
   function PingCommand() {
+    var _this6;
+
     var message = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
 
     _classCallCheck(this, PingCommand);
 
-    this.Message = message;
+    _this6 = _possibleConstructorReturn(this, _getPrototypeOf(PingCommand).call(this));
+    _this6.Message = message;
+    return _this6;
   }
 
-  _createClass(PingCommand, null, [{
+  _createClass(PingCommand, [{
+    key: "GetType",
+    value: function GetType() {
+      return "PingCommand";
+    }
+  }], [{
     key: "Format",
     value: function Format(sUser, ping) {
-      var msg = ping.Message;
-      return sUser + " says " + msg;
+      var txt = ping.Message;
+      return sUser + " says " + txt;
     }
   }]);
 
   return PingCommand;
-}();
+}(DtoMsg);
 
 function htmlEncode(html) {
   return document.createElement('a').appendChild(document.createTextNode(html)).parentNode.innerHTML;
@@ -238,7 +279,7 @@ function CountPointsDebug(sSelector2Set) {
 
 var InkBallGame = function () {
   function InkBallGame(sHubName, loggingLevel, hubProtocol, transportType, tokenFactory) {
-    var _this = this;
+    var _this7 = this;
 
     var bIsPlayingWithRed = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : true;
     var bIsPlayerActive = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : true;
@@ -312,11 +353,11 @@ var InkBallGame = function () {
               case 0:
                 if (err !== null && err !== undefined) {
                   console.log(err);
-                  _this.m_Screen.style.cursor = "not-allowed";
-                  if (_this.iConnErrCount < 5) _this.iConnErrCount++;
+                  _this7.m_Screen.style.cursor = "not-allowed";
+                  if (_this7.iConnErrCount < 5) _this7.iConnErrCount++;
                   setTimeout(function () {
-                    return _this.start();
-                  }, 4000 + _this.iExponentialBackOffMillis * _this.iConnErrCount);
+                    return _this7.start();
+                  }, 4000 + _this7.iExponentialBackOffMillis * _this7.iConnErrCount);
                 }
 
               case 1:
@@ -337,7 +378,7 @@ var InkBallGame = function () {
     key: "start",
     value: function () {
       var _start = _asyncToGenerator(regeneratorRuntime.mark(function _callee2() {
-        var _this2 = this;
+        var _this8 = this;
 
         return regeneratorRuntime.wrap(function _callee2$(_context2) {
           while (1) {
@@ -360,7 +401,7 @@ var InkBallGame = function () {
                 this.m_Screen.style.cursor = "not-allowed";
                 if (this.iConnErrCount < 5) this.iConnErrCount++;
                 setTimeout(function () {
-                  return _this2.start();
+                  return _this8.start();
                 }, 4000 + this.iExponentialBackOffMillis * this.iConnErrCount);
 
               case 13:
@@ -421,12 +462,10 @@ var InkBallGame = function () {
         document.querySelector(sMsgListSel).appendChild(li);
       }.bind(this));
       document.querySelector(sMsgSendButtonSel).addEventListener("click", function (event) {
-        var message = document.querySelector(sMsgInputSel).value;
-        var ping = new PingCommand(message);
-        this.g_SignalRConnection.invoke("ClientToServerPing", ping).catch(function (err) {
-          return console.error(err.toString());
-        });
         event.preventDefault();
+        var encodedMsg = document.querySelector(sMsgInputSel).value;
+        var ping = new PingCommand(encodedMsg);
+        this.SendAsyncData(ping);
       }.bind(this), false);
       document.querySelector(sMsgInputSel).addEventListener("keyup", function (event) {
         event.preventDefault();
@@ -576,10 +615,10 @@ var InkBallGame = function () {
   }, {
     key: "SetAllPoints",
     value: function SetAllPoints(points) {
-      var _this3 = this;
+      var _this9 = this;
 
       points.forEach(function (p) {
-        _this3.SetPoint(p[0], p[1], p[2]);
+        _this9.SetPoint(p[0], p[1], p[2]);
       });
     }
   }, {
@@ -619,10 +658,10 @@ var InkBallGame = function () {
   }, {
     key: "SetAllPaths",
     value: function SetAllPaths(paths) {
-      var _this4 = this;
+      var _this10 = this;
 
       paths.forEach(function (p) {
-        _this4.SetPath(p[0], p[1], p[2]);
+        _this10.SetPath(p[0], p[1], p[2]);
       });
     }
   }, {
@@ -770,8 +809,9 @@ var InkBallGame = function () {
   }, {
     key: "SendAsyncData",
     value: function SendAsyncData(payload) {
-      switch (payload.constructor.name) {
+      switch (payload.GetType()) {
         case "InkBallPointViewModel":
+          console.log(InkBallPointViewModel.Format('some player', payload));
           this.m_bHandlingEvent = true;
           this.g_SignalRConnection.invoke("ClientToServerPoint", payload).then(function (point) {
             this.ReceivedPointProcessing(point);
@@ -781,10 +821,17 @@ var InkBallGame = function () {
           break;
 
         case "InkBallPathViewModel":
+          console.log(InkBallPathViewModel.Format('some player', payload));
           this.m_bHandlingEvent = true;
           this.g_SignalRConnection.invoke("ClientToServerPath", payload).then(function (path) {
             this.ReceivedPathProcessing(path);
           }.bind(this)).catch(function (err) {
+            return console.error(err.toString());
+          });
+          break;
+
+        case "PingCommand":
+          this.g_SignalRConnection.invoke("ClientToServerPing", payload).catch(function (err) {
             return console.error(err.toString());
           });
           break;

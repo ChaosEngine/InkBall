@@ -20,8 +20,14 @@ const CommandKindEnum = Object.freeze({
 	PLAYER_SURRENDER: 4
 });
 
-class InkBallPointViewModel {
+class DtoMsg {
+	GetType() { throw new Exception("no GetType() method!"); }
+}
+
+class InkBallPointViewModel extends DtoMsg {
 	constructor(iId = 0, iGameId = 0, iPlayerId = 0, iX = 0, iY = 0, Status = StatusEnum.POINT_FREE, iEnclosingPathId = 0) {
+		super();
+
 		this.iId = iId;
 		this.iGameId = iGameId;
 		this.iPlayerId = iPlayerId;
@@ -31,6 +37,8 @@ class InkBallPointViewModel {
 		this.iEnclosingPathId = iEnclosingPathId;
 	}
 
+	GetType() { return "InkBallPointViewModel"; }
+
 	static Format(sUser, point) {
 		let msg = point.iX + ' ' + point.iY + ' ' + point.Status;
 
@@ -38,8 +46,10 @@ class InkBallPointViewModel {
 	}
 }
 
-class InkBallPathViewModel {
+class InkBallPathViewModel extends DtoMsg {
 	constructor(iId = 0, iGameId = 0, iPlayerId = 0, sPointsAsString = '', sOwnedPointsAsString = '') {
+		super();
+
 		this.iId = iId;
 		this.iGameId = iGameId;
 		this.iPlayerId = iPlayerId;
@@ -47,66 +57,70 @@ class InkBallPathViewModel {
 		this.sOwnedPointsAsString = sOwnedPointsAsString;
 	}
 
+	GetType() { return "InkBallPathViewModel"; }
+
 	static Format(sUser, path) {
-		let msg = path.iPlayerID + " " + path.sPointsAsString + " " + path.sOwnedPointsAsString;
+		let msg = path.iPlayerId + " " + path.sPointsAsString + " " + path.sOwnedPointsAsString;
 
 		return sUser + " places [" + msg + "] path";
 	}
 }
 
-class WaitForPlayerCommand {
-	get ShowP2Name() { return this.showP2Name; }
-	set ShowP2Name(value) { this.showP2Name = value; }
-
+class WaitForPlayerCommand extends DtoMsg {
 	constructor(showP2Name = false) {
+		super();
+
 		this.ShowP2Name = showP2Name;
 	}
+
+	GetType() { return "WaitForPlayerCommand"; }
 }
 
-class PlayerJoiningCommand {
-	get OtherPlayerId() { return this.otherPlayerId; }
-	get OtherPlayerName() { return this.otherPlayerName; }
-	get Message() { return this.message; }
+class PlayerJoiningCommand extends DtoMsg {
+	constructor(otherPlayerId, otherPlayerName, message) {
+		super();
 
-	constructor(locOtherPlayerId, locOtherPlayerName, locMessage) {
-		this.otherPlayerId = locOtherPlayerId;
-		this.otherPlayerName = locOtherPlayerName;
-		this.message = locMessage;
+		this.OtherPlayerId = otherPlayerId;
+		this.OtherPlayerName = otherPlayerName;
+		this.Message = message;
 	}
+
+	GetType() { return "PlayerJoiningCommand"; }
 
 	static Format(join) {
 		return join.Message;
 	}
 }
 
-class PlayerSurrenderingCommand {
-	get OtherPlayerId() { return this.otherPlayerId; }
-	get ThisOrOtherPlayerSurrenders() { return this.thisOrOtherPlayerSurrenders; }
-	get Message() { return this.message; }
+class PlayerSurrenderingCommand extends DtoMsg {
+	constructor(otherPlayerId, thisOrOtherPlayerSurrenders, message) {
+		super();
 
-	constructor(locOtherPlayerId, locThisOrOtherPlayerSurrenders, locMessage) {
-		this.otherPlayerId = locOtherPlayerId;
-		this.thisOrOtherPlayerSurrenders = locThisOrOtherPlayerSurrenders;
-		this.message = locMessage;
+		this.OtherPlayerId = otherPlayerId;
+		this.thisOrOtherPlayerSurrenders = thisOrOtherPlayerSurrenders;
+		this.Message = message;
 	}
+
+	GetType() { return "PlayerSurrenderingCommand"; }
 
 	static Format(surrender) {
 		return surrender.Message;
 	}
 }
 
-class PingCommand {
-	get Message() { return this.message; }
-	set Message(value) { this.message = value; }
-
+class PingCommand extends DtoMsg {
 	constructor(message = '') {
+		super();
+
 		this.Message = message;
 	}
 
-	static Format(sUser, ping) {
-		let msg = ping.Message;
+	GetType() { return "PingCommand"; }
 
-		return sUser + " says " + msg;
+	static Format(sUser, ping) {
+		let txt = ping.Message;
+
+		return sUser + " says " + txt;
 	}
 }
 
@@ -318,14 +332,13 @@ class InkBallGame {
 		}.bind(this));
 
 		document.querySelector(sMsgSendButtonSel).addEventListener("click", function (event) {
-			let message = document.querySelector(sMsgInputSel).value;
-
-			let ping = new PingCommand(message);
-			//TODO: capture click/draw event and send it to server as point
-			this.g_SignalRConnection.invoke("ClientToServerPing", ping).catch(function (err) {
-				return console.error(err.toString());
-			});
 			event.preventDefault();
+
+			let encodedMsg = document.querySelector(sMsgInputSel).value;
+			let ping = new PingCommand(encodedMsg);
+
+			this.SendAsyncData(ping);
+
 		}.bind(this), false);
 
 		// Execute a function when the user releases a key on the keyboard
@@ -650,6 +663,7 @@ class InkBallGame {
 	/**
 	 * Create transferable object holding path points creating it as well as owned points by it
 	 * @param {object} dto with path, owned
+	 * @returns {object} command
 	 */
 	CreateXMLPutPathRequest(dto) {
 		let cmd = new InkBallPathViewModel(0, this.g_iGameID, this.g_iPlayerID, dto.path, dto.owned);
@@ -661,26 +675,11 @@ class InkBallGame {
 	 * @param {object} payload transferrableObject (DTO)
 	 */
 	SendAsyncData(payload) {
-		//if (sData.length == 0) return;
-		// if(g_XmlHttp == null)
-		// {
-		// 	g_XmlHttp = GetXmlHttpObject();
-		// }
-		// if(g_XmlHttp == null)
-		// {
-		// 	alert('Browser does not support AJAX');
-		// 	return;
-		// }
-		// var url = "index.php";
-		// g_XmlHttp.open("POST", url, !false);
-		// g_XmlHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-		// g_XmlHttp.onreadystatechange = this.AjaxResponseCallBack;
-		// g_XmlHttp.send("action=<?php echo("<?xml version='1.0' encoding='utf-8'?>"); ?>" + sData);
 
-		switch (payload.constructor.name) {
+		switch (payload.GetType()) {
 
 			case "InkBallPointViewModel":
-				//console.log(InkBallPointViewModel.Format('some player', payload));
+				console.log(InkBallPointViewModel.Format('some player', payload));
 				this.m_bHandlingEvent = true;
 
 				this.g_SignalRConnection.invoke("ClientToServerPoint", payload).then(function (point) {
@@ -691,12 +690,18 @@ class InkBallGame {
 				break;
 
 			case "InkBallPathViewModel":
-				//console.log(InkBallPathViewModel.Format('some player', payload));
+				console.log(InkBallPathViewModel.Format('some player', payload));
 				this.m_bHandlingEvent = true;
 
 				this.g_SignalRConnection.invoke("ClientToServerPath", payload).then(function (path) {
 					this.ReceivedPathProcessing(path);
 				}.bind(this)).catch(function (err) {
+					return console.error(err.toString());
+				});
+				break;
+
+			case "PingCommand":
+				this.g_SignalRConnection.invoke("ClientToServerPing", payload).catch(function (err) {
 					return console.error(err.toString());
 				});
 				break;

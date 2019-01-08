@@ -1,3 +1,5 @@
+using MessagePack;
+
 namespace InkBall.Module.Model
 {
 	public enum CommandKindEnum
@@ -10,6 +12,7 @@ namespace InkBall.Module.Model
 		PLAYER_SURRENDER = 4
 	}
 
+	[MessagePackObject(true)]
 	public sealed class PingCommand
 	{
 		public string Message { get; set; }
@@ -28,6 +31,7 @@ namespace InkBall.Module.Model
 		}
 	}
 
+	/*[MessagePackObject(true)]
 	public sealed class WaitForPlayerCommand
 	{
 		public bool ShowP2Name { get; private set; }
@@ -39,8 +43,9 @@ namespace InkBall.Module.Model
 		{
 			ShowP2Name = showP2Name;
 		}
-	}
+	}*/
 
+	[MessagePackObject(true)]
 	public sealed class PlayerJoiningCommand
 	{
 		public int OtherPlayerId { get; private set; }
@@ -57,6 +62,7 @@ namespace InkBall.Module.Model
 		}
 	}
 
+	[MessagePackObject(true)]
 	public sealed class PlayerSurrenderingCommand
 	{
 		public int? OtherPlayerId { get; private set; }
@@ -65,7 +71,7 @@ namespace InkBall.Module.Model
 
 		public string Message { get; set; }
 
-		public PlayerSurrenderingCommand(int otherPlayerId, bool thisOrOtherPlayerSurrenders, string message)
+		public PlayerSurrenderingCommand(int? otherPlayerId, bool thisOrOtherPlayerSurrenders, string message)
 		{
 			OtherPlayerId = otherPlayerId;
 			ThisOrOtherPlayerSurrenders = thisOrOtherPlayerSurrenders;
