@@ -21,7 +21,7 @@ const CommandKindEnum = Object.freeze({
 });
 
 class DtoMsg {
-	GetType() { throw new Exception("no GetType() method!"); }
+	GetType() { throw new Error("missing GetType implementation!"); }
 }
 
 class InkBallPointViewModel extends DtoMsg {
@@ -505,7 +505,7 @@ class InkBallGame {
 
 	SetAllPoints(points) {
 		points.forEach(p => {
-			this.SetPoint(p[0], p[1], p[2])
+			this.SetPoint(p[0], p[1], p[2]);
 		});
 	}
 

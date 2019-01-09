@@ -48,7 +48,7 @@ var DtoMsg = function () {
   _createClass(DtoMsg, [{
     key: "GetType",
     value: function GetType() {
-      throw new Exception("no GetType() method!");
+      throw new Error("missing GetType implementation!");
     }
   }]);
 
