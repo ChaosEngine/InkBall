@@ -7,6 +7,8 @@ using Microsoft.Extensions.Logging;
 using InkBall.Module.Model;
 using Microsoft.AspNetCore.SignalR;
 using InkBall.Module.Hubs;
+using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Identity;
 
 namespace InkBall.Module.Pages
 {
@@ -14,11 +16,14 @@ namespace InkBall.Module.Pages
 	public class HomeModel : BasePageModel
 	{
 		private readonly IHubContext<ChatHub, IChatClient> _inkballHubContext;
+		private readonly IOptions<InkBallOptions> _commonUIConfigureOptions;
 
 		public HomeModel(GamesContext dbContext, ILogger<HomeModel> logger,
-			IHubContext<Hubs.ChatHub, Hubs.IChatClient> inkballHubContext) : base(dbContext, logger)
+			IHubContext<Hubs.ChatHub, Hubs.IChatClient> inkballHubContext,
+			IOptions<InkBallOptions> commonUIConfigureOptions) : base(dbContext, logger)
 		{
 			_inkballHubContext = inkballHubContext;
+			_commonUIConfigureOptions = commonUIConfigureOptions;
 		}
 
 		public async Task OnGet()
@@ -149,7 +154,6 @@ namespace InkBall.Module.Pages
 									}
 
 									trans.Commit();
-									return Redirect("~/Identity/Account/Logout");
 								}
 								catch (Exception ex)
 								{
@@ -159,7 +163,16 @@ namespace InkBall.Module.Pages
 								}
 							}
 						}
-						break;
+
+						if (typeof(SignInManager<>).MakeGenericType(_commonUIConfigureOptions.Value.ApplicationUserType) is Type type
+							&& type != null)
+						{
+							var signInManagerTUser = Request.HttpContext.RequestServices.GetService(type) as dynamic;
+
+							if (signInManagerTUser != null)
+								await signInManagerTUser.SignOutAsync();
+						}
+						return Redirect("~/Identity/Account/Logout");
 
 					case "Register":
 						return Redirect("~/Identity/Account/Register");
