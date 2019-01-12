@@ -118,17 +118,17 @@ namespace InkBall.Module.Model
 		public InkBallPathViewModel()
 		{ }
 
-		public InkBallPathViewModel(InkBallPath path)
+		public InkBallPathViewModel(InkBallPath path, string pointsAsString = null, string ownedPointsAsString = null)
 		{
 			this.iId = path.iId;
 			this.iGameId = path.iGameId;
 			this.iPlayerId = path.iPlayerId;
-			sPointsAsString = null;
-			sOwnedPointsAsString = null;
+			this.sPointsAsString = pointsAsString;
+			this.sOwnedPointsAsString = ownedPointsAsString;
 
 			if (path?.InkBallPoint?.Count > 0)
 			{
-				InkBallPoint = path.InkBallPoint.Select(p => new InkBallPointViewModel(p)).ToArray();
+				this.InkBallPoint = path.InkBallPoint.Select(p => new InkBallPointViewModel(p)).ToArray();
 			}
 		}
 
@@ -137,12 +137,12 @@ namespace InkBall.Module.Model
 			this.iId = path.iId;
 			this.iGameId = path.iGameId;
 			this.iPlayerId = path.iPlayerId;
-			sPointsAsString = path.sPointsAsString;
-			sOwnedPointsAsString = path.sOwnedPointsAsString;
+			this.sPointsAsString = path.sPointsAsString;
+			this.sOwnedPointsAsString = path.sOwnedPointsAsString;
 
 			if (path?.InkBallPoint?.Count > 0)
 			{
-				InkBallPoint = path.InkBallPoint;
+				this.InkBallPoint = path.InkBallPoint;
 			}
 		}
 	}

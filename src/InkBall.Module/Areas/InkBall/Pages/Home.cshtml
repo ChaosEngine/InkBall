@@ -11,19 +11,18 @@
 
 
 
-
-
 	var bIsLoggedIn = (Model.GameUser != null) ? true : false;
 	var bIsCurrentGameOk = Model.Game != null ? true : false;
 
-}
-@if (bIsLoggedIn)
-{
-	<p>Welcome <span>@Model.UserName</span></p>
-}
-else
-{
-	<p>Login to play</p>
+
+	if (bIsLoggedIn)
+	{
+		<p>Welcome <span>@Model.UserName</span></p>
+	}
+	else
+	{
+		<p>You are not logged in ... or old enough :-D</p>
+	}
 }
 
 @if (!string.IsNullOrEmpty(Model.Message))
@@ -58,14 +57,14 @@ else
 			}
 			<input type='submit' name='action' value='Game list' class="btn btn-primary" />
 			<input type='submit' name='action' value='Best' class="btn btn-primary" />
-			<input type='submit' name='action' value='Game rules' class="btn btn-primary" />
+			<a href="Rules" class="btn btn-primary">Game rules</a>
 			<input type='submit' name='action' value='Logout' class="btn btn-warning" />
 		}
 		else
 		{
-			<input type='submit' name='action' value='Game rules' class="btn btn-primary" />
-			<input type='submit' name='action' value='Login' class="btn btn-primary" />
-			<input type='submit' name='action' value='Register' class="btn btn-primary" />
+			<a href="Rules" class="btn btn-primary">Game rules</a>
+			<a href="~/Identity/Account/Login" class="btn btn-primary">Login</a>
+			<a href="~/Identity/Account/Register" class="btn btn-primary">Register</a>
 		}
 	</div>
 </form>
@@ -74,14 +73,6 @@ else
 
 
 
-
-<br />
-<p>TODO: add stuff:</p>
-<ol>
-	<li>If "not logged go to, login"</li>
-	<li>Show links to other rules, game list, register, home page</li>
-	<li>Handle postback</li>
-</ol>
 
 
 

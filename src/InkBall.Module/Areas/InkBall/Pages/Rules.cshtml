@@ -10,19 +10,6 @@
 	});
 }
 
-@{
-	var bIsLoggedIn = (Model.GameUser != null) ? true : false;
-	var bIsCurrentGameOk = Model.Game != null ? true : false;
-}
-@if (bIsLoggedIn)
-{
-	<p>Welcome <span>@Model.UserName</span></p>
-}
-else
-{
-	<p>Login to play</p>
-}
-
 
 
 

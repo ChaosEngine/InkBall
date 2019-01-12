@@ -95,22 +95,31 @@ namespace InkBall.Module.Pages
 			foreach (var path in paths)
 			{
 				var points = path.InkBallPoint;
-				builder.AppendFormat("{0}['", comma);
+				builder.AppendFormat("{0}[{1}'", comma
+#if DEBUG
+				, $"/*ID={path.iId}*/"
+#else
+				, ""
+#endif
+				);
 
-				string delimiter = string.Empty;
+				string space = string.Empty;
 				foreach (var point in points)
 				{
-					builder.AppendFormat("{0}{1},{2}", delimiter, point.iX, point.iY);
-					delimiter = " ";
+					builder.AppendFormat("{0}{1},{2}", space, point.iX, point.iY);
+					space = " ";
 				}
 
-				builder.AppendFormat("',{0},{1});",
+				builder.AppendFormat("',{0},{1}]",
+#if DEBUG
+					(isThisPlayerPlayingWithRed ? "true/*red*/" : "false/*blue*/"),
+					(isMainPlayerPoints ? "true/*player1*/" : "false/*player2*/")
+#else
 					(isThisPlayerPlayingWithRed ? "true" : "false"),
 					(isMainPlayerPoints ? "true" : "false")
-				).AppendLine();
-				builder.Append(']');
-
-				comma = ",";
+#endif
+				);
+				comma = "\r,";
 			}
 			builder.Append(']');
 
@@ -147,24 +156,5 @@ namespace InkBall.Module.Pages
 
 			return Page();
 		}
-
-		/*public async Task<string> GetPointsAndPathsAsInitScriptAsync(string pointJsMethodCall = "badSetPoint", string pathJsMethodCall = "badSetPath",
-			string pointJsEnumPrefix = "badGame.")
-		{
-			var sb = new StringBuilder(600);
-
-
-			GetPointsAsJavaScriptInitScript(this_points_n_paths.points, pointJsMethodCall, pointJsEnumPrefix, Game.IsThisPlayerPlayingWithRed(), true, ref sb);
-			GetPathsAsJavaScriptInitScript(this_points_n_paths.paths, pathJsMethodCall, Game.IsThisPlayerPlayingWithRed(), true, ref sb);
-
-			if (OtherPlayer != null)
-			{
-
-				GetPointsAsJavaScriptInitScript(other_points_n_paths.points, pointJsMethodCall, pointJsEnumPrefix, Game.IsThisPlayerPlayingWithRed(), false, ref sb);
-				GetPathsAsJavaScriptInitScript(other_points_n_paths.paths, pathJsMethodCall, Game.IsThisPlayerPlayingWithRed(), false, ref sb);
-			}
-
-			return sb.ToString();
-		}*/
 	}
 }

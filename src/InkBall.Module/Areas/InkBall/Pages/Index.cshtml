@@ -49,8 +49,8 @@
 		<input type='hidden' name='GameID' value='@Model.Game.iId' class='gameidbutton' />
 		<input type='submit' name='action' value='pause' class='btn btn-outline-primary' />
 		<input id='SurrenderButton' type='submit' name='action' value="@surrender_win_cancel_name" class='btn btn-outline-primary' />
-		<input id="DrawMode" type="button" value="Draw lines" class='btn btn-primary' />
-		<input id="Cancel" type="button" value="Cancel path" class='btn btn-primary' />
+		<input id="DrawMode" type="button" value="Draw lines" class='btn btn-primary' disabled />
+		<input id="CancelPath" type="button" value="Cancel path" class='btn btn-primary' disabled />
 	</form>
 </div>
 <span id="gameStatus" style="font-size:2em">•</span>
@@ -99,14 +99,14 @@
 			bPlayingWithRed, bPlayerActive, 15
 		);
 		game.StartSignalRConnection(iGameID, iPlayerID, '#messagesList', '#sendButton', '#messageInput');
-		game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus');
+		game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#DrawMode', '#CancelPath');
 
 		game.SetAllPoints(@(Model.GetPointsAsJavaScriptArray(Model.ThisPlayerPointsAndPaths.points, Model.Game.IsThisPlayerPlayingWithRed(), true)));
-		game.SetAllPaths(@(Model.GetPathsAsJavaScriptArray(Model.ThisPlayerPointsAndPaths.paths, Model.Game.IsThisPlayerPlayingWithRed(), true)));
+		game.SetAllPaths(@Html.Raw(Model.GetPathsAsJavaScriptArray(Model.ThisPlayerPointsAndPaths.paths, Model.Game.IsThisPlayerPlayingWithRed(), true)));
 		@if(Model.OtherPlayer != null)
 		{
 		@:game.SetAllPoints(@Model.GetPointsAsJavaScriptArray(Model.OtherPlayerPointsAndPaths.points, Model.Game.IsThisPlayerPlayingWithRed(), false));
-		@:game.SetAllPaths(@Model.GetPathsAsJavaScriptArray(Model.OtherPlayerPointsAndPaths.paths, Model.Game.IsThisPlayerPlayingWithRed(), false));
+		@:game.SetAllPaths(@Html.Raw(Model.GetPathsAsJavaScriptArray(Model.OtherPlayerPointsAndPaths.paths, Model.Game.IsThisPlayerPlayingWithRed(), false)));
 		}
 
 		//CountPointsDebug("#debug2");

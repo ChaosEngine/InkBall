@@ -309,16 +309,18 @@ namespace InkBall.Module.Hubs
 
 			await LoadGameAndPlayerStructures(token);
 
-			if (ThisGame == null || ThisPlayer == null || OtherPlayer == null || string.IsNullOrEmpty(OtherUserIdentifier)
-				|| string.IsNullOrEmpty(ThisUserName))
-			{
-				_logger.LogWarning("something bad ThisGame == null || ThisPlayer == null || OtherPlayer == null || " +
-					"string.IsNullOrEmpty(OtherUserIdentifier) || string.IsNullOrEmpty(ThisUserName)");
-				throw new ArgumentException("bad player or game");
-			}
-
 			try
 			{
+				if (ThisGame == null || ThisPlayer == null || OtherPlayer == null || string.IsNullOrEmpty(OtherUserIdentifier)
+					|| string.IsNullOrEmpty(ThisUserName))
+				{
+					throw new ArgumentException("bad player or game");
+				}
+				if (!ThisGame.IsThisPlayerActive())
+				{
+					throw new ArgumentException("not your turn");
+				}
+
 				var current_player_color = ThisGame.IsThisPlayerPlayingWithRed() ? InkBallPoint.StatusEnum.POINT_FREE_RED : InkBallPoint.StatusEnum.POINT_FREE_BLUE;
 
 				if (point == null || point.iGameId != ThisGame.iId || point.Status != current_player_color)
@@ -385,26 +387,99 @@ namespace InkBall.Module.Hubs
 
 			await LoadGameAndPlayerStructures(token);
 
-			if (ThisGame == null || ThisPlayer == null || OtherPlayer == null || string.IsNullOrEmpty(OtherUserIdentifier)
-				|| string.IsNullOrEmpty(ThisUserName))
-			{
-				_logger.LogWarning("something bad ThisGame == null || ThisPlayer == null || OtherPlayer == null || " +
-					"string.IsNullOrEmpty(OtherUserIdentifier) || string.IsNullOrEmpty(ThisUserName)");
-				throw new ArgumentException("bad game or player");
-			}
-
 			try
 			{
-				var current_player_color = ThisGame.IsThisPlayerPlayingWithRed() ? InkBallPoint.StatusEnum.POINT_FREE_RED : InkBallPoint.StatusEnum.POINT_FREE_BLUE;
+				if (ThisGame == null || ThisPlayer == null || OtherPlayer == null || string.IsNullOrEmpty(OtherUserIdentifier)
+					|| string.IsNullOrEmpty(ThisUserName))
+				{
+					throw new ArgumentException("bad game or player");
+				}
+				if (!ThisGame.IsThisPlayerActive())
+				{
+					throw new ArgumentException("not your turn");
+				}
 
 				if (path == null || path.iPlayerId <= 0 || path.iGameId <= 0 || path.iGameId != ThisGame.iId)
 					throw new ArgumentException("bad path");
 				if (path.iPlayerId != ThisPlayer.iId && path.iPlayerId != OtherPlayer.iId)
 					throw new ArgumentException("bad Player ID");
 
+				var current_player_color = ThisGame.IsThisPlayerPlayingWithRed() ? InkBallPoint.StatusEnum.POINT_FREE_RED : InkBallPoint.StatusEnum.POINT_FREE_BLUE;
+				var other_player_color = ThisGame.IsThisPlayerPlayingWithRed() ? InkBallPoint.StatusEnum.POINT_FREE_BLUE : InkBallPoint.StatusEnum.POINT_FREE_RED;
+				var owning_color = ThisGame.IsThisPlayerPlayingWithRed() ? InkBallPoint.StatusEnum.POINT_OWNED_BY_RED : InkBallPoint.StatusEnum.POINT_OWNED_BY_BLUE;
+				var db_path_player = ThisPlayer.iId == path.iPlayerId ? ThisPlayer : OtherPlayer;
 
-				var new_path = new InkBallPathViewModel(path);
-				new_path.GetOwnedPoints(ThisGame.IsThisPlayerPlayingWithRed() ? InkBallPoint.StatusEnum.POINT_OWNED_BY_RED : InkBallPoint.StatusEnum.POINT_OWNED_BY_BLUE);
+				var player_already_placed_points_fromDB = await (from p in _dbContext.InkBallPoint
+																 where p.iGameId == ThisGame.iId && p.iPlayerId == ThisPlayer.iId
+																 && p.Status == current_player_color && p.iEnclosingPathId == null
+																 select p).ToArrayAsync(token);
+				var points_on_path = path.InkBallPoint;
+				InkBallPathViewModel new_path;
+				using (var trans = await _dbContext.Database.BeginTransactionAsync(token))
+				{
+					try
+					{
+						var db_path = new InkBallPath
+						{
+							// iId = path.iId,
+							iGameId = path.iGameId,
+							iPlayerId = path.iPlayerId,
+						};
+						var status = InkBallPoint.StatusEnum.POINT_STARTING;
+						foreach (var pip in points_on_path)
+						{
+							//TODO: check in-path-next-point from start to end with closing
+							var found = player_already_placed_points_fromDB.FirstOrDefault(p => p.iX == pip.iX && p.iY == pip.iY);
+							if (found == null)
+							{
+								throw new ArgumentException("point not in path");
+							}
+							db_path.InkBallPointsInPath.Add(new InkBallPointsInPath
+							{
+								Path = db_path,
+								Point = found,
+							});
+							found.Status = status;
+							status = InkBallPoint.StatusEnum.POINT_IN_PATH;
+						}
+						await _dbContext.InkBallPath.AddAsync(db_path, token);
+
+						ThisGame.bIsPlayer1Active = !ThisGame.bIsPlayer1Active;
+
+						var owning_points = path.GetOwnedPoints(
+							ThisGame.IsThisPlayerPlayingWithRed() ? InkBallPoint.StatusEnum.POINT_OWNED_BY_RED : InkBallPoint.StatusEnum.POINT_OWNED_BY_BLUE);
+
+						var other_player_already_placed_points_fromDB = await (from p in _dbContext.InkBallPoint
+																			   where p.iGameId == ThisGame.iId && p.iPlayerId == OtherPlayer.iId
+																			   && p.Status == other_player_color && p.iEnclosingPathId == null
+																			   select p).ToArrayAsync(token);
+						foreach (var op in owning_points)
+						{
+							//TODO: pnpoly point inside path
+							var found = other_player_already_placed_points_fromDB.FirstOrDefault(p => p.iX == op.iX && p.iY == op.iY);
+							if (found == null)
+							{
+								throw new ArgumentException($"owning point not found [{op.iX}, {op.iY}]");
+							}
+							found.Status = owning_color;
+							found.EnclosingPath = db_path;
+						}
+
+						db_path_player.sLastMoveCode = JsonConvert.SerializeObject(path);
+
+						await _dbContext.SaveChangesAsync(token);
+
+						new_path = new InkBallPathViewModel(db_path, path.sPointsAsString, path.sOwnedPointsAsString);
+
+						trans.Commit();
+					}
+					catch (Exception ex)
+					{
+						trans.Rollback();
+						_logger.LogError(ex, nameof(_dbContext.SurrenderGameFromPlayerAsync));
+						throw;
+					}
+				}
 
 				await Clients.User(OtherUserIdentifier).ServerToClientPath(new_path, ThisUserName);
 				// await Clients.User(OtherUserIdentifier).ServerToClientPath(new_path, ThisUserName);
@@ -423,8 +498,6 @@ namespace InkBall.Module.Hubs
 			CancellationToken token = this.Context.ConnectionAborted;
 
 			await LoadGameAndPlayerStructures(token);
-
-
 
 			if (ThisGame == null || ThisPlayer == null || OtherPlayer == null || string.IsNullOrEmpty(OtherUserIdentifier)
 				|| string.IsNullOrEmpty(ThisUserName))

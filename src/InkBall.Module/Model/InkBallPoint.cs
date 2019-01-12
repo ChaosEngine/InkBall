@@ -29,9 +29,9 @@ namespace InkBall.Module.Model
 			POINT_FREE_BLUE = -2,
 			POINT_FREE = -1,
 			POINT_STARTING = 0,
-			POINT_IN_PATH = 2,
-			POINT_OWNED_BY_RED = 3,
-			POINT_OWNED_BY_BLUE = 4
+			POINT_IN_PATH = 1,
+			POINT_OWNED_BY_RED = 2,
+			POINT_OWNED_BY_BLUE = 3
 		}
 
 

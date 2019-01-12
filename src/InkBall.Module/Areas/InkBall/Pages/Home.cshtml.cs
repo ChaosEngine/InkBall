@@ -30,7 +30,7 @@ namespace InkBall.Module.Pages
 		{
 			await LoadUserPlayerAndGameAsync();
 		}
-
+		
 		public async Task<IActionResult> OnPostAsync(string action, string gameType)
 		{
 			await LoadUserPlayerAndGameAsync();

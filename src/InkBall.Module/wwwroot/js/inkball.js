@@ -204,6 +204,8 @@ class InkBallGame {
 		this.m_Debug = null;
 		this.m_Player2Name = null;
 		this.m_SurrenderButton = null;
+		this.m_DrawMode = null;
+		this.m_CancelPath = null;
 		this.m_bMouseDown = false;
 		this.m_bHandlingEvent = false;
 		this.m_bDrawLines = !true;
@@ -238,8 +240,6 @@ class InkBallGame {
 					this.iConnErrCount++;
 				setTimeout(() => this.start(), 4000 + (this.iExponentialBackOffMillis * this.iConnErrCount));
 			}
-			// else
-			// 	await this.start();
 		});
 	}
 
@@ -303,8 +303,21 @@ class InkBallGame {
 			let li = document.createElement("li");
 			li.textContent = encodedMsg;
 			document.querySelector(sMsgListSel).appendChild(li);
-			//TODO: implement some UI logic
-			this.m_Player2Name.innerHTML = join.OtherPlayerName;
+
+			if (this.m_SurrenderButton !== null) {
+				if (join.OtherPlayerName != '') {
+					this.m_Player2Name.innerHTML = join.OtherPlayerName;
+					this.m_SurrenderButton.value = 'surrender';
+					this.ShowMobileStatus('Your move');
+				}
+			}
+			if (this.m_DrawMode !== null) {
+				this.m_DrawMode.disabled = '';
+			}
+			if (this.m_CancelPath !== null) {
+				this.m_CancelPath.disabled = '';
+			}
+
 			this.m_bHandlingEvent = false;
 		}.bind(this));
 
@@ -406,7 +419,7 @@ class InkBallGame {
 			Target.style.MozUserSelect = "none";
 		else//All other route (ie: Opera)
 			Target.onmousedown = function () { return false; };
-		Target.style.cursor = "default";
+		//Target.style.cursor = "default";
 	}
 
 	f_clientWidth() {
@@ -859,11 +872,13 @@ class InkBallGame {
 			this.m_bIsPlayerActive = true;
 			this.ShowMobileStatus('Oponent has moved, your turn');
 			this.m_Screen.style.cursor = "crosshair";
+			this.m_DrawMode.disabled = this.m_CancelPath.disabled = '';
 		}
 		else {
 			this.m_bIsPlayerActive = false;
 			this.ShowMobileStatus('Waiting for oponent move');
 			this.m_Screen.style.cursor = "wait";
+			this.m_DrawMode.disabled = this.m_CancelPath.disabled = 'disabled';
 		}
 		this.m_bHandlingEvent = false;
 	}
@@ -895,6 +910,7 @@ class InkBallGame {
 			this.m_bIsPlayerActive = true;
 			this.ShowMobileStatus('Oponent has moved, your turn');
 			this.m_Screen.style.cursor = "crosshair";
+			this.m_DrawMode.disabled = this.m_CancelPath.disabled = '';
 		}
 		else {
 
@@ -917,6 +933,7 @@ class InkBallGame {
 			this.m_bIsPlayerActive = false;
 			this.ShowMobileStatus('Waiting for oponent move');
 			this.m_Screen.style.cursor = "wait";
+			this.m_DrawMode.disabled = this.m_CancelPath.disabled = 'disabled';
 		}
 		this.m_bHandlingEvent = false;
 	}
@@ -1153,21 +1170,20 @@ class InkBallGame {
 		this.m_bMouseDown = false;
 	}
 
-	OnDrawModeClick() {
+	OnDrawModeClick(event) {
 		this.m_bDrawLines = !this.m_bDrawLines;
-		let draw_mode = document.getElementById('DrawMode');
+		let btn = event.target;
 		if (!this.m_bDrawLines) {
-			draw_mode.value = 'Draw lines';
+			btn.value = 'Draw lines';
 		}
 		else {
-			draw_mode.value = 'Draw dots';
+			btn.value = 'Draw dots';
 		}
 		this.m_iLastX = this.m_iLastY = -1;
 		this.m_Line = null;
 	}
 
 	OnCancelClick() {
-		//alert('cancel clicked');
 		if (this.m_bDrawLines) {
 			if (this.m_Line != null) {
 				let points = this.m_Line.$GetPoints();
@@ -1211,9 +1227,12 @@ class InkBallGame {
 	 * @param {HTMLElement} sScreen screen dontainer selector
 	 * @param {HTMLElement} sPlayer2Name displaying element selector
 	 * @param {HTMLElement} sGameStatus game stat element selector
+	 * @param {HTMLElement} sSurrenderButton surrender button element selector
+	 * @param {HTMLElement} sDrawMode draw mode button element selector
+	 * @param {HTMLElement} sCancelPath cancel path button element selector
 	 * @param {number} iTooLong2Duration how long waiting is too long
 	 */
-	PrepareDrawing(sScreen, sPlayer2Name, sGameStatus, iTooLong2Duration = 125) {
+	PrepareDrawing(sScreen, sPlayer2Name, sGameStatus, sSurrenderButton, sDrawMode, sCancelPath, iTooLong2Duration = 125) {
 		this.m_bIsWon = false;
 		this.m_iDelayBetweenMultiCaptures = 4000;
 		this.m_iTimerInterval = 2000;
@@ -1233,7 +1252,6 @@ class InkBallGame {
 		this.m_iClientWidth = 0;
 		this.m_iClientHeight = 0;
 		this.m_Debug = null;
-		this.m_SurrenderButton = null;
 		this.m_bMouseDown = false;
 		this.m_bHandlingEvent = false;
 		this.m_bDrawLines = !true;
@@ -1246,7 +1264,9 @@ class InkBallGame {
 		this.m_Debug = document.getElementById('debug0');
 		this.m_Player2Name = document.querySelector(sPlayer2Name);
 		this.m_GameStatus = document.querySelector(sGameStatus);
-		this.m_SurrenderButton = document.getElementById('SurrenderButton');
+		this.m_SurrenderButton = document.querySelector(sSurrenderButton);
+		this.m_CancelPath = document.querySelector(sCancelPath);
+		this.m_DrawMode = document.querySelector(sDrawMode);
 		this.m_Screen = document.querySelector(sScreen);
 		if (!this.m_Screen) {
 			alert("no board");
@@ -1267,18 +1287,26 @@ class InkBallGame {
 			this.m_Screen.onmousemove = this.OnMouseMove.bind(this);
 			this.m_Screen.onmouseup = this.OnMouseUp.bind(this);
 
-			let button = document.getElementById('DrawMode');
-			button.onclick = this.OnDrawModeClick.bind(this);
-			button = document.getElementById('Cancel');
-			button.onclick = this.OnCancelClick.bind(this);
+			this.m_DrawMode.onclick = this.OnDrawModeClick.bind(this);
+			this.m_CancelPath.onclick = this.OnCancelClick.bind(this);
 
-			if (this.m_bIsPlayerActive) {
-				this.ShowMobileStatus('Your move');
-				this.m_Screen.style.cursor = "crosshair";
+			if (this.m_Player2Name.innerHTML == '???') {
+				this.ShowMobileStatus('Waiting for other player to connect');
+				this.m_Screen.style.cursor = "wait";
 			}
 			else {
-				this.ShowMobileStatus('Waiting for oponent move');
-				this.m_Screen.style.cursor = "wait";
+				this.m_SurrenderButton.value = 'surrender';
+
+				if (this.m_bIsPlayerActive) {
+					this.ShowMobileStatus('Your move');
+					this.m_Screen.style.cursor = "crosshair";
+					this.m_DrawMode.disabled = this.m_CancelPath.disabled = '';
+				}
+				else {
+					this.ShowMobileStatus('Waiting for oponent move');
+					this.m_Screen.style.cursor = "wait";
+					this.m_DrawMode.disabled = this.m_CancelPath.disabled = 'disabled';
+				}
 			}
 		}
 	}

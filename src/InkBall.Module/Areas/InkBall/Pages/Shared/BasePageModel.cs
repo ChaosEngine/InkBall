@@ -23,7 +23,7 @@ namespace InkBall.Module.Pages
 
 		public InkBallPlayer Player { get; protected set; }
 
-		public virtual string UserName => base.User.FindFirstValue(ClaimTypes.NameIdentifier);
+		public virtual string UserName => GameUser.UserName;
 
 		public InkBallGame Game { get; protected set; }
 
