@@ -7,22 +7,17 @@ using System.Threading.Tasks;
 using InkBall.Module.Hubs;
 using InkBall.Module.Model;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace InkBall.Module
 {
 	public static class Authentication
 	{
-		public static async Task InkBallCreateUserPrincipalAsync(dynamic user,
+		static async Task InkBallCreateUserPrincipalAsync(INamedAgedUser user,
 			ClaimsPrincipal principal, GamesContext inkBallContext, CancellationToken token = default)
 		{
 			// use this.UserManager if needed
@@ -69,9 +64,22 @@ namespace InkBall.Module
 			}
 		}
 
-		public static async Task InkBallSignOutActionAsync(string nameIdentifer, GamesContext inkBallContext,
+		public static async Task InkBallCreateUserPrincipalAsync(HttpContext context, INamedAgedUser user, ClaimsPrincipal principal)
+		{
+			CancellationToken token = context.RequestAborted;
+
+			using (IServiceScope scope = context.RequestServices.CreateScope())
+			{
+				GamesContext inkBallContext = scope.ServiceProvider.GetRequiredService<GamesContext>();
+
+				if (inkBallContext != null && user != null)
+					await InkBall.Module.Authentication.InkBallCreateUserPrincipalAsync(user, principal, inkBallContext, context.RequestAborted);
+			}
+		}
+
+		static async Task InkBallSignOutActionAsync(string nameIdentifer, GamesContext inkBallContext,
 			IHubContext<ChatHub, IChatClient> inkballHubContext, ILogger logger, ISession sessionAccessor,
-			CancellationToken token)
+			CancellationToken token = default)
 		{
 			var games_to_surrender = await inkBallContext.InkBallGame
 				.Include(gp1 => gp1.Player1).ThenInclude(p1 => p1.User)
@@ -135,6 +143,22 @@ namespace InkBall.Module
 						trans.Rollback();
 						logger.LogError(ex, ex.Message);
 					}
+				}
+			}
+		}
+
+		public static async Task InkBallSignOutActionAsync(HttpContext context, ILogger logger, string nameIdentifer)
+		{
+			using (IServiceScope scope = context.RequestServices.CreateScope())
+			{
+				GamesContext inkBallContext = scope.ServiceProvider.GetRequiredService<GamesContext>();
+				IHubContext<ChatHub, IChatClient> inkballHubContext = scope.ServiceProvider.GetRequiredService<IHubContext<ChatHub, IChatClient>>();
+
+				if (inkBallContext != null && inkballHubContext != null)
+				{
+					await InkBallSignOutActionAsync(
+						context.User.FindFirstValue(ClaimTypes.NameIdentifier),
+						inkBallContext, inkballHubContext, logger, context.Session, context.RequestAborted);
 				}
 			}
 		}

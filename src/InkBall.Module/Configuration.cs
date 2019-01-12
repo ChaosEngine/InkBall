@@ -53,7 +53,7 @@ namespace InkBall.Module
 		public static void AddInkBallCommonUI<TGamesDBContext, TIdentUser>(this IServiceCollection services, IHostingEnvironment environment,
 			Action<InkBallOptions> configureOptions)
 			where TGamesDBContext : IGamesContext
-			where TIdentUser : IdentityUser
+			where TIdentUser : IdentityUser, INamedAgedUser
 		{
 			InkBallOptions options = new InkBallOptions();
 			options.WebRootFileProvider = environment.WebRootFileProvider;
