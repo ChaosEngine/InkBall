@@ -94,7 +94,7 @@ namespace InkBall.Module.Pages
 			builder.Append('[');
 			foreach (var path in paths)
 			{
-				var points = path.InkBallPoint;
+				var points = path.InkBallPointsInPath;
 				builder.AppendFormat("{0}[{1}'", comma
 #if DEBUG
 				, $"/*ID={path.iId}*/"
@@ -106,7 +106,7 @@ namespace InkBall.Module.Pages
 				string space = string.Empty;
 				foreach (var point in points)
 				{
-					builder.AppendFormat("{0}{1},{2}", space, point.iX, point.iY);
+					builder.AppendFormat("{0}{1},{2}", space, point.Point.iX, point.Point.iY);
 					space = " ";
 				}
 
