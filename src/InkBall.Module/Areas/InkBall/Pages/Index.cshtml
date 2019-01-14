@@ -10,6 +10,8 @@
 		WriteLiteral($"<link rel='stylesheet' href='{Url.Content("~/css/inkball.css")}' />");
 	});
 
+
+
 	string P2Name = Model.Game.Player2 != null ? Model.Game.Player2?.User?.UserName : "???";
 	string surrender_win_cancel_name;
 	if(Model.Game.Player2 != null)
@@ -29,7 +31,7 @@
 	}
 }
 <h3>
-	This is from @(typeof(IndexModel).FullName)
+	This is Inball Game page
 </h3>
 <p>
 	<!-- Debug State -->
@@ -40,39 +42,37 @@
 
 	<img src="~/img/image.png" alt="image" />
 </p>
-<span>
-	@Model.Game.Player1?.User?.UserName
-</span>vs
-<span id='Player2Name'>@P2Name</span>
-<div class="buttony">
-	<form action="Games" method="post" asp-antiforgery="true">
-		<input type='hidden' name='GameID' value='@Model.Game.iId' class='gameidbutton' />
-		<input type='submit' name='action' value='pause' class='btn btn-outline-primary' />
-		<input id='SurrenderButton' type='submit' name='action' value="@surrender_win_cancel_name" class='btn btn-outline-primary' />
-		<input id="DrawMode" type="button" value="Draw lines" class='btn btn-primary' disabled />
-		<input id="CancelPath" type="button" value="Cancel path" class='btn btn-primary' disabled />
-	</form>
-</div>
-<span id="gameStatus" style="font-size:2em">•</span>
-<span id="debug0"></span>
-<span id="debug1"></span>
-<span id="debug2"></span>
 
-<div class="container">
-	<div class="row">&nbsp;</div>
-	<div class="row">&nbsp;</div>
+@Model.Game.Player1?.User?.UserName vs <span id='Player2Name'>@P2Name</span>
+<div class="container inkgame">
 	<div class="row">
-		<div id="screen" style="position:relative;width:@(Model.Game.iBoardWidth)px; height:@(Model.Game.iBoardHeight)px; border:1px solid red; background-image:url('../img/grid75.png')">
+		<form action="Games" method="post" asp-antiforgery="true">
+			<input type='hidden' name='GameID' value='@Model.Game.iId' class='gameidbutton' />
+			<input type='submit' name='action' value='pause' class='btn btn-outline-primary' />
+			<input id='SurrenderButton' type='submit' name='action' value="@surrender_win_cancel_name" class='btn btn-outline-primary' />
+			<input id="DrawMode" type="button" value="Draw lines" class='btn btn-primary' disabled />
+			<input id="CancelPath" type="button" value="Cancel path" class='btn btn-primary' disabled />
+		</form>
+	</div>
+	<div id="status" class="row">
+		<span id="gameStatus">•</span>
+		<span id="debug0"></span>
+		<span id="debug1"></span>
+		<span id="debug2"></span>
+	</div>
+	<div class="row">
+		<div id="screen" style="width:@(Model.Game.iBoardWidth)px; height:@(Model.Game.iBoardHeight)px">
 		</div>
-		<div class="col-4">
+		<div class="col-md-4">
 			<div class="input-group">
-				<input id="messageInput" type="text" class="form-control" placeholder="Message..." aria-label="Message to send" aria-describedby="sendButton" />
+				<input id="messageInput" type="text" class="form-control" placeholder="Message..." aria-label="Message to send" aria-describedby="sendButton"
+					   onblur="document.querySelector('#sendButton').disabled = this.value == '';" />
 				<div class="input-group-append">
-					<input id="sendButton" type="button" value="Send Message" class="btn btn-outline-secondary" />
+					<input id="sendButton" type="button" value="Send Message" class="btn btn-outline-secondary" disabled />
 				</div>
 			</div>
 			<hr />
-			<ul id="messagesList" style="overflow:auto;height:50%"></ul>
+			<ul id="messagesList"></ul>
 		</div>
 	</div>
 </div>
@@ -113,10 +113,10 @@
 		//$('#debug1').text((bPlayerActive ? "player Active" : "player INactive"));
 	});
 
-	window.addEventListener('beforeunload', function (event) {
-		//event.preventDefault();		
+	window.addEventListener('beforeunload', function (e) {
+		//e.preventDefault();		
 		game.StopSignalRConnection();
-		//event.returnValue = '';
+		//e.returnValue = '';
 	});
 </script>
 

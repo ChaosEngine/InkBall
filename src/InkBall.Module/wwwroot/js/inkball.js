@@ -347,7 +347,9 @@ class InkBallGame {
 		document.querySelector(sMsgSendButtonSel).addEventListener("click", function (event) {
 			event.preventDefault();
 
-			let encodedMsg = document.querySelector(sMsgInputSel).value;
+			let encodedMsg = document.querySelector(sMsgInputSel).value.trim();
+			if (encodedMsg == '') return;
+
 			let ping = new PingCommand(encodedMsg);
 
 			this.SendAsyncData(ping);

@@ -1,3 +1,27 @@
 ﻿h3 {
-    color: darkorange;
+	color: darkorange;
+}
+
+.inkgame div#status span {
+	vertical-align: middle;
+	display: inline-block;
+	line-height: 30px;
+}
+
+	.inkgame div#status span#gameStatus {
+		font-size: 2em;
+		vertical-align: middle;
+		display: inline-block;
+		line-height: 25px;
+	}
+
+.inkgame div#screen {
+	position: relative;
+	border: 1px solid red;
+	background-image: url('../img/grid75.png')
+}
+
+.inkgame ul#messagesList {
+	overflow: auto;
+	height: 50%
 }

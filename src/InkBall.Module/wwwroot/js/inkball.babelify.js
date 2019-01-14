@@ -481,7 +481,8 @@ var InkBallGame = function () {
       }.bind(this));
       document.querySelector(sMsgSendButtonSel).addEventListener("click", function (event) {
         event.preventDefault();
-        var encodedMsg = document.querySelector(sMsgInputSel).value;
+        var encodedMsg = document.querySelector(sMsgInputSel).value.trim();
+        if (encodedMsg == '') return;
         var ping = new PingCommand(encodedMsg);
         this.SendAsyncData(ping);
       }.bind(this), false);
