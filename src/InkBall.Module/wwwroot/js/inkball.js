@@ -520,7 +520,29 @@ class InkBallGame {
 
 	SetAllPoints(points) {
 		points.forEach(p => {
-			this.SetPoint(p[0], p[1], p[2]);
+			if (p[3] === this.g_iPlayerID) {//iPlayerID
+			}
+			else {
+				switch (p[2]) {//Status
+					case StatusEnum.POINT_FREE:
+					case StatusEnum.POINT_FREE_RED:
+					case StatusEnum.POINT_FREE_BLUE:
+					case StatusEnum.POINT_STARTING:
+					case StatusEnum.POINT_OWNED_BY_RED:
+					case StatusEnum.POINT_OWNED_BY_BLUE:
+						break;
+					case StatusEnum.POINT_IN_PATH:
+						if (this.m_bIsPlayingWithRed === true) {//bPlayingWithRed
+							p[2] = StatusEnum.POINT_FREE_BLUE;
+						}
+						else {
+							p[2] = StatusEnum.POINT_FREE_RED;
+						}
+						break;
+				}
+			}
+
+			this.SetPoint(p[0]/*x*/, p[1]/*y*/, p[2]/*Status*/);
 		});
 	}
 
@@ -551,7 +573,7 @@ class InkBallGame {
 
 	SetAllPaths(paths) {
 		paths.forEach(p => {
-			this.SetPath(p[0], p[1], p[2]);
+			this.SetPath(p[0]/*points*/, this.m_bIsPlayingWithRed, p[1] == this.g_iPlayerID/*isMainPlayerPoints*/);
 		});
 	}
 

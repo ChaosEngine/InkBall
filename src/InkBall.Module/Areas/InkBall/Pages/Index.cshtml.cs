@@ -19,79 +19,31 @@ namespace InkBall.Module.Pages
 	{
 		public InkBallPlayer OtherPlayer { get; protected set; }
 
-		public (IEnumerable<InkBallPath> paths, IEnumerable<InkBallPoint> points) ThisPlayerPointsAndPaths { get; private set; }
+		public (IEnumerable<InkBallPath> Paths, IEnumerable<InkBallPoint> Points) PlayerPointsAndPaths { get; private set; }
 
-		public (IEnumerable<InkBallPath> paths, IEnumerable<InkBallPoint> points) OtherPlayerPointsAndPaths { get; private set; }
-
-
-		public string GetPointsAsJavaScriptArray(IEnumerable<InkBallPoint> points, bool isThisPlayerPlayingWithRed, bool isMainPlayerPoints)
+		public string GetPointsAsJavaScriptArray(IEnumerable<InkBallPoint> points)
 		{
-			StringBuilder builder = new StringBuilder(100);
+			StringBuilder builder = new StringBuilder("[", 300);
 
-			string comma = "";
-			builder.Append('[');
-			foreach (var value in points)
+			string comma = string.Empty;
+			foreach (var p in points)
 			{
-				builder.AppendFormat("{0}[{1},{2},", comma, value.iX, value.iY);
-
-				if (isMainPlayerPoints)
-				{
-					builder.Append((int)value.Status)
 #if DEBUG
-					.Append("/*mine*/")
+				builder.AppendFormat("{4}[{0}/*x*/,{1}/*y*/,{2}/*val*/,{3}/*playerID*/]", p.iX, p.iY, (int)p.Status, p.iPlayerId, comma);
+#else
+				builder.AppendFormat("{4}[{0},{1},{2},{3}]", p.iX, p.iY, (int)p.Status, p.iPlayerId, comma);
 #endif
-					;
-				}
-				else
-				{
-					switch (value.Status)
-					{
-						case InkBallPoint.StatusEnum.POINT_FREE:
-						case InkBallPoint.StatusEnum.POINT_FREE_RED:
-						case InkBallPoint.StatusEnum.POINT_FREE_BLUE:
-						case InkBallPoint.StatusEnum.POINT_STARTING:
-						case InkBallPoint.StatusEnum.POINT_IN_PATH:
-							if (isThisPlayerPlayingWithRed)
-							{
-								builder.Append((int)InkBallPoint.StatusEnum.POINT_FREE_BLUE)
-#if DEBUG
-									.Append("/*red*/")
-#endif
-									;
-							}
-							else
-							{
-								//builder.Append("-3");
-								builder.Append((int)InkBallPoint.StatusEnum.POINT_FREE_RED)
-#if DEBUG
-									.Append("/*blue*/")
-#endif
-									;
-							}
-							break;
-						case InkBallPoint.StatusEnum.POINT_OWNED_BY_RED:
-						case InkBallPoint.StatusEnum.POINT_OWNED_BY_BLUE:
-							builder.Append((int)value.Status)
-#if DEBUG
-								.Append("/*theirs*/")
-#endif
-								;
-							break;
-					}
-				}
-				builder.Append("]");
-				comma = ",";
+				comma = ",\r";
 			}
 			builder.Append(']');
 
 			return builder.ToString();
 		}
 
-		public string GetPathsAsJavaScriptArray(IEnumerable<InkBallPath> paths, bool isThisPlayerPlayingWithRed, bool isMainPlayerPoints)
+		public string GetPathsAsJavaScriptArray(IEnumerable<InkBallPath> paths)
 		{
-			StringBuilder builder = new StringBuilder(100);
+			StringBuilder builder = new StringBuilder("[", 300);
 			string comma = "";
-			builder.Append('[');
 			foreach (var path in paths)
 			{
 				var points = path.InkBallPointsInPath;
@@ -106,20 +58,22 @@ namespace InkBall.Module.Pages
 				string space = string.Empty;
 				foreach (var point in points)
 				{
-					builder.AppendFormat("{0}{1},{2}", space, point.Point.iX, point.Point.iY);
+#if DEBUG
+					builder.AppendFormat("{2}{0}/*x*/,{1}/*y*/", point.Point.iX, point.Point.iY, space);
+#else
+					builder.AppendFormat("{2}{0},{1}", point.Point.iX, point.Point.iY, space);
+#endif
 					space = " ";
 				}
 
-				builder.AppendFormat("',{0},{1}]",
+				builder.AppendFormat(
 #if DEBUG
-					(isThisPlayerPlayingWithRed ? "true/*red*/" : "false/*blue*/"),
-					(isMainPlayerPoints ? "true/*player1*/" : "false/*player2*/")
+					"',{0}/*playerID*/]",
 #else
-					(isThisPlayerPlayingWithRed ? "true" : "false"),
-					(isMainPlayerPoints ? "true" : "false")
+					"',{0}]",
 #endif
-				);
-				comma = "\r,";
+					path.iPlayerId);
+				comma = ",\r";
 			}
 			builder.Append(']');
 
@@ -141,18 +95,12 @@ namespace InkBall.Module.Pages
 			if (Game == null)
 				return Redirect("Home");
 
-			InkBallPlayer otherPlayer = Game.GetOtherPlayer();
-			OtherPlayer = otherPlayer;
-
+			// InkBallPlayer otherPlayer = Game.GetOtherPlayer();
+			// OtherPlayer = otherPlayer;
 
 			var token = HttpContext.RequestAborted;
-			ThisPlayerPointsAndPaths = await _dbContext.LoadPointsAndPathsAsync(Game.iId, Player.iId, token);
 
-			if (OtherPlayer != null)
-			{
-				OtherPlayerPointsAndPaths = await _dbContext.LoadPointsAndPathsAsync(Game.iId, OtherPlayer.iId, token);
-			}
-
+			PlayerPointsAndPaths = await _dbContext.LoadPointsAndPathsAsync(Game.iId, token);
 
 			return Page();
 		}

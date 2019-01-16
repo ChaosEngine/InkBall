@@ -608,29 +608,28 @@ namespace InkBall.Module.Model
 			return await query.ToArrayAsync(token);
 		}
 
-		private async Task<IEnumerable<InkBallPath>> GetPathsFromDatabaseAsync(int iGameID, int iPlayerID, IEnumerable<InkBallPoint> points, CancellationToken token = default)
+		private async Task<IEnumerable<InkBallPath>> GetPathsFromDatabaseAsync(int iGameID, IEnumerable<InkBallPoint> points, CancellationToken token = default)
 		{
 			var query = from pa in InkBallPath.Include(x => x.InkBallPointsInPath)
-						where pa.iGameId == iGameID && pa.iPlayerId == iPlayerID
+						where pa.iGameId == iGameID// && pa.iPlayerId == iPlayerID
 						select pa;
 			var paths_combined = await query.ToArrayAsync(token);
 			return paths_combined;
 		}
 
-		private async Task<IEnumerable<InkBallPoint>> GetPointsFromDatabaseAsync(int iGameID, int iPlayerID, CancellationToken token = default)
+		private async Task<IEnumerable<InkBallPoint>> GetPointsFromDatabaseAsync(int iGameID, CancellationToken token = default)
 		{
 			var query = from ip in InkBallPoint
-						where ip.iGameId == iGameID && ip.iPlayerId == iPlayerID
+						where ip.iGameId == iGameID// && ip.iPlayerId == iPlayerID
 						select ip;
 
 			return await query.ToArrayAsync(token);
 		}
 
-		public async Task<(IEnumerable<InkBallPath> paths, IEnumerable<InkBallPoint> points)> LoadPointsAndPathsAsync(int iGameID, int iPlayerID,
-			CancellationToken token = default)
+		public async Task<(IEnumerable<InkBallPath> Paths, IEnumerable<InkBallPoint> Points)> LoadPointsAndPathsAsync(int iGameID, CancellationToken token = default)
 		{
-			var points = await GetPointsFromDatabaseAsync(iGameID, iPlayerID, token);
-			var paths = await GetPathsFromDatabaseAsync(iGameID, iPlayerID, points, token);
+			var points = await GetPointsFromDatabaseAsync(iGameID, token);
+			var paths = await GetPathsFromDatabaseAsync(iGameID, points, token);
 
 			return (paths, points);
 		}

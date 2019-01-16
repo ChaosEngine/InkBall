@@ -636,6 +636,27 @@ var InkBallGame = function () {
       var _this9 = this;
 
       points.forEach(function (p) {
+        if (p[3] === _this9.g_iPlayerID) {} else {
+          switch (p[2]) {
+            case StatusEnum.POINT_FREE:
+            case StatusEnum.POINT_FREE_RED:
+            case StatusEnum.POINT_FREE_BLUE:
+            case StatusEnum.POINT_STARTING:
+            case StatusEnum.POINT_OWNED_BY_RED:
+            case StatusEnum.POINT_OWNED_BY_BLUE:
+              break;
+
+            case StatusEnum.POINT_IN_PATH:
+              if (_this9.m_bIsPlayingWithRed === true) {
+                p[2] = StatusEnum.POINT_FREE_BLUE;
+              } else {
+                p[2] = StatusEnum.POINT_FREE_RED;
+              }
+
+              break;
+          }
+        }
+
         _this9.SetPoint(p[0], p[1], p[2]);
       });
     }
@@ -679,7 +700,7 @@ var InkBallGame = function () {
       var _this10 = this;
 
       paths.forEach(function (p) {
-        _this10.SetPath(p[0], p[1], p[2]);
+        _this10.SetPath(p[0], _this10.m_bIsPlayingWithRed, p[1] == _this10.g_iPlayerID);
       });
     }
   }, {
