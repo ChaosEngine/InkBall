@@ -29,7 +29,7 @@ namespace InkBall.Module.Pages
 			foreach (var p in points)
 			{
 #if DEBUG
-				builder.AppendFormat("{4}[{0}/*x*/,{1}/*y*/,{2}/*val*/,{3}/*playerID*/]", p.iX, p.iY, (int)p.Status, p.iPlayerId, comma);
+				builder.AppendFormat("{4}[/*id={5}*/{0}/*x*/,{1}/*y*/,{2}/*val*/,{3}/*playerID*/]", p.iX, p.iY, (int)p.Status, p.iPlayerId, comma, p.iId);
 #else
 				builder.AppendFormat("{4}[{0},{1},{2},{3}]", p.iX, p.iY, (int)p.Status, p.iPlayerId, comma);
 #endif
@@ -59,7 +59,7 @@ namespace InkBall.Module.Pages
 				foreach (var point in points)
 				{
 #if DEBUG
-					builder.AppendFormat("{2}{0}/*x*/,{1}/*y*/", point.Point.iX, point.Point.iY, space);
+					builder.AppendFormat("{2}{0}/*id={3}*/,{1}", point.Point.iX, point.Point.iY, space, point.Point.iId);
 #else
 					builder.AppendFormat("{2}{0},{1}", point.Point.iX, point.Point.iY, space);
 #endif

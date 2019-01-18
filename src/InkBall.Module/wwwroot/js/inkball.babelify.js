@@ -259,7 +259,7 @@ function htmlEncode(html) {
 
 function CountPointsDebug(sSelector2Set) {
   var sSvgSelector = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'svg';
-  var svgs = $(sSvgSelector),
+  var svgs = document.getElementsByTagName(sSvgSelector),
       totalChildren = 0,
       childCounts = [];
 
@@ -269,12 +269,12 @@ function CountPointsDebug(sSelector2Set) {
     childCounts.push(svg.childElementCount);
   }
 
-  var tags = ["circle", "path"],
+  var tags = ["circle", "polyline"],
       tagMessage = "";
   tags.forEach(function (tagName) {
-    tagMessage += tagName + ": " + $(tagName).length + " ";
+    tagMessage += tagName + ": " + document.getElementsByTagName(tagName).length + " ";
   });
-  $(sSelector2Set).text('SVG elements - totalChildren:' + totalChildren + ' SVG childElements:' + childCounts + ' by tag:' + tagMessage);
+  document.querySelector(sSelector2Set).innerHTML = "SVG: ".concat(totalChildren, " by tag: ").concat(tagMessage);
 }
 
 var InkBallGame = function () {

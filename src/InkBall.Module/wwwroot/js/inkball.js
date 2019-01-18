@@ -132,7 +132,7 @@ function htmlEncode(html) {
 
 //Debug function
 function CountPointsDebug(sSelector2Set, sSvgSelector = 'svg') {
-	let svgs = $(sSvgSelector), totalChildren = 0, childCounts = [];
+	let svgs = document.getElementsByTagName(sSvgSelector), totalChildren = 0, childCounts = [];
 
 	for (let i = 0; i < svgs.length; i++) {
 		let svg = svgs[i];
@@ -140,12 +140,12 @@ function CountPointsDebug(sSelector2Set, sSvgSelector = 'svg') {
 		childCounts.push(svg.childElementCount);
 	}
 
-	let tags = ["circle", "path"], tagMessage = "";
+	let tags = ["circle", "polyline"], tagMessage = "";
 	tags.forEach(tagName => {
-		tagMessage += (tagName + ": " + $(tagName).length + " ");
+		tagMessage += (tagName + ": " + document.getElementsByTagName(tagName).length + " ");
 	});
 
-	$(sSelector2Set).text('SVG elements - totalChildren:' + totalChildren + ' SVG childElements:' + childCounts + ' by tag:' + tagMessage);
+	document.querySelector(sSelector2Set).innerHTML = `SVG: ${totalChildren} by tag: ${tagMessage}`;
 }
 
 class InkBallGame {
