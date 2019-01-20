@@ -1129,19 +1129,12 @@ var InkBallGame = function () {
       if (!this.m_bIsPlayerActive || this.m_Player2Name.innerHTML == '???' || this.m_bHandlingEvent == true || this.iConnErrCount > 0) return;
       var x = (event ? event.clientX : window.event.clientX) - this.m_Screen.offsetLeft + this.f_scrollLeft() + 0.5 * this.m_iGridSize;
       var y = (event ? event.clientY : window.event.clientY) - this.m_Screen.offsetTop + this.f_scrollTop() + 0.5 * this.m_iGridSize;
-
-      if (this.m_MouseCursorOval == null) {
-        this.m_MouseCursorOval = $createOval(this.m_PointRadius, 'true');
-        this.m_MouseCursorOval.$SetFillColor(this.m_sDotColor);
-        this.m_MouseCursorOval.$strokeColor(this.m_sDotColor);
-        this.m_MouseCursorOval.$SetZIndex(-1);
-      }
-
       x = parseInt(x / this.m_iGridSize);
       y = parseInt(y / this.m_iGridSize);
       var tox = x * this.m_iGridSize;
       var toy = y * this.m_iGridSize;
       this.m_MouseCursorOval.$move(tox, toy, this.m_PointRadius);
+      this.m_MouseCursorOval.$Show();
       this.m_Screen.style.cursor = "crosshair";
 
       if (this.m_bDrawLines) {
@@ -1259,6 +1252,11 @@ var InkBallGame = function () {
       this.m_bMouseDown = false;
     }
   }, {
+    key: "OnMouseLeave",
+    value: function OnMouseLeave(event) {
+      this.m_MouseCursorOval.$Hide();
+    }
+  }, {
     key: "OnDrawModeClick",
     value: function OnDrawModeClick(event) {
       this.m_bDrawLines = !this.m_bDrawLines;
@@ -1327,8 +1325,6 @@ var InkBallGame = function () {
       this.m_bIsTimerRunning = false;
       this.m_WaitStartTime = null;
       this.m_iSlowdownLevel = 0;
-      this.m_iGridWidth = 0;
-      this.m_iGridHeight = 0;
       this.m_iLastX = -1;
       this.m_iLastY = -1;
       this.m_iMouseX = 0;
@@ -1369,9 +1365,18 @@ var InkBallGame = function () {
       this.DisableSelection(this.m_Screen);
 
       if (!this.m_bViewOnly) {
+        if (this.m_MouseCursorOval == null) {
+          this.m_MouseCursorOval = $createOval(this.m_PointRadius, 'true');
+          this.m_MouseCursorOval.$SetFillColor(this.m_sDotColor);
+          this.m_MouseCursorOval.$strokeColor(this.m_sDotColor);
+          this.m_MouseCursorOval.$SetZIndex(-1);
+          this.m_MouseCursorOval.$Hide();
+        }
+
         this.m_Screen.onmousedown = this.OnMouseDown.bind(this);
         this.m_Screen.onmousemove = this.OnMouseMove.bind(this);
         this.m_Screen.onmouseup = this.OnMouseUp.bind(this);
+        this.m_Screen.onmouseleave = this.OnMouseLeave.bind(this);
         this.m_DrawMode.onclick = this.OnDrawModeClick.bind(this);
         this.m_CancelPath.onclick = this.OnCancelClick.bind(this);
 

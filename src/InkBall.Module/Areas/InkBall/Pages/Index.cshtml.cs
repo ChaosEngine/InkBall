@@ -59,7 +59,7 @@ namespace InkBall.Module.Pages
 				foreach (var point in points)
 				{
 #if DEBUG
-					builder.AppendFormat("{2}{0}/*id={3}*/,{1}", point.Point.iX, point.Point.iY, space, point.Point.iId);
+					builder.AppendFormat("{2}{0}/*x*/,{1}/*y*//*id={3}*/", point.Point.iX, point.Point.iY, space, point.Point.iId);
 #else
 					builder.AppendFormat("{2}{0},{1}", point.Point.iX, point.Point.iY, space);
 #endif

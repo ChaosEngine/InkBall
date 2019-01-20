@@ -57,7 +57,7 @@
 	<div id="status" class="row">
 		<span id="gameStatus">•</span>
 		<span id="debug0"></span>
-		<span id="debug1"></span>
+		<span id="debug1"></span>&nbsp;
 		<span id="debug2"></span>
 	</div>
 	<div class="row">
@@ -104,7 +104,6 @@
 		//alert('a QQ');
 		$('.whichColor').css('color', bPlayingWithRed ? "red" : "blue");
 		CountPointsDebug("#debug2");
-		//$('#debug1').text((bPlayerActive ? "player Active" : "player INactive"));
 	});
 
 	window.addEventListener('beforeunload', function (e) {

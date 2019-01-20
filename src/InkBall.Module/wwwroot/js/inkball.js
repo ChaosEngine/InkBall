@@ -1036,19 +1036,15 @@ class InkBallGame {
 		let x = (event ? event.clientX : window.event.clientX) - this.m_Screen.offsetLeft + this.f_scrollLeft() + 0.5 * this.m_iGridSize;
 		let y = (event ? event.clientY : window.event.clientY) - this.m_Screen.offsetTop + this.f_scrollTop() + 0.5 * this.m_iGridSize;
 
-		if (this.m_MouseCursorOval == null) {
-			this.m_MouseCursorOval = $createOval(this.m_PointRadius, 'true');
-			this.m_MouseCursorOval.$SetFillColor(this.m_sDotColor);
-			this.m_MouseCursorOval.$strokeColor(this.m_sDotColor);
-			this.m_MouseCursorOval.$SetZIndex(-1);
-		}
 		x = parseInt(x / this.m_iGridSize);
 		y = parseInt(y / this.m_iGridSize);
 		let tox = x * this.m_iGridSize;
 		let toy = y * this.m_iGridSize;
 
 		this.m_MouseCursorOval.$move(tox, toy, this.m_PointRadius);
+		this.m_MouseCursorOval.$Show();
 		this.m_Screen.style.cursor = "crosshair";
+
 
 		if (this.m_bDrawLines) {
 			//lines
@@ -1194,6 +1190,10 @@ class InkBallGame {
 		this.m_bMouseDown = false;
 	}
 
+	OnMouseLeave(event) {
+		this.m_MouseCursorOval.$Hide();
+	}
+
 	OnDrawModeClick(event) {
 		this.m_bDrawLines = !this.m_bDrawLines;
 		let btn = event.target;
@@ -1265,8 +1265,6 @@ class InkBallGame {
 		this.m_bIsTimerRunning = false;
 		this.m_WaitStartTime = null;
 		this.m_iSlowdownLevel = 0;
-		this.m_iGridWidth = 0;
-		this.m_iGridHeight = 0;
 		this.m_iLastX = -1;
 		this.m_iLastY = -1;
 		this.m_iMouseX = 0;
@@ -1307,9 +1305,19 @@ class InkBallGame {
 
 		this.DisableSelection(this.m_Screen);
 		if (!this.m_bViewOnly) {
+
+			if (this.m_MouseCursorOval == null) {
+				this.m_MouseCursorOval = $createOval(this.m_PointRadius, 'true');
+				this.m_MouseCursorOval.$SetFillColor(this.m_sDotColor);
+				this.m_MouseCursorOval.$strokeColor(this.m_sDotColor);
+				this.m_MouseCursorOval.$SetZIndex(-1);
+				this.m_MouseCursorOval.$Hide();
+			}
+
 			this.m_Screen.onmousedown = this.OnMouseDown.bind(this);
 			this.m_Screen.onmousemove = this.OnMouseMove.bind(this);
 			this.m_Screen.onmouseup = this.OnMouseUp.bind(this);
+			this.m_Screen.onmouseleave = this.OnMouseLeave.bind(this);
 
 			this.m_DrawMode.onclick = this.OnDrawModeClick.bind(this);
 			this.m_CancelPath.onclick = this.OnCancelClick.bind(this);

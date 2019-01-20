@@ -97,6 +97,8 @@ if (SVG) {
 		o.$GetStatus = function () { return this.m_iStatus; };
 		o.$GetZIndex = function () { return this.getAttribute("z-index"); };
 		o.$SetZIndex = function (val) { this.setAttribute("z-index", val); };
+		o.$Hide = function () { this.setAttribute("visibility", 'hidden'); };
+		o.$Show = function () { this.setAttribute("visibility", 'visible'); };
 		//ch_added/changed end
 		o.$strokeWeight = function (sw) { this.setAttribute("stroke-width", sw); };
 		cont.appendChild(o);
@@ -198,6 +200,8 @@ if (SVG) {
 		o.$GetStatus = function () { return this.m_iStatus; };
 		o.$GetZIndex = function () { return this.getAttribute("z-index"); };
 		o.$SetZIndex = function (val) { this.setAttribute("z-index", val); };
+		o.$Hide = function () { this.setAttribute("visibility", 'hidden'); };
+		o.$Show = function () { this.setAttribute("visibility", 'visible'); };
 		//ch_added/changed end
 		o.$strokeWeight = function (sw) { this.strokeweight = sw; };
 		cont.appendChild(o);
