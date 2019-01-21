@@ -1136,6 +1136,7 @@ var InkBallGame = function () {
       this.m_MouseCursorOval.$move(tox, toy, this.m_PointRadius);
       this.m_MouseCursorOval.$Show();
       this.m_Screen.style.cursor = "crosshair";
+      this.Debug("[".concat(x, ",").concat(y, "]"), 1);
 
       if (this.m_bDrawLines) {
         if (this.m_bMouseDown == true && (this.m_iLastX != x || this.m_iLastY != y) && Math.abs(parseInt(this.m_iLastX - x)) <= 1 && Math.abs(parseInt(this.m_iLastY - y)) <= 1 && this.m_iLastX >= 0 && this.m_iLastY >= 0) {

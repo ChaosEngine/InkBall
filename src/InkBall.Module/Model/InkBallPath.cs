@@ -17,27 +17,82 @@ namespace InkBall.Module.Model
 		ICollection<Point> InkBallPoint { get; set; }
 	}
 
-	public partial class InkBallPath : IPath<InkBallPoint>
+	public abstract class AbstractPath<Point> : IPath<Point>
+		where Point : IPoint
 	{
 		public int iId { get; set; }
 		public int iGameId { get; set; }
 		public int iPlayerId { get; set; }
 
+		public abstract ICollection<Point> InkBallPoint { get; set; }
+
+		/**
+		 * Based on http://www.faqs.org/faqs/graphics/algorithms-faq/
+		 * but mainly on http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+		 * returns != 0 if point is inside path
+		 * @param {number} npol points count
+		 * @param {number} xp x point coordinates
+		 * @param {number} yp y point coordinates
+		 * @param {number} x point to check x coordinate
+		 * @param {number} y point to check y coordinate
+		 * @returns {boolean} if point lies inside the polygon
+		 */
+		static bool pnpoly(int npol, int[] xp, int[] yp, int x, int y)
+		{
+			int i, j; bool c = false;
+
+			for (i = 0, j = npol - 1; i < npol; j = i++)
+			{
+				if ((((yp[i] <= y) && (y < yp[j])) ||
+					((yp[j] <= y) && (y < yp[i]))) &&
+					(x < (xp[j] - xp[i]) * (y - yp[i]) / (yp[j] - yp[i]) + xp[i]))
+
+					c = !c;
+			}
+			return c;
+		}
+
+		static bool pnpoly(ICollection<IPoint> path, int x, int y)
+		{
+			int i, j, npol = path.Count; bool c = false;
+
+			for (i = 0, j = npol - 1; i < npol; j = i++)
+			{
+				IPoint pi = path.ElementAt(i), pj = path.ElementAt(j);
+
+				if ((((pi.iY <= y) && (y < pj.iY)) ||
+					((pj.iY <= y) && (y < pi.iY))) &&
+					(x < (pj.iX - pi.iX) * (y - pi.iY) / (pj.iY - pi.iY) + pi.iX))
+
+					c = !c;
+			}
+			return c;
+		}
+
+		public bool IsPointInsidePath(IPoint point)
+		{
+			var path_points = (ICollection<IPoint>)this.InkBallPoint;
+
+			return pnpoly(path_points, point.iX, point.iY);
+		}
+	}
+
+	public partial class InkBallPath : AbstractPath<InkBallPoint>
+	{
 		public InkBallGame Game { get; set; }
 		public InkBallPlayer Player { get; set; }
-		public ICollection<InkBallPoint> InkBallPoint { get; set; }
+		public override ICollection<InkBallPoint> InkBallPoint { get; set; }
 		public ICollection<InkBallPointsInPath> InkBallPointsInPath { get; set; }
 
 		public InkBallPath()
 		{
 			InkBallPoint = new HashSet<InkBallPoint>();
-
 			InkBallPointsInPath = new HashSet<InkBallPointsInPath>();
 		}
 	}
 
 	[MessagePackObject(true)]
-	public class InkBallPathViewModel : IPath<InkBallPointViewModel>
+	public class InkBallPathViewModel : AbstractPath<InkBallPointViewModel>
 	{
 		delegate void ActionRef<T1, T2, T3, T4>(ref T1 arg1, ref T2 arg2, ref T3 arg3, ref T4 arg4);
 
@@ -48,10 +103,6 @@ namespace InkBall.Module.Model
 
 		#endregion Fields
 
-		public int iId { get; set; }
-		public int iGameId { get; set; }
-		public int iPlayerId { get; set; }
-
 		//legacy
 		public string sPointsAsString { get; set; }
 		//legacy
@@ -61,15 +112,15 @@ namespace InkBall.Module.Model
 		///Points creating the path; path points
 		[JsonIgnore]
 		[IgnoreMember]
-		public ICollection<InkBallPointViewModel> InkBallPoint
+		public override ICollection<InkBallPointViewModel> InkBallPoint
 		{
 			get
 			{
 				if (!(_inkBallPoint?.Count > 0) && !string.IsNullOrEmpty(sPointsAsString))
 				{
 					_inkBallPoint = StringToPointCollection(sPointsAsString,
-						InkBall.Module.Model.InkBallPoint.StatusEnum.POINT_STARTING,
-						InkBall.Module.Model.InkBallPoint.StatusEnum.POINT_IN_PATH,
+						Model.InkBallPoint.StatusEnum.POINT_STARTING,
+						Model.InkBallPoint.StatusEnum.POINT_IN_PATH,
 						this.iPlayerId, EnsureContinuityOfPointsOnPath
 					).ToArray();
 				}
@@ -191,57 +242,6 @@ namespace InkBall.Module.Model
 			{
 				this.InkBallPoint = path.InkBallPoint;
 			}
-		}
-
-
-		/**
-		 * Based on http://www.faqs.org/faqs/graphics/algorithms-faq/
-		 * but mainly on http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
-		 * returns != 0 if point is inside path
-		 * @param {number} npol points count
-		 * @param {number} xp x point coordinates
-		 * @param {number} yp y point coordinates
-		 * @param {number} x point to check x coordinate
-		 * @param {number} y point to check y coordinate
-		 * @returns {boolean} if point lies inside the polygon
-		 */
-		static bool pnpoly(int npol, int[] xp, int[] yp, int x, int y)
-		{
-			int i, j; bool c = false;
-
-			for (i = 0, j = npol - 1; i < npol; j = i++)
-			{
-				if ((((yp[i] <= y) && (y < yp[j])) ||
-					((yp[j] <= y) && (y < yp[i]))) &&
-					(x < (xp[j] - xp[i]) * (y - yp[i]) / (yp[j] - yp[i]) + xp[i]))
-
-					c = !c;
-			}
-			return c;
-		}
-
-		static bool pnpoly(ICollection<IPoint> path, int x, int y)
-		{
-			int i, j, npol = path.Count; bool c = false;
-
-			for (i = 0, j = npol - 1; i < npol; j = i++)
-			{
-				IPoint pi = path.ElementAt(i), pj = path.ElementAt(j);
-
-				if ((((pi.iY <= y) && (y < pj.iY)) ||
-					((pj.iY <= y) && (y < pi.iY))) &&
-					(x < (pj.iX - pi.iX) * (y - pi.iY) / (pj.iY - pi.iY) + pi.iX))
-
-					c = !c;
-			}
-			return c;
-		}
-
-		public bool IsPointInsidePath(IPoint point)
-		{
-			var path_points = (ICollection<IPoint>)this.InkBallPoint;
-
-			return pnpoly(path_points, point.iX, point.iY);
 		}
 	}
 }

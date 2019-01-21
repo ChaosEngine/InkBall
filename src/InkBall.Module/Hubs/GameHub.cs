@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 
 namespace InkBall.Module.Hubs
 {
-	public interface IChatClient
+	public interface IGameClient
 	{
 		Task ServerToClientPoint(InkBallPointViewModel point, string user);
 
@@ -31,7 +31,7 @@ namespace InkBall.Module.Hubs
 
 	}
 
-	public interface IChatServer
+	public interface IGameServer
 	{
 		Task<InkBallPointViewModel> ClientToServerPoint(InkBallPointViewModel point);
 
@@ -42,11 +42,11 @@ namespace InkBall.Module.Hubs
 	}
 
 	[Authorize(Policy = "InkBallPlayerPolicy")]
-	public class ChatHub : Hub<IChatClient>, IChatServer
+	public class GameHub : Hub<IGameClient>, IGameServer
 	{
 		#region Fields
 
-		public const string HubName = "chatHub";
+		public const string HubName = "gameHub";
 
 		//Allowed origins here
 		internal static readonly SynchronizedCache<string> WebSocketAllowedOrigins = new SynchronizedCache<string>();
@@ -55,7 +55,7 @@ namespace InkBall.Module.Hubs
 		private static readonly Random _randomizer = new Random(Environment.TickCount);
 
 		private readonly GamesContext _dbContext;
-		private readonly ILogger<ChatHub> _logger;
+		private readonly ILogger<GameHub> _logger;
 
 		#endregion Fields
 
@@ -283,7 +283,7 @@ namespace InkBall.Module.Hubs
 
 		#endregion Private methods
 
-		public ChatHub(GamesContext dbContext, ILogger<ChatHub> logger)
+		public GameHub(GamesContext dbContext, ILogger<GameHub> logger)
 		{
 			_dbContext = dbContext;
 			_logger = logger;
@@ -302,7 +302,7 @@ namespace InkBall.Module.Hubs
 			await base.OnConnectedAsync();
 		}
 
-		#region IChatServer implementation
+		#region IGameServer implementation
 
 		public async Task<InkBallPointViewModel> ClientToServerPoint(InkBallPointViewModel point)
 		{
@@ -537,6 +537,6 @@ namespace InkBall.Module.Hubs
 			}
 		}
 
-		#endregion IChatServer implementation
+		#endregion IGameServer implementation
 	}
 }

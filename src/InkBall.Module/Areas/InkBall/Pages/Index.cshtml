@@ -55,8 +55,8 @@
 		</form>
 	</div>
 	<div id="status" class="row">
-		<span id="gameStatus">•</span>
-		<span id="debug0"></span>
+		<span id="gameStatus">•</span>&nbsp;
+		<span id="debug0"></span>&nbsp;
 		<span id="debug1"></span>&nbsp;
 		<span id="debug2"></span>
 	</div>
@@ -83,7 +83,7 @@
 	var game = null;
 
 	window.addEventListener('load', function() {
-		let inkBallHubName = '@(commonUIConfigureOptions.Value.AppRootPath + InkBall.Module.Hubs.ChatHub.HubName)';
+		let inkBallHubName = '@(commonUIConfigureOptions.Value.AppRootPath + InkBall.Module.Hubs.GameHub.HubName)';
 		let iGameID = @Model.Game.iId;
 		let iPlayerID = @Model.Player.iId;
 		let bPlayingWithRed = @(Model.Game.IsThisPlayerPlayingWithRed().ToString().ToLowerInvariant());
@@ -107,9 +107,7 @@
 	});
 
 	window.addEventListener('beforeunload', function (e) {
-		//e.preventDefault();		
 		game.StopSignalRConnection();
-		//e.returnValue = '';
 	});
 </script>
 

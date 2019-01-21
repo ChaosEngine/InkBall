@@ -78,7 +78,7 @@ namespace InkBall.Module
 		}
 
 		static async Task InkBallSignOutActionAsync(string nameIdentifer, GamesContext inkBallContext,
-			IHubContext<ChatHub, IChatClient> inkballHubContext, ILogger logger, ISession sessionAccessor,
+			IHubContext<GameHub, IGameClient> inkballHubContext, ILogger logger, ISession sessionAccessor,
 			CancellationToken token = default)
 		{
 			var games_to_surrender = await inkBallContext.InkBallGame
@@ -152,7 +152,7 @@ namespace InkBall.Module
 			using (IServiceScope scope = context.RequestServices.CreateScope())
 			{
 				GamesContext inkBallContext = scope.ServiceProvider.GetRequiredService<GamesContext>();
-				IHubContext<ChatHub, IChatClient> inkballHubContext = scope.ServiceProvider.GetRequiredService<IHubContext<ChatHub, IChatClient>>();
+				IHubContext<GameHub, IGameClient> inkballHubContext = scope.ServiceProvider.GetRequiredService<IHubContext<GameHub, IGameClient>>();
 
 				if (inkBallContext != null && inkballHubContext != null)
 				{

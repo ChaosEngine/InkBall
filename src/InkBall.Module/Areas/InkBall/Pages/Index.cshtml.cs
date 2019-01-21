@@ -85,10 +85,10 @@ namespace InkBall.Module.Pages
 
 		public async Task<IActionResult> OnGet()
 		{
-			if (!ChatHub.WebSocketAllowedOrigins.Any())
-				ChatHub.WebSocketAllowedOrigins.Add($"{Request.Scheme}://{Request.Host}");
+			if (!GameHub.WebSocketAllowedOrigins.Any())
+				GameHub.WebSocketAllowedOrigins.Add($"{Request.Scheme}://{Request.Host}");
 			else
-				ChatHub.WebSocketAllowedOrigins.AddOrUpdate($"{Request.Scheme}://{Request.Host}");
+				GameHub.WebSocketAllowedOrigins.AddOrUpdate($"{Request.Scheme}://{Request.Host}");
 
 			await base.LoadUserPlayerAndGameAsync();
 

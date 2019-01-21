@@ -17,6 +17,8 @@ namespace InkBall.Module.Model
 		InkBallGame.GameTypeEnum GameType { get; set; }
 		int iBoardHeight { get; set; }
 		int iBoardWidth { get; set; }
+		int LogicalWidth { get; }
+		int LogicalHeight { get; }
 		int iGridSize { get; set; }
 		int iId { get; set; }
 		ICollection<Path> InkBallPath { get; set; }
@@ -28,86 +30,41 @@ namespace InkBall.Module.Model
 		DateTime TimeStamp { get; set; }
 
 		bool IsThisPlayer1();
-
 		Player GetPlayer();
-
 		Player GetOtherPlayer();
-
 		bool IsThisPlayerActive();
-
 		bool IsThisPlayerPlayingWithRed();
 	}
 
-	public partial class InkBallGame : IGame<InkBallPlayer, InkBallPoint, InkBallPath>
+	public abstract class AbstractGame<Player, Point, Path>
+		where Player : IPlayer<Point, Path>
+		where Point : IPoint
+		where Path : IPath<Point>
 	{
 		protected internal static TimeSpan _deactivationDelayInSeconds = TimeSpan.FromSeconds(120);
-
-		public enum GameTypeEnum
-		{
-			FIRST_CAPTURE,
-			FIRST_5_CAPTURES,
-			FIRST_5_PATHS,
-			FIRST_5_ADVANTAGE_PATHS
-		}
-
-		public enum GameStateEnum
-		{
-			INACTIVE,
-			ACTIVE,
-			AWAITING,
-			FINISHED
-		}
 
 		[NotMapped]//Hide it from EF Core
 		[JsonProperty]//allow to serialize it
 		protected internal bool bIsPlayer1 { get; set; }
 		public int iId { get; set; }
+		public abstract Player Player1 { get; set; }
+		public abstract Player Player2 { get; set; }
+		public abstract ICollection<Path> InkBallPath { get; set; }
+		public abstract ICollection<Point> InkBallPoint { get; set; }
 		public int iPlayer1Id { get; set; }
 		public int? iPlayer2Id { get; set; }
 		public bool bIsPlayer1Active { get; set; }
 		public int iGridSize { get; set; }
 		public int iBoardWidth { get; set; }
 		public int iBoardHeight { get; set; }
-		public GameTypeEnum GameType { get; set; }
-		public GameStateEnum GameState { get; set; }
+		public int LogicalWidth => (int)(iBoardWidth / iGridSize);
+		public int LogicalHeight => (int)(iBoardHeight / iGridSize);
+		public InkBallGame.GameTypeEnum GameType { get; set; }
+		public InkBallGame.GameStateEnum GameState { get; set; }
 		public DateTime TimeStamp { get; set; }
 		public DateTime CreateTime { get; set; }
-		public InkBallPlayer Player1 { get; set; }
-		public InkBallPlayer Player2 { get; set; }
-		public ICollection<InkBallPath> InkBallPath { get; set; }
-		public ICollection<InkBallPoint> InkBallPoint { get; set; }
 
-		public InkBallGame()
-		{
-			InkBallPath = new HashSet<InkBallPath>();
-			InkBallPoint = new HashSet<InkBallPoint>();
-		}
-
-		public InkBallPlayer GetPlayer()
-		{
-			if (this.bIsPlayer1 == true)
-				return this.Player1;
-			else
-				return this.Player2;
-		}
-
-		public InkBallPlayer GetOtherPlayer()
-		{
-			if (this.bIsPlayer1 == false)
-				return this.Player1;
-			else
-				return this.Player2;
-		}
-
-		public InkBallPlayer GetPlayer1()
-		{
-			return this.Player1;
-		}
-
-		public InkBallPlayer GetPlayer2()
-		{
-			return this.Player2;
-		}
+		public static TimeSpan GetDeactivationDelayInSeconds() => InkBallGame._deactivationDelayInSeconds;
 
 		public bool IsThisPlayer1()
 		{
@@ -136,7 +93,61 @@ namespace InkBall.Module.Model
 			return this.bIsPlayer1;
 		}
 
-		public static TimeSpan GetDeactivationDelayInSeconds() => InkBallGame._deactivationDelayInSeconds;
+		public Player GetPlayer()
+		{
+			if (this.bIsPlayer1 == true)
+				return this.Player1;
+			else
+				return this.Player2;
+		}
+
+		public Player GetOtherPlayer()
+		{
+			if (this.bIsPlayer1 == false)
+				return this.Player1;
+			else
+				return this.Player2;
+		}
+
+		public Player GetPlayer1()
+		{
+			return this.Player1;
+		}
+
+		public Player GetPlayer2()
+		{
+			return this.Player2;
+		}
+	}
+
+	public partial class InkBallGame : AbstractGame<InkBallPlayer, InkBallPoint, InkBallPath>
+	{
+		public enum GameTypeEnum
+		{
+			FIRST_CAPTURE,
+			FIRST_5_CAPTURES,
+			FIRST_5_PATHS,
+			FIRST_5_ADVANTAGE_PATHS
+		}
+
+		public enum GameStateEnum
+		{
+			INACTIVE,
+			ACTIVE,
+			AWAITING,
+			FINISHED
+		}
+
+		public override InkBallPlayer Player1 { get; set; }
+		public override InkBallPlayer Player2 { get; set; }
+		public override ICollection<InkBallPath> InkBallPath { get; set; }
+		public override ICollection<InkBallPoint> InkBallPoint { get; set; }
+
+		public InkBallGame()
+		{
+			InkBallPath = new HashSet<InkBallPath>();
+			InkBallPoint = new HashSet<InkBallPoint>();
+		}
 
 		internal static void DeactivateDeadGamezFromExternalUserID(string sExternalUserID)
 		{
@@ -149,26 +160,13 @@ namespace InkBall.Module.Model
 		}
 	}
 
-	[Serializable]
-	public class InkBallGameViewModel : IGame<InkBallPlayerViewModel, InkBallPointViewModel, InkBallPathViewModel>
+	//[Serializable]
+	public class InkBallGameViewModel : AbstractGame<InkBallPlayerViewModel, InkBallPointViewModel, InkBallPathViewModel>
 	{
-		[JsonProperty]
-		protected internal bool bIsPlayer1 { get; set; }
-		public bool bIsPlayer1Active { get; set; }
-		public DateTime CreateTime { get; set; }
-		public InkBallGame.GameStateEnum GameState { get; set; }
-		public InkBallGame.GameTypeEnum GameType { get; set; }
-		public int iBoardHeight { get; set; }
-		public int iBoardWidth { get; set; }
-		public int iGridSize { get; set; }
-		public int iId { get; set; }
-		public ICollection<InkBallPathViewModel> InkBallPath { get; set; }
-		public ICollection<InkBallPointViewModel> InkBallPoint { get; set; }
-		public int iPlayer1Id { get; set; }
-		public int? iPlayer2Id { get; set; }
-		public InkBallPlayerViewModel Player1 { get; set; }
-		public InkBallPlayerViewModel Player2 { get; set; }
-		public DateTime TimeStamp { get; set; }
+		public override ICollection<InkBallPathViewModel> InkBallPath { get; set; }
+		public override ICollection<InkBallPointViewModel> InkBallPoint { get; set; }
+		public override InkBallPlayerViewModel Player1 { get; set; }
+		public override InkBallPlayerViewModel Player2 { get; set; }
 
 		public InkBallGameViewModel()
 		{
@@ -229,59 +227,6 @@ namespace InkBall.Module.Model
 			Player1 = game.Player1;
 			Player2 = game.Player2;
 			TimeStamp = game.TimeStamp;
-		}
-
-		public InkBallPlayerViewModel GetPlayer()
-		{
-			if (this.bIsPlayer1 == true)
-				return this.Player1;
-			else
-				return this.Player2;
-		}
-
-		public InkBallPlayerViewModel GetOtherPlayer()
-		{
-			if (this.bIsPlayer1 == false)
-				return this.Player1;
-			else
-				return this.Player2;
-		}
-
-		public InkBallPlayerViewModel GetPlayer1()
-		{
-			return this.Player1;
-		}
-
-		public InkBallPlayerViewModel GetPlayer2()
-		{
-			return this.Player2;
-		}
-
-		public bool IsThisPlayer1()
-		{
-			return this.bIsPlayer1;
-		}
-
-		public bool IsPlayer1Active()
-		{
-			return this.bIsPlayer1Active;
-		}
-
-		public bool IsThisPlayerActive()
-		{
-			if (this.bIsPlayer1)
-			{
-				return this.bIsPlayer1Active ? true : false;
-			}
-			else
-			{
-				return this.bIsPlayer1Active ? false : true;
-			}
-		}
-
-		public bool IsThisPlayerPlayingWithRed()
-		{
-			return this.bIsPlayer1;
 		}
 	}
 }

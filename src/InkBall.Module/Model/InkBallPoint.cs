@@ -131,20 +131,6 @@ namespace InkBall.Module.Model
 		{
 			InkBallPointsInPath = new HashSet<InkBallPointsInPath>();
 		}
-
-		// public static bool operator ==(InkBallPoint left, InkBallPoint right)
-		// {
-		// 	if (((object)left) == null || ((object)right) == null)
-		// 		return Object.Equals(left, right);
-		// 	return left.Equals(right);
-		// }
-
-		// public static bool operator !=(InkBallPoint left, InkBallPoint right)
-		// {
-		// 	if (((object)left) == null || ((object)right) == null)
-		// 		return !Object.Equals(left, right);
-		// 	return !(left.Equals(right));
-		// }
 	}
 
 	//[Serializable]
@@ -182,19 +168,5 @@ namespace InkBall.Module.Model
 			// don't serialize the iId property if <= 0
 			return (iId > 0);
 		}
-
-		// public static bool operator ==(InkBallPointViewModel left, InkBallPointViewModel right)
-		// {
-		// 	if (((object)left) == null || ((object)right) == null)
-		// 		return Object.Equals(left, right);
-		// 	return left.Equals(right);
-		// }
-
-		// public static bool operator !=(InkBallPointViewModel left, InkBallPointViewModel right)
-		// {
-		// 	if (((object)left) == null || ((object)right) == null)
-		// 		return !Object.Equals(left, right);
-		// 	return !(left.Equals(right));
-		// }
 	}
 }

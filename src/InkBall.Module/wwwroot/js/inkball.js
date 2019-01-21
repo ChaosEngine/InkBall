@@ -1044,6 +1044,7 @@ class InkBallGame {
 		this.m_MouseCursorOval.$move(tox, toy, this.m_PointRadius);
 		this.m_MouseCursorOval.$Show();
 		this.m_Screen.style.cursor = "crosshair";
+		this.Debug(`[${x},${y}]`, 1);
 
 
 		if (this.m_bDrawLines) {

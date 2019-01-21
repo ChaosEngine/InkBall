@@ -23,7 +23,9 @@ namespace InkBall.Module.Model
 		bool IsLastMoveOverdue();
 	}
 
-	public partial class InkBallPlayer : IPlayer<InkBallPoint, InkBallPath>
+	public abstract class AbstractPlayer<Point, Path> : IPlayer<Point, Path>
+		where Point : IPoint
+		where Path : IPath<Point>
 	{
 		public int iId { get; set; }
 		public int? iUserId { get; set; }
@@ -33,23 +35,9 @@ namespace InkBall.Module.Model
 		public int iDrawCount { get; set; }
 		public DateTime TimeStamp { get; set; }
 
-		public InkBallUser User { get; set; }
-		public ICollection<InkBallGame> InkBallGameIPlayer1 { get; set; }
-		public ICollection<InkBallGame> InkBallGameIPlayer2 { get; set; }
-		public ICollection<InkBallPath> InkBallPath { get; set; }
-		public ICollection<InkBallPoint> InkBallPoint { get; set; }
+		public abstract ICollection<Path> InkBallPath { get; set; }
+		public abstract ICollection<Point> InkBallPoint { get; set; }
 
-		public InkBallPlayer()
-		{
-			InkBallGameIPlayer1 = new HashSet<InkBallGame>();
-			InkBallGameIPlayer2 = new HashSet<InkBallGame>();
-			InkBallPath = new HashSet<InkBallPath>();
-			InkBallPoint = new HashSet<InkBallPoint>();
-		}
-
-		///
-		// TODO: Remove duplication
-		///
 		public bool IsLastMoveOverdue()
 		{
 			TimeSpan last_move = DateTime.Now - this.TimeStamp;
@@ -59,20 +47,29 @@ namespace InkBall.Module.Model
 		}
 	}
 
-	//[Serializable]
-	public class InkBallPlayerViewModel : IPlayer<InkBallPointViewModel, InkBallPathViewModel>
+	public partial class InkBallPlayer : AbstractPlayer<InkBallPoint, InkBallPath>
 	{
-		public int iId { get; set; }
-		public int? iUserId { get; set; }
-		public string sLastMoveCode { get; set; }
-		public int iWinCount { get; set; }
-		public int iLossCount { get; set; }
-		public int iDrawCount { get; set; }
-		public DateTime TimeStamp { get; set; }
+		public InkBallUser User { get; set; }
+		public ICollection<InkBallGame> InkBallGameIPlayer1 { get; set; }
+		public ICollection<InkBallGame> InkBallGameIPlayer2 { get; set; }
+		public override ICollection<InkBallPath> InkBallPath { get; set; }
+		public override ICollection<InkBallPoint> InkBallPoint { get; set; }
 
+		public InkBallPlayer()
+		{
+			InkBallGameIPlayer1 = new HashSet<InkBallGame>();
+			InkBallGameIPlayer2 = new HashSet<InkBallGame>();
+			InkBallPath = new HashSet<InkBallPath>();
+			InkBallPoint = new HashSet<InkBallPoint>();
+		}
+	}
+
+	//[Serializable]
+	public class InkBallPlayerViewModel : AbstractPlayer<InkBallPointViewModel, InkBallPathViewModel>
+	{
 		public InkBallUserViewModel User { get; set; }
-		public ICollection<InkBallPathViewModel> InkBallPath { get; set; }
-		public ICollection<InkBallPointViewModel> InkBallPoint { get; set; }
+		public override ICollection<InkBallPathViewModel> InkBallPath { get; set; }
+		public override ICollection<InkBallPointViewModel> InkBallPoint { get; set; }
 
 		public InkBallPlayerViewModel()
 		{
@@ -102,7 +99,6 @@ namespace InkBall.Module.Model
 			}
 		}
 
-		//[JsonConstructor]
 		public InkBallPlayerViewModel(InkBallPlayerViewModel player)
 		{
 			iId = player.iId;
@@ -125,17 +121,6 @@ namespace InkBall.Module.Model
 			{
 				InkBallPoint = player.InkBallPoint;
 			}
-		}
-
-		///
-		// TODO: Remove duplication
-		///
-		public bool IsLastMoveOverdue()
-		{
-			TimeSpan last_move = DateTime.Now - this.TimeStamp;
-			if (last_move > InkBallGame.GetDeactivationDelayInSeconds())
-				return true;
-			return false;
 		}
 	}
 }

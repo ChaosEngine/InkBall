@@ -18,13 +18,13 @@ namespace InkBall.Module.Pages
 	public class GamesModel : BasePageModel
 	{
 		private readonly IOptions<InkBallOptions> _commonUIConfigureOptions;
-		private readonly IHubContext<ChatHub, IChatClient> _inkballHubContext;
+		private readonly IHubContext<GameHub, IGameClient> _inkballHubContext;
 
 		// public IEnumerable<IGame<IPlayer<IPoint, IPath<IPoint>>, IPoint, IPath<IPoint>>> GamesList { get; private set; }
 		public IEnumerable<InkBallGame> GamesList { get; private set; }
 
 		public GamesModel(GamesContext dbContext, ILogger<RulesModel> logger, IOptions<InkBallOptions> commonUIConfigureOptions,
-			IHubContext<Hubs.ChatHub, Hubs.IChatClient> inkballHubContext) : base(dbContext, logger)
+			IHubContext<Hubs.GameHub, Hubs.IGameClient> inkballHubContext) : base(dbContext, logger)
 		{
 			_commonUIConfigureOptions = commonUIConfigureOptions;
 			_inkballHubContext = inkballHubContext;

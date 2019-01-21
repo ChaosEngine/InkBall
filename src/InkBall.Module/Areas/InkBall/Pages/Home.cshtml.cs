@@ -15,11 +15,11 @@ namespace InkBall.Module.Pages
 	[AllowAnonymous]
 	public class HomeModel : BasePageModel
 	{
-		private readonly IHubContext<ChatHub, IChatClient> _inkballHubContext;
+		private readonly IHubContext<GameHub, IGameClient> _inkballHubContext;
 		private readonly IOptions<InkBallOptions> _commonUIConfigureOptions;
 
 		public HomeModel(GamesContext dbContext, ILogger<HomeModel> logger,
-			IHubContext<Hubs.ChatHub, Hubs.IChatClient> inkballHubContext,
+			IHubContext<Hubs.GameHub, Hubs.IGameClient> inkballHubContext,
 			IOptions<InkBallOptions> commonUIConfigureOptions) : base(dbContext, logger)
 		{
 			_inkballHubContext = inkballHubContext;
