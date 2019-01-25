@@ -104,9 +104,9 @@ namespace InkBall.Module.Model
 		#endregion Fields
 
 		//legacy
-		public string sPointsAsString { get; set; }
+		public string PointsAsString { get; set; }
 		//legacy
-		public string sOwnedPointsAsString { get; set; }
+		public string OwnedPointsAsString { get; set; }
 
 
 		///Points creating the path; path points
@@ -116,9 +116,9 @@ namespace InkBall.Module.Model
 		{
 			get
 			{
-				if (!(_inkBallPoint?.Count > 0) && !string.IsNullOrEmpty(sPointsAsString))
+				if (!(_inkBallPoint?.Count > 0) && !string.IsNullOrEmpty(PointsAsString))
 				{
-					_inkBallPoint = StringToPointCollection(sPointsAsString,
+					_inkBallPoint = StringToPointCollection(PointsAsString,
 						Model.InkBallPoint.StatusEnum.POINT_STARTING,
 						Model.InkBallPoint.StatusEnum.POINT_IN_PATH,
 						this.iPlayerId, EnsureContinuityOfPointsOnPath
@@ -133,9 +133,9 @@ namespace InkBall.Module.Model
 		///Oponent points enclosed within this users path
 		public ICollection<InkBallPointViewModel> GetOwnedPoints(InkBall.Module.Model.InkBallPoint.StatusEnum ownedStatus, int otherPlayerID)
 		{
-			if (!(_ownedPoints?.Count > 0) && !string.IsNullOrEmpty(sOwnedPointsAsString))
+			if (!(_ownedPoints?.Count > 0) && !string.IsNullOrEmpty(OwnedPointsAsString))
 			{
-				_ownedPoints = StringToPointCollection(sOwnedPointsAsString, ownedStatus, ownedStatus, otherPlayerID).ToArray();
+				_ownedPoints = StringToPointCollection(OwnedPointsAsString, ownedStatus, ownedStatus, otherPlayerID).ToArray();
 			}
 			return _ownedPoints;
 		}
@@ -221,8 +221,8 @@ namespace InkBall.Module.Model
 			this.iId = path.iId;
 			this.iGameId = path.iGameId;
 			this.iPlayerId = path.iPlayerId;
-			this.sPointsAsString = pointsAsString;
-			this.sOwnedPointsAsString = ownedPointsAsString;
+			this.PointsAsString = pointsAsString;
+			this.OwnedPointsAsString = ownedPointsAsString;
 
 			if (path?.InkBallPoint?.Count > 0)
 			{
@@ -235,8 +235,8 @@ namespace InkBall.Module.Model
 			this.iId = path.iId;
 			this.iGameId = path.iGameId;
 			this.iPlayerId = path.iPlayerId;
-			this.sPointsAsString = path.sPointsAsString;
-			this.sOwnedPointsAsString = path.sOwnedPointsAsString;
+			this.PointsAsString = path.PointsAsString;
+			this.OwnedPointsAsString = path.OwnedPointsAsString;
 
 			if (path?.InkBallPoint?.Count > 0)
 			{

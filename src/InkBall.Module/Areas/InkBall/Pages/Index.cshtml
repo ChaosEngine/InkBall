@@ -66,9 +66,9 @@
 		<div class="col-md-4">
 			<div class="input-group">
 				<input id="messageInput" type="text" class="form-control" placeholder="Message..." aria-label="Message to send" aria-describedby="sendButton"
-					   onblur="document.querySelector('#sendButton').disabled = this.value == '';" />
+					onkeyup="document.querySelector('#sendButton').disabled = this.value == ''" />
 				<div class="input-group-append">
-					<input id="sendButton" type="button" value="Send Message" class="btn btn-outline-secondary" disabled />
+					<input id="sendButton" type="button" value="Send Message" class="btn btn-secondary" disabled />
 				</div>
 			</div>
 			<hr />

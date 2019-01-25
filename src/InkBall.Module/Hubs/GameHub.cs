@@ -479,7 +479,7 @@ namespace InkBall.Module.Hubs
 
 						await _dbContext.SaveChangesAsync(token);
 
-						new_path = new InkBallPathViewModel(db_path, path.sPointsAsString, path.sOwnedPointsAsString);
+						new_path = new InkBallPathViewModel(db_path, path.PointsAsString, path.OwnedPointsAsString);
 
 						trans.Commit();
 					}
