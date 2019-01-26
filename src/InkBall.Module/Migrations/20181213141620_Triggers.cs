@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace InkBall.Module.Migrations
 {
-	public partial class SqliteTriggers : Migration
+	public partial class Triggers : Migration
 	{
 		protected override void Up(MigrationBuilder migrationBuilder)
 		{

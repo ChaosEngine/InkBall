@@ -11,8 +11,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace InkBall.Module.Migrations
 {
     [DbContext(typeof(GamesContext))]
-    [Migration("20181213141620_SqliteTriggers")]
-    partial class SqliteTriggers
+    [Migration("20181213141620_Triggers")]
+    partial class Triggers
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -40,8 +40,8 @@ namespace InkBall.Module.Migrations
 
 				b.Property<DateTime>("TimeStamp")
 					.ValueGeneratedOnAddOrUpdate()
-					.HasColumnType("timestamp")
-					.HasDefaultValueSql(GamesContext.TimeStampInitialValueFromProvider(this.ActiveProvider));
+					.HasColumnType(GamesContext.TimeStampColumnTypeFromProvider(this.ActiveProvider))
+					.HasDefaultValueSql(GamesContext.TimeStampDefaultValueFromProvider(this.ActiveProvider));
 
 				b.Property<bool>("bIsPlayer1Active")
 					.ValueGeneratedOnAdd()
@@ -119,8 +119,8 @@ namespace InkBall.Module.Migrations
 
 				b.Property<DateTime>("TimeStamp")
 					.ValueGeneratedOnAddOrUpdate()
-					.HasColumnType("timestamp")
-					.HasDefaultValueSql(GamesContext.TimeStampInitialValueFromProvider(this.ActiveProvider));
+					.HasColumnType(GamesContext.TimeStampColumnTypeFromProvider(this.ActiveProvider))
+					.HasDefaultValueSql(GamesContext.TimeStampDefaultValueFromProvider(this.ActiveProvider));
 
 				b.Property<int>("iDrawCount")
 					.ValueGeneratedOnAdd()

@@ -24,7 +24,7 @@ namespace InkBall.Module.Model
 
 	public partial class GamesContext : DbContext, IGamesContext
 	{
-		private static DateTimeToBytesConverter _sqlServerDateTimeToBytesConverter;
+		//private static DateTimeToBytesConverter _sqlServerTimestampConverter;
 
 		public virtual DbSet<InkBallGame> InkBallGame { get; set; }
 		public virtual DbSet<InkBallPath> InkBallPath { get; set; }
@@ -39,12 +39,12 @@ namespace InkBall.Module.Model
 
 		#region Helpers
 
-		internal static string TimeStampInitialValueFromProvider(string activeProvider)
+		internal static string TimeStampDefaultValueFromProvider(string activeProvider)
 		{
 			switch (activeProvider)
 			{
 				case "Microsoft.EntityFrameworkCore.SqlServer":
-					return null;
+					return "GETDATE()";
 
 				case "Pomelo.EntityFrameworkCore.MySql":
 					return "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP";
@@ -63,14 +63,32 @@ namespace InkBall.Module.Model
 			switch (activeProvider)
 			{
 				case "Microsoft.EntityFrameworkCore.SqlServer":
-					if (_sqlServerDateTimeToBytesConverter == null)
-						_sqlServerDateTimeToBytesConverter = new DateTimeToBytesConverter();
-					return _sqlServerDateTimeToBytesConverter;
+					//if (_sqlServerTimestampConverter == null)
+					//	_sqlServerTimestampConverter = new DateTimeToBytesConverter();
+					//return _sqlServerTimestampConverter;
+					return null;
 
 				case "Microsoft.EntityFrameworkCore.Sqlite":
 				case "Pomelo.EntityFrameworkCore.MySql":
 				case "Npgsql.EntityFrameworkCore.PostgreSQL":
 					return null;
+
+				default:
+					throw new NotSupportedException($"Bad DBKind name");
+			}
+		}
+
+		internal static string TimeStampColumnTypeFromProvider(string activeProvider)
+		{
+			switch (activeProvider)
+			{
+				case "Microsoft.EntityFrameworkCore.SqlServer":
+					return "datetime2";
+
+				case "Pomelo.EntityFrameworkCore.MySql":
+				case "Microsoft.EntityFrameworkCore.Sqlite":
+				case "Npgsql.EntityFrameworkCore.PostgreSQL":
+					return "timestamp";
 
 				default:
 					throw new NotSupportedException($"Bad DBKind name");
@@ -144,9 +162,9 @@ namespace InkBall.Module.Model
 				entity.Property(e => e.iPlayer2Id).HasColumnName("iPlayer2ID");
 
 				entity.Property(e => e.TimeStamp)
-					.HasColumnType("timestamp")
+					.HasColumnType(TimeStampColumnTypeFromProvider(Database.ProviderName))
 					.ValueGeneratedOnAddOrUpdate()
-					.HasDefaultValueSql(TimeStampInitialValueFromProvider(Database.ProviderName))
+					.HasDefaultValueSql(TimeStampDefaultValueFromProvider(Database.ProviderName))
 					.HasConversion(TimeStampValueConverterFromProvider(Database.ProviderName));
 
 				entity.HasOne(d => d.Player1)
@@ -232,9 +250,9 @@ namespace InkBall.Module.Model
 					.HasColumnType("varchar(1000)");
 
 				entity.Property(e => e.TimeStamp)
-					.HasColumnType("timestamp")
+					.HasColumnType(TimeStampColumnTypeFromProvider(Database.ProviderName))
 					.ValueGeneratedOnAddOrUpdate()
-					.HasDefaultValueSql(TimeStampInitialValueFromProvider(Database.ProviderName))
+					.HasDefaultValueSql(TimeStampDefaultValueFromProvider(Database.ProviderName))
 					.HasConversion(TimeStampValueConverterFromProvider(Database.ProviderName));
 
 				entity.HasOne(d => d.User)
@@ -436,7 +454,7 @@ namespace InkBall.Module.Model
 						iBoardHeight = iBoardHeight,
 						GameType = gameType,
 						GameState = gameState,
-						TimeStamp = DateTime.Now,
+						//TimeStamp = DateTime.Now,
 						CreateTime = DateTime.UtcNow,
 					};
 					await InkBallGame.AddAsync(gm, token);
@@ -489,14 +507,14 @@ namespace InkBall.Module.Model
 					iWinCount = 0,
 					iLossCount = 0,
 					iDrawCount = 0,
-					TimeStamp = DateTime.Now
+					//TimeStamp = DateTime.Now
 				};
 				await this.InkBallPlayer.AddAsync(player, token);
 			}
 			else
 			{
 				player.sLastMoveCode = sLastMoveCode + "dbg" + DateTime.UtcNow;
-				player.TimeStamp = DateTime.Now;//sqlite can not timestamp on update
+				//player.TimeStamp = DateTime.Now;//sqlite can not timestamp on update
 			}
 			await this.SaveChangesAsync(token);
 
@@ -525,7 +543,7 @@ namespace InkBall.Module.Model
 			game.GameState = GameStateEnum.ACTIVE;
 			game.bIsPlayer1 = false;
 			game.bIsPlayer1Active = true;
-			game.TimeStamp = DateTime.Now;//sqlite can not timestamp on update
+			//game.TimeStamp = DateTime.Now;//sqlite can not timestamp on update
 
 			await this.SaveChangesAsync(token);
 

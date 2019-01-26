@@ -40,8 +40,8 @@ namespace InkBall.Module.Migrations
 
                     b.Property<DateTime>("TimeStamp")
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp")
-                        .HasDefaultValueSql(GamesContext.TimeStampInitialValueFromProvider(this.ActiveProvider));
+                        .HasColumnType(GamesContext.TimeStampColumnTypeFromProvider(this.ActiveProvider))
+                        .HasDefaultValueSql(GamesContext.TimeStampDefaultValueFromProvider(this.ActiveProvider));
 
                     b.Property<bool>("bIsPlayer1Active")
                         .ValueGeneratedOnAdd()
@@ -119,8 +119,8 @@ namespace InkBall.Module.Migrations
 
                     b.Property<DateTime>("TimeStamp")
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp")
-                        .HasDefaultValueSql(GamesContext.TimeStampInitialValueFromProvider(this.ActiveProvider));
+                        .HasColumnType(GamesContext.TimeStampColumnTypeFromProvider(this.ActiveProvider))
+                        .HasDefaultValueSql(GamesContext.TimeStampDefaultValueFromProvider(this.ActiveProvider));
 
                     b.Property<int>("iDrawCount")
                         .ValueGeneratedOnAdd()

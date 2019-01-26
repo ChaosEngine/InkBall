@@ -112,7 +112,7 @@ namespace InkBall.Module.Pages
 					iDrawCount = 0,
 					iWinCount = 0,
 					iLossCount = 0,
-					TimeStamp = DateTime.Now,
+					//TimeStamp = DateTime.Now,
 				};
 
 				await _dbContext.InkBallPlayer.AddAsync(dbPlayer, token);
