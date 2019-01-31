@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 
 namespace InkBall.Module.Model
@@ -36,7 +37,7 @@ namespace InkBall.Module.Model
 		bool IsThisPlayerPlayingWithRed();
 	}
 
-	public abstract class AbstractGame<Player, Point, Path>
+	public abstract class CommonGame<Player, Point, Path>
 		where Player : IPlayer<Point, Path>
 		where Point : IPoint
 		where Path : IPath<Point>
@@ -118,16 +119,104 @@ namespace InkBall.Module.Model
 		{
 			return this.Player2;
 		}
+
+		public void SetState(InkBallGame.GameStateEnum value)
+		{
+			this.GameState = value;
+		}
+
+		public async Task<InkBallGame.WinStatusEnum> Check4Win(InkBallPoint.StatusEnum playerOwningColor, InkBallPoint.StatusEnum otherPlayerOwningColor,
+			Func<int, ValueTask<int>> pathsCountForPlayerFunc, Func<InkBallPoint.StatusEnum, ValueTask<int>> ownedPointForColorFunc)
+		{
+			switch (this.GameType)
+			{
+				case InkBallGame.GameTypeEnum.FIRST_CAPTURE:
+					if (await pathsCountForPlayerFunc(GetPlayer().iId) > 0)
+					{
+						if (this.IsThisPlayerPlayingWithRed())
+							return InkBallGame.WinStatusEnum.RED_WINS;
+						else
+							return InkBallGame.WinStatusEnum.GREEN_WINS;
+					}
+					else if (await pathsCountForPlayerFunc(GetOtherPlayer().iId) > 0)
+					{
+						if (this.IsThisPlayerPlayingWithRed())
+							return InkBallGame.WinStatusEnum.GREEN_WINS;
+						else
+							return InkBallGame.WinStatusEnum.RED_WINS;
+					}
+					return InkBallGame.WinStatusEnum.NO_WIN;//continue game
+
+
+				case InkBallGame.GameTypeEnum.FIRST_5_CAPTURES:
+					if (await ownedPointForColorFunc(otherPlayerOwningColor) >= 5)
+					{
+						if (this.IsThisPlayerPlayingWithRed())
+							return InkBallGame.WinStatusEnum.RED_WINS;
+						else
+							return InkBallGame.WinStatusEnum.GREEN_WINS;
+					}
+					else if (await ownedPointForColorFunc(playerOwningColor) >= 5)
+					{
+						if (this.IsThisPlayerPlayingWithRed())
+							return InkBallGame.WinStatusEnum.GREEN_WINS;
+						else
+							return InkBallGame.WinStatusEnum.RED_WINS;
+					}
+					return InkBallGame.WinStatusEnum.NO_WIN;//continue game
+
+
+				case InkBallGame.GameTypeEnum.FIRST_5_PATHS:
+					if (await pathsCountForPlayerFunc(GetPlayer().iId) >= 5)
+					{
+						if (this.IsThisPlayerPlayingWithRed())
+							return InkBallGame.WinStatusEnum.RED_WINS;
+						else
+							return InkBallGame.WinStatusEnum.GREEN_WINS;
+					}
+					else if (await pathsCountForPlayerFunc(GetOtherPlayer().iId) >= 5)
+					{
+						if (this.IsThisPlayerPlayingWithRed())
+							return InkBallGame.WinStatusEnum.GREEN_WINS;
+						else
+							return InkBallGame.WinStatusEnum.RED_WINS;
+					}
+					return InkBallGame.WinStatusEnum.NO_WIN;//continue game
+
+
+				case InkBallGame.GameTypeEnum.FIRST_5_ADVANTAGE_PATHS:
+					var diff = await pathsCountForPlayerFunc(GetPlayer().iId) - await pathsCountForPlayerFunc(GetOtherPlayer().iId);
+					if (diff >= 5)
+					{
+						if (this.IsThisPlayerPlayingWithRed())
+							return InkBallGame.WinStatusEnum.RED_WINS;
+						else
+							return InkBallGame.WinStatusEnum.GREEN_WINS;
+					}
+					else if (diff <= -5)
+					{
+						if (this.IsThisPlayerPlayingWithRed())
+							return InkBallGame.WinStatusEnum.GREEN_WINS;
+						else
+							return InkBallGame.WinStatusEnum.RED_WINS;
+					}
+					return InkBallGame.WinStatusEnum.NO_WIN;//continue game
+
+
+				default:
+					throw new Exception("Wrong game type");
+			}
+		}
 	}
 
-	public partial class InkBallGame : AbstractGame<InkBallPlayer, InkBallPoint, InkBallPath>
+	public partial class InkBallGame : CommonGame<InkBallPlayer, InkBallPoint, InkBallPath>
 	{
 		public enum GameTypeEnum
 		{
-			FIRST_CAPTURE,
-			FIRST_5_CAPTURES,
-			FIRST_5_PATHS,
-			FIRST_5_ADVANTAGE_PATHS
+			FIRST_CAPTURE = 0,
+			FIRST_5_CAPTURES = 1,
+			FIRST_5_PATHS = 2,
+			FIRST_5_ADVANTAGE_PATHS = 3
 		}
 
 		public enum GameStateEnum
@@ -136,6 +225,14 @@ namespace InkBall.Module.Model
 			ACTIVE,
 			AWAITING,
 			FINISHED
+		}
+
+		public enum WinStatusEnum
+		{
+			RED_WINS = 0,
+			GREEN_WINS = 1,
+			NO_WIN = 2,
+			DRAW_WIN = 3
 		}
 
 		public override InkBallPlayer Player1 { get; set; }
@@ -161,7 +258,7 @@ namespace InkBall.Module.Model
 	}
 
 	//[Serializable]
-	public class InkBallGameViewModel : AbstractGame<InkBallPlayerViewModel, InkBallPointViewModel, InkBallPathViewModel>
+	public class InkBallGameViewModel : CommonGame<InkBallPlayerViewModel, InkBallPointViewModel, InkBallPathViewModel>
 	{
 		public override ICollection<InkBallPathViewModel> InkBallPath { get; set; }
 		public override ICollection<InkBallPointViewModel> InkBallPoint { get; set; }

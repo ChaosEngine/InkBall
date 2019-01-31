@@ -29,13 +29,16 @@ namespace InkBall.Module.Hubs
 
 		Task ServerToClientPlayerSurrender(PlayerSurrenderingCommand surrender);
 
+		Task ServerToClientPlayerWin(WinCommand win);
 	}
 
 	public interface IGameServer
 	{
 		Task<InkBallPointViewModel> ClientToServerPoint(InkBallPointViewModel point);
 
-		Task<InkBallPathViewModel> ClientToServerPath(InkBallPathViewModel path);
+		Task<IDtoMsg> ClientToServerPath(InkBallPathViewModel path);
+
+		//Task ClientToServerCheck4Win(Check4WinCommand cmd);
 
 		Task ClientToServerPing(PingCommand ping);
 
@@ -381,7 +384,7 @@ namespace InkBall.Module.Hubs
 			}
 		}
 
-		public async Task<InkBallPathViewModel> ClientToServerPath(InkBallPathViewModel path)
+		public async Task<IDtoMsg> ClientToServerPath(InkBallPathViewModel path)
 		{
 			CancellationToken token = this.Context.ConnectionAborted;
 
@@ -403,18 +406,20 @@ namespace InkBall.Module.Hubs
 				if (points_on_path.Count <= 3 || points_on_path.First() != points_on_path.Last())
 					throw new ArgumentException("points count <= 3 or first point != last point");
 
-				InkBallPoint.StatusEnum current_player_color, other_player_color, owning_color;
+				InkBallPoint.StatusEnum current_player_color, other_player_color, owning_color, other_owning_color;
 				if (ThisGame.IsThisPlayerPlayingWithRed())
 				{
 					current_player_color = InkBallPoint.StatusEnum.POINT_FREE_RED;
 					other_player_color = InkBallPoint.StatusEnum.POINT_FREE_BLUE;
 					owning_color = InkBallPoint.StatusEnum.POINT_OWNED_BY_RED;
+					other_owning_color = InkBallPoint.StatusEnum.POINT_OWNED_BY_BLUE;
 				}
 				else
 				{
 					current_player_color = InkBallPoint.StatusEnum.POINT_FREE_BLUE;
 					other_player_color = InkBallPoint.StatusEnum.POINT_FREE_RED;
 					owning_color = InkBallPoint.StatusEnum.POINT_OWNED_BY_BLUE;
+					other_owning_color = InkBallPoint.StatusEnum.POINT_OWNED_BY_RED;
 				}
 				var db_path_player = ThisPlayer.iId == path.iPlayerId ? ThisPlayer : OtherPlayer;
 
@@ -425,7 +430,7 @@ namespace InkBall.Module.Hubs
 													  select p).Cast<IPoint>()
 													  .ToDictionaryAsync(pip => pip, token);
 
-				InkBallPathViewModel new_path;
+				IDtoMsg new_path;
 				var db_path = new InkBallPath
 				{
 					// iId = path.iId,
@@ -481,7 +486,74 @@ namespace InkBall.Module.Hubs
 
 						new_path = new InkBallPathViewModel(db_path, path.PointsAsString, path.OwnedPointsAsString);
 
-						trans.Commit();
+
+
+
+						Dictionary<int, int> path_counts = null;
+						Dictionary<InkBallPoint.StatusEnum, int> owned_counts = null;
+						async ValueTask<int> path_counts_func(int pid)
+						{
+							if (path_counts == null)
+							{
+								path_counts = await (from pa in _dbContext.InkBallPath
+													 where pa.iGameId == ThisGame.iId
+													 group pa by pa.iPlayerId into g
+													 select new
+													 {
+														 playerId = g.Key,
+														 pathCount = g.Count()
+													 })
+													 .ToDictionaryAsync(k => k.playerId, v => v.pathCount, token);
+							}
+
+							if (path_counts.TryGetValue(pid, out var count))
+								return count;
+							return 0;
+						}
+						async ValueTask<int> owned_counts_func(InkBallPoint.StatusEnum color)
+						{
+							if (owned_counts == null)
+							{
+								owned_counts = await (from pt in _dbContext.InkBallPoint
+													  where pt.iGameId == ThisGame.iId && pt.iEnclosingPathId.HasValue &&
+													  new[] { InkBallPoint.StatusEnum.POINT_OWNED_BY_RED, InkBallPoint.StatusEnum.POINT_OWNED_BY_BLUE }.Contains(pt.Status)
+													  group pt by pt.Status into g
+													  select new
+													  {
+														  owningColor = g.Key,
+														  ownedCount = g.Count()
+													  })
+													  .ToDictionaryAsync(k => k.owningColor, v => v.ownedCount, token);
+							}
+
+							if (owned_counts.TryGetValue(color, out var count))
+								return count;
+							return 0;
+						}
+
+						var win_status = await ThisGame.Check4Win(owning_color, other_owning_color, path_counts_func, owned_counts_func);
+						if (win_status != InkBallGame.WinStatusEnum.NO_WIN)
+						{
+							int? winningPlayerID = await _dbContext.HandleWinStatusAsync(win_status, ThisGame, token);
+
+							var win = new WinCommand(win_status, winningPlayerID.GetValueOrDefault(0),
+								$"Bravo {(win_status == InkBallGame.WinStatusEnum.GREEN_WINS ? "green" : "red")}!");
+
+							new_path = win;
+							await Clients.User(OtherUserIdentifier).ServerToClientPlayerWin((WinCommand)new_path);
+						}
+						else
+						{
+							await Clients.User(OtherUserIdentifier).ServerToClientPath((InkBallPathViewModel)new_path, ThisUserName);
+						}
+
+
+
+
+
+						trans.Rollback();
+
+						return new_path;
 					}
 					catch (Exception ex)
 					{
@@ -489,18 +561,29 @@ namespace InkBall.Module.Hubs
 						_logger.LogError(ex, nameof(ClientToServerPath));
 						throw;
 					}
-				}
-
-				await Clients.User(OtherUserIdentifier).ServerToClientPath(new_path, ThisUserName);
-
-				return new_path;
+				}//trans end 
 			}
 			catch (Exception ex)
 			{
 				_logger.LogError(ex.Message);
 				throw;
 			}
-		}
+		}//method end 
+
+		//public async Task ClientToServerCheck4Win(Check4WinCommand cmd)
+		//{
+		//	CancellationToken token = this.Context.ConnectionAborted;
+
+		//	await LoadGameAndPlayerStructures(token);
+
+		//	if (ThisGame == null || ThisPlayer == null || OtherPlayer == null || string.IsNullOrEmpty(OtherUserIdentifier)
+		//		|| string.IsNullOrEmpty(ThisUserName))
+		//		return;
+
+		//	//TODO: execute Check4Win
+		//	//and if it checks out notify other player of win situation or other things
+		//	//
+		//}
 
 		public async Task ClientToServerPing(PingCommand ping)
 		{
@@ -511,15 +594,6 @@ namespace InkBall.Module.Hubs
 			if (ThisGame == null || ThisPlayer == null || OtherPlayer == null || string.IsNullOrEmpty(OtherUserIdentifier)
 				|| string.IsNullOrEmpty(ThisUserName))
 				return;
-
-			var claimsPrincipal = this.Context.User;
-			string userId = claimsPrincipal.FindFirstValue(nameof(Pages.BasePageModel.InkBallUserId));
-			if (this.Context.Items.Count > 1)
-			{
-				System.Type t = typeof(System.Net.WebSockets.WebSocketProtocol);
-				userId = "more than 1 " + t.ToString();
-			}
-
 
 			try
 			{
@@ -532,7 +606,13 @@ namespace InkBall.Module.Hubs
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError(ex.Message);
+				string str = string.Empty;
+				if (this.Context.Items.Count > 1)
+				{
+					System.Type t = typeof(System.Net.WebSockets.WebSocketProtocol);
+					str = "more than 1 " + t.ToString();
+				}
+				_logger.LogError(ex.Message + str);
 				throw;
 			}
 		}

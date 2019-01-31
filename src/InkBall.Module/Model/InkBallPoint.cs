@@ -21,7 +21,7 @@ namespace InkBall.Module.Model
 		int? iEnclosingPathId { get; set; }
 	}
 
-	public abstract class AbstractPoint : IPoint, IEquatable<IPoint>, IEqualityComparer<IPoint>
+	public abstract class CommonPoint : IPoint, IEquatable<IPoint>, IEqualityComparer<IPoint>, IMessagePackSerializationCallbackReceiver, IDtoMsg
 	{
 		public int iId { get; set; }
 
@@ -89,24 +89,44 @@ namespace InkBall.Module.Model
 			return obj.GetHashCode();
 		}
 
+		public void OnBeforeSerialize()
+		{
+			iId = Math.Max(0, iId);
+		}
+
+		public void OnAfterDeserialize()
+		{
+		}
+
+		public CommandKindEnum GetKind()
+		{
+			return CommandKindEnum.POINT;
+		}
+
 		#endregion Overrides
 
-		public static bool operator ==(AbstractPoint left, AbstractPoint right)
+		public static bool operator ==(CommonPoint left, CommonPoint right)
 		{
 			if (((object)left) == null || ((object)right) == null)
 				return Object.Equals(left, right);
 			return left.Equals(right);
 		}
 
-		public static bool operator !=(AbstractPoint left, AbstractPoint right)
+		public static bool operator !=(CommonPoint left, CommonPoint right)
 		{
 			if (((object)left) == null || ((object)right) == null)
 				return !Object.Equals(left, right);
 			return !(left.Equals(right));
 		}
+
+		public bool ShouldSerializeiId()
+		{
+			// don't serialize the iId property if <= 0
+			return (iId > 0);
+		}
 	}
 
-	public partial class InkBallPoint : AbstractPoint, IPoint
+	public partial class InkBallPoint : CommonPoint, IPoint
 	{
 		public enum StatusEnum
 		{
@@ -135,7 +155,7 @@ namespace InkBall.Module.Model
 
 	//[Serializable]
 	[MessagePackObject(true)]
-	public class InkBallPointViewModel : AbstractPoint, IPoint
+	public class InkBallPointViewModel : CommonPoint, IPoint
 	{
 		public InkBallPointViewModel()
 		{ }
@@ -161,12 +181,6 @@ namespace InkBall.Module.Model
 			this.iY = point.iY;
 			this.Status = point.Status;
 			this.iEnclosingPathId = point.iEnclosingPathId;
-		}
-
-		public bool ShouldSerializeiId()
-		{
-			// don't serialize the iId property if <= 0
-			return (iId > 0);
 		}
 	}
 }

@@ -17,7 +17,7 @@ namespace InkBall.Module.Model
 		ICollection<Point> InkBallPoint { get; set; }
 	}
 
-	public abstract class AbstractPath<Point> : IPath<Point>
+	public abstract class CommonPath<Point> : IPath<Point>, IDtoMsg
 		where Point : IPoint
 	{
 		public int iId { get; set; }
@@ -52,13 +52,13 @@ namespace InkBall.Module.Model
 			return c;
 		}
 
-		static bool pnpoly(ICollection<IPoint> path, int x, int y)
+		static bool pnpoly(ICollection<IPoint> pathPoints, int x, int y)
 		{
-			int i, j, npol = path.Count; bool c = false;
+			int i, j, npol = pathPoints.Count; bool c = false;
 
 			for (i = 0, j = npol - 1; i < npol; j = i++)
 			{
-				IPoint pi = path.ElementAt(i), pj = path.ElementAt(j);
+				IPoint pi = pathPoints.ElementAt(i), pj = pathPoints.ElementAt(j);
 
 				if ((((pi.iY <= y) && (y < pj.iY)) ||
 					((pj.iY <= y) && (y < pi.iY))) &&
@@ -75,9 +75,33 @@ namespace InkBall.Module.Model
 
 			return pnpoly(path_points, point.iX, point.iY);
 		}
+
+		#region Overrides
+
+		public void OnBeforeSerialize()
+		{
+			iId = Math.Max(0, iId);
+		}
+
+		public void OnAfterDeserialize()
+		{
+		}
+
+		public CommandKindEnum GetKind()
+		{
+			return CommandKindEnum.PATH;
+		}
+
+		#endregion Overrides
+
+		public bool ShouldSerializeiId()
+		{
+			// don't serialize the iId property if <= 0
+			return (iId > 0);
+		}
 	}
 
-	public partial class InkBallPath : AbstractPath<InkBallPoint>
+	public partial class InkBallPath : CommonPath<InkBallPoint>
 	{
 		public InkBallGame Game { get; set; }
 		public InkBallPlayer Player { get; set; }
@@ -92,7 +116,7 @@ namespace InkBall.Module.Model
 	}
 
 	[MessagePackObject(true)]
-	public class InkBallPathViewModel : AbstractPath<InkBallPointViewModel>
+	public class InkBallPathViewModel : CommonPath<InkBallPointViewModel>
 	{
 		delegate void ActionRef<T1, T2, T3, T4>(ref T1 arg1, ref T2 arg2, ref T3 arg3, ref T4 arg4);
 

@@ -52,6 +52,7 @@
 			<input id='SurrenderButton' type='submit' name='action' value="@surrender_win_cancel_name" class='btn btn-outline-primary' />
 			<input id="DrawMode" type="button" value="Draw lines" class='btn btn-primary' disabled />
 			<input id="CancelPath" type="button" value="Cancel path" class='btn btn-primary' disabled />
+			<input id="Test" type="button" value="Test" class='btn btn-warning' />
 		</form>
 	</div>
 	<div id="status" class="row">
@@ -88,12 +89,13 @@
 		let iPlayerID = @Model.Player.iId;
 		let bPlayingWithRed = @(Model.Game.IsThisPlayerPlayingWithRed().ToString().ToLowerInvariant());
 		let bPlayerActive = @(Model.Game.IsThisPlayerActive().ToString().ToLowerInvariant());
+		let gameType = @((int)Model.Game.GameType);
 		let protocol = @(commonUIConfigureOptions.Value.UseMessagePackBinaryTransport.ToString().ToLowerInvariant()) ? new signalR.protocols.msgpack.MessagePackHubProtocol() : new signalR.JsonHubProtocol();
 		game = new InkBallGame(inkBallHubName, signalR.LogLevel.Warning, protocol, signalR.HttpTransportType.None,
 			function () {
 				return 'iGameID=' + iGameID + '&iPlayerID=' + iPlayerID;
 			},
-			bPlayingWithRed, bPlayerActive, 15
+			gameType, bPlayingWithRed, bPlayerActive, 15
 		);
 		game.StartSignalRConnection(iGameID, iPlayerID, '#messagesList', '#sendButton', '#messageInput');
 		game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#DrawMode', '#CancelPath');

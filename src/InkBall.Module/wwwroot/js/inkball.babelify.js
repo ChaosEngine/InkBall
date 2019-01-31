@@ -37,7 +37,20 @@ var CommandKindEnum = Object.freeze({
   POINT: 1,
   PATH: 2,
   PLAYER_JOINING: 3,
-  PLAYER_SURRENDER: 4
+  PLAYER_SURRENDER: 4,
+  WIN: 5
+});
+var GameTypeEnum = Object.freeze({
+  FIRST_CAPTURE: 0,
+  FIRST_5_CAPTURES: 1,
+  FIRST_5_PATHS: 2,
+  FIRST_5_ADVANTAGE_PATHS: 3
+});
+var WinStatusEnum = Object.freeze({
+  RED_WINS: 0,
+  GREEN_WINS: 1,
+  NO_WIN: 2,
+  DRAW_WIN: 3
 });
 
 var DtoMsg = function () {
@@ -46,9 +59,9 @@ var DtoMsg = function () {
   }
 
   _createClass(DtoMsg, [{
-    key: "GetType",
-    value: function GetType() {
-      throw new Error("missing GetType implementation!");
+    key: "GetKind",
+    value: function GetKind() {
+      throw new Error("missing GetKind implementation!");
     }
   }]);
 
@@ -83,9 +96,9 @@ var InkBallPointViewModel = function (_DtoMsg) {
   }
 
   _createClass(InkBallPointViewModel, [{
-    key: "GetType",
-    value: function GetType() {
-      return "InkBallPointViewModel";
+    key: "GetKind",
+    value: function GetKind() {
+      return CommandKindEnum.POINT;
     }
   }], [{
     key: "Format",
@@ -122,9 +135,9 @@ var InkBallPathViewModel = function (_DtoMsg2) {
   }
 
   _createClass(InkBallPathViewModel, [{
-    key: "GetType",
-    value: function GetType() {
-      return "InkBallPathViewModel";
+    key: "GetKind",
+    value: function GetKind() {
+      return CommandKindEnum.PATH;
     }
   }], [{
     key: "Format",
@@ -137,50 +150,25 @@ var InkBallPathViewModel = function (_DtoMsg2) {
   return InkBallPathViewModel;
 }(DtoMsg);
 
-var WaitForPlayerCommand = function (_DtoMsg3) {
-  _inherits(WaitForPlayerCommand, _DtoMsg3);
-
-  function WaitForPlayerCommand() {
-    var _this3;
-
-    var showP2Name = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
-
-    _classCallCheck(this, WaitForPlayerCommand);
-
-    _this3 = _possibleConstructorReturn(this, _getPrototypeOf(WaitForPlayerCommand).call(this));
-    _this3.ShowP2Name = showP2Name;
-    return _this3;
-  }
-
-  _createClass(WaitForPlayerCommand, [{
-    key: "GetType",
-    value: function GetType() {
-      return "WaitForPlayerCommand";
-    }
-  }]);
-
-  return WaitForPlayerCommand;
-}(DtoMsg);
-
-var PlayerJoiningCommand = function (_DtoMsg4) {
-  _inherits(PlayerJoiningCommand, _DtoMsg4);
+var PlayerJoiningCommand = function (_DtoMsg3) {
+  _inherits(PlayerJoiningCommand, _DtoMsg3);
 
   function PlayerJoiningCommand(otherPlayerId, otherPlayerName, message) {
-    var _this4;
+    var _this3;
 
     _classCallCheck(this, PlayerJoiningCommand);
 
-    _this4 = _possibleConstructorReturn(this, _getPrototypeOf(PlayerJoiningCommand).call(this));
-    _this4.OtherPlayerId = otherPlayerId;
-    _this4.OtherPlayerName = otherPlayerName;
-    _this4.Message = message;
-    return _this4;
+    _this3 = _possibleConstructorReturn(this, _getPrototypeOf(PlayerJoiningCommand).call(this));
+    _this3.OtherPlayerId = otherPlayerId;
+    _this3.OtherPlayerName = otherPlayerName;
+    _this3.Message = message;
+    return _this3;
   }
 
   _createClass(PlayerJoiningCommand, [{
-    key: "GetType",
-    value: function GetType() {
-      return "PlayerJoiningCommand";
+    key: "GetKind",
+    value: function GetKind() {
+      return CommandKindEnum.PLAYER_JOINING;
     }
   }], [{
     key: "Format",
@@ -192,25 +180,25 @@ var PlayerJoiningCommand = function (_DtoMsg4) {
   return PlayerJoiningCommand;
 }(DtoMsg);
 
-var PlayerSurrenderingCommand = function (_DtoMsg5) {
-  _inherits(PlayerSurrenderingCommand, _DtoMsg5);
+var PlayerSurrenderingCommand = function (_DtoMsg4) {
+  _inherits(PlayerSurrenderingCommand, _DtoMsg4);
 
   function PlayerSurrenderingCommand(otherPlayerId, thisOrOtherPlayerSurrenders, message) {
-    var _this5;
+    var _this4;
 
     _classCallCheck(this, PlayerSurrenderingCommand);
 
-    _this5 = _possibleConstructorReturn(this, _getPrototypeOf(PlayerSurrenderingCommand).call(this));
-    _this5.OtherPlayerId = otherPlayerId;
-    _this5.thisOrOtherPlayerSurrenders = thisOrOtherPlayerSurrenders;
-    _this5.Message = message;
-    return _this5;
+    _this4 = _possibleConstructorReturn(this, _getPrototypeOf(PlayerSurrenderingCommand).call(this));
+    _this4.OtherPlayerId = otherPlayerId;
+    _this4.thisOrOtherPlayerSurrenders = thisOrOtherPlayerSurrenders;
+    _this4.Message = message;
+    return _this4;
   }
 
   _createClass(PlayerSurrenderingCommand, [{
-    key: "GetType",
-    value: function GetType() {
-      return "PlayerSurrenderingCommand";
+    key: "GetKind",
+    value: function GetKind() {
+      return CommandKindEnum.PLAYER_SURRENDER;
     }
   }], [{
     key: "Format",
@@ -222,25 +210,25 @@ var PlayerSurrenderingCommand = function (_DtoMsg5) {
   return PlayerSurrenderingCommand;
 }(DtoMsg);
 
-var PingCommand = function (_DtoMsg6) {
-  _inherits(PingCommand, _DtoMsg6);
+var PingCommand = function (_DtoMsg5) {
+  _inherits(PingCommand, _DtoMsg5);
 
   function PingCommand() {
-    var _this6;
+    var _this5;
 
     var message = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
 
     _classCallCheck(this, PingCommand);
 
-    _this6 = _possibleConstructorReturn(this, _getPrototypeOf(PingCommand).call(this));
-    _this6.Message = message;
-    return _this6;
+    _this5 = _possibleConstructorReturn(this, _getPrototypeOf(PingCommand).call(this));
+    _this5.Message = message;
+    return _this5;
   }
 
   _createClass(PingCommand, [{
-    key: "GetType",
-    value: function GetType() {
-      return "PingCommand";
+    key: "GetKind",
+    value: function GetKind() {
+      return CommandKindEnum.PING;
     }
   }], [{
     key: "Format",
@@ -251,6 +239,60 @@ var PingCommand = function (_DtoMsg6) {
   }]);
 
   return PingCommand;
+}(DtoMsg);
+
+var WinCommand = function (_DtoMsg6) {
+  _inherits(WinCommand, _DtoMsg6);
+
+  function WinCommand() {
+    var _this6;
+
+    var status = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : WinStatusEnum.NO_WIN;
+    var winningPlayerId = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+    var message = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 'null';
+
+    _classCallCheck(this, WinCommand);
+
+    _this6 = _possibleConstructorReturn(this, _getPrototypeOf(WinCommand).call(this));
+    _this6.Status = status;
+    _this6.WinningPlayerId = winningPlayerId;
+    _this6.Message = message;
+    return _this6;
+  }
+
+  _createClass(WinCommand, [{
+    key: "GetKind",
+    value: function GetKind() {
+      return CommandKindEnum.WIN;
+    }
+  }], [{
+    key: "Format",
+    value: function Format(win) {
+      var msg = '';
+
+      switch (win.Status) {
+        case WinStatusEnum.RED_WINS:
+          msg = 'red.';
+          break;
+
+        case WinStatusEnum.GREEN_WINS:
+          msg = 'green.';
+          break;
+
+        case WinStatusEnum.NO_WIN:
+          msg = 'no one!';
+          break;
+
+        case WinStatusEnum.DRAW_WIN:
+          msg = 'draw!';
+          break;
+      }
+
+      return 'And the winner is... ' + msg;
+    }
+  }]);
+
+  return WinCommand;
 }(DtoMsg);
 
 function htmlEncode(html) {
@@ -278,19 +320,20 @@ function CountPointsDebug(sSelector2Set) {
 }
 
 var InkBallGame = function () {
-  function InkBallGame(sHubName, loggingLevel, hubProtocol, transportType, tokenFactory) {
+  function InkBallGame(sHubName, loggingLevel, hubProtocol, transportType, tokenFactory, gameType) {
     var _this7 = this;
 
-    var bIsPlayingWithRed = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : true;
-    var bIsPlayerActive = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : true;
-    var iGridSize = arguments.length > 7 && arguments[7] !== undefined ? arguments[7] : 15;
-    var iTooLong2Duration = arguments.length > 8 && arguments[8] !== undefined ? arguments[8] : 125;
-    var bViewOnly = arguments.length > 9 && arguments[9] !== undefined ? arguments[9] : false;
+    var bIsPlayingWithRed = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : true;
+    var bIsPlayerActive = arguments.length > 7 && arguments[7] !== undefined ? arguments[7] : true;
+    var iGridSize = arguments.length > 8 && arguments[8] !== undefined ? arguments[8] : 15;
+    var iTooLong2Duration = arguments.length > 9 && arguments[9] !== undefined ? arguments[9] : 125;
+    var bViewOnly = arguments.length > 10 && arguments[10] !== undefined ? arguments[10] : false;
 
     _classCallCheck(this, InkBallGame);
 
     this.g_iGameID = null;
     this.g_iPlayerID = null;
+    this.GameType = gameType;
     this.iConnErrCount = 0;
     this.iExponentialBackOffMillis = 2000;
     this.COLOR_RED = 'red';
@@ -437,12 +480,27 @@ var InkBallGame = function () {
         document.querySelector(sMsgListSel).appendChild(li);
         this.ReceivedPointProcessing(point);
       }.bind(this));
-      this.g_SignalRConnection.on("ServerToClientPath", function (path, user) {
-        var encodedMsg = InkBallPathViewModel.Format(user, path);
-        var li = document.createElement("li");
-        li.textContent = encodedMsg;
-        document.querySelector(sMsgListSel).appendChild(li);
-        this.ReceivedPathProcessing(path);
+      this.g_SignalRConnection.on("ServerToClientPath", function (dto, user) {
+        debugger;
+
+        if (dto.hasOwnProperty('PointsAsString')) {
+          var path = dto;
+          var encodedMsg = InkBallPathViewModel.Format(user, path);
+          var li = document.createElement("li");
+          li.textContent = encodedMsg;
+          document.querySelector(sMsgListSel).appendChild(li);
+          this.ReceivedPathProcessing(path);
+        } else if (dto.hasOwnProperty('WinningPlayerId')) {
+          var win = dto;
+
+          var _encodedMsg = WinCommand.Format(win);
+
+          var _li = document.createElement("li");
+
+          _li.textContent = _encodedMsg;
+          document.querySelector(sMsgListSel).appendChild(_li);
+          this.ReceivedWinProcessing(win);
+        } else throw new Error("ServerToClientPath bad GetKind!");
       }.bind(this));
       this.g_SignalRConnection.on("ServerToClientPlayerJoin", function (join) {
         var encodedMsg = PlayerJoiningCommand.Format(join);
@@ -475,6 +533,16 @@ var InkBallGame = function () {
         document.querySelector(sMsgListSel).appendChild(li);
         this.m_bHandlingEvent = false;
         alert(encodedMsg === '' ? 'Game interrupted!' : encodedMsg);
+        window.location.href = "Games";
+      }.bind(this));
+      this.g_SignalRConnection.on("ServerToClientPlayerWin", function (win) {
+        debugger;
+        var encodedMsg = WinCommand.Format(win);
+        var li = document.createElement("li");
+        li.textContent = encodedMsg;
+        document.querySelector(sMsgListSel).appendChild(li);
+        this.m_bHandlingEvent = false;
+        alert(encodedMsg === '' ? 'Game won!' : encodedMsg);
         window.location.href = "Games";
       }.bind(this));
       this.g_SignalRConnection.on("ServerToClientPing", function (ping, user) {
@@ -833,10 +901,7 @@ var InkBallGame = function () {
     }
   }, {
     key: "CreateXMLWaitForPlayerRequest",
-    value: function CreateXMLWaitForPlayerRequest() {
-      var cmd = new WaitForPlayerCommand(arguments.length > 0 && (arguments.length <= 0 ? undefined : arguments[0]) === true ? true : false);
-      return cmd;
-    }
+    value: function CreateXMLWaitForPlayerRequest() {}
   }, {
     key: "CreateXMLPutPointRequest",
     value: function CreateXMLPutPointRequest(iX, iY) {
@@ -852,8 +917,8 @@ var InkBallGame = function () {
   }, {
     key: "SendAsyncData",
     value: function SendAsyncData(payload) {
-      switch (payload.GetType()) {
-        case "InkBallPointViewModel":
+      switch (payload.GetKind()) {
+        case CommandKindEnum.POINT:
           console.log(InkBallPointViewModel.Format('some player', payload));
           this.m_bHandlingEvent = true;
           this.g_SignalRConnection.invoke("ClientToServerPoint", payload).then(function (point) {
@@ -863,17 +928,23 @@ var InkBallGame = function () {
           });
           break;
 
-        case "InkBallPathViewModel":
+        case CommandKindEnum.PATH:
           console.log(InkBallPathViewModel.Format('some player', payload));
           this.m_bHandlingEvent = true;
-          this.g_SignalRConnection.invoke("ClientToServerPath", payload).then(function (path) {
-            this.ReceivedPathProcessing(path);
+          this.g_SignalRConnection.invoke("ClientToServerPath", payload).then(function (dto) {
+            if (dto.hasOwnProperty('WinningPlayerId')) {
+              var win = dto;
+              this.ReceivedWinProcessing(win);
+            } else if (dto.hasOwnProperty('PointsAsString')) {
+              var path = dto;
+              this.ReceivedPathProcessing(path);
+            } else throw new Error("ClientToServerPath bad GetKind!");
           }.bind(this)).catch(function (err) {
             return console.error(err.toString());
           });
           break;
 
-        case "PingCommand":
+        case CommandKindEnum.PING:
           this.g_SignalRConnection.invoke("ClientToServerPing", payload).then(function (msg) {
             document.querySelector(this.m_sMsgInputSel).value = '';
             document.querySelector(this.m_sMsgSendButtonSel).disabled = 'disabled';
@@ -1085,6 +1156,91 @@ var InkBallGame = function () {
       this.m_bHandlingEvent = false;
     }
   }, {
+    key: "ReceivedWinProcessing",
+    value: function ReceivedWinProcessing(win) {
+      this.ShowMobileStatus('Win situation');
+      this.m_bHandlingEvent = false;
+      var encodedMsg = WinCommand.Format(win);
+      alert(encodedMsg === '' ? 'Game won!' : encodedMsg);
+      window.location.href = "Games";
+    }
+  }, {
+    key: "Check4Win",
+    value: function Check4Win(playerPaths, otherPlayerPaths, playerPoints, otherPlayerPoints) {
+      var _this11 = this;
+
+      var paths, points, count;
+
+      switch (this.GameType) {
+        case GameTypeEnum.FIRST_CAPTURE:
+          paths = playerPaths;
+
+          if (paths.length > 0) {
+            if (this.m_bIsPlayingWithRed) return WinStatusEnum.RED_WINS;else return WinStatusEnum.GREEN_WINS;
+          }
+
+          paths = otherPlayerPaths;
+
+          if (paths.length > 0) {
+            if (this.m_bIsPlayingWithRed) return WinStatusEnum.GREEN_WINS;else return WinStatusEnum.RED_WINS;
+          }
+
+          return WinStatusEnum.NO_WIN;
+
+        case GameTypeEnum.FIRST_5_CAPTURES:
+          points = otherPlayerPoints;
+          count = 0;
+          points.forEach(function (p) {
+            if (p.iEnclosingPathId !== null) ++count;
+
+            if (count >= 5) {
+              if (_this11.m_bIsPlayingWithRed) return WinStatusEnum.RED_WINS;else return WinStatusEnum.GREEN_WINS;
+            }
+          });
+          points = playerPoints;
+          count = 0;
+          points.forEach(function (p) {
+            if (p.iEnclosingPathId !== null) ++count;
+
+            if (count >= 5) {
+              if (_this11.m_bIsPlayingWithRed) return WinStatusEnum.GREEN_WINS;else return WinStatusEnum.RED_WINS;
+            }
+          });
+          return WinStatusEnum.NO_WIN;
+
+        case GameTypeEnum.FIRST_5_PATHS:
+          paths = playerPaths;
+
+          if (paths.length >= 5) {
+            if (this.m_bIsPlayingWithRed) return WinStatusEnum.RED_WINS;else return WinStatusEnum.GREEN_WINS;
+          }
+
+          paths = otherPlayerPaths;
+
+          if (paths.length >= 5) {
+            if (this.m_bIsPlayingWithRed) return WinStatusEnum.GREEN_WINS;else return WinStatusEnum.RED_WINS;
+          }
+
+          return WinStatusEnum.NO_WIN;
+
+        case GameTypeEnum.FIRST_5_ADVANTAGE_PATHS:
+          var this_player_paths = playerPaths;
+          var other_player_paths = otherPlayerPaths;
+          var diff = this_player_paths.length - other_player_paths.length;
+
+          if (diff >= 5) {
+            if (this.m_bIsPlayingWithRed) return WinStatusEnum.RED_WINS;else return WinStatusEnum.GREEN_WINS;
+          } else if (diff <= -5) {
+            if (this.m_bIsPlayingWithRed) return WinStatusEnum.GREEN_WINS;else return WinStatusEnum.RED_WINS;
+          }
+
+          return WinStatusEnum.NO_WIN;
+
+        default:
+          throw new Exception("Wrong game type");
+      }
+    }
+  }, {
     key: "GameLoop",
     value: function GameLoop() {
       var bP2NameUnknown = this.m_Player2Name.innerHTML === '???' ? true : false;
@@ -1157,7 +1313,6 @@ var InkBallGame = function () {
                 var val = this.SurroundOponentPoints();
 
                 if (val.owned.length > 0) {
-                  this.m_Line.$SetIsClosed(true);
                   this.Debug('Closing path', 0);
                   this.SendAsyncData(this.CreateXMLPutPathRequest(val));
                 } else this.Debug('Wrong path, cancell it or refresh page', 0);
@@ -1216,7 +1371,6 @@ var InkBallGame = function () {
                 var val = this.SurroundOponentPoints();
 
                 if (val.owned.length > 0) {
-                  this.m_Line.$SetIsClosed(true);
                   this.Debug('Closing path', 0);
                   this.SendAsyncData(this.CreateXMLPutPathRequest(val));
                 } else this.Debug('Wrong path, cancell it or refresh page', 0);
@@ -1306,20 +1460,7 @@ var InkBallGame = function () {
   }, {
     key: "OnTestClick",
     value: function OnTestClick() {
-      if (this.m_bDrawLines) {
-        if (this.m_Line !== null) {
-          var val = this.SurroundOponentPoints();
-
-          if (val.owned.length > 0) {
-            this.m_iLastX = this.m_iLastY = -1;
-            this.m_Line = null;
-          }
-        }
-      } else {
-        var p0 = this.m_Points[this.m_iLastY * this.m_iGridWidth + this.m_iLastX];
-        var pos = p0.$GetPosition();
-        this.Debug("".concat(p0.$GetFillColor(), " posX = ").concat(pos.x, " posY = ").concat(pos.y), 1);
-      }
+      console.log(this.m_Points.flat());
     }
   }, {
     key: "PrepareDrawing",
@@ -1387,6 +1528,7 @@ var InkBallGame = function () {
         this.m_Screen.onmouseleave = this.OnMouseLeave.bind(this);
         this.m_DrawMode.onclick = this.OnDrawModeClick.bind(this);
         this.m_CancelPath.onclick = this.OnCancelClick.bind(this);
+        document.querySelector('#Test').onclick = this.OnTestClick.bind(this);
 
         if (this.m_Player2Name.innerHTML === '???') {
           this.ShowMobileStatus('Waiting for other player to connect');

@@ -9,11 +9,22 @@ namespace InkBall.Module.Model
 		POINT = 1,
 		PATH = 2,
 		PLAYER_JOINING = 3,
-		PLAYER_SURRENDER = 4
+		PLAYER_SURRENDER = 4,
+		WIN = 5
 	}
 
+	public interface IDtoMsg
+	{
+		CommandKindEnum GetKind();
+	}
+
+	//public abstract class DtoMsg : IDtoMsg
+	//{
+	//	public abstract CommandKindEnum GetKind();
+	//}
+
 	[MessagePackObject(true)]
-	public sealed class PingCommand
+	public sealed class PingCommand : IDtoMsg
 	{
 		public string Message { get; set; }
 
@@ -29,24 +40,15 @@ namespace InkBall.Module.Model
 		{
 			this.Message = parent.Message;
 		}
+
+		public CommandKindEnum GetKind()
+		{
+			return CommandKindEnum.PING;
+		}
 	}
 
-	/*[MessagePackObject(true)]
-	public sealed class WaitForPlayerCommand
-	{
-		public bool ShowP2Name { get; private set; }
-
-		public WaitForPlayerCommand() : this(false)
-		{ }
-
-		public WaitForPlayerCommand(bool showP2Name)
-		{
-			ShowP2Name = showP2Name;
-		}
-	}*/
-
 	[MessagePackObject(true)]
-	public sealed class PlayerJoiningCommand
+	public sealed class PlayerJoiningCommand : IDtoMsg
 	{
 		public int OtherPlayerId { get; private set; }
 
@@ -60,10 +62,15 @@ namespace InkBall.Module.Model
 			OtherPlayerName = otherPlayerName;
 			Message = message;
 		}
+
+		public CommandKindEnum GetKind()
+		{
+			return CommandKindEnum.PLAYER_JOINING;
+		}
 	}
 
 	[MessagePackObject(true)]
-	public sealed class PlayerSurrenderingCommand
+	public sealed class PlayerSurrenderingCommand : IDtoMsg
 	{
 		public int? OtherPlayerId { get; private set; }
 
@@ -76,6 +83,33 @@ namespace InkBall.Module.Model
 			OtherPlayerId = otherPlayerId;
 			ThisOrOtherPlayerSurrenders = thisOrOtherPlayerSurrenders;
 			Message = message;
+		}
+
+		public CommandKindEnum GetKind()
+		{
+			return CommandKindEnum.PLAYER_SURRENDER;
+		}
+	}
+
+	[MessagePackObject(true)]
+	public sealed class WinCommand : IDtoMsg
+	{
+		public int WinningPlayerId { get; }
+
+		public InkBallGame.WinStatusEnum Status { get; }
+
+		public string Message { get; }
+
+		public WinCommand(InkBallGame.WinStatusEnum status, int winningPlayerId, string message)
+		{
+			this.Status = status;
+			this.WinningPlayerId = winningPlayerId;
+			this.Message = message;
+		}
+
+		public CommandKindEnum GetKind()
+		{
+			return CommandKindEnum.WIN;
 		}
 	}
 }

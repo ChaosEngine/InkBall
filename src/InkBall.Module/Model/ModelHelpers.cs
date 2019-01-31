@@ -58,7 +58,7 @@ namespace InkBall.Module.Model
 
 				return res;
 			}
-			catch (Exception ex)
+			catch (Exception)
 			{
 				return DateTime.MinValue;
 			}
@@ -113,7 +113,7 @@ END;";
 					//var primaryKey = entityType.FindPrimaryKey();
 
 					command =
-$@"CREATE OR ALTER TRIGGER [dbo].[{tableName}_update_{timeStampColumnName}_Trigger] ON [dbo].[{tableName}]
+$@"CREATE TRIGGER [dbo].[{tableName}_update_{timeStampColumnName}_Trigger] ON [dbo].[{tableName}]
 	AFTER UPDATE
 AS
 BEGIN
@@ -154,7 +154,7 @@ END";
 				case "Microsoft.EntityFrameworkCore.SqlServer":
 					tableName = entityType.Relational().TableName;
 
-					command = $@"DROP TRIGGER IF EXISTS [dbo].[{tableName}_update_{timeStampColumnName}_Trigger];";
+					command = $@"DROP TRIGGER [dbo].[{tableName}_update_{timeStampColumnName}_Trigger];";
 
 					//Console.Error.WriteLine($"executing '{command}'");
 					migrationBuilder.Sql(command);

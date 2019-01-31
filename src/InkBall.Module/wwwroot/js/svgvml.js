@@ -56,20 +56,19 @@ if (SVG) {
 		if (points) o.setAttribute("points", points);
 		cont.appendChild(o);
 		//ch_added start
-		o.m_bIsClosed = false;
 		o.$AppendPoints = function (sPoints) {
 			this.setAttribute("points", this.getAttribute("points") + " " + sPoints);
 		};
 		o.$GetPoints = function () {
-			//return this.getAttribute("points").split(" ");
-			//return this.getAttribute("points").replace(",", " ").split(" ");
 			return this.getAttribute("points").replace(/,/g, " ").split(" ");
 		};
 		o.$SetPoints = function (sPoints) {
 			this.setAttribute("points", sPoints);
 		};
-		o.$GetIsClosed = function () { return this.m_bIsClosed; };
-		o.$SetIsClosed = function (bValue) { this.m_bIsClosed = bValue; };
+		o.$GetIsClosed = function () {
+			let pts = this.getAttribute("points").split(" ");
+			return pts[0] === pts[pts.length - 1];
+		};
 		//ch_added end
 		return o;
 	};
@@ -152,21 +151,21 @@ if (SVG) {
 		cont.appendChild(o);
 		//ch_added start
 		o.m_sMyPoints = points;
-		o.m_bIsClosed = false;
 		o.$AppendPoints = function (sPoints) {
 			this.m_sMyPoints = this.m_sMyPoints + " " + sPoints;
 			this.points.value = this.m_sMyPoints;
 		};
 		o.$GetPoints = function () {
-			//return o.m_sMyPoints.split(" ");
 			return o.m_sMyPoints.replace(/,/g, " ").split(" ");
 		};
 		o.$SetPoints = function (sPoints) {
 			this.m_sMyPoints = sPoints;
 			this.points.value = this.m_sMyPoints;
 		};
-		o.$GetIsClosed = function () { return this.m_bIsClosed; };
-		o.$SetIsClosed = function (bValue) { this.m_bIsClosed = bValue; };
+		o.$GetIsClosed = function () {
+			let pts = this.m_sMyPoints.split(" ");
+			return pts[0] === pts[pts.length - 1];
+		};
 		//ch_added end
 		return o;
 	};

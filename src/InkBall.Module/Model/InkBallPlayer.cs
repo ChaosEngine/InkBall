@@ -20,10 +20,16 @@ namespace InkBall.Module.Model
 		ICollection<Path> InkBallPath { get; set; }
 		ICollection<Point> InkBallPoint { get; set; }
 
+		int GetWinCount();
+		void SetWinCount(int value);
+		int GetLossCount();
+		void SetLossCount(int value);
+		int GetDrawCount();
+		void SetDrawCount(int value);
 		bool IsLastMoveOverdue();
 	}
 
-	public abstract class AbstractPlayer<Point, Path> : IPlayer<Point, Path>
+	public abstract class CommonPlayer<Point, Path> : IPlayer<Point, Path>
 		where Point : IPoint
 		where Path : IPath<Point>
 	{
@@ -38,6 +44,35 @@ namespace InkBall.Module.Model
 		public abstract ICollection<Path> InkBallPath { get; set; }
 		public abstract ICollection<Point> InkBallPoint { get; set; }
 
+		public int GetWinCount()
+		{
+			return iWinCount;
+		}
+
+		public void SetWinCount(int value)
+		{
+			iWinCount = value;
+		}
+
+		public int GetLossCount()
+		{
+			return iLossCount;
+		}
+
+		public void SetLossCount(int value)
+		{
+			iLossCount = value;
+		}
+
+		public int GetDrawCount()
+		{
+			return iDrawCount;
+		}
+
+		public void SetDrawCount(int value)
+		{
+			iDrawCount = value;
+		}
 		public bool IsLastMoveOverdue()
 		{
 			TimeSpan last_move = DateTime.Now - this.TimeStamp;
@@ -47,7 +82,7 @@ namespace InkBall.Module.Model
 		}
 	}
 
-	public partial class InkBallPlayer : AbstractPlayer<InkBallPoint, InkBallPath>
+	public partial class InkBallPlayer : CommonPlayer<InkBallPoint, InkBallPath>
 	{
 		public InkBallUser User { get; set; }
 		public ICollection<InkBallGame> InkBallGameIPlayer1 { get; set; }
@@ -65,7 +100,7 @@ namespace InkBall.Module.Model
 	}
 
 	//[Serializable]
-	public class InkBallPlayerViewModel : AbstractPlayer<InkBallPointViewModel, InkBallPathViewModel>
+	public class InkBallPlayerViewModel : CommonPlayer<InkBallPointViewModel, InkBallPathViewModel>
 	{
 		public InkBallUserViewModel User { get; set; }
 		public override ICollection<InkBallPathViewModel> InkBallPath { get; set; }

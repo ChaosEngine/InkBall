@@ -455,7 +455,7 @@ namespace InkBall.Module.Model
 						GameType = gameType,
 						GameState = gameState,
 						//TimeStamp = DateTime.Now,
-						CreateTime = DateTime.UtcNow,
+						CreateTime = DateTime.Now,
 					};
 					await InkBallGame.AddAsync(gm, token);
 
@@ -602,6 +602,129 @@ namespace InkBall.Module.Model
 					break;
 			}
 
+		}
+
+		public async Task<int?> HandleWinStatusAsync(WinStatusEnum winStatus, InkBallGame game, CancellationToken token = default)
+		{
+			int? winid;
+			switch (winStatus)
+			{
+				case WinStatusEnum.RED_WINS:
+					//update game(deactivate)...
+					game.SetState(GameStateEnum.FINISHED);
+					// sQuery = "call InkBallGameUpdate({this.GetGameID()}, null, null, null, null, null, null, '{this.GetState()}')";
+					// Result = mysqli_query(Connection, sQuery);
+					// if(Result != true)	throw new Exception("Query19 failed: " . mysqli_error(Connection));
+
+					//...and update players statistics(highscores)
+					if (game.IsThisPlayerPlayingWithRed())
+					{
+						game.GetPlayer().SetWinCount(game.GetPlayer().GetWinCount() + 1);
+						// sQuery = "call InkBallPlayerUpdate({this.GetGameID()}, {this.GetPlayer().GetPlayerID()}, null, {this.GetPlayer().GetWinCount()}, null, null)";
+						// Result = mysqli_query(Connection, sQuery);
+						// if(Result != true)	throw new Exception("Query20 failed: " . mysqli_error(Connection));
+
+						game.GetOtherPlayer().SetLossCount(game.GetOtherPlayer().GetLossCount() + 1);
+						// sQuery = "call InkBallPlayerUpdate({this.GetGameID()}, {this.GetOtherPlayer().GetPlayerID()}, null, null, {this.GetOtherPlayer().GetLossCount()}, null)";
+						// Result = mysqli_query(Connection, sQuery);
+						// if(Result != true)	throw new Exception("Query21 failed: " . mysqli_error(Connection));
+						winid = game.GetPlayer().iId;
+					}
+					else
+					{
+						game.GetOtherPlayer().SetWinCount(game.GetOtherPlayer().GetWinCount() + 1);
+						// sQuery = "call InkBallPlayerUpdate({this.GetGameID()}, {this.GetOtherPlayer().GetPlayerID()}, null, {this.GetOtherPlayer().GetWinCount()}, null, null)";
+						// Result = mysqli_query(Connection, sQuery);
+						// if(Result != true)	throw new Exception("Query22 failed: " . mysqli_error(Connection));
+
+						game.GetPlayer().SetLossCount(game.GetPlayer().GetLossCount() + 1);
+						// sQuery = "call InkBallPlayerUpdate({this.GetGameID()}, {this.GetPlayer().GetPlayerID()}, null, null, {this.GetPlayer().GetLossCount()}, null)";
+						// Result = mysqli_query(Connection, sQuery);
+						// if(Result != true)	throw new Exception("Query23 failed: " . mysqli_error(Connection));
+						winid = game.GetOtherPlayer().iId;
+					}
+
+					await this.SaveChangesAsync(token);
+
+					//store this game in session
+					//unset(_SESSION['InkBall']);
+					// string msg = "Red wins!";
+					//echo(this.CreateXMLInterruptGameResponse(msg));
+					break;
+
+				case WinStatusEnum.GREEN_WINS:
+					//update game(deactivate)...
+					game.SetState(GameStateEnum.FINISHED);
+					// sQuery = "call InkBallGameUpdate({this.GetGameID()}, null, null, null, null, null, null, '{this.GetState()}')";
+					// Result = mysqli_query(Connection, sQuery);
+					// if(Result != true)	throw new Exception("Query24 failed: " . mysqli_error(Connection));
+
+					//...and update players statistics(highscores)
+					if (!game.IsThisPlayerPlayingWithRed())
+					{
+						game.GetPlayer().SetWinCount(game.GetPlayer().GetWinCount() + 1);
+						// sQuery = "call InkBallPlayerUpdate({this.GetGameID()}, {this.GetPlayer().GetPlayerID()}, null, {this.GetPlayer().GetWinCount()}, null, null)";
+						// Result = mysqli_query(Connection, sQuery);
+						// if(Result != true)	throw new Exception("Query25 failed: " . mysqli_error(Connection));
+
+						game.GetOtherPlayer().SetLossCount(game.GetOtherPlayer().GetLossCount() + 1);
+						// sQuery = "call InkBallPlayerUpdate({this.GetGameID()}, {this.GetOtherPlayer().GetPlayerID()}, null, null, {this.GetOtherPlayer().GetLossCount()}, null)";
+						// Result = mysqli_query(Connection, sQuery);
+						// if(Result != true)	throw new Exception("Query26 failed: " . mysqli_error(Connection));
+						winid = game.GetPlayer().iId;
+					}
+					else
+					{
+						game.GetOtherPlayer().SetWinCount(game.GetOtherPlayer().GetWinCount() + 1);
+						// sQuery = "call InkBallPlayerUpdate({this.GetGameID()}, {this.GetOtherPlayer().GetPlayerID()}, null, {this.GetOtherPlayer().GetWinCount()}, null, null)";
+						// Result = mysqli_query(Connection, sQuery);
+						// if(Result != true)	throw new Exception("Query27 failed: " . mysqli_error(Connection));
+
+						game.GetPlayer().SetLossCount(game.GetPlayer().GetLossCount() + 1);
+						// sQuery = "call InkBallPlayerUpdate({this.GetGameID()}, {this.GetPlayer().GetPlayerID()}, null, null, {this.GetPlayer().GetLossCount()}, null)";
+						// Result = mysqli_query(Connection, sQuery);
+						// if(Result != true)	throw new Exception("Query28 failed: " . mysqli_error(Connection));
+						winid = game.GetOtherPlayer().iId;
+					}
+					await this.SaveChangesAsync(token);
+
+					//unset(_SESSION['InkBall']);
+					//string msg = "Blue wins!";
+					//echo(this.CreateXMLInterruptGameResponse(msg));
+					break;
+
+				case WinStatusEnum.DRAW_WIN:
+					//update game(deactivate)...
+					game.SetState(GameStateEnum.FINISHED);
+					// sQuery = "call InkBallGameUpdate({this.GetGameID()}, null, null, null, null, null, null, '{this.GetState()}')";
+					// Result = mysqli_query(Connection, sQuery);
+					// if(Result != true)	throw new Exception("Query29 failed: " . mysqli_error(Connection));
+
+					//...and update players statistics(highscores)
+					game.GetPlayer().SetDrawCount(game.GetPlayer().GetDrawCount() + 1);
+					// sQuery = "call InkBallPlayerUpdate({this.GetGameID()}, {this.GetPlayer().GetPlayerID()}, null, null, null, {this.GetPlayer().GetDrawCount()})";
+					// Result = mysqli_query(Connection, sQuery);
+					// if(Result != true)	throw new Exception("Query30 failed: " . mysqli_error(Connection));
+
+					game.GetOtherPlayer().SetDrawCount(game.GetOtherPlayer().GetDrawCount() + 1);
+					// sQuery = "call InkBallPlayerUpdate({this.GetGameID()}, {this.GetOtherPlayer().GetPlayerID()}, null, null, null, {this.GetPlayer().GetDrawCount()})";
+					// Result = mysqli_query(Connection, sQuery);
+					// if(Result != true)	throw new Exception("Query31 failed: " . mysqli_error(Connection));
+
+					await this.SaveChangesAsync(token);
+
+					//unset(_SESSION['InkBall']);
+					//string msg = "Draw";
+					//echo(this.CreateXMLInterruptGameResponse(msg));
+					winid = null;
+					break;
+
+				case WinStatusEnum.NO_WIN:
+				default:
+					winid = null;
+					break;
+			}
+			return winid;
 		}
 
 		public async Task<IEnumerable<InkBallGame>> GetGamesForRegistrationAsSelectTableRowsAsync(

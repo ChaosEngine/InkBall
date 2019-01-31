@@ -17,11 +17,26 @@ const CommandKindEnum = Object.freeze({
 	POINT: 1,
 	PATH: 2,
 	PLAYER_JOINING: 3,
-	PLAYER_SURRENDER: 4
+	PLAYER_SURRENDER: 4,
+	WIN: 5
+});
+
+const GameTypeEnum = Object.freeze({
+	FIRST_CAPTURE: 0,
+	FIRST_5_CAPTURES: 1,
+	FIRST_5_PATHS: 2,
+	FIRST_5_ADVANTAGE_PATHS: 3
+});
+
+const WinStatusEnum = Object.freeze({
+	RED_WINS: 0,
+	GREEN_WINS: 1,
+	NO_WIN: 2,
+	DRAW_WIN: 3
 });
 
 class DtoMsg {
-	GetType() { throw new Error("missing GetType implementation!"); }
+	GetKind() { throw new Error("missing GetKind implementation!"); }
 }
 
 class InkBallPointViewModel extends DtoMsg {
@@ -37,7 +52,7 @@ class InkBallPointViewModel extends DtoMsg {
 		this.iEnclosingPathId = iEnclosingPathId;
 	}
 
-	GetType() { return "InkBallPointViewModel"; }
+	GetKind() { return CommandKindEnum.POINT; }
 
 	static Format(sUser, point) {
 		let msg = point.iX + ' ' + point.iY + ' ' + point.Status;
@@ -57,7 +72,7 @@ class InkBallPathViewModel extends DtoMsg {
 		this.OwnedPointsAsString = OwnedPointsAsString;
 	}
 
-	GetType() { return "InkBallPathViewModel"; }
+	GetKind() { return CommandKindEnum.PATH; }
 
 	static Format(sUser, path) {
 		let msg = path.iPlayerId + " " + path.PointsAsString + " " + path.OwnedPointsAsString;
@@ -66,15 +81,15 @@ class InkBallPathViewModel extends DtoMsg {
 	}
 }
 
-class WaitForPlayerCommand extends DtoMsg {
+/*class WaitForPlayerCommand extends DtoMsg {
 	constructor(showP2Name = false) {
 		super();
 
 		this.ShowP2Name = showP2Name;
 	}
 
-	GetType() { return "WaitForPlayerCommand"; }
-}
+	//GetDtoType() { return "WaitForPlayerCommand"; }
+}*/
 
 class PlayerJoiningCommand extends DtoMsg {
 	constructor(otherPlayerId, otherPlayerName, message) {
@@ -85,7 +100,7 @@ class PlayerJoiningCommand extends DtoMsg {
 		this.Message = message;
 	}
 
-	GetType() { return "PlayerJoiningCommand"; }
+	GetKind() { return CommandKindEnum.PLAYER_JOINING; }
 
 	static Format(join) {
 		return join.Message;
@@ -101,7 +116,7 @@ class PlayerSurrenderingCommand extends DtoMsg {
 		this.Message = message;
 	}
 
-	GetType() { return "PlayerSurrenderingCommand"; }
+	GetKind() { return CommandKindEnum.PLAYER_SURRENDER; }
 
 	static Format(surrender) {
 		return surrender.Message;
@@ -115,12 +130,44 @@ class PingCommand extends DtoMsg {
 		this.Message = message;
 	}
 
-	GetType() { return "PingCommand"; }
+	GetKind() { return CommandKindEnum.PING; }
 
 	static Format(sUser, ping) {
 		let txt = ping.Message;
 
 		return sUser + " says " + txt;
+	}
+}
+
+class WinCommand extends DtoMsg {
+	constructor(status = WinStatusEnum.NO_WIN, winningPlayerId = 0, message = 'null') {
+		super();
+
+		this.Status = status;
+		this.WinningPlayerId = winningPlayerId;
+		this.Message = message;
+	}
+
+	GetKind() { return CommandKindEnum.WIN; }
+
+	static Format(win) {
+		let msg = '';
+		switch (win.Status) {
+			case WinStatusEnum.RED_WINS:
+				msg = 'red.';
+				break;
+			case WinStatusEnum.GREEN_WINS:
+				msg = 'green.';
+				break;
+			case WinStatusEnum.NO_WIN:
+				msg = 'no one!';
+				break;
+			case WinStatusEnum.DRAW_WIN:
+				msg = 'draw!';
+				break;
+		}
+
+		return 'And the winner is... ' + msg;
 	}
 }
 
@@ -157,17 +204,19 @@ class InkBallGame {
 	 * @param {enum} hubProtocol Json or messagePack
 	 * @param {enum} transportType websocket, server events or long polling
 	 * @param {function} tokenFactory auth token factory
+	 * @param {enum} gameType of game enum
 	 * @param {bool} bIsPlayingWithRed true - red, false - blue
 	 * @param {bool} bIsPlayerActive is this player acive now
 	 * @param {number} iGridSize grid size (number of rows and cols equal)
 	 * @param {number} iTooLong2Duration too long wait duration
 	 * @param {bool} bViewOnly only viewing the game no interaction
 	 */
-	constructor(sHubName, loggingLevel, hubProtocol, transportType, tokenFactory,
+	constructor(sHubName, loggingLevel, hubProtocol, transportType, tokenFactory, gameType,
 		bIsPlayingWithRed = true, bIsPlayerActive = true, iGridSize = 15, iTooLong2Duration = 125, bViewOnly = false) {
 
 		this.g_iGameID = null;
 		this.g_iPlayerID = null;
+		this.GameType = gameType;
 		this.iConnErrCount = 0;
 		this.iExponentialBackOffMillis = 2000;
 		this.COLOR_RED = 'red';
@@ -288,15 +337,31 @@ class InkBallGame {
 
 		}.bind(this));
 
-		this.g_SignalRConnection.on("ServerToClientPath", function (path, user) {
+		this.g_SignalRConnection.on("ServerToClientPath", function (dto, user) {
+			debugger;
+			if (dto.hasOwnProperty('PointsAsString')) {
+				let path = dto;
 
-			let encodedMsg = InkBallPathViewModel.Format(user, path);
+				let encodedMsg = InkBallPathViewModel.Format(user, path);
 
-			let li = document.createElement("li");
-			li.textContent = encodedMsg;
-			document.querySelector(sMsgListSel).appendChild(li);
+				let li = document.createElement("li");
+				li.textContent = encodedMsg;
+				document.querySelector(sMsgListSel).appendChild(li);
 
-			this.ReceivedPathProcessing(path);
+				this.ReceivedPathProcessing(path);
+			}
+			else if (dto.hasOwnProperty('WinningPlayerId')) {
+				let win = dto;
+				let encodedMsg = WinCommand.Format(win);
+
+				let li = document.createElement("li");
+				li.textContent = encodedMsg;
+				document.querySelector(sMsgListSel).appendChild(li);
+
+				this.ReceivedWinProcessing(win);
+			}
+			else
+				throw new Error("ServerToClientPath bad GetKind!");
 
 		}.bind(this));
 
@@ -336,6 +401,20 @@ class InkBallGame {
 
 			this.m_bHandlingEvent = false;
 			alert(encodedMsg === '' ? 'Game interrupted!' : encodedMsg);
+			window.location.href = "Games";
+		}.bind(this));
+
+		this.g_SignalRConnection.on("ServerToClientPlayerWin", function (win) {
+			debugger;
+			let encodedMsg = WinCommand.Format(win);
+
+			let li = document.createElement("li");
+			li.textContent = encodedMsg;
+			document.querySelector(sMsgListSel).appendChild(li);
+
+
+			this.m_bHandlingEvent = false;
+			alert(encodedMsg === '' ? 'Game won!' : encodedMsg);
 			window.location.href = "Games";
 		}.bind(this));
 
@@ -690,8 +769,8 @@ class InkBallGame {
 	}
 
 	CreateXMLWaitForPlayerRequest(...args) {
-		let cmd = new WaitForPlayerCommand((args.length > 0 && args[0] === true) ? true : false);
-		return cmd;
+		//let cmd = new WaitForPlayerCommand((args.length > 0 && args[0] === true) ? true : false);
+		//return cmd;
 	}
 
 	CreateXMLPutPointRequest(iX, iY) {
@@ -717,9 +796,9 @@ class InkBallGame {
 	 */
 	SendAsyncData(payload) {
 
-		switch (payload.GetType()) {
+		switch (payload.GetKind()) {
 
-			case "InkBallPointViewModel":
+			case CommandKindEnum.POINT:
 				console.log(InkBallPointViewModel.Format('some player', payload));
 				this.m_bHandlingEvent = true;
 
@@ -730,18 +809,29 @@ class InkBallGame {
 				});
 				break;
 
-			case "InkBallPathViewModel":
+			case CommandKindEnum.PATH:
 				console.log(InkBallPathViewModel.Format('some player', payload));
 				this.m_bHandlingEvent = true;
 
-				this.g_SignalRConnection.invoke("ClientToServerPath", payload).then(function (path) {
-					this.ReceivedPathProcessing(path);
+				this.g_SignalRConnection.invoke("ClientToServerPath", payload).then(function (dto) {
+
+					if (dto.hasOwnProperty('WinningPlayerId')) {
+						let win = dto;
+						this.ReceivedWinProcessing(win);
+					}
+					else if (dto.hasOwnProperty('PointsAsString')) {
+						let path = dto;
+						this.ReceivedPathProcessing(path);
+					}
+					else
+						throw new Error("ClientToServerPath bad GetKind!");
+
 				}.bind(this)).catch(function (err) {
 					return console.error(err.toString());
 				});
 				break;
 
-			case "PingCommand":
+			case CommandKindEnum.PING:
 				this.g_SignalRConnection.invoke("ClientToServerPing", payload).then(function (msg) {
 					document.querySelector(this.m_sMsgInputSel).value = '';
 					document.querySelector(this.m_sMsgSendButtonSel).disabled = 'disabled';
@@ -968,6 +1058,103 @@ class InkBallGame {
 		this.m_bHandlingEvent = false;
 	}
 
+	ReceivedWinProcessing(win) {
+		this.ShowMobileStatus('Win situation');
+		this.m_bHandlingEvent = false;
+
+		let encodedMsg = WinCommand.Format(win);
+
+		alert(encodedMsg === '' ? 'Game won!' : encodedMsg);
+		window.location.href = "Games";
+	}
+
+	Check4Win(playerPaths, otherPlayerPaths, playerPoints, otherPlayerPoints) {
+		let paths, points, count;
+		switch (this.GameType) {
+			case GameTypeEnum.FIRST_CAPTURE:
+				paths = playerPaths;
+				if (paths.length > 0) {
+					if (this.m_bIsPlayingWithRed)
+						return WinStatusEnum.RED_WINS;
+					else
+						return WinStatusEnum.GREEN_WINS;
+				}
+				paths = otherPlayerPaths;
+				if (paths.length > 0) {
+					if (this.m_bIsPlayingWithRed)
+						return WinStatusEnum.GREEN_WINS;
+					else
+						return WinStatusEnum.RED_WINS;
+				}
+				return WinStatusEnum.NO_WIN;//continue game
+
+			case GameTypeEnum.FIRST_5_CAPTURES:
+				points = otherPlayerPoints;
+				count = 0;
+				points.forEach(p => {
+					if (p.iEnclosingPathId !== null)//TODO: count closed paths owning points
+						++count;
+					if (count >= 5) {
+						if (this.m_bIsPlayingWithRed)
+							return WinStatusEnum.RED_WINS;
+						else
+							return WinStatusEnum.GREEN_WINS;
+					}
+				});
+				points = playerPoints;
+				count = 0;
+				points.forEach(p => {
+					if (p.iEnclosingPathId !== null)
+						++count;
+					if (count >= 5) {
+						if (this.m_bIsPlayingWithRed)
+							return WinStatusEnum.GREEN_WINS;
+						else
+							return WinStatusEnum.RED_WINS;
+					}
+				});
+				return WinStatusEnum.NO_WIN;//continue game
+
+			case GameTypeEnum.FIRST_5_PATHS:
+				paths = playerPaths;
+				if (paths.length >= 5) {
+					if (this.m_bIsPlayingWithRed)
+						return WinStatusEnum.RED_WINS;
+					else
+						return WinStatusEnum.GREEN_WINS;
+				}
+				paths = otherPlayerPaths;
+				if (paths.length >= 5) {
+					if (this.m_bIsPlayingWithRed)
+						return WinStatusEnum.GREEN_WINS;
+					else
+						return WinStatusEnum.RED_WINS;
+				}
+				return WinStatusEnum.NO_WIN;//continue game
+
+			case GameTypeEnum.FIRST_5_ADVANTAGE_PATHS:
+				let this_player_paths = playerPaths;
+				let other_player_paths = otherPlayerPaths;
+				let diff = this_player_paths.length - other_player_paths.length;
+				if (diff >= 5) {
+					if (this.m_bIsPlayingWithRed)
+						return WinStatusEnum.RED_WINS;
+					else
+						return WinStatusEnum.GREEN_WINS;
+				}
+				else if (diff <= -5) {
+					if (this.m_bIsPlayingWithRed)
+						return WinStatusEnum.GREEN_WINS;
+					else
+						return WinStatusEnum.RED_WINS;
+				}
+				return WinStatusEnum.NO_WIN;//continue game
+
+			default:
+				throw new Exception("Wrong game type");
+		}
+	}
+
 	GameLoop() {
 		/*act = 'action=WaitForPlayer';
 		if(this.m_Player2Name.innerHTML === '???')	act = act + '&ShowP2Name=true';*/
@@ -1070,7 +1257,7 @@ class InkBallGame {
 						else {
 							let val = this.SurroundOponentPoints();
 							if (val.owned.length > 0) {
-								this.m_Line.$SetIsClosed(true);
+								//this.m_Line.$SetIsClosed(true);
 								this.Debug('Closing path', 0);
 								this.SendAsyncData(this.CreateXMLPutPathRequest(val));
 							}
@@ -1151,7 +1338,7 @@ class InkBallGame {
 						else {
 							let val = this.SurroundOponentPoints();
 							if (val.owned.length > 0) {
-								this.m_Line.$SetIsClosed(true);
+								//this.m_Line.$SetIsClosed(true);
 								this.Debug('Closing path', 0);
 								this.SendAsyncData(this.CreateXMLPutPathRequest(val));
 							}
@@ -1237,20 +1424,8 @@ class InkBallGame {
 	}
 
 	OnTestClick() {
-		if (this.m_bDrawLines) {
-			if (this.m_Line !== null) {
-				let val = this.SurroundOponentPoints();
-				if (val.owned.length > 0) {
-					this.m_iLastX = this.m_iLastY = -1;
-					this.m_Line = null;
-				}
-			}
-		}
-		else {
-			let p0 = this.m_Points[this.m_iLastY * this.m_iGridWidth + this.m_iLastX];
-			let pos = p0.$GetPosition();
-			this.Debug(`${p0.$GetFillColor()} posX = ${pos.x} posY = ${pos.y}`, 1);
-		}
+
+		console.log(this.m_Points.flat());
 	}
 
 	/**
@@ -1328,6 +1503,7 @@ class InkBallGame {
 
 			this.m_DrawMode.onclick = this.OnDrawModeClick.bind(this);
 			this.m_CancelPath.onclick = this.OnCancelClick.bind(this);
+			document.querySelector('#Test').onclick = this.OnTestClick.bind(this);
 
 			if (this.m_Player2Name.innerHTML === '???') {
 				this.ShowMobileStatus('Waiting for other player to connect');
