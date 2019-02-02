@@ -1,3 +1,4 @@
+/*eslint no-unused-vars: ["error", { "varsIgnorePattern": "$" }]*/
 //////////////////////////////////////////////////////
 // SVG-VML mini graphic library 
 // ==========================================
@@ -72,7 +73,7 @@ if (SVG) {
 		//ch_added end
 		return o;
 	};
-	var $createOval = function (diam, filled) {
+	var $createOval = function (diam) {
 		var o = document.createElementNS(svgNS, "circle");
 		o.setAttribute("shape-rendering", svgAntialias ? "auto" : "optimizeSpeed");
 		o.setAttribute("stroke-width", 0);
@@ -115,14 +116,14 @@ if (SVG) {
 } else if (document.createStyleSheet) {
 
 	/* ============= VML ============== */
-	var $createSVGVML = function (o, iWidth, iHeight, antialias) {
+	$createSVGVML = function (o, iWidth, iHeight, antialias) {
 		document.namespaces.add("v", "urn:schemas-microsoft-com:vml");
 		var style = document.createStyleSheet();
 		style.addRule('v\\:*', "behavior: url(#default#VML);");
 		style.addRule('v\\:*', "antialias: " + antialias + ";");
 		return o;
 	};
-	var $createLine = function (w, col, linecap) {
+	$createLine = function (w, col, linecap) {
 		var o = document.createElement("v:line");
 		o.strokeweight = Math.round(w) + "px";
 		if (col) o.strokecolor = col;
@@ -133,19 +134,19 @@ if (SVG) {
 		o.$RGBcolor = function (R, G, B) { this.strokecolor = "rgb(" + Math.round(R) + "," + Math.round(G) + "," + Math.round(B) + ")"; };
 		o.$strokeWidth = function (s) { this.strokeweight = Math.round(s) + "px"; };
 		if (linecap) {
-			s = document.createElement("v:stroke");
+			let s = document.createElement("v:stroke");
 			s.endcap = linecap;
 			o.appendChild(s);
 		}
 		cont.appendChild(o);
 		return o;
 	};
-	var $createPolyline = function (w, points, col) {
+	$createPolyline = function (w, points, col) {
 		var o = document.createElement("v:polyline");
 		o.strokeweight = Math.round(w) + "px";
 		if (col) o.strokecolor = col;
 		o.points = points;
-		s = document.createElement("v:fill");
+		let s = document.createElement("v:fill");
 		s.on = "false";
 		o.appendChild(s);
 		cont.appendChild(o);
@@ -169,7 +170,7 @@ if (SVG) {
 		//ch_added end
 		return o;
 	};
-	var $createOval = function (diam, filled) {
+	$createOval = function (diam, filled) {
 		var o = document.createElement("v:oval");
 		o.style.position = "absolute";
 		//ch_commented o.style.cursor = "pointer";
@@ -207,16 +208,16 @@ if (SVG) {
 		return o;
 	};
 	//ch_added start
-	var $RemoveOval = function (Oval) {
+	$RemoveOval = function (Oval) {
 		cont.removeChild(Oval);
 	};
-	var $RemovePolyline = function (Polyline) {
+	$RemovePolyline = function (Polyline) {
 		cont.removeChild(Polyline);
 	};
 	//ch_added end
 } else {
 	/* ==== no script ==== */
-	var createSVG = function (o) {
+	$createSVGVML = function () {
 		alert('SVG or VML is not supported!');
 		return false;
 	};

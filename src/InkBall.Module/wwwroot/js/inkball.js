@@ -1,3 +1,5 @@
+/*eslint no-unused-vars: ["error", { "varsIgnorePattern": "InkBallGame|CountPointsDebug" }]*/
+/*global signalR $createOval $createPolyline $RemovePolyline $createSVGVML g_XmlHttp*/
 "use strict";
 
 /******** funcs-n-classes ********/
@@ -171,12 +173,6 @@ class WinCommand extends DtoMsg {
 	}
 }
 
-function htmlEncode(html) {
-	//return html.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-	return document.createElement('a').appendChild(
-		document.createTextNode(html)).parentNode.innerHTML;
-}
-
 //Debug function
 function CountPointsDebug(sSelector2Set, sSvgSelector = 'svg') {
 	let svgs = document.getElementsByTagName(sSvgSelector), totalChildren = 0, childCounts = [];
@@ -338,7 +334,6 @@ class InkBallGame {
 		}.bind(this));
 
 		this.g_SignalRConnection.on("ServerToClientPath", function (dto, user) {
-			debugger;
 			if (dto.hasOwnProperty('PointsAsString')) {
 				let path = dto;
 
@@ -405,7 +400,6 @@ class InkBallGame {
 		}.bind(this));
 
 		this.g_SignalRConnection.on("ServerToClientPlayerWin", function (win) {
-			debugger;
 			let encodedMsg = WinCommand.Format(win);
 
 			let li = document.createElement("li");
@@ -465,9 +459,11 @@ class InkBallGame {
 				this.m_Debug.innerHTML = args[0];
 				break;
 			case 2:
-				let d = document.getElementById('debug' + args[1]);
-				d.innerHTML = args[0];
-				break;
+				{
+					let d = document.getElementById('debug' + args[1]);
+					d.innerHTML = args[0];
+					break;
+				}
 			default:
 				break;
 		}
@@ -640,14 +636,14 @@ class InkBallGame {
 			sDelimiter = " ";
 
 			p = this.m_Points[y * this.m_iGridWidth + x];
-			if (p != null) p.$SetStatus(this.POINT_IN_PATH);
+			if (p !== null && p !== undefined) p.$SetStatus(this.POINT_IN_PATH);
 		}
 		p = sPoints[0].split(",");
 		x = parseInt(p[0]); y = parseInt(p[1]);
 		x *= this.m_iGridSize; y *= this.m_iGridSize;
 		sPathPoints = sPathPoints + sDelimiter + x + "," + y;
 		p = this.m_Points[y * this.m_iGridWidth + x];
-		if (p != null) p.$SetStatus(this.POINT_IN_PATH/*this.POINT_STARTING*/);
+		if (p !== null && p !== undefined) p.$SetStatus(this.POINT_IN_PATH/*this.POINT_STARTING*/);
 
 		let line = $createPolyline(3, sPathPoints,
 			(bBelong2ThisPlayer ? this.m_sDotColor : (bIsRed ? this.COLOR_BLUE : this.COLOR_RED)));
@@ -683,7 +679,7 @@ class InkBallGame {
 	 * @returns {boolean} if point lies inside the polygon
 	 */
 	pnpoly(npol, xp, yp, x, y) {
-		let i, j, c = 0;
+		let i, j, c = false;
 		for (i = 0, j = npol - 1; i < npol; j = i++) {
 			if ((((yp[i] <= y) && (y < yp[j])) ||
 				((yp[j] <= y) && (y < yp[i]))) &&
@@ -730,7 +726,8 @@ class InkBallGame {
 				let pos = p0.$GetPosition();
 				x = pos.x; y = pos.y;
 				x /= this.m_iGridSize; y /= this.m_iGridSize;
-				if (0 != this.pnpoly(count, xs, ys, x, y)) {
+
+				if (false !== this.pnpoly(count, xs, ys, x, y)) {
 					p0.$SetStatus(owned_by);
 					p0.$SetFillColor(sOwnedCol);
 					p0.$strokeColor(sOwnedCol);
@@ -761,14 +758,14 @@ class InkBallGame {
 				++k;
 			}
 
-			if (0 != this.pnpoly(count, xs, ys, iX, iY))
+			if (false !== this.pnpoly(count, xs, ys, iX, iY))
 				return false;
 		}
 
 		return true;
 	}
 
-	CreateXMLWaitForPlayerRequest(...args) {
+	CreateXMLWaitForPlayerRequest(/*...args*/) {
 		//let cmd = new WaitForPlayerCommand((args.length > 0 && args[0] === true) ? true : false);
 		//return cmd;
 	}
@@ -832,7 +829,7 @@ class InkBallGame {
 				break;
 
 			case CommandKindEnum.PING:
-				this.g_SignalRConnection.invoke("ClientToServerPing", payload).then(function (msg) {
+				this.g_SignalRConnection.invoke("ClientToServerPing", payload).then(function () {
 					document.querySelector(this.m_sMsgInputSel).value = '';
 					document.querySelector(this.m_sMsgSendButtonSel).disabled = 'disabled';
 				}.bind(this)).catch(function (err) {
@@ -850,76 +847,82 @@ class InkBallGame {
 		if ((g_XmlHttp.readyState === 4 || g_XmlHttp.readyState === "complete") && g_XmlHttp.status === 200) {
 			let xml = g_XmlHttp.responseXML;
 			let response = xml.firstChild;
-			if (response.nodeType != 1) response = response.nextSibling;
+			if (response.nodeType !== 1) response = response.nextSibling;
 			let resp_type = response.nodeName;
 
 			switch (resp_type) {
 				case 'WaitForPlayer':
-					let sP2Name = response.getElementsByTagName('P2Name').length > 0 ?
-						response.getElementsByTagName('P2Name')[0].firstChild.data : '';
-					let bActive = response.getElementsByTagName('Active')[0].firstChild.data === 'true'
-						? true : false;
-					if (bActive) {
-						if (sP2Name !== '') {
-							this.m_Player2Name.innerHTML = sP2Name;
-							this.m_SurrenderButton.value = 'surrender';
-						}
-						if (this.m_SurrenderButton.value === 'win')
-							this.m_SurrenderButton.value = 'surrender';
-						/////////////TODO: process last action///////////////
+					{
+						let sP2Name = response.getElementsByTagName('P2Name').length > 0 ?
+							response.getElementsByTagName('P2Name')[0].firstChild.data : '';
+						let bActive = response.getElementsByTagName('Active')[0].firstChild.data === 'true'
+							? true : false;
+						if (bActive) {
+							if (sP2Name !== '') {
+								this.m_Player2Name.innerHTML = sP2Name;
+								this.m_SurrenderButton.value = 'surrender';
+							}
+							if (this.m_SurrenderButton.value === 'win')
+								this.m_SurrenderButton.value = 'surrender';
+							/////////////TODO: process last action///////////////
 
-						let last_move = response.getElementsByTagName('LastMove')[0];
-						last_move = last_move.firstChild;
-						switch (last_move.nodeName) {
-							case 'Point':
-								let x = parseInt(last_move.getAttribute('x'));
-								let y = parseInt(last_move.getAttribute('y'));
-								let iStatus = parseInt(last_move.getAttribute('status'));
-								this.SetPoint(x, y, iStatus);
+							let last_move = response.getElementsByTagName('LastMove')[0];
+							last_move = last_move.firstChild;
+							switch (last_move.nodeName) {
+								case 'Point':
+									{
+										let x = parseInt(last_move.getAttribute('x'));
+										let y = parseInt(last_move.getAttribute('y'));
+										let iStatus = parseInt(last_move.getAttribute('status'));
+										this.SetPoint(x, y, iStatus);
 
-								this.m_bIsPlayerActive = true;
-								this.SetTimer(false);
-								this.ShowMobileStatus('Oponent has moved, your turn');
-								break;
-
-							case 'Path':
-								let path = last_move.firstChild.data;
-								let owned = response.getElementsByTagName('Owned')[0].firstChild.data;
-
-								this.SetPath(path,
-									(this.m_sDotColor === this.COLOR_RED ? true : false), false);
-
-								let Points = owned.split(" ");
-								let count = Points.length, p = null;
-								let point_status = (this.m_sDotColor === this.COLOR_RED ?
-									this.POINT_OWNED_BY_RED : this.POINT_OWNED_BY_BLUE);
-								let sOwnedCol = (this.m_sDotColor === this.COLOR_RED ? this.COLOR_OWNED_BLUE : this.COLOR_OWNED_RED);
-								for (let i = 0; i < count; ++i) {
-									p = Points[i].split(",");
-									x = parseInt(p[0]); y = parseInt(p[1]);
-									p = this.m_Points[y * this.m_iGridWidth + x];
-									if (p !== undefined) {
-										p.$SetStatus(point_status);
-										p.$SetFillColor(sOwnedCol);
-										p.$strokeColor(sOwnedCol);
+										this.m_bIsPlayerActive = true;
+										this.SetTimer(false);
+										this.ShowMobileStatus('Oponent has moved, your turn');
 									}
-								}
+									break;
 
-								this.m_bIsPlayerActive = true;
-								this.SetTimer(false);
-								this.ShowMobileStatus('Oponent has moved, your turn');
-								break;
+								case 'Path':
+									{
+										let path = last_move.firstChild.data;
+										let owned = response.getElementsByTagName('Owned')[0].firstChild.data;
 
-							default:
-								break;
+										this.SetPath(path,
+											(this.m_sDotColor === this.COLOR_RED ? true : false), false);
+
+										let Points = owned.split(" ");
+										let x, y, count = Points.length, p = null;
+										let point_status = (this.m_sDotColor === this.COLOR_RED ?
+											this.POINT_OWNED_BY_RED : this.POINT_OWNED_BY_BLUE);
+										let sOwnedCol = (this.m_sDotColor === this.COLOR_RED ? this.COLOR_OWNED_BLUE : this.COLOR_OWNED_RED);
+										for (let i = 0; i < count; ++i) {
+											p = Points[i].split(",");
+											x = parseInt(p[0]); y = parseInt(p[1]);
+											p = this.m_Points[y * this.m_iGridWidth + x];
+											if (p !== undefined) {
+												p.$SetStatus(point_status);
+												p.$SetFillColor(sOwnedCol);
+												p.$strokeColor(sOwnedCol);
+											}
+										}
+
+										this.m_bIsPlayerActive = true;
+										this.SetTimer(false);
+										this.ShowMobileStatus('Oponent has moved, your turn');
+									}
+									break;
+
+								default:
+									break;
+							}
 						}
-					}
-					else {
-						this.m_sMessage = 'Waiting for oponent move';
-						if (sP2Name !== '') {
-							this.m_Player2Name.innerHTML = sP2Name;
-							this.m_SurrenderButton.value = 'surrender';
-							this.ShowMobileStatus();
+						else {
+							this.m_sMessage = 'Waiting for oponent move';
+							if (sP2Name !== '') {
+								this.m_Player2Name.innerHTML = sP2Name;
+								this.m_SurrenderButton.value = 'surrender';
+								this.ShowMobileStatus();
+							}
 						}
 					}
 					break;
@@ -931,37 +934,41 @@ class InkBallGame {
 					break;
 
 				case 'PutPath':
-					//set starting point to POINT_IN_PATH to block further path closing with it
-					let points = this.m_Line.$GetPoints();
-					//var y = points[0].split(",");
-					//var x = y[0];	y = y[1];
-					let x = points[i];
-					let y = points[i + 1];
-					x /= this.m_iGridSize; y /= this.m_iGridSize;
-					let p0 = this.m_Points[y * this.m_iGridWidth + x];
-					if (p0 !== undefined)
-						p0.$SetStatus(this.POINT_IN_PATH);
+					{
+						//set starting point to POINT_IN_PATH to block further path closing with it
+						let i = 0, points = this.m_Line.$GetPoints();
+						//var y = points[0].split(",");
+						//var x = y[0];	y = y[1];
+						let x = points[i];
+						let y = points[i + 1];
+						x /= this.m_iGridSize; y /= this.m_iGridSize;
+						let p0 = this.m_Points[y * this.m_iGridWidth + x];
+						if (p0 !== undefined)
+							p0.$SetStatus(this.POINT_IN_PATH);
 
-					this.m_Lines[this.m_Lines.length] = this.m_Line;
-					this.m_iLastX = this.m_iLastY = -1;
-					this.m_Line = null;
+						this.m_Lines[this.m_Lines.length] = this.m_Line;
+						this.m_iLastX = this.m_iLastY = -1;
+						this.m_Line = null;
 
-					this.m_bIsPlayerActive = false;
-					this.m_iSlowdownLevel = 0;
-					this.SetTimer(true);
+						this.m_bIsPlayerActive = false;
+						this.m_iSlowdownLevel = 0;
+						this.SetTimer(true);
+					}
 					break;
 
 				case 'InterruptGame':
-					//TODO: break this infinite loop after some 1 minute or so - bandwith prevention
-					//or maybe also make GameLoop run @ longer interval
-					this.SetTimer(false);
-					let msg = response.getElementsByTagName('msg').length > 0 ?
-						response.getElementsByTagName('msg')[0].firstChild.data : '';
-					if (msg === '')
-						alert('Game interrupted!');
-					else
-						alert(msg);
-					window.location.href = "Games";
+					{
+						//TODO: break this infinite loop after some 1 minute or so - bandwith prevention
+						//or maybe also make GameLoop run @ longer interval
+						this.SetTimer(false);
+						let msg = response.getElementsByTagName('msg').length > 0 ?
+							response.getElementsByTagName('msg')[0].firstChild.data : '';
+						if (msg === '')
+							alert('Game interrupted!');
+						else
+							alert(msg);
+						window.location.href = "Games";
+					}
 					break;
 
 				case 'WaitingForSecondPlayer':
@@ -972,10 +979,12 @@ class InkBallGame {
 					break;
 
 				case 'Err':
-					msg = response.getElementsByTagName('msg').length > 0 ?
-						response.getElementsByTagName('msg')[0].firstChild.data : 'unknown error';
-					alert(msg);
-					this.OnCancelClick();
+					{
+						let msg = response.getElementsByTagName('msg').length > 0 ?
+							response.getElementsByTagName('msg')[0].firstChild.data : 'unknown error';
+						alert(msg);
+						this.OnCancelClick();
+					}
 					break;
 
 				default:
@@ -1133,25 +1142,27 @@ class InkBallGame {
 				return WinStatusEnum.NO_WIN;//continue game
 
 			case GameTypeEnum.FIRST_5_ADVANTAGE_PATHS:
-				let this_player_paths = playerPaths;
-				let other_player_paths = otherPlayerPaths;
-				let diff = this_player_paths.length - other_player_paths.length;
-				if (diff >= 5) {
-					if (this.m_bIsPlayingWithRed)
-						return WinStatusEnum.RED_WINS;
-					else
-						return WinStatusEnum.GREEN_WINS;
-				}
-				else if (diff <= -5) {
-					if (this.m_bIsPlayingWithRed)
-						return WinStatusEnum.GREEN_WINS;
-					else
-						return WinStatusEnum.RED_WINS;
+				{
+					let this_player_paths = playerPaths;
+					let other_player_paths = otherPlayerPaths;
+					let diff = this_player_paths.length - other_player_paths.length;
+					if (diff >= 5) {
+						if (this.m_bIsPlayingWithRed)
+							return WinStatusEnum.RED_WINS;
+						else
+							return WinStatusEnum.GREEN_WINS;
+					}
+					else if (diff <= -5) {
+						if (this.m_bIsPlayingWithRed)
+							return WinStatusEnum.GREEN_WINS;
+						else
+							return WinStatusEnum.RED_WINS;
+					}
 				}
 				return WinStatusEnum.NO_WIN;//continue game
 
 			default:
-				throw new Exception("Wrong game type");
+				throw new Error("Wrong game type");
 		}
 	}
 
@@ -1195,7 +1206,7 @@ class InkBallGame {
 		this.ShowMobileStatus(this.m_sMessage);
 	}
 
-	ShowMobileStatus(sMessage) {
+	ShowMobileStatus(sMessage = '') {
 		if (this.m_Player2Name.innerHTML === '???') {
 			if (this.m_bIsPlayerActive)
 				this.m_GameStatus.style.color = this.COLOR_RED;
@@ -1214,7 +1225,7 @@ class InkBallGame {
 			else
 				this.m_GameStatus.style.color = this.COLOR_RED;
 		}
-		if (sMessage != null)
+		if (sMessage !== null && sMessage !== '')
 			this.Debug(sMessage, 0);
 		else
 			this.Debug('', 0);
@@ -1380,11 +1391,11 @@ class InkBallGame {
 		}
 	}
 
-	OnMouseUp(event) {
+	OnMouseUp() {
 		this.m_bMouseDown = false;
 	}
 
-	OnMouseLeave(event) {
+	OnMouseLeave() {
 		this.m_MouseCursorOval.$Hide();
 	}
 
@@ -1424,7 +1435,6 @@ class InkBallGame {
 	}
 
 	OnTestClick() {
-
 		console.log(this.m_Points.flat());
 	}
 

@@ -484,7 +484,6 @@ namespace InkBall.Module.Hubs
 
 						await _dbContext.SaveChangesAsync(token);
 
-						new_path = new InkBallPathViewModel(db_path, path.PointsAsString, path.OwnedPointsAsString);
 
 
 
@@ -540,11 +539,13 @@ namespace InkBall.Module.Hubs
 								$"Bravo {(win_status == InkBallGame.WinStatusEnum.GREEN_WINS ? "green" : "red")}!");
 
 							new_path = win;
-							await Clients.User(OtherUserIdentifier).ServerToClientPlayerWin((WinCommand)new_path);
+							await Clients.User(OtherUserIdentifier).ServerToClientPlayerWin(win);
 						}
 						else
 						{
-							await Clients.User(OtherUserIdentifier).ServerToClientPath((InkBallPathViewModel)new_path, ThisUserName);
+							path = new InkBallPathViewModel(db_path, path.PointsAsString, path.OwnedPointsAsString);
+							new_path = path;
+							await Clients.User(OtherUserIdentifier).ServerToClientPath(path, ThisUserName);
 						}
 
 
