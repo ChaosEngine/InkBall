@@ -39,7 +39,7 @@ namespace InkBall.Module.Migrations
 						.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
 						.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
 					iUserID = table.Column<int>(nullable: true),
-					sLastMoveCode = table.Column<string>(type: "varchar(1000)", nullable: true),
+					sLastMoveCode = table.Column<string>(type: GamesContext.JsonColumnTypeFromProvider(this.ActiveProvider), nullable: true),
 					iWinCount = table.Column<int>(nullable: false, defaultValue: 0)
 						.Annotation("Sqlite:Autoincrement", true),
 					iLossCount = table.Column<int>(nullable: false, defaultValue: 0)

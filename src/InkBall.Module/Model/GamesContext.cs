@@ -95,6 +95,27 @@ namespace InkBall.Module.Model
 			}
 		}
 
+		internal static string JsonColumnTypeFromProvider(string activeProvider)
+		{
+			switch (activeProvider)
+			{
+				case "Microsoft.EntityFrameworkCore.SqlServer":
+					return "nvarchar(1000)";
+
+				case "Pomelo.EntityFrameworkCore.MySql":
+					return "json";
+
+				case "Microsoft.EntityFrameworkCore.Sqlite":
+					return "TEXT";
+
+				case "Npgsql.EntityFrameworkCore.PostgreSQL":
+					return "jsonb";
+
+				default:
+					throw new NotSupportedException($"Bad DBKind name");
+			}
+		}
+
 		/*protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
@@ -247,7 +268,7 @@ namespace InkBall.Module.Model
 
 				entity.Property(e => e.sLastMoveCode)
 					.HasColumnName("sLastMoveCode")
-					.HasColumnType("varchar(1000)");
+					.HasColumnType(JsonColumnTypeFromProvider(Database.ProviderName));
 
 				entity.Property(e => e.TimeStamp)
 					.HasColumnType(TimeStampColumnTypeFromProvider(Database.ProviderName))
@@ -513,7 +534,7 @@ namespace InkBall.Module.Model
 			}
 			else
 			{
-				player.sLastMoveCode = sLastMoveCode + "dbg" + DateTime.UtcNow;
+				player.sLastMoveCode = sLastMoveCode;
 				//player.TimeStamp = DateTime.Now;//sqlite can not timestamp on update
 			}
 			await this.SaveChangesAsync(token);

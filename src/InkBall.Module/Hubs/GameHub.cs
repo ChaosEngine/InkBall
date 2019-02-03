@@ -552,7 +552,7 @@ namespace InkBall.Module.Hubs
 
 
 
-						trans.Rollback();
+						trans.Commit();
 
 						return new_path;
 					}

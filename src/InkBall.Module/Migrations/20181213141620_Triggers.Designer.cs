@@ -142,7 +142,7 @@ namespace InkBall.Module.Migrations
 
 				b.Property<string>("sLastMoveCode")
 					.HasColumnName("sLastMoveCode")
-					.HasColumnType("varchar(1000)");
+					.HasColumnType(GamesContext.JsonColumnTypeFromProvider(this.ActiveProvider));
 
 				b.HasKey("iId");
 
