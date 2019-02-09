@@ -152,16 +152,16 @@ namespace InkBall.Module.Model
 					if (await ownedPointForColorFunc(otherPlayerOwningColor) >= 5)
 					{
 						if (this.IsThisPlayerPlayingWithRed())
-							return InkBallGame.WinStatusEnum.RED_WINS;
-						else
 							return InkBallGame.WinStatusEnum.GREEN_WINS;
+						else
+							return InkBallGame.WinStatusEnum.RED_WINS;
 					}
 					else if (await ownedPointForColorFunc(playerOwningColor) >= 5)
 					{
 						if (this.IsThisPlayerPlayingWithRed())
-							return InkBallGame.WinStatusEnum.GREEN_WINS;
-						else
 							return InkBallGame.WinStatusEnum.RED_WINS;
+						else
+							return InkBallGame.WinStatusEnum.GREEN_WINS;
 					}
 					return InkBallGame.WinStatusEnum.NO_WIN;//continue game
 
@@ -186,6 +186,88 @@ namespace InkBall.Module.Model
 
 				case InkBallGame.GameTypeEnum.FIRST_5_ADVANTAGE_PATHS:
 					var diff = await pathsCountForPlayerFunc(GetPlayer().iId) - await pathsCountForPlayerFunc(GetOtherPlayer().iId);
+					if (diff >= 5)
+					{
+						if (this.IsThisPlayerPlayingWithRed())
+							return InkBallGame.WinStatusEnum.RED_WINS;
+						else
+							return InkBallGame.WinStatusEnum.GREEN_WINS;
+					}
+					else if (diff <= -5)
+					{
+						if (this.IsThisPlayerPlayingWithRed())
+							return InkBallGame.WinStatusEnum.GREEN_WINS;
+						else
+							return InkBallGame.WinStatusEnum.RED_WINS;
+					}
+					return InkBallGame.WinStatusEnum.NO_WIN;//continue game
+
+
+				default:
+					throw new Exception("Wrong game type");
+			}
+		}
+
+		public async Task<InkBallGame.WinStatusEnum> Check4Win(IPointAndPathCounter pointAndPathCounter)
+		{
+			switch (this.GameType)
+			{
+				case InkBallGame.GameTypeEnum.FIRST_CAPTURE:
+					if (await pointAndPathCounter.GetThisPlayerPathCountAsync() > 0)
+					{
+						if (this.IsThisPlayerPlayingWithRed())
+							return InkBallGame.WinStatusEnum.RED_WINS;
+						else
+							return InkBallGame.WinStatusEnum.GREEN_WINS;
+					}
+					else if (await pointAndPathCounter.GetOtherPlayerPathCountAsync() > 0)
+					{
+						if (this.IsThisPlayerPlayingWithRed())
+							return InkBallGame.WinStatusEnum.GREEN_WINS;
+						else
+							return InkBallGame.WinStatusEnum.RED_WINS;
+					}
+					return InkBallGame.WinStatusEnum.NO_WIN;//continue game
+
+
+				case InkBallGame.GameTypeEnum.FIRST_5_CAPTURES:
+					if (await pointAndPathCounter.GetOtherPlayerOwnedPointCountAsync() >= 5)
+					{
+						if (this.IsThisPlayerPlayingWithRed())
+							return InkBallGame.WinStatusEnum.GREEN_WINS;
+						else
+							return InkBallGame.WinStatusEnum.RED_WINS;
+					}
+					else if (await pointAndPathCounter.GetThisPlayerOwnedPointCountAsync() >= 5)
+					{
+						if (this.IsThisPlayerPlayingWithRed())
+							return InkBallGame.WinStatusEnum.RED_WINS;
+						else
+							return InkBallGame.WinStatusEnum.GREEN_WINS;
+					}
+					return InkBallGame.WinStatusEnum.NO_WIN;//continue game
+
+
+				case InkBallGame.GameTypeEnum.FIRST_5_PATHS:
+					if (await pointAndPathCounter.GetThisPlayerPathCountAsync() >= 5)
+					{
+						if (this.IsThisPlayerPlayingWithRed())
+							return InkBallGame.WinStatusEnum.RED_WINS;
+						else
+							return InkBallGame.WinStatusEnum.GREEN_WINS;
+					}
+					else if (await pointAndPathCounter.GetOtherPlayerPathCountAsync() >= 5)
+					{
+						if (this.IsThisPlayerPlayingWithRed())
+							return InkBallGame.WinStatusEnum.GREEN_WINS;
+						else
+							return InkBallGame.WinStatusEnum.RED_WINS;
+					}
+					return InkBallGame.WinStatusEnum.NO_WIN;//continue game
+
+
+				case InkBallGame.GameTypeEnum.FIRST_5_ADVANTAGE_PATHS:
+					var diff = await pointAndPathCounter.GetThisPlayerPathCountAsync() - await pointAndPathCounter.GetOtherPlayerPathCountAsync();
 					if (diff >= 5)
 					{
 						if (this.IsThisPlayerPlayingWithRed())

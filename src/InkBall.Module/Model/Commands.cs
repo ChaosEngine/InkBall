@@ -18,11 +18,6 @@ namespace InkBall.Module.Model
 		CommandKindEnum GetKind();
 	}
 
-	//public abstract class DtoMsg : IDtoMsg
-	//{
-	//	public abstract CommandKindEnum GetKind();
-	//}
-
 	[MessagePackObject(true)]
 	public sealed class PingCommand : IDtoMsg
 	{

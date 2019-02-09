@@ -627,125 +627,75 @@ namespace InkBall.Module.Model
 
 		public async Task<int?> HandleWinStatusAsync(WinStatusEnum winStatus, InkBallGame game, CancellationToken token = default)
 		{
-			int? winid;
+			int? winningPlayerID;
 			switch (winStatus)
 			{
 				case WinStatusEnum.RED_WINS:
 					//update game(deactivate)...
 					game.SetState(GameStateEnum.FINISHED);
-					// sQuery = "call InkBallGameUpdate({this.GetGameID()}, null, null, null, null, null, null, '{this.GetState()}')";
-					// Result = mysqli_query(Connection, sQuery);
-					// if(Result != true)	throw new Exception("Query19 failed: " . mysqli_error(Connection));
 
 					//...and update players statistics(highscores)
 					if (game.IsThisPlayerPlayingWithRed())
 					{
 						game.GetPlayer().SetWinCount(game.GetPlayer().GetWinCount() + 1);
-						// sQuery = "call InkBallPlayerUpdate({this.GetGameID()}, {this.GetPlayer().GetPlayerID()}, null, {this.GetPlayer().GetWinCount()}, null, null)";
-						// Result = mysqli_query(Connection, sQuery);
-						// if(Result != true)	throw new Exception("Query20 failed: " . mysqli_error(Connection));
-
 						game.GetOtherPlayer().SetLossCount(game.GetOtherPlayer().GetLossCount() + 1);
-						// sQuery = "call InkBallPlayerUpdate({this.GetGameID()}, {this.GetOtherPlayer().GetPlayerID()}, null, null, {this.GetOtherPlayer().GetLossCount()}, null)";
-						// Result = mysqli_query(Connection, sQuery);
-						// if(Result != true)	throw new Exception("Query21 failed: " . mysqli_error(Connection));
-						winid = game.GetPlayer().iId;
+
+						winningPlayerID = game.GetPlayer().iId;
 					}
 					else
 					{
 						game.GetOtherPlayer().SetWinCount(game.GetOtherPlayer().GetWinCount() + 1);
-						// sQuery = "call InkBallPlayerUpdate({this.GetGameID()}, {this.GetOtherPlayer().GetPlayerID()}, null, {this.GetOtherPlayer().GetWinCount()}, null, null)";
-						// Result = mysqli_query(Connection, sQuery);
-						// if(Result != true)	throw new Exception("Query22 failed: " . mysqli_error(Connection));
-
 						game.GetPlayer().SetLossCount(game.GetPlayer().GetLossCount() + 1);
-						// sQuery = "call InkBallPlayerUpdate({this.GetGameID()}, {this.GetPlayer().GetPlayerID()}, null, null, {this.GetPlayer().GetLossCount()}, null)";
-						// Result = mysqli_query(Connection, sQuery);
-						// if(Result != true)	throw new Exception("Query23 failed: " . mysqli_error(Connection));
-						winid = game.GetOtherPlayer().iId;
-					}
 
+						winningPlayerID = game.GetOtherPlayer().iId;
+					}
 					await this.SaveChangesAsync(token);
 
-					//store this game in session
-					//unset(_SESSION['InkBall']);
-					// string msg = "Red wins!";
-					//echo(this.CreateXMLInterruptGameResponse(msg));
 					break;
 
 				case WinStatusEnum.GREEN_WINS:
 					//update game(deactivate)...
 					game.SetState(GameStateEnum.FINISHED);
-					// sQuery = "call InkBallGameUpdate({this.GetGameID()}, null, null, null, null, null, null, '{this.GetState()}')";
-					// Result = mysqli_query(Connection, sQuery);
-					// if(Result != true)	throw new Exception("Query24 failed: " . mysqli_error(Connection));
 
 					//...and update players statistics(highscores)
 					if (!game.IsThisPlayerPlayingWithRed())
 					{
 						game.GetPlayer().SetWinCount(game.GetPlayer().GetWinCount() + 1);
-						// sQuery = "call InkBallPlayerUpdate({this.GetGameID()}, {this.GetPlayer().GetPlayerID()}, null, {this.GetPlayer().GetWinCount()}, null, null)";
-						// Result = mysqli_query(Connection, sQuery);
-						// if(Result != true)	throw new Exception("Query25 failed: " . mysqli_error(Connection));
-
 						game.GetOtherPlayer().SetLossCount(game.GetOtherPlayer().GetLossCount() + 1);
-						// sQuery = "call InkBallPlayerUpdate({this.GetGameID()}, {this.GetOtherPlayer().GetPlayerID()}, null, null, {this.GetOtherPlayer().GetLossCount()}, null)";
-						// Result = mysqli_query(Connection, sQuery);
-						// if(Result != true)	throw new Exception("Query26 failed: " . mysqli_error(Connection));
-						winid = game.GetPlayer().iId;
+
+						winningPlayerID = game.GetPlayer().iId;
 					}
 					else
 					{
 						game.GetOtherPlayer().SetWinCount(game.GetOtherPlayer().GetWinCount() + 1);
-						// sQuery = "call InkBallPlayerUpdate({this.GetGameID()}, {this.GetOtherPlayer().GetPlayerID()}, null, {this.GetOtherPlayer().GetWinCount()}, null, null)";
-						// Result = mysqli_query(Connection, sQuery);
-						// if(Result != true)	throw new Exception("Query27 failed: " . mysqli_error(Connection));
-
 						game.GetPlayer().SetLossCount(game.GetPlayer().GetLossCount() + 1);
-						// sQuery = "call InkBallPlayerUpdate({this.GetGameID()}, {this.GetPlayer().GetPlayerID()}, null, null, {this.GetPlayer().GetLossCount()}, null)";
-						// Result = mysqli_query(Connection, sQuery);
-						// if(Result != true)	throw new Exception("Query28 failed: " . mysqli_error(Connection));
-						winid = game.GetOtherPlayer().iId;
+
+						winningPlayerID = game.GetOtherPlayer().iId;
 					}
 					await this.SaveChangesAsync(token);
 
-					//unset(_SESSION['InkBall']);
-					//string msg = "Blue wins!";
-					//echo(this.CreateXMLInterruptGameResponse(msg));
 					break;
 
 				case WinStatusEnum.DRAW_WIN:
 					//update game(deactivate)...
 					game.SetState(GameStateEnum.FINISHED);
-					// sQuery = "call InkBallGameUpdate({this.GetGameID()}, null, null, null, null, null, null, '{this.GetState()}')";
-					// Result = mysqli_query(Connection, sQuery);
-					// if(Result != true)	throw new Exception("Query29 failed: " . mysqli_error(Connection));
 
 					//...and update players statistics(highscores)
 					game.GetPlayer().SetDrawCount(game.GetPlayer().GetDrawCount() + 1);
-					// sQuery = "call InkBallPlayerUpdate({this.GetGameID()}, {this.GetPlayer().GetPlayerID()}, null, null, null, {this.GetPlayer().GetDrawCount()})";
-					// Result = mysqli_query(Connection, sQuery);
-					// if(Result != true)	throw new Exception("Query30 failed: " . mysqli_error(Connection));
-
 					game.GetOtherPlayer().SetDrawCount(game.GetOtherPlayer().GetDrawCount() + 1);
-					// sQuery = "call InkBallPlayerUpdate({this.GetGameID()}, {this.GetOtherPlayer().GetPlayerID()}, null, null, null, {this.GetPlayer().GetDrawCount()})";
-					// Result = mysqli_query(Connection, sQuery);
-					// if(Result != true)	throw new Exception("Query31 failed: " . mysqli_error(Connection));
 
 					await this.SaveChangesAsync(token);
 
-					//unset(_SESSION['InkBall']);
-					//string msg = "Draw";
-					//echo(this.CreateXMLInterruptGameResponse(msg));
-					winid = null;
+					winningPlayerID = null;
 					break;
 
 				case WinStatusEnum.NO_WIN:
 				default:
-					winid = null;
+					winningPlayerID = null;
 					break;
 			}
-			return winid;
+
+			return winningPlayerID;
 		}
 
 		public async Task<IEnumerable<InkBallGame>> GetGamesForRegistrationAsSelectTableRowsAsync(
@@ -808,4 +758,101 @@ namespace InkBall.Module.Model
 
 
 	}
+
+	#region Helpers
+
+	public interface IPointAndPathCounter
+	{
+		ValueTask<int> GetThisPlayerPathCountAsync();
+		ValueTask<int> GetOtherPlayerPathCountAsync();
+		ValueTask<int> GetOtherPlayerOwnedPointCountAsync();
+		ValueTask<int> GetThisPlayerOwnedPointCountAsync();
+	}
+
+	public sealed class StatisticalPointAndPathCounter : IPointAndPathCounter
+	{
+		Dictionary<int, int> _pathCountsDict;
+		Dictionary<InkBallPoint.StatusEnum, int> _ownedCountsDict;
+		readonly GamesContext _dbContext;
+		readonly int _gameID, _thisPlayerID, _otherPlayerID;
+		readonly InkBallPoint.StatusEnum _thisPlayerOwningColor, _otherPlayerOwningColor;
+		readonly CancellationToken _token;
+
+		public StatisticalPointAndPathCounter(GamesContext dbContext, int gameID,
+			int thisPlayerID, int otherPlayerID,
+			ref InkBallPoint.StatusEnum thisPlayerOwningColor, ref InkBallPoint.StatusEnum otherPlayerOwningColor,
+			ref CancellationToken token)
+		{
+			_dbContext = dbContext;
+			_gameID = gameID;
+			_thisPlayerID = thisPlayerID;
+			_otherPlayerID = otherPlayerID;
+			_thisPlayerOwningColor = thisPlayerOwningColor;
+			_otherPlayerOwningColor = otherPlayerOwningColor;
+			_token = token;
+		}
+
+		async ValueTask<int> GetPathCountAsync(int searchPlayerID)
+		{
+			if (_pathCountsDict == null)
+			{
+				_pathCountsDict = await (from pa in _dbContext.InkBallPath
+										 where pa.iGameId == _gameID
+										 group pa by pa.iPlayerId into g
+										 select new
+										 {
+											 playerId = g.Key,
+											 pathCount = g.Count()
+										 })
+										 .ToDictionaryAsync(k => k.playerId, v => v.pathCount, _token);
+			}
+
+			if (_pathCountsDict.TryGetValue(searchPlayerID, out var count))
+				return count;
+			return 0;
+		}
+
+		async ValueTask<int> OwnedPointCountAsync(InkBallPoint.StatusEnum searchedOwningColor)
+		{
+			if (_ownedCountsDict == null)
+			{
+				_ownedCountsDict = await (from pt in _dbContext.InkBallPoint
+										  where pt.iGameId == _gameID && pt.iEnclosingPathId.HasValue &&
+										  new[] { InkBallPoint.StatusEnum.POINT_OWNED_BY_RED, InkBallPoint.StatusEnum.POINT_OWNED_BY_BLUE }.Contains(pt.Status)
+										  group pt by pt.Status into g
+										  select new
+										  {
+											  owningColor = g.Key,
+											  ownedCount = g.Count()
+										  })
+										  .ToDictionaryAsync(k => k.owningColor, v => v.ownedCount, _token);
+			}
+
+			if (_ownedCountsDict.TryGetValue(searchedOwningColor, out var count))
+				return count;
+			return 0;
+		}
+
+		public ValueTask<int> GetOtherPlayerOwnedPointCountAsync()
+		{
+			return this.OwnedPointCountAsync(_otherPlayerOwningColor);
+		}
+
+		public ValueTask<int> GetThisPlayerOwnedPointCountAsync()
+		{
+			return this.OwnedPointCountAsync(_thisPlayerOwningColor);
+		}
+
+		public ValueTask<int> GetThisPlayerPathCountAsync()
+		{
+			return this.GetPathCountAsync(_thisPlayerID);
+		}
+
+		public ValueTask<int> GetOtherPlayerPathCountAsync()
+		{
+			return this.GetPathCountAsync(_otherPlayerID);
+		}
+	}
+
+	#endregion Helpers
 }

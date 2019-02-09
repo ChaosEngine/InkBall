@@ -316,14 +316,14 @@ function CountPointsDebug(sSelector2Set) {
 }
 
 var InkBallGame = function () {
-  function InkBallGame(sHubName, loggingLevel, hubProtocol, transportType, tokenFactory, gameType) {
+  function InkBallGame(sHubName, loggingLevel, hubProtocol, transportType, serverTimeoutInMilliseconds, tokenFactory, gameType) {
     var _this7 = this;
 
-    var bIsPlayingWithRed = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : true;
-    var bIsPlayerActive = arguments.length > 7 && arguments[7] !== undefined ? arguments[7] : true;
-    var iGridSize = arguments.length > 8 && arguments[8] !== undefined ? arguments[8] : 15;
-    var iTooLong2Duration = arguments.length > 9 && arguments[9] !== undefined ? arguments[9] : 125;
-    var bViewOnly = arguments.length > 10 && arguments[10] !== undefined ? arguments[10] : false;
+    var bIsPlayingWithRed = arguments.length > 7 && arguments[7] !== undefined ? arguments[7] : true;
+    var bIsPlayerActive = arguments.length > 8 && arguments[8] !== undefined ? arguments[8] : true;
+    var iGridSize = arguments.length > 9 && arguments[9] !== undefined ? arguments[9] : 15;
+    var iTooLong2Duration = arguments.length > 10 && arguments[10] !== undefined ? arguments[10] : 125;
+    var bViewOnly = arguments.length > 11 && arguments[11] !== undefined ? arguments[11] : false;
 
     _classCallCheck(this, InkBallGame);
 
@@ -388,6 +388,7 @@ var InkBallGame = function () {
       transport: transportType,
       accessTokenFactory: tokenFactory
     }).withHubProtocol(hubProtocol).configureLogging(loggingLevel).build();
+    this.g_SignalRConnection.serverTimeoutInMilliseconds = serverTimeoutInMilliseconds;
     this.g_SignalRConnection.onclose(function () {
       var _ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(err) {
         return regeneratorRuntime.wrap(function _callee$(_context) {
@@ -534,9 +535,7 @@ var InkBallGame = function () {
         var li = document.createElement("li");
         li.textContent = encodedMsg;
         document.querySelector(sMsgListSel).appendChild(li);
-        this.m_bHandlingEvent = false;
-        alert(encodedMsg === '' ? 'Game won!' : encodedMsg);
-        window.location.href = "Games";
+        this.ReceivedWinProcessing(win);
       }.bind(this));
       this.g_SignalRConnection.on("ServerToClientPing", function (ping, user) {
         var encodedMsg = PingCommand.Format(user, ping);
@@ -1170,8 +1169,11 @@ var InkBallGame = function () {
       this.ShowMobileStatus('Win situation');
       this.m_bHandlingEvent = false;
       var encodedMsg = WinCommand.Format(win);
-      alert(encodedMsg === '' ? 'Game won!' : encodedMsg);
-      window.location.href = "Games";
+
+      if ((win.Status === WinStatusEnum.RED_WINS || win.Status === WinStatusEnum.GREEN_WINS) && win.WinningPlayerId > 0 || win.Status === WinStatusEnum.DRAW_WIN) {
+        alert(encodedMsg === '' ? 'Game won!' : encodedMsg);
+        window.location.href = "Games";
+      }
     }
   }, {
     key: "Check4Win",

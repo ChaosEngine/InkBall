@@ -38,7 +38,7 @@ namespace InkBall.Module.Hubs
 
 		Task<IDtoMsg> ClientToServerPath(InkBallPathViewModel path);
 
-		//Task ClientToServerCheck4Win(Check4WinCommand cmd);
+		Task<IDtoMsg> ClientToServerCheck4Win();
 
 		Task ClientToServerPing(PingCommand ping);
 
@@ -485,52 +485,10 @@ namespace InkBall.Module.Hubs
 						await _dbContext.SaveChangesAsync(token);
 
 
+						var statisticalPointAndPathCounter = new StatisticalPointAndPathCounter(_dbContext, ThisGame.iId,
+							ThisPlayer.iId, OtherPlayer.iId, ref owning_color, ref other_owning_color, ref token);
 
-
-
-						Dictionary<int, int> path_counts = null;
-						Dictionary<InkBallPoint.StatusEnum, int> owned_counts = null;
-						async ValueTask<int> path_counts_func(int pid)
-						{
-							if (path_counts == null)
-							{
-								path_counts = await (from pa in _dbContext.InkBallPath
-													 where pa.iGameId == ThisGame.iId
-													 group pa by pa.iPlayerId into g
-													 select new
-													 {
-														 playerId = g.Key,
-														 pathCount = g.Count()
-													 })
-													 .ToDictionaryAsync(k => k.playerId, v => v.pathCount, token);
-							}
-
-							if (path_counts.TryGetValue(pid, out var count))
-								return count;
-							return 0;
-						}
-						async ValueTask<int> owned_counts_func(InkBallPoint.StatusEnum color)
-						{
-							if (owned_counts == null)
-							{
-								owned_counts = await (from pt in _dbContext.InkBallPoint
-													  where pt.iGameId == ThisGame.iId && pt.iEnclosingPathId.HasValue &&
-													  new[] { InkBallPoint.StatusEnum.POINT_OWNED_BY_RED, InkBallPoint.StatusEnum.POINT_OWNED_BY_BLUE }.Contains(pt.Status)
-													  group pt by pt.Status into g
-													  select new
-													  {
-														  owningColor = g.Key,
-														  ownedCount = g.Count()
-													  })
-													  .ToDictionaryAsync(k => k.owningColor, v => v.ownedCount, token);
-							}
-
-							if (owned_counts.TryGetValue(color, out var count))
-								return count;
-							return 0;
-						}
-
-						var win_status = await ThisGame.Check4Win(owning_color, other_owning_color, path_counts_func, owned_counts_func);
+						var win_status = await ThisGame.Check4Win(statisticalPointAndPathCounter);
 						if (win_status != InkBallGame.WinStatusEnum.NO_WIN)
 						{
 							int? winningPlayerID = await _dbContext.HandleWinStatusAsync(win_status, ThisGame, token);
@@ -548,10 +506,6 @@ namespace InkBall.Module.Hubs
 							await Clients.User(OtherUserIdentifier).ServerToClientPath(path, ThisUserName);
 						}
 
-
-
-
-
 						trans.Commit();
 
 						return new_path;
@@ -562,29 +516,74 @@ namespace InkBall.Module.Hubs
 						_logger.LogError(ex, nameof(ClientToServerPath));
 						throw;
 					}
-				}//trans end 
+				}//trans end
 			}
 			catch (Exception ex)
 			{
 				_logger.LogError(ex.Message);
 				throw;
 			}
-		}//method end 
+		}//method end
 
-		//public async Task ClientToServerCheck4Win(Check4WinCommand cmd)
-		//{
-		//	CancellationToken token = this.Context.ConnectionAborted;
+		public async Task<IDtoMsg> ClientToServerCheck4Win()
+		{
+			CancellationToken token = this.Context.ConnectionAborted;
 
-		//	await LoadGameAndPlayerStructures(token);
+			await LoadGameAndPlayerStructures(token);
 
-		//	if (ThisGame == null || ThisPlayer == null || OtherPlayer == null || string.IsNullOrEmpty(OtherUserIdentifier)
-		//		|| string.IsNullOrEmpty(ThisUserName))
-		//		return;
+			try
+			{
+				if (ThisGame == null || ThisPlayer == null || OtherPlayer == null || string.IsNullOrEmpty(OtherUserIdentifier)
+					|| string.IsNullOrEmpty(ThisUserName))
+					throw new ArgumentException("bad game or player");
+				if (!ThisGame.IsThisPlayerActive())
+					throw new ArgumentException("not your turn");
 
-		//	//TODO: execute Check4Win
-		//	//and if it checks out notify other player of win situation or other things
-		//	//
-		//}
+
+				InkBallPoint.StatusEnum owning_color, other_owning_color;
+				if (ThisGame.IsThisPlayerPlayingWithRed())
+				{
+					owning_color = InkBallPoint.StatusEnum.POINT_OWNED_BY_RED;
+					other_owning_color = InkBallPoint.StatusEnum.POINT_OWNED_BY_BLUE;
+				}
+				else
+				{
+					owning_color = InkBallPoint.StatusEnum.POINT_OWNED_BY_BLUE;
+					other_owning_color = InkBallPoint.StatusEnum.POINT_OWNED_BY_RED;
+				}
+				using (var trans = await _dbContext.Database.BeginTransactionAsync(token))
+				{
+					try
+					{
+						var statisticalPointAndPathCounter = new StatisticalPointAndPathCounter(_dbContext, ThisGame.iId,
+							ThisPlayer.iId, OtherPlayer.iId, ref owning_color, ref other_owning_color, ref token);
+
+						InkBallGame.WinStatusEnum win_status = await ThisGame.Check4Win(statisticalPointAndPathCounter);
+
+						int? winningPlayerID = await _dbContext.HandleWinStatusAsync(win_status, ThisGame, token);
+
+						var win = new WinCommand(win_status, winningPlayerID.GetValueOrDefault(0), win_status.ToString());
+
+						await Clients.User(OtherUserIdentifier).ServerToClientPlayerWin(win);
+
+						trans.Rollback();
+
+						return win;
+					}
+					catch (Exception ex)
+					{
+						trans.Rollback();
+						_logger.LogError(ex, nameof(ClientToServerPath));
+						throw;
+					}
+				}//trans end
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex.Message);
+				throw;
+			}
+		}
 
 		public async Task ClientToServerPing(PingCommand ping)
 		{

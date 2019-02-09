@@ -91,7 +91,8 @@
 		let bPlayerActive = @(Model.Game.IsThisPlayerActive().ToString().ToLowerInvariant());
 		let gameType = @((int)Model.Game.GameType);
 		let protocol = @(commonUIConfigureOptions.Value.UseMessagePackBinaryTransport.ToString().ToLowerInvariant()) ? new signalR.protocols.msgpack.MessagePackHubProtocol() : new signalR.JsonHubProtocol();
-		game = new InkBallGame(inkBallHubName, signalR.LogLevel.Warning, protocol, signalR.HttpTransportType.None,
+		let servTimeoutMillis = @(Model.ClientTimeoutInterval.TotalMilliseconds);
+		game = new InkBallGame(inkBallHubName, signalR.LogLevel.Warning, protocol, signalR.HttpTransportType.None, servTimeoutMillis,
 			function () {
 				return 'iGameID=' + iGameID + '&iPlayerID=' + iPlayerID;
 			},

@@ -199,6 +199,7 @@ class InkBallGame {
 	 * @param {enum} loggingLevel log level for SignalR
 	 * @param {enum} hubProtocol Json or messagePack
 	 * @param {enum} transportType websocket, server events or long polling
+	 * @param {number} serverTimeoutInMilliseconds If the server hasn't sent a message in this interval, the client considers the server disconnected
 	 * @param {function} tokenFactory auth token factory
 	 * @param {enum} gameType of game enum
 	 * @param {bool} bIsPlayingWithRed true - red, false - blue
@@ -207,7 +208,7 @@ class InkBallGame {
 	 * @param {number} iTooLong2Duration too long wait duration
 	 * @param {bool} bViewOnly only viewing the game no interaction
 	 */
-	constructor(sHubName, loggingLevel, hubProtocol, transportType, tokenFactory, gameType,
+	constructor(sHubName, loggingLevel, hubProtocol, transportType, serverTimeoutInMilliseconds, tokenFactory, gameType,
 		bIsPlayingWithRed = true, bIsPlayerActive = true, iGridSize = 15, iTooLong2Duration = 125, bViewOnly = false) {
 
 		this.g_iGameID = null;
@@ -277,6 +278,8 @@ class InkBallGame {
 			.withHubProtocol(hubProtocol)
 			.configureLogging(loggingLevel)
 			.build();
+		this.g_SignalRConnection.serverTimeoutInMilliseconds = serverTimeoutInMilliseconds;
+		
 
 		this.g_SignalRConnection.onclose(async (err) => {
 			if (err !== null && err !== undefined) {
@@ -406,10 +409,8 @@ class InkBallGame {
 			li.textContent = encodedMsg;
 			document.querySelector(sMsgListSel).appendChild(li);
 
+			this.ReceivedWinProcessing(win);
 
-			this.m_bHandlingEvent = false;
-			alert(encodedMsg === '' ? 'Game won!' : encodedMsg);
-			window.location.href = "Games";
 		}.bind(this));
 
 		this.g_SignalRConnection.on("ServerToClientPing", function (ping, user) {
@@ -1073,8 +1074,13 @@ class InkBallGame {
 
 		let encodedMsg = WinCommand.Format(win);
 
-		alert(encodedMsg === '' ? 'Game won!' : encodedMsg);
-		window.location.href = "Games";
+		if (((win.Status === WinStatusEnum.RED_WINS || win.Status === WinStatusEnum.GREEN_WINS) && win.WinningPlayerId > 0) ||
+			win.Status === WinStatusEnum.DRAW_WIN) {
+
+			alert(encodedMsg === '' ? 'Game won!' : encodedMsg);
+			window.location.href = "Games";
+			
+		}
 	}
 
 	Check4Win(playerPaths, otherPlayerPaths, playerPoints, otherPlayerPoints) {

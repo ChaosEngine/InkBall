@@ -2,14 +2,12 @@ using InkBall.Module.Hubs;
 using InkBall.Module.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace InkBall.Module.Pages
@@ -17,9 +15,19 @@ namespace InkBall.Module.Pages
 	[Authorize(Policy = "InkBallPlayerPolicy")]
 	public class IndexModel : BasePageModel
 	{
+		private readonly IOptions<HubOptions> _signalRHubOptions;
+
 		public InkBallPlayer OtherPlayer { get; protected set; }
 
 		public (IEnumerable<InkBallPath> Paths, IEnumerable<InkBallPoint> Points) PlayerPointsAndPaths { get; private set; }
+
+		public TimeSpan ClientTimeoutInterval
+		{
+			get
+			{
+				return _signalRHubOptions.Value.ClientTimeoutInterval.GetValueOrDefault(TimeSpan.FromSeconds(30));
+			}
+		}
 
 		public string GetPointsAsJavaScriptArray(IEnumerable<InkBallPoint> points)
 		{
@@ -80,8 +88,11 @@ namespace InkBall.Module.Pages
 			return builder.ToString();
 		}
 
-		public IndexModel(GamesContext dbContext, ILogger<BasePageModel> logger) : base(dbContext, logger)
-		{ }
+		public IndexModel(GamesContext dbContext, ILogger<BasePageModel> logger, IOptions<HubOptions> signalRHubOptions)
+			: base(dbContext, logger)
+		{
+			_signalRHubOptions = signalRHubOptions;
+		}
 
 		public async Task<IActionResult> OnGet()
 		{
