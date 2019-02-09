@@ -21,7 +21,8 @@ namespace InkBall.Module.Model
 		int? iEnclosingPathId { get; set; }
 	}
 
-	public abstract class CommonPoint : IPoint, IEquatable<IPoint>, IEqualityComparer<IPoint>, IMessagePackSerializationCallbackReceiver, IDtoMsg
+	public abstract class CommonPoint : IPoint, IDtoMsg, IMessagePackSerializationCallbackReceiver,
+		IEquatable<IPoint>, IEqualityComparer<IPoint>, IComparable
 	{
 		public int iId { get; set; }
 
@@ -53,6 +54,8 @@ namespace InkBall.Module.Model
 			IPoint o = (IPoint)obj;
 
 			return this.iGameId == o.iGameId && this.iPlayerId == o.iPlayerId
+				&& this.Status == o.Status
+				//&& this.iEnclosingPathId == o.iEnclosingPathId
 				&& this.iX == o.iX & this.iY == o.iY;
 		}
 
@@ -67,7 +70,7 @@ namespace InkBall.Module.Model
 		{
 			return ((object)o) != null
 				&& this.iGameId == o.iGameId && this.iPlayerId == o.iPlayerId
-				//&& this.Status == o.Status
+				&& this.Status == o.Status
 				//&& this.iEnclosingPathId == o.iEnclosingPathId
 				&& this.iX == o.iX && this.iY == o.iY;
 		}
@@ -87,6 +90,23 @@ namespace InkBall.Module.Model
 		public int GetHashCode(IPoint obj)
 		{
 			return obj.GetHashCode();
+		}
+
+		//interface IComparable
+		public int CompareTo(object obj)
+		{
+			if (obj == null) return 1;
+
+			CommonPoint other_point = obj as CommonPoint;
+			if (other_point != null)
+			{
+				int this_val = ((this.iY << 7) + this.iX);
+				int other_val = ((other_point.iY << 7) + other_point.iX);
+
+				return this_val.CompareTo(other_val);
+			}
+			else
+				throw new ArgumentException($"Object is not a {nameof(CommonPoint)}");
 		}
 
 		public void OnBeforeSerialize()

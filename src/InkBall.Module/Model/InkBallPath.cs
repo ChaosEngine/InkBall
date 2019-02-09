@@ -52,7 +52,7 @@ namespace InkBall.Module.Model
 			return c;
 		}
 
-		static bool pnpoly(ICollection<IPoint> pathPoints, int x, int y)
+		static bool pnpoly(ICollection<Point> pathPoints, int x, int y)
 		{
 			int i, j, npol = pathPoints.Count; bool c = false;
 
@@ -69,9 +69,11 @@ namespace InkBall.Module.Model
 			return c;
 		}
 
-		public bool IsPointInsidePath(IPoint point)
+		public bool IsPointInsidePath(Point point)
 		{
-			var path_points = (ICollection<IPoint>)this.InkBallPoint;
+			var path_points = this.InkBallPoint;
+			if (path_points.Contains(point))
+				return false;
 
 			return pnpoly(path_points, point.iX, point.iY);
 		}
@@ -122,6 +124,8 @@ namespace InkBall.Module.Model
 
 		#region Fields
 
+		readonly static char[] _spaceSeparatorArr = new char[] { ' ' }, _commaSeparatorArr = new char[] { ',' };
+
 		private ICollection<InkBallPointViewModel> _inkBallPoint;
 		private ICollection<InkBallPointViewModel> _ownedPoints;
 
@@ -146,7 +150,11 @@ namespace InkBall.Module.Model
 						Model.InkBallPoint.StatusEnum.POINT_STARTING,
 						Model.InkBallPoint.StatusEnum.POINT_IN_PATH,
 						this.iPlayerId, EnsureContinuityOfPointsOnPath
-					).ToArray();
+					);
+
+					InkBallPointViewModel first = _inkBallPoint.First(), last = _inkBallPoint.Last();
+					if (_inkBallPoint.Count <= 3 || first.iX != last.iX || first.iY != last.iY)
+						throw new ArgumentException("points count <= 3 or first point != last point");
 				}
 
 				return _inkBallPoint;
@@ -159,7 +167,7 @@ namespace InkBall.Module.Model
 		{
 			if (!(_ownedPoints?.Count > 0) && !string.IsNullOrEmpty(OwnedPointsAsString))
 			{
-				_ownedPoints = StringToPointCollection(OwnedPointsAsString, ownedStatus, ownedStatus, otherPlayerID).ToArray();
+				_ownedPoints = StringToPointCollection(OwnedPointsAsString, ownedStatus, ownedStatus, otherPlayerID);
 			}
 			return _ownedPoints;
 		}
@@ -169,62 +177,79 @@ namespace InkBall.Module.Model
 			_ownedPoints = ownedPoints;
 		}
 
-		private IEnumerable<InkBallPointViewModel> StringToPointCollection(string pointsAsString, InkBallPoint.StatusEnum firstPointStatus,
-			InkBallPoint.StatusEnum subsequentStatuses, int playerID2et, ActionRef<int, int, int, int> validateContinuityOfThePath = null)
+		private ICollection<InkBallPointViewModel> StringToPointCollection(string pointsAsString, InkBallPoint.StatusEnum firstPointStatus,
+			InkBallPoint.StatusEnum subsequentStatuses, int playerIDToSet, ActionRef<int, int, int, int> validateContinuityOfThePath = null)
 		{
-			//var tab = pointsAsString.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-			var tokensP = new StringTokenizer(pointsAsString, new char[] { ' ' });
-			var comma_sep = new char[] { ',' };
+			var tokensP = new StringTokenizer(pointsAsString, _spaceSeparatorArr);
+			var collection = new HashSet<InkBallPointViewModel>();
+			InkBallPointViewModel first = null;
 			InkBallPoint.StatusEnum status = firstPointStatus;
 
 			int i = 0, prev_x = -1, prev_y = -1;
 
 			var strP = tokensP.ElementAt(i);
-			var tokenXY = strP.Split(comma_sep);
+			var tokenXY = strP.Split(_commaSeparatorArr);
 			if (tokenXY.Count() >= 2)
 			{
 				if (int.TryParse(tokenXY.ElementAt(0).Value, out int x) && int.TryParse(tokenXY.ElementAt(1).Value, out int y))
 				{
 					prev_x = x; prev_y = y;
 
-					yield return new InkBallPointViewModel
+					first = new InkBallPointViewModel
 					{
 						//iId = 0,
 						iGameId = this.iGameId,
-						iPlayerId = playerID2et,
+						iPlayerId = playerIDToSet,
 						iX = x,
 						iY = y,
 						Status = status,
 						iEnclosingPathId = 0
 					};
+					collection.Add(first);
 					status = subsequentStatuses;
 				}
 			}
 
-			for (i++; i < tokensP.Count(); i++)
+			int count = tokensP.Count();
+			for (i++; i < count; i++)
 			{
 				strP = tokensP.ElementAt(i);
-				tokenXY = strP.Split(comma_sep);
+				tokenXY = strP.Split(_commaSeparatorArr);
 				if (tokenXY.Count() >= 2)
 				{
 					if (int.TryParse(tokenXY.ElementAt(0).Value, out int x) && int.TryParse(tokenXY.ElementAt(1).Value, out int y))
 					{
 						validateContinuityOfThePath?.Invoke(ref prev_x, ref prev_y, ref x, ref y);
 
-						yield return new InkBallPointViewModel
+						var point = new InkBallPointViewModel
 						{
 							//iId = 0,
 							iGameId = this.iGameId,
-							iPlayerId = playerID2et,
+							iPlayerId = playerIDToSet,
 							iX = x,
 							iY = y,
 							Status = status,
 							iEnclosingPathId = 0
 						};
+
+						if (!collection.Add(point))
+						{
+							// if (point == first && !((i + 1) < count))
+							// {
+							// 	var lst = collection.ToList();
+							// 	lst.Add(point);
+							// 	return lst;
+							// }
+							// else
+							throw new ArgumentException("points in path are not unique");
+						}
+
 						status = subsequentStatuses;
 					}
 				}
 			}
+
+			return collection;
 		}
 
 		void EnsureContinuityOfPointsOnPath(ref int prevX, ref int prevY, ref int x, ref int y)

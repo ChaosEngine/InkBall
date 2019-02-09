@@ -327,7 +327,8 @@ namespace InkBall.Module.Hubs
 
 				var current_player_color = ThisGame.IsThisPlayerPlayingWithRed() ? InkBallPoint.StatusEnum.POINT_FREE_RED : InkBallPoint.StatusEnum.POINT_FREE_BLUE;
 
-				if (point == null || point.iGameId != ThisGame.iId || point.Status != current_player_color)
+				if (point == null || point.iGameId != ThisGame.iId || point.Status != current_player_color
+					|| point.iX < 0 || point.iY < 0 || point.iX > ThisGame.LogicalWidth || point.iY > this.ThisGame.LogicalHeight)
 					throw new ArgumentException("bad point");
 				if (point.iPlayerId != ThisPlayer.iId && point.iPlayerId != OtherPlayer.iId)
 					throw new ArgumentException("bad Player ID");
@@ -403,9 +404,7 @@ namespace InkBall.Module.Hubs
 				if (path.iPlayerId != ThisPlayer.iId && path.iPlayerId != OtherPlayer.iId)
 					throw new ArgumentException("bad Player ID");
 				ICollection<InkBallPointViewModel> points_on_path = path.InkBallPoint;//serialize points from path int objects
-				if (points_on_path.Count <= 3 || points_on_path.First() != points_on_path.Last())
-					throw new ArgumentException("points count <= 3 or first point != last point");
-
+				
 				InkBallPoint.StatusEnum current_player_color, other_player_color, owning_color, other_owning_color;
 				if (ThisGame.IsThisPlayerPlayingWithRed())
 				{

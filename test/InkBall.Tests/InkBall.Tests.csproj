@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.2</TargetFramework>
-
+		<LangVersion>latest</LangVersion>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Project Include="../src/InkBall.Module/InkBall.Module.csproj" />
+    <ProjectReference Include="..\..\src\InkBall.Module\InkBall.Module.csproj" />
   </ItemGroup>
 
 </Project>

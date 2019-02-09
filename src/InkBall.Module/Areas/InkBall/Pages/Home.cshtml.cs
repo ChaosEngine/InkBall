@@ -30,7 +30,7 @@ namespace InkBall.Module.Pages
 		{
 			await LoadUserPlayerAndGameAsync();
 		}
-		
+
 		public async Task<IActionResult> OnPostAsync(string action, string gameType)
 		{
 			await LoadUserPlayerAndGameAsync();
@@ -69,21 +69,23 @@ namespace InkBall.Module.Pages
 						if (!Enum.TryParse<InkBallGame.GameTypeEnum>(gameType, true, out var GameType))
 							throw new NotSupportedException("Wrong game type");
 
-						int width = 0, height = 0;
+						int width, height, grid_size;
 						//if (g_bIsMobile)
 						{
-							width = 600 / 2; height = 800 / 2;
+							width = 300; height = 390;
+							grid_size = 15;
 						}
 						//else
 						//{
-						//	width = 600;	height = 800;
+						//	width = 300 * 2; height = 390 * 2;
+						//	grid_size = 15;
 						//}
 						using (var trans = await _dbContext.Database.BeginTransactionAsync(token))
 						{
 							try
 							{
 								var dbGame = await _dbContext.CreateNewGameFromExternalUserIDAsync(GameUser.sExternalId, InkBallGame.GameStateEnum.AWAITING,
-									GameType, 15/*grid size*/, width, height, true, token);
+									GameType, grid_size, width, height, true, token);
 
 								trans.Commit();
 								return Redirect("Index");

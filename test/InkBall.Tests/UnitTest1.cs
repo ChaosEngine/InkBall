@@ -1,14 +1,242 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using InkBall.Module.Model;
 using Xunit;
 
 namespace InkBall.Tests
 {
-    public class UnitTest1
-    {
-        [Fact]
-        public void Test1()
-        {
+	public class UnitTest1
+	{
+		public class PathValidationTheoryData : TheoryData<ValueTuple<(int, int)[], string, (int, int)[]>>
+		{
+			public PathValidationTheoryData(IEnumerable<ValueTuple<(int, int)[], string, (int, int)[]>> data)
+			{
+				foreach (ValueTuple<(int, int)[], string, (int, int)[]> t1 in data)
+				{
+					Add(t1);
+				}
+			}
+		}
 
-        }
-    }
+		[Fact]
+		public void GameHierarchyCreation()
+		{
+			//Arrange
+			var game = new InkBallGame
+			{
+				iId = 1,
+				CreateTime = DateTime.Now,
+				GameState = InkBallGame.GameStateEnum.AWAITING,
+				Player1 = new InkBallPlayer
+				{
+					iId = 1,
+					sLastMoveCode = "{}",
+					User = new InkBallUser
+					{
+						iId = 1,
+						UserName = "test",
+						iPrivileges = 0,
+						sExternalId = "xxxxx",
+					}
+				}
+			};
+			var point = new InkBallPoint
+			{
+				iId = 1,
+				iX = 1,
+				iY = 1,
+				iGameId = game.iId,
+				Status = InkBallPoint.StatusEnum.POINT_FREE_BLUE,
+				iEnclosingPathId = null,
+				iPlayerId = 1
+			};
+
+			//Act
+			var p1 = game.GetPlayer1();
+
+			//Assert
+			Assert.NotNull(p1);
+		}
+
+		[Theory]
+		[InlineData(new[] { 1, 1 }, "1,1")]
+		[InlineData(new[] { 2, 2 }, "2,2")]
+		[InlineData(new[] { 123, 456 }, "123,456")]
+		void PointSerialization(int[] pointsTab, string expectedCoords)
+		{
+			//Arrange
+			var point = new InkBallPoint
+			{
+				iId = 1,
+				iX = pointsTab[0],
+				iY = pointsTab[1],
+				iGameId = -1,
+				Status = InkBallPoint.StatusEnum.POINT_FREE_BLUE,
+				iEnclosingPathId = null,
+				iPlayerId = 1
+			};
+
+			//Act
+			var str = point.ToString();
+
+			//Assert
+			Assert.Equal($"{pointsTab[0]},{pointsTab[1]}", expectedCoords);
+		}
+
+
+		public static PathValidationTheoryData CorrectPathAndOwnedPointsData => new PathValidationTheoryData(new ValueTuple<(int, int)[], string, (int, int)[]>[]
+		{
+			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(1,1),(1,2),(1,3),(1,4),(2,4),(3,4),(3,3),(3,2),(3,1),(2,1),(1,1)},"1,1 1,2 1,3 1,4 2,4 3,4 3,3 3,2 3,1 2,1 1,1",new[]{(2,2),(2,3)}),
+			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(1,1),(2,1),(3,1),(4,1),(4,2),(4,3),(3,3),(2,3),(1,3),(1,2),(1,1)},"1,1 2,1 3,1 4,1 4,2 4,3 3,3 2,3 1,3 1,2 1,1",new[]{(2,2),(3,2)}),
+			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(10,14),(11,14),(12,15),(11,16),(10,16),(9,15),(10,14)},"10,14 11,14 12,15 11,16 10,16 9,15 10,14",new[]{(10,15),(11,15)}),
+			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(10,4),(9,5),(9,6),(10,7),(11,6),(11,5),(10,4)},"10,4 9,5 9,6 10,7 11,6 11,5 10,4",new[]{(10,5),(10,6)}),
+		});
+		public static PathValidationTheoryData IncorrectPathAndOwnedPointsData => new PathValidationTheoryData(new ValueTuple<(int, int)[], string, (int, int)[]>[]
+		{
+			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(1,1),(1,2),(1,5)},"1,1 1,2 1,5",new[]{(1,2)}),
+			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(1,1),(3,1)},"1,1 3,1",new[]{(1,2)}),
+			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(1,1),(1,2),(1,3),(1,8)},"1,1 1,2 1,3 1,8",new[]{(1,2)}),
+			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(1,1),(2,1),(3,1),(4,1)},"1,1 2,1 3,1 4,1",new[]{(1,2)}),
+			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(-1,13),(332,51),(34,1)},"blablabla",new[]{(1,2)}),
+			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(-1,13),(332,51),(34,1)},"blablabla 43 ddfg rgfd",new[]{(1,2)}),
+		});
+		public static PathValidationTheoryData BadOwnedPointsData => new PathValidationTheoryData(new ValueTuple<(int, int)[], string, (int, int)[]>[]
+		{
+			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(1,1),(1,2),(1,3),(1,4),(2,4),(3,4),(3,3),(3,2),(3,1),(2,1),(1,1)},"1,1 1,2 1,3 1,4 2,4 3,4 3,3 3,2 3,1 2,1 1,1",new[]{(26,26)}),
+			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(1,1),(2,1),(3,1),(4,1),(4,2),(4,3),(3,3),(2,3),(1,3),(1,2),(1,1)},"1,1 2,1 3,1 4,1 4,2 4,3 3,3 2,3 1,3 1,2 1,1",new[]{(8,8)}),
+			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(1,1),(2,1),(3,1),(4,1),(4,2),(4,3),(3,3),(2,3),(1,3),(1,2),(1,1)},"1,1 2,1 3,1 4,1 4,2 4,3 3,3 2,3 1,3 1,2 1,1",new[]{(1,1)}),
+			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(1,1),(2,1),(3,1),(4,1),(4,2),(4,3),(3,3),(2,3),(1,3),(1,2),(1,1)},"1,1 2,1 3,1 4,1 4,2 4,3 3,3 2,3 1,3 1,2 1,1",new[]{(4,2)}),
+		});
+
+		[Theory]
+		[MemberData(nameof(CorrectPathAndOwnedPointsData))]
+		void CorrectPathValidation(((int x, int y)[] coords, string expectedCoords, (int x, int y)[] ownedPoints) parameters)
+		{
+			//Arrange
+			string expectedCoords = parameters.expectedCoords;
+			var path = new InkBallPathViewModel
+			{
+				PointsAsString = expectedCoords
+			};
+
+			//Act
+			int len = parameters.coords.Length;
+			for (int i = 0; i < len; i++)
+			{
+				Assert.IsType<(int x, int y)>(parameters.coords[i]);
+				(int x, int y) coords = ((int, int))parameters.coords[i];
+
+				var ponit2verify = path.InkBallPoint.ElementAtOrDefault(i);
+				//Assert
+				Assert.NotNull(ponit2verify);
+
+				Assert.Equal(ponit2verify.iX, coords.x);
+				Assert.Equal(ponit2verify.iY, coords.y);
+			}
+		}
+
+		[Theory]
+		[MemberData(nameof(IncorrectPathAndOwnedPointsData))]
+		void IncorrectPathValidation(((int x, int y)[] coords, string expectedCoords, (int x, int y)[] ownedPoints) parameters)
+		{
+			//Arrange
+			string expectedCoords = parameters.expectedCoords;
+
+			//Act
+			var path = new InkBallPathViewModel
+			{
+				PointsAsString = expectedCoords
+			};
+
+			//Assert
+			Assert.ThrowsAny<Exception>(() =>
+			{
+				var path_points = path.InkBallPoint;
+			});
+		}
+
+		[Theory]
+		[MemberData(nameof(CorrectPathAndOwnedPointsData))]
+		void CorrectPointOwning(((int x, int y)[] coords, string expectedCoords, (int x, int y)[] ownedPoints) parameters)
+		{
+			//Arrange
+			string expectedCoords = parameters.expectedCoords;
+			var path = new InkBallPathViewModel
+			{
+				PointsAsString = expectedCoords
+			};
+
+			//Act
+			var path_points = path.InkBallPoint;
+
+			//Assert
+			foreach (var owned in parameters.ownedPoints)
+			{
+				var owned_point = new InkBallPointViewModel
+				{
+					iX = owned.x,
+					iY = owned.y
+				};
+				bool inside = path.IsPointInsidePath(owned_point);
+				Assert.True(inside);
+			}
+		}
+
+		[Theory]
+		[MemberData(nameof(BadOwnedPointsData))]
+		void IncorrectPointOwning(((int x, int y)[] coords, string expectedCoords, (int x, int y)[] ownedPoints) parameters)
+		{
+			//Arrange
+			string expectedCoords = parameters.expectedCoords;
+			var path = new InkBallPathViewModel
+			{
+				PointsAsString = expectedCoords
+			};
+
+			//Act
+			var path_points = path.InkBallPoint;
+
+			//Assert
+			foreach (var owned in parameters.ownedPoints)
+			{
+				var owned_point = new InkBallPointViewModel
+				{
+					iX = owned.x,
+					iY = owned.y
+				};
+				bool inside = path.IsPointInsidePath(owned_point);
+				Assert.False(inside);
+			}
+		}
+
+		[Theory]
+		[MemberData(nameof(CorrectPathAndOwnedPointsData))]
+		void AllPossibleOwningScenarios(((int x, int y)[] coords, string expectedCoords, (int x, int y)[] ownedPoints) parameters)
+		{
+			string expectedCoords = parameters.expectedCoords;
+			var path = new InkBallPathViewModel
+			{
+				PointsAsString = expectedCoords
+			};
+
+			for (int y = 0; y < 30; y++)
+			{
+				for (int x = 0; x < 30; x++)
+				{
+					var point_to_test = new InkBallPointViewModel
+					{
+						iX = x,
+						iY = y,
+						Status = InkBallPoint.StatusEnum.POINT_IN_PATH
+					};
+					if (parameters.ownedPoints.Contains((x, y)))
+						Assert.True(path.IsPointInsidePath(point_to_test));
+					else
+						Assert.False(path.IsPointInsidePath(point_to_test));
+				}
+			}
+		}
+	}
 }
