@@ -47,6 +47,34 @@ namespace InkBall.Module.Hubs
 	[Authorize(Policy = "InkBallPlayerPolicy")]
 	public class GameHub : Hub<IGameClient>, IGameServer
 	{
+		#region Helpers
+
+		sealed class SimpleCoordsPointComparer : IEqualityComparer<IPoint>
+		{
+			//interface IEqualityComparer
+			public bool Equals(IPoint left, IPoint right)
+			{
+				if (right == null && left == null)
+					return true;
+				else if (left == null || right == null)
+					return false;
+
+				return left.iGameId == right.iGameId && left.iPlayerId == right.iPlayerId
+					//&& left.Status == right.Status
+					//&& this.iEnclosingPathId == o.iEnclosingPathId
+					&& left.iX == right.iX && left.iY == right.iY;
+			}
+
+			//interface IEqualityComparer
+			public int GetHashCode(IPoint obj)
+			{
+				return obj.GetHashCode();
+			}
+		}
+
+		#endregion Helpers
+
+
 		#region Fields
 
 		public const string HubName = "gameHub";
@@ -54,8 +82,7 @@ namespace InkBall.Module.Hubs
 		//Allowed origins here
 		internal static readonly SynchronizedCache<string> WebSocketAllowedOrigins = new SynchronizedCache<string>();
 
-		//temporary randomizer object
-		private static readonly Random _randomizer = new Random(Environment.TickCount);
+		private static readonly SimpleCoordsPointComparer _simpleCoordsPointComparer = new SimpleCoordsPointComparer();
 
 		private readonly GamesContext _dbContext;
 		private readonly ILogger<GameHub> _logger;
@@ -404,7 +431,7 @@ namespace InkBall.Module.Hubs
 				if (path.iPlayerId != ThisPlayer.iId && path.iPlayerId != OtherPlayer.iId)
 					throw new ArgumentException("bad Player ID");
 				ICollection<InkBallPointViewModel> points_on_path = path.InkBallPoint;//serialize points from path int objects
-				
+
 				InkBallPoint.StatusEnum current_player_color, other_player_color, owning_color, other_owning_color;
 				if (ThisGame.IsThisPlayerPlayingWithRed())
 				{
@@ -425,9 +452,8 @@ namespace InkBall.Module.Hubs
 				var all_placed_points_fromDB = await (from p in _dbContext.InkBallPoint
 													  where p.iGameId == ThisGame.iId && p.iEnclosingPathId == null
 													  && (p.Status == current_player_color || p.Status == other_player_color)
-													  //&& p.Status == current_player_color && p.iPlayerId == ThisPlayer.iId
 													  select p).Cast<IPoint>()
-													  .ToDictionaryAsync(pip => pip, token);
+													  .ToDictionaryAsync(pip => pip, _simpleCoordsPointComparer, token);
 
 				IDtoMsg new_path;
 				var db_path = new InkBallPath
@@ -441,7 +467,7 @@ namespace InkBall.Module.Hubs
 				{
 					//TODO: check in-path-next-point from start to end with closing
 					if (!(all_placed_points_fromDB.TryGetValue(pop, out IPoint iobj) && iobj is InkBallPoint found)
-						|| !((found.Status == current_player_color || found == points_on_path.Last()) && found.iPlayerId == ThisPlayer.iId))
+						|| !((found.Status == current_player_color || _simpleCoordsPointComparer.Equals(found, points_on_path.Last())) && found.iPlayerId == ThisPlayer.iId))
 					{
 						throw new ArgumentOutOfRangeException($"point not in path [{pop}]");
 					}

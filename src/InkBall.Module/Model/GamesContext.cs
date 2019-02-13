@@ -410,7 +410,7 @@ namespace InkBall.Module.Model
 			{
 				if (!string.IsNullOrEmpty(sPlayer1ExternaUserID))
 				{
-					var dbPlayer1 = await CreateNewPlayerFromExternalUserIdAsync(sPlayer1ExternaUserID, "", token);
+					var dbPlayer1 = await CreateNewPlayerFromExternalUserIdAsync(sPlayer1ExternaUserID, "{}", token);
 				}
 			}
 			catch (Exception ex)
@@ -553,7 +553,7 @@ namespace InkBall.Module.Model
 			InkBallPlayer player2;
 			try
 			{
-				player2 = await CreateNewPlayerFromExternalUserIdAsync(sPlayer2ExternaUserID, "", token);
+				player2 = await CreateNewPlayerFromExternalUserIdAsync(sPlayer2ExternaUserID, "{}", token);
 			}
 			catch (Exception ex)
 			{
