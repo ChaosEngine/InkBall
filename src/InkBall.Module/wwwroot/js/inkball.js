@@ -279,11 +279,11 @@ class InkBallGame {
 			.configureLogging(loggingLevel)
 			.build();
 		this.g_SignalRConnection.serverTimeoutInMilliseconds = serverTimeoutInMilliseconds;
-		
+
 
 		this.g_SignalRConnection.onclose(async (err) => {
 			if (err !== null && err !== undefined) {
-				console.log(err);
+				console.error(err);
 
 				this.m_Screen.style.cursor = "not-allowed";
 				if (this.iConnErrCount < 5)//exponential back-off
@@ -300,7 +300,7 @@ class InkBallGame {
 			console.log('connected; iConnErrCount = ' + this.iConnErrCount);
 		}
 		catch (err) {
-			console.log(err + '; iConnErrCount = ' + this.iConnErrCount);
+			console.error(err + '; iConnErrCount = ' + this.iConnErrCount);
 
 			this.m_Screen.style.cursor = "not-allowed";
 			if (this.iConnErrCount < 5)//exponential back-off
@@ -712,7 +712,14 @@ class InkBallGame {
 		}
 		//alert(sPathPoints);
 		if (!(xs[0] === xs[xs.length - 1] && ys[0] === ys[ys.length - 1]))
-			return { owned: "", path: "" };
+			return {
+				OwnedPoints: undefined,
+				owned: "", 
+				path: "",
+				revertFillColor: undefined,
+				revertStatus: undefined,
+				revertStrokeColor: undefined
+			};
 
 		//make the test!
 		let count1 = this.m_Points.length;
@@ -720,6 +727,7 @@ class InkBallGame {
 		let owned_by = (this.m_sDotColor === this.COLOR_RED ? this.POINT_OWNED_BY_RED : this.POINT_OWNED_BY_BLUE);
 		let sOwnedCol = (this.m_sDotColor === this.COLOR_RED ? this.COLOR_OWNED_RED : this.COLOR_OWNED_BLUE);
 		let sOwnedPoints = "";
+		let ownedPoints = [];
 		sDelimiter = "";
 		for (let i = 0; i < count1; ++i) {
 			let p0 = this.m_Points[i];
@@ -734,11 +742,19 @@ class InkBallGame {
 					p0.$strokeColor(sOwnedCol);
 
 					sOwnedPoints = sOwnedPoints + sDelimiter + x + "," + y;
+					ownedPoints.push(p0);
 					sDelimiter = " ";
 				}
 			}
 		}
-		return { owned: sOwnedPoints, path: sPathPoints };
+		return {
+			OwnedPoints: ownedPoints,
+			owned: sOwnedPoints,
+			path: sPathPoints,
+			revertFillColor: sColor,
+			revertStatus: this.POINT_FREE,
+			revertStrokeColor: (this.m_sDotColor === this.COLOR_RED ? this.COLOR_OWNED_BLUE : this.COLOR_OWNED_RED)
+		};
 	}
 
 	IsPointOutsideAllPaths(iX, iY) {
@@ -791,8 +807,9 @@ class InkBallGame {
 	/**
 	 * Send data through signalR
 	 * @param {object} payload transferrableObject (DTO)
+	 * @param {function} revertFunction on-error revert/rollback function
 	 */
-	SendAsyncData(payload) {
+	SendAsyncData(payload, revertFunction = undefined) {
 
 		switch (payload.GetKind()) {
 
@@ -803,8 +820,10 @@ class InkBallGame {
 				this.g_SignalRConnection.invoke("ClientToServerPoint", payload).then(function (point) {
 					this.ReceivedPointProcessing(point);
 				}.bind(this)).catch(function (err) {
-					return console.error(err.toString());
-				});
+					console.error(err.toString());
+					if(revertFunction !== undefined)
+						revertFunction();
+				}.bind(this));
 				break;
 
 			case CommandKindEnum.PATH:
@@ -825,8 +844,10 @@ class InkBallGame {
 						throw new Error("ClientToServerPath bad GetKind!");
 
 				}.bind(this)).catch(function (err) {
-					return console.error(err.toString());
-				});
+					console.error(err.toString());
+					if(revertFunction !== undefined)
+						revertFunction();
+				}.bind(this));
 				break;
 
 			case CommandKindEnum.PING:
@@ -834,12 +855,12 @@ class InkBallGame {
 					document.querySelector(this.m_sMsgInputSel).value = '';
 					document.querySelector(this.m_sMsgSendButtonSel).disabled = 'disabled';
 				}.bind(this)).catch(function (err) {
-					return console.error(err.toString());
+					console.error(err.toString());
 				});
 				break;
 
 			default:
-				console.log('unknown object');
+				console.error('unknown object');
 				break;
 		}
 	}
@@ -1079,7 +1100,7 @@ class InkBallGame {
 
 			alert(encodedMsg === '' ? 'Game won!' : encodedMsg);
 			window.location.href = "Games";
-			
+
 		}
 	}
 
@@ -1276,7 +1297,16 @@ class InkBallGame {
 							if (val.owned.length > 0) {
 								//this.m_Line.$SetIsClosed(true);
 								this.Debug('Closing path', 0);
-								this.SendAsyncData(this.CreateXMLPutPathRequest(val));
+								this.SendAsyncData(this.CreateXMLPutPathRequest(val), () => {
+									this.OnCancelClick();
+									val.OwnedPoints.forEach(p => {
+										p.$SetStatus(val.revertStatus);
+										p.$SetFillColor(val.revertFillColor);
+										p.$strokeColor(val.revertStrokeColor);
+									});
+									//this.m_bMouseDown = false;
+									this.m_bHandlingEvent = false;
+								});
 							}
 							else
 								this.Debug('Wrong path, cancell it or refresh page', 0);
@@ -1333,7 +1363,10 @@ class InkBallGame {
 			if (this.m_Points[loc_y * this.m_iGridWidth + loc_x] !== undefined) return;
 			if (!this.IsPointOutsideAllPaths(loc_x, loc_y)) return;
 
-			this.SendAsyncData(this.CreateXMLPutPointRequest(loc_x, loc_y));
+			this.SendAsyncData(this.CreateXMLPutPointRequest(loc_x, loc_y), () => {
+				this.m_bMouseDown = false;
+				this.m_bHandlingEvent = false;
+			});
 		}
 		else {
 			//lines
@@ -1357,7 +1390,16 @@ class InkBallGame {
 							if (val.owned.length > 0) {
 								//this.m_Line.$SetIsClosed(true);
 								this.Debug('Closing path', 0);
-								this.SendAsyncData(this.CreateXMLPutPathRequest(val));
+								this.SendAsyncData(this.CreateXMLPutPathRequest(val), () => {
+									this.OnCancelClick();
+									val.OwnedPoints.forEach(p => {
+										p.$SetStatus(val.revertStatus);
+										p.$SetFillColor(val.revertFillColor);
+										p.$strokeColor(val.revertStrokeColor);
+									});
+									this.m_bMouseDown = false;
+									this.m_bHandlingEvent = false;
+								});
 							}
 							else
 								this.Debug('Wrong path, cancell it or refresh page', 0);
@@ -1423,8 +1465,6 @@ class InkBallGame {
 			if (this.m_Line !== null) {
 				let points = this.m_Line.$GetPoints();
 				for (let i = 0; i < points.length; i += 2) {
-					//var y = points[i].split(",");
-					//var x = y[0];	y = y[1];
 					let x = points[i];
 					let y = points[i + 1];
 					if (x === null || y === null) continue;

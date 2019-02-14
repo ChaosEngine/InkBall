@@ -396,7 +396,7 @@ var InkBallGame = function () {
             switch (_context.prev = _context.next) {
               case 0:
                 if (err !== null && err !== undefined) {
-                  console.log(err);
+                  console.error(err);
                   _this7.m_Screen.style.cursor = "not-allowed";
                   if (_this7.iConnErrCount < 5) _this7.iConnErrCount++;
                   setTimeout(function () {
@@ -441,7 +441,7 @@ var InkBallGame = function () {
               case 7:
                 _context2.prev = 7;
                 _context2.t0 = _context2["catch"](0);
-                console.log(_context2.t0 + '; iConnErrCount = ' + this.iConnErrCount);
+                console.error(_context2.t0 + '; iConnErrCount = ' + this.iConnErrCount);
                 this.m_Screen.style.cursor = "not-allowed";
                 if (this.iConnErrCount < 5) this.iConnErrCount++;
                 setTimeout(function () {
@@ -827,14 +827,19 @@ var InkBallGame = function () {
       }
 
       if (!(xs[0] === xs[xs.length - 1] && ys[0] === ys[ys.length - 1])) return {
+        OwnedPoints: undefined,
         owned: "",
-        path: ""
+        path: "",
+        revertFillColor: undefined,
+        revertStatus: undefined,
+        revertStrokeColor: undefined
       };
       var count1 = this.m_Points.length;
       var sColor = this.m_sDotColor === this.COLOR_RED ? this.COLOR_BLUE : this.COLOR_RED;
       var owned_by = this.m_sDotColor === this.COLOR_RED ? this.POINT_OWNED_BY_RED : this.POINT_OWNED_BY_BLUE;
       var sOwnedCol = this.m_sDotColor === this.COLOR_RED ? this.COLOR_OWNED_RED : this.COLOR_OWNED_BLUE;
       var sOwnedPoints = "";
+      var ownedPoints = [];
       sDelimiter = "";
 
       for (var _i = 0; _i < count1; ++_i) {
@@ -852,14 +857,19 @@ var InkBallGame = function () {
             p0.$SetFillColor(sOwnedCol);
             p0.$strokeColor(sOwnedCol);
             sOwnedPoints = sOwnedPoints + sDelimiter + x + "," + y;
+            ownedPoints.push(p0);
             sDelimiter = " ";
           }
         }
       }
 
       return {
+        OwnedPoints: ownedPoints,
         owned: sOwnedPoints,
-        path: sPathPoints
+        path: sPathPoints,
+        revertFillColor: sColor,
+        revertStatus: this.POINT_FREE,
+        revertStrokeColor: this.m_sDotColor === this.COLOR_RED ? this.COLOR_OWNED_BLUE : this.COLOR_OWNED_RED
       };
     }
   }, {
@@ -911,6 +921,8 @@ var InkBallGame = function () {
   }, {
     key: "SendAsyncData",
     value: function SendAsyncData(payload) {
+      var revertFunction = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : undefined;
+
       switch (payload.GetKind()) {
         case CommandKindEnum.POINT:
           console.log(InkBallPointViewModel.Format('some player', payload));
@@ -918,8 +930,9 @@ var InkBallGame = function () {
           this.g_SignalRConnection.invoke("ClientToServerPoint", payload).then(function (point) {
             this.ReceivedPointProcessing(point);
           }.bind(this)).catch(function (err) {
-            return console.error(err.toString());
-          });
+            console.error(err.toString());
+            if (revertFunction !== undefined) revertFunction();
+          }.bind(this));
           break;
 
         case CommandKindEnum.PATH:
@@ -934,8 +947,9 @@ var InkBallGame = function () {
               this.ReceivedPathProcessing(path);
             } else throw new Error("ClientToServerPath bad GetKind!");
           }.bind(this)).catch(function (err) {
-            return console.error(err.toString());
-          });
+            console.error(err.toString());
+            if (revertFunction !== undefined) revertFunction();
+          }.bind(this));
           break;
 
         case CommandKindEnum.PING:
@@ -943,12 +957,12 @@ var InkBallGame = function () {
             document.querySelector(this.m_sMsgInputSel).value = '';
             document.querySelector(this.m_sMsgSendButtonSel).disabled = 'disabled';
           }.bind(this)).catch(function (err) {
-            return console.error(err.toString());
+            console.error(err.toString());
           });
           break;
 
         default:
-          console.log('unknown object');
+          console.error('unknown object');
           break;
       }
     }
@@ -1303,6 +1317,8 @@ var InkBallGame = function () {
   }, {
     key: "OnMouseMove",
     value: function OnMouseMove(event) {
+      var _this12 = this;
+
       if (!this.m_bIsPlayerActive || this.m_Player2Name.innerHTML === '???' || this.m_bHandlingEvent === true || this.iConnErrCount > 0) return;
       var x = (event ? event.clientX : window.event.clientX) - this.m_Screen.offsetLeft + this.f_scrollLeft() + 0.5 * this.m_iGridSize;
       var y = (event ? event.clientY : window.event.clientY) - this.m_Screen.offsetTop + this.f_scrollTop() + 0.5 * this.m_iGridSize;
@@ -1328,7 +1344,16 @@ var InkBallGame = function () {
 
                 if (val.owned.length > 0) {
                   this.Debug('Closing path', 0);
-                  this.SendAsyncData(this.CreateXMLPutPathRequest(val));
+                  this.SendAsyncData(this.CreateXMLPutPathRequest(val), function () {
+                    _this12.OnCancelClick();
+
+                    val.OwnedPoints.forEach(function (p) {
+                      p.$SetStatus(val.revertStatus);
+                      p.$SetFillColor(val.revertFillColor);
+                      p.$strokeColor(val.revertStrokeColor);
+                    });
+                    _this12.m_bHandlingEvent = false;
+                  });
                 } else this.Debug('Wrong path, cancell it or refresh page', 0);
               }
               this.m_iLastX = x;
@@ -1354,6 +1379,8 @@ var InkBallGame = function () {
   }, {
     key: "OnMouseDown",
     value: function OnMouseDown(event) {
+      var _this13 = this;
+
       if (!this.m_bIsPlayerActive || this.m_Player2Name.innerHTML === '???' || this.m_bHandlingEvent === true || this.iConnErrCount > 0) return;
       var x = (event ? event.clientX : window.event.clientX) - this.m_Screen.offsetLeft + this.f_scrollLeft() + 0.5 * this.m_iGridSize;
       var y = (event ? event.clientY : window.event.clientY) - this.m_Screen.offsetTop + this.f_scrollTop() + 0.5 * this.m_iGridSize;
@@ -1370,7 +1397,10 @@ var InkBallGame = function () {
         y = loc_y * this.m_iGridSize;
         if (this.m_Points[loc_y * this.m_iGridWidth + loc_x] !== undefined) return;
         if (!this.IsPointOutsideAllPaths(loc_x, loc_y)) return;
-        this.SendAsyncData(this.CreateXMLPutPointRequest(loc_x, loc_y));
+        this.SendAsyncData(this.CreateXMLPutPointRequest(loc_x, loc_y), function () {
+          _this13.m_bMouseDown = false;
+          _this13.m_bHandlingEvent = false;
+        });
       } else {
         if ((this.m_iLastX !== x || this.m_iLastY !== y) && Math.abs(parseInt(this.m_iLastX - x)) <= 1 && Math.abs(parseInt(this.m_iLastY - y)) <= 1 && this.m_iLastX >= 0 && this.m_iLastY >= 0) {
           if (this.m_Line !== null) {
@@ -1386,7 +1416,17 @@ var InkBallGame = function () {
 
                 if (val.owned.length > 0) {
                   this.Debug('Closing path', 0);
-                  this.SendAsyncData(this.CreateXMLPutPathRequest(val));
+                  this.SendAsyncData(this.CreateXMLPutPathRequest(val), function () {
+                    _this13.OnCancelClick();
+
+                    val.OwnedPoints.forEach(function (p) {
+                      p.$SetStatus(val.revertStatus);
+                      p.$SetFillColor(val.revertFillColor);
+                      p.$strokeColor(val.revertStrokeColor);
+                    });
+                    _this13.m_bMouseDown = false;
+                    _this13.m_bHandlingEvent = false;
+                  });
                 } else this.Debug('Wrong path, cancell it or refresh page', 0);
               }
               this.m_iLastX = x;
