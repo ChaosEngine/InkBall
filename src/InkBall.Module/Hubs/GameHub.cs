@@ -47,34 +47,6 @@ namespace InkBall.Module.Hubs
 	[Authorize(Policy = "InkBallPlayerPolicy")]
 	public class GameHub : Hub<IGameClient>, IGameServer
 	{
-		#region Helpers
-
-		sealed class SimpleCoordsPointComparer : IEqualityComparer<IPoint>
-		{
-			//interface IEqualityComparer
-			public bool Equals(IPoint left, IPoint right)
-			{
-				if (right == null && left == null)
-					return true;
-				else if (left == null || right == null)
-					return false;
-
-				return left.iGameId == right.iGameId && left.iPlayerId == right.iPlayerId
-					//&& left.Status == right.Status
-					//&& this.iEnclosingPathId == o.iEnclosingPathId
-					&& left.iX == right.iX && left.iY == right.iY;
-			}
-
-			//interface IEqualityComparer
-			public int GetHashCode(IPoint obj)
-			{
-				return obj.GetHashCode();
-			}
-		}
-
-		#endregion Helpers
-
-
 		#region Fields
 
 		public const string HubName = "gameHub";
@@ -360,6 +332,8 @@ namespace InkBall.Module.Hubs
 				if (point.iPlayerId != ThisPlayer.iId && point.iPlayerId != OtherPlayer.iId)
 					throw new ArgumentException("bad Player ID");
 
+				// throw new ArgumentException("FAKE EXCEPTION");
+
 				var already_placed = await _dbContext.InkBallPoint.AnyAsync(pts =>
 									pts.iGameId == ThisGame.iId && pts.iPlayerId == point.iPlayerId
 									&& pts.iX == point.iX && pts.iY == point.iY
@@ -431,6 +405,8 @@ namespace InkBall.Module.Hubs
 				if (path.iPlayerId != ThisPlayer.iId && path.iPlayerId != OtherPlayer.iId)
 					throw new ArgumentException("bad Player ID");
 				ICollection<InkBallPointViewModel> points_on_path = path.InkBallPoint;//serialize points from path int objects
+
+				// throw new ArgumentException("FAKE EXCEPTION");
 
 				InkBallPoint.StatusEnum current_player_color, other_player_color, owning_color, other_owning_color;
 				if (ThisGame.IsThisPlayerPlayingWithRed())

@@ -58,7 +58,7 @@ namespace InkBall.Module.Model
 
 			for (i = 0, j = npol - 1; i < npol; j = i++)
 			{
-				IPoint pi = pathPoints.ElementAt(i), pj = pathPoints.ElementAt(j);
+				Point pi = pathPoints.ElementAt(i), pj = pathPoints.ElementAt(j);
 
 				if ((((pi.iY <= y) && (y < pj.iY)) ||
 					((pj.iY <= y) && (y < pi.iY))) &&

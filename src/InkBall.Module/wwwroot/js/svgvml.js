@@ -60,8 +60,17 @@ if (SVG) {
 		o.$AppendPoints = function (sPoints) {
 			this.setAttribute("points", this.getAttribute("points") + " " + sPoints);
 		};
-		o.$GetPoints = function () {
+		o.$GetPointsString = function () {
 			return this.getAttribute("points").replace(/,/g, " ").split(" ");
+		};
+		o.$GetPointsArray = function () {
+			//x0,y0 x1,y1 x2,y2
+			let pts = [];
+			this.getAttribute("points").split(" ").forEach(pt => {
+				let tab = pt.split(',');
+				pts.push({ x: parseInt(tab[0]), y: parseInt(tab[1]) });
+			});
+			return pts;
 		};
 		o.$SetPoints = function (sPoints) {
 			this.setAttribute("points", sPoints);
@@ -112,7 +121,7 @@ if (SVG) {
 		cont.removeChild(Polyline);
 	};
 	//ch_added end
-	
+
 } else if (document.createStyleSheet) {
 
 	/* ============= VML ============== */
@@ -156,8 +165,17 @@ if (SVG) {
 			this.m_sMyPoints = this.m_sMyPoints + " " + sPoints;
 			this.points.value = this.m_sMyPoints;
 		};
-		o.$GetPoints = function () {
+		o.$GetPointsString = function () {
 			return o.m_sMyPoints.replace(/,/g, " ").split(" ");
+		};
+		o.$GetPointsArray = function () {
+			//x0,y0 x1,y1 x2,y2
+			let pts = [];
+			this.m_sMyPoints.split(" ").forEach(pt => {
+				let tab = pt.split(',');
+				pts.push({ x: parseInt(tab[0]), y: parseInt(tab[1]) });
+			});
+			return pts;
 		};
 		o.$SetPoints = function (sPoints) {
 			this.m_sMyPoints = sPoints;

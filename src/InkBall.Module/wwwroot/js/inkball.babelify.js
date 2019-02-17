@@ -800,33 +800,43 @@ var InkBallGame = function () {
       return c;
     }
   }, {
+    key: "pnpoly2",
+    value: function pnpoly2(pathPoints, x, y) {
+      var i,
+          j,
+          npol = pathPoints.length,
+          c = false;
+
+      for (i = 0, j = npol - 1; i < npol; j = i++) {
+        var pi = pathPoints[i],
+            pj = pathPoints[j];
+        if ((pi.y <= y && y < pj.y || pj.y <= y && y < pi.y) && x < (pj.x - pi.x) * (y - pi.y) / (pj.y - pi.y) + pi.x) c = !c;
+      }
+
+      return c;
+    }
+  }, {
     key: "SurroundOponentPoints",
     value: function SurroundOponentPoints() {
       var count,
-          points = this.m_Line.$GetPoints();
+          points = this.m_Line.$GetPointsArray();
       count = points.length;
-      var xs = Array(),
-          ys = Array(),
-          x,
+      var x,
           y,
           sPathPoints = "",
-          sDelimiter = "",
-          k = 0;
+          sDelimiter = "";
 
-      for (var i = 0; i < count; i += 2) {
-        x = points[i];
-        y = points[i + 1];
+      for (var i = 0; i < count; i++) {
+        x = points[i].x;
+        y = points[i].y;
         if (x === null || y === null) continue;
         x /= this.m_iGridSize;
         y /= this.m_iGridSize;
-        xs[k] = x;
-        ys[k] = y;
         sPathPoints = sPathPoints + sDelimiter + x + "," + y;
         sDelimiter = " ";
-        ++k;
       }
 
-      if (!(xs[0] === xs[xs.length - 1] && ys[0] === ys[ys.length - 1])) return {
+      if (!(points[0].x === points[points.length - 1].x && points[0].y === points[points.length - 1].y)) return {
         OwnedPoints: undefined,
         owned: "",
         path: "",
@@ -834,28 +844,28 @@ var InkBallGame = function () {
         revertStatus: undefined,
         revertStrokeColor: undefined
       };
-      var count1 = this.m_Points.length;
       var sColor = this.m_sDotColor === this.COLOR_RED ? this.COLOR_BLUE : this.COLOR_RED;
       var owned_by = this.m_sDotColor === this.COLOR_RED ? this.POINT_OWNED_BY_RED : this.POINT_OWNED_BY_BLUE;
       var sOwnedCol = this.m_sDotColor === this.COLOR_RED ? this.COLOR_OWNED_RED : this.COLOR_OWNED_BLUE;
       var sOwnedPoints = "";
       var ownedPoints = [];
       sDelimiter = "";
+      count = this.m_Points.length;
 
-      for (var _i = 0; _i < count1; ++_i) {
+      for (var _i = 0; _i < count; ++_i) {
         var p0 = this.m_Points[_i];
 
         if (p0 !== undefined && p0.$GetStatus() === this.POINT_FREE && p0.$GetFillColor() === sColor) {
           var pos = p0.$GetPosition();
           x = pos.x;
           y = pos.y;
-          x /= this.m_iGridSize;
-          y /= this.m_iGridSize;
 
-          if (false !== this.pnpoly(count, xs, ys, x, y)) {
+          if (false !== this.pnpoly2(points, x, y)) {
             p0.$SetStatus(owned_by);
             p0.$SetFillColor(sOwnedCol);
             p0.$strokeColor(sOwnedCol);
+            x /= this.m_iGridSize;
+            y /= this.m_iGridSize;
             sOwnedPoints = sOwnedPoints + sDelimiter + x + "," + y;
             ownedPoints.push(p0);
             sDelimiter = " ";
@@ -878,27 +888,8 @@ var InkBallGame = function () {
       var count1 = this.m_Lines.length;
 
       for (var j = 0; j < count1; ++j) {
-        var count = void 0,
-            points = this.m_Lines[j].$GetPoints();
-        count = points.length;
-        var xs = Array(),
-            ys = Array(),
-            x = void 0,
-            y = void 0,
-            k = 0;
-
-        for (var i = 0; i < count; i += 2) {
-          x = points[i];
-          y = points[i + 1];
-          if (x === null || y === null) continue;
-          x /= this.m_iGridSize;
-          y /= this.m_iGridSize;
-          xs[k] = x;
-          ys[k] = y;
-          ++k;
-        }
-
-        if (false !== this.pnpoly(count, xs, ys, iX, iY)) return false;
+        var points = this.m_Lines[j].$GetPointsArray();
+        if (false !== this.pnpoly2(points, iX, iY)) return false;
       }
 
       return true;
@@ -1062,7 +1053,7 @@ var InkBallGame = function () {
           case 'PutPath':
             {
               var _i2 = 0,
-                  points = this.m_Line.$GetPoints();
+                  points = this.m_Line.$GetPointsString();
               var _x3 = points[_i2];
               var _y2 = points[_i2 + 1];
               _x3 /= this.m_iGridSize;
@@ -1157,7 +1148,7 @@ var InkBallGame = function () {
         this.m_Screen.style.cursor = "crosshair";
         this.m_DrawMode.disabled = this.m_CancelPath.disabled = '';
       } else {
-        var _points = this.m_Line.$GetPoints();
+        var _points = this.m_Line.$GetPointsString();
 
         var _i3 = 0;
         var _x4 = _points[_i3],
@@ -1319,7 +1310,14 @@ var InkBallGame = function () {
     value: function OnMouseMove(event) {
       var _this12 = this;
 
-      if (!this.m_bIsPlayerActive || this.m_Player2Name.innerHTML === '???' || this.m_bHandlingEvent === true || this.iConnErrCount > 0) return;
+      if (!this.m_bIsPlayerActive || this.m_Player2Name.innerHTML === '???' || this.m_bHandlingEvent === true || this.iConnErrCount > 0) {
+        if (this.iConnErrCount <= 0 && !this.m_bIsPlayerActive) {
+          this.m_Screen.style.cursor = "wait";
+        }
+
+        return;
+      }
+
       var x = (event ? event.clientX : window.event.clientX) - this.m_Screen.offsetLeft + this.f_scrollLeft() + 0.5 * this.m_iGridSize;
       var y = (event ? event.clientY : window.event.clientY) - this.m_Screen.offsetTop + this.f_scrollTop() + 0.5 * this.m_iGridSize;
       x = parseInt(x / this.m_iGridSize);
@@ -1492,11 +1490,11 @@ var InkBallGame = function () {
     value: function OnCancelClick() {
       if (this.m_bDrawLines) {
         if (this.m_Line !== null) {
-          var points = this.m_Line.$GetPoints();
+          var points = this.m_Line.$GetPointsArray();
 
-          for (var i = 0; i < points.length; i += 2) {
-            var x = points[i];
-            var y = points[i + 1];
+          for (var i = 0; i < points.length; i++) {
+            var x = points[i].x;
+            var y = points[i].y;
             if (x === null || y === null) continue;
             x /= this.m_iGridSize;
             y /= this.m_iGridSize;

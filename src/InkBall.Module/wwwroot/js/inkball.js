@@ -691,30 +691,45 @@ class InkBallGame {
 		return c;
 	}
 
+	pnpoly2(pathPoints, x, y) {
+		let i, j, npol = pathPoints.length, c = false;
+
+		for (i = 0, j = npol - 1; i < npol; j = i++) {
+			let pi = pathPoints[i], pj = pathPoints[j];
+
+			if ((((pi.y <= y) && (y < pj.y)) ||
+				((pj.y <= y) && (y < pi.y))) &&
+				(x < (pj.x - pi.x) * (y - pi.y) / (pj.y - pi.y) + pi.x))
+
+				c = !c;
+		}
+		return c;
+	}
+
 	SurroundOponentPoints() {
 		//if(!this.m_Line.$GetIsClosed())	return;
-		let count, points = this.m_Line.$GetPoints();
+		let count, points = this.m_Line.$GetPointsArray();
 
 		//convert to x's and y's arrays
 		count = points.length;
 		//alert('s' + points + 'e' + ' count = ' + count);
-		let xs = Array(), ys = Array(), x, y, sPathPoints = "", sDelimiter = "", k = 0;
-		for (let i = 0; i < count; i += 2) {
-			x = points[i];
-			y = points[i + 1];
+		let /*xs = Array(), ys = Array(), k = 0, */x, y, sPathPoints = "", sDelimiter = "";
+		for (let i = 0; i < count; i++) {
+			x = points[i].x;
+			y = points[i].y;
 			if (x === null || y === null) continue;
 			x /= this.m_iGridSize; y /= this.m_iGridSize;
-			xs[k] = x; ys[k] = y;
+			//xs[k] = x; ys[k] = y;
+			//++k;
 
 			sPathPoints = sPathPoints + sDelimiter + x + "," + y;
 			sDelimiter = " ";
-			++k;
 		}
-		//alert(sPathPoints);
-		if (!(xs[0] === xs[xs.length - 1] && ys[0] === ys[ys.length - 1]))
+
+		if (!(points[0].x === points[points.length - 1].x && points[0].y === points[points.length - 1].y))
 			return {
 				OwnedPoints: undefined,
-				owned: "", 
+				owned: "",
 				path: "",
 				revertFillColor: undefined,
 				revertStatus: undefined,
@@ -722,25 +737,24 @@ class InkBallGame {
 			};
 
 		//make the test!
-		let count1 = this.m_Points.length;
 		let sColor = (this.m_sDotColor === this.COLOR_RED ? this.COLOR_BLUE : this.COLOR_RED);
 		let owned_by = (this.m_sDotColor === this.COLOR_RED ? this.POINT_OWNED_BY_RED : this.POINT_OWNED_BY_BLUE);
 		let sOwnedCol = (this.m_sDotColor === this.COLOR_RED ? this.COLOR_OWNED_RED : this.COLOR_OWNED_BLUE);
 		let sOwnedPoints = "";
 		let ownedPoints = [];
 		sDelimiter = "";
-		for (let i = 0; i < count1; ++i) {
+		count = this.m_Points.length;
+		for (let i = 0; i < count; ++i) {
 			let p0 = this.m_Points[i];
 			if (p0 !== undefined && p0.$GetStatus() === this.POINT_FREE && p0.$GetFillColor() === sColor) {
 				let pos = p0.$GetPosition();
 				x = pos.x; y = pos.y;
-				x /= this.m_iGridSize; y /= this.m_iGridSize;
-
-				if (false !== this.pnpoly(count, xs, ys, x, y)) {
+				if (false !== this.pnpoly2(points, x, y)) {
 					p0.$SetStatus(owned_by);
 					p0.$SetFillColor(sOwnedCol);
 					p0.$strokeColor(sOwnedCol);
 
+					x /= this.m_iGridSize; y /= this.m_iGridSize;
 					sOwnedPoints = sOwnedPoints + sDelimiter + x + "," + y;
 					ownedPoints.push(p0);
 					sDelimiter = " ";
@@ -760,22 +774,19 @@ class InkBallGame {
 	IsPointOutsideAllPaths(iX, iY) {
 		let count1 = this.m_Lines.length;
 		for (let j = 0; j < count1; ++j) {
-			let count, points = this.m_Lines[j].$GetPoints();
+			let points = this.m_Lines[j].$GetPointsArray();
 			//convert to x's and y's arrays
-			count = points.length;
+			/*let count = points.length;
 			let xs = Array(), ys = Array(), x, y, k = 0;
 			for (let i = 0; i < count; i += 2) {
-				//y = points[i].split(",");
-				//x = y[0];	y = y[1];
 				x = points[i];
 				y = points[i + 1];
 				if (x === null || y === null) continue;
-				x /= this.m_iGridSize; y /= this.m_iGridSize;
+				//x /= this.m_iGridSize; y /= this.m_iGridSize;
 				xs[k] = x; ys[k] = y;
 				++k;
-			}
-
-			if (false !== this.pnpoly(count, xs, ys, iX, iY))
+			}*/
+			if (false !== this.pnpoly2(points, iX, iY))
 				return false;
 		}
 
@@ -821,7 +832,7 @@ class InkBallGame {
 					this.ReceivedPointProcessing(point);
 				}.bind(this)).catch(function (err) {
 					console.error(err.toString());
-					if(revertFunction !== undefined)
+					if (revertFunction !== undefined)
 						revertFunction();
 				}.bind(this));
 				break;
@@ -845,7 +856,7 @@ class InkBallGame {
 
 				}.bind(this)).catch(function (err) {
 					console.error(err.toString());
-					if(revertFunction !== undefined)
+					if (revertFunction !== undefined)
 						revertFunction();
 				}.bind(this));
 				break;
@@ -958,9 +969,7 @@ class InkBallGame {
 				case 'PutPath':
 					{
 						//set starting point to POINT_IN_PATH to block further path closing with it
-						let i = 0, points = this.m_Line.$GetPoints();
-						//var y = points[0].split(",");
-						//var x = y[0];	y = y[1];
+						let i = 0, points = this.m_Line.$GetPointsString();
 						let x = points[i];
 						let y = points[i + 1];
 						x /= this.m_iGridSize; y /= this.m_iGridSize;
@@ -1066,9 +1075,7 @@ class InkBallGame {
 		else {
 
 			//set starting point to POINT_IN_PATH to block further path closing with it
-			let points = this.m_Line.$GetPoints();
-			//var y = points[0].split(",");
-			//var x = y[0];	y = y[1];
+			let points = this.m_Line.$GetPointsString();
 			let i = 0;
 			let x = points[i], y = points[i + 1];
 			x /= this.m_iGridSize; y /= this.m_iGridSize;
@@ -1260,8 +1267,13 @@ class InkBallGame {
 
 	OnMouseMove(event) {
 		if (!this.m_bIsPlayerActive || this.m_Player2Name.innerHTML === '???' || this.m_bHandlingEvent === true
-			|| this.iConnErrCount > 0)
+			|| this.iConnErrCount > 0) {
+
+			if (this.iConnErrCount <= 0 && !this.m_bIsPlayerActive) {
+				this.m_Screen.style.cursor = "wait";
+			}
 			return;
+		}
 
 
 		let x = (event ? event.clientX : window.event.clientX) - this.m_Screen.offsetLeft + this.f_scrollLeft() + 0.5 * this.m_iGridSize;
@@ -1463,10 +1475,10 @@ class InkBallGame {
 	OnCancelClick() {
 		if (this.m_bDrawLines) {
 			if (this.m_Line !== null) {
-				let points = this.m_Line.$GetPoints();
-				for (let i = 0; i < points.length; i += 2) {
-					let x = points[i];
-					let y = points[i + 1];
+				let points = this.m_Line.$GetPointsArray();
+				for (let i = 0; i < points.length; i++) {
+					let x = points[i].x;
+					let y = points[i].y;
 					if (x === null || y === null) continue;
 					x /= this.m_iGridSize; y /= this.m_iGridSize;
 					let p0 = this.m_Points[y * this.m_iGridWidth + x];

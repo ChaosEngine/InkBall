@@ -437,7 +437,7 @@ namespace InkBall.Module.Model
 				int iGridSize, int iBoardWidth, int iBoardHeight, bool bIsPlayer1ActiveHere,
 				InkBallGame.GameStateEnum GameState, InkBallGame.GameTypeEnum GameType)
 			{
-				var cp1_query = from cp1 in this.InkBallPlayer.Include(u => u.User)
+				var cp1_query = from cp1 in this.InkBallPlayer//.Include(u => u.User)
 								where ((!iPlayer1ID.HasValue || cp1.iId == iPlayer1ID.Value)
 								&& (string.IsNullOrEmpty(iPlayer1ExternalUserID) || cp1.User.sExternalId == iPlayer1ExternalUserID)
 								&& (iPlayer1ID.HasValue || !string.IsNullOrEmpty(iPlayer1ExternalUserID)))
@@ -447,7 +447,7 @@ namespace InkBall.Module.Model
 								select (int?)cp1.iId;
 				int? p1 = await cp1_query.FirstOrDefaultAsync(token);
 
-				var cp2_query = from cp2 in this.InkBallPlayer.Include(u => u.User)
+				var cp2_query = from cp2 in this.InkBallPlayer//.Include(u => u.User)
 								where ((!iPlayer2ID.HasValue || cp2.iId == iPlayer2ID.Value)
 								&& (string.IsNullOrEmpty(iPlayer2ExternalUserID) || cp2.User.sExternalId == iPlayer2ExternalUserID)
 								&& (iPlayer2ID.HasValue || !string.IsNullOrEmpty(iPlayer2ExternalUserID)))

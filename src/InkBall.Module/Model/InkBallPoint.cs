@@ -53,7 +53,8 @@ namespace InkBall.Module.Model
 
 			IPoint o = (IPoint)obj;
 
-			return this.iGameId == o.iGameId && this.iPlayerId == o.iPlayerId
+			return this.iPlayerId == o.iPlayerId
+				//&& this.iGameId == o.iGameId
 				&& this.Status == o.Status
 				//&& this.iEnclosingPathId == o.iEnclosingPathId
 				&& this.iX == o.iX & this.iY == o.iY;
@@ -69,7 +70,8 @@ namespace InkBall.Module.Model
 		public bool Equals(IPoint o)
 		{
 			return ((object)o) != null
-				&& this.iGameId == o.iGameId && this.iPlayerId == o.iPlayerId
+				//&& this.iGameId == o.iGameId
+				&& this.iPlayerId == o.iPlayerId
 				&& this.Status == o.Status
 				//&& this.iEnclosingPathId == o.iEnclosingPathId
 				&& this.iX == o.iX && this.iY == o.iY;
@@ -203,4 +205,32 @@ namespace InkBall.Module.Model
 			this.iEnclosingPathId = point.iEnclosingPathId;
 		}
 	}
+
+	#region Helpers
+
+	sealed class SimpleCoordsPointComparer : IEqualityComparer<IPoint>
+	{
+		//interface IEqualityComparer
+		public bool Equals(IPoint left, IPoint right)
+		{
+			if (right == null && left == null)
+				return true;
+			else if (left == null || right == null)
+				return false;
+
+			return left.iPlayerId == right.iPlayerId
+				//&& left.iGameId == right.iGameId 
+				//&& left.Status == right.Status
+				//&& this.iEnclosingPathId == o.iEnclosingPathId
+				&& left.iX == right.iX && left.iY == right.iY;
+		}
+
+		//interface IEqualityComparer
+		public int GetHashCode(IPoint obj)
+		{
+			return obj.GetHashCode();
+		}
+	}
+
+	#endregion Helpers
 }

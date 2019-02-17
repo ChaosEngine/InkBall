@@ -1,7 +1,7 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using InkBall.Module.Model;
 using Xunit;
 
@@ -86,9 +86,28 @@ namespace InkBall.Tests
 		}
 
 
+		/**
+		* //path A
+		* 0 1 2 3 4 5 6
+		* 1 x x x
+		* 2 x o x
+		* 3 x o x
+		* 4 x x x
+		* 5
+		*
+		* //path B
+		* 0 1 2 3 4 5 6
+		* 1 x x x x
+		* 2 x o o x
+		* 3 x x x x
+		* 4 
+		* 5
+		 */
 		public static PathValidationTheoryData CorrectPathAndOwnedPointsData => new PathValidationTheoryData(new ValueTuple<(int, int)[], string, (int, int)[]>[]
 		{
+			//path A
 			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(1,1),(1,2),(1,3),(1,4),(2,4),(3,4),(3,3),(3,2),(3,1),(2,1),(1,1)},"1,1 1,2 1,3 1,4 2,4 3,4 3,3 3,2 3,1 2,1 1,1",new[]{(2,2),(2,3)}),
+			//path B
 			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(1,1),(2,1),(3,1),(4,1),(4,2),(4,3),(3,3),(2,3),(1,3),(1,2),(1,1)},"1,1 2,1 3,1 4,1 4,2 4,3 3,3 2,3 1,3 1,2 1,1",new[]{(2,2),(3,2)}),
 			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(10,14),(11,14),(12,15),(11,16),(10,16),(9,15),(10,14)},"10,14 11,14 12,15 11,16 10,16 9,15 10,14",new[]{(10,15),(11,15)}),
 			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(10,4),(9,5),(9,6),(10,7),(11,6),(11,5),(10,4)},"10,4 9,5 9,6 10,7 11,6 11,5 10,4",new[]{(10,5),(10,6)}),
@@ -221,7 +240,8 @@ namespace InkBall.Tests
 				PointsAsString = expectedCoords
 			};
 
-			for (int y = 0; y < 30; y++)
+			//for (int y = 0; y < 3000; y++)
+			Parallel.For(0, 30, (y) =>
 			{
 				for (int x = 0; x < 30; x++)
 				{
@@ -232,11 +252,16 @@ namespace InkBall.Tests
 						Status = InkBallPoint.StatusEnum.POINT_IN_PATH
 					};
 					if (parameters.ownedPoints.Contains((x, y)))
+					{
 						Assert.True(path.IsPointInsidePath(point_to_test));
+					}
 					else
+					{
 						Assert.False(path.IsPointInsidePath(point_to_test));
+					}
 				}
-			}
+			});
+
 		}
 	}
 }
