@@ -315,13 +315,22 @@ function CountPointsDebug(sSelector2Set) {
   document.querySelector(sSelector2Set).innerHTML = "SVG: ".concat(totalChildren, " by tag: ").concat(tagMessage);
 }
 
+function getBaseFontSize(el) {
+  var comp_style = getComputedStyle(el, null);
+  var font = comp_style.fontSize;
+  return parseFloat(font.match(/(\d+)px/)[1]);
+}
+
 var InkBallGame = function () {
   function InkBallGame(sHubName, loggingLevel, hubProtocol, transportType, serverTimeoutInMilliseconds, tokenFactory, gameType) {
     var _this7 = this;
 
     var bIsPlayingWithRed = arguments.length > 7 && arguments[7] !== undefined ? arguments[7] : true;
     var bIsPlayerActive = arguments.length > 8 && arguments[8] !== undefined ? arguments[8] : true;
-    var iGridSize = arguments.length > 9 && arguments[9] !== undefined ? arguments[9] : 15;
+    var BoardSize = arguments.length > 9 && arguments[9] !== undefined ? arguments[9] : {
+      width: 32,
+      height: 32
+    };
     var iTooLong2Duration = arguments.length > 10 && arguments[10] !== undefined ? arguments[10] : 125;
     var bViewOnly = arguments.length > 11 && arguments[11] !== undefined ? arguments[11] : false;
 
@@ -351,17 +360,17 @@ var InkBallGame = function () {
     this.m_bIsTimerRunning = false;
     this.m_WaitStartTime = null;
     this.m_iSlowdownLevel = 0;
-    this.m_iGridSize = iGridSize;
+    this.m_iGridSizeX = 0;
+    this.m_iGridSizeY = 0;
     this.m_iGridWidth = 0;
     this.m_iGridHeight = 0;
+    this.m_BoardSize = BoardSize;
     this.m_iLastX = -1;
     this.m_iLastY = -1;
     this.m_iMouseX = 0;
     this.m_iMouseY = 0;
     this.m_iPosX = 0;
     this.m_iPosY = 0;
-    this.m_iClientWidth = 0;
-    this.m_iClientHeight = 0;
     this.m_Screen = null;
     this.m_Debug = null;
     this.m_Player2Name = null;
@@ -638,8 +647,8 @@ var InkBallGame = function () {
   }, {
     key: "SetPoint",
     value: function SetPoint(iX, iY, iStatus) {
-      var x = iX * this.m_iGridSize;
-      var y = iY * this.m_iGridSize;
+      var x = iX * this.m_iGridSizeX;
+      var y = iY * this.m_iGridSizeY;
       var oval = $createOval(this.m_PointRadius, 'true');
       oval.$move(x, y, this.m_PointRadius);
       var color;
@@ -741,8 +750,8 @@ var InkBallGame = function () {
         p = sPoints[i].split(",");
         x = parseInt(p[0]);
         y = parseInt(p[1]);
-        x *= this.m_iGridSize;
-        y *= this.m_iGridSize;
+        x *= this.m_iGridSizeX;
+        y *= this.m_iGridSizeY;
         sPathPoints = sPathPoints + sDelimiter + x + "," + y;
         sDelimiter = " ";
         p = this.m_Points[y * this.m_iGridWidth + x];
@@ -752,8 +761,8 @@ var InkBallGame = function () {
       p = sPoints[0].split(",");
       x = parseInt(p[0]);
       y = parseInt(p[1]);
-      x *= this.m_iGridSize;
-      y *= this.m_iGridSize;
+      x *= this.m_iGridSizeX;
+      y *= this.m_iGridSizeY;
       sPathPoints = sPathPoints + sDelimiter + x + "," + y;
       p = this.m_Points[y * this.m_iGridWidth + x];
       if (p !== null && p !== undefined) p.$SetStatus(this.POINT_IN_PATH);
@@ -830,8 +839,8 @@ var InkBallGame = function () {
         x = points[i].x;
         y = points[i].y;
         if (x === null || y === null) continue;
-        x /= this.m_iGridSize;
-        y /= this.m_iGridSize;
+        x /= this.m_iGridSizeX;
+        y /= this.m_iGridSizeY;
         sPathPoints = sPathPoints + sDelimiter + x + "," + y;
         sDelimiter = " ";
       }
@@ -864,8 +873,8 @@ var InkBallGame = function () {
             p0.$SetStatus(owned_by);
             p0.$SetFillColor(sOwnedCol);
             p0.$strokeColor(sOwnedCol);
-            x /= this.m_iGridSize;
-            y /= this.m_iGridSize;
+            x /= this.m_iGridSizeX;
+            y /= this.m_iGridSizeY;
             sOwnedPoints = sOwnedPoints + sDelimiter + x + "," + y;
             ownedPoints.push(p0);
             sDelimiter = " ";
@@ -1056,8 +1065,8 @@ var InkBallGame = function () {
                   points = this.m_Line.$GetPointsString();
               var _x3 = points[_i2];
               var _y2 = points[_i2 + 1];
-              _x3 /= this.m_iGridSize;
-              _y2 /= this.m_iGridSize;
+              _x3 /= this.m_iGridSizeX;
+              _y2 /= this.m_iGridSizeY;
               var p0 = this.m_Points[_y2 * this.m_iGridWidth + _x3];
               if (p0 !== undefined) p0.$SetStatus(this.POINT_IN_PATH);
               this.m_Lines[this.m_Lines.length] = this.m_Line;
@@ -1153,8 +1162,8 @@ var InkBallGame = function () {
         var _i3 = 0;
         var _x4 = _points[_i3],
             _y3 = _points[_i3 + 1];
-        _x4 /= this.m_iGridSize;
-        _y3 /= this.m_iGridSize;
+        _x4 /= this.m_iGridSizeX;
+        _y3 /= this.m_iGridSizeY;
         var p0 = this.m_Points[_y3 * this.m_iGridWidth + _x4];
         if (p0 !== undefined) p0.$SetStatus(this.POINT_IN_PATH);
         this.m_Lines[this.m_Lines.length] = this.m_Line;
@@ -1318,19 +1327,19 @@ var InkBallGame = function () {
         return;
       }
 
-      var x = (event ? event.clientX : window.event.clientX) - this.m_Screen.offsetLeft + this.f_scrollLeft() + 0.5 * this.m_iGridSize;
-      var y = (event ? event.clientY : window.event.clientY) - this.m_Screen.offsetTop + this.f_scrollTop() + 0.5 * this.m_iGridSize;
-      x = parseInt(x / this.m_iGridSize);
-      y = parseInt(y / this.m_iGridSize);
-      var tox = x * this.m_iGridSize;
-      var toy = y * this.m_iGridSize;
+      var x = (event ? event.clientX : window.event.clientX) - this.m_Screen.offsetLeft + this.f_scrollLeft() + 0.5 * this.m_iGridSizeX;
+      var y = (event ? event.clientY : window.event.clientY) - this.m_Screen.offsetTop + this.f_scrollTop() + 0.5 * this.m_iGridSizeY;
+      x = parseInt(x / this.m_iGridSizeX);
+      y = parseInt(y / this.m_iGridSizeY);
+      var tox = x * this.m_iGridSizeX;
+      var toy = y * this.m_iGridSizeY;
       this.m_MouseCursorOval.$move(tox, toy, this.m_PointRadius);
       this.m_MouseCursorOval.$Show();
       this.m_Screen.style.cursor = "crosshair";
       this.Debug("[".concat(x, ",").concat(y, "]"), 1);
 
-      if (this.m_bDrawLines) {
-        if (this.m_bMouseDown === true && (this.m_iLastX !== x || this.m_iLastY !== y) && Math.abs(parseInt(this.m_iLastX - x)) <= 1 && Math.abs(parseInt(this.m_iLastY - y)) <= 1 && this.m_iLastX >= 0 && this.m_iLastY >= 0) {
+      if (this.m_bDrawLines && this.m_bMouseDown === true) {
+        if ((this.m_iLastX !== x || this.m_iLastY !== y) && Math.abs(parseInt(this.m_iLastX - x)) <= 1 && Math.abs(parseInt(this.m_iLastY - y)) <= 1 && this.m_iLastX >= 0 && this.m_iLastY >= 0) {
           if (this.m_Line !== null) {
             var p0 = this.m_Points[this.m_iLastY * this.m_iGridWidth + this.m_iLastX];
             var p1 = this.m_Points[y * this.m_iGridWidth + x];
@@ -1362,8 +1371,8 @@ var InkBallGame = function () {
             var _p2 = this.m_Points[y * this.m_iGridWidth + x];
 
             if (_p !== undefined && _p2 !== undefined && _p.$GetStatus() !== this.POINT_IN_PATH && _p2.$GetStatus() !== this.POINT_IN_PATH && _p.$GetFillColor() === this.m_sDotColor && _p2.$GetFillColor() === this.m_sDotColor) {
-              var fromx = this.m_iLastX * this.m_iGridSize;
-              var fromy = this.m_iLastY * this.m_iGridSize;
+              var fromx = this.m_iLastX * this.m_iGridSizeX;
+              var fromy = this.m_iLastY * this.m_iGridSizeY;
               this.m_Line = $createPolyline(3, fromx + "," + fromy + " " + tox + "," + toy, this.m_sDotColor);
               if (_p.$GetStatus() !== this.POINT_IN_PATH) _p.$SetStatus(this.POINT_STARTING);
               if (_p2.$GetStatus() !== this.POINT_IN_PATH) _p2.$SetStatus(this.POINT_STARTING);
@@ -1380,10 +1389,10 @@ var InkBallGame = function () {
       var _this13 = this;
 
       if (!this.m_bIsPlayerActive || this.m_Player2Name.innerHTML === '???' || this.m_bHandlingEvent === true || this.iConnErrCount > 0) return;
-      var x = (event ? event.clientX : window.event.clientX) - this.m_Screen.offsetLeft + this.f_scrollLeft() + 0.5 * this.m_iGridSize;
-      var y = (event ? event.clientY : window.event.clientY) - this.m_Screen.offsetTop + this.f_scrollTop() + 0.5 * this.m_iGridSize;
-      x = this.m_iMouseX = parseInt(x / this.m_iGridSize);
-      y = this.m_iMouseY = parseInt(y / this.m_iGridSize);
+      var x = (event ? event.clientX : window.event.clientX) - this.m_Screen.offsetLeft + this.f_scrollLeft() + 0.5 * this.m_iGridSizeX;
+      var y = (event ? event.clientY : window.event.clientY) - this.m_Screen.offsetTop + this.f_scrollTop() + 0.5 * this.m_iGridSizeY;
+      x = this.m_iMouseX = parseInt(x / this.m_iGridSizeX);
+      y = this.m_iMouseY = parseInt(y / this.m_iGridSizeY);
       this.m_bMouseDown = true;
 
       if (!this.m_bDrawLines) {
@@ -1391,8 +1400,8 @@ var InkBallGame = function () {
         this.m_iLastY = y;
         var loc_x = x;
         var loc_y = y;
-        x = loc_x * this.m_iGridSize;
-        y = loc_y * this.m_iGridSize;
+        x = loc_x * this.m_iGridSizeX;
+        y = loc_y * this.m_iGridSizeY;
         if (this.m_Points[loc_y * this.m_iGridWidth + loc_x] !== undefined) return;
         if (!this.IsPointOutsideAllPaths(loc_x, loc_y)) return;
         this.SendAsyncData(this.CreateXMLPutPointRequest(loc_x, loc_y), function () {
@@ -1406,8 +1415,8 @@ var InkBallGame = function () {
             var p1 = this.m_Points[y * this.m_iGridWidth + x];
 
             if (p0 !== undefined && p1 !== undefined && p1.$GetStatus() !== this.POINT_IN_PATH && p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
-              var tox = x * this.m_iGridSize;
-              var toy = y * this.m_iGridSize;
+              var tox = x * this.m_iGridSizeX;
+              var toy = y * this.m_iGridSizeY;
               this.m_Line.$AppendPoints(tox + "," + toy);
               if (p1.$GetStatus() !== this.POINT_STARTING) p1.$SetStatus(this.POINT_IN_PATH);else {
                 var val = this.SurroundOponentPoints();
@@ -1435,12 +1444,12 @@ var InkBallGame = function () {
             var _p4 = this.m_Points[y * this.m_iGridWidth + x];
 
             if (_p3 !== undefined && _p4 !== undefined && _p3.$GetStatus() !== this.POINT_IN_PATH && _p4.$GetStatus() !== this.POINT_IN_PATH && _p3.$GetFillColor() === this.m_sDotColor && _p4.$GetFillColor() === this.m_sDotColor) {
-              var fromx = this.m_iLastX * this.m_iGridSize;
-              var fromy = this.m_iLastY * this.m_iGridSize;
+              var fromx = this.m_iLastX * this.m_iGridSizeX;
+              var fromy = this.m_iLastY * this.m_iGridSizeY;
 
-              var _tox = x * this.m_iGridSize;
+              var _tox = x * this.m_iGridSizeX;
 
-              var _toy = y * this.m_iGridSize;
+              var _toy = y * this.m_iGridSizeY;
 
               this.m_Line = $createPolyline(3, fromx + "," + fromy + " " + _tox + "," + _toy, this.m_sDotColor);
               if (_p3.$GetStatus() !== this.POINT_IN_PATH) _p3.$SetStatus(this.POINT_STARTING);
@@ -1496,8 +1505,8 @@ var InkBallGame = function () {
             var x = points[i].x;
             var y = points[i].y;
             if (x === null || y === null) continue;
-            x /= this.m_iGridSize;
-            y /= this.m_iGridSize;
+            x /= this.m_iGridSizeX;
+            y /= this.m_iGridSizeY;
             var p0 = this.m_Points[y * this.m_iGridWidth + x];
             if (p0 !== undefined) p0.$SetStatus(this.POINT_FREE);
           }
@@ -1532,8 +1541,6 @@ var InkBallGame = function () {
       this.m_iMouseY = 0;
       this.m_iPosX = 0;
       this.m_iPosY = 0;
-      this.m_iClientWidth = 0;
-      this.m_iClientHeight = 0;
       this.m_Debug = null;
       this.m_bMouseDown = false;
       this.m_bHandlingEvent = false;
@@ -1558,10 +1565,14 @@ var InkBallGame = function () {
 
       this.m_iPosX = this.m_Screen.offsetLeft;
       this.m_iPosY = this.m_Screen.offsetTop;
-      this.m_iClientWidth = this.m_Screen.clientWidth;
-      this.m_iClientHeight = this.m_Screen.clientHeight;
-      this.m_iGridWidth = parseInt(this.m_iClientWidth / this.m_iGridSize);
-      this.m_iGridHeight = parseInt(this.m_iClientHeight / this.m_iGridSize);
+      var iClientWidth = this.m_Screen.clientWidth;
+      var iClientHeight = this.m_Screen.clientHeight;
+      var font_size = getBaseFontSize(this.m_Screen);
+      this.m_iGridSizeX = parseInt(Math.ceil(iClientWidth / this.m_BoardSize.width));
+      this.m_iGridSizeY = parseInt(Math.ceil(iClientHeight / this.m_BoardSize.height));
+      this.m_iGridWidth = parseInt(Math.ceil(iClientWidth / this.m_iGridSizeX));
+      this.m_iGridHeight = parseInt(Math.ceil(iClientHeight / this.m_iGridSizeY));
+      console.log("font_size=".concat(font_size, ", iClientWidth=").concat(iClientWidth, ", iClientHeight=").concat(iClientHeight, ",\nscaleX=").concat(iClientWidth / font_size / this.m_BoardSize.width, ", scaleY=").concat(iClientHeight / font_size / this.m_BoardSize.height, ",\nm_BoardSize=[").concat(this.m_BoardSize.width, ",").concat(this.m_BoardSize.height, "], intScaleX=").concat(parseInt(Math.ceil(iClientWidth / font_size / this.m_BoardSize.width)), ",\nintScaleY=").concat(parseInt(Math.ceil(iClientHeight / font_size / this.m_BoardSize.height)), ",\nm_iGridSizeX=").concat(this.m_iGridSizeX, ", m_iGridSizeY=").concat(this.m_iGridSizeY, ",\nm_iGridWidth=").concat(this.m_iGridWidth, ", m_iGridHeight=").concat(this.m_iGridHeight));
       $createSVGVML(this.m_Screen, this.m_Screen.style.width, this.m_Screen.style.height, true);
       this.DisableSelection(this.m_Screen);
 

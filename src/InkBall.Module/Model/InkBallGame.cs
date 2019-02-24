@@ -58,8 +58,8 @@ namespace InkBall.Module.Model
 		public int iGridSize { get; set; }
 		public int iBoardWidth { get; set; }
 		public int iBoardHeight { get; set; }
-		public int LogicalWidth => (int)(iBoardWidth / iGridSize);
-		public int LogicalHeight => (int)(iBoardHeight / iGridSize);
+		// public int LogicalWidth => (int)(iBoardWidth / iGridSize);
+		// public int LogicalHeight => (int)(iBoardHeight / iGridSize);
 		public InkBallGame.GameTypeEnum GameType { get; set; }
 		public InkBallGame.GameStateEnum GameState { get; set; }
 		public DateTime TimeStamp { get; set; }

@@ -72,11 +72,11 @@ namespace InkBall.Module.Migrations
 					iPlayer1ID = table.Column<int>(nullable: false),
 					iPlayer2ID = table.Column<int>(nullable: true),
 					bIsPlayer1Active = table.Column<bool>(nullable: false, defaultValue: true),
-					iGridSize = table.Column<int>(nullable: false, defaultValue: 15)
+					iGridSize = table.Column<int>(nullable: false, defaultValue: 16)
 						.Annotation("Sqlite:Autoincrement", true),
-					iBoardWidth = table.Column<int>(nullable: false, defaultValue: 600)
+					iBoardWidth = table.Column<int>(nullable: false, defaultValue: 20)
 						.Annotation("Sqlite:Autoincrement", true),
-					iBoardHeight = table.Column<int>(nullable: false, defaultValue: 800)
+					iBoardHeight = table.Column<int>(nullable: false, defaultValue: 26)
 						.Annotation("Sqlite:Autoincrement", true),
 					GameType = table.Column<string>(nullable: false),
 					GameState = table.Column<string>(nullable: false),

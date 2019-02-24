@@ -77,9 +77,9 @@ class InkBallPathViewModel extends DtoMsg {
 	GetKind() { return CommandKindEnum.PATH; }
 
 	static Format(sUser, path) {
-		let msg = path.iPlayerId + " " + path.PointsAsString + " " + path.OwnedPointsAsString;
+		let msg = `${path.iPlayerId}  [${path.PointsAsString}] [${path.OwnedPointsAsString}]`;
 
-		return sUser + " places [" + msg + "] path";
+		return `${sUser} places [${msg}] path`;
 	}
 }
 
@@ -191,6 +191,21 @@ function CountPointsDebug(sSelector2Set, sSvgSelector = 'svg') {
 	document.querySelector(sSelector2Set).innerHTML = `SVG: ${totalChildren} by tag: ${tagMessage}`;
 }
 
+/**
+ * Get base font size in PX
+ * @param {element} el Html element
+ * @returns {number} font pixel size
+ */
+function getBaseFontSize(el) {
+	//debugger;
+	let comp_style = getComputedStyle(el, null);
+	//console.log('comp_style => ', comp_style);
+	let font = comp_style.fontSize;
+	return parseFloat(font.match(/(\d+)px/)[1]);
+
+	//return parseFloat(getComputedStyle(document.body, null).fontSize.replace(/[^\d]/g, ''));
+}
+
 class InkBallGame {
 
 	/**
@@ -204,12 +219,12 @@ class InkBallGame {
 	 * @param {enum} gameType of game enum
 	 * @param {bool} bIsPlayingWithRed true - red, false - blue
 	 * @param {bool} bIsPlayerActive is this player acive now
-	 * @param {number} iGridSize grid size (number of rows and cols equal)
+	 * @param {object} BoardSize defines logical width and height of grid size
 	 * @param {number} iTooLong2Duration too long wait duration
 	 * @param {bool} bViewOnly only viewing the game no interaction
 	 */
 	constructor(sHubName, loggingLevel, hubProtocol, transportType, serverTimeoutInMilliseconds, tokenFactory, gameType,
-		bIsPlayingWithRed = true, bIsPlayerActive = true, iGridSize = 15, iTooLong2Duration = 125, bViewOnly = false) {
+		bIsPlayingWithRed = true, bIsPlayerActive = true, BoardSize = { width: 32, height: 32 }, iTooLong2Duration = 125, bViewOnly = false) {
 
 		this.g_iGameID = null;
 		this.g_iPlayerID = null;
@@ -235,17 +250,17 @@ class InkBallGame {
 		this.m_bIsTimerRunning = false;
 		this.m_WaitStartTime = null;
 		this.m_iSlowdownLevel = 0;
-		this.m_iGridSize = iGridSize;
+		this.m_iGridSizeX = 0;
+		this.m_iGridSizeY = 0;
 		this.m_iGridWidth = 0;
 		this.m_iGridHeight = 0;
+		this.m_BoardSize = BoardSize;
 		this.m_iLastX = -1;
 		this.m_iLastY = -1;
 		this.m_iMouseX = 0;
 		this.m_iMouseY = 0;
 		this.m_iPosX = 0;
 		this.m_iPosY = 0;
-		this.m_iClientWidth = 0;
-		this.m_iClientHeight = 0;
 		this.m_Screen = null;
 		this.m_Debug = null;
 		this.m_Player2Name = null;
@@ -544,8 +559,8 @@ class InkBallGame {
 	}
 
 	SetPoint(iX, iY, iStatus) {
-		let x = iX * this.m_iGridSize;
-		let y = iY * this.m_iGridSize;
+		let x = iX * this.m_iGridSizeX;
+		let y = iY * this.m_iGridSizeY;
 
 		let oval = $createOval(this.m_PointRadius, 'true');
 		oval.$move(x, y, this.m_PointRadius);
@@ -632,7 +647,7 @@ class InkBallGame {
 		for (let i = 0; i < count; ++i) {
 			p = sPoints[i].split(",");
 			x = parseInt(p[0]); y = parseInt(p[1]);
-			x *= this.m_iGridSize; y *= this.m_iGridSize;
+			x *= this.m_iGridSizeX; y *= this.m_iGridSizeY;
 			sPathPoints = sPathPoints + sDelimiter + x + "," + y;
 			sDelimiter = " ";
 
@@ -641,7 +656,7 @@ class InkBallGame {
 		}
 		p = sPoints[0].split(",");
 		x = parseInt(p[0]); y = parseInt(p[1]);
-		x *= this.m_iGridSize; y *= this.m_iGridSize;
+		x *= this.m_iGridSizeX; y *= this.m_iGridSizeY;
 		sPathPoints = sPathPoints + sDelimiter + x + "," + y;
 		p = this.m_Points[y * this.m_iGridWidth + x];
 		if (p !== null && p !== undefined) p.$SetStatus(this.POINT_IN_PATH/*this.POINT_STARTING*/);
@@ -718,7 +733,7 @@ class InkBallGame {
 			x = points[i].x;
 			y = points[i].y;
 			if (x === null || y === null) continue;
-			x /= this.m_iGridSize; y /= this.m_iGridSize;
+			x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
 			//xs[k] = x; ys[k] = y;
 			//++k;
 
@@ -754,7 +769,7 @@ class InkBallGame {
 					p0.$SetFillColor(sOwnedCol);
 					p0.$strokeColor(sOwnedCol);
 
-					x /= this.m_iGridSize; y /= this.m_iGridSize;
+					x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
 					sOwnedPoints = sOwnedPoints + sDelimiter + x + "," + y;
 					ownedPoints.push(p0);
 					sDelimiter = " ";
@@ -782,7 +797,7 @@ class InkBallGame {
 				x = points[i];
 				y = points[i + 1];
 				if (x === null || y === null) continue;
-				//x /= this.m_iGridSize; y /= this.m_iGridSize;
+				//x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
 				xs[k] = x; ys[k] = y;
 				++k;
 			}*/
@@ -972,7 +987,7 @@ class InkBallGame {
 						let i = 0, points = this.m_Line.$GetPointsString();
 						let x = points[i];
 						let y = points[i + 1];
-						x /= this.m_iGridSize; y /= this.m_iGridSize;
+						x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
 						let p0 = this.m_Points[y * this.m_iGridWidth + x];
 						if (p0 !== undefined)
 							p0.$SetStatus(this.POINT_IN_PATH);
@@ -1078,7 +1093,7 @@ class InkBallGame {
 			let points = this.m_Line.$GetPointsString();
 			let i = 0;
 			let x = points[i], y = points[i + 1];
-			x /= this.m_iGridSize; y /= this.m_iGridSize;
+			x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
 			let p0 = this.m_Points[y * this.m_iGridWidth + x];
 			if (p0 !== undefined)
 				p0.$SetStatus(this.POINT_IN_PATH);
@@ -1276,13 +1291,13 @@ class InkBallGame {
 		}
 
 
-		let x = (event ? event.clientX : window.event.clientX) - this.m_Screen.offsetLeft + this.f_scrollLeft() + 0.5 * this.m_iGridSize;
-		let y = (event ? event.clientY : window.event.clientY) - this.m_Screen.offsetTop + this.f_scrollTop() + 0.5 * this.m_iGridSize;
+		let x = (event ? event.clientX : window.event.clientX) - this.m_Screen.offsetLeft + this.f_scrollLeft() + 0.5 * this.m_iGridSizeX;
+		let y = (event ? event.clientY : window.event.clientY) - this.m_Screen.offsetTop + this.f_scrollTop() + 0.5 * this.m_iGridSizeY;
 
-		x = parseInt(x / this.m_iGridSize);
-		y = parseInt(y / this.m_iGridSize);
-		let tox = x * this.m_iGridSize;
-		let toy = y * this.m_iGridSize;
+		x = parseInt(x / this.m_iGridSizeX);
+		y = parseInt(y / this.m_iGridSizeY);
+		let tox = x * this.m_iGridSizeX;
+		let toy = y * this.m_iGridSizeY;
 
 		this.m_MouseCursorOval.$move(tox, toy, this.m_PointRadius);
 		this.m_MouseCursorOval.$Show();
@@ -1290,9 +1305,9 @@ class InkBallGame {
 		this.Debug(`[${x},${y}]`, 1);
 
 
-		if (this.m_bDrawLines) {
+		if (this.m_bDrawLines && this.m_bMouseDown === true) {
 			//lines
-			if (this.m_bMouseDown === true && (this.m_iLastX !== x || this.m_iLastY !== y) &&
+			if ((this.m_iLastX !== x || this.m_iLastY !== y) &&
 				(Math.abs(parseInt(this.m_iLastX - x)) <= 1 && Math.abs(parseInt(this.m_iLastY - y)) <= 1) &&
 				this.m_iLastX >= 0 && this.m_iLastY >= 0) {
 				if (this.m_Line !== null) {
@@ -1335,8 +1350,8 @@ class InkBallGame {
 					if (p0 !== undefined && p1 !== undefined &&
 						(p0.$GetStatus() !== this.POINT_IN_PATH && p1.$GetStatus() !== this.POINT_IN_PATH) &&
 						p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
-						let fromx = this.m_iLastX * this.m_iGridSize;
-						let fromy = this.m_iLastY * this.m_iGridSize;
+						let fromx = this.m_iLastX * this.m_iGridSizeX;
+						let fromy = this.m_iLastY * this.m_iGridSizeY;
 						this.m_Line = $createPolyline(3, fromx + "," + fromy + " " + tox + "," + toy, this.m_sDotColor);
 						if (p0.$GetStatus() !== this.POINT_IN_PATH)
 							p0.$SetStatus(this.POINT_STARTING);
@@ -1356,10 +1371,10 @@ class InkBallGame {
 			|| this.iConnErrCount > 0)
 			return;
 
-		let x = (event ? event.clientX : window.event.clientX) - this.m_Screen.offsetLeft + this.f_scrollLeft() + 0.5 * this.m_iGridSize;
-		let y = (event ? event.clientY : window.event.clientY) - this.m_Screen.offsetTop + this.f_scrollTop() + 0.5 * this.m_iGridSize;
-		x = this.m_iMouseX = parseInt(x / this.m_iGridSize);
-		y = this.m_iMouseY = parseInt(y / this.m_iGridSize);
+		let x = (event ? event.clientX : window.event.clientX) - this.m_Screen.offsetLeft + this.f_scrollLeft() + 0.5 * this.m_iGridSizeX;
+		let y = (event ? event.clientY : window.event.clientY) - this.m_Screen.offsetTop + this.f_scrollTop() + 0.5 * this.m_iGridSizeY;
+		x = this.m_iMouseX = parseInt(x / this.m_iGridSizeX);
+		y = this.m_iMouseY = parseInt(y / this.m_iGridSizeY);
 
 		this.m_bMouseDown = true;
 		if (!this.m_bDrawLines) {
@@ -1369,8 +1384,8 @@ class InkBallGame {
 
 			let loc_x = x;
 			let loc_y = y;
-			x = loc_x * this.m_iGridSize;
-			y = loc_y * this.m_iGridSize;
+			x = loc_x * this.m_iGridSizeX;
+			y = loc_y * this.m_iGridSizeY;
 
 			if (this.m_Points[loc_y * this.m_iGridWidth + loc_x] !== undefined) return;
 			if (!this.IsPointOutsideAllPaths(loc_x, loc_y)) return;
@@ -1392,8 +1407,8 @@ class InkBallGame {
 
 					if (p0 !== undefined && p1 !== undefined && (p1.$GetStatus() !== this.POINT_IN_PATH) &&
 						p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
-						let tox = x * this.m_iGridSize;
-						let toy = y * this.m_iGridSize;
+						let tox = x * this.m_iGridSizeX;
+						let toy = y * this.m_iGridSizeY;
 						this.m_Line.$AppendPoints(tox + "," + toy);
 						if (p1.$GetStatus() !== this.POINT_STARTING)
 							p1.$SetStatus(this.POINT_IN_PATH);
@@ -1428,10 +1443,10 @@ class InkBallGame {
 					if (p0 !== undefined && p1 !== undefined && (p0.$GetStatus() !== this.POINT_IN_PATH &&
 						p1.$GetStatus() !== this.POINT_IN_PATH) &&
 						p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
-						let fromx = this.m_iLastX * this.m_iGridSize;
-						let fromy = this.m_iLastY * this.m_iGridSize;
-						let tox = x * this.m_iGridSize;
-						let toy = y * this.m_iGridSize;
+						let fromx = this.m_iLastX * this.m_iGridSizeX;
+						let fromy = this.m_iLastY * this.m_iGridSizeY;
+						let tox = x * this.m_iGridSizeX;
+						let toy = y * this.m_iGridSizeY;
 						this.m_Line = $createPolyline(3, fromx + "," + fromy + " " + tox + "," + toy, this.m_sDotColor);
 						if (p0.$GetStatus() !== this.POINT_IN_PATH) p0.$SetStatus(this.POINT_STARTING);
 						if (p1.$GetStatus() !== this.POINT_IN_PATH) p1.$SetStatus(this.POINT_STARTING);
@@ -1480,7 +1495,7 @@ class InkBallGame {
 					let x = points[i].x;
 					let y = points[i].y;
 					if (x === null || y === null) continue;
-					x /= this.m_iGridSize; y /= this.m_iGridSize;
+					x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
 					let p0 = this.m_Points[y * this.m_iGridWidth + x];
 					if (p0 !== undefined)
 						p0.$SetStatus(this.POINT_FREE);
@@ -1521,8 +1536,6 @@ class InkBallGame {
 		this.m_iMouseY = 0;
 		this.m_iPosX = 0;
 		this.m_iPosY = 0;
-		this.m_iClientWidth = 0;
-		this.m_iClientHeight = 0;
 		this.m_Debug = null;
 		this.m_bMouseDown = false;
 		this.m_bHandlingEvent = false;
@@ -1546,10 +1559,12 @@ class InkBallGame {
 		}
 		this.m_iPosX = this.m_Screen.offsetLeft;
 		this.m_iPosY = this.m_Screen.offsetTop;
-		this.m_iClientWidth = this.m_Screen.clientWidth;
-		this.m_iClientHeight = this.m_Screen.clientHeight;
-		this.m_iGridWidth = parseInt(this.m_iClientWidth / this.m_iGridSize);
-		this.m_iGridHeight = parseInt(this.m_iClientHeight / this.m_iGridSize);
+		let iClientWidth = this.m_Screen.clientWidth;
+		let iClientHeight = this.m_Screen.clientHeight;
+		this.m_iGridSizeX = parseInt(Math.ceil(iClientWidth / this.m_BoardSize.width));
+		this.m_iGridSizeY = parseInt(Math.ceil(iClientHeight / this.m_BoardSize.height));
+		this.m_iGridWidth = parseInt(Math.ceil(iClientWidth / this.m_iGridSizeX));
+		this.m_iGridHeight = parseInt(Math.ceil(iClientHeight / this.m_iGridSizeY));
 
 		$createSVGVML(this.m_Screen, this.m_Screen.style.width, this.m_Screen.style.height, true);
 
@@ -1592,6 +1607,14 @@ class InkBallGame {
 				}
 			}
 		}
+
+		let font_size = getBaseFontSize(this.m_Screen);
+		console.log(`font_size=${font_size}, iClientWidth=${iClientWidth}, iClientHeight=${iClientHeight},
+scaleX=${iClientWidth / font_size / this.m_BoardSize.width}, scaleY=${iClientHeight / font_size / this.m_BoardSize.height},
+m_BoardSize=[${this.m_BoardSize.width},${this.m_BoardSize.height}], intScaleX=${parseInt(Math.ceil(iClientWidth / font_size / this.m_BoardSize.width))},
+intScaleY=${parseInt(Math.ceil(iClientHeight / font_size / this.m_BoardSize.height))},
+m_iGridSizeX=${this.m_iGridSizeX}, m_iGridSizeY=${this.m_iGridSizeY},
+m_iGridWidth=${this.m_iGridWidth}, m_iGridHeight=${this.m_iGridHeight}`);
 	}
 }
 /******** /funcs-n-classes ********/

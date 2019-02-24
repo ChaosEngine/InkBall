@@ -154,11 +154,11 @@ namespace InkBall.Module.Model
 
 				entity.Property(e => e.iBoardHeight)
 					.HasColumnName("iBoardHeight")
-					.HasDefaultValue(800);
+					.HasDefaultValue(26);
 
 				entity.Property(e => e.iBoardWidth)
 					.HasColumnName("iBoardWidth")
-					.HasDefaultValue(600);
+					.HasDefaultValue(20);
 
 				entity.Property(e => e.GameType)
 					//.HasMaxLength(50)
@@ -176,7 +176,7 @@ namespace InkBall.Module.Model
 
 				entity.Property(e => e.iGridSize)
 					.HasColumnName("iGridSize")
-					.HasDefaultValue(15);
+					.HasDefaultValue(16);
 
 				entity.Property(e => e.iPlayer1Id).HasColumnName("iPlayer1ID");
 

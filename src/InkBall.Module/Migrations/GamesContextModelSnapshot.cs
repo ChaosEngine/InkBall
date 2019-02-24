@@ -48,17 +48,17 @@ namespace InkBall.Module.Migrations
                     b.Property<int>("iBoardHeight")
                         .ValueGeneratedOnAdd()
                         .HasColumnName("iBoardHeight")
-                        .HasDefaultValueSql("'800'");
+                        .HasDefaultValueSql("'26'");
 
                     b.Property<int>("iBoardWidth")
                         .ValueGeneratedOnAdd()
                         .HasColumnName("iBoardWidth")
-                        .HasDefaultValueSql("'600'");
+                        .HasDefaultValueSql("'20'");
 
                     b.Property<int>("iGridSize")
                         .ValueGeneratedOnAdd()
                         .HasColumnName("iGridSize")
-                        .HasDefaultValueSql("'15'");
+                        .HasDefaultValueSql("'16'");
 
                     b.Property<int>("iPlayer1Id")
                         .HasColumnName("iPlayer1ID");

@@ -327,12 +327,11 @@ namespace InkBall.Module.Hubs
 				var current_player_color = ThisGame.IsThisPlayerPlayingWithRed() ? InkBallPoint.StatusEnum.POINT_FREE_RED : InkBallPoint.StatusEnum.POINT_FREE_BLUE;
 
 				if (point == null || point.iGameId != ThisGame.iId || point.Status != current_player_color
-					|| point.iX < 0 || point.iY < 0 || point.iX > ThisGame.LogicalWidth || point.iY > this.ThisGame.LogicalHeight)
+					|| point.iX < 0 || point.iY < 0 || point.iX > ThisGame.iBoardWidth || point.iY > this.ThisGame.iBoardHeight)
 					throw new ArgumentException("bad point");
 				if (point.iPlayerId != ThisPlayer.iId && point.iPlayerId != OtherPlayer.iId)
 					throw new ArgumentException("bad Player ID");
 
-				// throw new ArgumentException("FAKE EXCEPTION");
 
 				var already_placed = await _dbContext.InkBallPoint.AnyAsync(pts =>
 									pts.iGameId == ThisGame.iId && pts.iPlayerId == point.iPlayerId
@@ -363,6 +362,9 @@ namespace InkBall.Module.Hubs
 
 						new_point = new InkBallPointViewModel(db_point);
 						db_point_player.sLastMoveCode = JsonConvert.SerializeObject(new_point);
+
+						throw new ArgumentException($"FAKE EXCEPTION {new_point}");
+
 						await _dbContext.SaveChangesAsync(token);
 
 						trans.Commit();
@@ -405,8 +407,6 @@ namespace InkBall.Module.Hubs
 				if (path.iPlayerId != ThisPlayer.iId && path.iPlayerId != OtherPlayer.iId)
 					throw new ArgumentException("bad Player ID");
 				ICollection<InkBallPointViewModel> points_on_path = path.InkBallPoint;//serialize points from path int objects
-
-				// throw new ArgumentException("FAKE EXCEPTION");
 
 				InkBallPoint.StatusEnum current_player_color, other_player_color, owning_color, other_owning_color;
 				if (ThisGame.IsThisPlayerPlayingWithRed())
@@ -482,6 +482,8 @@ namespace InkBall.Module.Hubs
 						await _dbContext.InkBallPath.AddAsync(db_path, token);
 
 						db_path_player.sLastMoveCode = JsonConvert.SerializeObject(path);
+
+						throw new ArgumentException($"FAKE EXCEPTION {path.PointsAsString}, {path.OwnedPointsAsString}");
 
 						await _dbContext.SaveChangesAsync(token);
 

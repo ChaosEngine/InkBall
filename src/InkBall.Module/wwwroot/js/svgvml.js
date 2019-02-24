@@ -24,8 +24,8 @@ if (SVG) {
 	var $createSVGVML = function (o, iWidth, iHeight, antialias) {
 		cont = document.createElementNS(svgNS, "svg");
 		//ch_added start
-		cont.setAttributeNS(null, 'width', iWidth);
-		cont.setAttributeNS(null, 'height', iHeight);
+		// cont.setAttributeNS(null, 'width', iWidth);
+		// cont.setAttributeNS(null, 'height', iHeight);
 		//ch_added end
 		o.appendChild(cont);
 		svgAntialias = antialias;
