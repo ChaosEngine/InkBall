@@ -179,7 +179,8 @@ namespace InkBall.Module.Migrations
 						.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
 						.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
 					iPathId = table.Column<int>(nullable: false),
-					iPointId = table.Column<int>(nullable: false)
+					iPointId = table.Column<int>(nullable: false),
+					Order = table.Column<int>(nullable: false, defaultValue: 0)
 				},
 				constraints: table =>
 				{

@@ -72,8 +72,8 @@ namespace InkBall.Module.Pages
 						int width, height, grid_size;
 						//if (g_bIsMobile)
 						{
-							width = 300; height = 390;
-							grid_size = 15;
+							width = 20; height = 26;
+							grid_size = 16;
 						}
 						//else
 						//{

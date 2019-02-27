@@ -351,6 +351,10 @@ namespace InkBall.Module.Model
 
 				entity.Property(e => e.iPointId).HasColumnName("iPointId");
 
+				entity.Property(e => e.Order)
+					.HasColumnName("Order")
+					.HasDefaultValue(0);
+
 				entity.HasOne(d => d.Path)
 					.WithMany(p => p.InkBallPointsInPath)
 					.HasForeignKey(d => d.iPathId)

@@ -208,6 +208,10 @@ namespace InkBall.Module.Migrations
                     b.Property<int>("iPointId")
                         .HasColumnName("iPointId");
 
+                    b.Property<int>("Order")
+                        .HasColumnName("Order")
+                        .HasDefaultValue(0);
+
                     b.HasKey("iId");
 
                     b.HasIndex("iPathId")

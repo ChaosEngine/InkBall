@@ -8,6 +8,7 @@ namespace InkBall.Module.Model
 		public int iId { get; set; }
 		public int iPathId { get; set; }
 		public int iPointId { get; set; }
+		public int Order { get; set; }
 
 		public InkBallPath Path { get; set; }
 		public InkBallPoint Point { get; set; }

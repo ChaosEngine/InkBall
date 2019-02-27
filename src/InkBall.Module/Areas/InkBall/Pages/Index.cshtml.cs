@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -54,7 +55,7 @@ namespace InkBall.Module.Pages
 			string comma = "";
 			foreach (var path in paths)
 			{
-				var points = path.InkBallPointsInPath;
+				var points = path.InkBallPointsInPath.OrderBy(o => o.Order);
 				builder.AppendFormat("{0}[{1}'", comma
 #if DEBUG
 				, $"/*ID={path.iId}*/"

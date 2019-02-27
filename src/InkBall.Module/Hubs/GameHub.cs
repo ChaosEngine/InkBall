@@ -362,9 +362,9 @@ namespace InkBall.Module.Hubs
 
 						new_point = new InkBallPointViewModel(db_point);
 						db_point_player.sLastMoveCode = JsonConvert.SerializeObject(new_point);
-
-						throw new ArgumentException($"FAKE EXCEPTION {new_point}");
-
+#if DEBUG
+						//throw new Exception($"FAKE EXCEPTION {new_point}");
+#endif
 						await _dbContext.SaveChangesAsync(token);
 
 						trans.Commit();
@@ -439,6 +439,7 @@ namespace InkBall.Module.Hubs
 					iPlayerId = path.iPlayerId,
 				};
 				var status = InkBallPoint.StatusEnum.POINT_STARTING;
+				int order = 0;
 				foreach (var pop in points_on_path)
 				{
 					//TODO: check in-path-next-point from start to end with closing
@@ -452,6 +453,7 @@ namespace InkBall.Module.Hubs
 					{
 						Path = db_path,
 						Point = found,
+						Order = order++
 					});
 					found.Status = status;
 					status = InkBallPoint.StatusEnum.POINT_IN_PATH;
@@ -483,10 +485,15 @@ namespace InkBall.Module.Hubs
 
 						db_path_player.sLastMoveCode = JsonConvert.SerializeObject(path);
 
-						throw new ArgumentException($"FAKE EXCEPTION {path.PointsAsString}, {path.OwnedPointsAsString}");
-
 						await _dbContext.SaveChangesAsync(token);
+#if DEBUG
 
+						var saved_points = await _dbContext.LoadPointsAndPathsAsync(ThisGameID.Value, token);
+						//var restored_from_db = saved_points.Paths.LastOrDefault()?.InkBallPointsInPath
+						//	.Select(z => $"{z.Point.iX},{z.Point.iY}");
+						var str = (new Module.Pages.IndexModel(null, null, null)).GetPathsAsJavaScriptArray(saved_points.Paths);
+						//throw new Exception($"FAKE EXCEPTION org pts:[{path.PointsAsString}], restored pts:[{str}], owned:[{path.OwnedPointsAsString}]");
+#endif
 
 						var statisticalPointAndPathCounter = new StatisticalPointAndPathCounter(_dbContext, ThisGame.iId,
 							ThisPlayer.iId, OtherPlayer.iId, ref owning_color, ref other_owning_color, ref token);

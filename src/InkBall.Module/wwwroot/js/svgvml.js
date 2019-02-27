@@ -66,7 +66,7 @@ if (SVG) {
 		o.$GetPointsArray = function () {
 			//x0,y0 x1,y1 x2,y2
 			let pts = [];
-			this.getAttribute("points").split(" ").forEach(pt => {
+			this.getAttribute("points").split(" ").forEach(function (pt) {
 				let tab = pt.split(',');
 				pts.push({ x: parseInt(tab[0]), y: parseInt(tab[1]) });
 			});
@@ -171,7 +171,7 @@ if (SVG) {
 		o.$GetPointsArray = function () {
 			//x0,y0 x1,y1 x2,y2
 			let pts = [];
-			this.m_sMyPoints.split(" ").forEach(pt => {
+			this.m_sMyPoints.split(" ").forEach(function (pt) {
 				let tab = pt.split(',');
 				pts.push({ x: parseInt(tab[0]), y: parseInt(tab[1]) });
 			});
