@@ -111,7 +111,8 @@ namespace InkBall.Module.Migrations
 						.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
 						.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
 					iGameID = table.Column<int>(nullable: false),
-					iPlayerID = table.Column<int>(nullable: false)
+					iPlayerID = table.Column<int>(nullable: false),
+					PointsAsString = table.Column<string>(type: GamesContext.JsonColumnTypeFromProvider(this.ActiveProvider), nullable: true),
 				},
 				constraints: table =>
 				{

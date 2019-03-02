@@ -93,7 +93,11 @@ namespace InkBall.Module.Migrations
                     b.Property<int>("iPlayerId")
                         .HasColumnName("iPlayerID");
 
-                    b.HasKey("iId");
+					b.Property<string>("PointsAsString")
+						.HasColumnName("PointsAsString")
+						.HasColumnType("varchar(1000)");
+
+					b.HasKey("iId");
 
                     b.HasIndex("iGameId")
                         .HasName("IDX_InkBallPath_ByGame");

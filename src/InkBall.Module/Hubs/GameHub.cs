@@ -437,6 +437,7 @@ namespace InkBall.Module.Hubs
 					// iId = path.iId,
 					iGameId = path.iGameId,
 					iPlayerId = path.iPlayerId,
+					PointsAsString = path.PointsAsString
 				};
 				var status = InkBallPoint.StatusEnum.POINT_STARTING;
 				int order = 0;
@@ -481,18 +482,17 @@ namespace InkBall.Module.Hubs
 				{
 					try
 					{
-						await _dbContext.InkBallPath.AddAsync(db_path, token);
+						db_path_player.sLastMoveCode = db_path.PointsAsString = JsonConvert.SerializeObject(path);
 
-						db_path_player.sLastMoveCode = JsonConvert.SerializeObject(path);
+						await _dbContext.InkBallPath.AddAsync(db_path, token);
 
 						await _dbContext.SaveChangesAsync(token);
 #if DEBUG
 
-						var saved_points = await _dbContext.LoadPointsAndPathsAsync(ThisGameID.Value, token);
-						//var restored_from_db = saved_points.Paths.LastOrDefault()?.InkBallPointsInPath
-						//	.Select(z => $"{z.Point.iX},{z.Point.iY}");
-						var str = (new Module.Pages.IndexModel(null, null, null)).GetPathsAsJavaScriptArray(saved_points.Paths);
-						//throw new Exception($"FAKE EXCEPTION org pts:[{path.PointsAsString}], restored pts:[{str}], owned:[{path.OwnedPointsAsString}]");
+						var saved_pts = await _dbContext.LoadPointsAndPathsAsync(ThisGameID.Value, token);
+						var restored_from_db = saved_pts.Paths.LastOrDefault()?.InkBallPointsInPath.Select(z => $"{z.Point.iX},{z.Point.iY}");
+						var str = (new Module.Pages.IndexModel(null, null, null)).GetPathsAsJavaScriptArray(saved_pts.Paths);
+						throw new Exception($"FAKE EXCEPTION org pts:[{path.PointsAsString}], restored pts:[{str}], owned:[{path.OwnedPointsAsString}]");
 #endif
 
 						var statisticalPointAndPathCounter = new StatisticalPointAndPathCounter(_dbContext, ThisGame.iId,

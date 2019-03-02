@@ -221,6 +221,10 @@ namespace InkBall.Module.Model
 
 				entity.Property(e => e.iPlayerId).HasColumnName("iPlayerID");
 
+				entity.Property(e => e.PointsAsString)
+					.HasColumnName("PointsAsString")
+					.HasColumnType(JsonColumnTypeFromProvider(Database.ProviderName));
+				
 				entity.HasOne(d => d.Game)
 					.WithMany(p => p.InkBallPath)
 					.HasForeignKey(d => d.iGameId)

@@ -23,6 +23,7 @@ namespace InkBall.Module.Model
 		public int iId { get; set; }
 		public int iGameId { get; set; }
 		public int iPlayerId { get; set; }
+		public string PointsAsString { get; set; }
 
 		public abstract ICollection<Point> InkBallPoint { get; set; }
 
@@ -131,8 +132,6 @@ namespace InkBall.Module.Model
 
 		#endregion Fields
 
-		//legacy
-		public string PointsAsString { get; set; }
 		//legacy
 		public string OwnedPointsAsString { get; set; }
 
@@ -270,7 +269,7 @@ namespace InkBall.Module.Model
 			this.iId = path.iId;
 			this.iGameId = path.iGameId;
 			this.iPlayerId = path.iPlayerId;
-			this.PointsAsString = pointsAsString;
+			this.PointsAsString = pointsAsString ?? path.PointsAsString;
 			this.OwnedPointsAsString = ownedPointsAsString;
 
 			if (path?.InkBallPoint?.Count > 0)

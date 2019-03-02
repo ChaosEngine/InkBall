@@ -96,6 +96,10 @@ namespace InkBall.Module.Migrations
 				b.Property<int>("iPlayerId")
 					.HasColumnName("iPlayerID");
 
+				b.Property<string>("PointsAsString")
+					.HasColumnName("PointsAsString")
+					.HasColumnType(GamesContext.JsonColumnTypeFromProvider(this.ActiveProvider));
+
 				b.HasKey("iId");
 
 				b.HasIndex("iGameId")
