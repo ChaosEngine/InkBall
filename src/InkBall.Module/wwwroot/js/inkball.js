@@ -263,8 +263,8 @@ class InkBallGame {
 		this.m_sDotColor = this.m_bIsPlayingWithRed ? this.COLOR_RED : this.COLOR_BLUE;
 		this.m_PointRadius = 4;
 		this.m_Line = null;
-		this.m_Lines = new Array();
-		this.m_Points = new Array();
+		this.m_Lines = [];
+		this.m_Points = [];
 		this.m_bViewOnly = bViewOnly;
 		this.m_MouseCursorOval = null;
 
@@ -777,7 +777,7 @@ class InkBallGame {
 			let points = this.m_Lines[j].$GetPointsArray();
 			//convert to x's and y's arrays
 			/*let count = points.length;
-			let xs = Array(), ys = Array(), x, y, k = 0;
+			let xs = [], ys = [], x, y, k = 0;
 			for (let i = 0; i < count; i += 2) {
 				x = points[i];
 				y = points[i + 1];
@@ -1527,8 +1527,8 @@ class InkBallGame {
 		this.m_sMessage = '';
 		this.m_sDotColor = this.m_bIsPlayingWithRed ? this.COLOR_RED : this.COLOR_BLUE;
 		this.m_Line = null;
-		this.m_Lines = new Array();
-		this.m_Points = new Array();
+		this.m_Lines = [];
+		this.m_Points = [];
 
 		this.m_Debug = document.getElementById('debug0');
 		this.m_Player2Name = document.querySelector(sPlayer2Name);

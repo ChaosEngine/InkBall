@@ -741,9 +741,9 @@ namespace InkBall.Module.Model
 		private InkBallPath PathConstructor(InkBallPath path)
 		{
 			InkBallPath product;
-			if (!string.IsNullOrEmpty(path.PointsAsString))
-			{
-				var fromJson = JsonConvert.DeserializeObject<InkBallPathViewModel>(path.PointsAsString);
+			// if (!string.IsNullOrEmpty(path.PointsAsString))
+			// {
+				var pathVM_fromJson = JsonConvert.DeserializeObject<InkBallPathViewModel>(path.PointsAsString);
 
 				product = new InkBallPath
 				{
@@ -751,7 +751,7 @@ namespace InkBall.Module.Model
 					iGameId = path.iGameId,
 					iPlayerId = path.iPlayerId,
 					//InkBallPointsInPath = path.InkBallPointsInPath.OrderBy(o => o.Order).ToArray()
-					InkBallPointsInPath = fromJson.InkBallPoint.Select(c => new InkBallPointsInPath
+					InkBallPointsInPath = pathVM_fromJson.InkBallPoint.Select(c => new InkBallPointsInPath
 					{
 						Point = new InkBallPoint
 						{
@@ -761,23 +761,23 @@ namespace InkBall.Module.Model
 						}
 					}).ToArray()
 				};
-			}
-			else
-			{
-				product = new InkBallPath
-				{
-					iId = path.iId,
-					iGameId = path.iGameId,
-					iPlayerId = path.iPlayerId,
-					InkBallPointsInPath = path.InkBallPointsInPath.OrderBy(o => o.Order).ToArray()
-				};
-			}
+			// }
+			// else
+			// {
+			// 	product = new InkBallPath
+			// 	{
+			// 		iId = path.iId,
+			// 		iGameId = path.iGameId,
+			// 		iPlayerId = path.iPlayerId,
+			// 		InkBallPointsInPath = path.InkBallPointsInPath.OrderBy(o => o.Order).ToArray()
+			// 	};
+			// }
 			return product;
 		}
 
 		private async Task<IEnumerable<InkBallPath>> GetPathsFromDatabaseAsync(int iGameID, IEnumerable<InkBallPoint> points, CancellationToken token = default)
 		{
-			return await InkBallPath.Include(x => x.InkBallPointsInPath)
+			return await InkBallPath//.Include(x => x.InkBallPointsInPath)
 				.Where(pa => pa.iGameId == iGameID)
 				.Select(m => PathConstructor(m)).ToArrayAsync(token);
 		}
