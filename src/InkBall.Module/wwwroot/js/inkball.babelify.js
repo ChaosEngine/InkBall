@@ -300,11 +300,29 @@ function CountPointsDebug(sSelector2Set) {
   var svgs = document.getElementsByTagName(sSvgSelector),
       totalChildren = 0,
       childCounts = [];
+  var _iteratorNormalCompletion = true;
+  var _didIteratorError = false;
+  var _iteratorError = undefined;
 
-  for (var i = 0; i < svgs.length; i++) {
-    var svg = svgs[i];
-    totalChildren += svg.childElementCount;
-    childCounts.push(svg.childElementCount);
+  try {
+    for (var _iterator = svgs[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+      var svg = _step.value;
+      totalChildren += svg.childElementCount;
+      childCounts.push(svg.childElementCount);
+    }
+  } catch (err) {
+    _didIteratorError = true;
+    _iteratorError = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion && _iterator.return != null) {
+        _iterator.return();
+      }
+    } finally {
+      if (_didIteratorError) {
+        throw _iteratorError;
+      }
+    }
   }
 
   var tags = ["circle", "polyline"],
@@ -706,27 +724,45 @@ var InkBallGame = function () {
     key: "SetPath",
     value: function SetPath(packed, bIsRed, bBelong2ThisPlayer) {
       var sPoints = packed.split(" ");
-      var count = sPoints.length,
-          sDelimiter = "",
+      var sDelimiter = "",
           sPathPoints = "",
           p = null,
           x,
           y,
           status = StatusEnum.POINT_STARTING;
+      var _iteratorNormalCompletion2 = true;
+      var _didIteratorError2 = false;
+      var _iteratorError2 = undefined;
 
-      for (var i = 0; i < count; ++i) {
-        p = sPoints[i].split(",");
-        x = parseInt(p[0]);
-        y = parseInt(p[1]);
-        x *= this.m_iGridSizeX;
-        y *= this.m_iGridSizeY;
-        sPathPoints = sPathPoints + sDelimiter + x + "," + y;
-        sDelimiter = " ";
-        p = this.m_Points[y * this.m_iGridWidth + x];
+      try {
+        for (var _iterator2 = sPoints[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+          var _packed = _step2.value;
+          p = _packed.split(",");
+          x = parseInt(p[0]);
+          y = parseInt(p[1]);
+          x *= this.m_iGridSizeX;
+          y *= this.m_iGridSizeY;
+          sPathPoints += "".concat(sDelimiter).concat(x, ",").concat(y);
+          sDelimiter = " ";
+          p = this.m_Points[y * this.m_iGridWidth + x];
 
-        if (p !== null && p !== undefined) {
-          p.$SetStatus(status);
-          status = StatusEnum.POINT_IN_PATH;
+          if (p !== null && p !== undefined) {
+            p.$SetStatus(status);
+            status = StatusEnum.POINT_IN_PATH;
+          }
+        }
+      } catch (err) {
+        _didIteratorError2 = true;
+        _iteratorError2 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion2 && _iterator2.return != null) {
+            _iterator2.return();
+          }
+        } finally {
+          if (_didIteratorError2) {
+            throw _iteratorError2;
+          }
         }
       }
 
@@ -753,16 +789,31 @@ var InkBallGame = function () {
   }, {
     key: "IsPointBelongingToLine",
     value: function IsPointBelongingToLine(sPoints, iX, iY) {
-      var count = sPoints.length,
-          x,
-          y,
-          pnt;
+      var _iteratorNormalCompletion3 = true;
+      var _didIteratorError3 = false;
+      var _iteratorError3 = undefined;
 
-      for (var i = 0; i < count; ++i) {
-        pnt = sPoints[i].split(",");
-        x = pnt[0];
-        y = pnt[1];
-        if (x === iX && y === iY) return true;
+      try {
+        for (var _iterator3 = sPoints[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+          var packed = _step3.value;
+          var pnt = packed.split(",");
+          var x = pnt[0],
+              y = pnt[1];
+          if (x === iX && y === iY) return true;
+        }
+      } catch (err) {
+        _didIteratorError3 = true;
+        _iteratorError3 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion3 && _iterator3.return != null) {
+            _iterator3.return();
+          }
+        } finally {
+          if (_didIteratorError3) {
+            throw _iteratorError3;
+          }
+        }
       }
 
       return false;
@@ -816,20 +867,38 @@ var InkBallGame = function () {
         };
       }
 
-      var count = points.length,
-          x,
+      var x,
           y,
           sPathPoints = "",
           sDelimiter = "";
+      var _iteratorNormalCompletion4 = true;
+      var _didIteratorError4 = false;
+      var _iteratorError4 = undefined;
 
-      for (var i = 0; i < count; i++) {
-        x = points[i].x;
-        y = points[i].y;
-        if (x === null || y === null) continue;
-        x /= this.m_iGridSizeX;
-        y /= this.m_iGridSizeY;
-        sPathPoints = sPathPoints + sDelimiter + x + "," + y;
-        sDelimiter = " ";
+      try {
+        for (var _iterator4 = points[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+          var pt = _step4.value;
+          x = pt.x;
+          y = pt.y;
+          if (x === null || y === null) continue;
+          x /= this.m_iGridSizeX;
+          y /= this.m_iGridSizeY;
+          sPathPoints += "".concat(sDelimiter).concat(x, ",").concat(y);
+          sDelimiter = " ";
+        }
+      } catch (err) {
+        _didIteratorError4 = true;
+        _iteratorError4 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion4 && _iterator4.return != null) {
+            _iterator4.return();
+          }
+        } finally {
+          if (_didIteratorError4) {
+            throw _iteratorError4;
+          }
+        }
       }
 
       var sColor = this.m_sDotColor === this.COLOR_RED ? this.COLOR_BLUE : this.COLOR_RED;
@@ -838,25 +907,42 @@ var InkBallGame = function () {
       var sOwnedPoints = "";
       var ownedPoints = [];
       sDelimiter = "";
-      count = this.m_Points.length;
+      var _iteratorNormalCompletion5 = true;
+      var _didIteratorError5 = false;
+      var _iteratorError5 = undefined;
 
-      for (var _i = 0; _i < count; ++_i) {
-        var p0 = this.m_Points[_i];
+      try {
+        for (var _iterator5 = this.m_Points[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+          var p0 = _step5.value;
 
-        if (p0 !== undefined && p0.$GetStatus() === StatusEnum.POINT_FREE && p0.$GetFillColor() === sColor) {
-          var pos = p0.$GetPosition();
-          x = pos.x;
-          y = pos.y;
+          if (p0 !== undefined && p0.$GetStatus() === StatusEnum.POINT_FREE && p0.$GetFillColor() === sColor) {
+            var pos = p0.$GetPosition();
+            x = pos.x;
+            y = pos.y;
 
-          if (false !== this.pnpoly2(points, x, y)) {
-            p0.$SetStatus(owned_by);
-            p0.$SetFillColor(sOwnedCol);
-            p0.$strokeColor(sOwnedCol);
-            x /= this.m_iGridSizeX;
-            y /= this.m_iGridSizeY;
-            sOwnedPoints = sOwnedPoints + sDelimiter + x + "," + y;
-            ownedPoints.push(p0);
-            sDelimiter = " ";
+            if (false !== this.pnpoly2(points, x, y)) {
+              p0.$SetStatus(owned_by);
+              p0.$SetFillColor(sOwnedCol);
+              p0.$strokeColor(sOwnedCol);
+              x /= this.m_iGridSizeX;
+              y /= this.m_iGridSizeY;
+              sOwnedPoints = sOwnedPoints + sDelimiter + x + "," + y;
+              ownedPoints.push(p0);
+              sDelimiter = " ";
+            }
+          }
+        }
+      } catch (err) {
+        _didIteratorError5 = true;
+        _iteratorError5 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion5 && _iterator5.return != null) {
+            _iterator5.return();
+          }
+        } finally {
+          if (_didIteratorError5) {
+            throw _iteratorError5;
           }
         }
       }
@@ -873,11 +959,29 @@ var InkBallGame = function () {
   }, {
     key: "IsPointOutsideAllPaths",
     value: function IsPointOutsideAllPaths(iX, iY) {
-      var count1 = this.m_Lines.length;
+      var _iteratorNormalCompletion6 = true;
+      var _didIteratorError6 = false;
+      var _iteratorError6 = undefined;
 
-      for (var j = 0; j < count1; ++j) {
-        var points = this.m_Lines[j].$GetPointsArray();
-        if (false !== this.pnpoly2(points, iX, iY)) return false;
+      try {
+        for (var _iterator6 = this.m_Lines[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
+          var line = _step6.value;
+          var points = line.$GetPointsArray();
+          if (false !== this.pnpoly2(points, iX, iY)) return false;
+        }
+      } catch (err) {
+        _didIteratorError6 = true;
+        _iteratorError6 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion6 && _iterator6.return != null) {
+            _iterator6.return();
+          }
+        } finally {
+          if (_didIteratorError6) {
+            throw _iteratorError6;
+          }
+        }
       }
 
       return true;
@@ -975,20 +1079,38 @@ var InkBallGame = function () {
             owned = path.OwnedPointsAsString;
         this.SetPath(str_path, this.m_sDotColor === this.COLOR_RED ? true : false, false);
         var points = owned.split(" ");
-        var count = points.length;
         var point_status = this.m_sDotColor === this.COLOR_RED ? StatusEnum.POINT_OWNED_BY_RED : StatusEnum.POINT_OWNED_BY_BLUE;
         var sOwnedCol = this.m_sDotColor === this.COLOR_RED ? this.COLOR_OWNED_BLUE : this.COLOR_OWNED_RED;
+        var _iteratorNormalCompletion7 = true;
+        var _didIteratorError7 = false;
+        var _iteratorError7 = undefined;
 
-        for (var i = 0; i < count; ++i) {
-          var p = points[i].split(",");
-          var x = parseInt(p[0]),
-              y = parseInt(p[1]);
-          p = this.m_Points[y * this.m_iGridWidth + x];
+        try {
+          for (var _iterator7 = points[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
+            var packed = _step7.value;
+            var p = packed.split(",");
+            var x = parseInt(p[0]),
+                y = parseInt(p[1]);
+            p = this.m_Points[y * this.m_iGridWidth + x];
 
-          if (p !== undefined) {
-            p.$SetStatus(point_status);
-            p.$SetFillColor(sOwnedCol);
-            p.$strokeColor(sOwnedCol);
+            if (p !== undefined) {
+              p.$SetStatus(point_status);
+              p.$SetFillColor(sOwnedCol);
+              p.$strokeColor(sOwnedCol);
+            }
+          }
+        } catch (err) {
+          _didIteratorError7 = true;
+          _iteratorError7 = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion7 && _iterator7.return != null) {
+              _iterator7.return();
+            }
+          } finally {
+            if (_didIteratorError7) {
+              throw _iteratorError7;
+            }
           }
         }
 
@@ -999,9 +1121,9 @@ var InkBallGame = function () {
       } else {
         var _points = this.m_Line.$GetPointsString();
 
-        var _i2 = 0;
-        var _x2 = _points[_i2],
-            _y = _points[_i2 + 1];
+        var i = 0;
+        var _x2 = _points[i],
+            _y = _points[i + 1];
         _x2 /= this.m_iGridSizeX;
         _y /= this.m_iGridSizeY;
         var p0 = this.m_Points[_y * this.m_iGridWidth + _x2];
@@ -1307,15 +1429,34 @@ var InkBallGame = function () {
       if (this.m_bDrawLines) {
         if (this.m_Line !== null) {
           var points = this.m_Line.$GetPointsArray();
+          var _iteratorNormalCompletion8 = true;
+          var _didIteratorError8 = false;
+          var _iteratorError8 = undefined;
 
-          for (var i = 0; i < points.length; i++) {
-            var x = points[i].x;
-            var y = points[i].y;
-            if (x === null || y === null) continue;
-            x /= this.m_iGridSizeX;
-            y /= this.m_iGridSizeY;
-            var p0 = this.m_Points[y * this.m_iGridWidth + x];
-            if (p0 !== undefined) p0.$SetStatus(StatusEnum.POINT_FREE);
+          try {
+            for (var _iterator8 = points[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
+              var point = _step8.value;
+              var x = point.x,
+                  y = point.y;
+              if (x === null || y === null) continue;
+              x /= this.m_iGridSizeX;
+              y /= this.m_iGridSizeY;
+              var p0 = this.m_Points[y * this.m_iGridWidth + x];
+              if (p0 !== undefined) p0.$SetStatus(StatusEnum.POINT_FREE);
+            }
+          } catch (err) {
+            _didIteratorError8 = true;
+            _iteratorError8 = err;
+          } finally {
+            try {
+              if (!_iteratorNormalCompletion8 && _iterator8.return != null) {
+                _iterator8.return();
+              }
+            } finally {
+              if (_didIteratorError8) {
+                throw _iteratorError8;
+              }
+            }
           }
 
           $RemovePolyline(this.m_Line);

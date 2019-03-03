@@ -732,54 +732,33 @@ namespace InkBall.Module.Model
 		private async Task<IEnumerable<InkBallPoint>> GetPointsFromDatabaseAsync(int iGameID, CancellationToken token = default)
 		{
 			var query = from ip in InkBallPoint
-						where ip.iGameId == iGameID// && ip.iPlayerId == iPlayerID
+						where ip.iGameId == iGameID
 						select ip;
 
 			return await query.ToArrayAsync(token);
 		}
 
-		private InkBallPath PathConstructor(InkBallPath path)
+		private InkBallPath LoadPointsInPath(InkBallPath path)
 		{
-			InkBallPath product;
 			// if (!string.IsNullOrEmpty(path.PointsAsString))
 			// {
-				var pathVM_fromJson = JsonConvert.DeserializeObject<InkBallPathViewModel>(path.PointsAsString);
+			var pathVM_fromJson = JsonConvert.DeserializeObject<InkBallPathViewModel>(path.PointsAsString);
 
-				product = new InkBallPath
-				{
-					iId = path.iId,
-					iGameId = path.iGameId,
-					iPlayerId = path.iPlayerId,
-					//InkBallPointsInPath = path.InkBallPointsInPath.OrderBy(o => o.Order).ToArray()
-					InkBallPointsInPath = pathVM_fromJson.InkBallPoint.Select(c => new InkBallPointsInPath
-					{
-						Point = new InkBallPoint
-						{
-							iId = c.iId,
-							iX = c.iX,
-							iY = c.iY
-						}
-					}).ToArray()
-				};
+			//path.InkBallPointsInPath = path.InkBallPointsInPath.OrderBy(o => o.Order).ToArray();
+			path.InkBallPointsInPath = pathVM_fromJson.InkBallPoint.Select(c => new InkBallPointsInPath(c)).ToArray();
 			// }
 			// else
 			// {
-			// 	product = new InkBallPath
-			// 	{
-			// 		iId = path.iId,
-			// 		iGameId = path.iGameId,
-			// 		iPlayerId = path.iPlayerId,
-			// 		InkBallPointsInPath = path.InkBallPointsInPath.OrderBy(o => o.Order).ToArray()
-			// 	};
+			// 	path.InkBallPointsInPath = path.InkBallPointsInPath.OrderBy(o => o.Order).ToArray();
 			// }
-			return product;
+			return path;
 		}
 
 		private async Task<IEnumerable<InkBallPath>> GetPathsFromDatabaseAsync(int iGameID, IEnumerable<InkBallPoint> points, CancellationToken token = default)
 		{
 			return await InkBallPath//.Include(x => x.InkBallPointsInPath)
 				.Where(pa => pa.iGameId == iGameID)
-				.Select(m => PathConstructor(m)).ToArrayAsync(token);
+				.Select(m => LoadPointsInPath(m)).ToArrayAsync(token);
 		}
 
 		public async Task<(IEnumerable<InkBallPath> Paths, IEnumerable<InkBallPoint> Points)> LoadPointsAndPathsAsync(int iGameID, CancellationToken token = default)

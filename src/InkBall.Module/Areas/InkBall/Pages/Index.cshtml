@@ -39,8 +39,6 @@
 	iPlayerID=@Model.Player.iId
 	IsThisPlayer1=@(Model.Game.IsThisPlayer1() ? "P1" : "P2")
 	<span class="whichColor">Play color</span>
-
-	<img src="~/img/image.png" alt="image" />
 </p>
 
 @Model.Game.Player1?.User?.UserName vs <span id='Player2Name'>@P2Name</span>

@@ -177,8 +177,7 @@ class WinCommand extends DtoMsg {
 function CountPointsDebug(sSelector2Set, sSvgSelector = 'svg') {
 	let svgs = document.getElementsByTagName(sSvgSelector), totalChildren = 0, childCounts = [];
 
-	for (let i = 0; i < svgs.length; i++) {
-		let svg = svgs[i];
+	for (const svg of svgs) {
 		totalChildren += svg.childElementCount;
 		childCounts.push(svg.childElementCount);
 	}
@@ -621,13 +620,13 @@ class InkBallGame {
 
 	SetPath(packed, bIsRed, bBelong2ThisPlayer) {
 		let sPoints = packed.split(" ");
-		let count = sPoints.length, sDelimiter = "", sPathPoints = "", p = null, x, y,
+		let sDelimiter = "", sPathPoints = "", p = null, x, y,
 			status = StatusEnum.POINT_STARTING;
-		for (let i = 0; i < count; ++i) {
-			p = sPoints[i].split(",");
+		for (const packed of sPoints) {
+			p = packed.split(",");
 			x = parseInt(p[0]); y = parseInt(p[1]);
 			x *= this.m_iGridSizeX; y *= this.m_iGridSizeY;
-			sPathPoints = sPathPoints + sDelimiter + x + "," + y;
+			sPathPoints += `${sDelimiter}${x},${y}`;
 			sDelimiter = " ";
 
 			p = this.m_Points[y * this.m_iGridWidth + x];
@@ -655,10 +654,9 @@ class InkBallGame {
 	}
 
 	IsPointBelongingToLine(sPoints, iX, iY) {
-		let count = sPoints.length, x, y, pnt;
-		for (let i = 0; i < count; ++i) {
-			pnt = sPoints[i].split(",");
-			x = pnt[0]; y = pnt[1];
+		for (const packed of sPoints) {
+			let pnt = packed.split(",");
+			let x = pnt[0], y = pnt[1];
 			if (x === iX && y === iY)
 				return true;
 		}
@@ -724,15 +722,15 @@ class InkBallGame {
 			};
 		}
 
-		let count = points.length, x, y, sPathPoints = "", sDelimiter = "";
-		for (let i = 0; i < count; i++) {
-			x = points[i].x;
-			y = points[i].y;
+		let x, y, sPathPoints = "", sDelimiter = "";
+		for (const pt of points) {
+			x = pt.x;
+			y = pt.y;
 			if (x === null || y === null) continue;
 			x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
 			//xs[k] = x; ys[k++] = y;
 
-			sPathPoints = sPathPoints + sDelimiter + x + "," + y;
+			sPathPoints += `${sDelimiter}${x},${y}`;
 			sDelimiter = " ";
 		}
 
@@ -743,9 +741,7 @@ class InkBallGame {
 		let sOwnedPoints = "";
 		let ownedPoints = [];
 		sDelimiter = "";
-		count = this.m_Points.length;
-		for (let i = 0; i < count; ++i) {
-			let p0 = this.m_Points[i];
+		for (const p0 of this.m_Points) {
 			if (p0 !== undefined && p0.$GetStatus() === StatusEnum.POINT_FREE && p0.$GetFillColor() === sColor) {
 				let pos = p0.$GetPosition();
 				x = pos.x; y = pos.y;
@@ -772,9 +768,8 @@ class InkBallGame {
 	}
 
 	IsPointOutsideAllPaths(iX, iY) {
-		let count1 = this.m_Lines.length;
-		for (let j = 0; j < count1; ++j) {
-			let points = this.m_Lines[j].$GetPointsArray();
+		for (const line of this.m_Lines) {
+			let points = line.$GetPointsArray();
 			//convert to x's and y's arrays
 			/*let count = points.length;
 			let xs = [], ys = [], x, y, k = 0;
@@ -1052,11 +1047,10 @@ class InkBallGame {
 				(this.m_sDotColor === this.COLOR_RED ? true : false), false);
 
 			let points = owned.split(" ");
-			let count = points.length;
 			let point_status = (this.m_sDotColor === this.COLOR_RED ? StatusEnum.POINT_OWNED_BY_RED : StatusEnum.POINT_OWNED_BY_BLUE);
 			let sOwnedCol = (this.m_sDotColor === this.COLOR_RED ? this.COLOR_OWNED_BLUE : this.COLOR_OWNED_RED);
-			for (let i = 0; i < count; ++i) {
-				let p = points[i].split(",");
+			for (const packed of points) {
+				let p = packed.split(",");
 				let x = parseInt(p[0]), y = parseInt(p[1]);
 				p = this.m_Points[y * this.m_iGridWidth + x];
 				if (p !== undefined) {
@@ -1475,9 +1469,8 @@ class InkBallGame {
 		if (this.m_bDrawLines) {
 			if (this.m_Line !== null) {
 				let points = this.m_Line.$GetPointsArray();
-				for (let i = 0; i < points.length; i++) {
-					let x = points[i].x;
-					let y = points[i].y;
+				for (const point of points) {
+					let x = point.x, y = point.y;
 					if (x === null || y === null) continue;
 					x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
 					let p0 = this.m_Points[y * this.m_iGridWidth + x];

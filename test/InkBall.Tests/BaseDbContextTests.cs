@@ -13,6 +13,8 @@ namespace InkBall.Tests
 {
 	public abstract class BaseDbContextTests : IDisposable
 	{
+		CancellationTokenSource _cancellationSource = new CancellationTokenSource();
+
 		public (SqliteConnection Conn, DbContextOptions<GamesContext> DbOpts,
 				IConfiguration Conf, IMemoryCache Cache, ILogger<BaseDbContextTests> Logger)
 				Setup
@@ -20,12 +22,11 @@ namespace InkBall.Tests
 			get; set;
 		}
 
-		public CancellationToken CancellationToken
+		protected CancellationToken CancellationToken
 		{
 			get
 			{
-				CancellationTokenSource source = new CancellationTokenSource();
-				CancellationToken token = source.Token;
+				CancellationToken token = _cancellationSource.Token;
 				return token;
 			}
 		}
@@ -42,7 +43,7 @@ namespace InkBall.Tests
 			var connection = new SqliteConnection("DataSource=:memory:");
 
 			// In-memory database only exists while the connection is open
-			await connection.OpenAsync();
+			await connection.OpenAsync(CancellationToken);
 
 			var options = new DbContextOptionsBuilder<GamesContext>()
 				.UseSqlite(connection)
@@ -51,7 +52,7 @@ namespace InkBall.Tests
 			// Create the schema in the database
 			using (var context = new GamesContext(options))
 			{
-				await context.Database.EnsureCreatedAsync();
+				await context.Database.EnsureCreatedAsync(CancellationToken);
 			}
 
 			var serviceCollection = new ServiceCollection()
@@ -65,7 +66,7 @@ namespace InkBall.Tests
 			var logger = serviceProvider.GetService<ILoggerFactory>()
 				.CreateLogger<BaseDbContextTests>();
 
-            return (connection, options, config, cache, logger);
+			return (connection, options, config, cache, logger);
 		}
 
 		public BaseDbContextTests()
@@ -87,6 +88,7 @@ namespace InkBall.Tests
 					// TODO: dispose managed state (managed objects).
 					Setup.Conn.Close();
 					Setup.Conn.Dispose();
+					_cancellationSource?.Dispose();
 				}
 
 				// TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

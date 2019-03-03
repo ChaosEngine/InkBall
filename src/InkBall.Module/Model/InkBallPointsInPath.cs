@@ -12,5 +12,19 @@ namespace InkBall.Module.Model
 
 		public InkBallPath Path { get; set; }
 		public InkBallPoint Point { get; set; }
+
+		public InkBallPointsInPath()
+		{
+		}
+
+		public InkBallPointsInPath(IPoint point)
+		{
+			this.Point = new InkBallPoint
+			{
+				iId = point.iId,
+				iX = point.iX,
+				iY = point.iY
+			};
+		}
 	}
 }
