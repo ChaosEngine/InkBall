@@ -15,26 +15,26 @@
 
 	if (bIsLoggedIn)
 	{
-		<p>Welcome @Model.UserName</p>
+		<p class="inkhome">Welcome @Model.UserName</p>
 	}
 	else
 	{
-		<p>You are not logged in ... or old enough :-D</p>
+		<p class="inkhome">You are not logged in ... or old enough :-D</p>
 	}
 }
 
 @if (!string.IsNullOrEmpty(Model.Message))
 {
 	var statusMessageClass = Model.Message.Contains("Error") ? "danger" : "success";
-	<div class="alert alert-@statusMessageClass alert-dismissible fade show" role="alert">
+	<div class="alert alert-@statusMessageClass alert-dismissible fade show inkhome" role="alert">
 		<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
 		@Model.Message
 	</div>
 }
 
-<div class="container">
-	<form method='post' class="row">
-		<div class="order-last order-sm-1 px-2 pt-2 pt-sm-0 btn-group-vertical" role="group" aria-label="Vertical button group">
+<div class="container inkhome">
+	<div class="row" role="group" aria-label="Vertical button group">
+		<form method='post' class="order-last order-sm-first pr-md-2 btn-group-vertical was-validated">
 			@if (bIsLoggedIn)
 			{
 				if (bIsCurrentGameOk)
@@ -46,29 +46,45 @@
 				{
 					//new game
 					<input type='submit' name='action' value='New game' class="btn btn-primary btn-lg" />
-					<select name='GameType' id='GameType' class="custom-select">
-						<option value='0' selected='selected'>First capture wins</option>
-						<option value='1'>First 5 captures wins</option>
-						<option value='2'>First 5 paths wins</option>
-						<option value='3'>Advantage of 5 paths wins</option>
+					<select name='GameType' id='GameType' class="custom-select" required>
+  						<option value='' selected='selected'>Choose game type</option>
+						<optgroup label='Game types'>
+							<option value='0'>First capture wins</option>
+							<option value='1'>First 5 captures wins</option>
+							<option value='2'>First 5 paths wins</option>
+							<option value='3'>Advantage of 5 paths wins</option>
+						</optgroup>
 					</select>
+					<div class="invalid-feedback">Invalid game type</div>
+
+					<select name='BoardSize' id='BoardSize' class="custom-select" required>
+  						<option value='' selected='selected'>Choose board size</option>
+						<optgroup label='Board sizes'>
+							<option value='20'>20 x 26</option>
+							<option value='40'>40 x 52</option>
+							<option value='64'>64 x 64</option>
+							<option value='80'>80 x 80</option>
+						</optgroup>
+					</select>
+					<div class="invalid-feedback">Invalid bard size</div>
 				}
-				<input type='submit' name='action' value='Game list' class="btn btn-primary" />
-				<input type='submit' name='action' value='Best' class="btn btn-primary" />
-				<a href="Rules" class="btn btn-primary">Game rules</a>
-				<input type='submit' name='action' value='Logout' class="btn btn-warning" />
+				<input type='submit' name='action' value='Game list' class="btn btn-primary" formnovalidate='formnovalidate' />
+				<input type='submit' name='action' value='Best' class="btn btn-primary" formnovalidate='formnovalidate' />
+				<a href="Rules" class="btn btn-primary d-flex align-items-center justify-content-center">Game rules</a>
+				<input type='submit' name='action' value='Logout' class="btn btn-warning" formnovalidate='formnovalidate' />
 			}
 			else
 			{
-				<a href="Rules" class="btn btn-primary d-flex align-items-center">Game rules</a>
-				<a href="~/Identity/Account/Login" class="btn btn-primary d-flex align-items-center">Login</a>
-				<a href="~/Identity/Account/Register" class="btn btn-primary d-flex align-items-center">Register</a>
+				//not logged or bad
+				<a href="Rules" class="btn btn-primary d-flex align-items-center justify-content-center">Game rules</a>
+				<a href="~/Identity/Account/Login" class="btn btn-primary d-flex align-items-center justify-content-center">Login</a>
+				<a href="~/Identity/Account/Register" class="btn btn-primary d-flex align-items-center justify-content-center">Register</a>
 			}
-		</div>
-		<div class="order-first order-sm-12 px-2">
+		</form>
+		<div class="order-first order-sm-last pb-2 pb-md-0">
 			<img src="../img/homescreen.jpg" alt="home screen" aria-label="home screen image" class="rounded"/>
 		</div>
-	</form>
+	</div>
 </div>
 
 

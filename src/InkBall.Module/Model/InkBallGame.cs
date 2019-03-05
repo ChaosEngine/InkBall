@@ -317,6 +317,14 @@ namespace InkBall.Module.Model
 			DRAW_WIN = 3
 		}
 
+		public enum BoardSizeEnum
+		{
+			SIZE_20x26 = 20,
+			SIZE_40x52 = 40,
+			SIZE_64x64 = 64,
+			SIZE_80x80 = 80
+		}
+
 		public override InkBallPlayer Player1 { get; set; }
 		public override InkBallPlayer Player2 { get; set; }
 		public override ICollection<InkBallPath> InkBallPath { get; set; }

@@ -18,6 +18,11 @@ namespace InkBall.Module.Pages
 		private readonly IHubContext<GameHub, IGameClient> _inkballHubContext;
 		private readonly IOptions<InkBallOptions> _commonUIConfigureOptions;
 
+		
+		[BindProperty]
+		public InkBallGame.BoardSizeEnum BoardSize { get; set; }
+
+
 		public HomeModel(GamesContext dbContext, ILogger<HomeModel> logger,
 			IHubContext<Hubs.GameHub, Hubs.IGameClient> inkballHubContext,
 			IOptions<InkBallOptions> commonUIConfigureOptions) : base(dbContext, logger)
@@ -66,26 +71,43 @@ namespace InkBall.Module.Pages
 							msg = "You are not logged in";
 							break;
 						}
-						if (!Enum.TryParse<InkBallGame.GameTypeEnum>(gameType, true, out var GameType))
-							throw new NotSupportedException("Wrong game type");
-
-						int width, height, grid_size;
-						//if (g_bIsMobile)
+						if (!(Enum.TryParse<InkBallGame.GameTypeEnum>(gameType, true, out var selectedGameType) &&
+							(Enum.IsDefined(typeof(InkBallGame.GameTypeEnum), selectedGameType) | selectedGameType.ToString().Contains(","))))
 						{
-							width = 20; height = 26;
-							grid_size = 16;
+							msg = "Wrong game type";
+							break;
 						}
-						//else
-						//{
-						//	width = 300 * 2; height = 390 * 2;
-						//	grid_size = 15;
-						//}
+
+						int width = -1, height = -1, grid_size = 16;
+						switch (BoardSize)
+						{
+							case InkBallGame.BoardSizeEnum.SIZE_20x26:
+								width = 20; height = 26;
+								break;
+							case InkBallGame.BoardSizeEnum.SIZE_40x52:
+								width = 40; height = 52;
+								break;
+							case InkBallGame.BoardSizeEnum.SIZE_64x64:
+								width = 64; height = 64;
+								break;
+							case InkBallGame.BoardSizeEnum.SIZE_80x80:
+								width = 80; height = 80;
+								break;
+							default:
+								break;
+						}
+						if (width <= -1)
+						{
+							msg = "Wrong board size";
+							break;
+						}
+
 						using (var trans = await _dbContext.Database.BeginTransactionAsync(token))
 						{
 							try
 							{
 								var dbGame = await _dbContext.CreateNewGameFromExternalUserIDAsync(GameUser.sExternalId, InkBallGame.GameStateEnum.AWAITING,
-									GameType, grid_size, width, height, true, token);
+									selectedGameType, grid_size, width, height, true, token);
 
 								trans.Commit();
 								return Redirect("Index");

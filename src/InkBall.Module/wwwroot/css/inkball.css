@@ -1,4 +1,4 @@
-﻿h3 {
+﻿.inkgame h3 {
 	color: darkorange;
 }
 
@@ -19,8 +19,8 @@
 	border: 1px solid red;
 	background-image: url('../img/grid80.png');
 	background-size: calc(1em * 5) calc(1em * 5);
-	width: calc(1em * 20 * 1);
-	height: calc(1em * 26 * 1);
+	/* width: calc(1em * 20 * 1);
+	height: calc(1em * 26 * 1); */
 	/* font-size: 32px; */
 }
 

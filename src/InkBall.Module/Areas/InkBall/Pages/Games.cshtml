@@ -10,151 +10,172 @@
 		WriteLiteral($"<link rel='stylesheet' href='{Url.Content("~/css/inkball.css")}' />");
 	});
 
-
-
-
 	var sExternalUserID = Model.GameUser.sExternalId;
 	var bIsCurrentGameOk = Model.Game != null;
-
-
 
 	if (!string.IsNullOrEmpty(Model.Message))
 	{
 		var statusMessageClass = Model.Message.Contains("Error") ? "danger" : "success";
-		<div class="alert alert-@statusMessageClass alert-dismissible" role="alert">
+		<div class="alert alert-@statusMessageClass alert-dismissible fade show inkgames" role="alert">
 			<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
 			@Model.Message
 		</div>
 	}
 }
 
-
-<div class='content'>
-	<table class='game_tab'>
-		<tr>
-			<th class='gth'>Player 1</th>
-			<th class='gth'>Player 2</th>
-			<th class='gth'>Game state</th>
-			<th class='gth'>Action</th>
-			<th>Game type</th>
-		</tr>
-		@if(Model.GamesList != null)
-		{
-			foreach (var game in Model.GamesList)
-			{
+<div class='container inkgames'>
+	<div class="table-responsive">
+		<table class='table game_tab'>
+			<thead class="thead-light">
 				<tr>
-					<td class='gtd'>@game?.Player1.User.UserName</td>
-					<td class='gtd'>@game?.Player2?.User?.UserName</td>
-					@{
-						bool bIsMyOwnGame;
-						if (bIsCurrentGameOk &&
-							(game.Player1.User.sExternalId == sExternalUserID ||
-							(game?.Player2?.User != null && game.Player2.User.sExternalId == sExternalUserID)))
-						{
-							bIsMyOwnGame = true;
-						}
-						else
-						{
-							bIsMyOwnGame = false;
-						}
-
-						switch (game.GameState)
-						{
-							case InkBallGame.GameStateEnum.AWAITING:
-								<td class='gtd' style='font-style: italic'>waiting for another player</td>
-								<td class='gtd'>
-									<form method='post'>
-										<input type='hidden' name='GameID' value='@game.iId' />
-										@if (bIsMyOwnGame)
-										{
-											<input type='submit' name='action' value='continue' class='btn btn-outline-primary' />
-										}
-										else
-										{
-											if (!bIsCurrentGameOk)
-											{
-												<input type='submit' name='action' value='join' class='btn btn-outline-primary' />
-											}
-										}
-									</form>
-								</td>
-								break;
-
-							case InkBallGame.GameStateEnum.ACTIVE:
-								<td class='gtd' style='font-style: italic'>game in progress</td>
-								<td class='gtd'>
-									<form method='post'>
-										<input type='hidden' name='GameID' value='@game.iId' />
-										@if (bIsMyOwnGame)
-										{
-											<input type='submit' name='action' value='continue' class="btn btn-outline-primary" />
-										}
-										else
-										{
-											if (!bIsCurrentGameOk)
-											{
-												<a href='View?GameID=@game.iId'>view</a>
-											}
-										}
-									</form>
-								</td>
-								break;
-
-							case InkBallGame.GameStateEnum.INACTIVE:
-								<td class='gtd' style='font-style: italic'>game inactive</td>
-								<td class='gtd'></td>
-								break;
-							case InkBallGame.GameStateEnum.FINISHED:
-								<td class='gtd' style='font-style: italic'>game finished</td>
-								<td class='gtd'></td>
-								break;
-							default:
-								throw new NotSupportedException("bad game state");
-						}
-
-						switch (game.GameType)
-						{
-							case InkBallGame.GameTypeEnum.FIRST_5_ADVANTAGE_PATHS:
-								<td class='gtd' style='font-style: italic'>FIRST 5 ADVANTAGE PATHS</td>
-								break;
-							case InkBallGame.GameTypeEnum.FIRST_5_CAPTURES:
-								<td class='gtd' style='font-style: italic'>FIRST 5 CAPTURES</td>
-								break;
-							case InkBallGame.GameTypeEnum.FIRST_5_PATHS:
-								<td class='gtd' style='font-style: italic'>FIRST 5 PATHS</td>
-								break;
-							case InkBallGame.GameTypeEnum.FIRST_CAPTURE:
-								<td class='gtd' style='font-style: italic'>FIRST CAPTURE</td>
-								break;
-							default:
-								throw new NotSupportedException("bad game type");
-						}
-					}
+					<th scope='row'>#</th>
+					<th scope='col'>Player 1</th>
+					<th scope='col'>Player 2</th>
+					<th scope='col'>Game state</th>
+					<th scope='col'>Action</th>
+					<th scope='col'>Game type</th>
 				</tr>
-			}
-		}
-	</table>
-
-	<br/>
-	<br/>
-	<div class='buttonz2'>
-		<form method='post'>
-			@if (!bIsCurrentGameOk)
+			</thead>
+			<tbody>
+			@if(Model.GamesList != null)
 			{
-				@:Game type
-				<select name='GameType' id='GameType'>
-					<option value='0' selected='selected'>First capture wins</option>
-					<option value='1'>First 5 captures wins</option>
-					<option value='2'>First 5 paths wins</option>
-					<option value='3'>Advantage of 5 paths wins</option>
-				</select>
-				<input type='submit' name='action' value='New game' class='btn btn-outline-primary' />
+				foreach (var game in Model.GamesList)
+				{
+					<tr>
+						<th scope='row'>@game.iId</th>
+						<td class='gtd'>@game.Player1.User.UserName</td>
+						<td class='gtd'>@game?.Player2?.User?.UserName</td>
+						@{
+							bool bIsMyOwnGame;
+							if (bIsCurrentGameOk &&
+								(game.Player1.User.sExternalId == sExternalUserID ||
+								(game?.Player2?.User != null && game.Player2.User.sExternalId == sExternalUserID)))
+							{
+								bIsMyOwnGame = true;
+							}
+							else
+							{
+								bIsMyOwnGame = false;
+							}
+
+							switch (game.GameState)
+							{
+								case InkBallGame.GameStateEnum.AWAITING:
+									<td class='font-italic gtd'>waiting for another player</td>
+									<td class='gtd'>
+										<form method='post'>
+											<input type='hidden' name='GameID' value='@game.iId' />
+											@if (bIsMyOwnGame)
+											{
+												<input type='submit' name='action' value='continue' class='btn btn-outline-primary' />
+											}
+											else
+											{
+												if (!bIsCurrentGameOk)
+												{
+													<input type='submit' name='action' value='join' class='btn btn-outline-primary' />
+												}
+											}
+										</form>
+									</td>
+									break;
+
+								case InkBallGame.GameStateEnum.ACTIVE:
+									<td class='font-italic gtd'>game in progress</td>
+									<td class='gtd'>
+										<form method='post'>
+											<input type='hidden' name='GameID' value='@game.iId' />
+											@if (bIsMyOwnGame)
+											{
+												<input type='submit' name='action' value='continue' class="btn btn-outline-primary" />
+											}
+											else
+											{
+												if (!bIsCurrentGameOk)
+												{
+													<a href='View?GameID=@game.iId'>view</a>
+												}
+											}
+										</form>
+									</td>
+									break;
+
+								case InkBallGame.GameStateEnum.INACTIVE:
+									<td class='font-italic gtd' colspan="2">game inactive</td>
+									break;
+								case InkBallGame.GameStateEnum.FINISHED:
+									<td class='font-italic gtd' colspan="2">game finished</td>
+									break;
+								default:
+									throw new NotSupportedException("bad game state");
+							}
+
+							switch (game.GameType)
+							{
+								case InkBallGame.GameTypeEnum.FIRST_5_ADVANTAGE_PATHS:
+									<td class='font-italic gtd'>FIRST 5 ADVANTAGE PATHS</td>
+									break;
+								case InkBallGame.GameTypeEnum.FIRST_5_CAPTURES:
+									<td class='font-italic gtd'>FIRST 5 CAPTURES</td>
+									break;
+								case InkBallGame.GameTypeEnum.FIRST_5_PATHS:
+									<td class='font-italic gtd'>FIRST 5 PATHS</td>
+									break;
+								case InkBallGame.GameTypeEnum.FIRST_CAPTURE:
+									<td class='font-italic gtd'>FIRST CAPTURE</td>
+									break;
+								default:
+									throw new NotSupportedException("bad game type");
+							}
+						}
+					</tr>
+				}
 			}
-			<input type='submit' name='action' value='Home' class='btn btn-outline-primary' />
-		</form>
+			</tbody>
+		</table>
 	</div>
-
-
+	<form method='post' class="was-validated">
+		@if (!bIsCurrentGameOk)
+		{
+			<fieldset class="form-group bg-light">
+				<div class="form-row" role="group" aria-label="Button group">
+					<legend class="col-form-label col-sm-2 pt-0">New game creation</legend>
+					<div class="col-auto">
+						<select name='GameType' id='GameType' class="custom-select" required>
+							<option value='' selected='selected'>Choose game type</option>
+							<optgroup label='Game types'>
+								<option value='0'>First capture wins</option>
+								<option value='1'>First 5 captures wins</option>
+								<option value='2'>First 5 paths wins</option>
+								<option value='3'>Advantage of 5 paths wins</option>
+							</optgroup>
+						</select>
+						<div class="invalid-feedback">Invalid game type</div>
+					</div>
+					<div class="col-auto">
+						<select name='BoardSize' id='BoardSize' class="custom-select" required>
+							<option value='' selected='selected'>Choose board size</option>
+							<optgroup label='Board sizes'>
+								<option value='20'>20 x 26</option>
+								<option value='40'>40 x 52</option>
+								<option value='64'>64 x 64</option>
+								<option value='80'>80 x 80</option>
+							</optgroup>
+						</select>
+						<div class="invalid-feedback">Invalid bard size</div>
+					</div>
+					<input type='submit' name='action' value='New game' class='col-auto mx-1 btn btn-primary' />
+				</div>
+			</fieldset>
+			<div class="form-row justify-content-end">
+				<input type='submit' name='action' value='Home' class='col-auto mx-1 btn btn-outline-primary' formnovalidate='formnovalidate' />
+			</div>
+		}
+		else
+		{
+			<input type='submit' name='action' value='Home' class='btn btn-outline-primary' formnovalidate='formnovalidate' />
+		}
+	</form>
 </div>
 
 @*

@@ -1513,6 +1513,8 @@ var InkBallGame = function () {
 
       this.m_iPosX = this.m_Screen.offsetLeft;
       this.m_iPosY = this.m_Screen.offsetTop;
+      this.m_Screen.style.width = "calc(1em * ".concat(this.m_BoardSize.width, ")");
+      this.m_Screen.style.height = "calc(1em * ".concat(this.m_BoardSize.height, ")");
       var iClientWidth = this.m_Screen.clientWidth;
       var iClientHeight = this.m_Screen.clientHeight;
       this.m_iGridSizeX = parseInt(Math.ceil(iClientWidth / this.m_BoardSize.width));
