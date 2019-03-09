@@ -3,6 +3,7 @@ using InkBall.Module.Model;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
@@ -22,7 +23,7 @@ namespace InkBall.Module
 
 		public string AppRootPath { get; set; } = "/";
 
-		public string AuthorizationPolicyName { get; set; }
+		public string AuthorizationPolicyName { get; set; } = "InkBallPlayerPolicy";
 
 		public Type ApplicationUserType { get; set; }
 
@@ -61,8 +62,23 @@ namespace InkBall.Module
 
 			configureOptions?.Invoke(options);
 
+			services.AddAuthorization(auth_options =>
+			{
+				auth_options.AddPolicy(options.AuthorizationPolicyName, policy =>
+				{
+					policy.RequireAuthenticatedUser()
+						//.RequireRole("InkBallPlayer")
+						.AddRequirements(new InkBall.Module.MinimumAgeRequirement(18));
+				});
+			});
+
 			services.ConfigureOptions(options);
 			services.AddSingleton<IOptions<InkBallOptions>>(Options.Create(options));
+		}
+
+		public static void PrepareSignalRForInkBall(this HubRouteBuilder routes)
+		{
+			routes.MapHub<InkBall.Module.Hubs.GameHub>('/' + InkBall.Module.Hubs.GameHub.HubName);
 		}
 	}
 }
