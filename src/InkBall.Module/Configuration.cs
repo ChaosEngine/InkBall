@@ -1,5 +1,6 @@
 ﻿using System;
 using InkBall.Module.Model;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -23,7 +24,7 @@ namespace InkBall.Module
 
 		public string AppRootPath { get; set; } = "/";
 
-		public string AuthorizationPolicyName { get; set; } = "InkBallPlayerPolicy";
+		public Action<AuthorizationPolicyBuilder> CustomAuthorizationPolicyBuilder { get; set; }
 
 		public Type ApplicationUserType { get; set; }
 
@@ -62,15 +63,24 @@ namespace InkBall.Module
 
 			configureOptions?.Invoke(options);
 
-			services.AddAuthorization(auth_options =>
+			if (options.CustomAuthorizationPolicyBuilder != null)
 			{
-				auth_options.AddPolicy(options.AuthorizationPolicyName, policy =>
+				services.AddAuthorization(auth_options =>
 				{
-					policy.RequireAuthenticatedUser()
-						//.RequireRole("InkBallPlayer")
-						.AddRequirements(new InkBall.Module.MinimumAgeRequirement(18));
+					auth_options.AddPolicy("InkBallPlayerPolicy", options.CustomAuthorizationPolicyBuilder);
 				});
-			});
+			}
+			else
+			{
+				services.AddAuthorization(auth_options =>
+				{
+					auth_options.AddPolicy("InkBallPlayerPolicy", policy =>
+					{
+						policy.RequireAuthenticatedUser()
+							.AddRequirements(new InkBall.Module.MinimumAgeRequirement(18));
+					});
+				});
+			}
 
 			services.ConfigureOptions(options);
 			services.AddSingleton<IOptions<InkBallOptions>>(Options.Create(options));

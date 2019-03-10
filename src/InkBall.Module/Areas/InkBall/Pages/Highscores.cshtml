@@ -10,13 +10,25 @@
 	});
 }
 
-highscores
-
-@*
-@{
-	DefineSection(commonUIConfigureOptions.Value.ScriptsSectionName, async () =>
-	{
-		WriteLiteral($"<script type='text/javascript' src='{Url.Content("~/js/inkball.js")}'></script>");
-	});
-}
-*@
+<div class="container inkstats">
+	<a href="Home" class="btn btn-primary my-2">Home</a>
+	<div class="grid-striped">
+		<div class="row">
+			<div class="col font-weight-bold">Player</div>
+			<div class="col font-weight-bold">Wins</div>
+			<div class="col font-weight-bold">Loses</div>
+			<div class="col font-weight-bold">Draws</div>
+			<div class="col font-weight-bold">Game count</div>
+		</div>
+		@foreach ((int PlayerId, int? UserId, string UserName, int WinCount, int LossCount, int DrawCount, int GameCount) plyr_stat in Model.Stats)
+		{
+			<div class="row">
+				<div class="col">@plyr_stat.UserName</div>
+				<div class="col">@plyr_stat.WinCount</div>
+				<div class="col">@plyr_stat.LossCount</div>
+				<div class="col">@plyr_stat.DrawCount</div>
+				<div class="col">@plyr_stat.GameCount</div>
+			</div>		
+		}		
+	</div>
+</div>

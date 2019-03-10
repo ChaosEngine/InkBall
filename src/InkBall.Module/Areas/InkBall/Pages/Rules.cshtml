@@ -11,10 +11,7 @@
 }
 
 
-
-
-
-
+<a href="Home" class="btn btn-primary my-2">Home</a>
 <ol>
 	<li>Player put dots on the grid one after another</li>
 	<li>When player wants to surround oponents dots, one choses <span style='color:red; font-weight:bold'>Draw lines</span> and draws surrounding line; to put dots again - click <span style='color:red; font-weight:bold'>Draw dots</span></li>
@@ -23,15 +20,3 @@
 	<li>There must be at least one oponent dots to surround</li>
 </ol>
 
-
-
-
-
-@*
-@{
-	DefineSection(commonUIConfigureOptions.Value.ScriptsSectionName, async () =>
-	{
-		WriteLiteral($"<script type='text/javascript' src='{Url.Content("~/js/inkball.js")}'></script>");
-	});
-}
-*@

@@ -4,8 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using InkBall.Module.Model;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 
 namespace InkBall.Module.Pages
@@ -13,13 +11,17 @@ namespace InkBall.Module.Pages
 	[Authorize(Policy = "InkBallPlayerPolicy")]
 	public class HighscoresModel : BasePageModel
 	{
+		public IEnumerable<(int PlayerId, int? UserId, string UserName, int WinCount, int LossCount, int DrawCount, int GameCount)> Stats { get; set; }
+
 		public HighscoresModel(GamesContext dbContext, ILogger<RulesModel> logger) : base(dbContext, logger)
 		{
 		}
 
-		public Task OnGet()
+		public async Task OnGet()
 		{
-			return base.LoadUserPlayerAndGameAsync();
+			//await base.LoadUserPlayerAndGameAsync();
+
+			Stats = await _dbContext.GetPlayerStatisticTableAsync();
 		}
 	}
 }

@@ -769,6 +769,23 @@ namespace InkBall.Module.Model
 			return (paths, points);
 		}
 
+		public async Task<IEnumerable<(int, int?, string, int, int, int, int)>> GetPlayerStatisticTableAsync(
+			int? iPlayerID = null, int? iExternalUserID = null)
+		{
+			var query = this.InkBallPlayer.Include(u => u.User)
+				.Select(ip => ValueTuple.Create(
+							ip.iId,
+							ip.iUserId,
+							ip.User.UserName,
+							ip.iWinCount,
+							ip.iLossCount,
+							ip.iDrawCount,
+							this.InkBallGame.Count(g => g.iPlayer1Id == ip.iId || g.iPlayer2Id == ip.iId)
+						));
+
+			return await query.ToArrayAsync();
+		}
+
 		#endregion WIP
 
 
