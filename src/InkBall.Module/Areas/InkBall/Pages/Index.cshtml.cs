@@ -18,9 +18,7 @@ namespace InkBall.Module.Pages
 	{
 		private readonly IOptions<HubOptions> _signalRHubOptions;
 
-		public InkBallPlayer OtherPlayer { get; protected set; }
-
-		public (IEnumerable<InkBallPath> Paths, IEnumerable<InkBallPoint> Points) PlayerPointsAndPaths { get; private set; }
+		public (IEnumerable<InkBallPath> Paths, IEnumerable<InkBallPoint> Points) PlayerPointsAndPaths { get; protected set; }
 
 		public TimeSpan ClientTimeoutInterval
 		{
@@ -95,7 +93,7 @@ namespace InkBall.Module.Pages
 			_signalRHubOptions = signalRHubOptions;
 		}
 
-		public async Task<IActionResult> OnGet()
+		public virtual async Task<IActionResult> OnGetAsync(GameIdModel model)
 		{
 			if (!GameHub.WebSocketAllowedOrigins.Any())
 				GameHub.WebSocketAllowedOrigins.Add($"{Request.Scheme}://{Request.Host}");
@@ -106,9 +104,6 @@ namespace InkBall.Module.Pages
 
 			if (Game == null)
 				return Redirect("Home");
-
-			// InkBallPlayer otherPlayer = Game.GetOtherPlayer();
-			// OtherPlayer = otherPlayer;
 
 			var token = HttpContext.RequestAborted;
 

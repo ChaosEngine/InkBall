@@ -511,8 +511,8 @@ namespace InkBall.Module.Model
 								.ThenInclude(p1 => p1.User)
 							.Include(gp2 => gp2.Player2)
 								.ThenInclude(p2 => p2.User)
-							.Include(pt => pt.InkBallPoint)
-							.Include(pa => pa.InkBallPath)
+							// .Include(pt => pt.InkBallPoint)
+							// .Include(pa => pa.InkBallPath)
 						where g.iId == iID
 						select g;
 

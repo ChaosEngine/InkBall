@@ -8,9 +8,17 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using InkBall.Module.Model;
+using System.ComponentModel.DataAnnotations;
 
 namespace InkBall.Module.Pages
 {
+	public sealed class GameIdModel
+	{
+		[Required]
+		[Range(1, int.MaxValue)]
+		public int GameID { get; set; }
+	}
+
 	public abstract class BasePageModel : PageModel
 	{
 		protected readonly GamesContext _dbContext;

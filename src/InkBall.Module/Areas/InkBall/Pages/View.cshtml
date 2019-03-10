@@ -1,0 +1,145 @@
+@page
+@inject Microsoft.AspNetCore.Hosting.IHostingEnvironment env
+@inject Microsoft.Extensions.Options.IOptions<InkBallOptions> commonUIConfigureOptions
+@model ViewModel
+@{
+	ViewData["Title"] = "Game";
+
+	DefineSection(commonUIConfigureOptions.Value.HeadElementsSectionName, async () =>
+	{
+		WriteLiteral($"<link rel='stylesheet' href='{Url.Content("~/css/inkball.css")}' />");
+	});
+
+
+
+	string P2Name = Model.Game.Player2 != null ? Model.Game.Player2?.User?.UserName : "???";
+	string surrender_win_cancel_name;
+	if(Model.Game.Player2 != null)
+	{
+		if(Model.Game.GetOtherPlayer().IsLastMoveOverdue() && Model.Game.IsThisPlayerActive())
+		{
+			surrender_win_cancel_name = "win";
+		}
+		else
+		{
+			surrender_win_cancel_name = "surrender";
+		}
+	}
+	else
+	{
+		surrender_win_cancel_name = "cancel";
+	}
+}
+<h3 class="inkgame">
+	This is Inball Game page
+</h3>
+<p class="inkgame">
+	<!-- Debug State -->
+	iGameID=@Model.Game.iId
+	iPlayerID=@Model.Game.Player1.iId
+	IsThisPlayer1=@(Model.Game.IsThisPlayer1() ? "P1" : "P2")
+	<span class="whichColor">Play color</span>
+</p>
+
+@Model.Game.Player1?.User?.UserName vs <span id='Player2Name'>@P2Name</span>
+<div class="container inkgame">
+	<form action="Games" method="post" asp-antiforgery="true" class="row">
+		<input type='hidden' name='GameID' value='@Model.Game.iId' />
+		<div class="col-xs-6 col-sm-auto pl-0">
+			<input type='submit' name='action' value='pause' class='btn btn-outline-primary' />
+			<input id='SurrenderButton' type='submit' name='action' value="@surrender_win_cancel_name" class='btn btn-outline-primary' disabled />
+		</div>
+		<div class="col-xs-6 col-sm-auto pl-0">
+			<input id="DrawMode" type="button" value="Draw lines" class='btn btn-primary' disabled />
+			<input id="CancelPath" type="button" value="Cancel path" class='btn btn-primary' disabled />
+			<input id="Test" type="button" value="Test" class='btn btn-warning' />
+		</div>
+	</form>
+	<div id="status" class="row">
+		<div class="col-auto px-0">
+			<span id="gameStatus">•</span>&nbsp;
+			<span id="debug0"></span>&nbsp;
+			<span id="debug1"></span>&nbsp;
+			<span id="debug2"></span>
+		</div>
+	</div>
+	<div class="row">
+		<div id="screen" class="col-sm-auto p-0">
+		</div>
+		<div class="col pt-3 pt-md-0">
+			<div class="input-group">
+				<input id="messageInput" type="text" class="form-control" placeholder="Message..." aria-label="Message to send" aria-describedby="sendButton"
+					onkeyup="document.querySelector('#sendButton').disabled = this.value == ''" />
+				<div class="input-group-append">
+					<input id="sendButton" type="button" value="Send Message" class="btn btn-secondary" disabled />
+				</div>
+			</div>
+			<ul id="messagesList" class="list-group list-group-flush"></ul>
+		</div>
+	</div>
+</div>
+
+
+<script type='text/javascript'>
+"use strict";
+	var game = null;
+
+	window.addEventListener('load', function() {
+		let inkBallHubName = '@(commonUIConfigureOptions.Value.AppRootPath + InkBall.Module.Hubs.GameHub.HubName)';
+		let iGameID = @Model.Game.iId;
+		let iPlayerID = @Model.Game.Player1.iId;	
+		let iBoardWidth = @Model.Game.iBoardWidth, iBoardHeight = @Model.Game.iBoardHeight;
+		let bPlayingWithRed = @(Model.Game.IsThisPlayerPlayingWithRed().ToString().ToLowerInvariant());
+		let bPlayerActive = @(Model.Game.IsThisPlayerActive().ToString().ToLowerInvariant());
+		let gameType = @((int)Model.Game.GameType);
+		let protocol = @(commonUIConfigureOptions.Value.UseMessagePackBinaryTransport.ToString().ToLowerInvariant()) ? new signalR.protocols.msgpack.MessagePackHubProtocol() : new signalR.JsonHubProtocol();
+		let servTimeoutMillis = @(Model.ClientTimeoutInterval.TotalMilliseconds);
+		game = new InkBallGame(inkBallHubName, signalR.LogLevel.Warning, protocol, signalR.HttpTransportType.None, servTimeoutMillis,
+			function () {
+				return 'iGameID=' + iGameID + '&iPlayerID=' + iPlayerID;
+			},
+			gameType, bPlayingWithRed, bPlayerActive, {width: iBoardWidth, height: iBoardHeight}, 125, true
+		);
+		game.StartSignalRConnection(iGameID, iPlayerID, '#messagesList', '#sendButton', '#messageInput');
+		game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#DrawMode', '#CancelPath');
+
+		game.SetAllPoints(@Html.Raw(Model.GetPointsAsJavaScriptArray(Model.PlayerPointsAndPaths.Points)));
+		game.SetAllPaths(@Html.Raw(Model.GetPathsAsJavaScriptArray(Model.PlayerPointsAndPaths.Paths)));
+
+		//alert('a QQ');
+		$('.whichColor').css('color', bPlayingWithRed ? "red" : "blue");
+		CountPointsDebug("#debug2");
+	});
+
+	window.addEventListener('beforeunload', function (e) {
+		game.StopSignalRConnection();
+	});
+</script>
+
+@{
+	DefineSection(commonUIConfigureOptions.Value.ScriptsSectionName, async () =>
+	{
+		WriteLiteral(
+			(env.IsDevelopment() ?
+			$"<script src='{Url.Content("~/lib/signalr/dist/browser/signalr.js")}'></script>\r" +
+			(commonUIConfigureOptions.Value.UseMessagePackBinaryTransport ? $"<script src='{Url.Content("~/lib/msgpack5/dist/msgpack5.js")}'></script>\r" +
+			$"<script src='{Url.Content("~/lib/signalr-protocol-msgpack/dist/browser/signalr-protocol-msgpack.js")}'></script>\r" : "") +
+			$"<script async type='text/javascript' src='{Url.Content("~/js/svgvml.js")}'></script>\r"
+			:
+			@"<script src='https://cdn.jsdelivr.net/npm/@aspnet/signalr@1.1.2/dist/browser/signalr.min.js' integrity='sha256-2q+WZefmeSQ+GK2hUg0O51LUMb5GVMQYCLapBNme6oU=' crossorigin='anonymous'></script>" +
+			(commonUIConfigureOptions.Value.UseMessagePackBinaryTransport ? @"<script src='https://cdn.jsdelivr.net/npm/msgpack5@4.2.1/dist/msgpack5.min.js' integrity='sha256-mY/RhkCJfd98j3c5s1EcUDJdRzffTeKzEzFIaI/2KQg=' crossorigin='anonymous'></script>
+			<script src='https://cdn.jsdelivr.net/npm/@aspnet/signalr-protocol-msgpack@1.1.0/dist/browser/signalr-protocol-msgpack.min.js' integrity='sha256-/nN8c30tnA8AmQMPV0efnlYrEOhPNNo7v4Y6JgHSPac=' crossorigin='anonymous'></script>" : "") +
+			$"<script async type='text/javascript' src='{Url.Content("~/js/svgvml.min.js")}'></script>") +
+
+
+			@"<script type='text/javascript'>
+			if(navigator.userAgent.indexOf('Trident') < 0) {
+				document.write(""<script async src='" + (env.IsDevelopment() ? Url.Content("~/js/inkball.js") : Url.Content("~/js/inkball.min.js")) + @"'><\/script>"");
+			} else {
+				document.write(""<script src='https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/7.2.5/polyfill.min.js' integrity='sha256-5MaPCzSnmBMXH0Z0wdF0ETeJh9zN+psdZ641gqe4AQo=' crossorigin='anonymous'><\/script>"" +
+				""<script async src='" + (env.IsDevelopment() ? Url.Content("~/js/inkball.babelify.js"): Url.Content("~/js/inkball.babelify.min.js")) + @"'><\/script>"");
+			}
+			</script>"
+		);
+	});
+}
