@@ -30,6 +30,8 @@ namespace InkBall.Module
 
 		public bool UseMessagePackBinaryTransport { get; set; } = false;
 
+		public bool EnablePolyfill { get; set; } = true;
+
 		public void PostConfigure(string name, StaticFileOptions options)
 		{
 			name = name ?? throw new ArgumentNullException(nameof(name));

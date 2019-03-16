@@ -343,14 +343,14 @@ var InkBallGame = function () {
       width: 32,
       height: 32
     };
-    var iTooLong2Duration = arguments.length > 10 && arguments[10] !== undefined ? arguments[10] : 125;
-    var bViewOnly = arguments.length > 11 && arguments[11] !== undefined ? arguments[11] : false;
+    var bViewOnly = arguments.length > 10 && arguments[10] !== undefined ? arguments[10] : false;
+    var iTooLong2Duration = arguments.length > 11 && arguments[11] !== undefined ? arguments[11] : 125;
 
     _classCallCheck(this, InkBallGame);
 
     this.g_iGameID = null;
     this.g_iPlayerID = null;
-    this.GameType = gameType;
+    this.GameType = GameTypeEnum[gameType];
     this.iConnErrCount = 0;
     this.iExponentialBackOffMillis = 2000;
     this.COLOR_RED = 'red';
@@ -1540,6 +1540,8 @@ var InkBallGame = function () {
         this.m_DrawMode.onclick = this.OnDrawModeClick.bind(this);
         this.m_CancelPath.onclick = this.OnCancelClick.bind(this);
         document.querySelector('#Test').onclick = this.OnTestClick.bind(this);
+        document.querySelector(this.m_sMsgInputSel).disabled = '';
+        this.m_SurrenderButton.disabled = '';
 
         if (this.m_Player2Name.innerHTML === '???') {
           this.ShowMobileStatus('Waiting for other player to connect');

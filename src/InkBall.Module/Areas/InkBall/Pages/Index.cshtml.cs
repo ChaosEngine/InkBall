@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -19,6 +20,8 @@ namespace InkBall.Module.Pages
 		private readonly IOptions<HubOptions> _signalRHubOptions;
 
 		public (IEnumerable<InkBallPath> Paths, IEnumerable<InkBallPoint> Points) PlayerPointsAndPaths { get; protected set; }
+
+		public bool IsReadonly { get; private set; }
 
 		public TimeSpan ClientTimeoutInterval
 		{
@@ -93,19 +96,61 @@ namespace InkBall.Module.Pages
 			_signalRHubOptions = signalRHubOptions;
 		}
 
-		public virtual async Task<IActionResult> OnGetAsync(GameIdModel model)
+		public async Task<IActionResult> OnGetAsync()
 		{
 			if (!GameHub.WebSocketAllowedOrigins.Any())
 				GameHub.WebSocketAllowedOrigins.Add($"{Request.Scheme}://{Request.Host}");
 			else
 				GameHub.WebSocketAllowedOrigins.AddOrUpdate($"{Request.Scheme}://{Request.Host}");
 
+			var token = HttpContext.RequestAborted;
+
 			await base.LoadUserPlayerAndGameAsync();
 
 			if (Game == null)
+			{
+				Message = "No active game for you";
+
 				return Redirect("Home");
+			}
+
+			this.IsReadonly = false;
+
+			PlayerPointsAndPaths = await _dbContext.LoadPointsAndPathsAsync(Game.iId, token);
+
+			return Page();
+		}
+
+		public async Task<IActionResult> OnGetViewAsync(GameIdModel model)
+		{
+			if (!GameHub.WebSocketAllowedOrigins.Any())
+				GameHub.WebSocketAllowedOrigins.Add($"{Request.Scheme}://{Request.Host}");
+			else
+				GameHub.WebSocketAllowedOrigins.AddOrUpdate($"{Request.Scheme}://{Request.Host}");
+
+			if (!ModelState.IsValid)//model.GameID <= 0
+			{
+				Message = "View only: Bad GameID";
+
+				return Redirect("Home");
+			}
 
 			var token = HttpContext.RequestAborted;
+
+			Game = await _dbContext.GetGameFromDatabaseAsync(model.GameID, true, token);
+
+			if (Game == null ||
+				!int.TryParse(User.FindFirstValue(nameof(InkBallUserId)), out var inkBallUserId) || inkBallUserId <= 0 ||
+				Game?.Player1?.iUserId == inkBallUserId || Game?.Player2?.iUserId == inkBallUserId)
+			{
+				Message = "View only: It is your game, or bad GameID";
+
+				return Redirect("Home");
+			}
+			if (Player == null)
+				Player = Game.Player1;
+
+			this.IsReadonly = true;
 
 			PlayerPointsAndPaths = await _dbContext.LoadPointsAndPathsAsync(Game.iId, token);
 

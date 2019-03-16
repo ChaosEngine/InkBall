@@ -12,6 +12,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace InkBall.Module.Pages
 {
+	///
+	// Readonly game model
+	///
 	public sealed class GameIdModel
 	{
 		[Required]

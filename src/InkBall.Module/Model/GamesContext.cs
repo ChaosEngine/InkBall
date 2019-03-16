@@ -517,7 +517,8 @@ namespace InkBall.Module.Model
 						select g;
 
 			var game = await query.FirstOrDefaultAsync(token);
-			game.bIsPlayer1 = bIsPlayer1;
+			if (game != null)
+				game.bIsPlayer1 = bIsPlayer1;
 			return game;
 		}
 

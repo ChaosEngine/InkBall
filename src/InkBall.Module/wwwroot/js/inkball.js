@@ -200,19 +200,19 @@ class InkBallGame {
 	 * @param {enum} transportType websocket, server events or long polling
 	 * @param {number} serverTimeoutInMilliseconds If the server hasn't sent a message in this interval, the client considers the server disconnected
 	 * @param {function} tokenFactory auth token factory
-	 * @param {enum} gameType of game enum
+	 * @param {enum} gameType of game enum as string
 	 * @param {bool} bIsPlayingWithRed true - red, false - blue
 	 * @param {bool} bIsPlayerActive is this player acive now
 	 * @param {object} BoardSize defines logical width and height of grid size
-	 * @param {number} iTooLong2Duration too long wait duration
 	 * @param {bool} bViewOnly only viewing the game no interaction
+	 * @param {number} iTooLong2Duration too long wait duration
 	 */
 	constructor(sHubName, loggingLevel, hubProtocol, transportType, serverTimeoutInMilliseconds, tokenFactory, gameType,
-		bIsPlayingWithRed = true, bIsPlayerActive = true, BoardSize = { width: 32, height: 32 }, iTooLong2Duration = 125, bViewOnly = false) {
+		bIsPlayingWithRed = true, bIsPlayerActive = true, BoardSize = { width: 32, height: 32 }, bViewOnly = false, iTooLong2Duration = 125) {
 
 		this.g_iGameID = null;
 		this.g_iPlayerID = null;
-		this.GameType = gameType;
+		this.GameType = GameTypeEnum[gameType];
 		this.iConnErrCount = 0;
 		this.iExponentialBackOffMillis = 2000;
 		this.COLOR_RED = 'red';
@@ -1566,7 +1566,9 @@ class InkBallGame {
 			this.m_DrawMode.onclick = this.OnDrawModeClick.bind(this);
 			this.m_CancelPath.onclick = this.OnCancelClick.bind(this);
 			document.querySelector('#Test').onclick = this.OnTestClick.bind(this);
-
+			document.querySelector(this.m_sMsgInputSel).disabled = '';
+			this.m_SurrenderButton.disabled = '';
+			
 			if (this.m_Player2Name.innerHTML === '???') {
 				this.ShowMobileStatus('Waiting for other player to connect');
 				this.m_Screen.style.cursor = "wait";
