@@ -40,7 +40,8 @@
 				if (bIsCurrentGameOk)
 				{
 					//continue
-					<input type='submit' name='action' value='Continue' class="btn btn-primary btn-lg" />
+					<!-- <input type='submit' name='action' value='Continue' class="btn btn-primary btn-lg" /> -->
+					<a href='Index' class='btn btn-primary btn-lg d-flex align-items-center justify-content-center'>Continue</a>
 				}
 				else
 				{
@@ -68,8 +69,10 @@
 					</select>
 					<div class="invalid-feedback">Invalid bard size</div>
 				}
-				<input type='submit' name='action' value='Game list' class="btn btn-primary" formnovalidate='formnovalidate' />
-				<input type='submit' name='action' value='Best' class="btn btn-primary" formnovalidate='formnovalidate' />
+				<!-- <input type='submit' name='action' value='Game list' class="btn btn-primary" formnovalidate='formnovalidate' />
+				<input type='submit' name='action' value='Best' class="btn btn-primary" formnovalidate='formnovalidate' /> -->
+				<a href="Games" class="btn btn-primary d-flex align-items-center justify-content-center">Game list</a>
+				<a href="Highscores" class="btn btn-primary d-flex align-items-center justify-content-center">Best</a>
 				<a href="Rules" class="btn btn-primary d-flex align-items-center justify-content-center">Game rules</a>
 				<input type='submit' name='action' value='Logout' class="btn btn-warning" formnovalidate='formnovalidate' />
 			}

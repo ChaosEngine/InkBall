@@ -40,13 +40,15 @@
 	IsThisPlayer1=@(Model.Game.IsThisPlayer1() ? "P1" : "P2")
 	<span class="whichColor">Play color</span>
 </p>
-
+<p class="inkgame">
 @Model.Game.Player1?.User?.UserName vs <span id='Player2Name'>@P2Name</span>
+</p>
 <div class="container inkgame">
 	<form action="Games" method="post" asp-antiforgery="true" class="row">
 		<input type='hidden' name='GameID' value='@Model.Game.iId' />
 		<div class="col-xs-6 col-sm-auto pl-0">
-			<input type='submit' name='action' value='pause' class='btn btn-outline-primary' />
+			<!-- <input type='submit' name='action' value='pause' class='btn btn-outline-primary' /> -->
+			<a id='Pause' href='Games' class="btn btn-outline-primary">pause</a>
 			<input id='SurrenderButton' type='submit' name='action' value="@surrender_win_cancel_name" class='btn btn-outline-primary' disabled />
 		</div>
 		<div class="col-xs-6 col-sm-auto pl-0">
@@ -102,7 +104,7 @@
 			gameType, bPlayingWithRed, bPlayerActive, boardSize, isReadonly
 		);
 		game.StartSignalRConnection(iGameID, iPlayerID, '#messagesList', '#sendButton', '#messageInput');
-		game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#DrawMode', '#CancelPath');
+		game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#DrawMode', '#CancelPath', '#Pause');
 
 		game.SetAllPoints(@Html.Raw(Model.GetPointsAsJavaScriptArray(Model.PlayerPointsAndPaths.Points)));
 		game.SetAllPaths(@Html.Raw(Model.GetPathsAsJavaScriptArray(Model.PlayerPointsAndPaths.Paths)));

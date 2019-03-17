@@ -3,17 +3,21 @@ h3.inkgame {
 	color: darkorange;
 }
 
+p.inkgame {
+	margin-bottom: 0.3em;
+}
+
 .inkgame div#status span {
 	vertical-align: middle;
 	display: inline-block;
-	line-height: 30px;
+	line-height: 1em;
 }
 
 	.inkgame div#status span#gameStatus {
 		font-size: 2em;
 		vertical-align: middle;
 		display: inline-block;
-		line-height: 25px;
+		line-height: 1em;
 	}
 
 .inkgame div#screen {
@@ -25,10 +29,10 @@ h3.inkgame {
 	/* font-size: 32px; */
 }
 
-.inkgame div#screen > svg {
- 	width: 100%;
-	height: 100%;
-}
+	.inkgame div#screen > svg {
+		width: 100%;
+		height: 100%;
+	}
 
 .inkgame ul#messagesList {
 	overflow: auto;
@@ -37,9 +41,9 @@ h3.inkgame {
 
 /**********inkgames*********/
 .inkgames.grid-striped .row:nth-of-type(odd) {
-    background-color: rgba(0,0,0,.05);
+	background-color: rgba(0,0,0,.05);
 }
 /**********inkstats*********/
 .inkstats .grid-striped .row:nth-of-type(odd) {
-    background-color: rgba(0,0,0,.05);
+	background-color: rgba(0,0,0,.05);
 }

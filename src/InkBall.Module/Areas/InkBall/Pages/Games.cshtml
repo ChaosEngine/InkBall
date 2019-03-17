@@ -63,40 +63,42 @@
 								case InkBallGame.GameStateEnum.AWAITING:
 									<td class='font-italic gtd'>waiting for another player</td>
 									<td class='gtd'>
-										<form method='post'>
-											<input type='hidden' name='GameID' value='@game.iId' />
-											@if (bIsMyOwnGame)
+										@if (bIsMyOwnGame)
+										{
+											<!-- <input type='submit' name='action' value='continue' class='btn btn-outline-primary' /> -->
+											<a href='Index' class='btn btn-outline-primary'>Continue</a>
+										}
+										else
+										{
+											if (!bIsCurrentGameOk)
 											{
-												<input type='submit' name='action' value='continue' class='btn btn-outline-primary' />
+												<form method='post'>
+													<input type='hidden' name='GameID' value='@game.iId' />
+													<input type='submit' name='action' value='Join' class='btn btn-outline-primary' />
+												</form>
 											}
-											else
-											{
-												if (!bIsCurrentGameOk)
-												{
-													<input type='submit' name='action' value='join' class='btn btn-outline-primary' />
-												}
-											}
-										</form>
+										}
 									</td>
 									break;
 
 								case InkBallGame.GameStateEnum.ACTIVE:
 									<td class='font-italic gtd'>game in progress</td>
 									<td class='gtd'>
-										<form method='post'>
-											<input type='hidden' name='GameID' value='@game.iId' />
-											@if (bIsMyOwnGame)
+										<!-- <form method='post'>
+										<input type='hidden' name='GameID' value='@game.iId' /> -->
+										@if (bIsMyOwnGame)
+										{
+											<!-- <input type='submit' name='action' value='continue' class="btn btn-outline-primary" /> -->
+											<a href='Index' class="btn btn-outline-primary">Continue</a>
+										}
+										else
+										{
+											if (!bIsCurrentGameOk)
 											{
-												<input type='submit' name='action' value='continue' class="btn btn-outline-primary" />
+												<a href='Index?handler=View&GameID=@game.iId'>View only</a>
 											}
-											else
-											{
-												if (!bIsCurrentGameOk)
-												{
-													<a href='Index?handler=View&GameID=@game.iId'>View only</a>
-												}
-											}
-										</form>
+										}
+										<!-- </form> -->
 									</td>
 									break;
 
@@ -168,12 +170,14 @@
 				</div>
 			</fieldset>
 			<div class="form-row">
-				<input type='submit' name='action' value='Home' class='col-auto mx-1 btn btn-outline-primary' formnovalidate='formnovalidate' />
+				<!-- <input type='submit' name='action' value='Home' class='col-auto mx-1 btn btn-outline-primary' formnovalidate='formnovalidate' /> -->
+				<a href='Home' class='col-auto mx-1 btn btn-outline-primary'>Home</a>
 			</div>
 		}
 		else
 		{
-			<input type='submit' name='action' value='Home' class='btn btn-outline-primary' formnovalidate='formnovalidate' />
+			<!-- <input type='submit' name='action' value='Home' class='btn btn-outline-primary' formnovalidate='formnovalidate' /> -->
+			<a href='Home' class='btn btn-outline-primary'>Home</a>
 		}
 	</form>
 </div>

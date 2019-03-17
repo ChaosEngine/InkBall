@@ -1496,9 +1496,10 @@ class InkBallGame {
 	 * @param {HTMLElement} sSurrenderButton surrender button element selector
 	 * @param {HTMLElement} sDrawMode draw mode button element selector
 	 * @param {HTMLElement} sCancelPath cancel path button element selector
+	 * @param {HTMLElement} sPause pause button element selector
 	 * @param {number} iTooLong2Duration how long waiting is too long
 	 */
-	PrepareDrawing(sScreen, sPlayer2Name, sGameStatus, sSurrenderButton, sDrawMode, sCancelPath, iTooLong2Duration = 125) {
+	PrepareDrawing(sScreen, sPlayer2Name, sGameStatus, sSurrenderButton, sDrawMode, sCancelPath, sPause, iTooLong2Duration = 125) {
 		this.m_bIsWon = false;
 		this.m_iDelayBetweenMultiCaptures = 4000;
 		this.m_iTimerInterval = 2000;
@@ -1587,6 +1588,10 @@ class InkBallGame {
 					this.m_DrawMode.disabled = this.m_CancelPath.disabled = 'disabled';
 				}
 			}
+		}
+		else
+		{
+			document.querySelector(sPause).innerHTML = 'back to Game List';
 		}
 	}
 }

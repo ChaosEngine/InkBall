@@ -18,10 +18,6 @@ namespace InkBall.Module.Pages
 		private readonly IHubContext<GameHub, IGameClient> _inkballHubContext;
 		private readonly IOptions<InkBallOptions> _commonUIConfigureOptions;
 
-		
-		[BindProperty]
-		public InkBallGame.BoardSizeEnum BoardSize { get; set; }
-
 
 		public HomeModel(GamesContext dbContext, ILogger<HomeModel> logger,
 			IHubContext<Hubs.GameHub, Hubs.IGameClient> inkballHubContext,
@@ -36,7 +32,7 @@ namespace InkBall.Module.Pages
 			await LoadUserPlayerAndGameAsync();
 		}
 
-		public async Task<IActionResult> OnPostAsync(string action, string gameType)
+		public async Task<IActionResult> OnPostAsync(string action, string gameType, InkBallGame.BoardSizeEnum boardSize)
 		{
 			await LoadUserPlayerAndGameAsync();
 
@@ -79,7 +75,7 @@ namespace InkBall.Module.Pages
 						}
 
 						int width = -1, height = -1, grid_size = 16;
-						switch (BoardSize)
+						switch (boardSize)
 						{
 							case InkBallGame.BoardSizeEnum.SIZE_20x26:
 								width = 20; height = 26;

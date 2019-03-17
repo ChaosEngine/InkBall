@@ -1473,8 +1473,8 @@ var InkBallGame = function () {
     }
   }, {
     key: "PrepareDrawing",
-    value: function PrepareDrawing(sScreen, sPlayer2Name, sGameStatus, sSurrenderButton, sDrawMode, sCancelPath) {
-      var iTooLong2Duration = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : 125;
+    value: function PrepareDrawing(sScreen, sPlayer2Name, sGameStatus, sSurrenderButton, sDrawMode, sCancelPath, sPause) {
+      var iTooLong2Duration = arguments.length > 7 && arguments[7] !== undefined ? arguments[7] : 125;
       this.m_bIsWon = false;
       this.m_iDelayBetweenMultiCaptures = 4000;
       this.m_iTimerInterval = 2000;
@@ -1559,6 +1559,8 @@ var InkBallGame = function () {
             this.m_DrawMode.disabled = this.m_CancelPath.disabled = 'disabled';
           }
         }
+      } else {
+        document.querySelector(sPause).innerHTML = 'back to Game List';
       }
     }
   }]);

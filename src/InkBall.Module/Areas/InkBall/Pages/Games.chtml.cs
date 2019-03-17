@@ -23,9 +23,6 @@ namespace InkBall.Module.Pages
 
 		public IEnumerable<InkBallGame> GamesList { get; private set; }
 
-		[BindProperty]
-		public InkBallGame.BoardSizeEnum BoardSize { get; set; }
-
 
 		public GamesModel(GamesContext dbContext, ILogger<RulesModel> logger, IOptions<InkBallOptions> commonUIConfigureOptions,
 			IHubContext<Hubs.GameHub, Hubs.IGameClient> inkballHubContext) : base(dbContext, logger)
@@ -45,12 +42,10 @@ namespace InkBall.Module.Pages
 		{
 			await base.LoadUserPlayerAndGameAsync();
 
-			var games = GetGameList(HttpContext.RequestAborted);
-
-			GamesList = await games;
+			GamesList = await GetGameList(HttpContext.RequestAborted);
 		}
 
-		public async Task<IActionResult> OnPostAsync(string action, int gameID, string gameType)
+		public async Task<IActionResult> OnPostAsync(string action, int gameID, string gameType, InkBallGame.BoardSizeEnum boardSize)
 		{
 			await base.LoadUserPlayerAndGameAsync();
 
@@ -68,6 +63,7 @@ namespace InkBall.Module.Pages
 				switch (action)
 				{
 					case "join":
+					case "Join":
 						if (Game != null)
 						{
 							msg = "You've got another game";
@@ -133,6 +129,7 @@ namespace InkBall.Module.Pages
 						break;
 
 					case "continue":
+					case "Continue":
 						if (Game != null)
 						{
 							return Redirect("Index");
@@ -144,6 +141,7 @@ namespace InkBall.Module.Pages
 						break;
 
 					case "create":
+					case "Create":
 					case "New game":
 						if (Game != null)
 						{
@@ -159,7 +157,7 @@ namespace InkBall.Module.Pages
 						}
 
 						int width = -1, height = -1, grid_size = 16;
-						switch (BoardSize)
+						switch (boardSize)
 						{
 							case InkBallGame.BoardSizeEnum.SIZE_20x26:
 								width = 20; height = 26;
@@ -202,10 +200,12 @@ namespace InkBall.Module.Pages
 						break;
 
 					case "pause":
+					case "Pause":
 						return Redirect("Games");
 
 					case "surrender":
 					case "cancel":
+					case "Cancel":
 					case "win":
 						if (Game == null)
 						{
@@ -268,9 +268,7 @@ namespace InkBall.Module.Pages
 			if (!string.IsNullOrEmpty(msg))
 				Message = msg;
 
-			var games = GetGameList(token);
-
-			GamesList = await games;
+			GamesList = await GetGameList(token);
 
 			return base.Page();
 		}
