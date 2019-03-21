@@ -52,10 +52,11 @@ namespace InkBall.Module.Model
 
 				case "Microsoft.EntityFrameworkCore.Sqlite":
 				case "Npgsql.EntityFrameworkCore.PostgreSQL":
+				case "Oracle.EntityFrameworkCore":
 					return "CURRENT_TIMESTAMP";
 
 				default:
-					throw new NotSupportedException($"Bad DBKind name");
+					throw new NotSupportedException($"Bad DBKind name {activeProvider}");
 			}
 		}
 
@@ -72,10 +73,11 @@ namespace InkBall.Module.Model
 				case "Microsoft.EntityFrameworkCore.Sqlite":
 				case "Pomelo.EntityFrameworkCore.MySql":
 				case "Npgsql.EntityFrameworkCore.PostgreSQL":
+				case "Oracle.EntityFrameworkCore":
 					return null;
 
 				default:
-					throw new NotSupportedException($"Bad DBKind name");
+					throw new NotSupportedException($"Bad DBKind name {activeProvider}");
 			}
 		}
 
@@ -89,10 +91,11 @@ namespace InkBall.Module.Model
 				case "Pomelo.EntityFrameworkCore.MySql":
 				case "Microsoft.EntityFrameworkCore.Sqlite":
 				case "Npgsql.EntityFrameworkCore.PostgreSQL":
+				case "Oracle.EntityFrameworkCore":
 					return "timestamp";
 
 				default:
-					throw new NotSupportedException($"Bad DBKind name");
+					throw new NotSupportedException($"Bad DBKind name{activeProvider}");
 			}
 		}
 
@@ -112,8 +115,11 @@ namespace InkBall.Module.Model
 				case "Npgsql.EntityFrameworkCore.PostgreSQL":
 					return "jsonb";
 
+				case "Oracle.EntityFrameworkCore":
+					return "CLOB";
+
 				default:
-					throw new NotSupportedException($"Bad DBKind name");
+					throw new NotSupportedException($"Bad DBKind name {activeProvider}");
 			}
 		}
 
