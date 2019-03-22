@@ -23,5 +23,11 @@
   <ItemGroup>
     <EmbeddedResource Include="wwwroot\**\*" />
   </ItemGroup>
+  
+  <ItemGroup>
+    <Reference Include="Oracle.EntityFrameworkCore">
+      <HintPath>..\..\..\binaries\Oracle.EntityFrameworkCore.2.18.0-beta2\lib\netstandard2.0\Oracle.EntityFrameworkCore.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 
 </Project>
