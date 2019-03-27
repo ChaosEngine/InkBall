@@ -200,7 +200,7 @@ namespace InkBall.Module.Model
 				entity.HasOne(d => d.Player1)
 					.WithMany(p => p.InkBallGameIPlayer1)
 					.HasForeignKey(d => d.iPlayer1Id)
-					.OnDelete(DeleteBehavior.ClientSetNull)
+					.OnDelete(DeleteBehavior.Restrict)
 					.HasConstraintName("InkBallGame_ibfk_1");
 
 				entity.HasOne(d => d.Player2)
@@ -238,13 +238,13 @@ namespace InkBall.Module.Model
 				entity.HasOne(d => d.Game)
 					.WithMany(p => p.InkBallPath)
 					.HasForeignKey(d => d.iGameId)
-					.OnDelete(DeleteBehavior.ClientSetNull)
+					.OnDelete(DeleteBehavior.Restrict)
 					.HasConstraintName("InkBallPath_ibfk_1");
 
 				entity.HasOne(d => d.Player)
 					.WithMany(p => p.InkBallPath)
 					.HasForeignKey(d => d.iPlayerId)
-					.OnDelete(DeleteBehavior.ClientSetNull)
+					.OnDelete(DeleteBehavior.Restrict)
 					.HasConstraintName("InkBallPath_ibfk_2");
 			});
 
@@ -335,13 +335,13 @@ namespace InkBall.Module.Model
 				entity.HasOne(d => d.Game)
 					.WithMany(p => p.InkBallPoint)
 					.HasForeignKey(d => d.iGameId)
-					.OnDelete(DeleteBehavior.ClientSetNull)
+					.OnDelete(DeleteBehavior.Restrict)
 					.HasConstraintName("InkBallPoint_ibfk_3");
 
 				entity.HasOne(d => d.Player)
 					.WithMany(p => p.InkBallPoint)
 					.HasForeignKey(d => d.iPlayerId)
-					.OnDelete(DeleteBehavior.ClientSetNull)
+					.OnDelete(DeleteBehavior.Restrict)
 					.HasConstraintName("InkBallPoint_ibfk_4");
 			});
 
@@ -374,13 +374,13 @@ namespace InkBall.Module.Model
 				entity.HasOne(d => d.Path)
 					.WithMany(p => p.InkBallPointsInPath)
 					.HasForeignKey(d => d.iPathId)
-					.OnDelete(DeleteBehavior.ClientSetNull)
+					.OnDelete(DeleteBehavior.Restrict)
 					.HasConstraintName("InkBallPointsInPath_ibfk_1");
 
 				entity.HasOne(d => d.Point)
 					.WithMany(p => p.InkBallPointsInPath)
 					.HasForeignKey(d => d.iPointId)
-					.OnDelete(DeleteBehavior.ClientSetNull)
+					.OnDelete(DeleteBehavior.Restrict)
 					.HasConstraintName("InkBallPointsInPath_ibfk_2");
 			});
 

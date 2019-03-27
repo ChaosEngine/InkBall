@@ -129,6 +129,22 @@ END";
 					//Console.Error.WriteLine($"executing '{command}'");
 					migrationBuilder.Sql(command);
 					break;
+
+				case "Oracle.EntityFrameworkCore":
+					tableName = entityType.Relational().TableName;
+					//var primaryKey = entityType.FindPrimaryKey();
+
+					command =
+$@"CREATE OR REPLACE TRIGGER ""{tableName}_update_{timeStampColumnName}_Trigger""
+	BEFORE UPDATE ON ""{tableName}""
+	FOR EACH ROW
+BEGIN
+	:NEW.""{timeStampColumnName}"" := SYSTIMESTAMP;
+END;";
+					//Console.Error.WriteLine($"executing '{command}'");
+					migrationBuilder.Sql(command);
+					break;
+
 				case "Pomelo.EntityFrameworkCore.MySql":
 				case "Npgsql.EntityFrameworkCore.PostgreSQL":
 				default:
@@ -156,6 +172,24 @@ END";
 
 					command = $@"DROP TRIGGER [dbo].[{tableName}_update_{timeStampColumnName}_Trigger];";
 
+					//Console.Error.WriteLine($"executing '{command}'");
+					migrationBuilder.Sql(command);
+					break;
+
+				case "Oracle.EntityFrameworkCore":
+					tableName = entityType.Relational().TableName;
+
+					command = $@"
+DECLARE
+  l_count integer;
+BEGIN
+  SELECT COUNT(*) INTO l_count FROM user_triggers
+  WHERE trigger_name = '{tableName}_update_{timeStampColumnName}_Trigger';
+
+  IF l_count > 0 THEN
+     EXECUTE IMMEDIATE 'DROP TRIGGER ""{tableName}_update_{timeStampColumnName}_Trigger""';
+  END IF;
+END;";
 					//Console.Error.WriteLine($"executing '{command}'");
 					migrationBuilder.Sql(command);
 					break;

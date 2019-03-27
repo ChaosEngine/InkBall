@@ -439,52 +439,55 @@ namespace InkBall.Module.Hubs
 					iPlayerId = path.iPlayerId,
 					PointsAsString = path.PointsAsString
 				};
-				var status = InkBallPoint.StatusEnum.POINT_STARTING;
-				int order = 1;
-				foreach (var pop in points_on_path)
-				{
-					//TODO: check in-path-next-point from start to end with closing
-					if (!(all_placed_points_fromDB.TryGetValue(pop, out IPoint iobj) && iobj is InkBallPoint found)
-						|| !((found.Status == current_player_color || _simpleCoordsPointComparer.Equals(found, points_on_path.Last())) && found.iPlayerId == ThisPlayer.iId))
-					{
-						throw new ArgumentOutOfRangeException($"point not in path [{pop}]");
-					}
-
-					db_path.InkBallPointsInPath.Add(new InkBallPointsInPath
-					{
-						Path = db_path,
-						Point = found,
-						Order = order++
-					});
-					found.Status = status;
-					status = InkBallPoint.StatusEnum.POINT_IN_PATH;
-				}
-
-				ThisGame.bIsPlayer1Active = !ThisGame.bIsPlayer1Active;
-
-				var owning_points = path.GetOwnedPoints(owning_color, OtherPlayer.iId);
-				foreach (var op in owning_points)
-				{
-					if (!(all_placed_points_fromDB.TryGetValue(op, out IPoint iobj) && iobj is InkBallPoint found)
-						|| !(found.Status == other_player_color && found.iPlayerId == OtherPlayer.iId))
-					{
-						throw new ArgumentOutOfRangeException($"owning point not found [{op}]");
-					}
-					if (!path.IsPointInsidePath(op))
-					{
-						throw new ArgumentOutOfRangeException($"owning point not found [{op}]");
-					}
-
-					found.Status = owning_color;
-					found.EnclosingPath = db_path;
-				}
 				using (var trans = await _dbContext.Database.BeginTransactionAsync(token))
 				{
 					try
 					{
-						db_path_player.sLastMoveCode = db_path.PointsAsString = JsonConvert.SerializeObject(path);
-
 						await _dbContext.InkBallPath.AddAsync(db_path, token);
+
+						await _dbContext.SaveChangesAsync(token);
+
+						var status = InkBallPoint.StatusEnum.POINT_STARTING;
+						int order = 1;
+						foreach (var pop in points_on_path)
+						{
+							//TODO: check in-path-next-point from start to end with closing
+							if (!(all_placed_points_fromDB.TryGetValue(pop, out IPoint iobj) && iobj is InkBallPoint found)
+								|| !((found.Status == current_player_color || _simpleCoordsPointComparer.Equals(found, points_on_path.Last())) && found.iPlayerId == ThisPlayer.iId))
+							{
+								throw new ArgumentOutOfRangeException($"point not in path [{pop}]");
+							}
+
+							db_path.InkBallPointsInPath.Add(new InkBallPointsInPath
+							{
+								Path = db_path,
+								Point = found,
+								Order = order++
+							});
+							found.Status = status;
+							status = InkBallPoint.StatusEnum.POINT_IN_PATH;
+						}
+
+						ThisGame.bIsPlayer1Active = !ThisGame.bIsPlayer1Active;
+
+						var owning_points = path.GetOwnedPoints(owning_color, OtherPlayer.iId);
+						foreach (var op in owning_points)
+						{
+							if (!(all_placed_points_fromDB.TryGetValue(op, out IPoint iobj) && iobj is InkBallPoint found)
+								|| !(found.Status == other_player_color && found.iPlayerId == OtherPlayer.iId))
+							{
+								throw new ArgumentOutOfRangeException($"owning point not found [{op}]");
+							}
+							if (!path.IsPointInsidePath(op))
+							{
+								throw new ArgumentOutOfRangeException($"owning point not found [{op}]");
+							}
+
+							found.Status = owning_color;
+							found.EnclosingPath = db_path;
+						}
+
+						db_path_player.sLastMoveCode = db_path.PointsAsString = JsonConvert.SerializeObject(path);
 
 						await _dbContext.SaveChangesAsync(token);
 #if DEBUG
