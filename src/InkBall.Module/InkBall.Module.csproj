@@ -16,18 +16,13 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.2.0" />
 	  <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="2.2.0" />
 	  <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="2.2.3" />
+		<PackageReference Include="Oracle.EntityFrameworkCore" Version="2.18.0-beta3" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
 	  <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="1.1.0" />
   </ItemGroup>
   
   <ItemGroup>
     <EmbeddedResource Include="wwwroot\**\*" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <Reference Include="Oracle.EntityFrameworkCore">
-      <HintPath>..\..\..\binaries\Oracle.EntityFrameworkCore.2.18.0-beta2\lib\netstandard2.0\Oracle.EntityFrameworkCore.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
 </Project>
