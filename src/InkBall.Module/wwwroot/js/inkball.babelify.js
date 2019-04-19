@@ -315,8 +315,8 @@ function CountPointsDebug(sSelector2Set) {
     _iteratorError = err;
   } finally {
     try {
-      if (!_iteratorNormalCompletion && _iterator.return != null) {
-        _iterator.return();
+      if (!_iteratorNormalCompletion && _iterator["return"] != null) {
+        _iterator["return"]();
       }
     } finally {
       if (_didIteratorError) {
@@ -756,8 +756,8 @@ var InkBallGame = function () {
         _iteratorError2 = err;
       } finally {
         try {
-          if (!_iteratorNormalCompletion2 && _iterator2.return != null) {
-            _iterator2.return();
+          if (!_iteratorNormalCompletion2 && _iterator2["return"] != null) {
+            _iterator2["return"]();
           }
         } finally {
           if (_didIteratorError2) {
@@ -806,8 +806,8 @@ var InkBallGame = function () {
         _iteratorError3 = err;
       } finally {
         try {
-          if (!_iteratorNormalCompletion3 && _iterator3.return != null) {
-            _iterator3.return();
+          if (!_iteratorNormalCompletion3 && _iterator3["return"] != null) {
+            _iterator3["return"]();
           }
         } finally {
           if (_didIteratorError3) {
@@ -891,8 +891,8 @@ var InkBallGame = function () {
         _iteratorError4 = err;
       } finally {
         try {
-          if (!_iteratorNormalCompletion4 && _iterator4.return != null) {
-            _iterator4.return();
+          if (!_iteratorNormalCompletion4 && _iterator4["return"] != null) {
+            _iterator4["return"]();
           }
         } finally {
           if (_didIteratorError4) {
@@ -937,8 +937,8 @@ var InkBallGame = function () {
         _iteratorError5 = err;
       } finally {
         try {
-          if (!_iteratorNormalCompletion5 && _iterator5.return != null) {
-            _iterator5.return();
+          if (!_iteratorNormalCompletion5 && _iterator5["return"] != null) {
+            _iterator5["return"]();
           }
         } finally {
           if (_didIteratorError5) {
@@ -974,8 +974,8 @@ var InkBallGame = function () {
         _iteratorError6 = err;
       } finally {
         try {
-          if (!_iteratorNormalCompletion6 && _iterator6.return != null) {
-            _iterator6.return();
+          if (!_iteratorNormalCompletion6 && _iterator6["return"] != null) {
+            _iterator6["return"]();
           }
         } finally {
           if (_didIteratorError6) {
@@ -1012,7 +1012,7 @@ var InkBallGame = function () {
           this.m_bHandlingEvent = true;
           this.g_SignalRConnection.invoke("ClientToServerPoint", payload).then(function (point) {
             this.ReceivedPointProcessing(point);
-          }.bind(this)).catch(function (err) {
+          }.bind(this))["catch"](function (err) {
             console.error(err.toString());
             if (revertFunction !== undefined) revertFunction();
           }.bind(this));
@@ -1029,7 +1029,7 @@ var InkBallGame = function () {
               var path = dto;
               this.ReceivedPathProcessing(path);
             } else throw new Error("ClientToServerPath bad GetKind!");
-          }.bind(this)).catch(function (err) {
+          }.bind(this))["catch"](function (err) {
             console.error(err.toString());
             if (revertFunction !== undefined) revertFunction();
           }.bind(this));
@@ -1039,7 +1039,7 @@ var InkBallGame = function () {
           this.g_SignalRConnection.invoke("ClientToServerPing", payload).then(function () {
             document.querySelector(this.m_sMsgInputSel).value = '';
             document.querySelector(this.m_sMsgSendButtonSel).disabled = 'disabled';
-          }.bind(this)).catch(function (err) {
+          }.bind(this))["catch"](function (err) {
             console.error(err.toString());
           });
           break;
@@ -1104,8 +1104,8 @@ var InkBallGame = function () {
           _iteratorError7 = err;
         } finally {
           try {
-            if (!_iteratorNormalCompletion7 && _iterator7.return != null) {
-              _iterator7.return();
+            if (!_iteratorNormalCompletion7 && _iterator7["return"] != null) {
+              _iterator7["return"]();
             }
           } finally {
             if (_didIteratorError7) {
@@ -1449,8 +1449,8 @@ var InkBallGame = function () {
             _iteratorError8 = err;
           } finally {
             try {
-              if (!_iteratorNormalCompletion8 && _iterator8.return != null) {
-                _iterator8.return();
+              if (!_iteratorNormalCompletion8 && _iterator8["return"] != null) {
+                _iterator8["return"]();
               }
             } finally {
               if (_didIteratorError8) {

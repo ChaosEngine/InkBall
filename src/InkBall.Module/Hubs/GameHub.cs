@@ -437,7 +437,7 @@ namespace InkBall.Module.Hubs
 					// iId = path.iId,
 					iGameId = path.iGameId,
 					iPlayerId = path.iPlayerId,
-					PointsAsString = path.PointsAsString
+					//PointsAsString = path.PointsAsString
 				};
 				using (var trans = await _dbContext.Database.BeginTransactionAsync(token))
 				{
