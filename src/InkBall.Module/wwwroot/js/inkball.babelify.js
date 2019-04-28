@@ -484,16 +484,18 @@ var InkBallGame = function () {
       this.g_iPlayerID = iPlayerID;
       this.m_sMsgInputSel = sMsgInputSel;
       this.m_sMsgSendButtonSel = sMsgSendButtonSel;
-      this.g_SignalRConnection.on("ServerToClientPoint", function (point, user) {
+      this.g_SignalRConnection.on("ServerToClientPoint", function (point) {
+        var user = this.m_Player2Name.innerHTML;
         var encodedMsg = InkBallPointViewModel.Format(user, point);
         var li = document.createElement("li");
         li.textContent = encodedMsg;
         document.querySelector(sMsgListSel).appendChild(li);
         this.ReceivedPointProcessing(point);
       }.bind(this));
-      this.g_SignalRConnection.on("ServerToClientPath", function (dto, user) {
+      this.g_SignalRConnection.on("ServerToClientPath", function (dto) {
         if (dto.hasOwnProperty('PointsAsString')) {
           var path = dto;
+          var user = this.m_Player2Name.innerHTML;
           var encodedMsg = InkBallPathViewModel.Format(user, path);
           var li = document.createElement("li");
           li.textContent = encodedMsg;
@@ -551,7 +553,8 @@ var InkBallGame = function () {
         document.querySelector(sMsgListSel).appendChild(li);
         this.ReceivedWinProcessing(win);
       }.bind(this));
-      this.g_SignalRConnection.on("ServerToClientPing", function (ping, user) {
+      this.g_SignalRConnection.on("ServerToClientPing", function (ping) {
+        var user = this.m_Player2Name.innerHTML;
         var encodedMsg = PingCommand.Format(user, ping);
         var li = document.createElement("li");
         li.textContent = encodedMsg;

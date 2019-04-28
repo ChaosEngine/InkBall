@@ -19,11 +19,11 @@ namespace InkBall.Module.Hubs
 {
 	public interface IGameClient
 	{
-		Task ServerToClientPoint(InkBallPointViewModel point, string user);
+		Task ServerToClientPoint(InkBallPointViewModel point);
 
-		Task ServerToClientPath(InkBallPathViewModel path, string user);
+		Task ServerToClientPath(InkBallPathViewModel path);
 
-		Task ServerToClientPing(PingCommand ping, string user);
+		Task ServerToClientPing(PingCommand ping);
 
 		Task ServerToClientPlayerJoin(PlayerJoiningCommand join);
 
@@ -377,7 +377,7 @@ namespace InkBall.Module.Hubs
 					}
 				}
 
-				await Clients.User(OtherUserIdentifier).ServerToClientPoint(new_point, ThisUserName);
+				await Clients.User(OtherUserIdentifier).ServerToClientPoint(new_point);
 
 				return new_point;
 			}
@@ -515,7 +515,7 @@ namespace InkBall.Module.Hubs
 						{
 							path = new InkBallPathViewModel(db_path, path.PointsAsString, path.OwnedPointsAsString);
 							new_path = path;
-							await Clients.User(OtherUserIdentifier).ServerToClientPath(path, ThisUserName);
+							await Clients.User(OtherUserIdentifier).ServerToClientPath(path);
 						}
 
 						trans.Commit();
@@ -614,7 +614,7 @@ namespace InkBall.Module.Hubs
 
 				var new_ping = new PingCommand(ping);
 
-				await Clients.User(OtherUserIdentifier).ServerToClientPing(new_ping, ThisUserName);
+				await Clients.User(OtherUserIdentifier).ServerToClientPing(new_ping);
 			}
 			catch (Exception ex)
 			{

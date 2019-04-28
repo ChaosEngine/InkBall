@@ -323,8 +323,9 @@ class InkBallGame {
 		this.m_sMsgInputSel = sMsgInputSel;
 		this.m_sMsgSendButtonSel = sMsgSendButtonSel;
 
-		this.g_SignalRConnection.on("ServerToClientPoint", function (point, user) {
+		this.g_SignalRConnection.on("ServerToClientPoint", function (point) {
 
+			const user = this.m_Player2Name.innerHTML;
 			let encodedMsg = InkBallPointViewModel.Format(user, point);
 
 			let li = document.createElement("li");
@@ -335,10 +336,11 @@ class InkBallGame {
 
 		}.bind(this));
 
-		this.g_SignalRConnection.on("ServerToClientPath", function (dto, user) {
+		this.g_SignalRConnection.on("ServerToClientPath", function (dto) {
 			if (dto.hasOwnProperty('PointsAsString')) {
 				let path = dto;
 
+				const user = this.m_Player2Name.innerHTML;
 				let encodedMsg = InkBallPathViewModel.Format(user, path);
 
 				let li = document.createElement("li");
@@ -412,8 +414,9 @@ class InkBallGame {
 
 		}.bind(this));
 
-		this.g_SignalRConnection.on("ServerToClientPing", function (ping, user) {
+		this.g_SignalRConnection.on("ServerToClientPing", function (ping) {
 
+			const user = this.m_Player2Name.innerHTML;
 			let encodedMsg = PingCommand.Format(user, ping);
 
 			let li = document.createElement("li");
