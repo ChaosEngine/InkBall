@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using InkBall.Module.Hubs;
 using InkBall.Module.Model;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -16,7 +17,7 @@ namespace InkBall.Tests
 		CancellationTokenSource _cancellationSource = new CancellationTokenSource();
 
 		public (SqliteConnection Conn, DbContextOptions<GamesContext> DbOpts,
-				IConfiguration Conf, IMemoryCache Cache, ILogger<BaseDbContextTests> Logger)
+				IConfiguration Conf, IMemoryCache Cache, ILogger<GameHub> Logger)
 				Setup
 		{
 			get; set;
@@ -32,7 +33,7 @@ namespace InkBall.Tests
 		}
 
 		protected async Task<(SqliteConnection, DbContextOptions<GamesContext>,
-							IConfiguration, IMemoryCache, ILogger<BaseDbContextTests>)>
+							IConfiguration, IMemoryCache, ILogger<GameHub>)>
 							SetupInMemoryDB()
 		{
 			var builder = new ConfigurationBuilder()
@@ -64,7 +65,7 @@ namespace InkBall.Tests
 			IMemoryCache cache = serviceProvider.GetService<IMemoryCache>();
 
 			var logger = serviceProvider.GetService<ILoggerFactory>()
-				.CreateLogger<BaseDbContextTests>();
+				.CreateLogger<GameHub>();
 
 			return (connection, options, config, cache, logger);
 		}

@@ -3,7 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using InkBall.Module.Hubs;
 using InkBall.Module.Model;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.SignalR;
+using Moq;
 using Newtonsoft.Json;
 using Xunit;
 
@@ -242,6 +246,66 @@ namespace InkBall.Tests
 					var points1 = points_n_paths.Points;
 					Assert.NotEmpty(points1);
 				}
+			}
+		}
+
+		[Fact]
+		public async Task ClientToServerPoint()
+		{
+			//Arrange
+			var token = CancellationToken;
+
+			await CreateComplexGameHierarchy(token);
+
+			using (var db = new GamesContext(Setup.DbOpts))
+			{
+				var gameClient = new Mock<IGameClient>();
+				gameClient.Setup(c => c.ServerToClientPath(It.IsAny<InkBallPathViewModel>())).Returns(Task.FromResult(0));
+				gameClient.Setup(c => c.ServerToClientPing(It.IsAny<PingCommand>())).Returns(Task.FromResult(0));
+				gameClient.Setup(c => c.ServerToClientPlayerJoin(It.IsAny<PlayerJoiningCommand>())).Returns(Task.FromResult(0));
+				gameClient.Setup(c => c.ServerToClientPlayerSurrender(It.IsAny<PlayerSurrenderingCommand>())).Returns(Task.FromResult(0));
+				gameClient.Setup(c => c.ServerToClientPlayerWin(It.IsAny<WinCommand>())).Returns(Task.FromResult(0));
+				gameClient.Setup(c => c.ServerToClientPoint(It.IsAny<InkBallPointViewModel>())).Returns(Task.FromResult(0));
+
+				var mockHttpContext = new Mock<HttpContext>();
+				// mockHttpContext.SetupGet(foo => foo.Request).Returns(new HttpReq);
+
+				var mockHubCallerContext = new Mock<HubCallerContext>();
+				mockHubCallerContext.SetupGet(foo => foo.ConnectionAborted).Returns(default(CancellationToken));
+				mockHubCallerContext.SetupGet(foo => foo.UserIdentifier).Returns("uid");
+				mockHubCallerContext.SetupGet(foo => foo.Items).Returns(new Dictionary<object, object>());
+				mockHubCallerContext.Setup(foo => foo.GetHttpContext()).Returns(mockHttpContext.Object);
+
+				var mockClient = new Mock<IHubCallerClients<IGameClient>>();
+				mockClient.Setup(c => c.Client(It.IsAny<string>())).Returns(gameClient.Object);
+				//var mockClientProxy = new Mock<IClientProxy>();
+				mockClient.Setup(c => c.All).Returns(gameClient.Object);
+
+
+				var hub = new GameHub(db, Setup.Logger)
+				{
+					Clients = mockClient.Object,
+					Context = mockHubCallerContext.Object
+				};
+
+				//Act
+				await hub.ClientToServerPing(new PingCommand("motorcycles"));
+
+				await hub.ClientToServerPoint(new InkBallPointViewModel
+				{
+					iX = 7,
+					iY = 7,
+					Status = InkBallPoint.StatusEnum.POINT_FREE_BLUE,
+					iGameId = 1
+				});
+
+
+				//Assert
+				mockHubCallerContext.Verify(clients => clients.ConnectionAborted, Times.Once);
+
+				mockClient.Verify(
+					client => client.User(It.IsAny<string>()),
+					Times.AtLeastOnce);
 			}
 		}
 	}
