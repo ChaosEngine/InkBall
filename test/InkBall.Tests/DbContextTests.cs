@@ -1,12 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using InkBall.Module.Hubs;
 using InkBall.Module.Model;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Connections.Features;
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Primitives;
+using Microsoft.Net.Http.Headers;
 using Moq;
 using Newtonsoft.Json;
 using Xunit;
@@ -249,6 +255,39 @@ namespace InkBall.Tests
 			}
 		}
 
+		#region SignalR tests
+
+		Mock<HubCallerContext> GetMockHubCallerContext(int gameID, int playerID, int userID, string externalUserIdentifier)
+		{
+			var httpContextMock = new Moq.Mock<HttpContext>();
+			var moqRequest = new Mock<HttpRequest>();
+
+			var headers = new HeaderDictionary();
+			headers.Add(HeaderNames.Authorization, $"Bearer iGameID={gameID}&iPlayerID={playerID}");
+			moqRequest.SetupGet(r => r.Headers).Returns(headers);
+			httpContextMock.SetupGet(x => x.Request).Returns(moqRequest.Object);
+
+			CancellationToken token = default;
+			httpContextMock.SetupProperty(r => r.RequestAborted, token).SetReturnsDefault(token);
+
+			var items = new Dictionary<object, object>();
+			var features = new FeatureCollection();
+			var mockIHttpContextFeature = new Mock<IHttpContextFeature>();
+			mockIHttpContextFeature.SetupGet(i => i.HttpContext).Returns(httpContextMock.Object);
+			features.Set(mockIHttpContextFeature.Object);
+
+			var mockHubCallerContext = new Mock<HubCallerContext>();
+			mockHubCallerContext.SetupGet(foo => foo.ConnectionAborted).Returns(default(CancellationToken));
+			mockHubCallerContext.SetupGet(foo => foo.UserIdentifier).Returns(externalUserIdentifier);
+			mockHubCallerContext.SetupGet(foo => foo.Items).Returns(items);
+			mockHubCallerContext.SetupGet(foo => foo.User).Returns(
+				new ClaimsPrincipal(new[] { new ClaimsIdentity(new [] {
+						new Claim(nameof(InkBall.Module.Pages.HomeModel.InkBallUserId), userID.ToString(), nameof(InkBall.Module.Model.InkBallUser)) }) }));
+			mockHubCallerContext.Setup(foo => foo.Features).Returns(features);
+
+			return mockHubCallerContext;
+		}
+
 		[Fact]
 		public async Task ClientToServerPoint()
 		{
@@ -259,54 +298,59 @@ namespace InkBall.Tests
 
 			using (var db = new GamesContext(Setup.DbOpts))
 			{
-				var gameClient = new Mock<IGameClient>();
-				gameClient.Setup(c => c.ServerToClientPath(It.IsAny<InkBallPathViewModel>())).Returns(Task.FromResult(0));
-				gameClient.Setup(c => c.ServerToClientPing(It.IsAny<PingCommand>())).Returns(Task.FromResult(0));
-				gameClient.Setup(c => c.ServerToClientPlayerJoin(It.IsAny<PlayerJoiningCommand>())).Returns(Task.FromResult(0));
-				gameClient.Setup(c => c.ServerToClientPlayerSurrender(It.IsAny<PlayerSurrenderingCommand>())).Returns(Task.FromResult(0));
-				gameClient.Setup(c => c.ServerToClientPlayerWin(It.IsAny<WinCommand>())).Returns(Task.FromResult(0));
-				gameClient.Setup(c => c.ServerToClientPoint(It.IsAny<InkBallPointViewModel>())).Returns(Task.FromResult(0));
+				var mockGameClient = new Mock<IGameClient>();
+				mockGameClient.Setup(c => c.ServerToClientPath(It.IsAny<InkBallPathViewModel>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPing(It.IsAny<PingCommand>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPlayerJoin(It.IsAny<PlayerJoiningCommand>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPlayerSurrender(It.IsAny<PlayerSurrenderingCommand>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPlayerWin(It.IsAny<WinCommand>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPoint(It.IsAny<InkBallPointViewModel>())).Returns(Task.FromResult(0));
 
-				var mockHttpContext = new Mock<HttpContext>();
-				// mockHttpContext.SetupGet(foo => foo.Request).Returns(new HttpReq);
+				var mockHubCallerContext = GetMockHubCallerContext(gameID: 1, playerID: 1, userID: 1, externalUserIdentifier: "xxxxx");
 
-				var mockHubCallerContext = new Mock<HubCallerContext>();
-				mockHubCallerContext.SetupGet(foo => foo.ConnectionAborted).Returns(default(CancellationToken));
-				mockHubCallerContext.SetupGet(foo => foo.UserIdentifier).Returns("uid");
-				mockHubCallerContext.SetupGet(foo => foo.Items).Returns(new Dictionary<object, object>());
-				mockHubCallerContext.Setup(foo => foo.GetHttpContext()).Returns(mockHttpContext.Object);
-
-				var mockClient = new Mock<IHubCallerClients<IGameClient>>();
-				mockClient.Setup(c => c.Client(It.IsAny<string>())).Returns(gameClient.Object);
-				//var mockClientProxy = new Mock<IClientProxy>();
-				mockClient.Setup(c => c.All).Returns(gameClient.Object);
+				var mockHubCallerClients = new Mock<IHubCallerClients<IGameClient>>();
+				mockHubCallerClients.Setup(c => c.Client(It.IsAny<string>())).Returns(mockGameClient.Object);
+				mockHubCallerClients.Setup(c => c.User(It.IsAny<string>())).Returns(mockGameClient.Object);
 
 
 				var hub = new GameHub(db, Setup.Logger)
 				{
-					Clients = mockClient.Object,
+					Clients = mockHubCallerClients.Object,
 					Context = mockHubCallerContext.Object
 				};
 
 				//Act
-				await hub.ClientToServerPing(new PingCommand("motorcycles"));
+				await hub.OnConnectedAsync();
+
+				await hub.ClientToServerPing(new PingCommand("I like motorcycles"));
 
 				await hub.ClientToServerPoint(new InkBallPointViewModel
 				{
 					iX = 7,
 					iY = 7,
-					Status = InkBallPoint.StatusEnum.POINT_FREE_BLUE,
-					iGameId = 1
+					Status = InkBallPoint.StatusEnum.POINT_FREE_RED,
+					iGameId = 1,
+					iPlayerId = 1
 				});
 
 
 				//Assert
-				mockHubCallerContext.Verify(clients => clients.ConnectionAborted, Times.Once);
+				mockHubCallerContext.Verify(clients => clients.Features, Times.Once);
 
-				mockClient.Verify(
+				mockHubCallerClients.Verify(
 					client => client.User(It.IsAny<string>()),
 					Times.AtLeastOnce);
+
+				mockGameClient.Verify(
+					client => client.ServerToClientPing(It.Is<PingCommand>(pc => pc.Message == "I like motorcycles")),
+					Times.Once);
+
+				mockGameClient.Verify(
+					client => client.ServerToClientPoint(It.Is<InkBallPointViewModel>(p => p.iX == 7 && p.iY == 7)),
+					Times.Once);
 			}
 		}
+
+		#endregion SignalR tests
 	}
 }
