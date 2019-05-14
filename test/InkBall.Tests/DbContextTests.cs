@@ -289,10 +289,10 @@ namespace InkBall.Tests
 		}
 
 		[Fact]
-		public async Task ClientToServerPoint()
+		public async Task SignalR_ClientToServer_SimpleTests()
 		{
 			//Arrange
-			var token = CancellationToken;
+			var token = base.CancellationToken;
 
 			await CreateComplexGameHierarchy(token);
 
@@ -348,6 +348,72 @@ namespace InkBall.Tests
 				mockGameClient.Verify(
 					client => client.ServerToClientPoint(It.Is<InkBallPointViewModel>(p => p.iX == 7 && p.iY == 7)),
 					Times.Once);
+
+				var points_and_paths = await db.LoadPointsAndPathsAsync(1, token);
+				Assert.NotNull(points_and_paths.Points.FirstOrDefault(p => p.iX == 7 && p.iY == 7));
+			}
+		}
+
+
+		[Fact]
+		public async Task SignalR_ClientToServer_ComplexTests()
+		{
+			//Arrange
+			var token = base.CancellationToken;
+
+			await CreateComplexGameHierarchy(token);
+
+			using (var db = new GamesContext(Setup.DbOpts))
+			{
+				var mockGameClient = new Mock<IGameClient>();
+				mockGameClient.Setup(c => c.ServerToClientPath(It.IsAny<InkBallPathViewModel>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPing(It.IsAny<PingCommand>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPlayerJoin(It.IsAny<PlayerJoiningCommand>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPlayerSurrender(It.IsAny<PlayerSurrenderingCommand>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPlayerWin(It.IsAny<WinCommand>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPoint(It.IsAny<InkBallPointViewModel>())).Returns(Task.FromResult(0));
+
+				var mockHubCallerContext = GetMockHubCallerContext(gameID: 1, playerID: 2, userID: 2, externalUserIdentifier: "yyyyy");
+
+				var mockHubCallerClients = new Mock<IHubCallerClients<IGameClient>>();
+				mockHubCallerClients.Setup(c => c.Client(It.IsAny<string>())).Returns(mockGameClient.Object);
+				mockHubCallerClients.Setup(c => c.User(It.IsAny<string>())).Returns(mockGameClient.Object);
+
+
+				var hub = new GameHub(db, Setup.Logger)
+				{
+					Clients = mockHubCallerClients.Object,
+					Context = mockHubCallerContext.Object
+				};
+
+				//Act
+				await hub.OnConnectedAsync();
+
+				var exception = await Assert.ThrowsAsync<ArgumentException>(async () => {
+					await hub.ClientToServerPoint(new InkBallPointViewModel
+					{
+						iX = 8,
+						iY = 8,
+						Status = InkBallPoint.StatusEnum.POINT_FREE_RED,
+						iGameId = 1,
+						iPlayerId = 2
+					});
+				});
+
+				//Assert
+				Assert.Equal("not your turn", exception.Message);				
+				mockHubCallerContext.Verify(clients => clients.Features, Times.AtLeastOnce);
+
+				// mockHubCallerClients.Verify(
+				// 	client => client.User(It.IsAny<string>()),
+				// 	Times.AtLeastOnce);
+
+				// mockGameClient.Verify(
+				// 	client => client.ServerToClientPoint(It.Is<InkBallPointViewModel>(p => p.iX == 8 && p.iY == 8)),
+				// 	Times.Once);
+
+				// var points_and_paths = await db.LoadPointsAndPathsAsync(1, token);
+				// Assert.NotNull(points_and_paths.Points.FirstOrDefault(p => p.iX == 8 && p.iY == 8));
 			}
 		}
 
