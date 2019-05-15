@@ -256,7 +256,8 @@ namespace InkBall.Module.Model
 			int diff_x = Math.Abs(prevX - x), diff_y = Math.Abs(prevY - y);
 
 			if (diff_x > 1 || diff_y > 1)
-				throw new ArgumentOutOfRangeException("points are not stacked one after the other");
+				throw new ArgumentOutOfRangeException($"distance[({prevX},{prevY}), ({x},{y})] = ({diff_x},{diff_y}) > (1,1)",
+					"points are not stacked one after the other");
 
 			prevX = x; prevY = y;
 		}
