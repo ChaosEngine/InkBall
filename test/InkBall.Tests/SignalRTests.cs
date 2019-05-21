@@ -402,5 +402,114 @@ namespace InkBall.Tests
 				Assert.Equal("game == null", exception.Message);
 			}
 		}
+
+		[Fact]
+		public async Task SignalR_ClientToServer_PlayerJoin()
+		{
+			//Arrange
+			var token = base.CancellationToken;
+
+			//Start from creating a user
+			//Arrange
+			await CreateInitialUsers(token, new[] { "xxxxx", "yyyyy" });
+
+			using (var db = new GamesContext(Setup.DbOpts))
+			{
+				//Create game for user and assume eveyrthing is ready, player, connecting strucures, order of moves etc.
+				//Arrange
+				//Act
+				var new_game = await db.CreateNewGameFromExternalUserIDAsync("xxxxx", InkBallGame.GameStateEnum.AWAITING,
+					InkBallGame.GameTypeEnum.FIRST_CAPTURE, 16, 20, 26, true, token);
+				//Assert
+				Assert.NotNull(new_game);
+				Assert.NotNull(new_game.Player1);
+				Assert.NotNull(new_game.Player1.User);
+				Assert.Equal("xxxxx", new_game.Player1.User.sExternalId);
+
+				//Get active games for ALL the users and check if there is game for our user
+				//Act
+				IEnumerable<InkBallGame> games_from_db = await db.GetGamesForRegistrationAsSelectTableRowsAsync(null, null, null, true, token);
+				//Assert
+				Assert.NotNull(games_from_db);
+				Assert.NotEmpty(games_from_db);
+				Assert.NotNull(games_from_db.FirstOrDefault(p => p.Player1?.User.sExternalId == "xxxxx"));
+				Assert.NotNull(games_from_db.First().GetPlayer());
+				Assert.Equal("xxxxx", games_from_db.First().GetPlayer().User.sExternalId);
+				Assert.True(games_from_db.First().IsThisPlayerActive());
+				Assert.Equal(InkBallGame.GameStateEnum.AWAITING, games_from_db.First().GameState);
+				Assert.True(games_from_db.First().iId > 0);
+
+
+
+				//SignalR part
+				var mockGameClient = new Mock<IGameClient>();
+				mockGameClient.Setup(c => c.ServerToClientPath(It.IsAny<InkBallPathViewModel>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPing(It.IsAny<PingCommand>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPlayerJoin(It.IsAny<PlayerJoiningCommand>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPlayerSurrender(It.IsAny<PlayerSurrenderingCommand>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPlayerWin(It.IsAny<WinCommand>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPoint(It.IsAny<InkBallPointViewModel>())).Returns(Task.FromResult(0));
+
+				var mockHubCallerClients = new Mock<IHubCallerClients<IGameClient>>();
+				mockHubCallerClients.Setup(c => c.Client(It.IsAny<string>())).Returns(mockGameClient.Object);
+				mockHubCallerClients.Setup(c => c.User(It.IsAny<string>())).Returns(mockGameClient.Object);
+
+				var mockHubCallerContext_P1 = GetMockHubCallerContext(gameID: 1, playerID: 1, userID: 1, externalUserIdentifier: "xxxxx");
+				var hub_P1 = new GameHub(db, Setup.Logger)
+				{
+					Clients = mockHubCallerClients.Object,
+					Context = mockHubCallerContext_P1.Object
+				};
+
+				//Assue all structures (game, user, player, connections, order of moves etc.) are ready and waiting for our user/playee
+				//Act
+				//Assert
+				await hub_P1.OnConnectedAsync();
+
+				//Prepare for player JOIN action
+				//Act
+				var game_2_join = await db.GetGameFromDatabaseAsync(games_from_db.First().iId, false, token);
+
+				//Assert
+				Assert.NotNull(game_2_join);
+				Assert.NotNull(game_2_join.Player1);
+				Assert.Null(game_2_join.Player2);
+
+				//Join P2 player
+				//Act
+				await db.JoinGameFromExternalUserIdAsync(new_game, "yyyyy", token);
+
+				//Act
+				game_2_join = await db.GetGameFromDatabaseAsync(games_from_db.First().iId, false, token);
+				//Assert
+				Assert.NotNull(game_2_join);
+				Assert.NotNull(game_2_join.Player2);
+				Assert.NotNull(game_2_join.Player2.User);
+				Assert.NotNull(game_2_join.GetOtherPlayer());
+				Assert.NotNull(game_2_join.GetOtherPlayer().User.sExternalId);
+				Assert.Equal("yyyyy", game_2_join.Player2.User.sExternalId);
+				Assert.Equal(InkBallGame.GameStateEnum.ACTIVE, game_2_join.GameState);
+
+
+				//Arrange
+				var mockHubCallerContext_P2 = GetMockHubCallerContext(gameID: 1, playerID: 2, userID: 2, externalUserIdentifier: "yyyyy");
+				var hub_P2 = new GameHub(db, Setup.Logger)
+				{
+					Clients = mockHubCallerClients.Object,
+					Context = mockHubCallerContext_P2.Object
+				};
+
+				//Sign in as P2 of this game and ensure all is ready for the game
+				//Act
+				//Assert
+				await hub_P1.OnConnectedAsync();
+
+				//Notify P1 that P2 is joining
+				await hub_P2.Clients.User(game_2_join.GetOtherPlayer().User.sExternalId).ServerToClientPlayerJoin(
+					new PlayerJoiningCommand(game_2_join.GetOtherPlayer().iId,
+					game_2_join.GetPlayer().User.UserName,
+					$"Player {game_2_join.GetPlayer().User.UserName ?? ""} joining"));
+			}
+		}
 	}//end class
 }

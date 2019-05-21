@@ -135,6 +135,29 @@ namespace InkBall.Tests
 			}
 		}
 
+		protected async Task CreateInitialUsers(CancellationToken token = default, params string[] userIDs)
+		{
+			using (var context = new GamesContext(Setup.DbOpts))
+			{
+				int i = 0;
+				foreach (var uid in userIDs)
+				{
+					var user = new InkBallUser
+					{
+						//iId = 1,
+						UserName = $"test_{i}",
+						iPrivileges = 0,
+						sExternalId = uid,
+					};
+
+					await context.AddAsync(user, token);
+					i++;
+				}
+
+				await context.SaveChangesAsync(token);
+			}
+		}
+
 		public DbContextTests() : base()
 		{
 		}

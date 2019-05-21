@@ -564,7 +564,7 @@ namespace InkBall.Module.Model
 			return player;
 		}
 
-		internal async Task<bool> JoinGameFromExternalUserIdAsync(InkBallGame game, string sPlayer2ExternaUserID, CancellationToken token = default)
+		public async Task<bool> JoinGameFromExternalUserIdAsync(InkBallGame game, string sPlayer2ExternaUserID, CancellationToken token = default)
 		{
 			if (game.GameState != GameStateEnum.AWAITING || game.Player2 != null ||
 				game.Player1 == null || game.Player1.User.sExternalId == sPlayer2ExternaUserID)
