@@ -509,6 +509,13 @@ namespace InkBall.Tests
 					new PlayerJoiningCommand(game_2_join.GetOtherPlayer().iId,
 					game_2_join.GetPlayer().User.UserName,
 					$"Player {game_2_join.GetPlayer().User.UserName ?? ""} joining"));
+
+				//Assert
+				mockGameClient.Verify(client => client.ServerToClientPlayerJoin(It.Is<PlayerJoiningCommand>(pjc =>
+				   pjc.Message == "Player test_p2 joining"
+				   && (pjc.OtherPlayerId == 1 || pjc.OtherPlayerId == 2)
+				   && pjc.OtherPlayerName == "test_p2"
+				   )), Times.Once);
 			}
 		}
 	}//end class

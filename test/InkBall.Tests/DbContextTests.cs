@@ -139,7 +139,7 @@ namespace InkBall.Tests
 		{
 			using (var context = new GamesContext(Setup.DbOpts))
 			{
-				int i = 0;
+				int i = 1;
 				foreach (var uid in userIDs)
 				{
 					var user = new InkBallUser
