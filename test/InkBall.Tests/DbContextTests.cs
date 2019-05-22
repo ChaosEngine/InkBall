@@ -145,7 +145,7 @@ namespace InkBall.Tests
 					var user = new InkBallUser
 					{
 						//iId = 1,
-						UserName = $"test_{i}",
+						UserName = $"test_p{i}",
 						iPrivileges = 0,
 						sExternalId = uid,
 					};
