@@ -54,7 +54,7 @@ namespace InkBall.Module
 
 	public static class CommonUIServiceCollectionExtensions
 	{
-		public static void AddInkBallCommonUI<TGamesDBContext, TIdentUser>(this IServiceCollection services, IHostingEnvironment environment,
+		public static IServiceCollection AddInkBallCommonUI<TGamesDBContext, TIdentUser>(this IServiceCollection services, IHostingEnvironment environment,
 			Action<InkBallOptions> configureOptions)
 			where TGamesDBContext : IGamesContext
 			where TIdentUser : IdentityUser, INamedAgedUser
@@ -86,6 +86,8 @@ namespace InkBall.Module
 
 			services.ConfigureOptions(options);
 			services.AddSingleton<IOptions<InkBallOptions>>(Options.Create(options));
+
+			return services;
 		}
 
 		public static void PrepareSignalRForInkBall(this HubRouteBuilder routes)
