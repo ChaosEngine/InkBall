@@ -92,7 +92,7 @@ namespace InkBall.Module
 
 		public static void PrepareSignalRForInkBall(this HubRouteBuilder routes)
 		{
-			routes.MapHub<InkBall.Module.Hubs.GameHub>('/' + InkBall.Module.Hubs.GameHub.HubName);
+			routes.MapHub<InkBall.Module.Hubs.GameHub>("/dotnet/" + InkBall.Module.Hubs.GameHub.HubName);
 		}
 	}
 }
