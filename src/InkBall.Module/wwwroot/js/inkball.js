@@ -325,7 +325,7 @@ class InkBallGame {
 			LocalLog('connected; iConnErrCount = ' + this.iConnErrCount);
 
 			if (!this.m_bPointsAndPathsLoaded) {
-				await this.g_SignalRConnection.invoke("GetPlayerPointsAndPaths", this.g_iGameID).then(function (ppDTO) {
+				await this.g_SignalRConnection.invoke("GetPlayerPointsAndPaths", this.m_bViewOnly, this.g_iGameID).then(function (ppDTO) {
 					//LocalLog(ppDTO);
 
 					const path_and_point = PlayerPointsAndPathsDTO.Deserialize(ppDTO);

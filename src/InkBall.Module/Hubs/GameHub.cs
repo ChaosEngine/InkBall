@@ -42,7 +42,7 @@ namespace InkBall.Module.Hubs
 
 		Task ClientToServerPing(PingCommand ping);
 
-		Task<PlayerPointsAndPathsDTO> GetPlayerPointsAndPaths(int gameID);
+		Task<PlayerPointsAndPathsDTO> GetPlayerPointsAndPaths(bool viewOnly, int gameID);
 	}
 
 	[Authorize(Policy = Constants.InkBallPolicyName)]
@@ -161,25 +161,25 @@ namespace InkBall.Module.Hubs
 		private async Task LoadGameAndPlayerStructures(CancellationToken token)
 		{
 			var claimsPrincipal = this.Context.User;
-			var this_UserIdentifier = ThisUserIdentifier;
+			var thisUserIdentifier = ThisUserIdentifier;
 
 			//IPlayer<InkBallPoint, InkBallPath> this_Player = await GetPlayer(claimsPrincipal, this_UserIdentifier, token);
 			//ThisPlayer = this_Player;
 
-			(InkBallGame game, InkBallPlayer this_Player) = await GetGameAndThisPlayer(claimsPrincipal, this_UserIdentifier,
+			(InkBallGame game, InkBallPlayer this_Player) = await GetGameAndThisPlayer(claimsPrincipal, thisUserIdentifier,
 				ThisGameID.Value, ThisPlayerID.Value, token);
 			ThisGame = game;
 			ThisPlayer = this_Player;
 
 			ThisUserName = ThisPlayer.User.UserName;
 
-			(InkBallPlayer other_Player, string other_UserIdentifier) = GetOtherPlayer(ThisGame, this_UserIdentifier, this_Player);
+			(InkBallPlayer other_Player, string other_UserIdentifier) = GetOtherPlayer(ThisGame, thisUserIdentifier, this_Player);
 			OtherPlayer = other_Player;
 			OtherUserIdentifier = other_UserIdentifier;
 		}
 
 		private (InkBallPlayer other_Player, string other_UserIdentifier) GetOtherPlayer(InkBallGame game,
-			string this_UserIdentifier, IPlayer<InkBallPoint, InkBallPath> this_Player)
+			string thisUserIdentifier, IPlayer<InkBallPoint, InkBallPath> this_Player)
 		{
 			InkBallPlayer other_Player;
 			string other_UserIdentifier;
@@ -189,10 +189,10 @@ namespace InkBall.Module.Hubs
 			//	)
 			{
 				//obtain another player; co-player
-				InkBallPlayer otherDbPlayer = game.Player1.User.sExternalId == this_UserIdentifier ? game.Player2 : game.Player1;
+				InkBallPlayer otherDbPlayer = game.Player1.User.sExternalId == thisUserIdentifier ? game.Player2 : game.Player1;
 				if (otherDbPlayer != null)
 				{
-					if (otherDbPlayer.iId == this_Player.iId || OtherUserIdentifier == this_UserIdentifier)
+					if (otherDbPlayer.iId == this_Player.iId || OtherUserIdentifier == thisUserIdentifier)
 						throw new ArgumentException("both game players ar the same");
 					other_Player = otherDbPlayer;
 					other_UserIdentifier = otherDbPlayer.User.sExternalId;
@@ -209,7 +209,7 @@ namespace InkBall.Module.Hubs
 			return (other_Player, other_UserIdentifier);
 		}
 
-		private async Task<(InkBallGame, InkBallPlayer)> GetGameAndThisPlayer(ClaimsPrincipal claimsPrincipal, string this_UserIdentifier,
+		private async Task<(InkBallGame, InkBallPlayer)> GetGameAndThisPlayer(ClaimsPrincipal claimsPrincipal, string thisUserIdentifier,
 			int gameID, int playerID, CancellationToken token)
 		{
 			InkBallGame game;
@@ -225,7 +225,7 @@ namespace InkBall.Module.Hubs
 				.FirstOrDefaultAsync(
 					w => w.iId == gameID
 					&& (w.iPlayer1Id == playerID || w.iPlayer2Id == playerID)
-					&& (w.Player1.User.sExternalId == this_UserIdentifier || w.Player2.User.sExternalId == this_UserIdentifier)
+					&& (w.Player1.User.sExternalId == thisUserIdentifier || w.Player2.User.sExternalId == thisUserIdentifier)
 					&& (w.GameState == InkBallGame.GameStateEnum.ACTIVE || w.GameState == InkBallGame.GameStateEnum.AWAITING)
 				, token);
 				if (dbGame == null)
@@ -234,12 +234,12 @@ namespace InkBall.Module.Hubs
 					throw new ArgumentException("no player exist in that game");
 
 				bool bIsPlayer1;
-				if (this_UserIdentifier == dbGame.Player1.User.sExternalId)
+				if (thisUserIdentifier == dbGame.Player1.User.sExternalId)
 				{
 					this_Player = dbGame.Player1;
 					bIsPlayer1 = true;
 				}
-				else if (this_UserIdentifier == dbGame.Player2.User.sExternalId)
+				else if (thisUserIdentifier == dbGame.Player2.User.sExternalId)
 				{
 					this_Player = dbGame.Player2;
 					bIsPlayer1 = false;
@@ -268,7 +268,8 @@ namespace InkBall.Module.Hubs
 			//if (!(this.Context.Items.TryGetValue(nameof(ThisPlayer), out object pobj) && pobj is IPlayer<InkBallPointViewModel, InkBallPathViewModel> this_Player))
 			{
 				//get player from db
-				InkBallPlayer dbPlayer = await _dbContext.InkBallPlayer.Include(u => u.User).FirstOrDefaultAsync(p => p.User.sExternalId == thisUserIdentifier, token);
+				InkBallPlayer dbPlayer = await _dbContext.InkBallPlayer.Include(u => u.User)
+					.FirstOrDefaultAsync(p => p.User.sExternalId == thisUserIdentifier, token);
 				if (dbPlayer == null)
 					throw new NullReferenceException("no player");
 
@@ -630,21 +631,34 @@ namespace InkBall.Module.Hubs
 			}
 		}
 
-		[Authorize(Policy = Constants.InkBallViewOtherGamesPolicyName)]
-		public async Task<PlayerPointsAndPathsDTO> GetPlayerPointsAndPaths(int gameID)
+		//[Authorize(Policy = Constants.InkBallViewOtherGamesPolicyName)]
+		public async Task<PlayerPointsAndPathsDTO> GetPlayerPointsAndPaths(bool viewOnly, int gameID)
 		{
 			CancellationToken token = this.Context.ConnectionAborted;
 
-			var claimsPrincipal = this.Context.User;
-			ThisPlayer = await GetPlayer(claimsPrincipal, ThisUserIdentifier, token);
+			if (viewOnly)
+			{
+				//if(!(await authorization.AuthorizeAsync(base.User, Constants.InkBallViewOtherGamesPolicyName)).Succeeded)
+				if (!this.Context.User.HasClaim("role", "InkBallViewOtherPlayerGames"))
+					throw new UnauthorizedAccessException("Can not watch other player games!");
+
+				var claimsPrincipal = this.Context.User;
+				ThisPlayer = await GetPlayer(claimsPrincipal, ThisUserIdentifier, token);
+
+				if (gameID <= 0 || ThisPlayer == null)
+					throw new ArgumentException("bad player or game");
+			}
+			else
+			{
+				await LoadGameAndPlayerStructures(token);
+				if (ThisGame == null || ThisPlayer == null || string.IsNullOrEmpty(ThisUserName))
+					throw new ArgumentException("bad player or game");
+
+				gameID = ThisGame.iId;
+			}
 
 			try
 			{
-				if (gameID <= 0 || ThisPlayer == null)
-				{
-					throw new ArgumentException("bad player or game");
-				}
-
 				var packed = await _dbContext.LoadPointsAndPathsAsync(gameID, token);
 				var points = CommonPoint.GetPointsAsJavaScriptArrayStatic(packed.Points);
 				var paths = InkBallPath.GetPathsAsJavaScriptArrayStatic(packed.Paths);

@@ -500,14 +500,11 @@ var InkBallGame = function () {
                 }
 
                 _context2.next = 8;
-                return this.g_SignalRConnection.invoke("GetPlayerPointsAndPaths", 'payload?').then(function (ppDTO) {
-                  LocalLog(ppDTO);
+                return this.g_SignalRConnection.invoke("GetPlayerPointsAndPaths", this.m_bViewOnly, this.g_iGameID).then(function (ppDTO) {
                   var path_and_point = PlayerPointsAndPathsDTO.Deserialize(ppDTO);
                   if (path_and_point.Points !== undefined) this.SetAllPoints(path_and_point.Points);
                   if (path_and_point.Paths !== undefined) this.SetAllPaths(path_and_point.Paths);
                   this.m_bPointsAndPathsLoaded = true;
-                }.bind(this))["catch"](function (err) {
-                  LocalError(err.toString());
                 }.bind(this));
 
               case 8:
