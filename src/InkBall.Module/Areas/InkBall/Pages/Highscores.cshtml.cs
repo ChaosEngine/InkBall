@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace InkBall.Module.Pages
 {
-	[Authorize(Policy = "InkBallPlayerPolicy")]
+	[Authorize(Policy = Constants.InkBallPolicyName)]
 	public class HighscoresModel : BasePageModel
 	{
 		public IEnumerable<(int PlayerId, int? UserId, string UserName, int WinCount, int LossCount, int DrawCount, int GameCount)> Stats { get; set; }

@@ -14,7 +14,7 @@ using Microsoft.Extensions.Options;
 
 namespace InkBall.Module.Pages
 {
-	[Authorize(Policy = "InkBallPlayerPolicy")]
+	[Authorize(Policy = Constants.InkBallPolicyName)]
 	public class GamesModel : BasePageModel
 	{
 		private readonly IOptions<InkBallOptions> _commonUIConfigureOptions;

@@ -325,8 +325,8 @@ class InkBallGame {
 			LocalLog('connected; iConnErrCount = ' + this.iConnErrCount);
 
 			if (!this.m_bPointsAndPathsLoaded) {
-				await this.g_SignalRConnection.invoke("GetPlayerPointsAndPaths", 'payload?').then(function (ppDTO) {
-					LocalLog(ppDTO);
+				await this.g_SignalRConnection.invoke("GetPlayerPointsAndPaths", this.g_iGameID).then(function (ppDTO) {
+					//LocalLog(ppDTO);
 
 					const path_and_point = PlayerPointsAndPathsDTO.Deserialize(ppDTO);
 					if (path_and_point.Points !== undefined)
@@ -335,8 +335,6 @@ class InkBallGame {
 						this.SetAllPaths(path_and_point.Paths);
 
 					this.m_bPointsAndPathsLoaded = true;
-				}.bind(this)).catch(function (err) {
-					LocalError(err.toString());
 				}.bind(this));
 			}
 		}

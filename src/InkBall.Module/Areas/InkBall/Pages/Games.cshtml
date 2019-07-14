@@ -1,6 +1,7 @@
 @page
 @using InkBall.Module.Model
 @inject Microsoft.Extensions.Options.IOptions<InkBallOptions> commonUIConfigureOptions
+@inject Microsoft.AspNetCore.Authorization.IAuthorizationService authorization
 @model GamesModel
 @{
 	ViewData["Title"] = "Game list";
@@ -12,6 +13,8 @@
 
 	var sExternalUserID = Model.GameUser.sExternalId;
 	var bIsCurrentGameOk = Model.Game != null;
+	//var bCanViewOtherPlayerGames = User.HasClaim("role", "InkBallViewOtherPlayerGames");
+	var bCanViewOtherPlayerGames = (await authorization.AuthorizeAsync(User, null, Constants.InkBallViewOtherGamesPolicyName)).Succeeded;
 
 	if (!string.IsNullOrEmpty(Model.Message))
 	{
@@ -65,7 +68,6 @@
 									<td class='gtd'>
 										@if (bIsMyOwnGame)
 										{
-											<!-- <input type='submit' name='action' value='continue' class='btn btn-outline-primary' /> -->
 											<a href='Index' class='btn btn-outline-primary'>Continue</a>
 										}
 										else
@@ -84,21 +86,17 @@
 								case InkBallGame.GameStateEnum.ACTIVE:
 									<td class='font-italic gtd'>game in progress</td>
 									<td class='gtd'>
-										<!-- <form method='post'>
-										<input type='hidden' name='GameID' value='@game.iId' /> -->
 										@if (bIsMyOwnGame)
 										{
-											<!-- <input type='submit' name='action' value='continue' class="btn btn-outline-primary" /> -->
 											<a href='Index' class="btn btn-outline-primary">Continue</a>
 										}
 										else
 										{
-											if (!bIsCurrentGameOk)
+											if (!bIsCurrentGameOk && bCanViewOtherPlayerGames)
 											{
 												<a href='Index?handler=View&GameID=@game.iId'>View only</a>
 											}
 										}
-										<!-- </form> -->
 									</td>
 									break;
 
@@ -170,13 +168,11 @@
 				</div>
 			</fieldset>
 			<div class="form-row">
-				<!-- <input type='submit' name='action' value='Home' class='col-auto mx-1 btn btn-outline-primary' formnovalidate='formnovalidate' /> -->
 				<a href='Home' class='col-auto mx-1 btn btn-outline-primary'>Home</a>
 			</div>
 		}
 		else
 		{
-			<!-- <input type='submit' name='action' value='Home' class='btn btn-outline-primary' formnovalidate='formnovalidate' /> -->
 			<a href='Home' class='btn btn-outline-primary'>Home</a>
 		}
 	</form>

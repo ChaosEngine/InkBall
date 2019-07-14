@@ -42,10 +42,10 @@ namespace InkBall.Module.Hubs
 
 		Task ClientToServerPing(PingCommand ping);
 
-		Task<PlayerPointsAndPathsDTO> GetPlayerPointsAndPaths(string payload);
+		Task<PlayerPointsAndPathsDTO> GetPlayerPointsAndPaths(int gameID);
 	}
 
-	[Authorize(Policy = "InkBallPlayerPolicy")]
+	[Authorize(Policy = Constants.InkBallPolicyName)]
 	public class GameHub : Hub<IGameClient>, IGameServer
 	{
 		#region Fields
@@ -261,14 +261,14 @@ namespace InkBall.Module.Hubs
 			return (game, this_Player);
 		}
 
-		private async Task<IPlayer<InkBallPoint, InkBallPath>> GetPlayer(ClaimsPrincipal claimsPrincipal, string this_UserIdentifier,
+		private async Task<InkBallPlayer> GetPlayer(ClaimsPrincipal claimsPrincipal, string thisUserIdentifier,
 			CancellationToken token)
 		{
-			IPlayer<InkBallPoint, InkBallPath> this_Player;
+			InkBallPlayer this_Player;
 			//if (!(this.Context.Items.TryGetValue(nameof(ThisPlayer), out object pobj) && pobj is IPlayer<InkBallPointViewModel, InkBallPathViewModel> this_Player))
 			{
 				//get player from db
-				InkBallPlayer dbPlayer = await _dbContext.InkBallPlayer.Include(u => u.User).FirstOrDefaultAsync(p => p.User.sExternalId == this_UserIdentifier, token);
+				InkBallPlayer dbPlayer = await _dbContext.InkBallPlayer.Include(u => u.User).FirstOrDefaultAsync(p => p.User.sExternalId == thisUserIdentifier, token);
 				if (dbPlayer == null)
 					throw new NullReferenceException("no player");
 
@@ -279,7 +279,7 @@ namespace InkBall.Module.Hubs
 					throw new ArgumentException("this_UserId != this_Player.iUserId");
 
 				this_Player = dbPlayer;
-				this.Context.Items[nameof(ThisPlayer)] = this_Player;
+				//this.Context.Items[nameof(ThisPlayer)] = this_Player;
 			}
 			return this_Player;
 		}
@@ -630,21 +630,22 @@ namespace InkBall.Module.Hubs
 			}
 		}
 
-		public async Task<PlayerPointsAndPathsDTO> GetPlayerPointsAndPaths(string payload)
+		[Authorize(Policy = Constants.InkBallViewOtherGamesPolicyName)]
+		public async Task<PlayerPointsAndPathsDTO> GetPlayerPointsAndPaths(int gameID)
 		{
 			CancellationToken token = this.Context.ConnectionAborted;
 
-			await LoadGameAndPlayerStructures(token);
+			var claimsPrincipal = this.Context.User;
+			ThisPlayer = await GetPlayer(claimsPrincipal, ThisUserIdentifier, token);
 
 			try
 			{
-				if (ThisGame == null || ThisPlayer == null || OtherPlayer == null || string.IsNullOrEmpty(OtherUserIdentifier)
-					|| string.IsNullOrEmpty(ThisUserName))
+				if (gameID <= 0 || ThisPlayer == null)
 				{
 					throw new ArgumentException("bad player or game");
 				}
 
-				var packed = await _dbContext.LoadPointsAndPathsAsync(ThisGame.iId, token);
+				var packed = await _dbContext.LoadPointsAndPathsAsync(gameID, token);
 				var points = CommonPoint.GetPointsAsJavaScriptArrayStatic(packed.Points);
 				var paths = InkBallPath.GetPathsAsJavaScriptArrayStatic(packed.Paths);
 				var dto = new PlayerPointsAndPathsDTO(points, paths);

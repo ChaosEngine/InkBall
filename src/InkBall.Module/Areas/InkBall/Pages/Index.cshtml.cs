@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace InkBall.Module.Pages
 {
-	[Authorize(Policy = "InkBallPlayerPolicy")]
+	[Authorize(Policy = Constants.InkBallPolicyName)]
 	public class IndexModel : BasePageModel
 	{
 		private readonly IOptions<HubOptions> _signalRHubOptions;
@@ -125,8 +125,13 @@ namespace InkBall.Module.Pages
 			return Page();
 		}
 
-		public async Task<IActionResult> OnGetViewAsync(GameIdModel model)
+		public async Task<IActionResult> OnGetViewAsync([FromServices]IAuthorizationService authorization, GameIdModel model)
 		{
+			if(!(await authorization.AuthorizeAsync(base.User, Constants.InkBallViewOtherGamesPolicyName)).Succeeded)
+			// if (!base.User.HasClaim("role", "InkBallViewOtherPlayerGames"))
+				return await Task.FromResult<IActionResult>(base.Forbid());
+
+
 			if (!GameHub.WebSocketAllowedOrigins.Any())
 				GameHub.WebSocketAllowedOrigins.Add($"{Request.Scheme}://{Request.Host}");
 			else

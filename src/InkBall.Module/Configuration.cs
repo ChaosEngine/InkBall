@@ -12,6 +12,12 @@ using Microsoft.Extensions.Options;
 
 namespace InkBall.Module
 {
+	public static class Constants
+	{
+		public const string InkBallPolicyName = "InkBallPlayerPolicy";
+		public const string InkBallViewOtherGamesPolicyName = "InkBallViewOtherGamesPolicy";
+	}
+
 	public class InkBallOptions : IPostConfigureOptions<StaticFileOptions>
 	{
 		internal IFileProvider WebRootFileProvider { get; set; }
@@ -69,17 +75,22 @@ namespace InkBall.Module
 			{
 				services.AddAuthorization(auth_options =>
 				{
-					auth_options.AddPolicy("InkBallPlayerPolicy", options.CustomAuthorizationPolicyBuilder);
+					auth_options.AddPolicy(Constants.InkBallPolicyName, options.CustomAuthorizationPolicyBuilder);
 				});
 			}
 			else
 			{
 				services.AddAuthorization(auth_options =>
 				{
-					auth_options.AddPolicy("InkBallPlayerPolicy", policy =>
+					auth_options.AddPolicy(Constants.InkBallPolicyName, policy =>
 					{
 						policy.RequireAuthenticatedUser()
 							.AddRequirements(new InkBall.Module.MinimumAgeRequirement(18));
+					});
+					auth_options.AddPolicy(Constants.InkBallViewOtherGamesPolicyName, policy =>
+					{
+						policy.RequireAuthenticatedUser()
+							.RequireClaim("role", "InkBallViewOtherPlayerGames");
 					});
 				});
 			}
