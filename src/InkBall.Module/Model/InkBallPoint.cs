@@ -1,6 +1,7 @@
 ﻿using MessagePack;
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace InkBall.Module.Model
 {
@@ -139,6 +140,20 @@ namespace InkBall.Module.Model
 			if (((object)left) == null || ((object)right) == null)
 				return !Object.Equals(left, right);
 			return !(left.Equals(right));
+		}
+
+		public static string GetPointsAsJavaScriptArrayStatic(IEnumerable<CommonPoint> points)
+		{
+			StringBuilder builder = new StringBuilder("[", 300);
+			string comma = string.Empty;
+			foreach (var p in points)
+			{
+				builder.AppendFormat("{4}[{0},{1},{2},{3}]", p.iX, p.iY, (int)p.Status, p.iPlayerId, comma);
+				comma = ",";
+			}
+			builder.Append(']');
+
+			return builder.ToString();
 		}
 
 		public bool ShouldSerializeiId()

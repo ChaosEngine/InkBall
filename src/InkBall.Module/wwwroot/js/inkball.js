@@ -20,7 +20,8 @@ const CommandKindEnum = Object.freeze({
 	PATH: 2,
 	PLAYER_JOINING: 3,
 	PLAYER_SURRENDER: 4,
-	WIN: 5
+	WIN: 5,
+	POINTS_AND_PATHS: 6
 });
 
 const GameTypeEnum = Object.freeze({
@@ -173,6 +174,22 @@ class WinCommand extends DtoMsg {
 	}
 }
 
+class PlayerPointsAndPathsDTO extends DtoMsg {
+	constructor(points = [], paths = []) {
+		super();
+		this.Points = points;
+		this.Paths = paths;
+	}
+
+	GetKind() { return CommandKindEnum.POINTS_AND_PATHS; }
+
+	static Deserialize(ppDTO) {
+		const serialized = '{ "Points": ' + ppDTO.Points + ', "Paths": ' + ppDTO.Paths + ' }';
+		const path_and_point = JSON.parse(serialized);
+		return path_and_point;
+	}
+}
+
 //Debug function
 function CountPointsDebug(sSelector2Set, sSvgSelector = 'svg') {
 	let svgs = document.getElementsByTagName(sSvgSelector), totalChildren = 0, childCounts = [];
@@ -188,6 +205,14 @@ function CountPointsDebug(sSelector2Set, sSvgSelector = 'svg') {
 	});
 
 	document.querySelector(sSelector2Set).innerHTML = `SVG: ${totalChildren} by tag: ${tagMessage}`;
+}
+
+function LocalLog(msg) {
+	console.log(msg);
+}
+
+function LocalError(msg) {
+	console.error(msg);
 }
 
 class InkBallGame {
@@ -227,6 +252,7 @@ class InkBallGame {
 		this.POINT_OWNED_BY_RED = 2;
 		this.POINT_OWNED_BY_BLUE = 3;*/
 		this.m_bIsWon = false;
+		this.m_bPointsAndPathsLoaded = false;
 		this.m_iDelayBetweenMultiCaptures = 4000;
 		this.m_iTimerInterval = 2000;
 		this.m_iTooLong2Duration = iTooLong2Duration/*125*/;
@@ -282,7 +308,7 @@ class InkBallGame {
 
 		this.g_SignalRConnection.onclose(async (err) => {
 			if (err !== null && err !== undefined) {
-				console.error(err);
+				LocalError(err);
 
 				this.m_Screen.style.cursor = "not-allowed";
 				if (this.iConnErrCount < 5)//exponential back-off
@@ -296,10 +322,26 @@ class InkBallGame {
 		try {
 			await this.g_SignalRConnection.start();
 			this.iConnErrCount = 0;
-			console.log('connected; iConnErrCount = ' + this.iConnErrCount);
+			LocalLog('connected; iConnErrCount = ' + this.iConnErrCount);
+
+			if (!this.m_bPointsAndPathsLoaded) {
+				await this.g_SignalRConnection.invoke("GetPlayerPointsAndPaths", 'payload?').then(function (ppDTO) {
+					LocalLog(ppDTO);
+
+					const path_and_point = PlayerPointsAndPathsDTO.Deserialize(ppDTO);
+					if (path_and_point.Points !== undefined)
+						this.SetAllPoints(path_and_point.Points);
+					if (path_and_point.Paths !== undefined)
+						this.SetAllPaths(path_and_point.Paths);
+
+					this.m_bPointsAndPathsLoaded = true;
+				}.bind(this)).catch(function (err) {
+					LocalError(err.toString());
+				}.bind(this));
+			}
 		}
 		catch (err) {
-			console.error(err + '; iConnErrCount = ' + this.iConnErrCount);
+			LocalError(err + '; iConnErrCount = ' + this.iConnErrCount);
 
 			this.m_Screen.style.cursor = "not-allowed";
 			if (this.iConnErrCount < 5)//exponential back-off
@@ -312,16 +354,18 @@ class InkBallGame {
 	 * Start connection to SignalR
 	 * @param {number} iGameID ID of a game
 	 * @param {number} iPlayerID player ID
+	 * @param {boolean} loadPointsAndPathsFromSignalR load points and path thriugh SignalR
 	 * @param {string} sMsgListSel ul html element selector
 	 * @param {string} sMsgSendButtonSel input button html element selector
 	 * @param {string} sMsgInputSel input textbox html element selector
 	 */
-	StartSignalRConnection(iGameID, iPlayerID, sMsgListSel, sMsgSendButtonSel, sMsgInputSel) {
+	StartSignalRConnection(iGameID, iPlayerID, loadPointsAndPathsFromSignalR, sMsgListSel, sMsgSendButtonSel, sMsgInputSel) {
 		if (this.g_SignalRConnection === null) return;
 		this.g_iGameID = iGameID;
 		this.g_iPlayerID = iPlayerID;
 		this.m_sMsgInputSel = sMsgInputSel;
 		this.m_sMsgSendButtonSel = sMsgSendButtonSel;
+		this.m_bPointsAndPathsLoaded = !loadPointsAndPathsFromSignalR;
 
 		this.g_SignalRConnection.on("ServerToClientPoint", function (point) {
 
@@ -337,7 +381,7 @@ class InkBallGame {
 		}.bind(this));
 
 		this.g_SignalRConnection.on("ServerToClientPath", function (dto) {
-			if (dto.hasOwnProperty('PointsAsString')) {
+			if (Object.prototype.hasOwnProperty.call(dto, 'PointsAsString')) {
 				let path = dto;
 
 				const user = this.m_Player2Name.innerHTML;
@@ -349,7 +393,7 @@ class InkBallGame {
 
 				this.ReceivedPathProcessing(path);
 			}
-			else if (dto.hasOwnProperty('WinningPlayerId')) {
+			else if (Object.prototype.hasOwnProperty.call(dto, 'WinningPlayerId')) {
 				let win = dto;
 				let encodedMsg = WinCommand.Format(win);
 
@@ -452,7 +496,7 @@ class InkBallGame {
 	StopSignalRConnection() {
 		if (this.g_SignalRConnection !== null) {
 			this.g_SignalRConnection.stop();
-			console.log('Stopped SignalR connection');
+			LocalLog('Stopped SignalR connection');
 		}
 	}
 
@@ -823,29 +867,29 @@ class InkBallGame {
 		switch (payload.GetKind()) {
 
 			case CommandKindEnum.POINT:
-				console.log(InkBallPointViewModel.Format('some player', payload));
+				LocalLog(InkBallPointViewModel.Format('some player', payload));
 				this.m_bHandlingEvent = true;
 
 				this.g_SignalRConnection.invoke("ClientToServerPoint", payload).then(function (point) {
 					this.ReceivedPointProcessing(point);
 				}.bind(this)).catch(function (err) {
-					console.error(err.toString());
+					LocalError(err.toString());
 					if (revertFunction !== undefined)
 						revertFunction();
 				}.bind(this));
 				break;
 
 			case CommandKindEnum.PATH:
-				console.log(InkBallPathViewModel.Format('some player', payload));
+				LocalLog(InkBallPathViewModel.Format('some player', payload));
 				this.m_bHandlingEvent = true;
 
 				this.g_SignalRConnection.invoke("ClientToServerPath", payload).then(function (dto) {
 
-					if (dto.hasOwnProperty('WinningPlayerId')) {
+					if (Object.prototype.hasOwnProperty.call(dto, 'WinningPlayerId')) {
 						let win = dto;
 						this.ReceivedWinProcessing(win);
 					}
-					else if (dto.hasOwnProperty('PointsAsString')) {
+					else if (Object.prototype.hasOwnProperty.call(dto, 'PointsAsString')) {
 						let path = dto;
 						this.ReceivedPathProcessing(path);
 					}
@@ -853,7 +897,7 @@ class InkBallGame {
 						throw new Error("ClientToServerPath bad GetKind!");
 
 				}.bind(this)).catch(function (err) {
-					console.error(err.toString());
+					LocalError(err.toString());
 					if (revertFunction !== undefined)
 						revertFunction();
 				}.bind(this));
@@ -864,12 +908,12 @@ class InkBallGame {
 					document.querySelector(this.m_sMsgInputSel).value = '';
 					document.querySelector(this.m_sMsgSendButtonSel).disabled = 'disabled';
 				}.bind(this)).catch(function (err) {
-					console.error(err.toString());
+					LocalError(err.toString());
 				});
 				break;
 
 			default:
-				console.error('unknown object');
+				LocalError('unknown object');
 				break;
 		}
 	}
@@ -1488,7 +1532,7 @@ class InkBallGame {
 	}
 
 	OnTestClick() {
-		console.log(this.m_Points.flat());
+		LocalLog(this.m_Points.flat());
 	}
 
 	/**
@@ -1539,7 +1583,7 @@ class InkBallGame {
 			return;
 		}
 		this.m_iPosX = this.m_Screen.offsetLeft;
-		this.m_iPosY = this.m_Screen.offsetTop;		
+		this.m_iPosY = this.m_Screen.offsetTop;
 		this.m_Screen.style.width = `calc(1em * ${this.m_BoardSize.width})`;
 		this.m_Screen.style.height = `calc(1em * ${this.m_BoardSize.height})`;
 		let iClientWidth = this.m_Screen.clientWidth;
@@ -1572,7 +1616,7 @@ class InkBallGame {
 			document.querySelector('#Test').onclick = this.OnTestClick.bind(this);
 			document.querySelector(this.m_sMsgInputSel).disabled = '';
 			this.m_SurrenderButton.disabled = '';
-			
+
 			if (this.m_Player2Name.innerHTML === '???') {
 				this.ShowMobileStatus('Waiting for other player to connect');
 				this.m_Screen.style.cursor = "wait";
@@ -1592,8 +1636,7 @@ class InkBallGame {
 				}
 			}
 		}
-		else
-		{
+		else {
 			document.querySelector(sPause).innerHTML = 'back to Game List';
 		}
 	}

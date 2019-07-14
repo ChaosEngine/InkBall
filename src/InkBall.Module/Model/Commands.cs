@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using MessagePack;
 
 namespace InkBall.Module.Model
@@ -10,7 +11,8 @@ namespace InkBall.Module.Model
 		PATH = 2,
 		PLAYER_JOINING = 3,
 		PLAYER_SURRENDER = 4,
-		WIN = 5
+		WIN = 5,
+		POINTS_AND_PATHS = 6
 	}
 
 	public interface IDtoMsg
@@ -105,6 +107,25 @@ namespace InkBall.Module.Model
 		public CommandKindEnum GetKind()
 		{
 			return CommandKindEnum.WIN;
+		}
+	}
+
+	[MessagePackObject(true)]
+	public sealed class PlayerPointsAndPathsDTO : IDtoMsg
+	{
+		public string Points { get; }
+
+		public string Paths { get; }
+
+		public PlayerPointsAndPathsDTO(string points, string paths)
+		{
+			this.Points = points;
+			this.Paths = paths;
+		}
+
+		public CommandKindEnum GetKind()
+		{
+			return CommandKindEnum.POINTS_AND_PATHS;
 		}
 	}
 }

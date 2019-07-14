@@ -1,3 +1,5 @@
+#define LOAD_POINTS_AND_PATHS_FROM_SIGNALR
+
 using InkBall.Module.Hubs;
 using InkBall.Module.Model;
 using Microsoft.AspNetCore.Authorization;
@@ -22,6 +24,7 @@ namespace InkBall.Module.Pages
 		public (IEnumerable<InkBallPath> Paths, IEnumerable<InkBallPoint> Points) PlayerPointsAndPaths { get; protected set; }
 
 		public bool IsReadonly { get; private set; }
+
 
 		public TimeSpan ClientTimeoutInterval
 		{
@@ -57,7 +60,7 @@ namespace InkBall.Module.Pages
 			foreach (var path in paths)
 			{
 				var points = path.InkBallPointsInPath/*.OrderBy(o => o.Order)*/;
-				builder.AppendFormat("{0}[{1}'", comma
+				builder.AppendFormat("{0}[{1}\"", comma
 #if DEBUG
 				, $"/*ID={path.iId}*/"
 #else
@@ -78,9 +81,9 @@ namespace InkBall.Module.Pages
 
 				builder.AppendFormat(
 #if DEBUG
-					"',{0}/*playerID*/]",
+					"\",{0}/*playerID*/]",
 #else
-					"',{0}]",
+					"\",{0}]",
 #endif
 					path.iPlayerId);
 				comma = ",\r";
@@ -116,8 +119,9 @@ namespace InkBall.Module.Pages
 
 			this.IsReadonly = false;
 
+#if !LOAD_POINTS_AND_PATHS_FROM_SIGNALR
 			PlayerPointsAndPaths = await _dbContext.LoadPointsAndPathsAsync(Game.iId, token);
-
+#endif
 			return Page();
 		}
 
@@ -152,8 +156,9 @@ namespace InkBall.Module.Pages
 
 			this.IsReadonly = true;
 
+#if !LOAD_POINTS_AND_PATHS_FROM_SIGNALR
 			PlayerPointsAndPaths = await _dbContext.LoadPointsAndPathsAsync(Game.iId, token);
-
+#endif
 			return Page();
 		}
 	}

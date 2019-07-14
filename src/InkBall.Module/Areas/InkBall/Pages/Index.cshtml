@@ -87,7 +87,7 @@
 	var game = null;
 
 	window.addEventListener('load', function() {
-		const inkBallHubName = '@(commonUIConfigureOptions.Value.AppRootPath)@(InkBall.Module.Hubs.GameHub.HubName)';
+		const inkBallHubName = '@(commonUIConfigureOptions.Value.AppRootPath + InkBall.Module.Hubs.GameHub.HubName)';
 		const iGameID = @Model.Game.iId;
 		const iPlayerID = @Model.Player.iId;	
 		const boardSize = { width: @Model.Game.iBoardWidth, height: @Model.Game.iBoardHeight };
@@ -97,18 +97,24 @@
 		const protocol = JSON.parse('@commonUIConfigureOptions.Value.UseMessagePackBinaryTransport'.toLowerCase()) ? new signalR.protocols.msgpack.MessagePackHubProtocol() : new signalR.JsonHubProtocol();
 		const servTimeoutMillis = @Model.ClientTimeoutInterval.TotalMilliseconds;
 		const isReadonly = JSON.parse('@Model.IsReadonly'.toLowerCase());
+		const loadPointsAndPathsFromSignalR = JSON.parse('@(Model.PlayerPointsAndPaths.Paths == null)'.toLowerCase());
 		game = new InkBallGame(inkBallHubName, signalR.LogLevel.Warning, protocol, signalR.HttpTransportType.None, servTimeoutMillis,
 			function () {
 				return 'iGameID=' + iGameID + '&iPlayerID=' + iPlayerID;
 			},
 			gameType, bPlayingWithRed, bPlayerActive, boardSize, isReadonly
 		);
-		game.StartSignalRConnection(iGameID, iPlayerID, '#messagesList', '#sendButton', '#messageInput');
+		game.StartSignalRConnection(iGameID, iPlayerID, loadPointsAndPathsFromSignalR, '#messagesList', '#sendButton', '#messageInput');
 		game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#DrawMode', '#CancelPath', '#Pause');
 
-		game.SetAllPoints(@Html.Raw(Model.GetPointsAsJavaScriptArray(Model.PlayerPointsAndPaths.Points)));
-		game.SetAllPaths(@Html.Raw(Model.GetPathsAsJavaScriptArray(Model.PlayerPointsAndPaths.Paths)));
-
+		@if(Model.PlayerPointsAndPaths.Paths != null)
+		{
+			string jsEnodedPoints = Model.GetPointsAsJavaScriptArray(Model.PlayerPointsAndPaths.Points);
+			string jsEnodedPaths = Model.GetPathsAsJavaScriptArray(Model.PlayerPointsAndPaths.Paths);
+		@:game.SetAllPoints(@Html.Raw(jsEnodedPoints));
+		@:game.SetAllPaths(@Html.Raw(jsEnodedPaths));
+		}
+		
 		//alert('a QQ');
 		$('.whichColor').css('color', bPlayingWithRed ? "red" : "blue");
 		CountPointsDebug("#debug2");

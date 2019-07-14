@@ -42,6 +42,7 @@ namespace InkBall.Module.Hubs
 
 		Task ClientToServerPing(PingCommand ping);
 
+		Task<PlayerPointsAndPathsDTO> GetPlayerPointsAndPaths(string payload);
 	}
 
 	[Authorize(Policy = "InkBallPlayerPolicy")]
@@ -625,6 +626,34 @@ namespace InkBall.Module.Hubs
 					str = "more than 1 " + t.ToString();
 				}
 				_logger.LogError(ex.Message + str);
+				throw;
+			}
+		}
+
+		public async Task<PlayerPointsAndPathsDTO> GetPlayerPointsAndPaths(string payload)
+		{
+			CancellationToken token = this.Context.ConnectionAborted;
+
+			await LoadGameAndPlayerStructures(token);
+
+			try
+			{
+				if (ThisGame == null || ThisPlayer == null || OtherPlayer == null || string.IsNullOrEmpty(OtherUserIdentifier)
+					|| string.IsNullOrEmpty(ThisUserName))
+				{
+					throw new ArgumentException("bad player or game");
+				}
+
+				var packed = await _dbContext.LoadPointsAndPathsAsync(ThisGame.iId, token);
+				var points = CommonPoint.GetPointsAsJavaScriptArrayStatic(packed.Points);
+				var paths = InkBallPath.GetPathsAsJavaScriptArrayStatic(packed.Paths);
+				var dto = new PlayerPointsAndPathsDTO(points, paths);
+
+				return dto;
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex.Message);
 				throw;
 			}
 		}

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using MessagePack;
 using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json;
@@ -115,6 +116,30 @@ namespace InkBall.Module.Model
 		{
 			InkBallPoint = new HashSet<InkBallPoint>();
 			InkBallPointsInPath = new HashSet<InkBallPointsInPath>();
+		}
+
+		public static string GetPathsAsJavaScriptArrayStatic(IEnumerable<InkBallPath> paths)
+		{
+			StringBuilder builder = new StringBuilder("[", 300);
+			string comma = "";
+			foreach (var path in paths)
+			{
+				var points = path.InkBallPointsInPath/*.OrderBy(o => o.Order)*/;
+				builder.AppendFormat("{0}[{1}\"", comma, "");
+
+				string space = string.Empty;
+				foreach (var point in points)
+				{
+					builder.AppendFormat("{2}{0},{1}", point.Point.iX, point.Point.iY, space);
+					space = " ";
+				}
+
+				builder.AppendFormat("\",{0}]", path.iPlayerId);
+				comma = ",";
+			}
+			builder.Append(']');
+
+			return builder.ToString();
 		}
 	}
 
