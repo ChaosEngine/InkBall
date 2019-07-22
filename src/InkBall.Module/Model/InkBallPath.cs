@@ -118,13 +118,75 @@ namespace InkBall.Module.Model
 			InkBallPointsInPath = new HashSet<InkBallPointsInPath>();
 		}
 
-		public static string GetPathsAsJavaScriptArrayStatic(IEnumerable<InkBallPath> paths)
+		public static string GetPathsAsJavaScriptArrayForPage(IEnumerable<InkBallPath> paths)
 		{
 			StringBuilder builder = new StringBuilder("[", 300);
 			string comma = "";
 			foreach (var path in paths)
 			{
-				var points = path.InkBallPointsInPath/*.OrderBy(o => o.Order)*/;
+				var points = path.InkBallPointsInPath;
+				builder.AppendFormat("{0}[{1}\"", comma
+#if DEBUG
+				, $"/*ID={path.iId}*/"
+#else
+				, ""
+#endif
+				);
+
+				string space = string.Empty;
+				foreach (var point in points)
+				{
+#if DEBUG
+					builder.AppendFormat("{2}{0}/*x*/,{1}/*y*//*id={3}*/", point.Point.iX, point.Point.iY, space, point.Point.iId);
+#else
+					builder.AppendFormat("{2}{0},{1}", point.Point.iX, point.Point.iY, space);
+#endif
+					space = " ";
+				}
+
+				builder.AppendFormat(
+#if DEBUG
+					"\",{0}/*playerID*/]",
+#else
+					"\",{0}]",
+#endif
+					path.iPlayerId);
+				comma = ",\r";
+			}
+			builder.Append(']');
+
+			return builder.ToString();
+		}
+
+		public static string GetPathsAsJavaScriptArrayForPage2(IEnumerable<InkBallPath> paths)
+		{
+			StringBuilder builder = new StringBuilder("[", 300);
+			string comma = "";
+			foreach (var path in paths)
+			{
+				builder.AppendFormat("{0}{1}", comma
+#if DEBUG
+				, $"/*ID={path.iId}*/"
+#else
+ 				, ""
+#endif
+				)
+			   .Append(path.PointsAsString);
+
+				comma = ",\r";
+			}
+			builder.Append(']');
+
+			return builder.ToString();
+		}
+
+		public static string GetPathsAsJavaScriptArrayForSignalR(IEnumerable<InkBallPath> paths)
+		{
+			StringBuilder builder = new StringBuilder("[", 300);
+			string comma = "";
+			foreach (var path in paths)
+			{
+				var points = path.InkBallPointsInPath;
 				builder.AppendFormat("{0}[{1}\"", comma, "");
 
 				string space = string.Empty;
@@ -136,6 +198,21 @@ namespace InkBall.Module.Model
 
 				builder.AppendFormat("\",{0}]", path.iPlayerId);
 				comma = ",";
+			}
+			builder.Append(']');
+
+			return builder.ToString();
+		}
+
+		public static string GetPathsAsJavaScriptArrayForSignalR2(IEnumerable<InkBallPath> paths)
+		{
+			StringBuilder builder = new StringBuilder("[", 300);
+			string comma = "";
+			foreach (var path in paths)
+			{
+				builder.Append(comma).Append(path.PointsAsString);
+
+				comma = ",\r";
 			}
 			builder.Append(']');
 

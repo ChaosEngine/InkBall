@@ -107,12 +107,12 @@
 		game.StartSignalRConnection(iGameID, iPlayerID, loadPointsAndPathsFromSignalR, '#messagesList', '#sendButton', '#messageInput');
 		game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#DrawMode', '#CancelPath', '#Pause');
 
-		@if(Model.PlayerPointsAndPaths.Paths != null)
+		@if(Model.PlayerPointsAndPaths.Points != null)
 		{
-			string jsEnodedPoints = Model.GetPointsAsJavaScriptArray(Model.PlayerPointsAndPaths.Points);
-			string jsEnodedPaths = Model.GetPathsAsJavaScriptArray(Model.PlayerPointsAndPaths.Paths);
-		@:game.SetAllPoints(@Html.Raw(jsEnodedPoints));
-		@:game.SetAllPaths(@Html.Raw(jsEnodedPaths));
+			var jsEnodedPoints = Model.PointsAsJavaScriptArray;
+			var jsEnodedPaths = Model.PathsAsJavaScriptArray;
+		@:game.SetAllPoints(@jsEnodedPoints);
+		@:game.SetAllPaths2(@jsEnodedPaths);
 		}
 		
 		//alert('a QQ');

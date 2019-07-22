@@ -142,7 +142,26 @@ namespace InkBall.Module.Model
 			return !(left.Equals(right));
 		}
 
-		public static string GetPointsAsJavaScriptArrayStatic(IEnumerable<CommonPoint> points)
+		public static string GetPointsAsJavaScriptArrayForPage(IEnumerable<InkBallPoint> points)
+		{
+			StringBuilder builder = new StringBuilder("[", 300);
+
+			string comma = string.Empty;
+			foreach (var p in points)
+			{
+#if DEBUG
+				builder.AppendFormat("{4}[/*id={5}*/{0}/*x*/,{1}/*y*/,{2}/*val*/,{3}/*playerID*/]", p.iX, p.iY, (int)p.Status, p.iPlayerId, comma, p.iId);
+#else
+				builder.AppendFormat("{4}[{0},{1},{2},{3}]", p.iX, p.iY, (int)p.Status, p.iPlayerId, comma);
+#endif
+				comma = ",\r";
+			}
+			builder.Append(']');
+
+			return builder.ToString();
+		}
+
+		public static string GetPointsAsJavaScriptArrayForSignalR(IEnumerable<CommonPoint> points)
 		{
 			StringBuilder builder = new StringBuilder("[", 300);
 			string comma = string.Empty;

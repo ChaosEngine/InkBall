@@ -326,13 +326,14 @@ class InkBallGame {
 
 			if (!this.m_bPointsAndPathsLoaded) {
 				await this.g_SignalRConnection.invoke("GetPlayerPointsAndPaths", this.m_bViewOnly, this.g_iGameID).then(function (ppDTO) {
-					//LocalLog(ppDTO);
+					LocalLog(ppDTO);
+					debugger;
 
 					const path_and_point = PlayerPointsAndPathsDTO.Deserialize(ppDTO);
 					if (path_and_point.Points !== undefined)
 						this.SetAllPoints(path_and_point.Points);
 					if (path_and_point.Paths !== undefined)
-						this.SetAllPaths(path_and_point.Paths);
+						this.SetAllPaths2(path_and_point.Paths);
 
 					this.m_bPointsAndPathsLoaded = true;
 				}.bind(this));
@@ -695,6 +696,20 @@ class InkBallGame {
 	SetAllPaths(paths) {
 		paths.forEach(p => {
 			this.SetPath(p[0]/*points*/, this.m_bIsPlayingWithRed, p[1] === this.g_iPlayerID/*isMainPlayerPoints*/);
+		});
+	}
+
+	SetAllPaths2(packedPaths) {
+		//debugger;
+		packedPaths.forEach(unpacked => {
+			//debugger;
+			//const unpacked = JSON.parse(packed.Serialized);
+			LocalLog(unpacked);
+			if (unpacked.iGameId !== this.g_iGameID)
+				throw new Error("Bad game from path!");
+
+			this.SetPath(unpacked.PointsAsString/*points*/, this.m_bIsPlayingWithRed,
+				unpacked.iPlayerId === this.g_iPlayerID/*isMainPlayerPoints*/);
 		});
 	}
 

@@ -1,8 +1,9 @@
-#define LOAD_POINTS_AND_PATHS_FROM_SIGNALR
+//#define LOAD_POINTS_AND_PATHS_FROM_SIGNALR
 
 using InkBall.Module.Hubs;
 using InkBall.Module.Model;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -23,8 +24,17 @@ namespace InkBall.Module.Pages
 
 		public (IEnumerable<InkBallPath> Paths, IEnumerable<InkBallPoint> Points) PlayerPointsAndPaths { get; protected set; }
 
-		public bool IsReadonly { get; private set; }
+		public HtmlString PointsAsJavaScriptArray
+		{
+			get { return new HtmlString(CommonPoint.GetPointsAsJavaScriptArrayForPage(PlayerPointsAndPaths.Points)); }
+		}
 
+		public HtmlString PathsAsJavaScriptArray
+		{
+			get { return new HtmlString (InkBallPath.GetPathsAsJavaScriptArrayForPage2(PlayerPointsAndPaths.Paths)); }
+		}
+
+		public bool IsReadonly { get; private set; }
 
 		public TimeSpan ClientTimeoutInterval
 		{
@@ -32,65 +42,6 @@ namespace InkBall.Module.Pages
 			{
 				return _signalRHubOptions.Value.ClientTimeoutInterval.GetValueOrDefault(TimeSpan.FromSeconds(30));
 			}
-		}
-
-		public string GetPointsAsJavaScriptArray(IEnumerable<InkBallPoint> points)
-		{
-			StringBuilder builder = new StringBuilder("[", 300);
-
-			string comma = string.Empty;
-			foreach (var p in points)
-			{
-#if DEBUG
-				builder.AppendFormat("{4}[/*id={5}*/{0}/*x*/,{1}/*y*/,{2}/*val*/,{3}/*playerID*/]", p.iX, p.iY, (int)p.Status, p.iPlayerId, comma, p.iId);
-#else
-				builder.AppendFormat("{4}[{0},{1},{2},{3}]", p.iX, p.iY, (int)p.Status, p.iPlayerId, comma);
-#endif
-				comma = ",\r";
-			}
-			builder.Append(']');
-
-			return builder.ToString();
-		}
-
-		public string GetPathsAsJavaScriptArray(IEnumerable<InkBallPath> paths)
-		{
-			StringBuilder builder = new StringBuilder("[", 300);
-			string comma = "";
-			foreach (var path in paths)
-			{
-				var points = path.InkBallPointsInPath/*.OrderBy(o => o.Order)*/;
-				builder.AppendFormat("{0}[{1}\"", comma
-#if DEBUG
-				, $"/*ID={path.iId}*/"
-#else
-				, ""
-#endif
-				);
-
-				string space = string.Empty;
-				foreach (var point in points)
-				{
-#if DEBUG
-					builder.AppendFormat("{2}{0}/*x*/,{1}/*y*//*id={3}*/", point.Point.iX, point.Point.iY, space, point.Point.iId);
-#else
-					builder.AppendFormat("{2}{0},{1}", point.Point.iX, point.Point.iY, space);
-#endif
-					space = " ";
-				}
-
-				builder.AppendFormat(
-#if DEBUG
-					"\",{0}/*playerID*/]",
-#else
-					"\",{0}]",
-#endif
-					path.iPlayerId);
-				comma = ",\r";
-			}
-			builder.Append(']');
-
-			return builder.ToString();
 		}
 
 		public IndexModel(GamesContext dbContext, ILogger<BasePageModel> logger, IOptions<HubOptions> signalRHubOptions)
@@ -127,8 +78,8 @@ namespace InkBall.Module.Pages
 
 		public async Task<IActionResult> OnGetViewAsync([FromServices]IAuthorizationService authorization, GameIdModel model)
 		{
-			if(!(await authorization.AuthorizeAsync(base.User, Constants.InkBallViewOtherGamesPolicyName)).Succeeded)
-			// if (!base.User.HasClaim("role", "InkBallViewOtherPlayerGames"))
+			if (!(await authorization.AuthorizeAsync(base.User, Constants.InkBallViewOtherGamesPolicyName)).Succeeded)
+				// if (!base.User.HasClaim("role", "InkBallViewOtherPlayerGames"))
 				return await Task.FromResult<IActionResult>(base.Forbid());
 
 

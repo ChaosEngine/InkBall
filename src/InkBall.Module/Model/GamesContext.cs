@@ -751,27 +751,28 @@ namespace InkBall.Module.Model
 			return await query.ToArrayAsync(token);
 		}
 
-		private InkBallPath LoadPointsInPath(InkBallPath path)
+		private InkBallPath LoadPointsInPathFromRelationTable(InkBallPath path)
 		{
-			// if (!string.IsNullOrEmpty(path.PointsAsString))
-			// {
-			var pathVM_fromJson = JsonConvert.DeserializeObject<InkBallPathViewModel>(path.PointsAsString);
+			path.InkBallPointsInPath = path.InkBallPointsInPath.OrderBy(o => o.Order).ToArray();
 
-			//path.InkBallPointsInPath = path.InkBallPointsInPath.OrderBy(o => o.Order).ToArray();
+			return path;
+		}
+
+		private InkBallPath LoadPointsInPathFromJson(InkBallPath path)
+		{
+			var pathVM_fromJson = JsonConvert.DeserializeObject<InkBallPathViewModel>(path.PointsAsString);
 			path.InkBallPointsInPath = pathVM_fromJson.InkBallPoint.Select(c => new InkBallPointsInPath(c)).ToArray();
-			// }
-			// else
-			// {
-			// 	path.InkBallPointsInPath = path.InkBallPointsInPath.OrderBy(o => o.Order).ToArray();
-			// }
+
 			return path;
 		}
 
 		private async Task<IEnumerable<InkBallPath>> GetPathsFromDatabaseAsync(int iGameID, IEnumerable<InkBallPoint> points, CancellationToken token = default)
 		{
-			return await InkBallPath//.Include(x => x.InkBallPointsInPath)
+			return await InkBallPath//.Include(x => x.InkBallPointsInPath)//uncomment for LoadPointsInPathFromRelationTable method
 				.Where(pa => pa.iGameId == iGameID)
-				.Select(m => LoadPointsInPath(m)).ToArrayAsync(token);
+				// .Select(m => LoadPointsInPathFromRelationTable(m))
+				.Select(m => LoadPointsInPathFromJson(m))
+				.ToArrayAsync(token);
 		}
 
 		public async Task<(IEnumerable<InkBallPath> Paths, IEnumerable<InkBallPoint> Points)> LoadPointsAndPathsAsync(int iGameID, CancellationToken token = default)

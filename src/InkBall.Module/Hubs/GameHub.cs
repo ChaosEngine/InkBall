@@ -660,8 +660,8 @@ namespace InkBall.Module.Hubs
 			try
 			{
 				var packed = await _dbContext.LoadPointsAndPathsAsync(gameID, token);
-				var points = CommonPoint.GetPointsAsJavaScriptArrayStatic(packed.Points);
-				var paths = InkBallPath.GetPathsAsJavaScriptArrayStatic(packed.Paths);
+				var points = CommonPoint.GetPointsAsJavaScriptArrayForSignalR(packed.Points);
+				var paths = InkBallPath.GetPathsAsJavaScriptArrayForSignalR2(packed.Paths);
 				var dto = new PlayerPointsAndPathsDTO(points, paths);
 
 				return dto;
