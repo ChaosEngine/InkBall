@@ -10,9 +10,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace InkBall.Module.Pages
@@ -31,7 +29,7 @@ namespace InkBall.Module.Pages
 
 		public HtmlString PathsAsJavaScriptArray
 		{
-			get { return new HtmlString (InkBallPath.GetPathsAsJavaScriptArrayForPage2(PlayerPointsAndPaths.Paths)); }
+			get { return new HtmlString(InkBallPath.GetPathsAsJavaScriptArrayForPage2(PlayerPointsAndPaths.Paths)); }
 		}
 
 		public bool IsReadonly { get; private set; }

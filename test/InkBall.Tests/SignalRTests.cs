@@ -288,6 +288,57 @@ namespace InkBall.Tests
 					});
 				});
 				Assert.Contains("points are not stacked one after the other", exception.Message);
+
+				exception = await Assert.ThrowsAsync<ArgumentException>(async () =>
+				{
+					await hub_P1.ClientToServerPath(new InkBallPathViewModel
+					{
+						iGameId = 1,
+						iPlayerId = 1,
+						PointsAsString = "80,24 26,25 33,67 foo 55,40 bar, 80,24",
+						OwnedPointsAsString = "100,100"
+					});
+				});
+				Assert.Contains("bad characters in path", exception.Message);
+				
+				exception = await Assert.ThrowsAsync<ArgumentException>(async () =>
+				{
+					//path comprising points
+					var p1_pts = new int[5, 2] { { 8, 24 }, { 9, 25 }, { 8, 26 }, { 7, 25 }, { 8, 24 } };
+					var p2_pts = new int[5, 2] { { 12, 24 }, { 13, 25 }, { 12, 26 }, { 11, 25 }, { 12, 24 } };
+					//owned points
+					var p1_owned = new int[1, 2] { { 8, 25 } };
+					var p2_owned = new int[1, 2] { { 12, 25 } };
+
+					for (int i = p1_pts.GetLength(0) - 2; i >= 0; i--)
+					{
+						await hub_P1.ClientToServerPoint(new InkBallPointViewModel
+						{
+							iGameId = 1,
+							iPlayerId = 1,
+							iX = p1_pts[i, 0],
+							iY = p1_pts[i, 1],
+							Status = InkBallPoint.StatusEnum.POINT_FREE_RED,
+						});
+						await hub_P2.ClientToServerPoint(new InkBallPointViewModel
+						{
+							iGameId = 1,
+							iPlayerId = 2,
+							iX = p2_pts[i, 0],
+							iY = p2_pts[i, 1],
+							Status = InkBallPoint.StatusEnum.POINT_FREE_BLUE,
+						});
+					}
+					await hub_P1.ClientToServerPath(new InkBallPathViewModel
+					{
+						iGameId = 1,
+						iPlayerId = 1,
+						PointsAsString = "8,24 9,25 8,26 7,25 8,24",
+						OwnedPointsAsString = "8,bad is bad25"
+					});
+					//failing test
+				});
+				Assert.Contains("bad characters in path", exception.Message);
 			}
 		}
 

@@ -97,7 +97,7 @@
 		const protocol = JSON.parse('@commonUIConfigureOptions.Value.UseMessagePackBinaryTransport'.toLowerCase()) ? new signalR.protocols.msgpack.MessagePackHubProtocol() : new signalR.JsonHubProtocol();
 		const servTimeoutMillis = @Model.ClientTimeoutInterval.TotalMilliseconds;
 		const isReadonly = JSON.parse('@Model.IsReadonly'.toLowerCase());
-		const loadPointsAndPathsFromSignalR = JSON.parse('@(Model.PlayerPointsAndPaths.Paths == null)'.toLowerCase());
+		const loadPointsAndPathsFromSignalR = JSON.parse('@(Model.PlayerPointsAndPaths.Points == null)'.toLowerCase());
 		game = new InkBallGame(inkBallHubName, signalR.LogLevel.Warning, protocol, signalR.HttpTransportType.None, servTimeoutMillis,
 			function () {
 				return 'iGameID=' + iGameID + '&iPlayerID=' + iPlayerID;

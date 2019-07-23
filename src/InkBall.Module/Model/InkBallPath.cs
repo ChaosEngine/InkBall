@@ -281,14 +281,21 @@ namespace InkBall.Module.Model
 		private ICollection<InkBallPointViewModel> StringToPointCollection(string pointsAsString, InkBallPoint.StatusEnum firstPointStatus,
 			InkBallPoint.StatusEnum subsequentStatuses, int playerIDToSet, ActionRef<int, int, int, int> validateContinuityOfThePath = null)
 		{
+			//basic string allowed char validation
+			if (!pointsAsString.All(c => c == ' ' || c == ',' || (c >= '0' && c <= '9')))
+				throw new ArgumentException("bad characters in path");
+
 			var tokensP = new StringTokenizer(pointsAsString, _spaceSeparatorArr);
 			var collection = new HashSet<InkBallPointViewModel>();
 			InkBallPointViewModel first = null;
 			InkBallPoint.StatusEnum status = firstPointStatus;
 
-			int i = 0, prev_x = -1, prev_y = -1;
+			int prev_x = -1, prev_y = -1;
 
-			var strP = tokensP.ElementAt(i);
+			IEnumerator<StringSegment> enumerator = tokensP.GetEnumerator();
+			enumerator.MoveNext();
+			var strP = enumerator.Current;
+
 			var tokenXY = strP.Split(_commaSeparatorArr);
 			if (tokenXY.Count() >= 2)
 			{
@@ -311,10 +318,9 @@ namespace InkBall.Module.Model
 				}
 			}
 
-			int count = tokensP.Count();
-			for (i++; i < count; i++)
+			while (enumerator.MoveNext())
 			{
-				strP = tokensP.ElementAt(i);
+				strP = enumerator.Current;
 				tokenXY = strP.Split(_commaSeparatorArr);
 				if (tokenXY.Count() >= 2)
 				{

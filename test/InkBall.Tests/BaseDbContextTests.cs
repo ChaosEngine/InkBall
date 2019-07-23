@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using InkBall.Module.Hubs;
@@ -9,10 +11,11 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace InkBall.Tests
 {
-	public abstract class BaseDbContextTests : IDisposable
+	public abstract class DbContextSetup : IDisposable
 	{
 		CancellationTokenSource _cancellationSource = new CancellationTokenSource();
 
@@ -70,7 +73,7 @@ namespace InkBall.Tests
 			return (connection, options, config, cache, logger);
 		}
 
-		public BaseDbContextTests()
+		public DbContextSetup()
 		{
 			var db = SetupInMemoryDB();
 			db.Wait();
@@ -114,5 +117,149 @@ namespace InkBall.Tests
 			// GC.SuppressFinalize(this);
 		}
 		#endregion
+	}
+
+	public abstract class BaseDbContextTests : DbContextSetup
+	{
+		protected async Task CreateComplexGameHierarchy(CancellationToken token = default,
+			InkBallGame.GameTypeEnum gameType2Create = InkBallGame.GameTypeEnum.FIRST_CAPTURE)
+		{
+			//Arrange
+			var game0 = new InkBallGame
+			{
+				//iId = 1,
+				CreateTime = DateTime.Now,
+				GameState = InkBallGame.GameStateEnum.ACTIVE,
+				GameType = gameType2Create,
+				Player1 = new InkBallPlayer
+				{
+					//iId = 1,
+					sLastMoveCode = "{}",
+					User = new InkBallUser
+					{
+						//iId = 1,
+						UserName = "test_p1",
+						iPrivileges = 0,
+						sExternalId = "xxxxx",
+					}
+				},
+				Player2 = new InkBallPlayer
+				{
+					//iId = 2,
+					sLastMoveCode = "{}",
+					User = new InkBallUser
+					{
+						//iId = 2,
+						UserName = "test_p2",
+						iPrivileges = 0,
+						sExternalId = "yyyyy",
+					}
+				}
+			};
+			var points0 = new List<InkBallPoint>(100);
+			var paths0 = new List<InkBallPath>(5);
+			bool is_player_turn = true;
+			foreach (var source in UnitTest1.CorrectPathAndOwnedPointsData)
+			{
+				((int x, int y)[] coords, string expectedCoords, (int x, int y)[] ownedPoints) parameters =
+					(ValueTuple<(int, int)[], string, (int, int)[]>)source[0];
+
+				foreach ((int x, int y) pt in parameters.coords.Union(parameters.ownedPoints))
+				{
+					points0.Add(new InkBallPoint
+					{
+						//iId = 1,
+						iX = pt.x,
+						iY = pt.y,
+						Game = game0,
+						Status = InkBallPoint.StatusEnum.POINT_IN_PATH,
+						iEnclosingPathId = null,
+						Player = game0.Player1
+					});
+				}
+
+				var db_path = new InkBallPath
+				{
+					Game = game0,
+					Player = is_player_turn ? game0.Player1 : game0.Player2
+				};
+				int order = 1;
+				var path_vm = new InkBallPathViewModel
+				{
+					PointsAsString = parameters.expectedCoords
+				};
+				path_vm.InkBallPoint.ToList().ForEach((p) =>
+				{
+					var pip = new InkBallPointsInPath
+					{
+						Path = db_path,
+						Point = new InkBallPoint
+						{
+							iX = p.iX,
+							iY = p.iY,
+							Player = db_path.Player,
+							Game = db_path.Game
+						},
+						Order = order++
+					};
+					db_path.InkBallPointsInPath.Add(pip);
+				});
+				db_path.PointsAsString = JsonConvert.SerializeObject(path_vm);
+
+				paths0.Add(db_path);
+				foreach (var owned in parameters.ownedPoints)
+				{
+					points0.Where(p => p.iX == owned.x && p.iY == owned.y).ToList().ForEach((pt) =>
+					{
+						pt.EnclosingPath = db_path;
+						pt.Status = db_path.Game.Player1 == db_path.Player ?
+							InkBallPoint.StatusEnum.POINT_OWNED_BY_BLUE : InkBallPoint.StatusEnum.POINT_OWNED_BY_RED;
+					});
+				}
+
+				is_player_turn = !is_player_turn;
+			}
+
+			//Act
+			using (var context = new GamesContext(Setup.DbOpts))
+			{
+				await context.AddAsync(game0, token);
+
+				foreach (var pt in points0)
+					await context.AddAsync(pt, token);
+
+				foreach (var pa in paths0)
+					await context.AddAsync(pa, token);
+
+				await context.SaveChangesAsync(token);
+			}
+		}
+
+		protected async Task CreateInitialUsers(CancellationToken token = default, params string[] userIDs)
+		{
+			using (var context = new GamesContext(Setup.DbOpts))
+			{
+				int i = 1;
+				foreach (var uid in userIDs)
+				{
+					var user = new InkBallUser
+					{
+						//iId = 1,
+						UserName = $"test_p{i}",
+						iPrivileges = 0,
+						sExternalId = uid,
+					};
+
+					await context.AddAsync(user, token);
+					i++;
+				}
+
+				await context.SaveChangesAsync(token);
+			}
+		}
+
+		public BaseDbContextTests() : base()
+		{
+		}
 	}
 }

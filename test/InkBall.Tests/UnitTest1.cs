@@ -121,6 +121,8 @@ namespace InkBall.Tests
 			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(1,1),(2,1),(3,1),(4,1)},"1,1 2,1 3,1 4,1",new[]{(1,2)}),
 			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(-1,13),(332,51),(34,1)},"blablabla",new[]{(1,2)}),
 			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(-1,13),(332,51),(34,1)},"blablabla 43 ddfg rgfd",new[]{(1,2)}),
+			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(1,1),(2,1),(3,1),(4,1),(4,2),(4,3),(3,3),(2,3),(1,3),(1,2),(1,1)},"1,1 2,1 3,1 4,1 4,2 4,3 <script>alert(1)</script> 3,3 2,3 1,3 1,2 1,1",new[]{(4,2)}),
+			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(10,4),(9,5),(9,6),(10,7),(11,6),(11,5),(10,4)},"10,4 9,5 9,6 10,7 11,6 11,5 10,4a",new[]{(10,5),(10,6)}),
 		});
 		public static PathValidationTheoryData BadOwnedPointsData => new PathValidationTheoryData(new ValueTuple<(int, int)[], string, (int, int)[]>[]
 		{
