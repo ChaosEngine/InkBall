@@ -501,9 +501,11 @@ var InkBallGame = function () {
 
                 _context2.next = 8;
                 return this.g_SignalRConnection.invoke("GetPlayerPointsAndPaths", this.m_bViewOnly, this.g_iGameID).then(function (ppDTO) {
+                  LocalLog(ppDTO);
+                  debugger;
                   var path_and_point = PlayerPointsAndPathsDTO.Deserialize(ppDTO);
                   if (path_and_point.Points !== undefined) this.SetAllPoints(path_and_point.Points);
-                  if (path_and_point.Paths !== undefined) this.SetAllPaths(path_and_point.Paths);
+                  if (path_and_point.Paths !== undefined) this.SetAllPaths2(path_and_point.Paths);
                   this.m_bPointsAndPathsLoaded = true;
                 }.bind(this));
 
@@ -847,6 +849,18 @@ var InkBallGame = function () {
 
       paths.forEach(function (p) {
         _this11.SetPath(p[0], _this11.m_bIsPlayingWithRed, p[1] === _this11.g_iPlayerID);
+      });
+    }
+  }, {
+    key: "SetAllPaths2",
+    value: function SetAllPaths2(packedPaths) {
+      var _this12 = this;
+
+      packedPaths.forEach(function (unpacked) {
+        LocalLog(unpacked);
+        if (unpacked.iGameId !== _this12.g_iGameID) throw new Error("Bad game from path!");
+
+        _this12.SetPath(unpacked.PointsAsString, _this12.m_bIsPlayingWithRed, unpacked.iPlayerId === _this12.g_iPlayerID);
       });
     }
   }, {
@@ -1217,7 +1231,7 @@ var InkBallGame = function () {
   }, {
     key: "Check4Win",
     value: function Check4Win(playerPaths, otherPlayerPaths, playerPoints, otherPlayerPoints) {
-      var _this12 = this;
+      var _this13 = this;
 
       var paths, points, count;
 
@@ -1244,7 +1258,7 @@ var InkBallGame = function () {
             if (p.iEnclosingPathId !== null) ++count;
 
             if (count >= 5) {
-              if (_this12.m_bIsPlayingWithRed) return WinStatusEnum.RED_WINS;else return WinStatusEnum.GREEN_WINS;
+              if (_this13.m_bIsPlayingWithRed) return WinStatusEnum.RED_WINS;else return WinStatusEnum.GREEN_WINS;
             }
           });
           points = playerPoints;
@@ -1253,7 +1267,7 @@ var InkBallGame = function () {
             if (p.iEnclosingPathId !== null) ++count;
 
             if (count >= 5) {
-              if (_this12.m_bIsPlayingWithRed) return WinStatusEnum.GREEN_WINS;else return WinStatusEnum.RED_WINS;
+              if (_this13.m_bIsPlayingWithRed) return WinStatusEnum.GREEN_WINS;else return WinStatusEnum.RED_WINS;
             }
           });
           return WinStatusEnum.NO_WIN;
@@ -1309,7 +1323,7 @@ var InkBallGame = function () {
   }, {
     key: "OnMouseMove",
     value: function OnMouseMove(event) {
-      var _this13 = this;
+      var _this14 = this;
 
       if (!this.m_bIsPlayerActive || this.m_Player2Name.innerHTML === '???' || this.m_bHandlingEvent === true || this.iConnErrCount > 0) {
         if (this.iConnErrCount <= 0 && !this.m_bIsPlayerActive) {
@@ -1344,14 +1358,14 @@ var InkBallGame = function () {
                 if (val.owned.length > 0) {
                   this.Debug('Closing path', 0);
                   this.SendAsyncData(this.CreateXMLPutPathRequest(val), function () {
-                    _this13.OnCancelClick();
+                    _this14.OnCancelClick();
 
                     val.OwnedPoints.forEach(function (p) {
                       p.$SetStatus(val.revertStatus);
                       p.$SetFillColor(val.revertFillColor);
                       p.$strokeColor(val.revertStrokeColor);
                     });
-                    _this13.m_bHandlingEvent = false;
+                    _this14.m_bHandlingEvent = false;
                   });
                 } else this.Debug('Wrong path, cancell it or refresh page', 0);
               }
@@ -1378,7 +1392,7 @@ var InkBallGame = function () {
   }, {
     key: "OnMouseDown",
     value: function OnMouseDown(event) {
-      var _this14 = this;
+      var _this15 = this;
 
       if (!this.m_bIsPlayerActive || this.m_Player2Name.innerHTML === '???' || this.m_bHandlingEvent === true || this.iConnErrCount > 0) return;
       var x = (event ? event.clientX : window.event.clientX) - this.m_Screen.offsetLeft + this.f_scrollLeft() + 0.5 * this.m_iGridSizeX;
@@ -1397,8 +1411,8 @@ var InkBallGame = function () {
         if (this.m_Points[loc_y * this.m_iGridWidth + loc_x] !== undefined) return;
         if (!this.IsPointOutsideAllPaths(loc_x, loc_y)) return;
         this.SendAsyncData(this.CreateXMLPutPointRequest(loc_x, loc_y), function () {
-          _this14.m_bMouseDown = false;
-          _this14.m_bHandlingEvent = false;
+          _this15.m_bMouseDown = false;
+          _this15.m_bHandlingEvent = false;
         });
       } else {
         if ((this.m_iLastX !== x || this.m_iLastY !== y) && Math.abs(parseInt(this.m_iLastX - x)) <= 1 && Math.abs(parseInt(this.m_iLastY - y)) <= 1 && this.m_iLastX >= 0 && this.m_iLastY >= 0) {
@@ -1416,15 +1430,15 @@ var InkBallGame = function () {
                 if (val.owned.length > 0) {
                   this.Debug('Closing path', 0);
                   this.SendAsyncData(this.CreateXMLPutPathRequest(val), function () {
-                    _this14.OnCancelClick();
+                    _this15.OnCancelClick();
 
                     val.OwnedPoints.forEach(function (p) {
                       p.$SetStatus(val.revertStatus);
                       p.$SetFillColor(val.revertFillColor);
                       p.$strokeColor(val.revertStrokeColor);
                     });
-                    _this14.m_bMouseDown = false;
-                    _this14.m_bHandlingEvent = false;
+                    _this15.m_bMouseDown = false;
+                    _this15.m_bHandlingEvent = false;
                   });
                 } else this.Debug('Wrong path, cancell it or refresh page', 0);
               }

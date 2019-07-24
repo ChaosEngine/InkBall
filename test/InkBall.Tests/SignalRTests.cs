@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Net.Http.Headers;
 using Moq;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -47,7 +49,9 @@ namespace InkBall.Tests
 			mockHubCallerContext.SetupGet(foo => foo.Items).Returns(items);
 			mockHubCallerContext.SetupGet(foo => foo.User).Returns(
 				new ClaimsPrincipal(new[] { new ClaimsIdentity(new [] {
-						new Claim(nameof(InkBall.Module.Pages.HomeModel.InkBallUserId), userID.ToString(), nameof(InkBall.Module.Model.InkBallUser)) }) }));
+						new Claim(nameof(InkBall.Module.Pages.HomeModel.InkBallUserId), userID.ToString(), nameof(InkBall.Module.Model.InkBallUser)),
+						new Claim("role", "InkBallViewOtherPlayerGames")
+				}) }));
 			mockHubCallerContext.Setup(foo => foo.Features).Returns(features);
 
 			return mockHubCallerContext;
@@ -300,7 +304,7 @@ namespace InkBall.Tests
 					});
 				});
 				Assert.Contains("bad characters in path", exception.Message);
-				
+
 				exception = await Assert.ThrowsAsync<ArgumentException>(async () =>
 				{
 					//path comprising points
@@ -466,7 +470,7 @@ namespace InkBall.Tests
 
 			using (var db = new GamesContext(Setup.DbOpts))
 			{
-				//Create game for user and assume eveyrthing is ready, player, connecting strucures, order of moves etc.
+				//Create game for user and assume everything is ready, player, connecting structures, order of moves etc.
 				//Arrange
 				//Act
 				var new_game = await db.CreateNewGameFromExternalUserIDAsync("xxxxx", InkBallGame.GameStateEnum.AWAITING,
@@ -567,6 +571,195 @@ namespace InkBall.Tests
 				   && (pjc.OtherPlayerId == 1 || pjc.OtherPlayerId == 2)
 				   && pjc.OtherPlayerName == "test_p2"
 				   )), Times.Once);
+			}
+		}
+
+		[Theory]
+		[InlineData(false)]
+		[InlineData(true)]
+		public async Task SignalR_GetPlayerPointsAndPaths(bool viewOnly)
+		{
+			//Arrange
+			var token = base.CancellationToken;
+
+			await CreateComplexGameHierarchy(token, InkBallGame.GameTypeEnum.FIRST_5_PATHS);
+
+			using (var db = new GamesContext(Setup.DbOpts))
+			{
+				var mockGameClient = new Mock<IGameClient>();
+				mockGameClient.Setup(c => c.ServerToClientPath(It.IsAny<InkBallPathViewModel>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPing(It.IsAny<PingCommand>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPlayerJoin(It.IsAny<PlayerJoiningCommand>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPlayerSurrender(It.IsAny<PlayerSurrenderingCommand>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPlayerWin(It.IsAny<WinCommand>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPoint(It.IsAny<InkBallPointViewModel>())).Returns(Task.FromResult(0));
+
+				var mockHubCallerClients = new Mock<IHubCallerClients<IGameClient>>();
+				mockHubCallerClients.Setup(c => c.Client(It.IsAny<string>())).Returns(mockGameClient.Object);
+				mockHubCallerClients.Setup(c => c.User(It.IsAny<string>())).Returns(mockGameClient.Object);
+
+				var mockHubCallerContext_P1 = GetMockHubCallerContext(gameID: 1, playerID: 1, userID: 1, externalUserIdentifier: "xxxxx");
+				var mockHubCallerContext_P2 = GetMockHubCallerContext(gameID: 1, playerID: 2, userID: 2, externalUserIdentifier: "yyyyy");
+
+				var hub_P1 = new GameHub(db, Setup.Logger)
+				{
+					Clients = mockHubCallerClients.Object,
+					Context = mockHubCallerContext_P1.Object
+				};
+				var hub_P2 = new GameHub(db, Setup.Logger)
+				{
+					Clients = mockHubCallerClients.Object,
+					Context = mockHubCallerContext_P2.Object
+				};
+
+				//Act
+				await hub_P1.OnConnectedAsync();
+				await hub_P2.OnConnectedAsync();
+
+				//path comprising points
+				var p1_pts = new int[5, 2] { { 8, 24 }, { 9, 25 }, { 8, 26 }, { 7, 25 }, { 8, 24 } };//red
+				var p2_pts = new int[5, 2] { { 12, 24 }, { 13, 25 }, { 12, 26 }, { 11, 25 }, { 12, 24 } };//blue
+
+				//owned points
+				var p1_owned = new int[1, 2] { { 8, 25 } };//owned by blue
+				var p2_owned = new int[1, 2] { { 12, 25 } };//owned by red
+
+				for (int i = p1_pts.GetLength(0) - 2; i >= 0; i--)
+				{
+					await hub_P1.ClientToServerPoint(new InkBallPointViewModel
+					{
+						iGameId = 1,
+						iPlayerId = 1,
+						iX = p1_pts[i, 0],
+						iY = p1_pts[i, 1],
+						Status = InkBallPoint.StatusEnum.POINT_FREE_RED,
+					});
+					await hub_P2.ClientToServerPoint(new InkBallPointViewModel
+					{
+						iGameId = 1,
+						iPlayerId = 2,
+						iX = p2_pts[i, 0],
+						iY = p2_pts[i, 1],
+						Status = InkBallPoint.StatusEnum.POINT_FREE_BLUE,
+					});
+				}
+				await hub_P1.ClientToServerPoint(new InkBallPointViewModel
+				{
+					iGameId = 1,
+					iPlayerId = 1,
+					iX = p2_owned[0, 0],
+					iY = p2_owned[0, 1],
+					Status = InkBallPoint.StatusEnum.POINT_FREE_RED,
+				});
+				await hub_P2.ClientToServerPoint(new InkBallPointViewModel
+				{
+					iGameId = 1,
+					iPlayerId = 2,
+					iX = p1_owned[0, 0],
+					iY = p1_owned[0, 1],
+					Status = InkBallPoint.StatusEnum.POINT_FREE_BLUE,
+				});
+
+				//Assert
+				await hub_P1.ClientToServerPath(new InkBallPathViewModel
+				{
+					iGameId = 1,
+					iPlayerId = 1,
+					PointsAsString = "8,24 9,25 8,26 7,25 8,24",
+					OwnedPointsAsString = "8,25"
+				});
+				await hub_P2.ClientToServerPath(new InkBallPathViewModel
+				{
+					iGameId = 1,
+					iPlayerId = 2,
+					PointsAsString = "12,24 13,25 12,26 11,25 12,24",
+					OwnedPointsAsString = "12,25"
+				});
+
+				//Act
+				var dto = await hub_P1.GetPlayerPointsAndPaths(viewOnly, 1);
+				//Assert
+				Assert.NotNull(dto);
+				Assert.NotNull(dto.Points);
+				Assert.NotNull(dto.Paths);
+
+				//Assert
+				TempPoint[] json_points = JsonConvert.DeserializeObject<TempPoint[]>(dto.Points);
+				InkBallPathViewModel[] json_paths = JsonConvert.DeserializeObject<InkBallPathViewModel[]>(dto.Paths);
+				Assert.NotNull(json_points);
+				Assert.NotNull(json_paths);
+				Assert.True(json_points.All(pt => pt.iPlayerId == 1 || pt.iPlayerId == 2));
+				Assert.True(json_paths.All(pa => pa.iGameId == 1 && (pa.iPlayerId == 1 || pa.iPlayerId == 2)));
+
+				//Assert
+				Assert.All(Enumerable.Range(0, p1_pts.GetLength(0)), (rank) =>
+				{
+					Assert.Single(json_points, q => q.iPlayerId == 1 && q.iX == p1_pts[rank, 0] && q.iY == p1_pts[rank, 1]);
+					Assert.Single(json_points, q => q.iPlayerId == 2 && q.iX == p2_pts[rank, 0] && q.iY == p2_pts[rank, 1]);
+				});
+
+				//Assert
+				Assert.Single(json_paths, q => q.iPlayerId == 1 && q.iGameId == 1 &&
+
+					q.PointsAsString == Enumerable.Range(0, p1_pts.GetLength(0))
+					.Select(rank => $"{p1_pts[rank, 0]},{p1_pts[rank, 1]}")
+					.Aggregate((prev, next) => $"{prev} {next}") &&
+
+					q.OwnedPointsAsString == Enumerable.Range(0, p1_owned.GetLength(0))
+					.Select(rank => $"{p1_owned[rank, 0]},{p1_owned[rank, 1]}")
+					.Aggregate((prev, next) => $"{prev} {next}")
+				);
+				Assert.Single(json_paths, q => q.iPlayerId == 2 && q.iGameId == 1 &&
+
+					q.PointsAsString == Enumerable.Range(0, p2_pts.GetLength(0))
+					.Select(rank => $"{p2_pts[rank, 0]},{p2_pts[rank, 1]}")
+					.Aggregate((prev, next) => $"{prev} {next}") &&
+
+					q.OwnedPointsAsString == Enumerable.Range(0, p2_owned.GetLength(0))
+					.Select(rank => $"{p2_owned[rank, 0]},{p2_owned[rank, 1]}")
+					.Aggregate((prev, next) => $"{prev} {next}")
+				);
+
+				//Act
+				var points_n_paths = await db.LoadPointsAndPathsAsync(1, token);
+				var json_points1 = JsonConvert.SerializeObject(JsonConvert.DeserializeObject<TempPoint[]>(
+					CommonPoint.GetPointsAsJavaScriptArrayForPage(points_n_paths.Points)));
+				var json_paths1 = JsonConvert.SerializeObject(JsonConvert.DeserializeObject<InkBallPathViewModel[]>(
+					InkBallPath.GetPathsAsJavaScriptArrayForPage2(points_n_paths.Paths)));
+
+				//Assert
+				Assert.Equal(dto.Points, json_points1);
+				Assert.Equal(dto.Paths.Replace("\r", ""), json_paths1.Replace("\r", ""));
+			}
+		}
+
+		sealed class TempPoint : List<int>
+		{
+			[JsonIgnore]
+			public int iX { get { return base[0]; } }
+			[JsonIgnore]
+			public int iY { get { return base[1]; } }
+			[JsonIgnore]
+			public InkBallPoint.StatusEnum Status { get { return (InkBallPoint.StatusEnum)base[2]; } }
+			[JsonIgnore]
+			public int iPlayerId { get { return base[3]; } }
+
+			public TempPoint() : base() { }
+
+			public TempPoint(int x, int y) : base()
+			{
+				base.Add(x); base.Add(y);
+			}
+
+			public override bool Equals(object obj)
+			{
+				var other = (TempPoint)obj;
+				return iX == other.iX && iY == other.iY;
+			}
+
+			public override int GetHashCode()
+			{
+				return (iY << 9) ^ iX;
 			}
 		}
 	}//end class

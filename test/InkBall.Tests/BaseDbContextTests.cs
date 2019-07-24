@@ -127,13 +127,13 @@ namespace InkBall.Tests
 			//Arrange
 			var game0 = new InkBallGame
 			{
-				//iId = 1,
+				iId = 1,
 				CreateTime = DateTime.Now,
 				GameState = InkBallGame.GameStateEnum.ACTIVE,
 				GameType = gameType2Create,
 				Player1 = new InkBallPlayer
 				{
-					//iId = 1,
+					iId = 1,
 					sLastMoveCode = "{}",
 					User = new InkBallUser
 					{
@@ -143,9 +143,10 @@ namespace InkBall.Tests
 						sExternalId = "xxxxx",
 					}
 				},
+				iPlayer1Id = 1,
 				Player2 = new InkBallPlayer
 				{
-					//iId = 2,
+					iId = 2,
 					sLastMoveCode = "{}",
 					User = new InkBallUser
 					{
@@ -154,7 +155,8 @@ namespace InkBall.Tests
 						iPrivileges = 0,
 						sExternalId = "yyyyy",
 					}
-				}
+				},
+				iPlayer2Id = 2
 			};
 			var points0 = new List<InkBallPoint>(100);
 			var paths0 = new List<InkBallPath>(5);
@@ -172,6 +174,7 @@ namespace InkBall.Tests
 						iX = pt.x,
 						iY = pt.y,
 						Game = game0,
+						iGameId = game0.iId,
 						Status = InkBallPoint.StatusEnum.POINT_IN_PATH,
 						iEnclosingPathId = null,
 						Player = game0.Player1
@@ -181,12 +184,17 @@ namespace InkBall.Tests
 				var db_path = new InkBallPath
 				{
 					Game = game0,
-					Player = is_player_turn ? game0.Player1 : game0.Player2
+					iGameId = game0.iId,
+					Player = is_player_turn ? game0.Player1 : game0.Player2,
+					iPlayerId = is_player_turn ? game0.iPlayer1Id : game0.iPlayer2Id.GetValueOrDefault(0)
+
 				};
 				int order = 1;
 				var path_vm = new InkBallPathViewModel
 				{
-					PointsAsString = parameters.expectedCoords
+					iGameId = game0.iId,
+					PointsAsString = parameters.expectedCoords,
+					iPlayerId = is_player_turn ? game0.iPlayer1Id : game0.iPlayer2Id.GetValueOrDefault(0)
 				};
 				path_vm.InkBallPoint.ToList().ForEach((p) =>
 				{
@@ -198,13 +206,14 @@ namespace InkBall.Tests
 							iX = p.iX,
 							iY = p.iY,
 							Player = db_path.Player,
-							Game = db_path.Game
+							iPlayerId = db_path.iPlayerId,
+							Game = db_path.Game,
+							iGameId = db_path.iGameId
 						},
 						Order = order++
 					};
 					db_path.InkBallPointsInPath.Add(pip);
 				});
-				db_path.PointsAsString = JsonConvert.SerializeObject(path_vm);
 
 				paths0.Add(db_path);
 				foreach (var owned in parameters.ownedPoints)
@@ -216,6 +225,8 @@ namespace InkBall.Tests
 							InkBallPoint.StatusEnum.POINT_OWNED_BY_BLUE : InkBallPoint.StatusEnum.POINT_OWNED_BY_RED;
 					});
 				}
+				path_vm.OwnedPointsAsString = parameters.ownedPoints.Select(o => $"{o.x},{o.y}").Aggregate((me, me1) => me + " " + me1);
+				db_path.PointsAsString = JsonConvert.SerializeObject(path_vm);
 
 				is_player_turn = !is_player_turn;
 			}
