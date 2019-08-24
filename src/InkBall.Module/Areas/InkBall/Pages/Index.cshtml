@@ -147,7 +147,7 @@
 			if(!doPolyfill || notIE11) {
 				document.write(""<script async src='" + (env.IsDevelopment() ? Url.Content("~/js/inkball.js") : Url.Content("~/js/inkball.min.js")) + @"'><\/script>"");
 			} else {
-				document.write(""<script src='https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/7.2.5/polyfill.min.js' integrity='sha256-5MaPCzSnmBMXH0Z0wdF0ETeJh9zN+psdZ641gqe4AQo=' crossorigin='anonymous'><\/script>"" +
+				document.write(""<script src='https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/7.4.4/polyfill.min.js' integrity='sha256-lu1gm0Fb5u5n6tuNLefOZNE96ckovOjhNzvsl+Iz50w=' crossorigin='anonymous'><\/script>"" +
 				""<script async src='" + (env.IsDevelopment() ? Url.Content("~/js/inkball.babelify.js"): Url.Content("~/js/inkball.babelify.min.js")) + @"'><\/script>"");
 			}
 			</script>"
