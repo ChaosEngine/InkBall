@@ -410,19 +410,7 @@ namespace InkBall.Module.Model
 			});
 		}
 
-
-
-
-
-
-
-
-
-
-
-
-
-		#region WIP
+		#region Business logic methods
 
 		public async Task<InkBallGame> CreateNewGameFromExternalUserIDAsync(string sPlayer1ExternaUserID, InkBallGame.GameStateEnum gameState, InkBallGame.GameTypeEnum gameType,
 			int gridSize, int width, int height, bool bIsPlayer1Active = true, CancellationToken token = default)
@@ -800,17 +788,7 @@ namespace InkBall.Module.Model
 			return await query.ToArrayAsync();
 		}
 
-		#endregion WIP
-
-
-
-
-
-
-
-
-
-
+		#endregion Business logic methods
 	}
 
 	#region Helpers

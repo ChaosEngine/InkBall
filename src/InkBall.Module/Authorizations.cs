@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace InkBall.Module
 {
@@ -60,6 +61,15 @@ namespace InkBall.Module
 					var date_of_birth = new Claim(ClaimTypes.DateOfBirth,
 						DateTime.UtcNow.AddYears(-user.Age).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
 					identity.AddClaim(date_of_birth);
+				}
+
+				if (!identity.HasClaim(x => x.Type == ClaimTypes.UserData))
+				{
+					var user_settings = new Claim(ClaimTypes.UserData,
+						JsonConvert.SerializeObject(user.UserSettings,
+							new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }),
+						"UserSettings");
+					identity.AddClaim(user_settings);
 				}
 			}
 		}
