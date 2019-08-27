@@ -21,7 +21,8 @@ const CommandKindEnum = Object.freeze({
 	PLAYER_JOINING: 3,
 	PLAYER_SURRENDER: 4,
 	WIN: 5,
-	POINTS_AND_PATHS: 6
+	POINTS_AND_PATHS: 6,
+	USER_SETTINGS: 7
 });
 
 const GameTypeEnum = Object.freeze({
@@ -190,6 +191,21 @@ class PlayerPointsAndPathsDTO extends DtoMsg {
 	}
 }
 
+class ApplicationUserSettings extends DtoMsg {
+	constructor(desktopNotifications = false) {
+		super();
+		this.DesktopNotifications = desktopNotifications;
+	}
+
+	GetKind() { return CommandKindEnum.USER_SETTINGS; }
+
+	static Serialize(settings) {
+		const str = JSON.stringify(settings);
+		return str;
+	}
+}
+
+
 //Debug function
 function CountPointsDebug(sSelector2Set, sSvgSelector = 'svg') {
 	let svgs = document.getElementsByTagName(sSvgSelector), totalChildren = 0, childCounts = [];
@@ -313,30 +329,56 @@ class InkBallGame {
 				this.m_Screen.style.cursor = "not-allowed";
 				if (this.iConnErrCount < 5)//exponential back-off
 					this.iConnErrCount++;
-				setTimeout(() => this.start(), 4000 + (this.iExponentialBackOffMillis * this.iConnErrCount));
+				setTimeout(() => this.Connect(), 4000 + (this.iExponentialBackOffMillis * this.iConnErrCount));
 			}
 		});
 	}
 
-	async start() {
+	async GetPlayerPointsAndPaths() {
+		debugger;
+		if (!this.m_bPointsAndPathsLoaded) {
+			await this.g_SignalRConnection.invoke("GetPlayerPointsAndPaths", this.m_bViewOnly, this.g_iGameID).then(function (ppDTO) {
+				LocalLog(ppDTO);
+				debugger;
+
+				const path_and_point = PlayerPointsAndPathsDTO.Deserialize(ppDTO);
+				if (path_and_point.Points !== undefined)
+					this.SetAllPoints(path_and_point.Points);
+				if (path_and_point.Paths !== undefined)
+					this.SetAllPaths2(path_and_point.Paths);
+
+				this.m_bPointsAndPathsLoaded = true;
+
+				return true;
+			}.bind(this));
+		}
+		else
+			return false;
+	}
+
+	async Connect() {
 		try {
 			await this.g_SignalRConnection.start();
 			this.iConnErrCount = 0;
 			LocalLog('connected; iConnErrCount = ' + this.iConnErrCount);
 
-			if (!this.m_bPointsAndPathsLoaded) {
-				await this.g_SignalRConnection.invoke("GetPlayerPointsAndPaths", this.m_bViewOnly, this.g_iGameID).then(function (ppDTO) {
-					LocalLog(ppDTO);
+			if (this.m_bViewOnly === false && sessionStorage.getItem("ApplicationUserSettings") === null) {
+				await this.g_SignalRConnection.invoke("GetUserSettings").then(function (settings) {
 					debugger;
+					LocalLog(settings);
+					const to_store = ApplicationUserSettings.Serialize(settings);
 
-					const path_and_point = PlayerPointsAndPathsDTO.Deserialize(ppDTO);
-					if (path_and_point.Points !== undefined)
-						this.SetAllPoints(path_and_point.Points);
-					if (path_and_point.Paths !== undefined)
-						this.SetAllPaths2(path_and_point.Paths);
+					sessionStorage.setItem("ApplicationUserSettings", to_store);
 
-					this.m_bPointsAndPathsLoaded = true;
-				}.bind(this));
+					return settings;
+				}.bind(this)).then(async function (stngs) {
+					return await this.GetPlayerPointsAndPaths();
+				}.bind(this)).then(async function (status) {
+					debugger;
+				});
+			}
+			else if (!this.m_bPointsAndPathsLoaded) {
+				await this.GetPlayerPointsAndPaths();
 			}
 		}
 		catch (err) {
@@ -345,7 +387,7 @@ class InkBallGame {
 			this.m_Screen.style.cursor = "not-allowed";
 			if (this.iConnErrCount < 5)//exponential back-off
 				this.iConnErrCount++;
-			setTimeout(() => this.start(), 4000 + (this.iExponentialBackOffMillis * this.iConnErrCount));
+			setTimeout(() => this.Connect(), 4000 + (this.iExponentialBackOffMillis * this.iConnErrCount));
 		}
 	}
 
@@ -489,7 +531,7 @@ class InkBallGame {
 			}
 		}.bind(this), false);
 
-		this.start();
+		this.Connect();
 	}
 
 	StopSignalRConnection() {

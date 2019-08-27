@@ -43,6 +43,8 @@ namespace InkBall.Module.Hubs
 		Task ClientToServerPing(PingCommand ping);
 
 		Task<PlayerPointsAndPathsDTO> GetPlayerPointsAndPaths(bool viewOnly, int gameID);
+
+		Task<ApplicationUserSettings> GetUserSettings();
 	}
 
 	[Authorize(Policy = Constants.InkBallPolicyName)]
@@ -665,6 +667,33 @@ namespace InkBall.Module.Hubs
 				var dto = new PlayerPointsAndPathsDTO(points, paths);
 
 				return dto;
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex.Message);
+				throw;
+			}
+		}
+
+		public async Task<ApplicationUserSettings> GetUserSettings()
+		{
+			CancellationToken token = this.Context.ConnectionAborted;
+
+			await LoadGameAndPlayerStructures(token);
+			if (ThisGame == null || ThisPlayer == null || string.IsNullOrEmpty(ThisUserName))
+				throw new ArgumentException("bad player or game");
+
+			try
+			{
+				var settings_json = this.Context.User.FindFirst(c => c.ValueType == "UserSettings" && c.Type == ClaimTypes.UserData);
+				if (settings_json != null && settings_json.Value != null)
+				{
+					var settings = Newtonsoft.Json.JsonConvert.DeserializeObject<ApplicationUserSettings>(settings_json.Value,
+						new Newtonsoft.Json.JsonSerializerSettings { NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore });
+					return settings;
+				}
+				else
+					return null;
 			}
 			catch (Exception ex)
 			{

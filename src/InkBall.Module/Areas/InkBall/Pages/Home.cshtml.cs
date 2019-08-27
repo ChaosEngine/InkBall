@@ -31,7 +31,7 @@ namespace InkBall.Module.Pages
 		{
 			await LoadUserPlayerAndGameAsync();
 
-			/*var settings_json = User.FindFirst(c => c.Type == System.Security.Claims.ClaimTypes.UserData);
+			/*var settings_json = User.FindFirst(c => c.ValueType == "UserSettings" && c.Type == System.Security.Claims.ClaimTypes.UserData);
 			if (settings_json != null && settings_json.Value != null)
 			{
 				var settings = Newtonsoft.Json.JsonConvert.DeserializeObject<ApplicationUserSettings>(settings_json.Value,

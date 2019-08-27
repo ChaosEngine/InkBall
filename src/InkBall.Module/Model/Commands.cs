@@ -12,7 +12,8 @@ namespace InkBall.Module.Model
 		PLAYER_JOINING = 3,
 		PLAYER_SURRENDER = 4,
 		WIN = 5,
-		POINTS_AND_PATHS = 6
+		POINTS_AND_PATHS = 6,
+		USER_SETTINGS = 7
 	}
 
 	public interface IDtoMsg

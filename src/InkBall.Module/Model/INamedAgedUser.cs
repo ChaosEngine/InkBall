@@ -1,3 +1,5 @@
+using MessagePack;
+
 namespace InkBall.Module.Model
 {
 
@@ -9,9 +11,15 @@ namespace InkBall.Module.Model
 		bool DesktopNotifications { get; set; }
 	}
 
-	public sealed class ApplicationUserSettings : IApplicationUserSettings
+	[MessagePackObject(true)]
+	public sealed class ApplicationUserSettings : IApplicationUserSettings, IDtoMsg
 	{
 		public bool DesktopNotifications { get; set; }
+
+		public CommandKindEnum GetKind()
+		{
+			return CommandKindEnum.USER_SETTINGS;
+		}
 	}
 
 	public interface INamedAgedUser
