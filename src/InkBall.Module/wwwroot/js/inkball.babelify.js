@@ -516,17 +516,14 @@ var InkBallGame = function () {
           while (1) {
             switch (_context2.prev = _context2.next) {
               case 0:
-                debugger;
-
                 if (this.m_bPointsAndPathsLoaded) {
-                  _context2.next = 6;
+                  _context2.next = 5;
                   break;
                 }
 
-                _context2.next = 4;
+                _context2.next = 3;
                 return this.g_SignalRConnection.invoke("GetPlayerPointsAndPaths", this.m_bViewOnly, this.g_iGameID).then(function (ppDTO) {
                   LocalLog(ppDTO);
-                  debugger;
                   var path_and_point = PlayerPointsAndPathsDTO.Deserialize(ppDTO);
                   if (path_and_point.Points !== undefined) this.SetAllPoints(path_and_point.Points);
                   if (path_and_point.Paths !== undefined) this.SetAllPaths2(path_and_point.Paths);
@@ -534,14 +531,14 @@ var InkBallGame = function () {
                   return true;
                 }.bind(this));
 
-              case 4:
-                _context2.next = 7;
+              case 3:
+                _context2.next = 6;
                 break;
 
-              case 6:
+              case 5:
                 return _context2.abrupt("return", false);
 
-              case 7:
+              case 6:
               case "end":
                 return _context2.stop();
             }
@@ -580,54 +577,42 @@ var InkBallGame = function () {
 
                 _context5.next = 8;
                 return this.g_SignalRConnection.invoke("GetUserSettings").then(function (settings) {
-                  debugger;
                   LocalLog(settings);
-                  var to_store = ApplicationUserSettings.Serialize(settings);
-                  sessionStorage.setItem("ApplicationUserSettings", to_store);
+
+                  if (settings) {
+                    var to_store = ApplicationUserSettings.Serialize(settings);
+                    sessionStorage.setItem("ApplicationUserSettings", to_store);
+                  }
+
                   return settings;
-                }.bind(this)).then(function () {
-                  var _ref2 = _asyncToGenerator(regeneratorRuntime.mark(function _callee3(stngs) {
-                    return regeneratorRuntime.wrap(function _callee3$(_context3) {
-                      while (1) {
-                        switch (_context3.prev = _context3.next) {
-                          case 0:
-                            _context3.next = 2;
-                            return this.GetPlayerPointsAndPaths();
+                }.bind(this)).then(_asyncToGenerator(regeneratorRuntime.mark(function _callee3() {
+                  return regeneratorRuntime.wrap(function _callee3$(_context3) {
+                    while (1) {
+                      switch (_context3.prev = _context3.next) {
+                        case 0:
+                          _context3.next = 2;
+                          return this.GetPlayerPointsAndPaths();
 
-                          case 2:
-                            return _context3.abrupt("return", _context3.sent);
+                        case 2:
+                          return _context3.abrupt("return", _context3.sent);
 
-                          case 3:
-                          case "end":
-                            return _context3.stop();
-                        }
+                        case 3:
+                        case "end":
+                          return _context3.stop();
                       }
-                    }, _callee3, this);
-                  }));
-
-                  return function (_x2) {
-                    return _ref2.apply(this, arguments);
-                  };
-                }().bind(this)).then(function () {
-                  var _ref3 = _asyncToGenerator(regeneratorRuntime.mark(function _callee4(status) {
-                    return regeneratorRuntime.wrap(function _callee4$(_context4) {
-                      while (1) {
-                        switch (_context4.prev = _context4.next) {
-                          case 0:
-                            debugger;
-
-                          case 1:
-                          case "end":
-                            return _context4.stop();
-                        }
+                    }
+                  }, _callee3, this);
+                })).bind(this)).then(_asyncToGenerator(regeneratorRuntime.mark(function _callee4() {
+                  return regeneratorRuntime.wrap(function _callee4$(_context4) {
+                    while (1) {
+                      switch (_context4.prev = _context4.next) {
+                        case 0:
+                        case "end":
+                          return _context4.stop();
                       }
-                    }, _callee4);
-                  }));
-
-                  return function (_x3) {
-                    return _ref3.apply(this, arguments);
-                  };
-                }());
+                    }
+                  }, _callee4);
+                })));
 
               case 8:
                 _context5.next = 13;
@@ -1332,11 +1317,11 @@ var InkBallGame = function () {
         var _points = this.m_Line.$GetPointsString();
 
         var i = 0;
-        var _x4 = _points[i],
+        var _x2 = _points[i],
             _y = _points[i + 1];
-        _x4 /= this.m_iGridSizeX;
+        _x2 /= this.m_iGridSizeX;
         _y /= this.m_iGridSizeY;
-        var p0 = this.m_Points[_y * this.m_iGridWidth + _x4];
+        var p0 = this.m_Points[_y * this.m_iGridWidth + _x2];
         if (p0 !== undefined) p0.$SetStatus(StatusEnum.POINT_IN_PATH);
         this.m_Lines[this.m_Lines.length] = this.m_Line;
         this.m_iLastX = this.m_iLastY = -1;

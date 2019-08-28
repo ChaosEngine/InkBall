@@ -1,4 +1,5 @@
 using MessagePack;
+using Microsoft.AspNetCore.Identity;
 
 namespace InkBall.Module.Model
 {
@@ -8,12 +9,14 @@ namespace InkBall.Module.Model
 	/// </summary>
 	public interface IApplicationUserSettings
 	{
+		[PersonalData]
 		bool DesktopNotifications { get; set; }
 	}
 
 	[MessagePackObject(true)]
 	public sealed class ApplicationUserSettings : IApplicationUserSettings, IDtoMsg
 	{
+		[PersonalData]
 		public bool DesktopNotifications { get; set; }
 
 		public CommandKindEnum GetKind()
@@ -37,6 +40,7 @@ namespace InkBall.Module.Model
 		/// <summary>
 		// Various user settings
 		/// </summary>	
+		[PersonalData]
 		IApplicationUserSettings UserSettings { get; set; }
 	}
 }

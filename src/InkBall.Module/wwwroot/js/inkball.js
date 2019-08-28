@@ -335,11 +335,9 @@ class InkBallGame {
 	}
 
 	async GetPlayerPointsAndPaths() {
-		debugger;
 		if (!this.m_bPointsAndPathsLoaded) {
 			await this.g_SignalRConnection.invoke("GetPlayerPointsAndPaths", this.m_bViewOnly, this.g_iGameID).then(function (ppDTO) {
 				LocalLog(ppDTO);
-				debugger;
 
 				const path_and_point = PlayerPointsAndPathsDTO.Deserialize(ppDTO);
 				if (path_and_point.Points !== undefined)
@@ -364,17 +362,16 @@ class InkBallGame {
 
 			if (this.m_bViewOnly === false && sessionStorage.getItem("ApplicationUserSettings") === null) {
 				await this.g_SignalRConnection.invoke("GetUserSettings").then(function (settings) {
-					debugger;
 					LocalLog(settings);
-					const to_store = ApplicationUserSettings.Serialize(settings);
+					if (settings) {
+						const to_store = ApplicationUserSettings.Serialize(settings);
 
-					sessionStorage.setItem("ApplicationUserSettings", to_store);
-
+						sessionStorage.setItem("ApplicationUserSettings", to_store);
+					}
 					return settings;
-				}.bind(this)).then(async function (stngs) {
+				}.bind(this)).then(async function () {
 					return await this.GetPlayerPointsAndPaths();
-				}.bind(this)).then(async function (status) {
-					debugger;
+				}.bind(this)).then(async function () {
 				});
 			}
 			else if (!this.m_bPointsAndPathsLoaded) {
