@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using MessagePack;
 using Microsoft.AspNetCore.Identity;
 
@@ -41,6 +42,12 @@ namespace InkBall.Module.Model
 		// Various user settings
 		/// </summary>	
 		[PersonalData]
+		[NotMapped]
 		IApplicationUserSettings UserSettings { get; set; }
+
+		/// <summary>
+		// Various user settings as JSON
+		/// </summary>	
+		string UserSettingsJSON { get; set; }
 	}
 }

@@ -66,8 +66,9 @@ namespace InkBall.Module
 				if (!identity.HasClaim(x => x.Type == ClaimTypes.UserData))
 				{
 					var user_settings = new Claim(ClaimTypes.UserData,
-						JsonConvert.SerializeObject(user.UserSettings,
-							new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }),
+						// JsonConvert.SerializeObject(user.UserSettingsJSON,
+						// 	new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }),
+						user.UserSettingsJSON ?? "",
 						"UserSettings");
 					identity.AddClaim(user_settings);
 				}

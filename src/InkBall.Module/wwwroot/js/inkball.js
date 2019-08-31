@@ -364,7 +364,7 @@ class InkBallGame {
 				await this.g_SignalRConnection.invoke("GetUserSettings").then(function (settings) {
 					LocalLog(settings);
 					if (settings) {
-						const to_store = ApplicationUserSettings.Serialize(settings);
+						const to_store = /*ApplicationUserSettings.Serialize*/(settings);
 
 						sessionStorage.setItem("ApplicationUserSettings", to_store);
 					}

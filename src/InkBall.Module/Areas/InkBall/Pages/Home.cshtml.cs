@@ -30,13 +30,6 @@ namespace InkBall.Module.Pages
 		public async Task OnGet()
 		{
 			await LoadUserPlayerAndGameAsync();
-
-			/*var settings_json = User.FindFirst(c => c.ValueType == "UserSettings" && c.Type == System.Security.Claims.ClaimTypes.UserData);
-			if (settings_json != null && settings_json.Value != null)
-			{
-				var settings = Newtonsoft.Json.JsonConvert.DeserializeObject<ApplicationUserSettings>(settings_json.Value,
-					new Newtonsoft.Json.JsonSerializerSettings { NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore });
-			}*/
 		}
 
 		public async Task<IActionResult> OnPostAsync(string action, string gameType, InkBallGame.BoardSizeEnum boardSize)

@@ -44,7 +44,7 @@ namespace InkBall.Module.Hubs
 
 		Task<PlayerPointsAndPathsDTO> GetPlayerPointsAndPaths(bool viewOnly, int gameID);
 
-		Task<ApplicationUserSettings> GetUserSettings();
+		Task<string> GetUserSettings();
 	}
 
 	[Authorize(Policy = Constants.InkBallPolicyName)]
@@ -675,7 +675,7 @@ namespace InkBall.Module.Hubs
 			}
 		}
 
-		public async Task<ApplicationUserSettings> GetUserSettings()
+		public async Task<string> GetUserSettings()
 		{
 			CancellationToken token = this.Context.ConnectionAborted;
 
@@ -688,8 +688,9 @@ namespace InkBall.Module.Hubs
 				var settings_json = this.Context.User.FindFirst(c => c.ValueType == "UserSettings" && c.Type == ClaimTypes.UserData);
 				if (settings_json != null && settings_json.Value != null)
 				{
-					var settings = Newtonsoft.Json.JsonConvert.DeserializeObject<ApplicationUserSettings>(settings_json.Value,
-						new Newtonsoft.Json.JsonSerializerSettings { NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore });
+					// var settings = Newtonsoft.Json.JsonConvert.DeserializeObject<ApplicationUserSettings>(settings_json.Value,
+					// 	new Newtonsoft.Json.JsonSerializerSettings { NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore });
+					var settings = settings_json.Value;
 					return settings;
 				}
 				else
