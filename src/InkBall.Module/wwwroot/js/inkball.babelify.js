@@ -354,8 +354,14 @@ var ApplicationUserSettings = function (_DtoMsg8) {
   }], [{
     key: "Serialize",
     value: function Serialize(settings) {
-      var str = JSON.stringify(settings);
-      return str;
+      var jsonStr = JSON.stringify(settings);
+      return jsonStr;
+    }
+  }, {
+    key: "Deserialize",
+    value: function Deserialize(jsonStr) {
+      var settings = JSON.parse(jsonStr);
+      return settings;
     }
   }]);
 
@@ -473,6 +479,7 @@ var InkBallGame = function () {
     this.m_Points = [];
     this.m_bViewOnly = bViewOnly;
     this.m_MouseCursorOval = null;
+    this.m_ApplicationUserSettings = null;
     if (sHubName === null || sHubName === "") return;
     this.g_SignalRConnection = new signalR.HubConnectionBuilder().withUrl(sHubName, {
       transport: transportType,
@@ -558,6 +565,7 @@ var InkBallGame = function () {
       var _Connect = _asyncToGenerator(regeneratorRuntime.mark(function _callee5() {
         var _this10 = this;
 
+        var json, settings;
         return regeneratorRuntime.wrap(function _callee5$(_context5) {
           while (1) {
             switch (_context5.prev = _context5.next) {
@@ -570,39 +578,52 @@ var InkBallGame = function () {
                 this.iConnErrCount = 0;
                 LocalLog('connected; iConnErrCount = ' + this.iConnErrCount);
 
-                if (!(this.m_bViewOnly === false && sessionStorage.getItem("ApplicationUserSettings") === null)) {
-                  _context5.next = 10;
+                if (!(this.m_bViewOnly === false)) {
+                  _context5.next = 14;
                   break;
                 }
 
-                _context5.next = 8;
+                if (!(sessionStorage.getItem("ApplicationUserSettings") === null)) {
+                  _context5.next = 11;
+                  break;
+                }
+
+                _context5.next = 9;
                 return this.g_SignalRConnection.invoke("GetUserSettings").then(function (settings) {
                   LocalLog(settings);
 
                   if (settings) {
+                    settings = ApplicationUserSettings.Deserialize(settings);
                     var to_store = ApplicationUserSettings.Serialize(settings);
                     sessionStorage.setItem("ApplicationUserSettings", to_store);
                   }
 
                   return settings;
-                }.bind(this)).then(_asyncToGenerator(regeneratorRuntime.mark(function _callee3() {
-                  return regeneratorRuntime.wrap(function _callee3$(_context3) {
-                    while (1) {
-                      switch (_context3.prev = _context3.next) {
-                        case 0:
-                          _context3.next = 2;
-                          return this.GetPlayerPointsAndPaths();
+                }.bind(this)).then(function () {
+                  var _ref2 = _asyncToGenerator(regeneratorRuntime.mark(function _callee3(settings) {
+                    return regeneratorRuntime.wrap(function _callee3$(_context3) {
+                      while (1) {
+                        switch (_context3.prev = _context3.next) {
+                          case 0:
+                            this.m_ApplicationUserSettings = new ApplicationUserSettings(settings.DesktopNotifications);
+                            _context3.next = 3;
+                            return this.GetPlayerPointsAndPaths();
 
-                        case 2:
-                          return _context3.abrupt("return", _context3.sent);
+                          case 3:
+                            return _context3.abrupt("return", _context3.sent);
 
-                        case 3:
-                        case "end":
-                          return _context3.stop();
+                          case 4:
+                          case "end":
+                            return _context3.stop();
+                        }
                       }
-                    }
-                  }, _callee3, this);
-                })).bind(this)).then(_asyncToGenerator(regeneratorRuntime.mark(function _callee4() {
+                    }, _callee3, this);
+                  }));
+
+                  return function (_x2) {
+                    return _ref2.apply(this, arguments);
+                  };
+                }().bind(this)).then(_asyncToGenerator(regeneratorRuntime.mark(function _callee4() {
                   return regeneratorRuntime.wrap(function _callee4$(_context4) {
                     while (1) {
                       switch (_context4.prev = _context4.next) {
@@ -614,25 +635,34 @@ var InkBallGame = function () {
                   }, _callee4);
                 })));
 
-              case 8:
-                _context5.next = 13;
+              case 9:
+                _context5.next = 14;
                 break;
 
-              case 10:
+              case 11:
+                json = sessionStorage.getItem("ApplicationUserSettings");
+                settings = ApplicationUserSettings.Deserialize(json);
+                this.m_ApplicationUserSettings = new ApplicationUserSettings(settings.DesktopNotifications);
+
+              case 14:
                 if (this.m_bPointsAndPathsLoaded) {
-                  _context5.next = 13;
+                  _context5.next = 17;
                   break;
                 }
 
-                _context5.next = 13;
+                _context5.next = 17;
                 return this.GetPlayerPointsAndPaths();
 
-              case 13:
-                _context5.next = 21;
+              case 17:
+                if (this.m_ApplicationUserSettings !== null && this.m_ApplicationUserSettings.DesktopNotifications === true) {
+                  this.NotifyBrowser();
+                }
+
+                _context5.next = 26;
                 break;
 
-              case 15:
-                _context5.prev = 15;
+              case 20:
+                _context5.prev = 20;
                 _context5.t0 = _context5["catch"](0);
                 LocalError(_context5.t0 + '; iConnErrCount = ' + this.iConnErrCount);
                 this.m_Screen.style.cursor = "not-allowed";
@@ -641,12 +671,12 @@ var InkBallGame = function () {
                   return _this10.Connect();
                 }, 4000 + this.iExponentialBackOffMillis * this.iConnErrCount);
 
-              case 21:
+              case 26:
               case "end":
                 return _context5.stop();
             }
           }
-        }, _callee5, this, [[0, 15]]);
+        }, _callee5, this, [[0, 20]]);
       }));
 
       function Connect() {
@@ -655,6 +685,42 @@ var InkBallGame = function () {
 
       return Connect;
     }()
+  }, {
+    key: "NotifyBrowser",
+    value: function NotifyBrowser() {
+      var title = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'Hi there!';
+      var body = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'How are you doing?';
+      if (!document.hidden) return false;
+
+      if (!window.Notification) {
+        LocalLog('Browser does not support notifications.');
+        return false;
+      } else {
+        if (Notification.permission === 'granted') {
+          new Notification(title, {
+            body: body,
+            icon: '../img/homescreen.webp'
+          });
+          return true;
+        } else {
+          Notification.requestPermission().then(function (p) {
+            if (p === 'granted') {
+              new Notification(title, {
+                body: body,
+                icon: '../img/homescreen.webp'
+              });
+              return true;
+            } else {
+              LocalLog('User blocked notifications.');
+              return false;
+            }
+          })["catch"](function (err) {
+            LocalError(err);
+            return false;
+          });
+        }
+      }
+    }
   }, {
     key: "StartSignalRConnection",
     value: function StartSignalRConnection(iGameID, iPlayerID, loadPointsAndPathsFromSignalR, sMsgListSel, sMsgSendButtonSel, sMsgInputSel) {
@@ -671,6 +737,7 @@ var InkBallGame = function () {
         li.textContent = encodedMsg;
         document.querySelector(sMsgListSel).appendChild(li);
         this.ReceivedPointProcessing(point);
+        this.NotifyBrowser('New Point', encodedMsg);
       }.bind(this));
       this.g_SignalRConnection.on("ServerToClientPath", function (dto) {
         if (Object.prototype.hasOwnProperty.call(dto, 'PointsAsString')) {
@@ -681,6 +748,7 @@ var InkBallGame = function () {
           li.textContent = encodedMsg;
           document.querySelector(sMsgListSel).appendChild(li);
           this.ReceivedPathProcessing(path);
+          this.NotifyBrowser('New Path', encodedMsg);
         } else if (Object.prototype.hasOwnProperty.call(dto, 'WinningPlayerId')) {
           var win = dto;
 
@@ -691,6 +759,7 @@ var InkBallGame = function () {
           _li.textContent = _encodedMsg;
           document.querySelector(sMsgListSel).appendChild(_li);
           this.ReceivedWinProcessing(win);
+          this.NotifyBrowser('We have a winner', _encodedMsg);
         } else throw new Error("ServerToClientPath bad GetKind!");
       }.bind(this));
       this.g_SignalRConnection.on("ServerToClientPlayerJoin", function (join) {
@@ -715,6 +784,7 @@ var InkBallGame = function () {
           this.m_CancelPath.disabled = '';
         }
 
+        this.NotifyBrowser('Player joininig', encodedMsg);
         this.m_bHandlingEvent = false;
       }.bind(this));
       this.g_SignalRConnection.on("ServerToClientPlayerSurrender", function (surrender) {
@@ -723,7 +793,9 @@ var InkBallGame = function () {
         li.textContent = encodedMsg;
         document.querySelector(sMsgListSel).appendChild(li);
         this.m_bHandlingEvent = false;
-        alert(encodedMsg === '' ? 'Game interrupted!' : encodedMsg);
+        encodedMsg = encodedMsg === '' ? 'Game interrupted!' : encodedMsg;
+        this.NotifyBrowser('Game interruption', encodedMsg);
+        alert(encodedMsg);
         window.location.href = "Games";
       }.bind(this));
       this.g_SignalRConnection.on("ServerToClientPlayerWin", function (win) {
@@ -732,6 +804,7 @@ var InkBallGame = function () {
         li.textContent = encodedMsg;
         document.querySelector(sMsgListSel).appendChild(li);
         this.ReceivedWinProcessing(win);
+        this.NotifyBrowser('We have a winner', encodedMsg);
       }.bind(this));
       this.g_SignalRConnection.on("ServerToClientPing", function (ping) {
         var user = this.m_Player2Name.innerHTML;
@@ -739,6 +812,7 @@ var InkBallGame = function () {
         var li = document.createElement("li");
         li.textContent = encodedMsg;
         document.querySelector(sMsgListSel).appendChild(li);
+        this.NotifyBrowser('User Message', encodedMsg);
       }.bind(this));
       document.querySelector(this.m_sMsgSendButtonSel).addEventListener("click", function (event) {
         event.preventDefault();
@@ -1317,11 +1391,11 @@ var InkBallGame = function () {
         var _points = this.m_Line.$GetPointsString();
 
         var i = 0;
-        var _x2 = _points[i],
+        var _x3 = _points[i],
             _y = _points[i + 1];
-        _x2 /= this.m_iGridSizeX;
+        _x3 /= this.m_iGridSizeX;
         _y /= this.m_iGridSizeY;
-        var p0 = this.m_Points[_y * this.m_iGridWidth + _x2];
+        var p0 = this.m_Points[_y * this.m_iGridWidth + _x3];
         if (p0 !== undefined) p0.$SetStatus(StatusEnum.POINT_IN_PATH);
         this.m_Lines[this.m_Lines.length] = this.m_Line;
         this.m_iLastX = this.m_iLastY = -1;

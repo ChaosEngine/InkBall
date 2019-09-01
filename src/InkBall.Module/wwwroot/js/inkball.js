@@ -200,8 +200,13 @@ class ApplicationUserSettings extends DtoMsg {
 	GetKind() { return CommandKindEnum.USER_SETTINGS; }
 
 	static Serialize(settings) {
-		const str = JSON.stringify(settings);
-		return str;
+		const jsonStr = JSON.stringify(settings);
+		return jsonStr;
+	}
+
+	static Deserialize(jsonStr) {
+		const settings = JSON.parse(jsonStr);
+		return settings;
 	}
 }
 
@@ -308,6 +313,7 @@ class InkBallGame {
 		this.m_Points = [];
 		this.m_bViewOnly = bViewOnly;
 		this.m_MouseCursorOval = null;
+		this.m_ApplicationUserSettings = null;
 
 		if (sHubName === null || sHubName === "") return;
 
@@ -360,22 +366,36 @@ class InkBallGame {
 			this.iConnErrCount = 0;
 			LocalLog('connected; iConnErrCount = ' + this.iConnErrCount);
 
-			if (this.m_bViewOnly === false && sessionStorage.getItem("ApplicationUserSettings") === null) {
-				await this.g_SignalRConnection.invoke("GetUserSettings").then(function (settings) {
-					LocalLog(settings);
-					if (settings) {
-						const to_store = /*ApplicationUserSettings.Serialize*/(settings);
+			if (this.m_bViewOnly === false) {
+				if (sessionStorage.getItem("ApplicationUserSettings") === null) {
+					await this.g_SignalRConnection.invoke("GetUserSettings").then(function (settings) {
+						LocalLog(settings);
+						if (settings) {
+							settings = ApplicationUserSettings.Deserialize(settings);
+							const to_store = ApplicationUserSettings.Serialize(settings);
 
-						sessionStorage.setItem("ApplicationUserSettings", to_store);
-					}
-					return settings;
-				}.bind(this)).then(async function () {
-					return await this.GetPlayerPointsAndPaths();
-				}.bind(this)).then(async function () {
-				});
+							sessionStorage.setItem("ApplicationUserSettings", to_store);
+						}
+						return settings;
+					}.bind(this)).then(async function (settings) {
+						this.m_ApplicationUserSettings = new ApplicationUserSettings(settings.DesktopNotifications);
+
+						return await this.GetPlayerPointsAndPaths();
+					}.bind(this)).then(async function () {
+					});
+				}
+				else {
+					const json = sessionStorage.getItem("ApplicationUserSettings");
+					const settings = ApplicationUserSettings.Deserialize(json);
+
+					this.m_ApplicationUserSettings = new ApplicationUserSettings(settings.DesktopNotifications);
+				}
 			}
-			else if (!this.m_bPointsAndPathsLoaded) {
+			if (!this.m_bPointsAndPathsLoaded) {
 				await this.GetPlayerPointsAndPaths();
+			}
+			if (this.m_ApplicationUserSettings !== null && this.m_ApplicationUserSettings.DesktopNotifications === true) {
+				this.NotifyBrowser();
 			}
 		}
 		catch (err) {
@@ -385,6 +405,45 @@ class InkBallGame {
 			if (this.iConnErrCount < 5)//exponential back-off
 				this.iConnErrCount++;
 			setTimeout(() => this.Connect(), 4000 + (this.iExponentialBackOffMillis * this.iConnErrCount));
+		}
+	}
+
+	NotifyBrowser(title = 'Hi there!', body = 'How are you doing?') {
+		if (!document.hidden)
+			return false;
+
+		if (!window.Notification) {
+			LocalLog('Browser does not support notifications.');
+			return false;
+
+		} else {
+			// check if permission is already granted
+			if (Notification.permission === 'granted') {
+				// show notification here
+				new Notification(title, {
+					body: body,
+					icon: '../img/homescreen.webp'
+				});
+				return true;
+			} else {
+				// request permission from user
+				Notification.requestPermission().then(function (p) {
+					if (p === 'granted') {
+						// show notification here
+						new Notification(title, {
+							body: body,
+							icon: '../img/homescreen.webp'
+						});
+						return true;
+					} else {
+						LocalLog('User blocked notifications.');
+						return false;
+					}
+				}).catch(function (err) {
+					LocalError(err);
+					return false;
+				});
+			}
 		}
 	}
 
@@ -415,6 +474,7 @@ class InkBallGame {
 			document.querySelector(sMsgListSel).appendChild(li);
 
 			this.ReceivedPointProcessing(point);
+			this.NotifyBrowser('New Point', encodedMsg);
 
 		}.bind(this));
 
@@ -430,6 +490,7 @@ class InkBallGame {
 				document.querySelector(sMsgListSel).appendChild(li);
 
 				this.ReceivedPathProcessing(path);
+				this.NotifyBrowser('New Path', encodedMsg);
 			}
 			else if (Object.prototype.hasOwnProperty.call(dto, 'WinningPlayerId')) {
 				let win = dto;
@@ -440,6 +501,7 @@ class InkBallGame {
 				document.querySelector(sMsgListSel).appendChild(li);
 
 				this.ReceivedWinProcessing(win);
+				this.NotifyBrowser('We have a winner', encodedMsg);
 			}
 			else
 				throw new Error("ServerToClientPath bad GetKind!");
@@ -467,6 +529,7 @@ class InkBallGame {
 			if (this.m_CancelPath !== null) {
 				this.m_CancelPath.disabled = '';
 			}
+			this.NotifyBrowser('Player joininig', encodedMsg);
 
 			this.m_bHandlingEvent = false;
 		}.bind(this));
@@ -481,7 +544,9 @@ class InkBallGame {
 
 
 			this.m_bHandlingEvent = false;
-			alert(encodedMsg === '' ? 'Game interrupted!' : encodedMsg);
+			encodedMsg = encodedMsg === '' ? 'Game interrupted!' : encodedMsg;
+			this.NotifyBrowser('Game interruption', encodedMsg);
+			alert(encodedMsg);
 			window.location.href = "Games";
 		}.bind(this));
 
@@ -493,6 +558,7 @@ class InkBallGame {
 			document.querySelector(sMsgListSel).appendChild(li);
 
 			this.ReceivedWinProcessing(win);
+			this.NotifyBrowser('We have a winner', encodedMsg);
 
 		}.bind(this));
 
@@ -504,6 +570,8 @@ class InkBallGame {
 			let li = document.createElement("li");
 			li.textContent = encodedMsg;
 			document.querySelector(sMsgListSel).appendChild(li);
+			this.NotifyBrowser('User Message', encodedMsg);
+
 		}.bind(this));
 
 		document.querySelector(this.m_sMsgSendButtonSel).addEventListener("click", function (event) {
