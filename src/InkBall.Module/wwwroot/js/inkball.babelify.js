@@ -436,7 +436,7 @@ var InkBallGame = function () {
     this.iExponentialBackOffMillis = 2000;
     this.COLOR_RED = 'red';
     this.COLOR_BLUE = 'blue';
-    this.COLOR_OWNED_RED = 'pink';
+    this.COLOR_OWNED_RED = '#DC143C';
     this.COLOR_OWNED_BLUE = '#8A2BE2';
     this.m_bIsWon = false;
     this.m_bPointsAndPathsLoaded = false;
@@ -655,7 +655,7 @@ var InkBallGame = function () {
 
               case 17:
                 if (this.m_ApplicationUserSettings !== null && this.m_ApplicationUserSettings.DesktopNotifications === true) {
-                  this.NotifyBrowser();
+                  this.SetupNotifications();
                 }
 
                 _context5.next = 26;
@@ -685,6 +685,30 @@ var InkBallGame = function () {
 
       return Connect;
     }()
+  }, {
+    key: "SetupNotifications",
+    value: function SetupNotifications() {
+      if (!window.Notification) {
+        LocalLog('Browser does not support notifications.');
+        return false;
+      } else {
+        if (Notification.permission === 'granted') {
+          return true;
+        } else {
+          Notification.requestPermission().then(function (p) {
+            if (p === 'granted') {
+              return true;
+            } else {
+              LocalLog('User blocked notifications.');
+              return false;
+            }
+          })["catch"](function (err) {
+            LocalError(err);
+            return false;
+          });
+        }
+      }
+    }
   }, {
     key: "NotifyBrowser",
     value: function NotifyBrowser() {

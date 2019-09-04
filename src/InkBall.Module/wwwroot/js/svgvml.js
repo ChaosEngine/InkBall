@@ -53,7 +53,8 @@ if (SVG) {
 		o.setAttribute("shape-rendering", svgAntialias ? "auto" : "optimizeSpeed");
 		o.setAttribute("stroke-width", Math.round(w));
 		if (col) o.setAttribute("stroke", col);
-		o.setAttribute("fill", "none");
+		o.setAttribute("fill", col);
+		o.setAttribute("fill-opacity", "0.1");
 		if (points) o.setAttribute("points", points);
 		cont.appendChild(o);
 		//ch_added start
@@ -156,7 +157,8 @@ if (SVG) {
 		if (col) o.strokecolor = col;
 		o.points = points;
 		let s = document.createElement("v:fill");
-		s.on = "false";
+		s.color = col;
+		s.opacity = 0.1;
 		o.appendChild(s);
 		cont.appendChild(o);
 		//ch_added start

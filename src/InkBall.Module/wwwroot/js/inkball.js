@@ -59,9 +59,36 @@ class InkBallPointViewModel extends DtoMsg {
 	GetKind() { return CommandKindEnum.POINT; }
 
 	static Format(sUser, point) {
-		let msg = point.iX + ' ' + point.iY + ' ' + point.Status;
+		let msg = '(' + point.iX + ',' + point.iY + ' - ';// + point.Status;
 
-		return sUser + " places [" + msg + "] point";
+		switch (point.Status) {
+			case StatusEnum.POINT_FREE_RED:
+				msg += 'red';
+				break;
+			case StatusEnum.POINT_FREE_BLUE:
+				msg += 'blue';
+				break;
+			case StatusEnum.POINT_FREE:
+				msg += '';
+				break;
+			case StatusEnum.POINT_STARTING:
+				msg += 'starting';
+				break;
+			case StatusEnum.POINT_IN_PATH:
+				msg += 'path';
+				break;
+			case StatusEnum.POINT_OWNED_BY_RED:
+				msg += 'owned by red';
+				break;
+			case StatusEnum.POINT_OWNED_BY_BLUE:
+				msg += 'owned by blue';
+				break;
+
+			default:
+				throw new Error("Bad point type!");
+		}
+
+		return sUser + ' places ' + msg + ')' + ' point';
 	}
 }
 
@@ -79,9 +106,9 @@ class InkBallPathViewModel extends DtoMsg {
 	GetKind() { return CommandKindEnum.PATH; }
 
 	static Format(sUser, path) {
-		let msg = `${path.iPlayerId}  [${path.PointsAsString}] [${path.OwnedPointsAsString}]`;
+		let msg = `(${path.PointsAsString}) [${path.OwnedPointsAsString}]`;
 
-		return `${sUser} places [${msg}] path`;
+		return `${sUser} places ${msg} path`;
 	}
 }
 
@@ -139,7 +166,7 @@ class PingCommand extends DtoMsg {
 	static Format(sUser, ping) {
 		let txt = ping.Message;
 
-		return sUser + " says " + txt;
+		return sUser + " says '" + txt + "'";
 	}
 }
 
@@ -229,10 +256,12 @@ function CountPointsDebug(sSelector2Set, sSvgSelector = 'svg') {
 }
 
 function LocalLog(msg) {
+	// eslint-disable-next-line no-console
 	console.log(msg);
 }
 
 function LocalError(msg) {
+	// eslint-disable-next-line no-console
 	console.error(msg);
 }
 
@@ -263,7 +292,7 @@ class InkBallGame {
 		this.iExponentialBackOffMillis = 2000;
 		this.COLOR_RED = 'red';
 		this.COLOR_BLUE = 'blue';
-		this.COLOR_OWNED_RED = 'pink';
+		this.COLOR_OWNED_RED = '#DC143C';
 		this.COLOR_OWNED_BLUE = '#8A2BE2';
 		/*this.POINT_FREE_RED = -3;
 		this.POINT_FREE_BLUE = -2;
@@ -333,9 +362,10 @@ class InkBallGame {
 				LocalError(err);
 
 				this.m_Screen.style.cursor = "not-allowed";
-				if (this.iConnErrCount < 5)//exponential back-off
-					this.iConnErrCount++;
-				setTimeout(() => this.Connect(), 4000 + (this.iExponentialBackOffMillis * this.iConnErrCount));
+				this.iConnErrCount++;
+				setTimeout(() => this.Connect(), 4000 +
+					(this.iExponentialBackOffMillis * Math.max(this.iConnErrCount, 5))//exponential back-off
+				);
 			}
 		});
 	}
@@ -395,16 +425,45 @@ class InkBallGame {
 				await this.GetPlayerPointsAndPaths();
 			}
 			if (this.m_ApplicationUserSettings !== null && this.m_ApplicationUserSettings.DesktopNotifications === true) {
-				this.NotifyBrowser();
+				this.SetupNotifications();
 			}
 		}
 		catch (err) {
 			LocalError(err + '; iConnErrCount = ' + this.iConnErrCount);
 
 			this.m_Screen.style.cursor = "not-allowed";
-			if (this.iConnErrCount < 5)//exponential back-off
-				this.iConnErrCount++;
-			setTimeout(() => this.Connect(), 4000 + (this.iExponentialBackOffMillis * this.iConnErrCount));
+			this.iConnErrCount++;
+			setTimeout(() => this.Connect(), 4000 +
+				(this.iExponentialBackOffMillis * Math.max(this.iConnErrCount, 5))//exponential back-off
+			);
+		}
+	}
+
+	SetupNotifications() {
+		if (!window.Notification) {
+			LocalLog('Browser does not support notifications.');
+			return false;
+		}
+		else {
+			// check if permission is already granted
+			if (Notification.permission === 'granted') {
+				return true;
+			}
+			else {
+				// request permission from user
+				Notification.requestPermission().then(function (p) {
+					if (p === 'granted') {
+						return true;
+					}
+					else {
+						LocalLog('User blocked notifications.');
+						return false;
+					}
+				}).catch(function (err) {
+					LocalError(err);
+					return false;
+				});
+			}
 		}
 	}
 
@@ -415,8 +474,8 @@ class InkBallGame {
 		if (!window.Notification) {
 			LocalLog('Browser does not support notifications.');
 			return false;
-
-		} else {
+		}
+		else {
 			// check if permission is already granted
 			if (Notification.permission === 'granted') {
 				// show notification here
@@ -425,7 +484,8 @@ class InkBallGame {
 					icon: '../img/homescreen.webp'
 				});
 				return true;
-			} else {
+			}
+			else {
 				// request permission from user
 				Notification.requestPermission().then(function (p) {
 					if (p === 'granted') {
@@ -435,7 +495,8 @@ class InkBallGame {
 							icon: '../img/homescreen.webp'
 						});
 						return true;
-					} else {
+					}
+					else {
 						LocalLog('User blocked notifications.');
 						return false;
 					}
@@ -1447,68 +1508,77 @@ class InkBallGame {
 
 		this.m_MouseCursorOval.$move(tox, toy, this.m_PointRadius);
 		this.m_MouseCursorOval.$Show();
-		this.m_Screen.style.cursor = "crosshair";
 		this.Debug(`[${x},${y}]`, 1);
 
 
-		if (this.m_bDrawLines && this.m_bMouseDown === true) {
-			//lines
-			if ((this.m_iLastX !== x || this.m_iLastY !== y) &&
-				(Math.abs(parseInt(this.m_iLastX - x)) <= 1 && Math.abs(parseInt(this.m_iLastY - y)) <= 1) &&
-				this.m_iLastX >= 0 && this.m_iLastY >= 0) {
-				if (this.m_Line !== null) {
-					let p0 = this.m_Points[this.m_iLastY * this.m_iGridWidth + this.m_iLastX];
-					let p1 = this.m_Points[y * this.m_iGridWidth + x];
+		if (this.m_bDrawLines) {
+			if (this.m_Line !== null)
+				this.m_Screen.style.cursor = "move";
+			else
+				this.m_Screen.style.cursor = "crosshair";
 
-					if (p0 !== undefined && p1 !== undefined && (p1.$GetStatus() !== StatusEnum.POINT_IN_PATH) &&
-						p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
-						this.m_Line.$AppendPoints(tox + "," + toy);
-						if (p1.$GetStatus() !== StatusEnum.POINT_STARTING)
-							p1.$SetStatus(StatusEnum.POINT_IN_PATH);
-						else {
-							let val = this.SurroundOponentPoints();
-							if (val.owned.length > 0) {
-								//this.m_Line.$SetIsClosed(true);
-								this.Debug('Closing path', 0);
-								this.SendAsyncData(this.CreateXMLPutPathRequest(val), () => {
-									this.OnCancelClick();
-									val.OwnedPoints.forEach(p => {
-										p.$SetStatus(val.revertStatus);
-										p.$SetFillColor(val.revertFillColor);
-										p.$strokeColor(val.revertStrokeColor);
+			if (this.m_bMouseDown === true) {
+				//lines
+				if ((this.m_iLastX !== x || this.m_iLastY !== y) &&
+					(Math.abs(parseInt(this.m_iLastX - x)) <= 1 && Math.abs(parseInt(this.m_iLastY - y)) <= 1) &&
+					this.m_iLastX >= 0 && this.m_iLastY >= 0) {
+					if (this.m_Line !== null) {
+						let p0 = this.m_Points[this.m_iLastY * this.m_iGridWidth + this.m_iLastX];
+						let p1 = this.m_Points[y * this.m_iGridWidth + x];
+
+						if (p0 !== undefined && p1 !== undefined && (p1.$GetStatus() !== StatusEnum.POINT_IN_PATH) &&
+							p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
+							this.m_Line.$AppendPoints(tox + "," + toy);
+							if (p1.$GetStatus() !== StatusEnum.POINT_STARTING)
+								p1.$SetStatus(StatusEnum.POINT_IN_PATH);
+							else {
+								let val = this.SurroundOponentPoints();
+								if (val.owned.length > 0) {
+									//this.m_Line.$SetIsClosed(true);
+									this.Debug('Closing path', 0);
+									this.SendAsyncData(this.CreateXMLPutPathRequest(val), () => {
+										this.OnCancelClick();
+										val.OwnedPoints.forEach(p => {
+											p.$SetStatus(val.revertStatus);
+											p.$SetFillColor(val.revertFillColor);
+											p.$strokeColor(val.revertStrokeColor);
+										});
+										//this.m_bMouseDown = false;
+										this.m_bHandlingEvent = false;
 									});
-									//this.m_bMouseDown = false;
-									this.m_bHandlingEvent = false;
-								});
+								}
+								else
+									this.Debug('Wrong path, cancell it or refresh page', 0);
 							}
-							else
-								this.Debug('Wrong path, cancell it or refresh page', 0);
+
+							this.m_iLastX = x;
+							this.m_iLastY = y;
 						}
-
-						this.m_iLastX = x;
-						this.m_iLastY = y;
 					}
-				}
-				else {
-					let p0 = this.m_Points[this.m_iLastY * this.m_iGridWidth + this.m_iLastX];
-					let p1 = this.m_Points[y * this.m_iGridWidth + x];
+					else {
+						let p0 = this.m_Points[this.m_iLastY * this.m_iGridWidth + this.m_iLastX];
+						let p1 = this.m_Points[y * this.m_iGridWidth + x];
 
-					if (p0 !== undefined && p1 !== undefined &&
-						(p0.$GetStatus() !== StatusEnum.POINT_IN_PATH && p1.$GetStatus() !== StatusEnum.POINT_IN_PATH) &&
-						p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
-						let fromx = this.m_iLastX * this.m_iGridSizeX;
-						let fromy = this.m_iLastY * this.m_iGridSizeY;
-						this.m_Line = $createPolyline(3, fromx + "," + fromy + " " + tox + "," + toy, this.m_sDotColor);
-						if (p0.$GetStatus() !== StatusEnum.POINT_IN_PATH)
-							p0.$SetStatus(StatusEnum.POINT_STARTING);
-						if (p1.$GetStatus() !== StatusEnum.POINT_IN_PATH)
-							p1.$SetStatus(StatusEnum.POINT_IN_PATH);
+						if (p0 !== undefined && p1 !== undefined &&
+							(p0.$GetStatus() !== StatusEnum.POINT_IN_PATH && p1.$GetStatus() !== StatusEnum.POINT_IN_PATH) &&
+							p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
+							let fromx = this.m_iLastX * this.m_iGridSizeX;
+							let fromy = this.m_iLastY * this.m_iGridSizeY;
+							this.m_Line = $createPolyline(3, fromx + "," + fromy + " " + tox + "," + toy, this.m_sDotColor);
+							if (p0.$GetStatus() !== StatusEnum.POINT_IN_PATH)
+								p0.$SetStatus(StatusEnum.POINT_STARTING);
+							if (p1.$GetStatus() !== StatusEnum.POINT_IN_PATH)
+								p1.$SetStatus(StatusEnum.POINT_IN_PATH);
 
-						this.m_iLastX = x;
-						this.m_iLastY = y;
+							this.m_iLastX = x;
+							this.m_iLastY = y;
+						}
 					}
 				}
 			}
+		}
+		else {
+			this.m_Screen.style.cursor = "crosshair";
 		}
 	}
 
@@ -1620,6 +1690,8 @@ class InkBallGame {
 	}
 
 	OnDrawModeClick(event) {
+		if (this.m_Line !== null)
+			this.OnCancelClick();
 		this.m_bDrawLines = !this.m_bDrawLines;
 		let btn = event.target;
 		if (!this.m_bDrawLines) {
