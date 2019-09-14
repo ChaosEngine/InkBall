@@ -69,7 +69,7 @@ namespace InkBall.Module.Pages
 			this.IsReadonly = false;
 
 #if !LOAD_POINTS_AND_PATHS_FROM_SIGNALR
-			PlayerPointsAndPaths = await _dbContext.LoadPointsAndPathsAsync(Game.iId, token);
+			PlayerPointsAndPaths = await _dbContext.LoadPointsAndPathsAsync(Game.iId, token, false);
 #endif
 			return Page();
 		}
@@ -111,7 +111,7 @@ namespace InkBall.Module.Pages
 			this.IsReadonly = true;
 
 #if !LOAD_POINTS_AND_PATHS_FROM_SIGNALR
-			PlayerPointsAndPaths = await _dbContext.LoadPointsAndPathsAsync(Game.iId, token);
+			PlayerPointsAndPaths = await _dbContext.LoadPointsAndPathsAsync(Game.iId, token, false);
 #endif
 			return Page();
 		}

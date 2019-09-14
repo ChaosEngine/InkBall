@@ -345,6 +345,7 @@ namespace InkBall.Module.Model
 					.HasConstraintName("InkBallPoint_ibfk_4");
 			});
 
+			//TODO: remove coz not needed anymore - points are stored inside InkBallPath.PointsAsString JSON field
 			modelBuilder.Entity<InkBallPointsInPath>(entity =>
 			{
 				entity.HasKey(e => e.iId);
@@ -749,24 +750,46 @@ namespace InkBall.Module.Model
 		private InkBallPath LoadPointsInPathFromJson(InkBallPath path)
 		{
 			var pathVM_fromJson = JsonConvert.DeserializeObject<InkBallPathViewModel>(path.PointsAsString);
-			path.InkBallPointsInPath = pathVM_fromJson.InkBallPoint.Select(c => new InkBallPointsInPath(c)).ToArray();
+			path.InkBallPoint = pathVM_fromJson.InkBallPoint.Select(c => new InkBallPoint
+			{
+				iId = c.iId,
+				iGameId = c.iGameId,
+				iPlayerId = c.iPlayerId,
+				iX = c.iX,
+				iY = c.iY,
+				Status = c.Status,
+				iEnclosingPathId = c.iEnclosingPathId
+			}).ToArray();
 
 			return path;
 		}
 
-		private async Task<IEnumerable<InkBallPath>> GetPathsFromDatabaseAsync(int iGameID, IEnumerable<InkBallPoint> points, CancellationToken token = default)
+		protected internal async Task<IEnumerable<InkBallPath>> GetPathsFromDatabaseAsync(int iGameID, bool deserializeJsonPath,
+			CancellationToken token = default)
 		{
-			return await InkBallPath//.Include(x => x.InkBallPointsInPath)//uncomment for LoadPointsInPathFromRelationTable method
-				.Where(pa => pa.iGameId == iGameID)
-				// .Select(m => LoadPointsInPathFromRelationTable(m))
-				.Select(m => LoadPointsInPathFromJson(m))
-				.ToArrayAsync(token);
+			if (deserializeJsonPath)
+			{
+				return await InkBallPath//.Include(x => x.InkBallPointsInPath)//uncomment for LoadPointsInPathFromRelationTable method
+					.Where(pa => pa.iGameId == iGameID)
+					// .Select(m => LoadPointsInPathFromRelationTable(m))
+					.Select(m => LoadPointsInPathFromJson(m))
+					.ToArrayAsync(token);
+			}
+			else
+			{
+				return await InkBallPath//.Include(x => x.InkBallPointsInPath)//uncomment for LoadPointsInPathFromRelationTable method
+					.Where(pa => pa.iGameId == iGameID)
+					// .Select(m => LoadPointsInPathFromRelationTable(m))
+					// .Select(m => LoadPointsInPathFromJson(m))
+					.ToArrayAsync(token);
+			}
 		}
 
-		public async Task<(IEnumerable<InkBallPath> Paths, IEnumerable<InkBallPoint> Points)> LoadPointsAndPathsAsync(int iGameID, CancellationToken token = default)
+		public async Task<(IEnumerable<InkBallPath> Paths, IEnumerable<InkBallPoint> Points)> LoadPointsAndPathsAsync(int iGameID,
+			CancellationToken token = default, bool deserializeJsonPath = true)
 		{
 			var points = await GetPointsFromDatabaseAsync(iGameID, token);
-			var paths = await GetPathsFromDatabaseAsync(iGameID, points, token);
+			var paths = await GetPathsFromDatabaseAsync(iGameID, deserializeJsonPath, token);
 
 			return (paths, points);
 		}

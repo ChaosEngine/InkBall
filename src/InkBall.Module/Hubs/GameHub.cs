@@ -345,6 +345,10 @@ namespace InkBall.Module.Hubs
 				if (already_placed)
 					throw new ArgumentException("point already placed");
 
+				var game_paths = await _dbContext.GetPathsFromDatabaseAsync(point.iGameId, true, token);
+				if (game_paths.Any(pa => pa.IsPointInsidePath(point)))
+					throw new ArgumentException("point inside path");
+
 				var db_point = new InkBallPoint
 				{
 					//iId = point.iId,
@@ -366,9 +370,9 @@ namespace InkBall.Module.Hubs
 
 						new_point = new InkBallPointViewModel(db_point);
 						db_point_player.sLastMoveCode = JsonConvert.SerializeObject(new_point);
-#if DEBUG
-						//throw new Exception($"FAKE EXCEPTION {new_point}");
-#endif
+// #if DEBUG
+// 						throw new Exception($"FAKE EXCEPTION {new_point}");
+// #endif
 						await _dbContext.SaveChangesAsync(token);
 
 						trans.Commit();
@@ -452,7 +456,7 @@ namespace InkBall.Module.Hubs
 						await _dbContext.SaveChangesAsync(token);
 
 						var status = InkBallPoint.StatusEnum.POINT_STARTING;
-						int order = 1;
+						// int order = 1;
 						foreach (var pop in points_on_path)
 						{
 							//TODO: check in-path-next-point from start to end with closing
@@ -462,12 +466,13 @@ namespace InkBall.Module.Hubs
 								throw new ArgumentOutOfRangeException($"point not in path [{pop}]");
 							}
 
-							db_path.InkBallPointsInPath.Add(new InkBallPointsInPath
-							{
-								Path = db_path,
-								Point = found,
-								Order = order++
-							});
+							//TODO: remove coz not needed anymore - points are stored inside InkBallPath.PointsAsString JSON field
+							// db_path.InkBallPointsInPath.Add(new InkBallPointsInPath
+							// {
+							// 	Path = db_path,
+							// 	Point = found,
+							// 	Order = order++
+							// });
 							found.Status = status;
 							status = InkBallPoint.StatusEnum.POINT_IN_PATH;
 						}
@@ -494,12 +499,12 @@ namespace InkBall.Module.Hubs
 						db_path_player.sLastMoveCode = db_path.PointsAsString = JsonConvert.SerializeObject(path);
 
 						await _dbContext.SaveChangesAsync(token);
-#if DEBUG
-						// var saved_pts = await _dbContext.LoadPointsAndPathsAsync(ThisGameID.Value, token);
-						// var restored_from_db = saved_pts.Paths.LastOrDefault()?.InkBallPointsInPath.Select(z => $"{z.Point.iX},{z.Point.iY}");
-						// var str = (new Module.Pages.IndexModel(null, null, null)).GetPathsAsJavaScriptArray(saved_pts.Paths);
-						// throw new Exception($"FAKE EXCEPTION org pts:[{path.PointsAsString}], restored pts:[{str}], owned:[{path.OwnedPointsAsString}]");
-#endif
+// #if DEBUG
+// 						var saved_pts = await _dbContext.LoadPointsAndPathsAsync(ThisGameID.Value, token);
+// 						var restored_from_db = saved_pts.Paths.LastOrDefault()?.InkBallPoint.Select(z => $"{z.iX},{z.iY}");
+// 						var str = InkBallPath.GetPathsAsJavaScriptArrayForPage2(saved_pts.Paths);
+// 						throw new Exception($"FAKE EXCEPTION org pts:[{path.PointsAsString}], restored pts:[{str}], owned:[{path.OwnedPointsAsString}]");
+// #endif
 
 						var statisticalPointAndPathCounter = new StatisticalPointAndPathCounter(_dbContext, ThisGame.iId,
 							ThisPlayer.iId, OtherPlayer.iId, ref owning_color, ref other_owning_color, ref token);
@@ -661,7 +666,7 @@ namespace InkBall.Module.Hubs
 
 			try
 			{
-				var packed = await _dbContext.LoadPointsAndPathsAsync(gameID, token);
+				var packed = await _dbContext.LoadPointsAndPathsAsync(gameID, token, false);
 				var points = CommonPoint.GetPointsAsJavaScriptArrayForSignalR(packed.Points);
 				var paths = InkBallPath.GetPathsAsJavaScriptArrayForSignalR2(packed.Paths);
 				var dto = new PlayerPointsAndPathsDTO(points, paths);

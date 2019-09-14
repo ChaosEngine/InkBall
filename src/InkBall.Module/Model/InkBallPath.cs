@@ -19,7 +19,7 @@ namespace InkBall.Module.Model
 	}
 
 	public abstract class CommonPath<Point> : IPath<Point>, IDtoMsg
-		where Point : IPoint
+		where Point : CommonPoint, IPoint
 	{
 		public int iId { get; set; }
 		public int iGameId { get; set; }
@@ -39,7 +39,7 @@ namespace InkBall.Module.Model
 		 * @param {number} y point to check y coordinate
 		 * @returns {boolean} if point lies inside the polygon
 		 */
-		static bool pnpoly(int npol, int[] xp, int[] yp, int x, int y)
+		protected static bool pnpoly(int npol, int[] xp, int[] yp, int x, int y)
 		{
 			int i, j; bool c = false;
 
@@ -54,7 +54,7 @@ namespace InkBall.Module.Model
 			return c;
 		}
 
-		static bool pnpoly(ICollection<Point> pathPoints, int x, int y)
+		protected static bool pnpoly(ICollection<Point> pathPoints, int x, int y)
 		{
 			int i, j, npol = pathPoints.Count; bool c = false;
 
@@ -71,7 +71,7 @@ namespace InkBall.Module.Model
 			return c;
 		}
 
-		public bool IsPointInsidePath(Point point)
+		public virtual bool IsPointInsidePath(CommonPoint point)
 		{
 			var path_points = this.InkBallPoint;
 			if (path_points.Contains(point))
@@ -114,8 +114,8 @@ namespace InkBall.Module.Model
 
 		public InkBallPath()
 		{
-			InkBallPoint = new HashSet<InkBallPoint>();
-			InkBallPointsInPath = new HashSet<InkBallPointsInPath>();
+			// InkBallPoint = new HashSet<InkBallPoint>();
+			// InkBallPointsInPath = new HashSet<InkBallPointsInPath>();
 		}
 
 		public static string GetPathsAsJavaScriptArrayForPage(IEnumerable<InkBallPath> paths)
@@ -124,7 +124,7 @@ namespace InkBall.Module.Model
 			string comma = "";
 			foreach (var path in paths)
 			{
-				var points = path.InkBallPointsInPath;
+				var points = path.InkBallPoint;
 				builder.AppendFormat("{0}[{1}\"", comma
 #if DEBUG
 				, $"/*ID={path.iId}*/"
@@ -137,9 +137,9 @@ namespace InkBall.Module.Model
 				foreach (var point in points)
 				{
 #if DEBUG
-					builder.AppendFormat("{2}{0}/*x*/,{1}/*y*//*id={3}*/", point.Point.iX, point.Point.iY, space, point.Point.iId);
+					builder.AppendFormat("{2}{0}/*x*/,{1}/*y*//*id={3}*/", point.iX, point.iY, space, point.iId);
 #else
-					builder.AppendFormat("{2}{0},{1}", point.Point.iX, point.Point.iY, space);
+					builder.AppendFormat("{2}{0},{1}", point.iX, point.iY, space);
 #endif
 					space = " ";
 				}
@@ -186,13 +186,13 @@ namespace InkBall.Module.Model
 			string comma = "";
 			foreach (var path in paths)
 			{
-				var points = path.InkBallPointsInPath;
+				var points = path.InkBallPoint;
 				builder.AppendFormat("{0}[{1}\"", comma, "");
 
 				string space = string.Empty;
 				foreach (var point in points)
 				{
-					builder.AppendFormat("{2}{0},{1}", point.Point.iX, point.Point.iY, space);
+					builder.AppendFormat("{2}{0},{1}", point.iX, point.iY, space);
 					space = " ";
 				}
 

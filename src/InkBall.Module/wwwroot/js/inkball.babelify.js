@@ -105,8 +105,42 @@ var InkBallPointViewModel = function (_DtoMsg) {
   }], [{
     key: "Format",
     value: function Format(sUser, point) {
-      var msg = point.iX + ' ' + point.iY + ' ' + point.Status;
-      return sUser + " places [" + msg + "] point";
+      var msg = '(' + point.iX + ',' + point.iY + ' - ';
+
+      switch (point.Status) {
+        case StatusEnum.POINT_FREE_RED:
+          msg += 'red';
+          break;
+
+        case StatusEnum.POINT_FREE_BLUE:
+          msg += 'blue';
+          break;
+
+        case StatusEnum.POINT_FREE:
+          msg += '';
+          break;
+
+        case StatusEnum.POINT_STARTING:
+          msg += 'starting';
+          break;
+
+        case StatusEnum.POINT_IN_PATH:
+          msg += 'path';
+          break;
+
+        case StatusEnum.POINT_OWNED_BY_RED:
+          msg += 'owned by red';
+          break;
+
+        case StatusEnum.POINT_OWNED_BY_BLUE:
+          msg += 'owned by blue';
+          break;
+
+        default:
+          throw new Error("Bad point type!");
+      }
+
+      return sUser + ' places ' + msg + ')' + ' point';
     }
   }]);
 
@@ -144,8 +178,8 @@ var InkBallPathViewModel = function (_DtoMsg2) {
   }], [{
     key: "Format",
     value: function Format(sUser, path) {
-      var msg = "".concat(path.iPlayerId, "  [").concat(path.PointsAsString, "] [").concat(path.OwnedPointsAsString, "]");
-      return "".concat(sUser, " places [").concat(msg, "] path");
+      var msg = "(".concat(path.PointsAsString, ") [").concat(path.OwnedPointsAsString, "]");
+      return "".concat(sUser, " places ").concat(msg, " path");
     }
   }]);
 
@@ -236,7 +270,7 @@ var PingCommand = function (_DtoMsg5) {
     key: "Format",
     value: function Format(sUser, ping) {
       var txt = ping.Message;
-      return sUser + " says " + txt;
+      return sUser + " says '" + txt + "'";
     }
   }]);
 
@@ -368,6 +402,84 @@ var ApplicationUserSettings = function (_DtoMsg8) {
   return ApplicationUserSettings;
 }(DtoMsg);
 
+var CountdownTimer = function () {
+  function CountdownTimer() {
+    var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+        _ref$countdownSeconds = _ref.countdownSeconds,
+        countdownSeconds = _ref$countdownSeconds === void 0 ? 60 : _ref$countdownSeconds,
+        _ref$labelSelector = _ref.labelSelector,
+        labelSelector = _ref$labelSelector === void 0 ? null : _ref$labelSelector,
+        _ref$initialStart = _ref.initialStart,
+        initialStart = _ref$initialStart === void 0 ? false : _ref$initialStart,
+        _ref$countdownReached = _ref.countdownReachedHandler,
+        countdownReachedHandler = _ref$countdownReached === void 0 ? undefined : _ref$countdownReached;
+
+    _classCallCheck(this, CountdownTimer);
+
+    this.countdownSeconds = countdownSeconds;
+    this.totalSeconds = this.countdownSeconds;
+    this.timerID = -1;
+    this.countdownReachedHandler = countdownReachedHandler;
+    if (labelSelector) this.label = document.querySelector(labelSelector);
+    if (initialStart) this.Start();
+  }
+
+  _createClass(CountdownTimer, [{
+    key: "setTimeFunc",
+    value: function setTimeFunc() {
+      if (--this.totalSeconds <= 0) {
+        this.Stop();
+        if (this.countdownReachedHandler) this.countdownReachedHandler();
+      } else if (this.label) {
+        this.label.innerHTML = this.pad(parseInt(this.totalSeconds / 60)) + ':' + this.pad(this.totalSeconds % 60);
+      }
+    }
+  }, {
+    key: "pad",
+    value: function pad(val) {
+      var valString = val + "";
+
+      if (valString.length < 2) {
+        return "0" + valString;
+      } else {
+        return valString;
+      }
+    }
+  }, {
+    key: "Start",
+    value: function Start() {
+      this.Stop();
+      this.timerID = setInterval(this.setTimeFunc.bind(this), 1000);
+    }
+  }, {
+    key: "Stop",
+    value: function Stop() {
+      if (this.timerID > 0) clearInterval(this.timerID);
+    }
+  }, {
+    key: "Reset",
+    value: function Reset() {
+      var _ref2 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+          _ref2$countdownSecond = _ref2.countdownSeconds,
+          countdownSeconds = _ref2$countdownSecond === void 0 ? 60 : _ref2$countdownSecond,
+          _ref2$labelSelector = _ref2.labelSelector,
+          labelSelector = _ref2$labelSelector === void 0 ? null : _ref2$labelSelector,
+          _ref2$initialStart = _ref2.initialStart,
+          initialStart = _ref2$initialStart === void 0 ? false : _ref2$initialStart,
+          _ref2$countdownReache = _ref2.countdownReachedHandler,
+          countdownReachedHandler = _ref2$countdownReache === void 0 ? undefined : _ref2$countdownReache;
+
+      this.countdownSeconds = countdownSeconds;
+      this.totalSeconds = this.countdownSeconds;
+      this.countdownReachedHandler = countdownReachedHandler;
+      if (labelSelector) this.label = document.querySelector(labelSelector);
+      if (initialStart) this.Start();
+    }
+  }]);
+
+  return CountdownTimer;
+}();
+
 function CountPointsDebug(sSelector2Set) {
   var sSvgSelector = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'svg';
   var svgs = document.getElementsByTagName(sSvgSelector),
@@ -441,10 +553,8 @@ var InkBallGame = function () {
     this.m_bIsWon = false;
     this.m_bPointsAndPathsLoaded = false;
     this.m_iDelayBetweenMultiCaptures = 4000;
-    this.m_iTimerInterval = 2000;
     this.m_iTooLong2Duration = iTooLong2Duration;
-    this.m_iTimerID = null;
-    this.m_bIsTimerRunning = false;
+    this.m_Timer = null;
     this.m_WaitStartTime = null;
     this.m_iSlowdownLevel = 0;
     this.m_iGridSizeX = 0;
@@ -487,7 +597,7 @@ var InkBallGame = function () {
     }).withHubProtocol(hubProtocol).configureLogging(loggingLevel).build();
     this.g_SignalRConnection.serverTimeoutInMilliseconds = serverTimeoutInMilliseconds;
     this.g_SignalRConnection.onclose(function () {
-      var _ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(err) {
+      var _ref3 = _asyncToGenerator(regeneratorRuntime.mark(function _callee(err) {
         return regeneratorRuntime.wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
@@ -495,10 +605,10 @@ var InkBallGame = function () {
                 if (err !== null && err !== undefined) {
                   LocalError(err);
                   _this9.m_Screen.style.cursor = "not-allowed";
-                  if (_this9.iConnErrCount < 5) _this9.iConnErrCount++;
+                  _this9.iConnErrCount++;
                   setTimeout(function () {
                     return _this9.Connect();
-                  }, 4000 + _this9.iExponentialBackOffMillis * _this9.iConnErrCount);
+                  }, 4000 + _this9.iExponentialBackOffMillis * Math.max(_this9.iConnErrCount, 5));
                 }
 
               case 1:
@@ -510,7 +620,7 @@ var InkBallGame = function () {
       }));
 
       return function (_x) {
-        return _ref.apply(this, arguments);
+        return _ref3.apply(this, arguments);
       };
     }());
   }
@@ -530,7 +640,6 @@ var InkBallGame = function () {
 
                 _context2.next = 3;
                 return this.g_SignalRConnection.invoke("GetPlayerPointsAndPaths", this.m_bViewOnly, this.g_iGameID).then(function (ppDTO) {
-                  LocalLog(ppDTO);
                   var path_and_point = PlayerPointsAndPathsDTO.Deserialize(ppDTO);
                   if (path_and_point.Points !== undefined) this.SetAllPoints(path_and_point.Points);
                   if (path_and_point.Paths !== undefined) this.SetAllPaths2(path_and_point.Paths);
@@ -600,7 +709,7 @@ var InkBallGame = function () {
 
                   return settings;
                 }.bind(this)).then(function () {
-                  var _ref2 = _asyncToGenerator(regeneratorRuntime.mark(function _callee3(settings) {
+                  var _ref4 = _asyncToGenerator(regeneratorRuntime.mark(function _callee3(settings) {
                     return regeneratorRuntime.wrap(function _callee3$(_context3) {
                       while (1) {
                         switch (_context3.prev = _context3.next) {
@@ -621,7 +730,7 @@ var InkBallGame = function () {
                   }));
 
                   return function (_x2) {
-                    return _ref2.apply(this, arguments);
+                    return _ref4.apply(this, arguments);
                   };
                 }().bind(this)).then(_asyncToGenerator(regeneratorRuntime.mark(function _callee4() {
                   return regeneratorRuntime.wrap(function _callee4$(_context4) {
@@ -666,10 +775,10 @@ var InkBallGame = function () {
                 _context5.t0 = _context5["catch"](0);
                 LocalError(_context5.t0 + '; iConnErrCount = ' + this.iConnErrCount);
                 this.m_Screen.style.cursor = "not-allowed";
-                if (this.iConnErrCount < 5) this.iConnErrCount++;
+                this.iConnErrCount++;
                 setTimeout(function () {
                   return _this10.Connect();
-                }, 4000 + this.iExponentialBackOffMillis * this.iConnErrCount);
+                }, 4000 + this.iExponentialBackOffMillis * Math.max(this.iConnErrCount, 5));
 
               case 26:
               case "end":
@@ -865,19 +974,28 @@ var InkBallGame = function () {
   }, {
     key: "Debug",
     value: function Debug() {
+      var d;
+
       switch (arguments.length) {
         case 1:
           this.m_Debug.innerHTML = arguments.length <= 0 ? undefined : arguments[0];
           break;
 
         case 2:
-          {
-            var d = document.getElementById('debug' + (arguments.length <= 1 ? undefined : arguments[1]));
-            d.innerHTML = arguments.length <= 0 ? undefined : arguments[0];
-            break;
-          }
+          d = document.getElementById('debug' + (arguments.length <= 1 ? undefined : arguments[1]));
+          d.innerHTML = arguments.length <= 0 ? undefined : arguments[0];
+          break;
 
         default:
+          for (var i = 0; i < arguments.length; i++) {
+            var msg = i < 0 || arguments.length <= i ? undefined : arguments[i];
+
+            if (msg) {
+              d = document.getElementById('debug' + i);
+              if (d) d.innerHTML = msg;
+            }
+          }
+
           break;
       }
     }
@@ -1073,7 +1191,6 @@ var InkBallGame = function () {
       var _this13 = this;
 
       packedPaths.forEach(function (unpacked) {
-        LocalLog(unpacked);
         if (unpacked.iGameId !== _this13.g_iGameID) throw new Error("Bad game from path!");
 
         _this13.SetPath(unpacked.PointsAsString, _this13.m_bIsPlayingWithRed, unpacked.iPlayerId === _this13.g_iPlayerID);
@@ -1260,7 +1377,7 @@ var InkBallGame = function () {
         for (var _iterator6 = this.m_Lines[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
           var line = _step6.value;
           var points = line.$GetPointsArray();
-          if (false !== this.pnpoly2(points, iX, iY)) return false;
+          if (false !== this.pnpoly2(points, iX * this.m_iGridSizeX, iY * this.m_iGridSizeY)) return false;
         }
       } catch (err) {
         _didIteratorError6 = true;
@@ -1348,6 +1465,15 @@ var InkBallGame = function () {
       var x = point.iX,
           y = point.iY,
           iStatus = point.Status;
+      var timer_opts = {
+        countdownSeconds: 180,
+        labelSelector: "#debug2",
+        initialStart: true,
+        countdownReachedHandler: function countdownReachedHandler() {
+          this.m_Timer = null;
+        }
+      };
+      if (this.m_Timer) this.m_Timer.Reset(timer_opts);else this.m_Timer = new CountdownTimer(timer_opts);
       this.SetPoint(x, y, iStatus);
 
       if (this.g_iPlayerID !== point.iPlayerId) {
@@ -1557,52 +1683,57 @@ var InkBallGame = function () {
       var toy = y * this.m_iGridSizeY;
       this.m_MouseCursorOval.$move(tox, toy, this.m_PointRadius);
       this.m_MouseCursorOval.$Show();
-      this.m_Screen.style.cursor = "crosshair";
       this.Debug("[".concat(x, ",").concat(y, "]"), 1);
 
-      if (this.m_bDrawLines && this.m_bMouseDown === true) {
-        if ((this.m_iLastX !== x || this.m_iLastY !== y) && Math.abs(parseInt(this.m_iLastX - x)) <= 1 && Math.abs(parseInt(this.m_iLastY - y)) <= 1 && this.m_iLastX >= 0 && this.m_iLastY >= 0) {
-          if (this.m_Line !== null) {
-            var p0 = this.m_Points[this.m_iLastY * this.m_iGridWidth + this.m_iLastX];
-            var p1 = this.m_Points[y * this.m_iGridWidth + x];
+      if (this.m_bDrawLines) {
+        if (this.m_Line !== null) this.m_Screen.style.cursor = "move";else this.m_Screen.style.cursor = "crosshair";
 
-            if (p0 !== undefined && p1 !== undefined && p1.$GetStatus() !== StatusEnum.POINT_IN_PATH && p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
-              this.m_Line.$AppendPoints(tox + "," + toy);
-              if (p1.$GetStatus() !== StatusEnum.POINT_STARTING) p1.$SetStatus(StatusEnum.POINT_IN_PATH);else {
-                var val = this.SurroundOponentPoints();
+        if (this.m_bMouseDown === true) {
+          if ((this.m_iLastX !== x || this.m_iLastY !== y) && Math.abs(parseInt(this.m_iLastX - x)) <= 1 && Math.abs(parseInt(this.m_iLastY - y)) <= 1 && this.m_iLastX >= 0 && this.m_iLastY >= 0) {
+            if (this.m_Line !== null) {
+              var p0 = this.m_Points[this.m_iLastY * this.m_iGridWidth + this.m_iLastX];
+              var p1 = this.m_Points[y * this.m_iGridWidth + x];
 
-                if (val.owned.length > 0) {
-                  this.Debug('Closing path', 0);
-                  this.SendAsyncData(this.CreateXMLPutPathRequest(val), function () {
-                    _this15.OnCancelClick();
+              if (p0 !== undefined && p1 !== undefined && p1.$GetStatus() !== StatusEnum.POINT_IN_PATH && p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
+                this.m_Line.$AppendPoints(tox + "," + toy);
+                if (p1.$GetStatus() !== StatusEnum.POINT_STARTING) p1.$SetStatus(StatusEnum.POINT_IN_PATH);else {
+                  var val = this.SurroundOponentPoints();
 
-                    val.OwnedPoints.forEach(function (p) {
-                      p.$SetStatus(val.revertStatus);
-                      p.$SetFillColor(val.revertFillColor);
-                      p.$strokeColor(val.revertStrokeColor);
+                  if (val.owned.length > 0) {
+                    this.Debug('Closing path', 0);
+                    this.SendAsyncData(this.CreateXMLPutPathRequest(val), function () {
+                      _this15.OnCancelClick();
+
+                      val.OwnedPoints.forEach(function (p) {
+                        p.$SetStatus(val.revertStatus);
+                        p.$SetFillColor(val.revertFillColor);
+                        p.$strokeColor(val.revertStrokeColor);
+                      });
+                      _this15.m_bHandlingEvent = false;
                     });
-                    _this15.m_bHandlingEvent = false;
-                  });
-                } else this.Debug('Wrong path, cancell it or refresh page', 0);
+                  } else this.Debug('Wrong path, cancell it or refresh page', 0);
+                }
+                this.m_iLastX = x;
+                this.m_iLastY = y;
               }
-              this.m_iLastX = x;
-              this.m_iLastY = y;
-            }
-          } else {
-            var _p = this.m_Points[this.m_iLastY * this.m_iGridWidth + this.m_iLastX];
-            var _p2 = this.m_Points[y * this.m_iGridWidth + x];
+            } else {
+              var _p = this.m_Points[this.m_iLastY * this.m_iGridWidth + this.m_iLastX];
+              var _p2 = this.m_Points[y * this.m_iGridWidth + x];
 
-            if (_p !== undefined && _p2 !== undefined && _p.$GetStatus() !== StatusEnum.POINT_IN_PATH && _p2.$GetStatus() !== StatusEnum.POINT_IN_PATH && _p.$GetFillColor() === this.m_sDotColor && _p2.$GetFillColor() === this.m_sDotColor) {
-              var fromx = this.m_iLastX * this.m_iGridSizeX;
-              var fromy = this.m_iLastY * this.m_iGridSizeY;
-              this.m_Line = $createPolyline(3, fromx + "," + fromy + " " + tox + "," + toy, this.m_sDotColor);
-              if (_p.$GetStatus() !== StatusEnum.POINT_IN_PATH) _p.$SetStatus(StatusEnum.POINT_STARTING);
-              if (_p2.$GetStatus() !== StatusEnum.POINT_IN_PATH) _p2.$SetStatus(StatusEnum.POINT_IN_PATH);
-              this.m_iLastX = x;
-              this.m_iLastY = y;
+              if (_p !== undefined && _p2 !== undefined && _p.$GetStatus() !== StatusEnum.POINT_IN_PATH && _p2.$GetStatus() !== StatusEnum.POINT_IN_PATH && _p.$GetFillColor() === this.m_sDotColor && _p2.$GetFillColor() === this.m_sDotColor) {
+                var fromx = this.m_iLastX * this.m_iGridSizeX;
+                var fromy = this.m_iLastY * this.m_iGridSizeY;
+                this.m_Line = $createPolyline(3, fromx + "," + fromy + " " + tox + "," + toy, this.m_sDotColor);
+                if (_p.$GetStatus() !== StatusEnum.POINT_IN_PATH) _p.$SetStatus(StatusEnum.POINT_STARTING);
+                if (_p2.$GetStatus() !== StatusEnum.POINT_IN_PATH) _p2.$SetStatus(StatusEnum.POINT_IN_PATH);
+                this.m_iLastX = x;
+                this.m_iLastY = y;
+              }
             }
           }
         }
+      } else {
+        this.m_Screen.style.cursor = "crosshair";
       }
     }
   }, {
@@ -1704,6 +1835,7 @@ var InkBallGame = function () {
   }, {
     key: "OnDrawModeClick",
     value: function OnDrawModeClick(event) {
+      if (this.m_Line !== null) this.OnCancelClick();
       this.m_bDrawLines = !this.m_bDrawLines;
       var btn = event.target;
 
@@ -1770,10 +1902,8 @@ var InkBallGame = function () {
       var iTooLong2Duration = arguments.length > 7 && arguments[7] !== undefined ? arguments[7] : 125;
       this.m_bIsWon = false;
       this.m_iDelayBetweenMultiCaptures = 4000;
-      this.m_iTimerInterval = 2000;
       this.m_iTooLong2Duration = iTooLong2Duration;
-      this.m_iTimerID = null;
-      this.m_bIsTimerRunning = false;
+      this.m_Timer = null;
       this.m_WaitStartTime = null;
       this.m_iSlowdownLevel = 0;
       this.m_iLastX = -1;
@@ -1782,7 +1912,6 @@ var InkBallGame = function () {
       this.m_iMouseY = 0;
       this.m_iPosX = 0;
       this.m_iPosY = 0;
-      this.m_Debug = null;
       this.m_bMouseDown = false;
       this.m_bHandlingEvent = false;
       this.m_bDrawLines = !true;

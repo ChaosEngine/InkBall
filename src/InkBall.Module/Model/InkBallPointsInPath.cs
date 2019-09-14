@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 namespace InkBall.Module.Model
 {
+	//TODO: remove coz not needed anymore - points are stored inside InkBallPath.PointsAsString JSON field
 	public partial class InkBallPointsInPath
 	{
 		public int iId { get; set; }

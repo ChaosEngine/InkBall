@@ -189,7 +189,7 @@ namespace InkBall.Tests
 					iPlayerId = is_player_turn ? game0.iPlayer1Id : game0.iPlayer2Id.GetValueOrDefault(0)
 
 				};
-				int order = 1;
+				// int order = 1;
 				var path_vm = new InkBallPathViewModel
 				{
 					iGameId = game0.iId,
@@ -198,21 +198,22 @@ namespace InkBall.Tests
 				};
 				path_vm.InkBallPoint.ToList().ForEach((p) =>
 				{
-					var pip = new InkBallPointsInPath
-					{
-						Path = db_path,
-						Point = new InkBallPoint
-						{
-							iX = p.iX,
-							iY = p.iY,
-							Player = db_path.Player,
-							iPlayerId = db_path.iPlayerId,
-							Game = db_path.Game,
-							iGameId = db_path.iGameId
-						},
-						Order = order++
-					};
-					db_path.InkBallPointsInPath.Add(pip);
+					//TODO: remove coz not needed anymore - points are stored inside InkBallPath.PointsAsString JSON field
+					// var pip = new InkBallPointsInPath
+					// {
+					// 	Path = db_path,
+					// 	Point = new InkBallPoint
+					// 	{
+					// 		iX = p.iX,
+					// 		iY = p.iY,
+					// 		Player = db_path.Player,
+					// 		iPlayerId = db_path.iPlayerId,
+					// 		Game = db_path.Game,
+					// 		iGameId = db_path.iGameId
+					// 	},
+					// 	Order = order++
+					// };
+					// db_path.InkBallPointsInPath.Add(pip);
 				});
 
 				paths0.Add(db_path);

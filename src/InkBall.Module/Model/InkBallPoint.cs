@@ -205,7 +205,7 @@ namespace InkBall.Module.Model
 
 		public InkBallPoint()
 		{
-			InkBallPointsInPath = new HashSet<InkBallPointsInPath>();
+			// InkBallPointsInPath = new HashSet<InkBallPointsInPath>();
 		}
 	}
 

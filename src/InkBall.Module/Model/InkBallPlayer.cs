@@ -111,10 +111,10 @@ namespace InkBall.Module.Model
 
 		public InkBallPlayer()
 		{
-			InkBallGameIPlayer1 = new HashSet<InkBallGame>();
-			InkBallGameIPlayer2 = new HashSet<InkBallGame>();
-			InkBallPath = new HashSet<InkBallPath>();
-			InkBallPoint = new HashSet<InkBallPoint>();
+			// InkBallGameIPlayer1 = new HashSet<InkBallGame>();
+			// InkBallGameIPlayer2 = new HashSet<InkBallGame>();
+			// InkBallPath = new HashSet<InkBallPath>();
+			// InkBallPoint = new HashSet<InkBallPoint>();
 		}
 	}
 

@@ -237,6 +237,71 @@ class ApplicationUserSettings extends DtoMsg {
 	}
 }
 
+class CountdownTimer {
+	constructor({
+		countdownSeconds = 60,
+		labelSelector = null,
+		initialStart = false,
+		countdownReachedHandler = undefined
+	} = {}) {
+		this.countdownSeconds = countdownSeconds;
+		this.totalSeconds = this.countdownSeconds;
+		this.timerID = -1;
+		this.countdownReachedHandler = countdownReachedHandler;
+		if (labelSelector)
+			this.label = document.querySelector(labelSelector);
+
+		if (initialStart)
+			this.Start();
+	}
+
+	setTimeFunc() {
+		if ((--this.totalSeconds) <= 0) {
+			this.Stop();
+			if (this.countdownReachedHandler)
+				this.countdownReachedHandler();
+		}
+		else if (this.label) {
+			this.label.innerHTML = this.pad(parseInt(this.totalSeconds / 60)) +
+				':' + this.pad(this.totalSeconds % 60);
+		}
+	}
+
+	pad(val) {
+		const valString = val + "";
+		if (valString.length < 2) {
+			return "0" + valString;
+		} else {
+			return valString;
+		}
+	}
+
+	Start() {
+		this.Stop();
+		this.timerID = setInterval(this.setTimeFunc.bind(this), 1000);
+	}
+
+	Stop() {
+		if (this.timerID > 0)
+			clearInterval(this.timerID);
+	}
+
+	Reset({
+		countdownSeconds = 60,
+		labelSelector = null,
+		initialStart = false,
+		countdownReachedHandler = undefined
+	} = {}) {
+		this.countdownSeconds = countdownSeconds;
+		this.totalSeconds = this.countdownSeconds;
+		this.countdownReachedHandler = countdownReachedHandler;
+		if (labelSelector)
+			this.label = document.querySelector(labelSelector);
+
+		if (initialStart)
+			this.Start();
+	}
+}
 
 //Debug function
 function CountPointsDebug(sSelector2Set, sSvgSelector = 'svg') {
@@ -304,10 +369,8 @@ class InkBallGame {
 		this.m_bIsWon = false;
 		this.m_bPointsAndPathsLoaded = false;
 		this.m_iDelayBetweenMultiCaptures = 4000;
-		this.m_iTimerInterval = 2000;
 		this.m_iTooLong2Duration = iTooLong2Duration/*125*/;
-		this.m_iTimerID = null;
-		this.m_bIsTimerRunning = false;
+		this.m_Timer = null;
 		this.m_WaitStartTime = null;
 		this.m_iSlowdownLevel = 0;
 		this.m_iGridSizeX = 0;
@@ -373,7 +436,7 @@ class InkBallGame {
 	async GetPlayerPointsAndPaths() {
 		if (!this.m_bPointsAndPathsLoaded) {
 			await this.g_SignalRConnection.invoke("GetPlayerPointsAndPaths", this.m_bViewOnly, this.g_iGameID).then(function (ppDTO) {
-				LocalLog(ppDTO);
+				//LocalLog(ppDTO);
 
 				const path_and_point = PlayerPointsAndPathsDTO.Deserialize(ppDTO);
 				if (path_and_point.Points !== undefined)
@@ -668,17 +731,24 @@ class InkBallGame {
 	}
 
 	Debug(...args) {
+		let d;
 		switch (args.length) {
 			case 1:
 				this.m_Debug.innerHTML = args[0];
 				break;
 			case 2:
-				{
-					let d = document.getElementById('debug' + args[1]);
-					d.innerHTML = args[0];
-					break;
-				}
+				d = document.getElementById('debug' + args[1]);
+				d.innerHTML = args[0];
+				break;
 			default:
+				for (let i = 0; i < args.length; i++) {
+					const msg = args[i];
+					if (msg) {
+						d = document.getElementById('debug' + i);
+						if (d)
+							d.innerHTML = msg;
+					}
+				}
 				break;
 		}
 	}
@@ -868,11 +938,8 @@ class InkBallGame {
 	}
 
 	SetAllPaths2(packedPaths) {
-		//debugger;
 		packedPaths.forEach(unpacked => {
-			//debugger;
 			//const unpacked = JSON.parse(packed.Serialized);
-			LocalLog(unpacked);
 			if (unpacked.iGameId !== this.g_iGameID)
 				throw new Error("Bad game from path!");
 
@@ -1009,7 +1076,8 @@ class InkBallGame {
 				xs[k] = x; ys[k] = y;
 				++k;
 			}*/
-			if (false !== this.pnpoly2(points, iX, iY))
+
+			if (false !== this.pnpoly2(points, iX * this.m_iGridSizeX, iY * this.m_iGridSizeY))
 				return false;
 		}
 
@@ -1249,6 +1317,20 @@ class InkBallGame {
 
 	ReceivedPointProcessing(point) {
 		let x = point.iX, y = point.iY, iStatus = point.Status;
+
+		const timer_opts = {
+			countdownSeconds: 180,
+			labelSelector: "#debug2",
+			initialStart: true,
+			countdownReachedHandler: function () {
+				//alert('timer ended');
+				this.m_Timer = null;
+			}
+		};
+		if (this.m_Timer)
+			this.m_Timer.Reset(timer_opts);
+		else
+			this.m_Timer = new CountdownTimer(timer_opts);
 
 		this.SetPoint(x, y, iStatus);
 		if (this.g_iPlayerID !== point.iPlayerId) {
@@ -1741,10 +1823,8 @@ class InkBallGame {
 	PrepareDrawing(sScreen, sPlayer2Name, sGameStatus, sSurrenderButton, sDrawMode, sCancelPath, sPause, iTooLong2Duration = 125) {
 		this.m_bIsWon = false;
 		this.m_iDelayBetweenMultiCaptures = 4000;
-		this.m_iTimerInterval = 2000;
 		this.m_iTooLong2Duration = iTooLong2Duration/*125*/;
-		this.m_iTimerID = null;
-		this.m_bIsTimerRunning = false;
+		this.m_Timer = null;
 		this.m_WaitStartTime = null;
 		this.m_iSlowdownLevel = 0;
 		this.m_iLastX = -1;
@@ -1753,7 +1833,6 @@ class InkBallGame {
 		this.m_iMouseY = 0;
 		this.m_iPosX = 0;
 		this.m_iPosY = 0;
-		this.m_Debug = null;
 		this.m_bMouseDown = false;
 		this.m_bHandlingEvent = false;
 		this.m_bDrawLines = !true;

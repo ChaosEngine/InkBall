@@ -29,7 +29,7 @@ namespace InkBall.Module.Model
 
 		public InkBallUser()
 		{
-			InkBallPlayer = new HashSet<InkBallPlayer>();
+			// InkBallPlayer = new HashSet<InkBallPlayer>();
 		}
 	}
 
