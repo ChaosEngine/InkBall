@@ -586,7 +586,7 @@ var InkBallGame = function () {
     this.m_PointRadius = 4;
     this.m_Line = null;
     this.m_Lines = [];
-    this.m_Points = [];
+    this.m_Points = new Map();
     this.m_bViewOnly = bViewOnly;
     this.m_MouseCursorOval = null;
     this.m_ApplicationUserSettings = null;
@@ -1087,7 +1087,7 @@ var InkBallGame = function () {
 
       oval.$SetFillColor(color);
       oval.$strokeColor(color);
-      this.m_Points[iY * this.m_iGridWidth + iX] = oval;
+      this.m_Points.set(iY * this.m_iGridWidth + iX, oval);
     }
   }, {
     key: "SetAllPoints",
@@ -1143,7 +1143,7 @@ var InkBallGame = function () {
           y *= this.m_iGridSizeY;
           sPathPoints += "".concat(sDelimiter).concat(x, ",").concat(y);
           sDelimiter = " ";
-          p = this.m_Points[y * this.m_iGridWidth + x];
+          p = this.m_Points.get(y * this.m_iGridWidth + x);
 
           if (p !== null && p !== undefined) {
             p.$SetStatus(status);
@@ -1171,7 +1171,7 @@ var InkBallGame = function () {
       x *= this.m_iGridSizeX;
       y *= this.m_iGridSizeY;
       sPathPoints = sPathPoints + sDelimiter + x + "," + y;
-      p = this.m_Points[y * this.m_iGridWidth + x];
+      p = this.m_Points.get(y * this.m_iGridWidth + x);
       if (p !== null && p !== undefined) p.$SetStatus(status);
       var line = $createPolyline(3, sPathPoints, bBelong2ThisPlayer ? this.m_sDotColor : bIsRed ? this.COLOR_BLUE : this.COLOR_RED);
       this.m_Lines[this.m_Lines.length] = line;
@@ -1314,15 +1314,15 @@ var InkBallGame = function () {
       var sColor = this.m_sDotColor === this.COLOR_RED ? this.COLOR_BLUE : this.COLOR_RED;
       var owned_by = this.m_sDotColor === this.COLOR_RED ? StatusEnum.POINT_OWNED_BY_RED : StatusEnum.POINT_OWNED_BY_BLUE;
       var sOwnedCol = this.m_sDotColor === this.COLOR_RED ? this.COLOR_OWNED_RED : this.COLOR_OWNED_BLUE;
-      var sOwnedPoints = "";
-      var ownedPoints = [];
+      var sOwnedPoints = "",
+          ownedPoints = [];
       sDelimiter = "";
       var _iteratorNormalCompletion5 = true;
       var _didIteratorError5 = false;
       var _iteratorError5 = undefined;
 
       try {
-        for (var _iterator5 = this.m_Points[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+        for (var _iterator5 = this.m_Points.values()[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
           var p0 = _step5.value;
 
           if (p0 !== undefined && p0.$GetStatus() === StatusEnum.POINT_FREE && p0.$GetFillColor() === sColor) {
@@ -1336,7 +1336,7 @@ var InkBallGame = function () {
               p0.$strokeColor(sOwnedCol);
               x /= this.m_iGridSizeX;
               y /= this.m_iGridSizeY;
-              sOwnedPoints = sOwnedPoints + sDelimiter + x + "," + y;
+              sOwnedPoints += sDelimiter + x + "," + y;
               ownedPoints.push(p0);
               sDelimiter = " ";
             }
@@ -1510,7 +1510,7 @@ var InkBallGame = function () {
             var p = packed.split(",");
             var x = parseInt(p[0]),
                 y = parseInt(p[1]);
-            p = this.m_Points[y * this.m_iGridWidth + x];
+            p = this.m_Points.get(y * this.m_iGridWidth + x);
 
             if (p !== undefined) {
               p.$SetStatus(point_status);
@@ -1545,7 +1545,7 @@ var InkBallGame = function () {
             _y = _points[i + 1];
         _x3 /= this.m_iGridSizeX;
         _y /= this.m_iGridSizeY;
-        var p0 = this.m_Points[_y * this.m_iGridWidth + _x3];
+        var p0 = this.m_Points.get(_y * this.m_iGridWidth + _x3);
         if (p0 !== undefined) p0.$SetStatus(StatusEnum.POINT_IN_PATH);
         this.m_Lines[this.m_Lines.length] = this.m_Line;
         this.m_iLastX = this.m_iLastY = -1;
@@ -1691,8 +1691,8 @@ var InkBallGame = function () {
         if (this.m_bMouseDown === true) {
           if ((this.m_iLastX !== x || this.m_iLastY !== y) && Math.abs(parseInt(this.m_iLastX - x)) <= 1 && Math.abs(parseInt(this.m_iLastY - y)) <= 1 && this.m_iLastX >= 0 && this.m_iLastY >= 0) {
             if (this.m_Line !== null) {
-              var p0 = this.m_Points[this.m_iLastY * this.m_iGridWidth + this.m_iLastX];
-              var p1 = this.m_Points[y * this.m_iGridWidth + x];
+              var p0 = this.m_Points.get(this.m_iLastY * this.m_iGridWidth + this.m_iLastX);
+              var p1 = this.m_Points.get(y * this.m_iGridWidth + x);
 
               if (p0 !== undefined && p1 !== undefined && p1.$GetStatus() !== StatusEnum.POINT_IN_PATH && p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
                 this.m_Line.$AppendPoints(tox + "," + toy);
@@ -1717,8 +1717,9 @@ var InkBallGame = function () {
                 this.m_iLastY = y;
               }
             } else {
-              var _p = this.m_Points[this.m_iLastY * this.m_iGridWidth + this.m_iLastX];
-              var _p2 = this.m_Points[y * this.m_iGridWidth + x];
+              var _p = this.m_Points.get(this.m_iLastY * this.m_iGridWidth + this.m_iLastX);
+
+              var _p2 = this.m_Points.get(y * this.m_iGridWidth + x);
 
               if (_p !== undefined && _p2 !== undefined && _p.$GetStatus() !== StatusEnum.POINT_IN_PATH && _p2.$GetStatus() !== StatusEnum.POINT_IN_PATH && _p.$GetFillColor() === this.m_sDotColor && _p2.$GetFillColor() === this.m_sDotColor) {
                 var fromx = this.m_iLastX * this.m_iGridSizeX;
@@ -1755,8 +1756,17 @@ var InkBallGame = function () {
         var loc_y = y;
         x = loc_x * this.m_iGridSizeX;
         y = loc_y * this.m_iGridSizeY;
-        if (this.m_Points[loc_y * this.m_iGridWidth + loc_x] !== undefined) return;
-        if (!this.IsPointOutsideAllPaths(loc_x, loc_y)) return;
+
+        if (this.m_Points.get(loc_y * this.m_iGridWidth + loc_x) !== undefined) {
+          this.Debug('Wrong point - already existing', 0);
+          return;
+        }
+
+        if (!this.IsPointOutsideAllPaths(loc_x, loc_y)) {
+          this.Debug('Wrong point, Point is not outside all paths', 0);
+          return;
+        }
+
         this.SendAsyncData(this.CreateXMLPutPointRequest(loc_x, loc_y), function () {
           _this16.m_bMouseDown = false;
           _this16.m_bHandlingEvent = false;
@@ -1764,8 +1774,8 @@ var InkBallGame = function () {
       } else {
         if ((this.m_iLastX !== x || this.m_iLastY !== y) && Math.abs(parseInt(this.m_iLastX - x)) <= 1 && Math.abs(parseInt(this.m_iLastY - y)) <= 1 && this.m_iLastX >= 0 && this.m_iLastY >= 0) {
           if (this.m_Line !== null) {
-            var p0 = this.m_Points[this.m_iLastY * this.m_iGridWidth + this.m_iLastX];
-            var p1 = this.m_Points[y * this.m_iGridWidth + x];
+            var p0 = this.m_Points.get(this.m_iLastY * this.m_iGridWidth + this.m_iLastX);
+            var p1 = this.m_Points.get(y * this.m_iGridWidth + x);
 
             if (p0 !== undefined && p1 !== undefined && p1.$GetStatus() !== StatusEnum.POINT_IN_PATH && p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
               var tox = x * this.m_iGridSizeX;
@@ -1777,6 +1787,8 @@ var InkBallGame = function () {
                 if (val.owned.length > 0) {
                   this.Debug('Closing path', 0);
                   this.SendAsyncData(this.CreateXMLPutPathRequest(val), function () {
+                    _this16.Debug('Wrong path', 0);
+
                     _this16.OnCancelClick();
 
                     val.OwnedPoints.forEach(function (p) {
@@ -1793,8 +1805,9 @@ var InkBallGame = function () {
               this.m_iLastY = y;
             }
           } else {
-            var _p3 = this.m_Points[this.m_iLastY * this.m_iGridWidth + this.m_iLastX];
-            var _p4 = this.m_Points[y * this.m_iGridWidth + x];
+            var _p3 = this.m_Points.get(this.m_iLastY * this.m_iGridWidth + this.m_iLastX);
+
+            var _p4 = this.m_Points.get(y * this.m_iGridWidth + x);
 
             if (_p3 !== undefined && _p4 !== undefined && _p3.$GetStatus() !== StatusEnum.POINT_IN_PATH && _p4.$GetStatus() !== StatusEnum.POINT_IN_PATH && _p3.$GetFillColor() === this.m_sDotColor && _p4.$GetFillColor() === this.m_sDotColor) {
               var fromx = this.m_iLastX * this.m_iGridSizeX;
@@ -1813,7 +1826,7 @@ var InkBallGame = function () {
             this.m_iLastY = y;
           }
         } else if (this.m_iLastX < 0 || this.m_iLastY < 0) {
-          var _p5 = this.m_Points[y * this.m_iGridWidth + x];
+          var _p5 = this.m_Points.get(y * this.m_iGridWidth + x);
 
           if (_p5 !== undefined && _p5.$GetStatus() === StatusEnum.POINT_FREE && _p5.$GetFillColor() === this.m_sDotColor) {
             this.m_iLastX = x;
@@ -1866,7 +1879,7 @@ var InkBallGame = function () {
               if (x === null || y === null) continue;
               x /= this.m_iGridSizeX;
               y /= this.m_iGridSizeY;
-              var p0 = this.m_Points[y * this.m_iGridWidth + x];
+              var p0 = this.m_Points.get(y * this.m_iGridWidth + x);
               if (p0 !== undefined) p0.$SetStatus(StatusEnum.POINT_FREE);
             }
           } catch (err) {
@@ -1894,7 +1907,7 @@ var InkBallGame = function () {
   }, {
     key: "OnTestClick",
     value: function OnTestClick() {
-      LocalLog(this.m_Points.flat());
+      LocalLog(Array.from(this.m_Points).flat());
     }
   }, {
     key: "PrepareDrawing",
@@ -1919,7 +1932,7 @@ var InkBallGame = function () {
       this.m_sDotColor = this.m_bIsPlayingWithRed ? this.COLOR_RED : this.COLOR_BLUE;
       this.m_Line = null;
       this.m_Lines = [];
-      this.m_Points = [];
+      this.m_Points = new Map();
       this.m_Debug = document.getElementById('debug0');
       this.m_Player2Name = document.querySelector(sPlayer2Name);
       this.m_GameStatus = document.querySelector(sGameStatus);

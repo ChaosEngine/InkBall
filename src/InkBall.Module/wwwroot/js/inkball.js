@@ -402,7 +402,7 @@ class InkBallGame {
 		this.m_PointRadius = 4;
 		this.m_Line = null;
 		this.m_Lines = [];
-		this.m_Points = [];
+		this.m_Points = new Map();
 		this.m_bViewOnly = bViewOnly;
 		this.m_MouseCursorOval = null;
 		this.m_ApplicationUserSettings = null;
@@ -871,7 +871,7 @@ class InkBallGame {
 		oval.$SetFillColor(color);
 		oval.$strokeColor(color);
 
-		this.m_Points[iY * this.m_iGridWidth + iX] = oval;
+		this.m_Points.set(iY * this.m_iGridWidth + iX, oval);
 	}
 
 	SetAllPoints(points) {
@@ -913,7 +913,7 @@ class InkBallGame {
 			sPathPoints += `${sDelimiter}${x},${y}`;
 			sDelimiter = " ";
 
-			p = this.m_Points[y * this.m_iGridWidth + x];
+			p = this.m_Points.get(y * this.m_iGridWidth + x);
 			if (p !== null && p !== undefined) {
 				p.$SetStatus(status);
 				status = StatusEnum.POINT_IN_PATH;
@@ -923,7 +923,7 @@ class InkBallGame {
 		x = parseInt(p[0]); y = parseInt(p[1]);
 		x *= this.m_iGridSizeX; y *= this.m_iGridSizeY;
 		sPathPoints = sPathPoints + sDelimiter + x + "," + y;
-		p = this.m_Points[y * this.m_iGridWidth + x];
+		p = this.m_Points.get(y * this.m_iGridWidth + x);
 		if (p !== null && p !== undefined) p.$SetStatus(status);
 
 		let line = $createPolyline(3, sPathPoints,
@@ -999,7 +999,7 @@ class InkBallGame {
 	SurroundOponentPoints() {
 		let points = this.m_Line.$GetPointsArray();
 
-		//uniqe point path test (no duplcates except starting-ending point)
+		//uniqe point path test (no duplicates except starting-ending point)
 		let unique_hashset = new Set();
 		let hasDuplicates = points.slice(0, -1).some(function (pt) {
 			return unique_hashset.size === unique_hashset.add(pt.x + '_' + pt.y).size;
@@ -1030,15 +1030,14 @@ class InkBallGame {
 		}
 
 		//make the test!
-		let sColor = (this.m_sDotColor === this.COLOR_RED ? this.COLOR_BLUE : this.COLOR_RED);
-		let owned_by = (this.m_sDotColor === this.COLOR_RED ? StatusEnum.POINT_OWNED_BY_RED : StatusEnum.POINT_OWNED_BY_BLUE);
-		let sOwnedCol = (this.m_sDotColor === this.COLOR_RED ? this.COLOR_OWNED_RED : this.COLOR_OWNED_BLUE);
-		let sOwnedPoints = "";
-		let ownedPoints = [];
+		const sColor = (this.m_sDotColor === this.COLOR_RED ? this.COLOR_BLUE : this.COLOR_RED);
+		const owned_by = (this.m_sDotColor === this.COLOR_RED ? StatusEnum.POINT_OWNED_BY_RED : StatusEnum.POINT_OWNED_BY_BLUE);
+		const sOwnedCol = (this.m_sDotColor === this.COLOR_RED ? this.COLOR_OWNED_RED : this.COLOR_OWNED_BLUE);
+		let sOwnedPoints = "", ownedPoints = [];
 		sDelimiter = "";
-		for (const p0 of this.m_Points) {
+		for (const p0 of this.m_Points.values()) {
 			if (p0 !== undefined && p0.$GetStatus() === StatusEnum.POINT_FREE && p0.$GetFillColor() === sColor) {
-				let pos = p0.$GetPosition();
+				const pos = p0.$GetPosition();
 				x = pos.x; y = pos.y;
 				if (false !== this.pnpoly2(points, x, y)) {
 					p0.$SetStatus(owned_by);
@@ -1046,7 +1045,7 @@ class InkBallGame {
 					p0.$strokeColor(sOwnedCol);
 
 					x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
-					sOwnedPoints = sOwnedPoints + sDelimiter + x + "," + y;
+					sOwnedPoints += sDelimiter + x + "," + y;
 					ownedPoints.push(p0);
 					sDelimiter = " ";
 				}
@@ -1222,7 +1221,7 @@ class InkBallGame {
 										for (let i = 0; i < count; ++i) {
 											p = Points[i].split(",");
 											x = parseInt(p[0]); y = parseInt(p[1]);
-											p = this.m_Points[y * this.m_iGridWidth + x];
+											p = this.m_Points.get(y * this.m_iGridWidth + x);
 											if (p !== undefined) {
 												p.$SetStatus(point_status);
 												p.$SetFillColor(sOwnedCol);
@@ -1264,7 +1263,7 @@ class InkBallGame {
 						let x = points[i];
 						let y = points[i + 1];
 						x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
-						let p0 = this.m_Points[y * this.m_iGridWidth + x];
+						let p0 = this.m_Points.get(y * this.m_iGridWidth + x);
 						if (p0 !== undefined)
 							p0.$SetStatus(this.POINT_IN_PATH);
 
@@ -1362,7 +1361,7 @@ class InkBallGame {
 			for (const packed of points) {
 				let p = packed.split(",");
 				let x = parseInt(p[0]), y = parseInt(p[1]);
-				p = this.m_Points[y * this.m_iGridWidth + x];
+				p = this.m_Points.get(y * this.m_iGridWidth + x);
 				if (p !== undefined) {
 					p.$SetStatus(point_status);
 					p.$SetFillColor(sOwnedCol);
@@ -1383,7 +1382,7 @@ class InkBallGame {
 			let i = 0;
 			let x = points[i], y = points[i + 1];
 			x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
-			let p0 = this.m_Points[y * this.m_iGridWidth + x];
+			let p0 = this.m_Points.get(y * this.m_iGridWidth + x);
 			if (p0 !== undefined)
 				p0.$SetStatus(StatusEnum.POINT_IN_PATH);
 
@@ -1605,8 +1604,8 @@ class InkBallGame {
 					(Math.abs(parseInt(this.m_iLastX - x)) <= 1 && Math.abs(parseInt(this.m_iLastY - y)) <= 1) &&
 					this.m_iLastX >= 0 && this.m_iLastY >= 0) {
 					if (this.m_Line !== null) {
-						let p0 = this.m_Points[this.m_iLastY * this.m_iGridWidth + this.m_iLastX];
-						let p1 = this.m_Points[y * this.m_iGridWidth + x];
+						let p0 = this.m_Points.get(this.m_iLastY * this.m_iGridWidth + this.m_iLastX);
+						let p1 = this.m_Points.get(y * this.m_iGridWidth + x);
 
 						if (p0 !== undefined && p1 !== undefined && (p1.$GetStatus() !== StatusEnum.POINT_IN_PATH) &&
 							p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
@@ -1638,8 +1637,8 @@ class InkBallGame {
 						}
 					}
 					else {
-						let p0 = this.m_Points[this.m_iLastY * this.m_iGridWidth + this.m_iLastX];
-						let p1 = this.m_Points[y * this.m_iGridWidth + x];
+						let p0 = this.m_Points.get(this.m_iLastY * this.m_iGridWidth + this.m_iLastX);
+						let p1 = this.m_Points.get(y * this.m_iGridWidth + x);
 
 						if (p0 !== undefined && p1 !== undefined &&
 							(p0.$GetStatus() !== StatusEnum.POINT_IN_PATH && p1.$GetStatus() !== StatusEnum.POINT_IN_PATH) &&
@@ -1685,8 +1684,14 @@ class InkBallGame {
 			x = loc_x * this.m_iGridSizeX;
 			y = loc_y * this.m_iGridSizeY;
 
-			if (this.m_Points[loc_y * this.m_iGridWidth + loc_x] !== undefined) return;
-			if (!this.IsPointOutsideAllPaths(loc_x, loc_y)) return;
+			if (this.m_Points.get(loc_y * this.m_iGridWidth + loc_x) !== undefined) {
+				this.Debug('Wrong point - already existing', 0);
+				return;
+			}
+			if (!this.IsPointOutsideAllPaths(loc_x, loc_y)) {
+				this.Debug('Wrong point, Point is not outside all paths', 0);
+				return;
+			}
 
 			this.SendAsyncData(this.CreateXMLPutPointRequest(loc_x, loc_y), () => {
 				this.m_bMouseDown = false;
@@ -1700,8 +1705,8 @@ class InkBallGame {
 				(Math.abs(parseInt(this.m_iLastX - x)) <= 1 && Math.abs(parseInt(this.m_iLastY - y)) <= 1) &&
 				this.m_iLastX >= 0 && this.m_iLastY >= 0) {
 				if (this.m_Line !== null) {
-					let p0 = this.m_Points[this.m_iLastY * this.m_iGridWidth + this.m_iLastX];
-					let p1 = this.m_Points[y * this.m_iGridWidth + x];
+					let p0 = this.m_Points.get(this.m_iLastY * this.m_iGridWidth + this.m_iLastX);
+					let p1 = this.m_Points.get(y * this.m_iGridWidth + x);
 
 					if (p0 !== undefined && p1 !== undefined && (p1.$GetStatus() !== StatusEnum.POINT_IN_PATH) &&
 						p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
@@ -1715,6 +1720,7 @@ class InkBallGame {
 							if (val.owned.length > 0) {
 								this.Debug('Closing path', 0);
 								this.SendAsyncData(this.CreateXMLPutPathRequest(val), () => {
+									this.Debug('Wrong path', 0);
 									this.OnCancelClick();
 									val.OwnedPoints.forEach(p => {
 										p.$SetStatus(val.revertStatus);
@@ -1734,8 +1740,8 @@ class InkBallGame {
 					}
 				}
 				else {
-					let p0 = this.m_Points[this.m_iLastY * this.m_iGridWidth + this.m_iLastX];
-					let p1 = this.m_Points[y * this.m_iGridWidth + x];
+					let p0 = this.m_Points.get(this.m_iLastY * this.m_iGridWidth + this.m_iLastX);
+					let p1 = this.m_Points.get(y * this.m_iGridWidth + x);
 
 					if (p0 !== undefined && p1 !== undefined && (p0.$GetStatus() !== StatusEnum.POINT_IN_PATH &&
 						p1.$GetStatus() !== StatusEnum.POINT_IN_PATH) &&
@@ -1753,7 +1759,7 @@ class InkBallGame {
 				}
 			}
 			else if (this.m_iLastX < 0 || this.m_iLastY < 0) {
-				let p1 = this.m_Points[y * this.m_iGridWidth + x];
+				let p1 = this.m_Points.get(y * this.m_iGridWidth + x);
 				if (p1 !== undefined && p1.$GetStatus() === StatusEnum.POINT_FREE && p1.$GetFillColor() === this.m_sDotColor) {
 					this.m_iLastX = x;
 					this.m_iLastY = y;
@@ -1794,7 +1800,7 @@ class InkBallGame {
 					let x = point.x, y = point.y;
 					if (x === null || y === null) continue;
 					x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
-					let p0 = this.m_Points[y * this.m_iGridWidth + x];
+					let p0 = this.m_Points.get(y * this.m_iGridWidth + x);
 					if (p0 !== undefined)
 						p0.$SetStatus(StatusEnum.POINT_FREE);
 				}
@@ -1806,7 +1812,7 @@ class InkBallGame {
 	}
 
 	OnTestClick() {
-		LocalLog(this.m_Points.flat());
+		LocalLog(Array.from(this.m_Points).flat());
 	}
 
 	/**
@@ -1840,7 +1846,7 @@ class InkBallGame {
 		this.m_sDotColor = this.m_bIsPlayingWithRed ? this.COLOR_RED : this.COLOR_BLUE;
 		this.m_Line = null;
 		this.m_Lines = [];
-		this.m_Points = [];
+		this.m_Points = new Map();
 
 		this.m_Debug = document.getElementById('debug0');
 		this.m_Player2Name = document.querySelector(sPlayer2Name);
