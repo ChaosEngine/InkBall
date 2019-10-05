@@ -51,7 +51,7 @@ namespace InkBall.Module
 
 		public int Count
 		{
-			get { return _innerCache != default ? 1 : 0; }
+			get { return EqualityComparer<V>.Default.Equals(_innerCache, default) ? 0 : 1; }
 		}
 
 		public V Value
@@ -72,7 +72,7 @@ namespace InkBall.Module
 
 		public bool Any()
 		{
-			return _innerCache != default;
+			return !EqualityComparer<V>.Default.Equals(_innerCache, default);
 		}
 
 		public void Add(V value)
@@ -127,7 +127,7 @@ namespace InkBall.Module
 			try
 			{
 				V result = _innerCache;
-				if (result != default)
+				if (!EqualityComparer<V>.Default.Equals(result, default))
 				{
 					if (EqualityComparer<V>.Default.Equals(result, value))
 					{
