@@ -60,27 +60,27 @@ namespace InkBall.Module
 
 	public static class CommonUIServiceCollectionExtensions
 	{
-		public static IServiceCollection AddInkBallCommonUI<TGamesDBContext, TIdentUser>(this IServiceCollection services, IHostingEnvironment environment,
+		public static IServiceCollection AddInkBallCommonUI<TGamesDBContext, TIdentUser>(this IServiceCollection services, IFileProvider webRootFileProvider,
 			Action<InkBallOptions> configureOptions)
 			where TGamesDBContext : IGamesContext
 			where TIdentUser : IdentityUser, INamedAgedUser
 		{
 			InkBallOptions options = new InkBallOptions();
-			options.WebRootFileProvider = environment.WebRootFileProvider;
+			options.WebRootFileProvider = webRootFileProvider;
 			options.ApplicationUserType = typeof(TIdentUser);
 
 			configureOptions?.Invoke(options);
 
 			if (options.CustomAuthorizationPolicyBuilder != null)
 			{
-				services.AddAuthorization(auth_options =>
+				services.AddAuthorizationCore(auth_options =>
 				{
 					auth_options.AddPolicy(Constants.InkBallPolicyName, options.CustomAuthorizationPolicyBuilder);
 				});
 			}
 			else
 			{
-				services.AddAuthorization(auth_options =>
+				services.AddAuthorizationCore(auth_options =>
 				{
 					auth_options.AddPolicy(Constants.InkBallPolicyName, policy =>
 					{
