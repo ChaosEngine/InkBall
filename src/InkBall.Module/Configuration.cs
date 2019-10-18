@@ -105,5 +105,10 @@ namespace InkBall.Module
 		{
 			routes.MapHub<InkBall.Module.Hubs.GameHub>(path + InkBall.Module.Hubs.GameHub.HubName);
 		}
+
+		/*public static void PrepareSignalRForInkBall(this Microsoft.AspNetCore.Routing.IEndpointRouteBuilder endpoints, string path = "")
+		{
+			endpoints.MapHub<InkBall.Module.Hubs.GameHub>(path + InkBall.Module.Hubs.GameHub.HubName);
+		}*/
 	}
 }
