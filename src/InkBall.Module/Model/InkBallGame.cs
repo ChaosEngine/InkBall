@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 
 namespace InkBall.Module.Model
 {
@@ -45,7 +45,7 @@ namespace InkBall.Module.Model
 		protected internal static TimeSpan _deactivationDelayInSeconds = TimeSpan.FromSeconds(120);
 
 		[NotMapped]//Hide it from EF Core
-		[JsonProperty]//allow to serialize it
+		[JsonPropertyName("bIsPlayer1")]//allow to serialize it
 		protected internal bool bIsPlayer1 { get; set; }
 		public int iId { get; set; }
 		public abstract Player Player1 { get; set; }

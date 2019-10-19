@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using MessagePack;
-using Newtonsoft.Json;
 
 namespace InkBall.Module.Model
 {
@@ -53,7 +54,7 @@ namespace InkBall.Module.Model
 			{
 				if (!(_lastMoveDict?.Count > 0) && !string.IsNullOrEmpty(sLastMoveCode))
 				{
-					_lastMoveDict = JsonConvert.DeserializeObject<Dictionary<string, string>>(sLastMoveCode);
+					_lastMoveDict = JsonSerializer.Deserialize<Dictionary<string, string>>(sLastMoveCode);
 				}
 				return _lastMoveDict;
 			}

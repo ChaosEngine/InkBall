@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Http;
 using static InkBall.Module.Model.InkBallGame;
-using Newtonsoft.Json;
+using System.Text.Json;
 
 namespace InkBall.Module.Model
 {
@@ -749,7 +749,7 @@ namespace InkBall.Module.Model
 
 		private InkBallPath LoadPointsInPathFromJson(InkBallPath path)
 		{
-			var pathVM_fromJson = JsonConvert.DeserializeObject<InkBallPathViewModel>(path.PointsAsString);
+			var pathVM_fromJson = JsonSerializer.Deserialize<InkBallPathViewModel>(path.PointsAsString);
 			path.InkBallPoint = pathVM_fromJson.InkBallPoint.Select(c => new InkBallPoint
 			{
 				iId = c.iId,

@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Http;
-using Newtonsoft.Json;
+//using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 
 namespace InkBall.Module
 {
-	public static class SessionExtensions
+	/*public static class SessionExtensions
 	{
 		static readonly JsonSerializerSettings _jsonSerializerSettings = new JsonSerializerSettings
 		{
@@ -34,7 +34,7 @@ namespace InkBall.Module
 				return obj;
 			}
 		}
-	}
+	}*/
 
 	public class SynchronizedCache<V> : IDisposable
 		where V : IEquatable<V>

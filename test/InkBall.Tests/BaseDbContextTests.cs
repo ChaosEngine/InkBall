@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using InkBall.Module.Hubs;
@@ -11,7 +12,6 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 
 namespace InkBall.Tests
 {
@@ -227,7 +227,7 @@ namespace InkBall.Tests
 					});
 				}
 				path_vm.OwnedPointsAsString = parameters.ownedPoints.Select(o => $"{o.x},{o.y}").Aggregate((me, me1) => me + " " + me1);
-				db_path.PointsAsString = JsonConvert.SerializeObject(path_vm);
+				db_path.PointsAsString = JsonSerializer.Serialize(path_vm);
 
 				is_player_turn = !is_player_turn;
 			}

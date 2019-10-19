@@ -6,12 +6,12 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Net.Http.Headers;
 using Moq;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -684,8 +684,8 @@ namespace InkBall.Tests
 				Assert.NotNull(dto.Paths);
 
 				//Assert
-				TempPoint[] json_points = JsonConvert.DeserializeObject<TempPoint[]>(dto.Points);
-				InkBallPathViewModel[] json_paths = JsonConvert.DeserializeObject<InkBallPathViewModel[]>(dto.Paths);
+				TempPoint[] json_points = JsonSerializer.Deserialize<TempPoint[]>(dto.Points);
+				InkBallPathViewModel[] json_paths = JsonSerializer.Deserialize<InkBallPathViewModel[]>(dto.Paths);
 				Assert.NotNull(json_points);
 				Assert.NotNull(json_paths);
 				Assert.True(json_points.All(pt => pt.iPlayerId == 1 || pt.iPlayerId == 2));
@@ -722,9 +722,9 @@ namespace InkBall.Tests
 
 				//Act
 				var points_n_paths = await db.LoadPointsAndPathsAsync(1, token);
-				var json_points1 = JsonConvert.SerializeObject(JsonConvert.DeserializeObject<TempPoint[]>(
+				var json_points1 = JsonSerializer.Serialize(JsonSerializer.Deserialize<TempPoint[]>(
 					CommonPoint.GetPointsAsJavaScriptArrayForPage(points_n_paths.Points)));
-				var json_paths1 = JsonConvert.SerializeObject(JsonConvert.DeserializeObject<InkBallPathViewModel[]>(
+				var json_paths1 = JsonSerializer.Serialize(JsonSerializer.Deserialize<InkBallPathViewModel[]>(
 					InkBallPath.GetPathsAsJavaScriptArrayForPage2(points_n_paths.Paths)));
 
 				//Assert

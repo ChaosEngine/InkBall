@@ -7,11 +7,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using Microsoft.Net.Http.Headers;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -369,7 +369,7 @@ namespace InkBall.Module.Hubs
 						ThisGame.bIsPlayer1Active = !ThisGame.bIsPlayer1Active;
 
 						new_point = new InkBallPointViewModel(db_point);
-						db_point_player.sLastMoveCode = JsonConvert.SerializeObject(new_point);
+						db_point_player.sLastMoveCode = JsonSerializer.Serialize(new_point);
 // #if DEBUG
 // 						throw new Exception($"FAKE EXCEPTION {new_point}");
 // #endif
@@ -496,7 +496,7 @@ namespace InkBall.Module.Hubs
 							found.EnclosingPath = db_path;
 						}
 
-						db_path_player.sLastMoveCode = db_path.PointsAsString = JsonConvert.SerializeObject(path);
+						db_path_player.sLastMoveCode = db_path.PointsAsString = JsonSerializer.Serialize(path);
 
 						await _dbContext.SaveChangesAsync(token);
 // #if DEBUG

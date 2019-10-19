@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using MessagePack;
 using Microsoft.Extensions.Primitives;
-using Newtonsoft.Json;
 
 namespace InkBall.Module.Model
 {
