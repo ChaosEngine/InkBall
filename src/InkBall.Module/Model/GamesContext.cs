@@ -740,14 +740,14 @@ namespace InkBall.Module.Model
 			return await query.ToArrayAsync(token);
 		}
 
-		private InkBallPath LoadPointsInPathFromRelationTable(InkBallPath path)
+		private static InkBallPath LoadPointsInPathFromRelationTable(InkBallPath path)
 		{
 			path.InkBallPointsInPath = path.InkBallPointsInPath.OrderBy(o => o.Order).ToArray();
 
 			return path;
 		}
 
-		private InkBallPath LoadPointsInPathFromJson(InkBallPath path)
+		private static InkBallPath LoadPointsInPathFromJson(InkBallPath path)
 		{
 			var pathVM_fromJson = JsonSerializer.Deserialize<InkBallPathViewModel>(path.PointsAsString);
 			path.InkBallPoint = pathVM_fromJson.InkBallPoint.Select(c => new InkBallPoint
@@ -759,7 +759,7 @@ namespace InkBall.Module.Model
 				iY = c.iY,
 				Status = c.Status,
 				iEnclosingPathId = c.iEnclosingPathId
-			}).ToArray();
+			}).ToList();
 
 			return path;
 		}
@@ -773,7 +773,7 @@ namespace InkBall.Module.Model
 					.Where(pa => pa.iGameId == iGameID)
 					// .Select(m => LoadPointsInPathFromRelationTable(m))
 					.Select(m => LoadPointsInPathFromJson(m))
-					.ToArrayAsync(token);
+					.ToListAsync(token);
 			}
 			else
 			{
@@ -781,7 +781,7 @@ namespace InkBall.Module.Model
 					.Where(pa => pa.iGameId == iGameID)
 					// .Select(m => LoadPointsInPathFromRelationTable(m))
 					// .Select(m => LoadPointsInPathFromJson(m))
-					.ToArrayAsync(token);
+					.ToListAsync(token);
 			}
 		}
 

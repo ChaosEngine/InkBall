@@ -722,10 +722,14 @@ namespace InkBall.Tests
 
 				//Act
 				var points_n_paths = await db.LoadPointsAndPathsAsync(1, token);
+
 				var json_points1 = JsonSerializer.Serialize(JsonSerializer.Deserialize<TempPoint[]>(
-					CommonPoint.GetPointsAsJavaScriptArrayForPage(points_n_paths.Points)));
+					CommonPoint.GetPointsAsJavaScriptArrayForPage(points_n_paths.Points),
+					new JsonSerializerOptions { ReadCommentHandling = JsonCommentHandling.Skip, AllowTrailingCommas = true }));
+
 				var json_paths1 = JsonSerializer.Serialize(JsonSerializer.Deserialize<InkBallPathViewModel[]>(
-					InkBallPath.GetPathsAsJavaScriptArrayForPage2(points_n_paths.Paths)));
+					InkBallPath.GetPathsAsJavaScriptArrayForPage2(points_n_paths.Paths),
+					new JsonSerializerOptions { ReadCommentHandling = JsonCommentHandling.Skip, AllowTrailingCommas = true }));
 
 				//Assert
 				Assert.Equal(dto.Points, json_points1);
