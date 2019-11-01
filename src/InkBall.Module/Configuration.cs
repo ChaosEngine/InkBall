@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.DependencyInjection;
@@ -101,14 +102,21 @@ namespace InkBall.Module
 			return services;
 		}
 
-		public static void PrepareSignalRForInkBall(this HubRouteBuilder routes, string path = "")
+		/*public static void PrepareSignalRForInkBall(this HubRouteBuilder routes, string path = "")
 		{
 			routes.MapHub<InkBall.Module.Hubs.GameHub>(path + InkBall.Module.Hubs.GameHub.HubName);
 		}
 
-		/*public static void PrepareSignalRForInkBall(this Microsoft.AspNetCore.Routing.IEndpointRouteBuilder endpoints, string path = "")
+		public static void PrepareSignalRForInkBall(this IEndpointRouteBuilder endpoints, string path = "")
 		{
 			endpoints.MapHub<InkBall.Module.Hubs.GameHub>(path + InkBall.Module.Hubs.GameHub.HubName);
 		}*/
 	}
+
+	/*public class DummyStartup
+	{
+		static void Main(string[] args)
+		{
+		}
+	}*/
 }
