@@ -1,9 +1,5 @@
 "use strict";
 
-function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
-
-function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
-
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
@@ -596,204 +592,176 @@ var InkBallGame = function () {
       accessTokenFactory: tokenFactory
     }).withHubProtocol(hubProtocol).configureLogging(loggingLevel).build();
     this.g_SignalRConnection.serverTimeoutInMilliseconds = serverTimeoutInMilliseconds;
-    this.g_SignalRConnection.onclose(function () {
-      var _ref3 = _asyncToGenerator(regeneratorRuntime.mark(function _callee(err) {
-        return regeneratorRuntime.wrap(function _callee$(_context) {
-          while (1) {
-            switch (_context.prev = _context.next) {
-              case 0:
-                if (err !== null && err !== undefined) {
-                  LocalError(err);
-                  _this9.m_Screen.style.cursor = "not-allowed";
-                  _this9.iConnErrCount++;
-                  setTimeout(function () {
-                    return _this9.Connect();
-                  }, 4000 + _this9.iExponentialBackOffMillis * Math.max(_this9.iConnErrCount, 5));
-                }
+    this.g_SignalRConnection.onclose(function _callee(err) {
+      return regeneratorRuntime.async(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              if (err !== null && err !== undefined) {
+                LocalError(err);
+                _this9.m_Screen.style.cursor = "not-allowed";
+                _this9.iConnErrCount++;
+                setTimeout(function () {
+                  return _this9.Connect();
+                }, 4000 + _this9.iExponentialBackOffMillis * Math.max(_this9.iConnErrCount, 5));
+              }
 
-              case 1:
-              case "end":
-                return _context.stop();
-            }
+            case 1:
+            case "end":
+              return _context.stop();
           }
-        }, _callee);
-      }));
-
-      return function (_x) {
-        return _ref3.apply(this, arguments);
-      };
-    }());
+        }
+      });
+    });
   }
 
   _createClass(InkBallGame, [{
     key: "GetPlayerPointsAndPaths",
-    value: function () {
-      var _GetPlayerPointsAndPaths = _asyncToGenerator(regeneratorRuntime.mark(function _callee2() {
-        return regeneratorRuntime.wrap(function _callee2$(_context2) {
-          while (1) {
-            switch (_context2.prev = _context2.next) {
-              case 0:
-                if (this.m_bPointsAndPathsLoaded) {
-                  _context2.next = 5;
-                  break;
-                }
-
-                _context2.next = 3;
-                return this.g_SignalRConnection.invoke("GetPlayerPointsAndPaths", this.m_bViewOnly, this.g_iGameID).then(function (ppDTO) {
-                  var path_and_point = PlayerPointsAndPathsDTO.Deserialize(ppDTO);
-                  if (path_and_point.Points !== undefined) this.SetAllPoints(path_and_point.Points);
-                  if (path_and_point.Paths !== undefined) this.SetAllPaths2(path_and_point.Paths);
-                  this.m_bPointsAndPathsLoaded = true;
-                  return true;
-                }.bind(this));
-
-              case 3:
-                _context2.next = 6;
+    value: function GetPlayerPointsAndPaths() {
+      return regeneratorRuntime.async(function GetPlayerPointsAndPaths$(_context2) {
+        while (1) {
+          switch (_context2.prev = _context2.next) {
+            case 0:
+              if (this.m_bPointsAndPathsLoaded) {
+                _context2.next = 5;
                 break;
+              }
 
-              case 5:
-                return _context2.abrupt("return", false);
+              _context2.next = 3;
+              return regeneratorRuntime.awrap(this.g_SignalRConnection.invoke("GetPlayerPointsAndPaths", this.m_bViewOnly, this.g_iGameID).then(function (ppDTO) {
+                var path_and_point = PlayerPointsAndPathsDTO.Deserialize(ppDTO);
+                if (path_and_point.Points !== undefined) this.SetAllPoints(path_and_point.Points);
+                if (path_and_point.Paths !== undefined) this.SetAllPaths2(path_and_point.Paths);
+                this.m_bPointsAndPathsLoaded = true;
+                return true;
+              }.bind(this)));
 
-              case 6:
-              case "end":
-                return _context2.stop();
-            }
+            case 3:
+              _context2.next = 6;
+              break;
+
+            case 5:
+              return _context2.abrupt("return", false);
+
+            case 6:
+            case "end":
+              return _context2.stop();
           }
-        }, _callee2, this);
-      }));
-
-      function GetPlayerPointsAndPaths() {
-        return _GetPlayerPointsAndPaths.apply(this, arguments);
-      }
-
-      return GetPlayerPointsAndPaths;
-    }()
+        }
+      }, null, this);
+    }
   }, {
     key: "Connect",
-    value: function () {
-      var _Connect = _asyncToGenerator(regeneratorRuntime.mark(function _callee5() {
-        var _this10 = this;
+    value: function Connect() {
+      var _this10 = this;
 
-        var json, settings;
-        return regeneratorRuntime.wrap(function _callee5$(_context5) {
-          while (1) {
-            switch (_context5.prev = _context5.next) {
-              case 0:
-                _context5.prev = 0;
-                _context5.next = 3;
-                return this.g_SignalRConnection.start();
+      var json, settings;
+      return regeneratorRuntime.async(function Connect$(_context5) {
+        while (1) {
+          switch (_context5.prev = _context5.next) {
+            case 0:
+              _context5.prev = 0;
+              _context5.next = 3;
+              return regeneratorRuntime.awrap(this.g_SignalRConnection.start());
 
-              case 3:
-                this.iConnErrCount = 0;
-                LocalLog('connected; iConnErrCount = ' + this.iConnErrCount);
+            case 3:
+              this.iConnErrCount = 0;
+              LocalLog('connected; iConnErrCount = ' + this.iConnErrCount);
 
-                if (!(this.m_bViewOnly === false)) {
-                  _context5.next = 14;
-                  break;
-                }
-
-                if (!(sessionStorage.getItem("ApplicationUserSettings") === null)) {
-                  _context5.next = 11;
-                  break;
-                }
-
-                _context5.next = 9;
-                return this.g_SignalRConnection.invoke("GetUserSettings").then(function (settings) {
-                  LocalLog(settings);
-
-                  if (settings) {
-                    settings = ApplicationUserSettings.Deserialize(settings);
-                    var to_store = ApplicationUserSettings.Serialize(settings);
-                    sessionStorage.setItem("ApplicationUserSettings", to_store);
-                  }
-
-                  return settings;
-                }.bind(this)).then(function () {
-                  var _ref4 = _asyncToGenerator(regeneratorRuntime.mark(function _callee3(settings) {
-                    return regeneratorRuntime.wrap(function _callee3$(_context3) {
-                      while (1) {
-                        switch (_context3.prev = _context3.next) {
-                          case 0:
-                            this.m_ApplicationUserSettings = new ApplicationUserSettings(settings.DesktopNotifications);
-                            _context3.next = 3;
-                            return this.GetPlayerPointsAndPaths();
-
-                          case 3:
-                            return _context3.abrupt("return", _context3.sent);
-
-                          case 4:
-                          case "end":
-                            return _context3.stop();
-                        }
-                      }
-                    }, _callee3, this);
-                  }));
-
-                  return function (_x2) {
-                    return _ref4.apply(this, arguments);
-                  };
-                }().bind(this)).then(_asyncToGenerator(regeneratorRuntime.mark(function _callee4() {
-                  return regeneratorRuntime.wrap(function _callee4$(_context4) {
-                    while (1) {
-                      switch (_context4.prev = _context4.next) {
-                        case 0:
-                        case "end":
-                          return _context4.stop();
-                      }
-                    }
-                  }, _callee4);
-                })));
-
-              case 9:
+              if (!(this.m_bViewOnly === false)) {
                 _context5.next = 14;
                 break;
+              }
 
-              case 11:
-                json = sessionStorage.getItem("ApplicationUserSettings");
-                settings = ApplicationUserSettings.Deserialize(json);
-                this.m_ApplicationUserSettings = new ApplicationUserSettings(settings.DesktopNotifications);
-
-              case 14:
-                if (this.m_bPointsAndPathsLoaded) {
-                  _context5.next = 17;
-                  break;
-                }
-
-                _context5.next = 17;
-                return this.GetPlayerPointsAndPaths();
-
-              case 17:
-                if (this.m_ApplicationUserSettings !== null && this.m_ApplicationUserSettings.DesktopNotifications === true) {
-                  this.SetupNotifications();
-                }
-
-                _context5.next = 26;
+              if (!(sessionStorage.getItem("ApplicationUserSettings") === null)) {
+                _context5.next = 11;
                 break;
+              }
 
-              case 20:
-                _context5.prev = 20;
-                _context5.t0 = _context5["catch"](0);
-                LocalError(_context5.t0 + '; iConnErrCount = ' + this.iConnErrCount);
-                this.m_Screen.style.cursor = "not-allowed";
-                this.iConnErrCount++;
-                setTimeout(function () {
-                  return _this10.Connect();
-                }, 4000 + this.iExponentialBackOffMillis * Math.max(this.iConnErrCount, 5));
+              _context5.next = 9;
+              return regeneratorRuntime.awrap(this.g_SignalRConnection.invoke("GetUserSettings").then(function (settings) {
+                LocalLog(settings);
 
-              case 26:
-              case "end":
-                return _context5.stop();
-            }
+                if (settings) {
+                  settings = ApplicationUserSettings.Deserialize(settings);
+                  var to_store = ApplicationUserSettings.Serialize(settings);
+                  sessionStorage.setItem("ApplicationUserSettings", to_store);
+                }
+
+                return settings;
+              }.bind(this)).then(function _callee2(settings) {
+                return regeneratorRuntime.async(function _callee2$(_context3) {
+                  while (1) {
+                    switch (_context3.prev = _context3.next) {
+                      case 0:
+                        this.m_ApplicationUserSettings = new ApplicationUserSettings(settings.DesktopNotifications);
+                        _context3.next = 3;
+                        return regeneratorRuntime.awrap(this.GetPlayerPointsAndPaths());
+
+                      case 3:
+                        return _context3.abrupt("return", _context3.sent);
+
+                      case 4:
+                      case "end":
+                        return _context3.stop();
+                    }
+                  }
+                }, null, this);
+              }.bind(this)).then(function _callee3() {
+                return regeneratorRuntime.async(function _callee3$(_context4) {
+                  while (1) {
+                    switch (_context4.prev = _context4.next) {
+                      case 0:
+                      case "end":
+                        return _context4.stop();
+                    }
+                  }
+                });
+              }));
+
+            case 9:
+              _context5.next = 14;
+              break;
+
+            case 11:
+              json = sessionStorage.getItem("ApplicationUserSettings");
+              settings = ApplicationUserSettings.Deserialize(json);
+              this.m_ApplicationUserSettings = new ApplicationUserSettings(settings.DesktopNotifications);
+
+            case 14:
+              if (this.m_bPointsAndPathsLoaded) {
+                _context5.next = 17;
+                break;
+              }
+
+              _context5.next = 17;
+              return regeneratorRuntime.awrap(this.GetPlayerPointsAndPaths());
+
+            case 17:
+              if (this.m_ApplicationUserSettings !== null && this.m_ApplicationUserSettings.DesktopNotifications === true) {
+                this.SetupNotifications();
+              }
+
+              _context5.next = 26;
+              break;
+
+            case 20:
+              _context5.prev = 20;
+              _context5.t0 = _context5["catch"](0);
+              LocalError(_context5.t0 + '; iConnErrCount = ' + this.iConnErrCount);
+              this.m_Screen.style.cursor = "not-allowed";
+              this.iConnErrCount++;
+              setTimeout(function () {
+                return _this10.Connect();
+              }, 4000 + this.iExponentialBackOffMillis * Math.max(this.iConnErrCount, 5));
+
+            case 26:
+            case "end":
+              return _context5.stop();
           }
-        }, _callee5, this, [[0, 20]]);
-      }));
-
-      function Connect() {
-        return _Connect.apply(this, arguments);
-      }
-
-      return Connect;
-    }()
+        }
+      }, null, this, [[0, 20]]);
+    }
   }, {
     key: "SetupNotifications",
     value: function SetupNotifications() {
@@ -1541,11 +1509,11 @@ var InkBallGame = function () {
         var _points = this.m_Line.$GetPointsString();
 
         var i = 0;
-        var _x3 = _points[i],
+        var _x = _points[i],
             _y = _points[i + 1];
-        _x3 /= this.m_iGridSizeX;
+        _x /= this.m_iGridSizeX;
         _y /= this.m_iGridSizeY;
-        var p0 = this.m_Points.get(_y * this.m_iGridWidth + _x3);
+        var p0 = this.m_Points.get(_y * this.m_iGridWidth + _x);
         if (p0 !== undefined) p0.$SetStatus(StatusEnum.POINT_IN_PATH);
         this.m_Lines[this.m_Lines.length] = this.m_Line;
         this.m_iLastX = this.m_iLastY = -1;
