@@ -61,7 +61,7 @@ namespace InkBall.Module.Model
 			}
 		}
 
-		internal ValueConverter TimeStampValueConverterFromProvider(string activeProvider)
+		internal static ValueConverter TimeStampValueConverterFromProvider(string activeProvider)
 		{
 			switch (activeProvider)
 			{

@@ -6,7 +6,7 @@
 
 	DefineSection(commonUIConfigureOptions.Value.HeadElementsSectionName, async () =>
 	{
-		WriteLiteral($"<link rel='stylesheet' href='{Url.Content("~/css/inkball.css")}' />");
+		WriteLiteral($"<link rel='stylesheet' href='{Url.Content(Constants.WwwIncludeCSS)}' />");
 	});
 
 
@@ -92,13 +92,3 @@
 		</div>
 	</div>
 </div>
-
-
-@*
-	@{
-		DefineSection(commonUIConfigureOptions.Value.ScriptsSectionName, async () =>
-		{
-			WriteLiteral($"<script type='text/javascript' src='{Url.Content("~/js/inkball.js")}'></script>");
-		});
-	}
-*@

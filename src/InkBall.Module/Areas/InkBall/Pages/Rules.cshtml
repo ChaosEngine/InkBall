@@ -6,7 +6,7 @@
 
 	DefineSection(commonUIConfigureOptions.Value.HeadElementsSectionName, async () =>
 	{
-		WriteLiteral($"<link rel='stylesheet' href='{Url.Content("~/css/inkball.css")}' />");
+		WriteLiteral($"<link rel='stylesheet' href='{Url.Content(Constants.WwwIncludeCSS)}' />");
 	});
 }
 
@@ -19,4 +19,3 @@
 	<li>One can not put dots inside surrounded groups</li>
 	<li>There must be at least one oponent dots to surround</li>
 </ol>
-

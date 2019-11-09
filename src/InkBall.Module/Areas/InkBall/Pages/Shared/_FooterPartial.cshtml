@@ -3,6 +3,6 @@ footer
 @{
 	DefineSection(commonUIConfigureOptions.Value.ScriptsSectionName, async () =>
 	{
-		WriteLiteral($"<script type='text/javascript' src='{Url.Content("~/js/inkball.js")}'></script>");
+		WriteLiteral($"<script type='text/javascript' src='{Url.Content(Constants.WwwIncludeJS)}'></script>");
 	});
 }

@@ -3,6 +3,6 @@ header
 @{
 	DefineSection(commonUIConfigureOptions.Value.HeadElementsSectionName, async () =>
 	{
-		WriteLiteral($"<link rel='stylesheet' href='{Url.Content("~/css/inkball.css")}' />");
+		WriteLiteral($"<link rel='stylesheet' href='{Url.Content(Constants.WwwIncludeCSS)}' />");
 	});
 }
