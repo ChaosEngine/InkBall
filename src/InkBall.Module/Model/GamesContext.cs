@@ -749,17 +749,17 @@ namespace InkBall.Module.Model
 
 		private static InkBallPath LoadPointsInPathFromJson(InkBallPath path)
 		{
-			var pathVM_fromJson = JsonSerializer.Deserialize<InkBallPathViewModel>(path.PointsAsString);
-			path.InkBallPoint = pathVM_fromJson.InkBallPoint.Select(c => new InkBallPoint
-			{
-				iId = c.iId,
-				iGameId = c.iGameId,
-				iPlayerId = c.iPlayerId,
-				iX = c.iX,
-				iY = c.iY,
-				Status = c.Status,
-				iEnclosingPathId = c.iEnclosingPathId
-			}).ToList();
+			path.InkBallPoint = JsonSerializer.Deserialize<InkBallPathViewModel>(path.PointsAsString)
+				.InkBallPoint.Select(c => new InkBallPoint
+				{
+					iId = c.iId,
+					iGameId = c.iGameId,
+					iPlayerId = c.iPlayerId,
+					iX = c.iX,
+					iY = c.iY,
+					Status = c.Status,
+					iEnclosingPathId = c.iEnclosingPathId
+				}).ToList();
 
 			return path;
 		}
@@ -769,18 +769,22 @@ namespace InkBall.Module.Model
 		{
 			if (deserializeJsonPath)
 			{
-				return await InkBallPath//.Include(x => x.InkBallPointsInPath)//uncomment for LoadPointsInPathFromRelationTable method
+				var paths = await InkBallPath//.Include(x => x.InkBallPointsInPath)//uncomment for LoadPointsInPathFromRelationTable method
 					.Where(pa => pa.iGameId == iGameID)
-					// .Select(m => LoadPointsInPathFromRelationTable(m))
-					.Select(m => LoadPointsInPathFromJson(m))
+					//// .Select(m => LoadPointsInPathFromRelationTable(m))
+					//.Select(m => LoadPointsInPathFromJson(m))
 					.ToListAsync(token);
+
+				foreach (var pa in paths)
+					LoadPointsInPathFromJson(pa);
+
+				return paths;
 			}
 			else
 			{
 				return await InkBallPath//.Include(x => x.InkBallPointsInPath)//uncomment for LoadPointsInPathFromRelationTable method
 					.Where(pa => pa.iGameId == iGameID)
 					// .Select(m => LoadPointsInPathFromRelationTable(m))
-					// .Select(m => LoadPointsInPathFromJson(m))
 					.ToListAsync(token);
 			}
 		}
