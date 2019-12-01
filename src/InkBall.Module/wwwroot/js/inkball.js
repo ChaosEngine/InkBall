@@ -827,6 +827,10 @@ class InkBallGame {
 	}
 
 	SetPoint(iX, iY, iStatus) {
+		if (this.m_Points.has(iY * this.m_iGridWidth + iX)) {
+			// debugger;
+			return;
+		}
 		let x = iX * this.m_iGridSizeX;
 		let y = iY * this.m_iGridSizeY;
 

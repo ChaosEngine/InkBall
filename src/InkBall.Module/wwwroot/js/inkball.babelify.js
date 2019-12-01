@@ -1006,6 +1006,10 @@ var InkBallGame = function () {
   }, {
     key: "SetPoint",
     value: function SetPoint(iX, iY, iStatus) {
+      if (this.m_Points.has(iY * this.m_iGridWidth + iX)) {
+        return;
+      }
+
       var x = iX * this.m_iGridSizeX;
       var y = iY * this.m_iGridSizeY;
       var oval = $createOval(this.m_PointRadius, 'true');

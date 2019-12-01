@@ -250,6 +250,7 @@ namespace InkBall.Tests
 				await hub_P1.OnConnectedAsync();
 				await hub_P2.OnConnectedAsync();
 
+				int count0 = await db.InkBallPoint.CountAsync(p => p.iGameId == 1, token);
 				await hub_P1.ClientToServerPoint(new InkBallPointViewModel
 				{
 					iX = 7,
@@ -258,6 +259,8 @@ namespace InkBall.Tests
 					iGameId = 1,
 					iPlayerId = 1
 				});
+				int count1 = await db.InkBallPoint.CountAsync(p => p.iGameId == 1, token);
+				Assert.Equal(count0 + 1, count1);
 				await hub_P2.ClientToServerPoint(new InkBallPointViewModel
 				{
 					iX = 8,
@@ -266,6 +269,8 @@ namespace InkBall.Tests
 					iGameId = 1,
 					iPlayerId = 2
 				});
+				int count2 = await db.InkBallPoint.CountAsync(p => p.iGameId == 1, token);
+				Assert.Equal(count1 + 1, count2);
 
 
 				//Assert
@@ -299,7 +304,7 @@ namespace InkBall.Tests
 
 				for (int i = p1_pts.GetLength(0) - 2; i >= 0; i--)
 				{
-int count0 = await db.InkBallPoint.CountAsync(p => p.iGameId == 1, token);
+					count0 = await db.InkBallPoint.CountAsync(p => p.iGameId == 1, token);
 					await hub_P1.ClientToServerPoint(new InkBallPointViewModel
 					{
 						iGameId = 1,
@@ -308,8 +313,8 @@ int count0 = await db.InkBallPoint.CountAsync(p => p.iGameId == 1, token);
 						iY = p1_pts[i, 1],
 						Status = InkBallPoint.StatusEnum.POINT_FREE_RED,
 					});
-int count1 = await db.InkBallPoint.CountAsync(p => p.iGameId == 1, token);
-Assert.Equal(count0 + 1, count1);
+					count1 = await db.InkBallPoint.CountAsync(p => p.iGameId == 1, token);
+					Assert.Equal(count0 + 1, count1);
 					await hub_P2.ClientToServerPoint(new InkBallPointViewModel
 					{
 						iGameId = 1,
@@ -318,10 +323,10 @@ Assert.Equal(count0 + 1, count1);
 						iY = p2_pts[i, 1],
 						Status = InkBallPoint.StatusEnum.POINT_FREE_BLUE,
 					});
-int count2 = await db.InkBallPoint.CountAsync(p => p.iGameId == 1, token);
-Assert.Equal(count1 + 1, count2);
+					count2 = await db.InkBallPoint.CountAsync(p => p.iGameId == 1, token);
+					Assert.Equal(count1 + 1, count2);
 				}
-int count3 = await db.InkBallPoint.CountAsync(p => p.iGameId == 1, token);
+				int count3 = await db.InkBallPoint.CountAsync(p => p.iGameId == 1, token);
 				await hub_P1.ClientToServerPoint(new InkBallPointViewModel
 				{
 					iGameId = 1,
@@ -330,8 +335,8 @@ int count3 = await db.InkBallPoint.CountAsync(p => p.iGameId == 1, token);
 					iY = p2_owned[0, 1],
 					Status = InkBallPoint.StatusEnum.POINT_FREE_RED,
 				});
-int count4 = await db.InkBallPoint.CountAsync(p => p.iGameId == 1, token);
-Assert.Equal(count3 + 1, count4);
+				int count4 = await db.InkBallPoint.CountAsync(p => p.iGameId == 1, token);
+				Assert.Equal(count3 + 1, count4);
 				await hub_P2.ClientToServerPoint(new InkBallPointViewModel
 				{
 					iGameId = 1,
@@ -341,8 +346,8 @@ Assert.Equal(count3 + 1, count4);
 					Status = InkBallPoint.StatusEnum.POINT_FREE_BLUE,
 				});
 
-int count5 = await db.InkBallPoint.CountAsync(p => p.iGameId == 1, token);
-Assert.Equal(count4 + 1, count5);
+				int count5 = await db.InkBallPoint.CountAsync(p => p.iGameId == 1, token);
+				Assert.Equal(count4 + 1, count5);
 
 				//Assert
 				await hub_P1.ClientToServerPath(new InkBallPathViewModel
@@ -352,8 +357,8 @@ Assert.Equal(count4 + 1, count5);
 					PointsAsString = "8,24 9,25 8,26 7,25 8,24",
 					OwnedPointsAsString = "8,25"
 				});
-int count6 = await db.InkBallPoint.CountAsync(p => p.iGameId == 1, token);
-Assert.Equal(count5, count6);
+				int count6 = await db.InkBallPoint.CountAsync(p => p.iGameId == 1, token);
+				Assert.Equal(count5, count6);
 				await hub_P2.ClientToServerPath(new InkBallPathViewModel
 				{
 					iGameId = 1,
@@ -361,8 +366,8 @@ Assert.Equal(count5, count6);
 					PointsAsString = "12,24 13,25 12,26 11,25 12,24",
 					OwnedPointsAsString = "12,25"
 				});
-int count7 = await db.InkBallPoint.CountAsync(p => p.iGameId == 1, token);
-Assert.Equal(count6, count7);
+				int count7 = await db.InkBallPoint.CountAsync(p => p.iGameId == 1, token);
+				Assert.Equal(count6, count7);
 			}
 		}
 

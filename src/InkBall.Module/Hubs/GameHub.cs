@@ -365,7 +365,6 @@ namespace InkBall.Module.Hubs
 				{
 					try
 					{
-int before = await _dbContext.InkBallPoint.CountAsync(p => p.iGameId == ThisGame.iId, token);
 						await _dbContext.InkBallPoint.AddAsync(db_point, token);
 						ThisGame.bIsPlayer1Active = !ThisGame.bIsPlayer1Active;
 
@@ -375,8 +374,7 @@ int before = await _dbContext.InkBallPoint.CountAsync(p => p.iGameId == ThisGame
 // 						throw new Exception($"FAKE EXCEPTION {new_point}");
 // #endif
 						await _dbContext.SaveChangesAsync(token);
-int after = await _dbContext.InkBallPoint.CountAsync(p => p.iGameId == ThisGame.iId, token);
-int diff_should_be_one = after - before;
+
 						trans.Commit();
 					}
 					catch (Exception ex)

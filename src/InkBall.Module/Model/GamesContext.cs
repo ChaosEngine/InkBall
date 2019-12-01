@@ -311,7 +311,13 @@ namespace InkBall.Module.Model
 				entity.HasIndex(e => e.iPlayerId)
 					.HasName("IDX_InkBallPoint_ByPlayer");
 
-				entity.Property(e => e.iId).HasColumnName("iId");
+				entity.Property(e => e.iId).HasColumnName("iId")
+					.ValueGeneratedOnAdd()
+					.HasAnnotation("Sqlite:Autoincrement", true)
+					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
+					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
+					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn);
 
 				entity.Property(e => e.iEnclosingPathId).HasColumnName("iEnclosingPathId");
 
@@ -769,20 +775,19 @@ namespace InkBall.Module.Model
 		{
 			if (deserializeJsonPath)
 			{
-				var paths = await InkBallPath//.Include(x => x.InkBallPointsInPath)//uncomment for LoadPointsInPathFromRelationTable method
+				var paths = await InkBallPath.AsNoTracking()
+					//.Include(x => x.InkBallPointsInPath)//uncomment for LoadPointsInPathFromRelationTable method
 					.Where(pa => pa.iGameId == iGameID)
-					//// .Select(m => LoadPointsInPathFromRelationTable(m))
-					//.Select(m => LoadPointsInPathFromJson(m))
+					// .Select(m => LoadPointsInPathFromRelationTable(m))
+					.Select(m => LoadPointsInPathFromJson(m))
 					.ToListAsync(token);
-
-				foreach (var pa in paths)
-					LoadPointsInPathFromJson(pa);
 
 				return paths;
 			}
 			else
 			{
-				return await InkBallPath//.Include(x => x.InkBallPointsInPath)//uncomment for LoadPointsInPathFromRelationTable method
+				return await InkBallPath.AsNoTracking()
+					//.Include(x => x.InkBallPointsInPath)//uncomment for LoadPointsInPathFromRelationTable method
 					.Where(pa => pa.iGameId == iGameID)
 					// .Select(m => LoadPointsInPathFromRelationTable(m))
 					.ToListAsync(token);
