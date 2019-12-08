@@ -2,19 +2,22 @@
 @inject Microsoft.Extensions.Options.IOptions<InkBallOptions> commonUIConfigureOptions
 @model HomeModel
 @{
-	ViewData["Title"] = "Home";
+    ViewData["Title"] = "Home";
 
-	DefineSection(commonUIConfigureOptions.Value.HeadElementsSectionName, async () =>
-	{
-		WriteLiteral($"<link rel='stylesheet' href='{Url.Content(Constants.WwwIncludeCSS)}' />");
-	});
+    if (!string.IsNullOrEmpty(commonUIConfigureOptions.Value.HeadElementsSectionName))
+    {
+		DefineSection(commonUIConfigureOptions.Value.HeadElementsSectionName, async () =>
+		{
+			WriteLiteral($"<link rel='stylesheet' href='{Url.Content(Constants.WwwIncludeCSS)}' />");
+		});
+    }
 
 
-	var bIsLoggedIn = (Model.GameUser != null) ? true : false;
-	var bIsCurrentGameOk = Model.Game != null ? true : false;
+    var bIsLoggedIn = (Model.GameUser != null) ? true : false;
+    var bIsCurrentGameOk = Model.Game != null ? true : false;
 
-	if (bIsLoggedIn)
-	{
+    if (bIsLoggedIn)
+    {
 		<p class="inkhome">Welcome @Model.UserName</p>
 	}
 	else

@@ -4,21 +4,24 @@
 @inject Microsoft.AspNetCore.Authorization.IAuthorizationService authorization
 @model GamesModel
 @{
-	ViewData["Title"] = "Game list";
+    ViewData["Title"] = "Game list";
 
-	DefineSection(commonUIConfigureOptions.Value.HeadElementsSectionName, async () =>
-	{
-		WriteLiteral($"<link rel='stylesheet' href='{Url.Content(Constants.WwwIncludeCSS)}' />");
-	});
+    if (!string.IsNullOrEmpty(commonUIConfigureOptions.Value.HeadElementsSectionName))
+    {
+        DefineSection(commonUIConfigureOptions.Value.HeadElementsSectionName, async () =>
+        {
+            WriteLiteral($"<link rel='stylesheet' href='{Url.Content(Constants.WwwIncludeCSS)}' />");
+        });
+    }
 
-	var sExternalUserID = Model.GameUser.sExternalId;
-	var bIsCurrentGameOk = Model.Game != null;
-	//var bCanViewOtherPlayerGames = User.HasClaim("role", "InkBallViewOtherPlayerGames");
-	var bCanViewOtherPlayerGames = (await authorization.AuthorizeAsync(User, null, Constants.InkBallViewOtherGamesPolicyName)).Succeeded;
+    var sExternalUserID = Model.GameUser.sExternalId;
+    var bIsCurrentGameOk = Model.Game != null;
+    //var bCanViewOtherPlayerGames = User.HasClaim("role", "InkBallViewOtherPlayerGames");
+    var bCanViewOtherPlayerGames = (await authorization.AuthorizeAsync(User, null, Constants.InkBallViewOtherGamesPolicyName)).Succeeded;
 
-	if (!string.IsNullOrEmpty(Model.Message))
-	{
-		var statusMessageClass = Model.Message.Contains("Error") ? "danger" : "success";
+    if (!string.IsNullOrEmpty(Model.Message))
+    {
+        var statusMessageClass = Model.Message.Contains("Error") ? "danger" : "success";
 		<div class="alert alert-@statusMessageClass alert-dismissible fade show inkgames" role="alert">
 			<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
 			@Model.Message

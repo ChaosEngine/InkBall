@@ -4,32 +4,34 @@
 @inject Microsoft.Extensions.Options.IOptions<InkBallOptions> commonUIConfigureOptions
 @model IndexModel
 @{
-	ViewData["Title"] = "Game";
+    ViewData["Title"] = "Game";
 
-	DefineSection(commonUIConfigureOptions.Value.HeadElementsSectionName, async () =>
-	{
-		WriteLiteral($"<link rel='stylesheet' href='{Url.Content(Constants.WwwIncludeCSS)}' />");
-	});
+    if (!string.IsNullOrEmpty(commonUIConfigureOptions.Value.HeadElementsSectionName))
+    {
+        DefineSection(commonUIConfigureOptions.Value.HeadElementsSectionName, async () =>
+        {
+            WriteLiteral($"<link rel='stylesheet' href='{Url.Content(Constants.WwwIncludeCSS)}' />");
+        });
+    }
 
 
-
-	string P2Name = Model.Game.Player2 != null ? Model.Game.Player2?.User?.UserName : "???";
-	string surrender_win_cancel_name;
-	if(Model.Game.Player2 != null)
-	{
-		if(Model.Game.GetOtherPlayer().IsLastMoveOverdue() && Model.Game.IsThisPlayerActive())
-		{
-			surrender_win_cancel_name = "win";
-		}
-		else
-		{
-			surrender_win_cancel_name = "surrender";
-		}
-	}
-	else
-	{
-		surrender_win_cancel_name = "cancel";
-	}
+    string P2Name = Model.Game.Player2 != null ? Model.Game.Player2?.User?.UserName : "???";
+    string surrender_win_cancel_name;
+    if(Model.Game.Player2 != null)
+    {
+        if(Model.Game.GetOtherPlayer().IsLastMoveOverdue() && Model.Game.IsThisPlayerActive())
+        {
+            surrender_win_cancel_name = "win";
+        }
+        else
+        {
+            surrender_win_cancel_name = "surrender";
+        }
+    }
+    else
+    {
+        surrender_win_cancel_name = "cancel";
+    }
 }
 <h3 class="inkgame">
 	This is Inball Game page
@@ -55,7 +57,7 @@
 		<div class="col-xs-6 col-sm-auto pl-0">
 			<input id="DrawMode" type="button" value="Draw lines" class='btn btn-primary' disabled />
 			<input id="CancelPath" type="button" value="Cancel path" class='btn btn-primary' disabled />
-			<input id="Test" type="button" value="Test" class='btn btn-warning' />
+			<input id="StopAndDraw" type="button" value="Stop and Draw" class='btn btn-warning' disabled />
 		</div>
 	</form>
 	<div id="status" class="row">
@@ -106,7 +108,7 @@
 			gameType, bPlayingWithRed, bPlayerActive, boardSize, isReadonly
 		);
 		game.StartSignalRConnection(iGameID, iPlayerID, loadPointsAndPathsFromSignalR, '#messagesList', '#sendButton', '#messageInput');
-		game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#DrawMode', '#CancelPath', '#Pause');
+		game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#DrawMode', '#CancelPath', '#Pause', '#StopAndDraw');
 
 		@if(Model.PlayerPointsAndPaths.Points != null)
 		{
@@ -126,31 +128,34 @@
 	});
 </script>
 @{
-	DefineSection(commonUIConfigureOptions.Value.ScriptsSectionName, async () =>
-	{
-		WriteLiteral(
-			(env.IsDevelopment() ?
-			$"<script src='{Url.Content("~/lib/signalr/dist/browser/signalr.js")}'></script>\r" +
-			(commonUIConfigureOptions.Value.UseMessagePackBinaryTransport ? $"<script src='{Url.Content("~/lib/msgpack5/dist/msgpack5.js")}'></script>\r" +
-			$"<script src='{Url.Content("~/lib/signalr-protocol-msgpack/dist/browser/signalr-protocol-msgpack.js")}'></script>\r" : "") +
-			$"<script async type='text/javascript' src='{Url.Content(Constants.WwwIncludeJSSvgVml)}'></script>\r"
-			:
-			@"<script src='https://cdn.jsdelivr.net/npm/@microsoft/signalr@3.1.0/dist/browser/signalr.min.js' integrity='sha256-rg2KSyzQ1v1QcXOuY50TdGTmfsnAmd50eTwhtKzie74=' crossorigin='anonymous'></script>" +
-			(commonUIConfigureOptions.Value.UseMessagePackBinaryTransport ? @"<script src='https://cdn.jsdelivr.net/npm/msgpack5@4.2.1/dist/msgpack5.min.js' integrity='sha256-mY/RhkCJfd98j3c5s1EcUDJdRzffTeKzEzFIaI/2KQg=' crossorigin='anonymous'></script>
-			<script src='https://cdn.jsdelivr.net/npm/@microsoft/signalr-protocol-msgpack@3.1.0/dist/browser/signalr-protocol-msgpack.min.js' integrity='sha256-aOON2bgN5+MvZXrVICzPTpVBlt8SmcEUWkymLO2mDcg=' crossorigin='anonymous'></script>" : "") +
-			$"<script async type='text/javascript' src='{Url.Content(Constants.WwwIncludeJSSvgVml)}'></script>") +
+    if (!string.IsNullOrEmpty(commonUIConfigureOptions.Value.ScriptsSectionName))
+    {
+        DefineSection(commonUIConfigureOptions.Value.ScriptsSectionName, async () =>
+        {
+            WriteLiteral(
+                (env.IsDevelopment() ?
+                $"<script src='{Url.Content("~/lib/signalr/dist/browser/signalr.js")}'></script>\r" +
+                (commonUIConfigureOptions.Value.UseMessagePackBinaryTransport ? $"<script src='{Url.Content("~/lib/msgpack5/dist/msgpack5.js")}'></script>\r" +
+                $"<script src='{Url.Content("~/lib/signalr-protocol-msgpack/dist/browser/signalr-protocol-msgpack.js")}'></script>\r" : "") +
+                $"<script async type='text/javascript' src='{Url.Content(Constants.WwwIncludeJSSvgVml)}'></script>\r"
+                :
+                @"<script src='https://cdn.jsdelivr.net/npm/@microsoft/signalr@3.1.0/dist/browser/signalr.min.js' integrity='sha256-rg2KSyzQ1v1QcXOuY50TdGTmfsnAmd50eTwhtKzie74=' crossorigin='anonymous'></script>" +
+                (commonUIConfigureOptions.Value.UseMessagePackBinaryTransport ? @"<script src='https://cdn.jsdelivr.net/npm/msgpack5@4.2.1/dist/msgpack5.min.js' integrity='sha256-mY/RhkCJfd98j3c5s1EcUDJdRzffTeKzEzFIaI/2KQg=' crossorigin='anonymous'></script>
+				<script src='https://cdn.jsdelivr.net/npm/@microsoft/signalr-protocol-msgpack@3.1.0/dist/browser/signalr-protocol-msgpack.min.js' integrity='sha256-aOON2bgN5+MvZXrVICzPTpVBlt8SmcEUWkymLO2mDcg=' crossorigin='anonymous'></script>" : "") +
+                $"<script async type='text/javascript' src='{Url.Content(Constants.WwwIncludeJSSvgVml)}'></script>") +
 
 
-			@"<script type='text/javascript'>
-			const doPolyfill = JSON.parse('" + commonUIConfigureOptions.Value.EnablePolyfill + @"'.toLowerCase());
-			const notIE11 = navigator.userAgent.indexOf('Trident') < 0;
-			if(!doPolyfill || notIE11) {
-				document.write(""<script async src='" + Url.Content(Constants.WwwIncludeJS) + @"'><\/script>"");
-			} else {
-				document.write(""<script src='https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/7.6.0/polyfill.js' integrity='sha256-jmSsX8km4AmoOLA5zpP5GEzk+YmxRj/xDAYlewpQ9qY=' crossorigin='anonymous'><\/script>"" +
-				""<script async src='" + Url.Content(Constants.WwwIncludeJSBabel) + @"'><\/script>"");
-			}
-			</script>"
-		);
-	});
+                @"<script type='text/javascript'>
+				const doPolyfill = JSON.parse('" + commonUIConfigureOptions.Value.EnablePolyfill + @"'.toLowerCase());
+				const notIE11 = navigator.userAgent.indexOf('Trident') < 0;
+				if(!doPolyfill || notIE11) {
+					document.write(""<script async src='" + Url.Content(Constants.WwwIncludeJS) + @"'><\/script>"");
+				} else {
+					document.write(""<script src='https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/7.6.0/polyfill.js' integrity='sha256-jmSsX8km4AmoOLA5zpP5GEzk+YmxRj/xDAYlewpQ9qY=' crossorigin='anonymous'><\/script>"" +
+					""<script async src='" + Url.Content(Constants.WwwIncludeJSBabel) + @"'><\/script>"");
+				}
+				</script>"
+            );
+        });
+    }
 }

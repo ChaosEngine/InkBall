@@ -1,8 +1,11 @@
 ﻿@inject Microsoft.Extensions.Options.IOptions<InkBallOptions> commonUIConfigureOptions
 footer
 @{
-	DefineSection(commonUIConfigureOptions.Value.ScriptsSectionName, async () =>
-	{
-		WriteLiteral($"<script type='text/javascript' src='{Url.Content(Constants.WwwIncludeJS)}'></script>");
-	});
+    if (!string.IsNullOrEmpty(commonUIConfigureOptions.Value.ScriptsSectionName))
+    {
+        DefineSection(commonUIConfigureOptions.Value.ScriptsSectionName, async () =>
+        {
+            WriteLiteral($"<script type='text/javascript' src='{Url.Content(Constants.WwwIncludeJS)}'></script>");
+        });
+    }
 }

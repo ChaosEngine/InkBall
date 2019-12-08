@@ -1,8 +1,11 @@
 ﻿@inject Microsoft.Extensions.Options.IOptions<InkBallOptions> commonUIConfigureOptions
 header
 @{
-	DefineSection(commonUIConfigureOptions.Value.HeadElementsSectionName, async () =>
-	{
-		WriteLiteral($"<link rel='stylesheet' href='{Url.Content(Constants.WwwIncludeCSS)}' />");
-	});
+    if (!string.IsNullOrEmpty(commonUIConfigureOptions.Value.HeadElementsSectionName))
+    {
+        DefineSection(commonUIConfigureOptions.Value.HeadElementsSectionName, async () =>
+        {
+            WriteLiteral($"<link rel='stylesheet' href='{Url.Content(Constants.WwwIncludeCSS)}' />");
+        });
+    }
 }

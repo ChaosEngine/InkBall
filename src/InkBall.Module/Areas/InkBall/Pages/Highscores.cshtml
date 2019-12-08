@@ -2,12 +2,15 @@
 @inject Microsoft.Extensions.Options.IOptions<InkBallOptions> commonUIConfigureOptions
 @model HighscoresModel
 @{
-	ViewData["Title"] = "Highscores";
+    ViewData["Title"] = "Highscores";
 
-	DefineSection(commonUIConfigureOptions.Value.HeadElementsSectionName, async () =>
-	{
-		WriteLiteral($"<link rel='stylesheet' href='{Url.Content(Constants.WwwIncludeCSS)}' />");
-	});
+    if (!string.IsNullOrEmpty(commonUIConfigureOptions.Value.HeadElementsSectionName))
+    {
+        DefineSection(commonUIConfigureOptions.Value.HeadElementsSectionName, async () =>
+        {
+            WriteLiteral($"<link rel='stylesheet' href='{Url.Content(Constants.WwwIncludeCSS)}' />");
+        });
+    }
 }
 
 <div class="container inkstats">

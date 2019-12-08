@@ -2,12 +2,15 @@
 @inject Microsoft.Extensions.Options.IOptions<InkBallOptions> commonUIConfigureOptions
 @model RulesModel
 @{
-	ViewData["Title"] = "Rules";
+    ViewData["Title"] = "Rules";
 
-	DefineSection(commonUIConfigureOptions.Value.HeadElementsSectionName, async () =>
-	{
-		WriteLiteral($"<link rel='stylesheet' href='{Url.Content(Constants.WwwIncludeCSS)}' />");
-	});
+    if (!string.IsNullOrEmpty(commonUIConfigureOptions.Value.HeadElementsSectionName))
+    {
+        DefineSection(commonUIConfigureOptions.Value.HeadElementsSectionName, async () =>
+        {
+            WriteLiteral($"<link rel='stylesheet' href='{Url.Content(Constants.WwwIncludeCSS)}' />");
+        });
+    }
 }
 
 
