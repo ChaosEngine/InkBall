@@ -80,6 +80,9 @@ if (SVG) {
 			let pts = this.getAttribute("points").split(" ");
 			return pts[0] === pts[pts.length - 1];
 		};
+		o.$GetLength = function () {
+			return this.getAttribute("points").split(" ").length;
+		};
 		//ch_added end
 		return o;
 	};
@@ -186,6 +189,9 @@ if (SVG) {
 		o.$GetIsClosed = function () {
 			let pts = this.m_sMyPoints.split(" ");
 			return pts[0] === pts[pts.length - 1];
+		};
+		o.$GetLength = function () {
+			return this.m_sMyPoints.split(" ").length;
 		};
 		//ch_added end
 		return o;

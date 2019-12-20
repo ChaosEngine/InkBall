@@ -1,6 +1,6 @@
 ﻿@page
 @using Microsoft.Extensions.Hosting
-@inject Microsoft.AspNetCore.Hosting.IHostingEnvironment env
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment env
 @inject Microsoft.Extensions.Options.IOptions<InkBallOptions> commonUIConfigureOptions
 @model IndexModel
 @{
@@ -55,9 +55,8 @@
 			<input id='SurrenderButton' type='submit' name='action' value="@surrender_win_cancel_name" class='btn btn-outline-primary' disabled />
 		</div>
 		<div class="col-xs-6 col-sm-auto pl-0">
-			<input id="DrawMode" type="button" value="Draw lines" class='btn btn-primary' disabled />
-			<input id="CancelPath" type="button" value="Cancel path" class='btn btn-primary' disabled />
 			<input id="StopAndDraw" type="button" value="Stop and Draw" class='btn btn-warning' disabled />
+			<input id="CancelPath" type="button" value="Cancel path" class='btn btn-primary' disabled />
 		</div>
 	</form>
 	<div id="status" class="row">
@@ -108,7 +107,7 @@
 			gameType, bPlayingWithRed, bPlayerActive, boardSize, isReadonly
 		);
 		game.StartSignalRConnection(iGameID, iPlayerID, loadPointsAndPathsFromSignalR, '#messagesList', '#sendButton', '#messageInput');
-		game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#DrawMode', '#CancelPath', '#Pause', '#StopAndDraw');
+		game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw');
 
 		@if(Model.PlayerPointsAndPaths.Points != null)
 		{
