@@ -42,7 +42,7 @@ namespace InkBall.Module.Model
 		where Point : IPoint
 		where Path : IPath<Point>
 	{
-		protected internal static TimeSpan _deactivationDelayInSeconds = TimeSpan.FromSeconds(120);
+		protected internal readonly static TimeSpan _deactivationDelayInSeconds = TimeSpan.FromSeconds(120);
 
 		[NotMapped]//Hide it from EF Core
 		[JsonPropertyName("bIsPlayer1")]//allow to serialize it
@@ -204,7 +204,7 @@ namespace InkBall.Module.Model
 
 
 				default:
-					throw new Exception("Wrong game type");
+					throw new ArgumentException("Wrong game type", nameof(this.GameType));
 			}
 		}
 
@@ -286,7 +286,7 @@ namespace InkBall.Module.Model
 
 
 				default:
-					throw new Exception("Wrong game type");
+					throw new ArgumentException("Wrong game type", nameof(this.GameType));
 			}
 		}
 	}

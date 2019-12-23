@@ -313,23 +313,25 @@ function CountPointsDebug(sSelector2Set) {
 	const tags = [
 		{
 			query: "circle:not([z-index])",
-			display: "circles"
+			display: "circles: %s, "
 		},
 		{
 			query: "polyline",
-			display: "lines"
+			display: "lines: %s, "
 		},
 		{
-			query: "circle[fill*='#']",
-			display: "intercepted"
+			query: "circle[fill='#DC143C']",
+			display: "intercepted(P1:%s, "
+		},
+		{
+			query: "circle[fill='#8A2BE2']",
+			display: "P2:%s)"
 		}
 	];
-	let tagMessage = "";
-	const aggregated = tags.map(function (tag) {
+	let aggregated = "";
+	tags.forEach(function (tag) {
 		const cnt = document.querySelectorAll(tag.query);
-		const res = tagMessage + tag.display + ":" + cnt.length;
-		tagMessage = " ";
-		return res;
+		aggregated += tag.display.replace('%s', cnt.length);
 	});
 
 	document.querySelector(sSelector2Set).innerHTML = 'SVGs by tags: ' + aggregated;
@@ -360,10 +362,12 @@ class InkBallGame {
 	 * @param {bool} bIsPlayerActive is this player acive now
 	 * @param {object} BoardSize defines logical width and height of grid size
 	 * @param {bool} bViewOnly only viewing the game no interaction
+	 * @param {number} pathAfterPointDrawAllowanceSecAmount is number of seconds, a player is allowed to start drawing path after putting point
 	 * @param {number} iTooLong2Duration too long wait duration
 	 */
 	constructor(sHubName, loggingLevel, hubProtocol, transportType, serverTimeoutInMilliseconds, tokenFactory, gameType,
-		bIsPlayingWithRed = true, bIsPlayerActive = true, BoardSize = { width: 32, height: 32 }, bViewOnly = false, iTooLong2Duration = 125) {
+		bIsPlayingWithRed = true, bIsPlayerActive = true, BoardSize = { width: 32, height: 32 }, bViewOnly = false,
+		pathAfterPointDrawAllowanceSecAmount = 60, iTooLong2Duration = 125) {
 
 		this.g_iGameID = null;
 		this.g_iPlayerID = null;
@@ -423,7 +427,7 @@ class InkBallGame {
 		this.m_MouseCursorOval = null;
 		this.m_ApplicationUserSettings = null;
 		this.m_TimerOpts = {
-			countdownSeconds: 30,
+			countdownSeconds: pathAfterPointDrawAllowanceSecAmount,
 			labelSelector: "#debug2",
 			initialStart: true,
 			countdownReachedHandler: this.CountDownReachedHandler.bind(this)
@@ -615,7 +619,7 @@ class InkBallGame {
 			const user = this.m_Player2Name.innerHTML;
 			let encodedMsg = InkBallPointViewModel.Format(user, point);
 
-			let li = document.createElement("li");
+			const li = document.createElement("li");
 			li.textContent = encodedMsg;
 			document.querySelector(sMsgListSel).appendChild(li);
 
@@ -631,7 +635,7 @@ class InkBallGame {
 				const user = this.m_Player2Name.innerHTML;
 				let encodedMsg = InkBallPathViewModel.Format(user, path);
 
-				let li = document.createElement("li");
+				const li = document.createElement("li");
 				li.textContent = encodedMsg;
 				document.querySelector(sMsgListSel).appendChild(li);
 
@@ -1190,154 +1194,6 @@ class InkBallGame {
 		}
 	}
 
-	/*AjaxResponseCallBack() {
-		if ((g_XmlHttp.readyState === 4 || g_XmlHttp.readyState === "complete") && g_XmlHttp.status === 200) {
-			let xml = g_XmlHttp.responseXML;
-			let response = xml.firstChild;
-			if (response.nodeType !== 1) response = response.nextSibling;
-			let resp_type = response.nodeName;
-
-			switch (resp_type) {
-				case 'WaitForPlayer':
-					{
-						let sP2Name = response.getElementsByTagName('P2Name').length > 0 ?
-							response.getElementsByTagName('P2Name')[0].firstChild.data : '';
-						let bActive = response.getElementsByTagName('Active')[0].firstChild.data === 'true'
-							? true : false;
-						if (bActive) {
-							if (sP2Name !== '') {
-								this.m_Player2Name.innerHTML = sP2Name;
-								this.m_SurrenderButton.value = 'surrender';
-							}
-							if (this.m_SurrenderButton.value === 'win')
-								this.m_SurrenderButton.value = 'surrender';
-							/////////////TODO: process last action///////////////
-
-							let last_move = response.getElementsByTagName('LastMove')[0];
-							last_move = last_move.firstChild;
-							switch (last_move.nodeName) {
-								case 'Point':
-									{
-										let x = parseInt(last_move.getAttribute('x'));
-										let y = parseInt(last_move.getAttribute('y'));
-										let iStatus = parseInt(last_move.getAttribute('status'));
-										this.SetPoint(x, y, iStatus);
-
-										this.m_bIsPlayerActive = true;
-										this.SetTimer(false);
-										this.ShowMobileStatus('Oponent has moved, your turn');
-									}
-									break;
-
-								case 'Path':
-									{
-										let path = last_move.firstChild.data;
-										let owned = response.getElementsByTagName('Owned')[0].firstChild.data;
-
-										this.SetPath(path,
-											(this.m_sDotColor === this.COLOR_RED ? true : false), false);
-
-										let Points = owned.split(" ");
-										let x, y, count = Points.length, p = null;
-										let point_status = (this.m_sDotColor === this.COLOR_RED ?
-											this.POINT_OWNED_BY_RED : this.POINT_OWNED_BY_BLUE);
-										let sOwnedCol = (this.m_sDotColor === this.COLOR_RED ? this.COLOR_OWNED_BLUE : this.COLOR_OWNED_RED);
-										for (let i = 0; i < count; ++i) {
-											p = Points[i].split(",");
-											x = parseInt(p[0]); y = parseInt(p[1]);
-											p = this.m_Points.get(y * this.m_iGridWidth + x);
-											if (p !== undefined) {
-												p.$SetStatus(point_status);
-												p.$SetFillColor(sOwnedCol);
-												p.$strokeColor(sOwnedCol);
-											}
-										}
-
-										this.m_bIsPlayerActive = true;
-										this.SetTimer(false);
-										this.ShowMobileStatus('Oponent has moved, your turn');
-									}
-									break;
-
-								default:
-									break;
-							}
-						}
-						else {
-							this.m_sMessage = 'Waiting for oponent move';
-							if (sP2Name !== '') {
-								this.m_Player2Name.innerHTML = sP2Name;
-								this.m_SurrenderButton.value = 'surrender';
-								this.ShowMobileStatus();
-							}
-						}
-					}
-					break;
-
-				case 'PutPoint':
-					this.m_bIsPlayerActive = false;
-					this.m_iSlowdownLevel = 0;
-					this.SetTimer(true);
-					break;
-
-				case 'PutPath':
-					{
-						//set starting point to POINT_IN_PATH to block further path closing with it
-						let i = 0, points = this.m_Line.$GetPointsString();
-						let x = points[i];
-						let y = points[i + 1];
-						x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
-						let p0 = this.m_Points.get(y * this.m_iGridWidth + x);
-						if (p0 !== undefined)
-							p0.$SetStatus(this.POINT_IN_PATH);
-
-						this.m_Lines[this.m_Lines.length] = this.m_Line;
-						this.m_iLastX = this.m_iLastY = -1;
-						this.m_Line = null;
-
-						this.m_bIsPlayerActive = false;
-						this.m_iSlowdownLevel = 0;
-						this.SetTimer(true);
-					}
-					break;
-
-				case 'InterruptGame':
-					{
-						//TODO: break this infinite loop after some 1 minute or so - bandwith prevention
-						//or maybe also make GameLoop run @ longer interval
-						this.SetTimer(false);
-						let msg = response.getElementsByTagName('msg').length > 0 ?
-							response.getElementsByTagName('msg')[0].firstChild.data : '';
-						if (msg === '')
-							alert('Game interrupted!');
-						else
-							alert(msg);
-						window.location.href = "Games";
-					}
-					break;
-
-				case 'WaitingForSecondPlayer':
-					//TODO: break this infinite loop after some 1 minute or so - bandwith prevention
-					//or maybe also make GameLoop run @ longer interval
-					//this.Debug('Oczekiwanie na podłączenie drugiego gracza', 1);
-					this.m_sMessage = 'Waiting for other player to connect';
-					break;
-
-				case 'Err':
-					{
-						let msg = response.getElementsByTagName('msg').length > 0 ?
-							response.getElementsByTagName('msg')[0].firstChild.data : 'unknown error';
-						alert(msg);
-						this.OnCancelClick();
-					}
-					break;
-
-				default:
-					break;
-			}
-		}
-	}*/
-
 	CountDownReachedHandler(label) {
 		if (label)
 			label.innerHTML = '';
@@ -1547,46 +1403,6 @@ class InkBallGame {
 				throw new Error("Wrong game type");
 		}
 	}
-
-	/*GameLoop() {
-		//act = 'action=WaitForPlayer';
-		//if(this.m_Player2Name.innerHTML === '???')	act = act + '&ShowP2Name=true';
-		let bP2NameUnknown = this.m_Player2Name.innerHTML === '???' ? true : false;
-
-		this.SendAsyncData(this.CreateXMLWaitForPlayerRequest(bP2NameUnknown));
-		let d = parseInt(((new Date()) - this.m_WaitStartTime) / 1000);
-		if (this.m_iSlowdownLevel <= 0 && d >= (this.m_iTooLong2Duration * 0.25)) {
-			this.m_iSlowdownLevel = 1;
-			this.SetTimer(true);
-		}
-		else if (this.m_iSlowdownLevel <= 1 && d >= (this.m_iTooLong2Duration * 0.5)) {
-			this.m_iSlowdownLevel = 2;
-			this.SetTimer(true);
-		}
-		else if (this.m_iSlowdownLevel <= 2 && d >= (this.m_iTooLong2Duration * 0.75)) {
-			this.m_iSlowdownLevel = 4;
-			this.SetTimer(true);
-		}
-		else if (d >= this.m_iTooLong2Duration) {
-			if (bP2NameUnknown) {
-				this.SetTimer(false);
-				if (confirm('Second player is still not connecting. Continue waiting?') === true)
-					this.SetTimer(true);
-				else {
-					window.location.href = "Games";
-					return;
-				}
-			}
-			else {
-				this.SetTimer(false);
-				this.m_SurrenderButton.value = 'win';
-				alert('Second player is not responding for quiet long. To walkover win click win - or continue to wait for oponent move');
-				this.SetTimer(true);
-			}
-		}
-
-		this.ShowMobileStatus(this.m_sMessage);
-	}*/
 
 	ShowMobileStatus(sMessage = '') {
 		if (this.m_Player2Name.innerHTML === '???') {

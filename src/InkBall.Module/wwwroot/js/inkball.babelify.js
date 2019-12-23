@@ -486,20 +486,21 @@ var CountdownTimer = function () {
 function CountPointsDebug(sSelector2Set) {
   var tags = [{
     query: "circle:not([z-index])",
-    display: "circles"
+    display: "circles: %s, "
   }, {
     query: "polyline",
-    display: "lines"
+    display: "lines: %s, "
   }, {
-    query: "circle[fill*='#']",
-    display: "intercepted"
+    query: "circle[fill='#DC143C']",
+    display: "intercepted(P1:%s, "
+  }, {
+    query: "circle[fill='#8A2BE2']",
+    display: "P2:%s)"
   }];
-  var tagMessage = "";
-  var aggregated = tags.map(function (tag) {
+  var aggregated = "";
+  tags.forEach(function (tag) {
     var cnt = document.querySelectorAll(tag.query);
-    var res = tagMessage + tag.display + ":" + cnt.length;
-    tagMessage = " ";
-    return res;
+    aggregated += tag.display.replace('%s', cnt.length);
   });
   document.querySelector(sSelector2Set).innerHTML = 'SVGs by tags: ' + aggregated;
 }
@@ -523,7 +524,8 @@ var InkBallGame = function () {
       height: 32
     };
     var bViewOnly = arguments.length > 10 && arguments[10] !== undefined ? arguments[10] : false;
-    var iTooLong2Duration = arguments.length > 11 && arguments[11] !== undefined ? arguments[11] : 125;
+    var pathAfterPointDrawAllowanceSecAmount = arguments.length > 11 && arguments[11] !== undefined ? arguments[11] : 60;
+    var iTooLong2Duration = arguments.length > 12 && arguments[12] !== undefined ? arguments[12] : 125;
 
     _classCallCheck(this, InkBallGame);
 
@@ -577,7 +579,7 @@ var InkBallGame = function () {
     this.m_MouseCursorOval = null;
     this.m_ApplicationUserSettings = null;
     this.m_TimerOpts = {
-      countdownSeconds: 30,
+      countdownSeconds: pathAfterPointDrawAllowanceSecAmount,
       labelSelector: "#debug2",
       initialStart: true,
       countdownReachedHandler: this.CountDownReachedHandler.bind(this)

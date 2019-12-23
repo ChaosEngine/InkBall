@@ -110,7 +110,7 @@
 									<td class='font-italic gtd' colspan="2">game finished</td>
 									break;
 								default:
-									throw new NotSupportedException("bad game state");
+									throw new ArgumentNullException(nameof(game.GameState), "bad game state");
 							}
 
 							switch (game.GameType)
@@ -128,7 +128,7 @@
 									<td class='font-italic gtd'>FIRST CAPTURE</td>
 									break;
 								default:
-									throw new NotSupportedException("bad game type");
+									throw new ArgumentNullException(nameof(game.GameType), "bad game type");
 							}
 						}
 					</tr>

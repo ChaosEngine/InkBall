@@ -431,7 +431,7 @@ namespace InkBall.Module.Model
 			}
 			catch (Exception ex)
 			{
-				throw new Exception("Could not create user of that ID", ex);
+				throw new ApplicationException("Could not create user of that ID", ex);
 			}
 
 
@@ -439,7 +439,7 @@ namespace InkBall.Module.Model
 			int game_id = await PrivInkBallGameInsertAsync(null, sPlayer1ExternaUserID, null, null, gridSize, width, height, bIsPlayer1Active, gameState, gameType);
 
 			if (game_id <= -1)
-				throw new Exception("Could not create new game");
+				throw new ArgumentNullException(nameof(game_id), "Could not create new game");
 
 			var new_game = await GetGameFromDatabaseAsync(game_id, true);
 			return new_game;
@@ -564,7 +564,7 @@ namespace InkBall.Module.Model
 			if (game.GameState != GameStateEnum.AWAITING || game.Player2 != null ||
 				game.Player1 == null || game.Player1.User.sExternalId == sPlayer2ExternaUserID)
 			{
-				throw new Exception("Wrong game state 2 join");
+				throw new ArgumentException("Wrong game state 2 join", nameof(game));
 			}
 
 			InkBallPlayer player2;
@@ -574,7 +574,7 @@ namespace InkBall.Module.Model
 			}
 			catch (Exception ex)
 			{
-				throw new Exception("Could not create user of that ID", ex);
+				throw new ArgumentException("Could not create user of that ID", nameof(player2), ex);
 			}
 
 			game.Player2 = player2;

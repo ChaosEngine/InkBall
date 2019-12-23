@@ -17,6 +17,14 @@ namespace InkBall.Module
 	{
 		public const string InkBallPolicyName = "InkBallPlayerPolicy";
 		public const string InkBallViewOtherGamesPolicyName = "InkBallViewOtherGamesPolicy";
+		/// <summary>
+		// When point is put, and user pushed StopAndraw button - one is allowed to close a path withing this much number of seconds
+		// which should be accepted
+		/// </summary>
+		public const int PathAfterPointDrawAllowanceSecAmount = 120;
+		
+
+		#region JS/CSS variables
 
 #if DEBUG
 		public const string WwwIncludeJS = "~/js/inkball.js";
@@ -30,6 +38,7 @@ namespace InkBall.Module
 		public const string WwwIncludeCSS = "~/css/inkball.min.css";
 #endif
 
+		#endregion JS/CSS variables
 	}
 
 	public class InkBallOptions : IPostConfigureOptions<StaticFileOptions>
@@ -118,18 +127,11 @@ namespace InkBall.Module
 		/*public static void PrepareSignalRForInkBall(this HubRouteBuilder routes, string path = "")
 		{
 			routes.MapHub<InkBall.Module.Hubs.GameHub>(path + InkBall.Module.Hubs.GameHub.HubName);
-		}
+		}*/
 
 		public static void PrepareSignalRForInkBall(this IEndpointRouteBuilder endpoints, string path = "")
 		{
 			endpoints.MapHub<InkBall.Module.Hubs.GameHub>(path + InkBall.Module.Hubs.GameHub.HubName);
-		}*/
-	}
-
-	/*public class DummyStartup
-	{
-		static void Main(string[] args)
-		{
 		}
-	}*/
+	}
 }

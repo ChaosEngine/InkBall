@@ -93,6 +93,7 @@ namespace InkBall.Module.Model
 		{
 			iDrawCount = value;
 		}
+
 		public bool IsLastMoveOverdue()
 		{
 			TimeSpan last_move = DateTime.Now - this.TimeStamp;

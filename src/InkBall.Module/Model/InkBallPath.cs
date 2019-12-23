@@ -283,7 +283,7 @@ namespace InkBall.Module.Model
 		{
 			//basic string allowed char validation
 			if (!pointsAsString.All(c => c == ' ' || c == ',' || (c >= '0' && c <= '9')))
-				throw new ArgumentException("bad characters in path");
+				throw new ArgumentException("bad characters in path", nameof(pointsAsString));
 
 			var tokensP = new StringTokenizer(pointsAsString, _spaceSeparatorArr);
 			var collection = new HashSet<InkBallPointViewModel>();

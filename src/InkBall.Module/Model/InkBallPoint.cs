@@ -109,7 +109,7 @@ namespace InkBall.Module.Model
 				return this_val.CompareTo(other_val);
 			}
 			else
-				throw new ArgumentException($"Object is not a {nameof(CommonPoint)}");
+				throw new ArgumentNullException(nameof(other_point), $"Object is not a {nameof(CommonPoint)}");
 		}
 
 		public void OnBeforeSerialize()

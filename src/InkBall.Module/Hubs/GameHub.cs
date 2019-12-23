@@ -247,14 +247,14 @@ namespace InkBall.Module.Hubs
 					bIsPlayer1 = false;
 				}
 				else
-					throw new NotSupportedException("player not found");
+					throw new ArgumentNullException(nameof(thisUserIdentifier), "player not found");
 				dbGame.bIsPlayer1 = bIsPlayer1;
 
 				//additional validation
 				string value = claimsPrincipal.FindFirstValue(nameof(Pages.BasePageModel.InkBallUserId));
 				int.TryParse(value, out int this_UserId);
 				if (this_UserId != this_Player.iUserId)
-					throw new ArgumentException("this_UserId != this_Player.iUserId");
+					throw new ArgumentException("this_UserId != this_Player.iUserId", nameof(this_Player.iUserId));
 
 				game = dbGame;
 				//this.Context.Items[nameof(ThisGame)] = game;
@@ -273,13 +273,13 @@ namespace InkBall.Module.Hubs
 				InkBallPlayer dbPlayer = await _dbContext.InkBallPlayer.Include(u => u.User)
 					.FirstOrDefaultAsync(p => p.User.sExternalId == thisUserIdentifier, token);
 				if (dbPlayer == null)
-					throw new NullReferenceException("no player");
+					throw new ArgumentNullException(nameof(dbPlayer), "no player");
 
 				//additional validation
 				string value = claimsPrincipal.FindFirstValue(nameof(Pages.BasePageModel.InkBallUserId));
 				int.TryParse(value, out int this_UserId);
 				if (this_UserId != dbPlayer.iUserId)
-					throw new ArgumentException("this_UserId != this_Player.iUserId");
+					throw new ArgumentException("this_UserId != this_Player.iUserId", nameof(dbPlayer.iUserId));
 
 				this_Player = dbPlayer;
 				//this.Context.Items[nameof(ThisPlayer)] = this_Player;
@@ -370,9 +370,9 @@ namespace InkBall.Module.Hubs
 
 						new_point = new InkBallPointViewModel(db_point);
 						db_point_player.sLastMoveCode = JsonSerializer.Serialize(new_point);
-// #if DEBUG
-// 						throw new Exception($"FAKE EXCEPTION {new_point}");
-// #endif
+						// #if DEBUG
+						// 						throw new Exception($"FAKE EXCEPTION {new_point}");
+						// #endif
 						await _dbContext.SaveChangesAsync(token);
 
 						trans.Commit();
@@ -407,7 +407,8 @@ namespace InkBall.Module.Hubs
 				if (ThisGame == null || ThisPlayer == null || OtherPlayer == null || string.IsNullOrEmpty(OtherUserIdentifier)
 					|| string.IsNullOrEmpty(ThisUserName))
 					throw new ArgumentException("bad game or player");
-				if (!ThisGame.IsThisPlayerActive())
+				if (!ThisGame.IsThisPlayerActive()
+					&& ThisPlayer.TimeStamp.AddSeconds(Constants.PathAfterPointDrawAllowanceSecAmount) <= DateTime.Now)
 					throw new ArgumentException("not your turn");
 
 				if (path == null || path.iPlayerId <= 0 || path.iGameId <= 0 || path.iGameId != ThisGame.iId)
@@ -499,12 +500,12 @@ namespace InkBall.Module.Hubs
 						db_path_player.sLastMoveCode = db_path.PointsAsString = JsonSerializer.Serialize(path);
 
 						await _dbContext.SaveChangesAsync(token);
-// #if DEBUG
-// 						var saved_pts = await _dbContext.LoadPointsAndPathsAsync(ThisGameID.Value, token);
-// 						var restored_from_db = saved_pts.Paths.LastOrDefault()?.InkBallPoint.Select(z => $"{z.iX},{z.iY}");
-// 						var str = InkBallPath.GetPathsAsJavaScriptArrayForPage2(saved_pts.Paths);
-// 						throw new Exception($"FAKE EXCEPTION org pts:[{path.PointsAsString}], restored pts:[{str}], owned:[{path.OwnedPointsAsString}]");
-// #endif
+						// #if DEBUG
+						// 						var saved_pts = await _dbContext.LoadPointsAndPathsAsync(ThisGameID.Value, token);
+						// 						var restored_from_db = saved_pts.Paths.LastOrDefault()?.InkBallPoint.Select(z => $"{z.iX},{z.iY}");
+						// 						var str = InkBallPath.GetPathsAsJavaScriptArrayForPage2(saved_pts.Paths);
+						// 						throw new Exception($"FAKE EXCEPTION org pts:[{path.PointsAsString}], restored pts:[{str}], owned:[{path.OwnedPointsAsString}]");
+						// #endif
 
 						var statisticalPointAndPathCounter = new StatisticalPointAndPathCounter(_dbContext, ThisGame.iId,
 							ThisPlayer.iId, OtherPlayer.iId, ref owning_color, ref other_owning_color, ref token);
@@ -619,7 +620,7 @@ namespace InkBall.Module.Hubs
 			try
 			{
 				if (ping == null)
-					throw new NullReferenceException("ping == null");
+					throw new ArgumentNullException(nameof(ping), "ping == null");
 
 				var new_ping = new PingCommand(ping);
 
