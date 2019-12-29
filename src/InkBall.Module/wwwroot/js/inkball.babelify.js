@@ -1466,7 +1466,9 @@ var InkBallGame = function () {
         this.m_bIsPlayerActive = true;
         this.ShowMobileStatus('Oponent has moved, your turn');
         this.m_Screen.style.cursor = "crosshair";
+        if (this.m_Line !== null) this.OnCancelClick();
         this.m_StopAndDraw.disabled = '';
+        if (!this.m_bDrawLines) this.m_StopAndDraw.value = 'Draw line';else this.m_StopAndDraw.value = 'Draw dot';
 
         if (this.m_Timer) {
           this.m_Timer.Stop();
@@ -1530,6 +1532,7 @@ var InkBallGame = function () {
         this.m_bIsPlayerActive = true;
         this.ShowMobileStatus('Oponent has moved, your turn');
         this.m_Screen.style.cursor = "crosshair";
+        if (this.m_Line !== null) this.OnCancelClick();
         this.m_StopAndDraw.disabled = '';
       } else {
         var _points = this.m_Line.$GetPointsString();
@@ -1857,11 +1860,12 @@ var InkBallGame = function () {
         if (!this.m_bDrawLines) btn.value = 'Draw line';else btn.value = 'Draw dot';
         this.m_iLastX = this.m_iLastY = -1;
         this.m_Line = null;
-      } else {
+      } else if (this.m_Line === null) {
         this.m_bDrawLines = true;
         this.m_iLastX = this.m_iLastY = -1;
         this.m_Line = null;
         this.m_bIsPlayerActive = true;
+        this.m_StopAndDraw.disabled = 'disabled';
       }
     }
   }, {
@@ -1906,6 +1910,7 @@ var InkBallGame = function () {
         }
 
         this.m_iLastX = this.m_iLastY = -1;
+        if (this.m_Timer) this.m_StopAndDraw.disabled = '';
       }
     }
   }, {

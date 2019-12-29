@@ -1213,8 +1213,15 @@ class InkBallGame {
 			this.m_bIsPlayerActive = true;
 			this.ShowMobileStatus('Oponent has moved, your turn');
 			this.m_Screen.style.cursor = "crosshair";
-			//this.m_DrawMode.disabled = '';
+
+			//this.m_DrawMode.disabled = 'disabled';
+			if (this.m_Line !== null)
+				this.OnCancelClick();
 			this.m_StopAndDraw.disabled = '';
+			if (!this.m_bDrawLines)
+				this.m_StopAndDraw.value = 'Draw line';
+			else
+				this.m_StopAndDraw.value = 'Draw dot';
 
 			if (this.m_Timer) {
 				this.m_Timer.Stop();
@@ -1264,7 +1271,10 @@ class InkBallGame {
 			this.m_bIsPlayerActive = true;
 			this.ShowMobileStatus('Oponent has moved, your turn');
 			this.m_Screen.style.cursor = "crosshair";
-			//this.m_DrawMode.disabled = '';
+			
+			//this.m_DrawMode.disabled = 'disabled';
+			if (this.m_Line !== null)
+				this.OnCancelClick();
 			this.m_StopAndDraw.disabled = '';
 		}
 		else {
@@ -1285,6 +1295,7 @@ class InkBallGame {
 			this.m_bIsPlayerActive = false;
 			this.ShowMobileStatus('Waiting for oponent move');
 			this.m_Screen.style.cursor = "wait";
+			
 			//this.m_DrawMode.disabled = 'disabled';
 			this.m_StopAndDraw.disabled = this.m_CancelPath.disabled = 'disabled';
 		}
@@ -1640,21 +1651,6 @@ class InkBallGame {
 		this.m_MouseCursorOval.$Hide();
 	}
 
-	/*OnDrawModeClick(event) {
-		if (this.m_Line !== null)
-			this.OnCancelClick();
-		this.m_bDrawLines = !this.m_bDrawLines;
-		let btn = event.target;
-		if (!this.m_bDrawLines) {
-			btn.value = 'Draw lines';
-		}
-		else {
-			btn.value = 'Draw dots';
-		}
-		this.m_iLastX = this.m_iLastY = -1;
-		this.m_Line = null;
-	}*/
-
 	OnStopAndDraw(event) {
 		if (!this.m_Timer) {
 			if (this.m_Line !== null)
@@ -1667,11 +1663,12 @@ class InkBallGame {
 				btn.value = 'Draw dot';
 			this.m_iLastX = this.m_iLastY = -1;
 			this.m_Line = null;
-		} else {
+		} else if (this.m_Line === null) {
 			this.m_bDrawLines = true;
 			this.m_iLastX = this.m_iLastY = -1;
 			this.m_Line = null;
 			this.m_bIsPlayerActive = true;
+			this.m_StopAndDraw.disabled = 'disabled';
 		}
 	}
 
@@ -1692,6 +1689,9 @@ class InkBallGame {
 				this.m_Line = null;
 			}
 			this.m_iLastX = this.m_iLastY = -1;
+
+			if (this.m_Timer)
+				this.m_StopAndDraw.disabled = '';
 		}
 	}
 
