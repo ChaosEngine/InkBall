@@ -803,10 +803,9 @@ namespace InkBall.Module.Model
 			return (paths, points);
 		}
 
-		public async Task<IEnumerable<(int, int?, string, int, int, int, int)>> GetPlayerStatisticTableAsync(
-			int? iPlayerID = null, int? iExternalUserID = null)
+		public async Task<IEnumerable<(int, int?, string, int, int, int, int)>> GetPlayerStatisticTableAsync()
 		{
-			var query = this.InkBallPlayer.Include(u => u.User)
+			var query = this.InkBallPlayer//.Include(u => u.User)
 				.Select(ip => ValueTuple.Create(
 							ip.iId,
 							ip.iUserId,
