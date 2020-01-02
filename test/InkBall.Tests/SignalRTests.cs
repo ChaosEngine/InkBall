@@ -21,6 +21,42 @@ namespace InkBall.Tests
 {
 	public class SignalRTests : DbContextTests
 	{
+		#region Helpers
+
+		private sealed class TempPoint : List<int>
+		{
+			[JsonIgnore]
+			public int iX { get { return base[0]; } }
+
+			[JsonIgnore]
+			public int iY { get { return base[1]; } }
+
+			[JsonIgnore]
+			public InkBallPoint.StatusEnum Status { get { return (InkBallPoint.StatusEnum)base[2]; } }
+
+			[JsonIgnore] public int iPlayerId { get { return base[3]; } }
+
+			public TempPoint() : base() { }
+
+			public TempPoint(int x, int y) : base()
+			{
+				base.Add(x); base.Add(y);
+			}
+
+			public override bool Equals(object obj)
+			{
+				var other = (TempPoint)obj;
+				return iX == other.iX && iY == other.iY;
+			}
+
+			public override int GetHashCode()
+			{
+				return (iY << 9) ^ iX;
+			}
+		}
+
+		#endregion Helpers
+
 		public SignalRTests() : base()
 		{
 		}
@@ -208,7 +244,6 @@ namespace InkBall.Tests
 				});
 			}
 		}
-
 
 		[Fact]
 		public async Task SignalR_EFCore3_MultipleInsertsOfSamePoint()
@@ -508,7 +543,6 @@ namespace InkBall.Tests
 				Assert.Contains("bad characters in path", exception.Message);
 			}
 		}
-
 
 		[Fact]
 		public async Task SignalR_ClientToServer_WinSituationDetection()
@@ -900,34 +934,119 @@ namespace InkBall.Tests
 			}
 		}
 
-		sealed class TempPoint : List<int>
+		[Theory]
+		[InlineData(false, null)]
+		[InlineData(true, 2 * InkBall.Module.Constants.PathAfterPointDrawAllowanceSecAmount)]
+		[InlineData(false, 0.5 * InkBall.Module.Constants.PathAfterPointDrawAllowanceSecAmount)]
+		public async Task SignalR_ClientToServer_OnStopAndDraw_PossibleTooLate(bool isDelayed, double? delayTimeInSecs)
 		{
-			[JsonIgnore]
-			public int iX { get { return base[0]; } }
-			[JsonIgnore]
-			public int iY { get { return base[1]; } }
-			[JsonIgnore]
-			public InkBallPoint.StatusEnum Status { get { return (InkBallPoint.StatusEnum)base[2]; } }
-			[JsonIgnore]
-			public int iPlayerId { get { return base[3]; } }
+			//Arrange
+			var token = base.CancellationToken;
 
-			public TempPoint() : base() { }
+			await CreateComplexGameHierarchy(token, InkBallGame.GameTypeEnum.FIRST_5_PATHS);
 
-			public TempPoint(int x, int y) : base()
+			using (var db = new GamesContext(Setup.DbOpts))
 			{
-				base.Add(x); base.Add(y);
-			}
+				var mockGameClient = new Mock<IGameClient>();
+				mockGameClient.Setup(c => c.ServerToClientPath(It.IsAny<InkBallPathViewModel>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPing(It.IsAny<PingCommand>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPlayerJoin(It.IsAny<PlayerJoiningCommand>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPlayerSurrender(It.IsAny<PlayerSurrenderingCommand>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPlayerWin(It.IsAny<WinCommand>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPoint(It.IsAny<InkBallPointViewModel>())).Returns(Task.FromResult(0));
 
-			public override bool Equals(object obj)
-			{
-				var other = (TempPoint)obj;
-				return iX == other.iX && iY == other.iY;
-			}
+				var mockHubCallerClients = new Mock<IHubCallerClients<IGameClient>>();
+				mockHubCallerClients.Setup(c => c.Client(It.IsAny<string>())).Returns(mockGameClient.Object);
+				mockHubCallerClients.Setup(c => c.User(It.IsAny<string>())).Returns(mockGameClient.Object);
 
-			public override int GetHashCode()
-			{
-				return (iY << 9) ^ iX;
+				var mockHubCallerContext_P1 = GetMockHubCallerContext(gameID: 1, playerID: 1, userID: 1, externalUserIdentifier: "xxxxx");
+				var mockHubCallerContext_P2 = GetMockHubCallerContext(gameID: 1, playerID: 2, userID: 2, externalUserIdentifier: "yyyyy");
+
+				var hub_P1 = new GameHub(db, Setup.Logger)
+				{
+					Clients = mockHubCallerClients.Object,
+					Context = mockHubCallerContext_P1.Object
+				};
+				var hub_P2 = new GameHub(db, Setup.Logger)
+				{
+					Clients = mockHubCallerClients.Object,
+					Context = mockHubCallerContext_P2.Object
+				};
+
+				await hub_P1.OnConnectedAsync();
+				await hub_P2.OnConnectedAsync();
+
+
+
+				//Act
+				//path comprising points
+				var p1_pts = new int[5, 2] { { 8, 24 }, { 9, 25 }, { 8, 26 }, { 7, 25 }, { 8, 24 } };
+				var p2_pts = new int[5, 2] { { 12, 24 }, { 13, 25 }, { 12, 26 }, { 11, 25 }, { 12, 24 } };
+				//owned points
+				var p1_owned = new int[1, 2] { { 8, 25 } };
+				var p2_owned = new int[1, 2] { { 12, 25 } };
+
+				for (int i = p1_pts.GetLength(0) - 2; i >= 0; i--)
+				{
+					await hub_P1.ClientToServerPoint(new InkBallPointViewModel
+					{
+						iGameId = 1,
+						iPlayerId = 1,
+						iX = p1_pts[i, 0],
+						iY = p1_pts[i, 1],
+						Status = InkBallPoint.StatusEnum.POINT_FREE_RED,
+					});
+					hub_P1.ThisPlayer.TimeStamp = DateTime.Now.Subtract(TimeSpan.FromSeconds(delayTimeInSecs.GetValueOrDefault(0)));
+					await hub_P2.ClientToServerPoint(new InkBallPointViewModel
+					{
+						iGameId = 1,
+						iPlayerId = 2,
+						iX = p2_pts[i, 0],
+						iY = p2_pts[i, 1],
+						Status = InkBallPoint.StatusEnum.POINT_FREE_BLUE,
+					});
+					hub_P2.ThisPlayer.TimeStamp = DateTime.Now.Subtract(TimeSpan.FromSeconds(delayTimeInSecs.GetValueOrDefault(0)));
+				}
+				await hub_P1.ClientToServerPoint(new InkBallPointViewModel
+				{
+					iGameId = 1,
+					iPlayerId = 1,
+					iX = p2_owned[0, 0],
+					iY = p2_owned[0, 1],
+					Status = InkBallPoint.StatusEnum.POINT_FREE_RED,
+				});
+				hub_P1.ThisPlayer.TimeStamp = DateTime.Now.Subtract(TimeSpan.FromSeconds(delayTimeInSecs.GetValueOrDefault(0)));
+				await hub_P2.ClientToServerPoint(new InkBallPointViewModel
+				{
+					iGameId = 1,
+					iPlayerId = 2,
+					iX = p1_owned[0, 0],
+					iY = p1_owned[0, 1],
+					Status = InkBallPoint.StatusEnum.POINT_FREE_BLUE,
+				});
+				hub_P2.ThisPlayer.TimeStamp = DateTime.Now.Subtract(TimeSpan.FromSeconds(delayTimeInSecs.GetValueOrDefault(0)));
+
+
+				//Assert
+				var exception = await Record.ExceptionAsync(async () =>
+				{
+					await hub_P2.ClientToServerPath(new InkBallPathViewModel
+					{
+						iGameId = 1,
+						iPlayerId = 2,
+						PointsAsString = "12,24 13,25 12,26 11,25 12,24",
+						OwnedPointsAsString = "12,25"
+					});
+					//hub_P2.ThisPlayer.TimeStamp = DateTime.Now.Subtract(TimeSpan.FromSeconds(delayTimeInSecs.GetValueOrDefault(0)));
+				});
+				if (isDelayed)
+				{
+					Assert.NotNull(exception);
+					Assert.IsType<ArgumentException>(exception);
+					Assert.Equal("not your turn", exception.Message);
+				}
 			}
 		}
+
 	}//end class
 }

@@ -58,8 +58,6 @@ namespace InkBall.Module.Model
 		public int iGridSize { get; set; }
 		public int iBoardWidth { get; set; }
 		public int iBoardHeight { get; set; }
-		// public int LogicalWidth => (int)(iBoardWidth / iGridSize);
-		// public int LogicalHeight => (int)(iBoardHeight / iGridSize);
 		public InkBallGame.GameTypeEnum GameType { get; set; }
 		public InkBallGame.GameStateEnum GameState { get; set; }
 		public DateTime TimeStamp { get; set; }
@@ -80,13 +78,9 @@ namespace InkBall.Module.Model
 		public bool IsThisPlayerActive()
 		{
 			if (this.bIsPlayer1)
-			{
-				return this.bIsPlayer1Active ? true : false;
-			}
+				return this.bIsPlayer1Active;
 			else
-			{
-				return this.bIsPlayer1Active ? false : true;
-			}
+				return !this.bIsPlayer1Active;
 		}
 
 		public bool IsThisPlayerPlayingWithRed()
