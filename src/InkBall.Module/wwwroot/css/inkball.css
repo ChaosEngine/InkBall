@@ -43,6 +43,10 @@ p.inkgame {
 .inkgames.grid-striped .row:nth-of-type(odd) {
 	background-color: rgba(0,0,0,.05);
 }
+.inkgames .table-responsive {
+	overflow-y: auto;
+	max-height: calc(100vh - 56px - 72px - 33px - 24px);
+}
 /**********inkstats*********/
 .inkstats .grid-striped .row:nth-of-type(odd) {
 	background-color: rgba(0,0,0,.05);
