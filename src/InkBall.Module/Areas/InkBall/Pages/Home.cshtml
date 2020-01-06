@@ -11,81 +11,17 @@
 			WriteLiteral($"<link rel='stylesheet' href='{Url.Content(Constants.WwwIncludeCSS)}' />");
 		});
     }
-
-
-    var bIsLoggedIn = (Model.GameUser != null) ? true : false;
-    var bIsCurrentGameOk = Model.Game != null ? true : false;
-
-    if (bIsLoggedIn)
-    {
-		<p class="inkhome">Welcome @Model.UserName</p>
-	}
-	else
-	{
-		<p class="inkhome">You are not logged in ... or old enough :-D</p>
-	}
 }
 
-@if (!string.IsNullOrEmpty(Model.Message))
-{
-	var statusMessageClass = Model.Message.Contains("Error") ? "danger" : "success";
-	<div class="alert alert-@statusMessageClass alert-dismissible fade show inkhome" role="alert">
-		<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-		@Model.Message
-	</div>
-}
+<p class="inkhome"></p>
+
+<div class="alert alert-dismissible fade show inkhome" role="alert">
+	<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+</div>
 
 <div class="container inkhome">
 	<div class="row" role="group" aria-label="Vertical button group">
 		<form method='post' class="order-last order-sm-first pr-md-2 btn-group-vertical was-validated">
-			@if (bIsLoggedIn)
-			{
-				if (bIsCurrentGameOk)
-				{
-					//continue
-					<!-- <input type='submit' name='action' value='Continue' class="btn btn-primary btn-lg" /> -->
-					<a href='Index' class='btn btn-primary btn-lg d-flex align-items-center justify-content-center'>Continue</a>
-				}
-				else
-				{
-					//new game
-					<input type='submit' name='action' value='New game' class="btn btn-primary btn-lg" />
-					<select name='GameType' id='GameType' class="custom-select" required>
-  						<option value='' selected='selected'>Choose game type</option>
-						<optgroup label='Game types'>
-							<option value='0'>First capture wins</option>
-							<option value='1'>First 5 captures wins</option>
-							<option value='2'>First 5 paths wins</option>
-							<option value='3'>Advantage of 5 paths wins</option>
-						</optgroup>
-					</select>
-					<div class="invalid-feedback">Invalid game type</div>
-
-					<select name='BoardSize' id='BoardSize' class="custom-select" required>
-  						<option value='' selected='selected'>Choose board size</option>
-						<optgroup label='Board sizes'>
-							<option value='20'>20 x 26</option>
-							<option value='40'>40 x 52</option>
-							<option value='64'>64 x 64</option>
-							<option value='80'>80 x 80</option>
-						</optgroup>
-					</select>
-					<div class="invalid-feedback">Invalid bard size</div>
-				}
-				<!-- <input type='submit' name='action' value='Game list' class="btn btn-primary" formnovalidate='formnovalidate' />
-				<input type='submit' name='action' value='Best' class="btn btn-primary" formnovalidate='formnovalidate' /> -->
-				<a href="Games" class="btn btn-primary d-flex align-items-center justify-content-center">Game list</a>
-				<a href="Highscores" class="btn btn-primary d-flex align-items-center justify-content-center">Best</a>
-				<a href="Rules" class="btn btn-primary d-flex align-items-center justify-content-center">Game rules</a>
-				<input type='submit' name='action' value='Logout' class="btn btn-warning rounded-bottom" formnovalidate='formnovalidate' />
-			}
-			else
-			{
-				//not logged or bad
-				<a href="Rules" class="btn btn-primary d-flex align-items-center justify-content-center">Game rules</a>
-				<a href="~/Identity/Account/Login" class="btn btn-primary d-flex align-items-center justify-content-center">Login</a>
-				<a href="~/Identity/Account/Register" class="btn btn-primary d-flex align-items-center justify-content-center rounded-bottom">Register</a>
-			}
 		</form>
 		<div class="order-first order-sm-last pb-2 pb-md-0">
 			<picture alt="home screen" aria-label="home screen image">
@@ -95,3 +31,94 @@
 		</div>
 	</div>
 </div>
+
+<script type='text/javascript'>
+"use strict";
+	const alert = document.querySelector("div.alert.alert-dismissible.inkhome");
+	const msg = "@Model.Message";
+	if (msg !== "") {
+		let addendum;
+		//debugger;
+		if (msg.toLowerCase().indexOf('exception') !== -1)
+			addendum = 'danger';
+		else if (msg.toLowerCase().indexOf('error') !== -1)
+			addendum = 'danger';
+		else if (msg.toLowerCase().indexOf('warning') !== -1)
+			addendum = 'warning';
+		else
+			addendum = 'success';
+
+		const statusMessageClass = 'alert-' + addendum;
+		alert.classList.add(statusMessageClass);
+		alert.innerHTML += "\r\n" + msg;
+	}
+	else
+		alert.parentNode.removeChild(alert);
+
+
+	const userName = '@Model.GameUser?.UserName';
+	const bIsLoggedIn = userName !== '' ? true : false;
+    const bIsCurrentGameOk = JSON.parse('@(Model.Game != null ? true : false)'.toLowerCase());
+
+	const form = document.querySelector(".inkhome form");
+	let innerForm = '';
+	if (bIsLoggedIn)
+    {
+		document.querySelector("p.inkhome").innerHTML = 'Welcome ' + userName;
+
+		if (bIsCurrentGameOk)
+		{
+			//continue
+			innerForm += "<a href='Index' class='btn btn-primary btn-lg rounded-top d-flex align-items-center justify-content-center'>Continue</a>";
+		}
+		else
+		{
+			//new game
+			innerForm +=
+				"<input type='submit' name='action' value='New game' class='btn btn-primary btn-lg rounded-top' />" +
+				"<select name='GameType' id='GameType' class='custom-select' required>" +
+					"<option value='' selected='selected'>Choose game type</option>" +
+					"<optgroup label='Game types'>" +
+						"<option value='0'>First capture wins</option>" +
+						"<option value='1'>First 5 captures wins</option>" +
+						"<option value='2'>First 5 paths wins</option>" +
+						"<option value='3'>Advantage of 5 paths wins</option>" +
+					"</optgroup>" +
+				"</select>" +
+				"<div class='invalid-feedback'>Invalid game type</div>" +
+
+				"<select name='BoardSize' id='BoardSize' class='custom-select' required>" +
+					"<option value='' selected='selected'>Choose board size</option>" +
+					"<optgroup label='Board sizes'>" +
+						"<option value='20'>20 x 26</option>" +
+						"<option value='40'>40 x 52</option>" +
+						"<option value='64'>64 x 64</option>" +
+						"<option value='80'>80 x 80</option>" +
+					"</optgroup>" +
+				"</select>" +
+				"<div class='invalid-feedback'>Invalid bard size</div>";
+		}
+		const logoutPath = '@commonUIConfigureOptions.Value.LogoutPath';
+
+		innerForm +=
+			"<a href='Games' class='btn btn-primary d-flex align-items-center justify-content-center'>Game list</a>" +
+			"<a href='Highscores' class='btn btn-primary d-flex align-items-center justify-content-center'>Best</a>" +
+			"<a href='Rules' class='btn btn-primary d-flex align-items-center justify-content-center'>Game rules</a>" +
+			(logoutPath ? "<input type='submit' name='action' value='Logout' class='btn btn-warning rounded-bottom' formnovalidate='formnovalidate' />" : "");
+	}
+	else
+	{
+		document.querySelector("p.inkhome").innerHTML = 'You are not logged in ... or allowed 😅';
+
+		//not logged or bad
+		const loginPath = '@commonUIConfigureOptions.Value.LoginPath';
+		const registerPath = '@commonUIConfigureOptions.Value.RegisterPath';
+
+		innerForm +=
+			"<a href='Rules' class='btn btn-primary rounded-top d-flex align-items-center justify-content-center'>Game rules</a>" +
+			(loginPath ? "<a href='" + loginPath + "' class='btn btn-primary d-flex align-items-center justify-content-center'>Login</a>" : "") +
+			(registerPath ? "<a href='" + registerPath + "' class='btn btn-primary d-flex align-items-center justify-content-center rounded-bottom'>Register</a>" : "");
+	}
+	form.innerHTML += innerForm;
+
+</script>

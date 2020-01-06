@@ -158,6 +158,7 @@ var InkBallPathViewModel = function (_DtoMsg2) {
     var iPlayerId = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
     var PointsAsString = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : '';
     var OwnedPointsAsString = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : '';
+    var IsDelayed = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : false;
 
     _classCallCheck(this, InkBallPathViewModel);
 
@@ -167,6 +168,7 @@ var InkBallPathViewModel = function (_DtoMsg2) {
     _this2.iPlayerId = iPlayerId;
     _this2.PointsAsString = PointsAsString;
     _this2.OwnedPointsAsString = OwnedPointsAsString;
+    _this2.IsDelayed = IsDelayed;
     return _this2;
   }
 
@@ -1395,7 +1397,7 @@ var InkBallGame = function () {
   }, {
     key: "CreateXMLPutPathRequest",
     value: function CreateXMLPutPathRequest(dto) {
-      var cmd = new InkBallPathViewModel(0, this.g_iGameID, this.g_iPlayerID, dto.path, dto.owned);
+      var cmd = new InkBallPathViewModel(0, this.g_iGameID, this.g_iPlayerID, dto.path, dto.owned, this.m_Timer !== null);
       return cmd;
     }
   }, {

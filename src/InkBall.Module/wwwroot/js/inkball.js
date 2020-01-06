@@ -93,7 +93,7 @@ class InkBallPointViewModel extends DtoMsg {
 }
 
 class InkBallPathViewModel extends DtoMsg {
-	constructor(iId = 0, iGameId = 0, iPlayerId = 0, PointsAsString = '', OwnedPointsAsString = '') {
+	constructor(iId = 0, iGameId = 0, iPlayerId = 0, PointsAsString = '', OwnedPointsAsString = '', IsDelayed = false) {
 		super();
 
 		this.iId = iId;
@@ -101,6 +101,7 @@ class InkBallPathViewModel extends DtoMsg {
 		this.iPlayerId = iPlayerId;
 		this.PointsAsString = PointsAsString;
 		this.OwnedPointsAsString = OwnedPointsAsString;
+		this.IsDelayed = IsDelayed;
 	}
 
 	GetKind() { return CommandKindEnum.PATH; }
@@ -1129,7 +1130,8 @@ class InkBallGame {
 	 * @returns {object} command
 	 */
 	CreateXMLPutPathRequest(dto) {
-		let cmd = new InkBallPathViewModel(0, this.g_iGameID, this.g_iPlayerID, dto.path, dto.owned);
+		let cmd = new InkBallPathViewModel(0, this.g_iGameID, this.g_iPlayerID, dto.path, dto.owned,
+			this.m_Timer !== null);
 		return cmd;
 	}
 

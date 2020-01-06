@@ -30,6 +30,8 @@ namespace InkBall.Module.Pages
 		public async Task OnGet()
 		{
 			await LoadUserPlayerAndGameAsync();
+
+			// Message = "start1ng info end0";
 		}
 
 		public async Task<IActionResult> OnPostAsync(string action, string gameType, InkBallGame.BoardSizeEnum boardSize)
@@ -139,7 +141,7 @@ namespace InkBall.Module.Pages
 						return Redirect("Rules");
 
 					case "Login":
-						return Redirect("~/Identity/Account/Login");
+						return Redirect(_commonUIConfigureOptions.Value.LoginPath);
 
 					case "Logout":
 						if (Game != null)
@@ -192,10 +194,10 @@ namespace InkBall.Module.Pages
 							if (signInManagerTUser != null)
 								await signInManagerTUser.SignOutAsync();
 						}
-						return Redirect("~/Identity/Account/Logout");
+						return Redirect(_commonUIConfigureOptions.Value.LogoutPath);
 
 					case "Register":
-						return Redirect("~/Identity/Account/Register");
+						return Redirect(_commonUIConfigureOptions.Value.RegisterPath);
 
 					default:
 						break;

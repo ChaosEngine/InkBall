@@ -60,6 +60,12 @@ namespace InkBall.Module
 		public bool UseMessagePackBinaryTransport { get; set; } = false;
 
 		public bool EnablePolyfill { get; set; } = true;
+		
+		public string LoginPath { get; set; }
+		
+		public string LogoutPath { get; set; }
+		
+		public string RegisterPath { get; set; }
 
 		public void PostConfigure(string name, StaticFileOptions options)
 		{
