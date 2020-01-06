@@ -96,7 +96,7 @@ namespace InkBall.Module
 				.Include(gp2 => gp2.Player2).ThenInclude(p2 => p2.User)
 				.Where(w =>
 				   (w.Player1.User.sExternalId == nameIdentifer || w.Player2.User.sExternalId == nameIdentifer)
-				   && (w.GameState == InkBallGame.GameStateEnum.ACTIVE || w.GameState == InkBallGame.GameStateEnum.AWAITING)
+				   && (GamesContext.ActiveVisibleGameStates.Contains(w.GameState))
 				).ToArrayAsync(token);
 
 			if (games_to_surrender.Any())

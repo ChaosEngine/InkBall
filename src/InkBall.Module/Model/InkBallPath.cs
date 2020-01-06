@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -385,6 +386,8 @@ namespace InkBall.Module.Model
 			{
 				this.InkBallPoint = path.InkBallPoint.Select(p => new InkBallPointViewModel(p)).ToArray();
 			}
+
+			Debug.Assert(this.iId >= 0);
 		}
 
 		public InkBallPathViewModel(InkBallPathViewModel path)
@@ -399,6 +402,8 @@ namespace InkBall.Module.Model
 			{
 				this.InkBallPoint = path.InkBallPoint;
 			}
+
+			Debug.Assert(this.iId >= 0);
 		}
 	}
 }

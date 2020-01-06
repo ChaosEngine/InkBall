@@ -1,6 +1,7 @@
 ﻿using MessagePack;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 
 namespace InkBall.Module.Model
@@ -225,6 +226,8 @@ namespace InkBall.Module.Model
 			this.iY = point.iY;
 			this.Status = point.Status;
 			this.iEnclosingPathId = point.iEnclosingPathId;
+
+			Debug.Assert(this.iId >= 0);
 		}
 
 		//[JsonConstructor]
@@ -237,6 +240,8 @@ namespace InkBall.Module.Model
 			this.iY = point.iY;
 			this.Status = point.Status;
 			this.iEnclosingPathId = point.iEnclosingPathId;
+
+			Debug.Assert(this.iId >= 0);
 		}
 	}
 
@@ -253,7 +258,7 @@ namespace InkBall.Module.Model
 				return false;
 
 			return left.iPlayerId == right.iPlayerId
-				//&& left.iGameId == right.iGameId 
+				//&& left.iGameId == right.iGameId
 				//&& left.Status == right.Status
 				//&& this.iEnclosingPathId == o.iEnclosingPathId
 				&& left.iX == right.iX && left.iY == right.iY;

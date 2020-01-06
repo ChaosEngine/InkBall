@@ -62,7 +62,7 @@ namespace InkBall.Tests
 			//Assert
 			using (var context = new GamesContext(Setup.DbOpts))
 			{
-				var games = await context.GetGamesForRegistrationAsSelectTableRowsAsync(null, null, null, true, token);
+				var games = await context.GetGamesForRegistrationAsSelectTableRowsAsync(/*null, null, null, true, */token);
 				Assert.NotEmpty(games);
 
 				var points_n_paths = await context.LoadPointsAndPathsAsync(games.First().iId, token);
@@ -85,7 +85,7 @@ namespace InkBall.Tests
 			//Act
 			using (var context = new GamesContext(Setup.DbOpts))
 			{
-				var games = await context.GetGamesForRegistrationAsSelectTableRowsAsync(null, null, null, true, token);
+				var games = await context.GetGamesForRegistrationAsSelectTableRowsAsync(/*null, null, null, true, */token);
 
 				//Assert
 				Assert.NotEmpty(games);
@@ -114,7 +114,7 @@ namespace InkBall.Tests
 			{
 				using (var context = new GamesContext(Setup.DbOpts))
 				{
-					var games = await context.GetGamesForRegistrationAsSelectTableRowsAsync(null, null, null, true, token);
+					var games = await context.GetGamesForRegistrationAsSelectTableRowsAsync(/*null, null, null, true, */token);
 
 					//Assert
 					Assert.NotEmpty(games);

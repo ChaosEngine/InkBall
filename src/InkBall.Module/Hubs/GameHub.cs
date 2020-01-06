@@ -228,7 +228,7 @@ namespace InkBall.Module.Hubs
 					w => w.iId == gameID
 					&& (w.iPlayer1Id == playerID || w.iPlayer2Id == playerID)
 					&& (w.Player1.User.sExternalId == thisUserIdentifier || w.Player2.User.sExternalId == thisUserIdentifier)
-					&& (w.GameState == InkBallGame.GameStateEnum.ACTIVE || w.GameState == InkBallGame.GameStateEnum.AWAITING)
+					&& (GamesContext.ActiveVisibleGameStates.Contains(w.GameState))
 				, token);
 				if (dbGame == null)
 					throw new NullReferenceException("game == null");
@@ -370,9 +370,9 @@ namespace InkBall.Module.Hubs
 
 						new_point = new InkBallPointViewModel(db_point);
 						db_point_player.sLastMoveCode = JsonSerializer.Serialize(new_point);
-						// #if DEBUG
-						// 						throw new Exception($"FAKE EXCEPTION {new_point}");
-						// #endif
+// #if DEBUG
+// 						throw new Exception($"FAKE EXCEPTION {new_point}");
+// #endif
 						await _dbContext.SaveChangesAsync(token);
 
 						trans.Commit();

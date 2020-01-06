@@ -65,15 +65,9 @@ namespace InkBall.Module.Model
 
 		public static TimeSpan GetDeactivationDelayInSeconds() => InkBallGame._deactivationDelayInSeconds;
 
-		public bool IsThisPlayer1()
-		{
-			return this.bIsPlayer1;
-		}
+		public bool IsThisPlayer1() => this.bIsPlayer1;
 
-		public bool IsPlayer1Active()
-		{
-			return this.bIsPlayer1Active;
-		}
+		public bool IsPlayer1Active() => this.bIsPlayer1Active;
 
 		public bool IsThisPlayerActive()
 		{
@@ -83,10 +77,7 @@ namespace InkBall.Module.Model
 				return !this.bIsPlayer1Active;
 		}
 
-		public bool IsThisPlayerPlayingWithRed()
-		{
-			return this.bIsPlayer1;
-		}
+		public bool IsThisPlayerPlayingWithRed() => this.bIsPlayer1;
 
 		public Player GetPlayer()
 		{
@@ -104,15 +95,9 @@ namespace InkBall.Module.Model
 				return this.Player2;
 		}
 
-		public Player GetPlayer1()
-		{
-			return this.Player1;
-		}
+		public Player GetPlayer1() => this.Player1;
 
-		public Player GetPlayer2()
-		{
-			return this.Player2;
-		}
+		public Player GetPlayer2() => this.Player2;
 
 		public void SetState(InkBallGame.GameStateEnum value)
 		{

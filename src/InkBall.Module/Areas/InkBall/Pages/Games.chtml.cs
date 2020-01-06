@@ -33,7 +33,8 @@ namespace InkBall.Module.Pages
 
 		private async Task<IEnumerable<InkBallGame>> GetGameList(CancellationToken token)
 		{
-			IEnumerable<InkBallGame> games_from_db = await _dbContext.GetGamesForRegistrationAsSelectTableRowsAsync(null, null, null, true, token);
+			IEnumerable<InkBallGame> games_from_db =
+				await _dbContext.GetGamesForRegistrationAsSelectTableRowsAsync(/*null, null, null, true,*/token);
 
 			return games_from_db;
 		}
@@ -43,6 +44,8 @@ namespace InkBall.Module.Pages
 			await base.LoadUserPlayerAndGameAsync();
 
 			GamesList = await GetGameList(HttpContext.RequestAborted);
+
+			//Message = $"ExternalId = [{GameUser.sExternalId}] PlayerID = [{GameUser.InkBallPlayer.FirstOrDefault()?.iId}]";
 		}
 
 		public async Task<IActionResult> OnPostAsync(string action, int gameID, string gameType, InkBallGame.BoardSizeEnum boardSize)
@@ -97,7 +100,7 @@ namespace InkBall.Module.Pages
 												var recipient_id_joiner = payload as Tuple<string, int?, string>;
 												if (!string.IsNullOrEmpty(recipient_id_joiner.Item1))
 												{
-													//delay for some signalr connction to be established. Is it really needed?
+													//delay for some signalr connection to be established. Is it really needed?
 													await Task.Delay(1_000);
 
 													await _inkballHubContext.Clients.User(recipient_id_joiner.Item1).ServerToClientPlayerJoin(

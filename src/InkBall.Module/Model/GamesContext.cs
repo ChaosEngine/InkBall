@@ -40,6 +40,9 @@ namespace InkBall.Module.Model
 		}
 
 		#region Helpers
+		
+		internal static readonly GameStateEnum[] ActiveVisibleGameStates =
+			new GameStateEnum[] { GameStateEnum.ACTIVE, GameStateEnum.AWAITING };
 
 		internal static string TimeStampDefaultValueFromProvider(string activeProvider)
 		{
@@ -458,7 +461,7 @@ namespace InkBall.Module.Model
 								&& (string.IsNullOrEmpty(iPlayer1ExternalUserID) || cp1.User.sExternalId == iPlayer1ExternalUserID)
 								&& (iPlayer1ID.HasValue || !string.IsNullOrEmpty(iPlayer1ExternalUserID)))
 								&& !InkBallGame.Any(tmp => (tmp.iPlayer1Id == cp1.iId || tmp.iPlayer2Id == cp1.iId)
-									&& (tmp.GameState == Module.Model.InkBallGame.GameStateEnum.ACTIVE || tmp.GameState == Module.Model.InkBallGame.GameStateEnum.AWAITING))
+									&& (ActiveVisibleGameStates.Contains(tmp.GameState)))
 
 								select (int?)cp1.iId;
 				int? p1 = await cp1_query.FirstOrDefaultAsync(token);
@@ -468,7 +471,7 @@ namespace InkBall.Module.Model
 								&& (string.IsNullOrEmpty(iPlayer2ExternalUserID) || cp2.User.sExternalId == iPlayer2ExternalUserID)
 								&& (iPlayer2ID.HasValue || !string.IsNullOrEmpty(iPlayer2ExternalUserID)))
 								&& !InkBallGame.Any(tmp => (tmp.iPlayer1Id == cp2.iId || tmp.iPlayer2Id == cp2.iId)
-									&& (tmp.GameState == Module.Model.InkBallGame.GameStateEnum.ACTIVE || tmp.GameState == Module.Model.InkBallGame.GameStateEnum.AWAITING))
+									&& (ActiveVisibleGameStates.Contains(tmp.GameState)))
 
 								select (int?)cp2.iId;
 				int? p2 = await cp2_query.FirstOrDefaultAsync(token);
@@ -716,21 +719,23 @@ namespace InkBall.Module.Model
 		}
 
 		public async Task<IEnumerable<InkBallGame>> GetGamesForRegistrationAsSelectTableRowsAsync(
-			int? iGameID = null, int? iUserID = null, string sExternalUserId = null, bool? bShowOnlyActive = true,
+			//int? iGameID = null, int? iUserID = null, string sExternalUserId = null, bool? bShowOnlyActive = true,
 			CancellationToken token = default)
 		{
+
 			var query = from ig in InkBallGame
 						.Include(ip1 => ip1.Player1)
 							.ThenInclude(u1 => u1.User)
 						.Include(ip2 => ip2.Player2)
 							.ThenInclude(u2 => u2.User)
-						where (!iGameID.HasValue || ig.iId == iGameID.Value)
-							&& (!bShowOnlyActive.HasValue ||
-								(bShowOnlyActive.Value == true && (ig.GameState == GameStateEnum.ACTIVE || ig.GameState == GameStateEnum.AWAITING)))
-							&& (!iUserID.HasValue ||
-								(iUserID.Value == ig.Player1.iUserId || (ig.Player2.iUserId.HasValue && iUserID == ig.Player2.iUserId)))
-							&& (string.IsNullOrEmpty(sExternalUserId) ||
-								(sExternalUserId == ig.Player1.User.sExternalId || (ig.Player2.iUserId.HasValue && sExternalUserId == ig.Player2.User.sExternalId)))
+						where //(!iGameID.HasValue || ig.iId == iGameID.Value) &&
+							(//!bShowOnlyActive.HasValue ||
+								(//bShowOnlyActive.Value == true &&
+								(ActiveVisibleGameStates.Contains(ig.GameState))))
+						//&& (!iUserID.HasValue ||
+						//	(iUserID.Value == ig.Player1.iUserId || (ig.Player2.iUserId.HasValue && iUserID == ig.Player2.iUserId)))
+						//&& (string.IsNullOrEmpty(sExternalUserId) ||
+						//	(sExternalUserId == ig.Player1.User.sExternalId || (ig.Player2.iUserId.HasValue && sExternalUserId == ig.Player2.User.sExternalId)))
 						orderby ig.iId
 						select ig;
 
@@ -879,9 +884,11 @@ namespace InkBall.Module.Model
 		{
 			if (_ownedCountsDict == null)
 			{
+				var statuses = new[] { InkBallPoint.StatusEnum.POINT_OWNED_BY_RED, InkBallPoint.StatusEnum.POINT_OWNED_BY_BLUE };
+				
 				_ownedCountsDict = await (from pt in _dbContext.InkBallPoint
 										  where pt.iGameId == _gameID && pt.iEnclosingPathId.HasValue &&
-										  new[] { InkBallPoint.StatusEnum.POINT_OWNED_BY_RED, InkBallPoint.StatusEnum.POINT_OWNED_BY_BLUE }.Contains(pt.Status)
+										  statuses.Contains(pt.Status)
 										  group pt by pt.Status into g
 										  select new
 										  {
