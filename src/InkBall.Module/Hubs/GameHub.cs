@@ -30,6 +30,12 @@ namespace InkBall.Module.Hubs
 		Task ServerToClientPlayerSurrender(PlayerSurrenderingCommand surrender);
 
 		Task ServerToClientPlayerWin(WinCommand win);
+
+		Task ServerToClientStopAndDrawDelayedPath(string message);
+
+		Task ServerToClientOtherPlayerDisconnected(string message);
+
+		Task ServerToClientOtherPlayerConnected(string message);
 	}
 
 	public interface IGameServer
@@ -45,6 +51,8 @@ namespace InkBall.Module.Hubs
 		Task<PlayerPointsAndPathsDTO> GetPlayerPointsAndPaths(bool viewOnly, int gameID);
 
 		Task<string> GetUserSettings();
+
+		//Task<string> ClientToServerStopAndDrawDelayedPath(string message);
 	}
 
 	[Authorize(Policy = Constants.InkBallPolicyName)]
@@ -165,19 +173,22 @@ namespace InkBall.Module.Hubs
 			var claimsPrincipal = this.Context.User;
 			var thisUserIdentifier = ThisUserIdentifier;
 
-			//IPlayer<InkBallPoint, InkBallPath> this_Player = await GetPlayer(claimsPrincipal, this_UserIdentifier, token);
-			//ThisPlayer = this_Player;
-
-			(InkBallGame game, InkBallPlayer this_Player) = await GetGameAndThisPlayer(claimsPrincipal, thisUserIdentifier,
-				ThisGameID.Value, ThisPlayerID.Value, token);
-			ThisGame = game;
-			ThisPlayer = this_Player;
+			// if (ThisGame == null || ThisPlayer == null)
+			{
+				(InkBallGame game, InkBallPlayer this_Player) = await GetGameAndThisPlayer(claimsPrincipal, thisUserIdentifier,
+					ThisGameID.Value, ThisPlayerID.Value, token);
+				ThisGame = game;
+				ThisPlayer = this_Player;
+			}
 
 			ThisUserName = ThisPlayer.User.UserName;
 
-			(InkBallPlayer other_Player, string other_UserIdentifier) = GetOtherPlayer(ThisGame, thisUserIdentifier, this_Player);
-			OtherPlayer = other_Player;
-			OtherUserIdentifier = other_UserIdentifier;
+			// if (OtherPlayer == null || OtherUserIdentifier == null)
+			{
+				(InkBallPlayer other_Player, string other_UserIdentifier) = GetOtherPlayer(ThisGame, thisUserIdentifier, ThisPlayer);
+				OtherPlayer = other_Player;
+				OtherUserIdentifier = other_UserIdentifier;
+			}
 		}
 
 		private (InkBallPlayer other_Player, string other_UserIdentifier) GetOtherPlayer(InkBallGame game,
@@ -287,6 +298,45 @@ namespace InkBall.Module.Hubs
 			return this_Player;
 		}
 
+		private async Task OtherPlayerConnectNotification(CancellationToken token)
+		{
+			await LoadGameAndPlayerStructures(token);
+			try
+			{
+				if (ThisGame == null || ThisPlayer == null || OtherPlayer == null || string.IsNullOrEmpty(OtherUserIdentifier)
+					|| string.IsNullOrEmpty(ThisUserName))
+					return;
+
+				var msg = $"Other player {ThisPlayer?.User?.UserName} connected 😁";
+				await Clients.User(OtherUserIdentifier).ServerToClientOtherPlayerConnected(msg);
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex.Message);
+			}
+		}
+
+		private async Task OtherPlayerDisconnectNotification(Exception exception, CancellationToken token = default)
+		{
+			if (exception != null)
+				_logger.LogInformation(exception, nameof(OnDisconnectedAsync));
+
+			await LoadGameAndPlayerStructures(token);
+			try
+			{
+				if (ThisGame == null || ThisPlayer == null || OtherPlayer == null || string.IsNullOrEmpty(OtherUserIdentifier)
+					|| string.IsNullOrEmpty(ThisUserName))
+					return;
+
+				var msg = $"Other player {ThisPlayer?.User?.UserName} disconnected 😢";
+				await Clients.User(OtherUserIdentifier).ServerToClientOtherPlayerDisconnected(msg);
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex.Message);
+			}
+		}
+
 		#endregion Private methods
 
 		public GameHub(GamesContext dbContext, ILogger<GameHub> logger)
@@ -305,7 +355,13 @@ namespace InkBall.Module.Hubs
 			ThisGameID = gameID;
 			ThisPlayerID = playerID;
 
-			await base.OnConnectedAsync();
+
+			await OtherPlayerConnectNotification(this.Context.ConnectionAborted);
+		}
+
+		public override async Task OnDisconnectedAsync(Exception exception)
+		{
+			await OtherPlayerDisconnectNotification(exception);
 		}
 
 		#region IGameServer implementation
@@ -370,9 +426,9 @@ namespace InkBall.Module.Hubs
 
 						new_point = new InkBallPointViewModel(db_point);
 						db_point_player.sLastMoveCode = JsonSerializer.Serialize(new_point);
-// #if DEBUG
-// 						throw new Exception($"FAKE EXCEPTION {new_point}");
-// #endif
+						// #if DEBUG
+						// 						throw new Exception($"FAKE EXCEPTION {new_point}");
+						// #endif
 						await _dbContext.SaveChangesAsync(token);
 
 						trans.Commit();
@@ -407,8 +463,9 @@ namespace InkBall.Module.Hubs
 				if (ThisGame == null || ThisPlayer == null || OtherPlayer == null || string.IsNullOrEmpty(OtherUserIdentifier)
 					|| string.IsNullOrEmpty(ThisUserName))
 					throw new ArgumentException("bad game or player");
+				bool isDelayedPathDrawn = false;
 				if (!ThisGame.IsThisPlayerActive()
-					&& ThisPlayer.TimeStamp.AddSeconds(Constants.PathAfterPointDrawAllowanceSecAmount) <= DateTime.Now)
+					&& !(isDelayedPathDrawn = ThisPlayer.IsDelayedPathDrawPossible()))
 					throw new ArgumentException("not your turn");
 
 				if (path == null || path.iPlayerId <= 0 || path.iGameId <= 0 || path.iGameId != ThisGame.iId)
@@ -478,7 +535,8 @@ namespace InkBall.Module.Hubs
 							status = InkBallPoint.StatusEnum.POINT_IN_PATH;
 						}
 
-						ThisGame.bIsPlayer1Active = !ThisGame.bIsPlayer1Active;
+						if (!isDelayedPathDrawn)
+							ThisGame.bIsPlayer1Active = !ThisGame.bIsPlayer1Active;
 
 						var owning_points = path.GetOwnedPoints(owning_color, OtherPlayer.iId);
 						foreach (var op in owning_points)
@@ -500,12 +558,12 @@ namespace InkBall.Module.Hubs
 						db_path_player.sLastMoveCode = db_path.PointsAsString = JsonSerializer.Serialize(path);
 
 						await _dbContext.SaveChangesAsync(token);
-// #if DEBUG
-// 						var saved_pts = await _dbContext.LoadPointsAndPathsAsync(ThisGameID.Value, token);
-// 						var restored_from_db = saved_pts.Paths.LastOrDefault()?.InkBallPoint.Select(z => $"{z.iX},{z.iY}");
-// 						var str = InkBallPath.GetPathsAsJavaScriptArrayForPage2(saved_pts.Paths);
-// 						throw new Exception($"FAKE EXCEPTION org pts:[{path.PointsAsString}], restored pts:[{str}], owned:[{path.OwnedPointsAsString}]");
-// #endif
+						// #if DEBUG
+						// 						var saved_pts = await _dbContext.LoadPointsAndPathsAsync(ThisGameID.Value, token);
+						// 						var restored_from_db = saved_pts.Paths.LastOrDefault()?.InkBallPoint.Select(z => $"{z.iX},{z.iY}");
+						// 						var str = InkBallPath.GetPathsAsJavaScriptArrayForPage2(saved_pts.Paths);
+						// 						throw new Exception($"FAKE EXCEPTION org pts:[{path.PointsAsString}], restored pts:[{str}], owned:[{path.OwnedPointsAsString}]");
+						// #endif
 
 						var statisticalPointAndPathCounter = new StatisticalPointAndPathCounter(_dbContext, ThisGame.iId,
 							ThisPlayer.iId, OtherPlayer.iId, ref owning_color, ref other_owning_color, ref token);
@@ -708,6 +766,27 @@ namespace InkBall.Module.Hubs
 				throw;
 			}
 		}
+
+		/*public async Task<string> ClientToServerStopAndDrawDelayedPath(string message)
+		{
+			CancellationToken token = this.Context.ConnectionAborted;
+
+			await LoadGameAndPlayerStructures(token);
+			if (ThisGame == null || ThisPlayer == null || string.IsNullOrEmpty(ThisUserName))
+				throw new ArgumentException("bad player or game");
+
+			try
+			{
+				await Clients.User(OtherUserIdentifier).ServerToClientStopAndDrawDelayedPath(message);
+
+				return "notification sent";
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex.Message);
+				throw;
+			}
+		}*/
 
 		#endregion IGameServer implementation
 	}

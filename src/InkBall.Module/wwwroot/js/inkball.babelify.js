@@ -158,7 +158,6 @@ var InkBallPathViewModel = function (_DtoMsg2) {
     var iPlayerId = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
     var PointsAsString = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : '';
     var OwnedPointsAsString = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : '';
-    var IsDelayed = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : false;
 
     _classCallCheck(this, InkBallPathViewModel);
 
@@ -168,7 +167,6 @@ var InkBallPathViewModel = function (_DtoMsg2) {
     _this2.iPlayerId = iPlayerId;
     _this2.PointsAsString = PointsAsString;
     _this2.OwnedPointsAsString = OwnedPointsAsString;
-    _this2.IsDelayed = IsDelayed;
     return _this2;
   }
 
@@ -545,7 +543,14 @@ var InkBallGame = function () {
     this.m_iDelayBetweenMultiCaptures = 4000;
     this.m_iTooLong2Duration = iTooLong2Duration;
     this.m_Timer = null;
+    this.m_ReconnectTimer = null;
     this.m_WaitStartTime = null;
+    this.m_TimerOpts = {
+      countdownSeconds: pathAfterPointDrawAllowanceSecAmount,
+      labelSelector: "#debug2",
+      initialStart: true,
+      countdownReachedHandler: this.CountDownReachedHandler.bind(this)
+    };
     this.m_iSlowdownLevel = 0;
     this.m_iGridSizeX = 0;
     this.m_iGridSizeY = 0;
@@ -580,12 +585,6 @@ var InkBallGame = function () {
     this.m_bViewOnly = bViewOnly;
     this.m_MouseCursorOval = null;
     this.m_ApplicationUserSettings = null;
-    this.m_TimerOpts = {
-      countdownSeconds: pathAfterPointDrawAllowanceSecAmount,
-      labelSelector: "#debug2",
-      initialStart: true,
-      countdownReachedHandler: this.CountDownReachedHandler.bind(this)
-    };
     if (sHubName === null || sHubName === "") return;
     this.g_SignalRConnection = new signalR.HubConnectionBuilder().withUrl(sHubName, {
       transport: transportType,
@@ -935,6 +934,34 @@ var InkBallGame = function () {
         document.querySelector(sMsgListSel).appendChild(li);
         this.NotifyBrowser('User Message', encodedMsg);
       }.bind(this));
+      this.g_SignalRConnection.on("ServerToClientOtherPlayerDisconnected", function (sMsg) {
+        var opts = {
+          countdownSeconds: 5,
+          initialStart: true,
+          countdownReachedHandler: function (label) {
+            var encodedMsg = sMsg;
+            var li = document.createElement("li");
+            li.textContent = encodedMsg;
+            document.querySelector(sMsgListSel).appendChild(li);
+            this.NotifyBrowser('User disconnected', encodedMsg);
+            this.m_ReconnectTimer = null;
+          }.bind(this)
+        };
+        if (this.m_ReconnectTimer) this.m_ReconnectTimer.Reset(opts);else this.m_ReconnectTimer = new CountdownTimer(opts);
+      }.bind(this));
+      this.g_SignalRConnection.on("ServerToClientOtherPlayerConnected", function (sMsg) {
+        if (this.m_ReconnectTimer) {
+          this.m_ReconnectTimer.Stop();
+          this.m_ReconnectTimer = null;
+        } else {
+          var encodedMsg = sMsg;
+          var li = document.createElement("li");
+          li.textContent = encodedMsg;
+          document.querySelector(sMsgListSel).appendChild(li);
+          this.NotifyBrowser('User disconnected', encodedMsg);
+          this.m_ReconnectTimer = null;
+        }
+      }.bind(this));
       document.querySelector(this.m_sMsgSendButtonSel).addEventListener("click", function (event) {
         event.preventDefault();
         var encodedMsg = document.querySelector(this.m_sMsgInputSel).value.trim();
@@ -956,6 +983,8 @@ var InkBallGame = function () {
     value: function StopSignalRConnection() {
       if (this.g_SignalRConnection !== null) {
         this.g_SignalRConnection.stop();
+        if (this.m_ReconnectTimer) this.m_ReconnectTimer.Stop();
+        if (this.m_Timer) this.m_Timer.Stop();
         LocalLog('Stopped SignalR connection');
       }
     }
@@ -1397,7 +1426,7 @@ var InkBallGame = function () {
   }, {
     key: "CreateXMLPutPathRequest",
     value: function CreateXMLPutPathRequest(dto) {
-      var cmd = new InkBallPathViewModel(0, this.g_iGameID, this.g_iPlayerID, dto.path, dto.owned, this.m_Timer !== null);
+      var cmd = new InkBallPathViewModel(0, this.g_iGameID, this.g_iPlayerID, dto.path, dto.owned);
       return cmd;
     }
   }, {

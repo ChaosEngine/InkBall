@@ -93,7 +93,7 @@ class InkBallPointViewModel extends DtoMsg {
 }
 
 class InkBallPathViewModel extends DtoMsg {
-	constructor(iId = 0, iGameId = 0, iPlayerId = 0, PointsAsString = '', OwnedPointsAsString = '', IsDelayed = false) {
+	constructor(iId = 0, iGameId = 0, iPlayerId = 0, PointsAsString = '', OwnedPointsAsString = ''/*, IsDelayed = false*/) {
 		super();
 
 		this.iId = iId;
@@ -101,7 +101,7 @@ class InkBallPathViewModel extends DtoMsg {
 		this.iPlayerId = iPlayerId;
 		this.PointsAsString = PointsAsString;
 		this.OwnedPointsAsString = OwnedPointsAsString;
-		this.IsDelayed = IsDelayed;
+		//this.IsDelayed = IsDelayed;
 	}
 
 	GetKind() { return CommandKindEnum.PATH; }
@@ -391,7 +391,14 @@ class InkBallGame {
 		this.m_iDelayBetweenMultiCaptures = 4000;
 		this.m_iTooLong2Duration = iTooLong2Duration/*125*/;
 		this.m_Timer = null;
+		this.m_ReconnectTimer = null;
 		this.m_WaitStartTime = null;
+		this.m_TimerOpts = {
+			countdownSeconds: pathAfterPointDrawAllowanceSecAmount,
+			labelSelector: "#debug2",
+			initialStart: true,
+			countdownReachedHandler: this.CountDownReachedHandler.bind(this)
+		};
 		this.m_iSlowdownLevel = 0;
 		this.m_iGridSizeX = 0;
 		this.m_iGridSizeY = 0;
@@ -427,12 +434,6 @@ class InkBallGame {
 		this.m_bViewOnly = bViewOnly;
 		this.m_MouseCursorOval = null;
 		this.m_ApplicationUserSettings = null;
-		this.m_TimerOpts = {
-			countdownSeconds: pathAfterPointDrawAllowanceSecAmount,
-			labelSelector: "#debug2",
-			initialStart: true,
-			countdownReachedHandler: this.CountDownReachedHandler.bind(this)
-		};
 
 		if (sHubName === null || sHubName === "") return;
 
@@ -724,6 +725,45 @@ class InkBallGame {
 
 		}.bind(this));
 
+		this.g_SignalRConnection.on("ServerToClientOtherPlayerDisconnected", function (sMsg) {
+			const opts = {
+				countdownSeconds: 5,
+				//labelSelector: "#debug2",
+				initialStart: true,
+				countdownReachedHandler: function (label) {
+					//const user = this.m_Player2Name.innerHTML;
+					let encodedMsg = sMsg;//"User " + user + " disconnected 😢";
+					let li = document.createElement("li");
+					li.textContent = encodedMsg;
+					document.querySelector(sMsgListSel).appendChild(li);
+
+					this.NotifyBrowser('User disconnected', encodedMsg);
+					this.m_ReconnectTimer = null;
+				}.bind(this)
+			};
+			if (this.m_ReconnectTimer)
+				this.m_ReconnectTimer.Reset(opts);
+			else
+				this.m_ReconnectTimer = new CountdownTimer(opts);
+		}.bind(this));
+
+		this.g_SignalRConnection.on("ServerToClientOtherPlayerConnected", function (sMsg) {
+			if (this.m_ReconnectTimer) {
+				this.m_ReconnectTimer.Stop();
+				this.m_ReconnectTimer = null;
+			}
+			else {
+				//const user = this.m_Player2Name.innerHTML;
+				let encodedMsg = sMsg;//"User " + user + " connected 😁";
+				let li = document.createElement("li");
+				li.textContent = encodedMsg;
+				document.querySelector(sMsgListSel).appendChild(li);
+
+				this.NotifyBrowser('User disconnected', encodedMsg);
+				this.m_ReconnectTimer = null;
+			}
+		}.bind(this));
+
 		document.querySelector(this.m_sMsgSendButtonSel).addEventListener("click", function (event) {
 			event.preventDefault();
 
@@ -752,6 +792,13 @@ class InkBallGame {
 	StopSignalRConnection() {
 		if (this.g_SignalRConnection !== null) {
 			this.g_SignalRConnection.stop();
+
+			//cleanup
+			if (this.m_ReconnectTimer)
+				this.m_ReconnectTimer.Stop();
+			if (this.m_Timer)
+				this.m_Timer.Stop();
+
 			LocalLog('Stopped SignalR connection');
 		}
 	}
@@ -1118,7 +1165,7 @@ class InkBallGame {
 	}
 
 	CreateXMLPutPointRequest(iX, iY) {
-		let cmd = new InkBallPointViewModel(0, this.g_iGameID, this.g_iPlayerID, iX, iY,
+		const cmd = new InkBallPointViewModel(0, this.g_iGameID, this.g_iPlayerID, iX, iY,
 			this.m_bIsPlayingWithRed ? StatusEnum.POINT_FREE_RED : StatusEnum.POINT_FREE_BLUE,
 			0);
 		return cmd;
@@ -1130,8 +1177,8 @@ class InkBallGame {
 	 * @returns {object} command
 	 */
 	CreateXMLPutPathRequest(dto) {
-		let cmd = new InkBallPathViewModel(0, this.g_iGameID, this.g_iPlayerID, dto.path, dto.owned,
-			this.m_Timer !== null);
+		const cmd = new InkBallPathViewModel(0, this.g_iGameID, this.g_iPlayerID, dto.path, dto.owned
+			/*, this.m_Timer !== null*/);
 		return cmd;
 	}
 
@@ -1273,7 +1320,7 @@ class InkBallGame {
 			this.m_bIsPlayerActive = true;
 			this.ShowMobileStatus('Oponent has moved, your turn');
 			this.m_Screen.style.cursor = "crosshair";
-			
+
 			//this.m_DrawMode.disabled = 'disabled';
 			if (this.m_Line !== null)
 				this.OnCancelClick();
@@ -1297,7 +1344,7 @@ class InkBallGame {
 			this.m_bIsPlayerActive = false;
 			this.ShowMobileStatus('Waiting for oponent move');
 			this.m_Screen.style.cursor = "wait";
-			
+
 			//this.m_DrawMode.disabled = 'disabled';
 			this.m_StopAndDraw.disabled = this.m_CancelPath.disabled = 'disabled';
 		}

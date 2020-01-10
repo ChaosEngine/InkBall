@@ -64,30 +64,21 @@ namespace InkBall.Module.Model
 		public abstract ICollection<Path> InkBallPath { get; set; }
 		public abstract ICollection<Point> InkBallPoint { get; set; }
 
-		public int GetWinCount()
-		{
-			return iWinCount;
-		}
+		public int GetWinCount() => iWinCount;
 
 		public void SetWinCount(int value)
 		{
 			iWinCount = value;
 		}
 
-		public int GetLossCount()
-		{
-			return iLossCount;
-		}
+		public int GetLossCount() => iLossCount;
 
 		public void SetLossCount(int value)
 		{
 			iLossCount = value;
 		}
 
-		public int GetDrawCount()
-		{
-			return iDrawCount;
-		}
+		public int GetDrawCount() => iDrawCount;
 
 		public void SetDrawCount(int value)
 		{
@@ -100,6 +91,11 @@ namespace InkBall.Module.Model
 			if (last_move > InkBallGame.GetDeactivationDelayInSeconds())
 				return true;
 			return false;
+		}
+
+		public bool IsDelayedPathDrawPossible()
+		{
+			return TimeStamp.AddSeconds(Constants.PathAfterPointDrawAllowanceSecAmount) > DateTime.Now;
 		}
 	}
 
