@@ -22,7 +22,8 @@ const CommandKindEnum = Object.freeze({
 	PLAYER_SURRENDER: 4,
 	WIN: 5,
 	POINTS_AND_PATHS: 6,
-	USER_SETTINGS: 7
+	USER_SETTINGS: 7,
+	STOP_AND_DRAW: 8
 });
 
 const GameTypeEnum = Object.freeze({
@@ -203,6 +204,18 @@ class WinCommand extends DtoMsg {
 	}
 }
 
+class StopAndDrawCommand extends DtoMsg {
+	constructor() {
+		super();
+	}
+
+	GetKind() { return CommandKindEnum.STOP_AND_DRAW; }
+
+	static Format(otherUser) {
+		return 'User ' + otherUser + ' started to draw path';
+	}
+}
+
 class PlayerPointsAndPathsDTO extends DtoMsg {
 	constructor(points = [], paths = []) {
 		super();
@@ -379,13 +392,6 @@ class InkBallGame {
 		this.COLOR_BLUE = 'blue';
 		this.COLOR_OWNED_RED = '#DC143C';
 		this.COLOR_OWNED_BLUE = '#8A2BE2';
-		/*this.POINT_FREE_RED = -3;
-		this.POINT_FREE_BLUE = -2;
-		this.POINT_FREE = -1;
-		this.POINT_STARTING = 0;
-		this.POINT_IN_PATH = 1;
-		this.POINT_OWNED_BY_RED = 2;
-		this.POINT_OWNED_BY_BLUE = 3;*/
 		this.m_bIsWon = false;
 		this.m_bPointsAndPathsLoaded = false;
 		this.m_iDelayBetweenMultiCaptures = 4000;
@@ -665,7 +671,7 @@ class InkBallGame {
 			let encodedMsg = PlayerJoiningCommand.Format(join);
 
 			let li = document.createElement("li");
-			li.textContent = encodedMsg;
+			li.innerHTML = `<strong class="text-primary">${encodedMsg}</strong>`;
 			document.querySelector(sMsgListSel).appendChild(li);
 
 			if (this.m_SurrenderButton !== null) {
@@ -675,10 +681,6 @@ class InkBallGame {
 					this.ShowMobileStatus('Your move');
 				}
 			}
-			// if (this.m_DrawMode !== null)
-			// 	this.m_DrawMode.disabled = '';
-			//if (this.m_CancelPath !== null)
-			//	this.m_CancelPath.disabled = '';
 
 			this.NotifyBrowser('Player joininig', encodedMsg);
 
@@ -690,7 +692,7 @@ class InkBallGame {
 			let encodedMsg = PlayerSurrenderingCommand.Format(surrender);
 
 			let li = document.createElement("li");
-			li.textContent = encodedMsg;
+			li.innerHTML = `<strong class="text-warning">${encodedMsg}</strong>`;
 			document.querySelector(sMsgListSel).appendChild(li);
 
 
@@ -705,7 +707,7 @@ class InkBallGame {
 			let encodedMsg = WinCommand.Format(win);
 
 			let li = document.createElement("li");
-			li.textContent = encodedMsg;
+			li.innerHTML = `<strong class="text-warning">${encodedMsg}</strong>`;
 			document.querySelector(sMsgListSel).appendChild(li);
 
 			this.ReceivedWinProcessing(win);
@@ -730,11 +732,10 @@ class InkBallGame {
 				countdownSeconds: 5,
 				//labelSelector: "#debug2",
 				initialStart: true,
-				countdownReachedHandler: function (label) {
-					//const user = this.m_Player2Name.innerHTML;
-					let encodedMsg = sMsg;//"User " + user + " disconnected 😢";
+				countdownReachedHandler: function () {
+					let encodedMsg = sMsg;
 					let li = document.createElement("li");
-					li.textContent = encodedMsg;
+					li.innerHTML = `<strong class="text-warning">${encodedMsg}</strong>`;
 					document.querySelector(sMsgListSel).appendChild(li);
 
 					this.NotifyBrowser('User disconnected', encodedMsg);
@@ -753,15 +754,28 @@ class InkBallGame {
 				this.m_ReconnectTimer = null;
 			}
 			else {
-				//const user = this.m_Player2Name.innerHTML;
-				let encodedMsg = sMsg;//"User " + user + " connected 😁";
+				let encodedMsg = sMsg;
 				let li = document.createElement("li");
-				li.textContent = encodedMsg;
+				li.innerHTML = `<strong class="text-primary">${encodedMsg}</strong>`;
 				document.querySelector(sMsgListSel).appendChild(li);
 
 				this.NotifyBrowser('User disconnected', encodedMsg);
 				this.m_ReconnectTimer = null;
 			}
+		}.bind(this));
+
+		this.g_SignalRConnection.on("ServerToClientStopAndDraw", function (cmd) {
+			//debugger;
+			if (!cmd) return;
+
+			const user = this.m_Player2Name.innerHTML;
+			let encodedMsg = StopAndDrawCommand.Format(user);
+
+			let li = document.createElement("li");
+			li.innerHTML = `<strong class="text-info">${encodedMsg}</strong>`;
+			document.querySelector(sMsgListSel).appendChild(li);
+
+			this.NotifyBrowser('User ' + user + ' started drawing new path', encodedMsg);
 		}.bind(this));
 
 		document.querySelector(this.m_sMsgSendButtonSel).addEventListener("click", function (event) {
@@ -825,23 +839,6 @@ class InkBallGame {
 				break;
 		}
 	}
-
-	/*SetTimer(bStartTimer) {
-		if (bStartTimer === false) {
-			if (this.m_bIsTimerRunning === true)
-				clearInterval(this.m_iTimerID);
-			this.m_bIsTimerRunning = false;
-		}
-		else {
-			if (this.m_bIsTimerRunning === true)
-				clearInterval(this.m_iTimerID);
-			else
-				this.m_WaitStartTime = new Date();
-			let interval = this.m_iTimerInterval * (1 + this.m_iSlowdownLevel * 0.5);
-			this.m_iTimerID = setInterval(this.GameLoop, interval);
-			this.m_bIsTimerRunning = true;
-		}
-	}*/
 
 	/**
 	 * Disable Text Selection script- © Dynamic Drive DHTML code library (www.dynamicdrive.com)
@@ -1140,17 +1137,6 @@ class InkBallGame {
 	IsPointOutsideAllPaths(iX, iY) {
 		for (const line of this.m_Lines) {
 			let points = line.$GetPointsArray();
-			//convert to x's and y's arrays
-			/*let count = points.length;
-			let xs = [], ys = [], x, y, k = 0;
-			for (let i = 0; i < count; i += 2) {
-				x = points[i];
-				y = points[i + 1];
-				if (x === null || y === null) continue;
-				//x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
-				xs[k] = x; ys[k] = y;
-				++k;
-			}*/
 
 			if (false !== this.pnpoly2(points, iX * this.m_iGridSizeX, iY * this.m_iGridSizeY))
 				return false;
@@ -1232,6 +1218,20 @@ class InkBallGame {
 				this.g_SignalRConnection.invoke("ClientToServerPing", payload).then(function () {
 					document.querySelector(this.m_sMsgInputSel).value = '';
 					document.querySelector(this.m_sMsgSendButtonSel).disabled = 'disabled';
+				}.bind(this)).catch(function (err) {
+					LocalError(err.toString());
+				});
+				break;
+
+			case CommandKindEnum.STOP_AND_DRAW:
+				this.g_SignalRConnection.invoke("ClientToServerStopAndDraw", payload).then(function () {
+					//debugger;
+					this.m_bDrawLines = true;
+					this.m_iLastX = this.m_iLastY = -1;
+					this.m_Line = null;
+					this.m_bIsPlayerActive = true;
+					this.m_StopAndDraw.disabled = 'disabled';
+
 				}.bind(this)).catch(function (err) {
 					LocalError(err.toString());
 				});
@@ -1537,7 +1537,6 @@ class InkBallGame {
 							else {
 								let val = this.SurroundOponentPoints();
 								if (val.owned.length > 0) {
-									//this.m_Line.$SetIsClosed(true);
 									this.Debug('Closing path', 0);
 									this.SendAsyncData(this.CreateXMLPutPathRequest(val), () => {
 										this.OnCancelClick();
@@ -1546,7 +1545,6 @@ class InkBallGame {
 											p.$SetFillColor(val.revertFillColor);
 											p.$strokeColor(val.revertStrokeColor);
 										});
-										//this.m_bMouseDown = false;
 										this.m_bHandlingEvent = false;
 									});
 								}
@@ -1713,11 +1711,9 @@ class InkBallGame {
 			this.m_iLastX = this.m_iLastY = -1;
 			this.m_Line = null;
 		} else if (this.m_Line === null) {
-			this.m_bDrawLines = true;
-			this.m_iLastX = this.m_iLastY = -1;
-			this.m_Line = null;
-			this.m_bIsPlayerActive = true;
-			this.m_StopAndDraw.disabled = 'disabled';
+			//debugger;
+			//send On-Stop-And-Draw notification
+			this.SendAsyncData(new StopAndDrawCommand());
 		}
 	}
 

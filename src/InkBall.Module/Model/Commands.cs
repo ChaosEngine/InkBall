@@ -13,7 +13,8 @@ namespace InkBall.Module.Model
 		PLAYER_SURRENDER = 4,
 		WIN = 5,
 		POINTS_AND_PATHS = 6,
-		USER_SETTINGS = 7
+		USER_SETTINGS = 7,
+		STOP_AND_DRAW = 8
 	}
 
 	public interface IDtoMsg
@@ -108,6 +109,19 @@ namespace InkBall.Module.Model
 		public CommandKindEnum GetKind()
 		{
 			return CommandKindEnum.WIN;
+		}
+	}
+
+	[MessagePackObject(true)]
+	public sealed class StopAndDrawCommand : IDtoMsg
+	{
+		public StopAndDrawCommand()
+		{
+		}
+
+		public CommandKindEnum GetKind()
+		{
+			return CommandKindEnum.STOP_AND_DRAW;
 		}
 	}
 

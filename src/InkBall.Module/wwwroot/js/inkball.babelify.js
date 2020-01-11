@@ -40,7 +40,8 @@ var CommandKindEnum = Object.freeze({
   PLAYER_SURRENDER: 4,
   WIN: 5,
   POINTS_AND_PATHS: 6,
-  USER_SETTINGS: 7
+  USER_SETTINGS: 7,
+  STOP_AND_DRAW: 8
 });
 var GameTypeEnum = Object.freeze({
   FIRST_CAPTURE: 0,
@@ -331,8 +332,32 @@ var WinCommand = function (_DtoMsg6) {
   return WinCommand;
 }(DtoMsg);
 
-var PlayerPointsAndPathsDTO = function (_DtoMsg7) {
-  _inherits(PlayerPointsAndPathsDTO, _DtoMsg7);
+var StopAndDrawCommand = function (_DtoMsg7) {
+  _inherits(StopAndDrawCommand, _DtoMsg7);
+
+  function StopAndDrawCommand() {
+    _classCallCheck(this, StopAndDrawCommand);
+
+    return _possibleConstructorReturn(this, _getPrototypeOf(StopAndDrawCommand).call(this));
+  }
+
+  _createClass(StopAndDrawCommand, [{
+    key: "GetKind",
+    value: function GetKind() {
+      return CommandKindEnum.STOP_AND_DRAW;
+    }
+  }], [{
+    key: "Format",
+    value: function Format(otherUser) {
+      return 'User ' + otherUser + ' started to draw path';
+    }
+  }]);
+
+  return StopAndDrawCommand;
+}(DtoMsg);
+
+var PlayerPointsAndPathsDTO = function (_DtoMsg8) {
+  _inherits(PlayerPointsAndPathsDTO, _DtoMsg8);
 
   function PlayerPointsAndPathsDTO() {
     var _this7;
@@ -365,8 +390,8 @@ var PlayerPointsAndPathsDTO = function (_DtoMsg7) {
   return PlayerPointsAndPathsDTO;
 }(DtoMsg);
 
-var ApplicationUserSettings = function (_DtoMsg8) {
-  _inherits(ApplicationUserSettings, _DtoMsg8);
+var ApplicationUserSettings = function (_DtoMsg9) {
+  _inherits(ApplicationUserSettings, _DtoMsg9);
 
   function ApplicationUserSettings() {
     var _this8;
@@ -893,7 +918,7 @@ var InkBallGame = function () {
       this.g_SignalRConnection.on("ServerToClientPlayerJoin", function (join) {
         var encodedMsg = PlayerJoiningCommand.Format(join);
         var li = document.createElement("li");
-        li.textContent = encodedMsg;
+        li.innerHTML = "<strong class=\"text-primary\">".concat(encodedMsg, "</strong>");
         document.querySelector(sMsgListSel).appendChild(li);
 
         if (this.m_SurrenderButton !== null) {
@@ -910,7 +935,7 @@ var InkBallGame = function () {
       this.g_SignalRConnection.on("ServerToClientPlayerSurrender", function (surrender) {
         var encodedMsg = PlayerSurrenderingCommand.Format(surrender);
         var li = document.createElement("li");
-        li.textContent = encodedMsg;
+        li.innerHTML = "<strong class=\"text-warning\">".concat(encodedMsg, "</strong>");
         document.querySelector(sMsgListSel).appendChild(li);
         this.m_bHandlingEvent = false;
         encodedMsg = encodedMsg === '' ? 'Game interrupted!' : encodedMsg;
@@ -921,7 +946,7 @@ var InkBallGame = function () {
       this.g_SignalRConnection.on("ServerToClientPlayerWin", function (win) {
         var encodedMsg = WinCommand.Format(win);
         var li = document.createElement("li");
-        li.textContent = encodedMsg;
+        li.innerHTML = "<strong class=\"text-warning\">".concat(encodedMsg, "</strong>");
         document.querySelector(sMsgListSel).appendChild(li);
         this.ReceivedWinProcessing(win);
         this.NotifyBrowser('We have a winner', encodedMsg);
@@ -938,10 +963,10 @@ var InkBallGame = function () {
         var opts = {
           countdownSeconds: 5,
           initialStart: true,
-          countdownReachedHandler: function (label) {
+          countdownReachedHandler: function () {
             var encodedMsg = sMsg;
             var li = document.createElement("li");
-            li.textContent = encodedMsg;
+            li.innerHTML = "<strong class=\"text-warning\">".concat(encodedMsg, "</strong>");
             document.querySelector(sMsgListSel).appendChild(li);
             this.NotifyBrowser('User disconnected', encodedMsg);
             this.m_ReconnectTimer = null;
@@ -956,11 +981,20 @@ var InkBallGame = function () {
         } else {
           var encodedMsg = sMsg;
           var li = document.createElement("li");
-          li.textContent = encodedMsg;
+          li.innerHTML = "<strong class=\"text-primary\">".concat(encodedMsg, "</strong>");
           document.querySelector(sMsgListSel).appendChild(li);
           this.NotifyBrowser('User disconnected', encodedMsg);
           this.m_ReconnectTimer = null;
         }
+      }.bind(this));
+      this.g_SignalRConnection.on("ServerToClientStopAndDraw", function (cmd) {
+        if (!cmd) return;
+        var user = this.m_Player2Name.innerHTML;
+        var encodedMsg = StopAndDrawCommand.Format(user);
+        var li = document.createElement("li");
+        li.innerHTML = "<strong class=\"text-info\">".concat(encodedMsg, "</strong>");
+        document.querySelector(sMsgListSel).appendChild(li);
+        this.NotifyBrowser('User ' + user + ' started drawing new path', encodedMsg);
       }.bind(this));
       document.querySelector(this.m_sMsgSendButtonSel).addEventListener("click", function (event) {
         event.preventDefault();
@@ -1472,6 +1506,18 @@ var InkBallGame = function () {
           });
           break;
 
+        case CommandKindEnum.STOP_AND_DRAW:
+          this.g_SignalRConnection.invoke("ClientToServerStopAndDraw", payload).then(function () {
+            this.m_bDrawLines = true;
+            this.m_iLastX = this.m_iLastY = -1;
+            this.m_Line = null;
+            this.m_bIsPlayerActive = true;
+            this.m_StopAndDraw.disabled = 'disabled';
+          }.bind(this))["catch"](function (err) {
+            LocalError(err.toString());
+          });
+          break;
+
         default:
           LocalError('unknown object');
           break;
@@ -1892,11 +1938,7 @@ var InkBallGame = function () {
         this.m_iLastX = this.m_iLastY = -1;
         this.m_Line = null;
       } else if (this.m_Line === null) {
-        this.m_bDrawLines = true;
-        this.m_iLastX = this.m_iLastY = -1;
-        this.m_Line = null;
-        this.m_bIsPlayerActive = true;
-        this.m_StopAndDraw.disabled = 'disabled';
+        this.SendAsyncData(new StopAndDrawCommand());
       }
     }
   }, {

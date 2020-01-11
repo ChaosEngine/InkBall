@@ -31,7 +31,7 @@ namespace InkBall.Module.Hubs
 
 		Task ServerToClientPlayerWin(WinCommand win);
 
-		Task ServerToClientStopAndDrawDelayedPath(string message);
+		Task ServerToClientStopAndDraw(StopAndDrawCommand notification);
 
 		Task ServerToClientOtherPlayerDisconnected(string message);
 
@@ -52,7 +52,7 @@ namespace InkBall.Module.Hubs
 
 		Task<string> GetUserSettings();
 
-		//Task<string> ClientToServerStopAndDrawDelayedPath(string message);
+		Task ClientToServerStopAndDraw(StopAndDrawCommand notification);
 	}
 
 	[Authorize(Policy = Constants.InkBallPolicyName)]
@@ -767,7 +767,7 @@ namespace InkBall.Module.Hubs
 			}
 		}
 
-		/*public async Task<string> ClientToServerStopAndDrawDelayedPath(string message)
+		public async Task ClientToServerStopAndDraw(StopAndDrawCommand notification)
 		{
 			CancellationToken token = this.Context.ConnectionAborted;
 
@@ -777,16 +777,14 @@ namespace InkBall.Module.Hubs
 
 			try
 			{
-				await Clients.User(OtherUserIdentifier).ServerToClientStopAndDrawDelayedPath(message);
-
-				return "notification sent";
+				await Clients.User(OtherUserIdentifier).ServerToClientStopAndDraw(notification);
 			}
 			catch (Exception ex)
 			{
 				_logger.LogError(ex.Message);
 				throw;
 			}
-		}*/
+		}
 
 		#endregion IGameServer implementation
 	}
