@@ -1773,10 +1773,10 @@ var InkBallGame = function () {
             if (this.m_Line !== null) {
               var p0 = this.m_Points.get(this.m_iLastY * this.m_iGridWidth + this.m_iLastX);
               var p1 = this.m_Points.get(y * this.m_iGridWidth + x);
+              this.m_CancelPath.disabled = this.m_Line.$GetLength() >= 2 ? '' : 'disabled';
 
               if (p0 !== undefined && p1 !== undefined && p1.$GetStatus() !== StatusEnum.POINT_IN_PATH && p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
                 this.m_Line.$AppendPoints(tox + "," + toy);
-                this.m_CancelPath.disabled = this.m_Line.$GetLength() >= 2 ? '' : 'disabled';
                 if (p1.$GetStatus() !== StatusEnum.POINT_STARTING) p1.$SetStatus(StatusEnum.POINT_IN_PATH);else {
                   var val = this.SurroundOponentPoints();
 
@@ -1806,6 +1806,7 @@ var InkBallGame = function () {
                 var fromx = this.m_iLastX * this.m_iGridSizeX;
                 var fromy = this.m_iLastY * this.m_iGridSizeY;
                 this.m_Line = $createPolyline(3, fromx + "," + fromy + " " + tox + "," + toy, this.m_sDotColor);
+                this.m_CancelPath.disabled = '';
                 if (_p.$GetStatus() !== StatusEnum.POINT_IN_PATH) _p.$SetStatus(StatusEnum.POINT_STARTING);
                 if (_p2.$GetStatus() !== StatusEnum.POINT_IN_PATH) _p2.$SetStatus(StatusEnum.POINT_IN_PATH);
                 this.m_iLastX = x;
@@ -1857,12 +1858,12 @@ var InkBallGame = function () {
           if (this.m_Line !== null) {
             var p0 = this.m_Points.get(this.m_iLastY * this.m_iGridWidth + this.m_iLastX);
             var p1 = this.m_Points.get(y * this.m_iGridWidth + x);
+            this.m_CancelPath.disabled = this.m_Line.$GetLength() >= 2 ? '' : 'disabled';
 
             if (p0 !== undefined && p1 !== undefined && p1.$GetStatus() !== StatusEnum.POINT_IN_PATH && p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
               var tox = x * this.m_iGridSizeX;
               var toy = y * this.m_iGridSizeY;
               this.m_Line.$AppendPoints(tox + "," + toy);
-              this.m_CancelPath.disabled = this.m_Line.$GetLength() >= 2 ? '' : 'disabled';
               if (p1.$GetStatus() !== StatusEnum.POINT_STARTING) p1.$SetStatus(StatusEnum.POINT_IN_PATH);else {
                 var val = this.SurroundOponentPoints();
 
@@ -1900,6 +1901,7 @@ var InkBallGame = function () {
               var _toy = y * this.m_iGridSizeY;
 
               this.m_Line = $createPolyline(3, fromx + "," + fromy + " " + _tox + "," + _toy, this.m_sDotColor);
+              this.m_CancelPath.disabled = '';
               if (_p3.$GetStatus() !== StatusEnum.POINT_IN_PATH) _p3.$SetStatus(StatusEnum.POINT_STARTING);
               if (_p4.$GetStatus() !== StatusEnum.POINT_IN_PATH) _p4.$SetStatus(StatusEnum.POINT_IN_PATH);
             }
@@ -1983,7 +1985,7 @@ var InkBallGame = function () {
         }
 
         this.m_iLastX = this.m_iLastY = -1;
-        if (this.m_Timer) this.m_StopAndDraw.disabled = '';
+        if (this.m_Timer) this.m_StopAndDraw.disabled = 'disabled';
       }
     }
   }, {

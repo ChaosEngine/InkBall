@@ -1023,8 +1023,8 @@ class InkBallGame {
 
 	IsPointBelongingToLine(sPoints, iX, iY) {
 		for (const packed of sPoints) {
-			let pnt = packed.split(",");
-			let x = pnt[0], y = pnt[1];
+			const pnt = packed.split(",");
+			const x = pnt[0], y = pnt[1];
 			if (x === iX && y === iY)
 				return true;
 		}
@@ -1074,7 +1074,7 @@ class InkBallGame {
 
 		//uniqe point path test (no duplicates except starting-ending point)
 		let unique_hashset = new Set();
-		let hasDuplicates = points.slice(0, -1).some(function (pt) {
+		const hasDuplicates = points.slice(0, -1).some(function (pt) {
 			return unique_hashset.size === unique_hashset.add(pt.x + '_' + pt.y).size;
 		});
 
@@ -1328,7 +1328,7 @@ class InkBallGame {
 		}
 		else {
 			//set starting point to POINT_IN_PATH to block further path closing with it
-			let points = this.m_Line.$GetPointsString();
+			const points = this.m_Line.$GetPointsString();
 			let i = 0;
 			let x = points[i], y = points[i + 1];
 			x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
@@ -1527,11 +1527,11 @@ class InkBallGame {
 					if (this.m_Line !== null) {
 						let p0 = this.m_Points.get(this.m_iLastY * this.m_iGridWidth + this.m_iLastX);
 						let p1 = this.m_Points.get(y * this.m_iGridWidth + x);
+						this.m_CancelPath.disabled = this.m_Line.$GetLength() >= 2 ? '' : 'disabled';
 
 						if (p0 !== undefined && p1 !== undefined && (p1.$GetStatus() !== StatusEnum.POINT_IN_PATH) &&
 							p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
 							this.m_Line.$AppendPoints(tox + "," + toy);
-							this.m_CancelPath.disabled = this.m_Line.$GetLength() >= 2 ? '' : 'disabled';
 							if (p1.$GetStatus() !== StatusEnum.POINT_STARTING)
 								p1.$SetStatus(StatusEnum.POINT_IN_PATH);
 							else {
@@ -1563,9 +1563,10 @@ class InkBallGame {
 						if (p0 !== undefined && p1 !== undefined &&
 							(p0.$GetStatus() !== StatusEnum.POINT_IN_PATH && p1.$GetStatus() !== StatusEnum.POINT_IN_PATH) &&
 							p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
-							let fromx = this.m_iLastX * this.m_iGridSizeX;
-							let fromy = this.m_iLastY * this.m_iGridSizeY;
+							const fromx = this.m_iLastX * this.m_iGridSizeX;
+							const fromy = this.m_iLastY * this.m_iGridSizeY;
 							this.m_Line = $createPolyline(3, fromx + "," + fromy + " " + tox + "," + toy, this.m_sDotColor);
+							this.m_CancelPath.disabled = '';
 							if (p0.$GetStatus() !== StatusEnum.POINT_IN_PATH)
 								p0.$SetStatus(StatusEnum.POINT_STARTING);
 							if (p1.$GetStatus() !== StatusEnum.POINT_IN_PATH)
@@ -1599,8 +1600,8 @@ class InkBallGame {
 			this.m_iLastX = x;
 			this.m_iLastY = y;
 
-			let loc_x = x;
-			let loc_y = y;
+			const loc_x = x;
+			const loc_y = y;
 			x = loc_x * this.m_iGridSizeX;
 			y = loc_y * this.m_iGridSizeY;
 
@@ -1627,13 +1628,13 @@ class InkBallGame {
 				if (this.m_Line !== null) {
 					let p0 = this.m_Points.get(this.m_iLastY * this.m_iGridWidth + this.m_iLastX);
 					let p1 = this.m_Points.get(y * this.m_iGridWidth + x);
+					this.m_CancelPath.disabled = this.m_Line.$GetLength() >= 2 ? '' : 'disabled';
 
 					if (p0 !== undefined && p1 !== undefined && (p1.$GetStatus() !== StatusEnum.POINT_IN_PATH) &&
 						p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
-						let tox = x * this.m_iGridSizeX;
-						let toy = y * this.m_iGridSizeY;
+						const tox = x * this.m_iGridSizeX;
+						const toy = y * this.m_iGridSizeY;
 						this.m_Line.$AppendPoints(tox + "," + toy);
-						this.m_CancelPath.disabled = this.m_Line.$GetLength() >= 2 ? '' : 'disabled';
 						if (p1.$GetStatus() !== StatusEnum.POINT_STARTING)
 							p1.$SetStatus(StatusEnum.POINT_IN_PATH);
 						else {
@@ -1667,13 +1668,16 @@ class InkBallGame {
 					if (p0 !== undefined && p1 !== undefined && (p0.$GetStatus() !== StatusEnum.POINT_IN_PATH &&
 						p1.$GetStatus() !== StatusEnum.POINT_IN_PATH) &&
 						p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
-						let fromx = this.m_iLastX * this.m_iGridSizeX;
-						let fromy = this.m_iLastY * this.m_iGridSizeY;
-						let tox = x * this.m_iGridSizeX;
-						let toy = y * this.m_iGridSizeY;
+						const fromx = this.m_iLastX * this.m_iGridSizeX;
+						const fromy = this.m_iLastY * this.m_iGridSizeY;
+						const tox = x * this.m_iGridSizeX;
+						const toy = y * this.m_iGridSizeY;
 						this.m_Line = $createPolyline(3, fromx + "," + fromy + " " + tox + "," + toy, this.m_sDotColor);
-						if (p0.$GetStatus() !== StatusEnum.POINT_IN_PATH) p0.$SetStatus(StatusEnum.POINT_STARTING);
-						if (p1.$GetStatus() !== StatusEnum.POINT_IN_PATH) p1.$SetStatus(StatusEnum.POINT_IN_PATH);
+						this.m_CancelPath.disabled = '';
+						if (p0.$GetStatus() !== StatusEnum.POINT_IN_PATH)
+							p0.$SetStatus(StatusEnum.POINT_STARTING);
+						if (p1.$GetStatus() !== StatusEnum.POINT_IN_PATH)
+							p1.$SetStatus(StatusEnum.POINT_IN_PATH);
 					}
 					this.m_iLastX = x;
 					this.m_iLastY = y;
@@ -1736,7 +1740,7 @@ class InkBallGame {
 			this.m_iLastX = this.m_iLastY = -1;
 
 			if (this.m_Timer)
-				this.m_StopAndDraw.disabled = '';
+				this.m_StopAndDraw.disabled = 'disabled';
 		}
 	}
 
