@@ -60,7 +60,7 @@ if (SVG) {
 		cont.appendChild(o);
 		//ch_added start
 		o.$AppendPoints = function (x, y) {
-			this.setAttribute("points", this.getAttribute("points") + ` ${x},${y}`);
+			this.setAttribute("points", this.getAttribute("points") + (" " + x + "," + y));
 		};
 		o.$RemoveLastPoint = function () {
 			const newpts = this.getAttribute("points").replace(/(\s\d+,\d+)$/, "");
@@ -68,9 +68,7 @@ if (SVG) {
 			return newpts;
 		};
 		o.$ContainsPoint = function (x, y) {
-			//return this.getAttribute("points").indexOf(`${x},${y}`) !== -1;
-			//debugger;
-			const regexstr = new RegExp(`${x},${y}`, 'g');
+			const regexstr = new RegExp(x + "," + y, 'g');
 			const cnt = (this.getAttribute("points").match(regexstr) || []).length;
 			console.warn('regexstr = ' + regexstr + ' cnt = ' + cnt);
 			return cnt;
@@ -184,7 +182,7 @@ if (SVG) {
 		//ch_added start
 		o.m_sMyPoints = points;
 		o.$AppendPoints = function (x, y) {
-			this.m_sMyPoints = this.m_sMyPoints + ` ${x},${y}`;
+			this.m_sMyPoints = this.m_sMyPoints + (" " + x + "," + y);
 			this.points.value = this.m_sMyPoints;
 		};
 		o.$RemoveLastPoint = function () {
@@ -193,9 +191,7 @@ if (SVG) {
 			return this.m_sMyPoints;
 		};
 		o.$ContainsPoint = function (x, y) {
-			//return this.m_sMyPoints.indexOf(`${x},${y}`) !== -1;
-			//debugger;
-			const regexstr = new RegExp(`${x},${y}`, 'g');
+			const regexstr = new RegExp(x + "," + y, 'g');
 			const cnt = (this.m_sMyPoints.match(regexstr) || []).length;
 			console.warn('regexstr = ' + regexstr + ' cnt = ' + cnt);
 			return cnt;
