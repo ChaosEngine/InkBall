@@ -4,6 +4,7 @@
 // ==========================================
 // written by Gerard Ferrandez
 // initial version - June 28, 2006
+// modified - 2018-2020 - Andrzej Pauli polyline and oval functions & extensions
 // modified - July 21 - use object functions
 // modified - July 24 - debug
 // www.dhteumeuleu.com
@@ -58,30 +59,46 @@ if (SVG) {
 		if (points) o.setAttribute("points", points);
 		cont.appendChild(o);
 		//ch_added start
-		o.$AppendPoints = function (sPoints) {
-			this.setAttribute("points", this.getAttribute("points") + " " + sPoints);
+		o.$AppendPoints = function (x, y) {
+			this.setAttribute("points", this.getAttribute("points") + ` ${x},${y}`);
+		};
+		o.$RemoveLastPoint = function () {
+			const newpts = this.getAttribute("points").replace(/(\s\d+,\d+)$/, "");
+			this.setAttribute("points", newpts);
+			return newpts;
+		};
+		o.$ContainsPoint = function (x, y) {
+			//return this.getAttribute("points").indexOf(`${x},${y}`) !== -1;
+			//debugger;
+			const regexstr = new RegExp(`${x},${y}`, 'g');
+			const cnt = (this.getAttribute("points").match(regexstr) || []).length;
+			console.warn('regexstr = ' + regexstr + ' cnt = ' + cnt);
+			return cnt;
 		};
 		o.$GetPointsString = function () {
 			return this.getAttribute("points").replace(/,/g, " ").split(" ");
 		};
 		o.$GetPointsArray = function () {
 			//x0,y0 x1,y1 x2,y2
-			let pts = [];
-			this.getAttribute("points").split(" ").forEach(function (pt) {
-				let tab = pt.split(',');
-				pts.push({ x: parseInt(tab[0]), y: parseInt(tab[1]) });
+			return this.getAttribute("points").split(" ").map(function (pt) {
+				const tab = pt.split(',');
+				return { x: parseInt(tab[0]), y: parseInt(tab[1]) };
 			});
-			return pts;
 		};
 		o.$SetPoints = function (sPoints) {
 			this.setAttribute("points", sPoints);
 		};
 		o.$GetIsClosed = function () {
-			let pts = this.getAttribute("points").split(" ");
+			const pts = this.getAttribute("points").split(" ");
 			return pts[0] === pts[pts.length - 1];
 		};
 		o.$GetLength = function () {
 			return this.getAttribute("points").split(" ").length;
+		};
+		o.$SetWidthAndColor = function (w, col) {
+			this.setAttribute("stroke", col);
+			this.setAttribute("fill", col);
+			this.setAttribute("stroke-width", Math.round(w));
 		};
 		//ch_added end
 		return o;
@@ -166,32 +183,48 @@ if (SVG) {
 		cont.appendChild(o);
 		//ch_added start
 		o.m_sMyPoints = points;
-		o.$AppendPoints = function (sPoints) {
-			this.m_sMyPoints = this.m_sMyPoints + " " + sPoints;
+		o.$AppendPoints = function (x, y) {
+			this.m_sMyPoints = this.m_sMyPoints + ` ${x},${y}`;
 			this.points.value = this.m_sMyPoints;
+		};
+		o.$RemoveLastPoint = function () {
+			this.m_sMyPoints = this.m_sMyPoints.replace(/(\s\d+,\d+)$/, "");
+			this.points.value = this.m_sMyPoints;
+			return this.m_sMyPoints;
+		};
+		o.$ContainsPoint = function (x, y) {
+			//return this.m_sMyPoints.indexOf(`${x},${y}`) !== -1;
+			//debugger;
+			const regexstr = new RegExp(`${x},${y}`, 'g');
+			const cnt = (this.m_sMyPoints.match(regexstr) || []).length;
+			console.warn('regexstr = ' + regexstr + ' cnt = ' + cnt);
+			return cnt;
 		};
 		o.$GetPointsString = function () {
 			return o.m_sMyPoints.replace(/,/g, " ").split(" ");
 		};
 		o.$GetPointsArray = function () {
 			//x0,y0 x1,y1 x2,y2
-			let pts = [];
-			this.m_sMyPoints.split(" ").forEach(function (pt) {
-				let tab = pt.split(',');
-				pts.push({ x: parseInt(tab[0]), y: parseInt(tab[1]) });
+			return this.m_sMyPoints.split(" ").map(function (pt) {
+				const tab = pt.split(',');
+				return { x: parseInt(tab[0]), y: parseInt(tab[1]) };
 			});
-			return pts;
 		};
 		o.$SetPoints = function (sPoints) {
 			this.m_sMyPoints = sPoints;
 			this.points.value = this.m_sMyPoints;
 		};
 		o.$GetIsClosed = function () {
-			let pts = this.m_sMyPoints.split(" ");
+			const pts = this.m_sMyPoints.split(" ");
 			return pts[0] === pts[pts.length - 1];
 		};
 		o.$GetLength = function () {
 			return this.m_sMyPoints.split(" ").length;
+		};
+		o.$SetWidthAndColor = function (w, col) {
+			this.strokecolor = col;
+			this.fill.color = col;
+			this.strokeweight = Math.round(w) + "px";
 		};
 		//ch_added end
 		return o;

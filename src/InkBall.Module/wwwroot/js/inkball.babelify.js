@@ -563,6 +563,7 @@ var InkBallGame = function () {
     this.COLOR_BLUE = 'blue';
     this.COLOR_OWNED_RED = '#DC143C';
     this.COLOR_OWNED_BLUE = '#8A2BE2';
+    this.DRAWING_PATH_COLOR = "black";
     this.m_bIsWon = false;
     this.m_bPointsAndPathsLoaded = false;
     this.m_iDelayBetweenMultiCaptures = 4000;
@@ -1296,9 +1297,9 @@ var InkBallGame = function () {
   }, {
     key: "pnpoly2",
     value: function pnpoly2(pathPoints, x, y) {
+      var npol = pathPoints.length;
       var i,
           j,
-          npol = pathPoints.length,
           c = false;
 
       for (i = 0, j = npol - 1; i < npol; j = i++) {
@@ -1329,24 +1330,39 @@ var InkBallGame = function () {
         };
       }
 
+      var sColor = this.m_sDotColor === this.COLOR_RED ? this.COLOR_BLUE : this.COLOR_RED;
+      var owned_by = this.m_sDotColor === this.COLOR_RED ? StatusEnum.POINT_OWNED_BY_RED : StatusEnum.POINT_OWNED_BY_BLUE;
+      var sOwnedCol = this.m_sDotColor === this.COLOR_RED ? this.COLOR_OWNED_RED : this.COLOR_OWNED_BLUE;
       var x,
           y,
           sPathPoints = "",
-          sDelimiter = "";
+          sOwnedPoints = "",
+          sDelimiter = "",
+          ownedPoints = [];
       var _iteratorNormalCompletion3 = true;
       var _didIteratorError3 = false;
       var _iteratorError3 = undefined;
 
       try {
-        for (var _iterator3 = points[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-          var pt = _step3.value;
-          x = pt.x;
-          y = pt.y;
-          if (x === null || y === null) continue;
-          x /= this.m_iGridSizeX;
-          y /= this.m_iGridSizeY;
-          sPathPoints += "".concat(sDelimiter).concat(x, ",").concat(y);
-          sDelimiter = " ";
+        for (var _iterator3 = this.m_Points.values()[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+          var p0 = _step3.value;
+
+          if (p0 !== undefined && p0.$GetStatus() === StatusEnum.POINT_FREE && p0.$GetFillColor() === sColor) {
+            var pos = p0.$GetPosition();
+            x = pos.x;
+            y = pos.y;
+
+            if (false !== this.pnpoly2(points, x, y)) {
+              p0.$SetStatus(owned_by);
+              p0.$SetFillColor(sOwnedCol);
+              p0.$strokeColor(sOwnedCol);
+              x /= this.m_iGridSizeX;
+              y /= this.m_iGridSizeY;
+              sOwnedPoints += "".concat(sDelimiter).concat(x, ",").concat(y);
+              ownedPoints.push(p0);
+              sDelimiter = " ";
+            }
+          }
         }
       } catch (err) {
         _didIteratorError3 = true;
@@ -1363,50 +1379,15 @@ var InkBallGame = function () {
         }
       }
 
-      var sColor = this.m_sDotColor === this.COLOR_RED ? this.COLOR_BLUE : this.COLOR_RED;
-      var owned_by = this.m_sDotColor === this.COLOR_RED ? StatusEnum.POINT_OWNED_BY_RED : StatusEnum.POINT_OWNED_BY_BLUE;
-      var sOwnedCol = this.m_sDotColor === this.COLOR_RED ? this.COLOR_OWNED_RED : this.COLOR_OWNED_BLUE;
-      var sOwnedPoints = "",
-          ownedPoints = [];
-      sDelimiter = "";
-      var _iteratorNormalCompletion4 = true;
-      var _didIteratorError4 = false;
-      var _iteratorError4 = undefined;
-
-      try {
-        for (var _iterator4 = this.m_Points.values()[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-          var p0 = _step4.value;
-
-          if (p0 !== undefined && p0.$GetStatus() === StatusEnum.POINT_FREE && p0.$GetFillColor() === sColor) {
-            var pos = p0.$GetPosition();
-            x = pos.x;
-            y = pos.y;
-
-            if (false !== this.pnpoly2(points, x, y)) {
-              p0.$SetStatus(owned_by);
-              p0.$SetFillColor(sOwnedCol);
-              p0.$strokeColor(sOwnedCol);
-              x /= this.m_iGridSizeX;
-              y /= this.m_iGridSizeY;
-              sOwnedPoints += sDelimiter + x + "," + y;
-              ownedPoints.push(p0);
-              sDelimiter = " ";
-            }
-          }
-        }
-      } catch (err) {
-        _didIteratorError4 = true;
-        _iteratorError4 = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion4 && _iterator4["return"] != null) {
-            _iterator4["return"]();
-          }
-        } finally {
-          if (_didIteratorError4) {
-            throw _iteratorError4;
-          }
-        }
+      if (sOwnedPoints) {
+        sPathPoints = points.map(function (pt) {
+          x = pt.x;
+          y = pt.y;
+          if (x === null || y === null) return '';
+          x /= this.m_iGridSizeX;
+          y /= this.m_iGridSizeY;
+          return "".concat(x, ",").concat(y);
+        }.bind(this)).join(' ');
       }
 
       return {
@@ -1421,27 +1402,29 @@ var InkBallGame = function () {
   }, {
     key: "IsPointOutsideAllPaths",
     value: function IsPointOutsideAllPaths(iX, iY) {
-      var _iteratorNormalCompletion5 = true;
-      var _didIteratorError5 = false;
-      var _iteratorError5 = undefined;
+      var xmul = iX * this.m_iGridSizeX,
+          ymul = iY * this.m_iGridSizeY;
+      var _iteratorNormalCompletion4 = true;
+      var _didIteratorError4 = false;
+      var _iteratorError4 = undefined;
 
       try {
-        for (var _iterator5 = this.m_Lines[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
-          var line = _step5.value;
+        for (var _iterator4 = this.m_Lines[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+          var line = _step4.value;
           var points = line.$GetPointsArray();
-          if (false !== this.pnpoly2(points, iX * this.m_iGridSizeX, iY * this.m_iGridSizeY)) return false;
+          if (false !== this.pnpoly2(points, xmul, ymul)) return false;
         }
       } catch (err) {
-        _didIteratorError5 = true;
-        _iteratorError5 = err;
+        _didIteratorError4 = true;
+        _iteratorError4 = err;
       } finally {
         try {
-          if (!_iteratorNormalCompletion5 && _iterator5["return"] != null) {
-            _iterator5["return"]();
+          if (!_iteratorNormalCompletion4 && _iterator4["return"] != null) {
+            _iterator4["return"]();
           }
         } finally {
-          if (_didIteratorError5) {
-            throw _iteratorError5;
+          if (_didIteratorError4) {
+            throw _iteratorError4;
           }
         }
       }
@@ -1573,13 +1556,13 @@ var InkBallGame = function () {
         var points = owned.split(" ");
         var point_status = this.m_sDotColor === this.COLOR_RED ? StatusEnum.POINT_OWNED_BY_RED : StatusEnum.POINT_OWNED_BY_BLUE;
         var sOwnedCol = this.m_sDotColor === this.COLOR_RED ? this.COLOR_OWNED_BLUE : this.COLOR_OWNED_RED;
-        var _iteratorNormalCompletion6 = true;
-        var _didIteratorError6 = false;
-        var _iteratorError6 = undefined;
+        var _iteratorNormalCompletion5 = true;
+        var _didIteratorError5 = false;
+        var _iteratorError5 = undefined;
 
         try {
-          for (var _iterator6 = points[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
-            var packed = _step6.value;
+          for (var _iterator5 = points[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+            var packed = _step5.value;
             var p = packed.split(",");
             var x = parseInt(p[0]),
                 y = parseInt(p[1]);
@@ -1592,16 +1575,16 @@ var InkBallGame = function () {
             }
           }
         } catch (err) {
-          _didIteratorError6 = true;
-          _iteratorError6 = err;
+          _didIteratorError5 = true;
+          _iteratorError5 = err;
         } finally {
           try {
-            if (!_iteratorNormalCompletion6 && _iterator6["return"] != null) {
-              _iterator6["return"]();
+            if (!_iteratorNormalCompletion5 && _iterator5["return"] != null) {
+              _iterator5["return"]();
             }
           } finally {
-            if (_didIteratorError6) {
-              throw _iteratorError6;
+            if (_didIteratorError5) {
+              throw _iteratorError5;
             }
           }
         }
@@ -1621,6 +1604,7 @@ var InkBallGame = function () {
         _y /= this.m_iGridSizeY;
         var p0 = this.m_Points.get(_y * this.m_iGridWidth + _x3);
         if (p0 !== undefined) p0.$SetStatus(StatusEnum.POINT_IN_PATH);
+        this.m_Line.$SetWidthAndColor(3, this.m_sDotColor);
         this.m_Lines.push(this.m_Line);
         this.m_iLastX = this.m_iLastY = -1;
         this.m_Line = null;
@@ -1775,8 +1759,8 @@ var InkBallGame = function () {
               var p1 = this.m_Points.get(y * this.m_iGridWidth + x);
               this.m_CancelPath.disabled = this.m_Line.$GetLength() >= 2 ? '' : 'disabled';
 
-              if (p0 !== undefined && p1 !== undefined && p1.$GetStatus() !== StatusEnum.POINT_IN_PATH && p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
-                this.m_Line.$AppendPoints(tox + "," + toy);
+              if (p0 !== undefined && p1 !== undefined && p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
+                this.m_Line.$AppendPoints(tox, toy);
                 if (p1.$GetStatus() !== StatusEnum.POINT_STARTING) p1.$SetStatus(StatusEnum.POINT_IN_PATH);else {
                   var val = this.SurroundOponentPoints();
 
@@ -1805,7 +1789,7 @@ var InkBallGame = function () {
               if (_p !== undefined && _p2 !== undefined && _p.$GetStatus() !== StatusEnum.POINT_IN_PATH && _p2.$GetStatus() !== StatusEnum.POINT_IN_PATH && _p.$GetFillColor() === this.m_sDotColor && _p2.$GetFillColor() === this.m_sDotColor) {
                 var fromx = this.m_iLastX * this.m_iGridSizeX;
                 var fromy = this.m_iLastY * this.m_iGridSizeY;
-                this.m_Line = $createPolyline(3, fromx + "," + fromy + " " + tox + "," + toy, this.m_sDotColor);
+                this.m_Line = $createPolyline(6, fromx + "," + fromy + " " + tox + "," + toy, this.DRAWING_PATH_COLOR);
                 this.m_CancelPath.disabled = '';
                 if (_p.$GetStatus() !== StatusEnum.POINT_IN_PATH) _p.$SetStatus(StatusEnum.POINT_STARTING);
                 if (_p2.$GetStatus() !== StatusEnum.POINT_IN_PATH) _p2.$SetStatus(StatusEnum.POINT_IN_PATH);
@@ -1860,10 +1844,10 @@ var InkBallGame = function () {
             var p1 = this.m_Points.get(y * this.m_iGridWidth + x);
             this.m_CancelPath.disabled = this.m_Line.$GetLength() >= 2 ? '' : 'disabled';
 
-            if (p0 !== undefined && p1 !== undefined && p1.$GetStatus() !== StatusEnum.POINT_IN_PATH && p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
+            if (p0 !== undefined && p1 !== undefined && p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
               var tox = x * this.m_iGridSizeX;
               var toy = y * this.m_iGridSizeY;
-              this.m_Line.$AppendPoints(tox + "," + toy);
+              this.m_Line.$AppendPoints(tox, toy);
               if (p1.$GetStatus() !== StatusEnum.POINT_STARTING) p1.$SetStatus(StatusEnum.POINT_IN_PATH);else {
                 var val = this.SurroundOponentPoints();
 
@@ -1900,7 +1884,7 @@ var InkBallGame = function () {
 
               var _toy = y * this.m_iGridSizeY;
 
-              this.m_Line = $createPolyline(3, fromx + "," + fromy + " " + _tox + "," + _toy, this.m_sDotColor);
+              this.m_Line = $createPolyline(6, fromx + "," + fromy + " " + _tox + "," + _toy, this.DRAWING_PATH_COLOR);
               this.m_CancelPath.disabled = '';
               if (_p3.$GetStatus() !== StatusEnum.POINT_IN_PATH) _p3.$SetStatus(StatusEnum.POINT_STARTING);
               if (_p4.$GetStatus() !== StatusEnum.POINT_IN_PATH) _p4.$SetStatus(StatusEnum.POINT_IN_PATH);
@@ -1950,13 +1934,13 @@ var InkBallGame = function () {
         if (this.m_Line !== null) {
           var points = this.m_Line.$GetPointsArray();
           this.m_CancelPath.disabled = 'disabled';
-          var _iteratorNormalCompletion7 = true;
-          var _didIteratorError7 = false;
-          var _iteratorError7 = undefined;
+          var _iteratorNormalCompletion6 = true;
+          var _didIteratorError6 = false;
+          var _iteratorError6 = undefined;
 
           try {
-            for (var _iterator7 = points[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
-              var point = _step7.value;
+            for (var _iterator6 = points[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
+              var point = _step6.value;
               var x = point.x,
                   y = point.y;
               if (x === null || y === null) continue;
@@ -1966,16 +1950,16 @@ var InkBallGame = function () {
               if (p0 !== undefined) p0.$SetStatus(StatusEnum.POINT_FREE);
             }
           } catch (err) {
-            _didIteratorError7 = true;
-            _iteratorError7 = err;
+            _didIteratorError6 = true;
+            _iteratorError6 = err;
           } finally {
             try {
-              if (!_iteratorNormalCompletion7 && _iterator7["return"] != null) {
-                _iterator7["return"]();
+              if (!_iteratorNormalCompletion6 && _iterator6["return"] != null) {
+                _iterator6["return"]();
               }
             } finally {
-              if (_didIteratorError7) {
-                throw _iteratorError7;
+              if (_didIteratorError6) {
+                throw _iteratorError6;
               }
             }
           }

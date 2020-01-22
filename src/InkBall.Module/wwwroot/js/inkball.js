@@ -392,6 +392,7 @@ class InkBallGame {
 		this.COLOR_BLUE = 'blue';
 		this.COLOR_OWNED_RED = '#DC143C';
 		this.COLOR_OWNED_BLUE = '#8A2BE2';
+		this.DRAWING_PATH_COLOR = "black";
 		this.m_bIsWon = false;
 		this.m_bPointsAndPathsLoaded = false;
 		this.m_iDelayBetweenMultiCaptures = 4000;
@@ -765,7 +766,6 @@ class InkBallGame {
 		}.bind(this));
 
 		this.g_SignalRConnection.on("ServerToClientStopAndDraw", function (cmd) {
-			//debugger;
 			if (!cmd) return;
 
 			const user = this.m_Player2Name.innerHTML;
@@ -1055,10 +1055,11 @@ class InkBallGame {
 	}
 
 	pnpoly2(pathPoints, x, y) {
-		let i, j, npol = pathPoints.length, c = false;
+		const npol = pathPoints.length;
+		let i, j, c = false;
 
 		for (i = 0, j = npol - 1; i < npol; j = i++) {
-			let pi = pathPoints[i], pj = pathPoints[j];
+			const pi = pathPoints[i], pj = pathPoints[j];
 
 			if ((((pi.y <= y) && (y < pj.y)) ||
 				((pj.y <= y) && (y < pi.y))) &&
@@ -1070,7 +1071,7 @@ class InkBallGame {
 	}
 
 	SurroundOponentPoints() {
-		let points = this.m_Line.$GetPointsArray();
+		const points = this.m_Line.$GetPointsArray();
 
 		//uniqe point path test (no duplicates except starting-ending point)
 		let unique_hashset = new Set();
@@ -1089,25 +1090,12 @@ class InkBallGame {
 				revertStrokeColor: undefined
 			};
 		}
-
-		let x, y, sPathPoints = "", sDelimiter = "";
-		for (const pt of points) {
-			x = pt.x;
-			y = pt.y;
-			if (x === null || y === null) continue;
-			x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
-			//xs[k] = x; ys[k++] = y;
-
-			sPathPoints += `${sDelimiter}${x},${y}`;
-			sDelimiter = " ";
-		}
-
 		//make the test!
 		const sColor = (this.m_sDotColor === this.COLOR_RED ? this.COLOR_BLUE : this.COLOR_RED);
 		const owned_by = (this.m_sDotColor === this.COLOR_RED ? StatusEnum.POINT_OWNED_BY_RED : StatusEnum.POINT_OWNED_BY_BLUE);
 		const sOwnedCol = (this.m_sDotColor === this.COLOR_RED ? this.COLOR_OWNED_RED : this.COLOR_OWNED_BLUE);
-		let sOwnedPoints = "", ownedPoints = [];
-		sDelimiter = "";
+		let x, y, sPathPoints = "", sOwnedPoints = "", sDelimiter = "", ownedPoints = [];
+
 		for (const p0 of this.m_Points.values()) {
 			if (p0 !== undefined && p0.$GetStatus() === StatusEnum.POINT_FREE && p0.$GetFillColor() === sColor) {
 				const pos = p0.$GetPosition();
@@ -1118,11 +1106,21 @@ class InkBallGame {
 					p0.$strokeColor(sOwnedCol);
 
 					x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
-					sOwnedPoints += sDelimiter + x + "," + y;
+					sOwnedPoints += `${sDelimiter}${x},${y}`;
 					ownedPoints.push(p0);
 					sDelimiter = " ";
 				}
 			}
+		}
+		if (sOwnedPoints) {
+			sPathPoints = points.map(function (pt) {
+				x = pt.x;
+				y = pt.y;
+				if (x === null || y === null) return '';
+				x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
+
+				return `${x},${y}`;
+			}.bind(this)).join(' ');
 		}
 		return {
 			OwnedPoints: ownedPoints,
@@ -1135,10 +1133,12 @@ class InkBallGame {
 	}
 
 	IsPointOutsideAllPaths(iX, iY) {
-		for (const line of this.m_Lines) {
-			let points = line.$GetPointsArray();
+		const xmul = iX * this.m_iGridSizeX, ymul = iY * this.m_iGridSizeY;
 
-			if (false !== this.pnpoly2(points, iX * this.m_iGridSizeX, iY * this.m_iGridSizeY))
+		for (const line of this.m_Lines) {
+			const points = line.$GetPointsArray();
+
+			if (false !== this.pnpoly2(points, xmul, ymul))
 				return false;
 		}
 
@@ -1225,7 +1225,6 @@ class InkBallGame {
 
 			case CommandKindEnum.STOP_AND_DRAW:
 				this.g_SignalRConnection.invoke("ClientToServerStopAndDraw", payload).then(function () {
-					//debugger;
 					this.m_bDrawLines = true;
 					this.m_iLastX = this.m_iLastY = -1;
 					this.m_Line = null;
@@ -1336,6 +1335,7 @@ class InkBallGame {
 			if (p0 !== undefined)
 				p0.$SetStatus(StatusEnum.POINT_IN_PATH);
 
+			this.m_Line.$SetWidthAndColor(3, this.m_sDotColor);
 			this.m_Lines.push(this.m_Line);
 			this.m_iLastX = this.m_iLastY = -1;
 			this.m_Line = null;
@@ -1529,29 +1529,36 @@ class InkBallGame {
 						let p1 = this.m_Points.get(y * this.m_iGridWidth + x);
 						this.m_CancelPath.disabled = this.m_Line.$GetLength() >= 2 ? '' : 'disabled';
 
-						if (p0 !== undefined && p1 !== undefined && (p1.$GetStatus() !== StatusEnum.POINT_IN_PATH) &&
+						if (p0 !== undefined && p1 !== undefined &&// (p1.$GetStatus() !== StatusEnum.POINT_IN_PATH) &&
 							p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
-							this.m_Line.$AppendPoints(tox + "," + toy);
-							if (p1.$GetStatus() !== StatusEnum.POINT_STARTING)
-								p1.$SetStatus(StatusEnum.POINT_IN_PATH);
-							else {
-								let val = this.SurroundOponentPoints();
-								if (val.owned.length > 0) {
-									this.Debug('Closing path', 0);
-									this.SendAsyncData(this.CreateXMLPutPathRequest(val), () => {
-										this.OnCancelClick();
-										val.OwnedPoints.forEach(p => {
-											p.$SetStatus(val.revertStatus);
-											p.$SetFillColor(val.revertFillColor);
-											p.$strokeColor(val.revertStrokeColor);
-										});
-										this.m_bHandlingEvent = false;
-									});
-								}
-								else
-									this.Debug('Wrong path, cancell it or refresh page', 0);
-							}
+							//debugger;
+							//const line_contains_point = this.m_Line.$ContainsPoint(tox, toy);
+							//if (line_contains_point <= 2) {
 
+								this.m_Line.$AppendPoints(tox, toy);
+								if (p1.$GetStatus() !== StatusEnum.POINT_STARTING)
+									p1.$SetStatus(StatusEnum.POINT_IN_PATH);
+								else {
+									const val = this.SurroundOponentPoints();
+									if (val.owned.length > 0) {
+										this.Debug('Closing path', 0);
+										this.SendAsyncData(this.CreateXMLPutPathRequest(val), () => {
+											this.OnCancelClick();
+											val.OwnedPoints.forEach(p => {
+												p.$SetStatus(val.revertStatus);
+												p.$SetFillColor(val.revertFillColor);
+												p.$strokeColor(val.revertStrokeColor);
+											});
+											this.m_bHandlingEvent = false;
+										});
+									}
+									else
+										this.Debug('Wrong path, cancell it or refresh page', 0);
+								}
+							//}
+							//else {
+							//	this.m_Line.$RemoveLastPoint();
+							//}
 							this.m_iLastX = x;
 							this.m_iLastY = y;
 						}
@@ -1565,7 +1572,7 @@ class InkBallGame {
 							p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
 							const fromx = this.m_iLastX * this.m_iGridSizeX;
 							const fromy = this.m_iLastY * this.m_iGridSizeY;
-							this.m_Line = $createPolyline(3, fromx + "," + fromy + " " + tox + "," + toy, this.m_sDotColor);
+							this.m_Line = $createPolyline(6, fromx + "," + fromy + " " + tox + "," + toy, this.DRAWING_PATH_COLOR);
 							this.m_CancelPath.disabled = '';
 							if (p0.$GetStatus() !== StatusEnum.POINT_IN_PATH)
 								p0.$SetStatus(StatusEnum.POINT_STARTING);
@@ -1630,33 +1637,40 @@ class InkBallGame {
 					let p1 = this.m_Points.get(y * this.m_iGridWidth + x);
 					this.m_CancelPath.disabled = this.m_Line.$GetLength() >= 2 ? '' : 'disabled';
 
-					if (p0 !== undefined && p1 !== undefined && (p1.$GetStatus() !== StatusEnum.POINT_IN_PATH) &&
+					if (p0 !== undefined && p1 !== undefined &&// (p1.$GetStatus() !== StatusEnum.POINT_IN_PATH) &&
 						p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
 						const tox = x * this.m_iGridSizeX;
 						const toy = y * this.m_iGridSizeY;
-						this.m_Line.$AppendPoints(tox + "," + toy);
-						if (p1.$GetStatus() !== StatusEnum.POINT_STARTING)
-							p1.$SetStatus(StatusEnum.POINT_IN_PATH);
-						else {
-							let val = this.SurroundOponentPoints();
-							if (val.owned.length > 0) {
-								this.Debug('Closing path', 0);
-								this.SendAsyncData(this.CreateXMLPutPathRequest(val), () => {
-									this.Debug('Wrong path', 0);
-									this.OnCancelClick();
-									val.OwnedPoints.forEach(p => {
-										p.$SetStatus(val.revertStatus);
-										p.$SetFillColor(val.revertFillColor);
-										p.$strokeColor(val.revertStrokeColor);
-									});
-									this.m_bMouseDown = false;
-									this.m_bHandlingEvent = false;
-								});
-							}
-							else
-								this.Debug('Wrong path, cancell it or refresh page', 0);
-						}
+						//debugger;
+						//const line_contains_point = this.m_Line.$ContainsPoint(tox, toy);
+						//if (line_contains_point <= 2) {
 
+							this.m_Line.$AppendPoints(tox, toy);
+							if (p1.$GetStatus() !== StatusEnum.POINT_STARTING)
+								p1.$SetStatus(StatusEnum.POINT_IN_PATH);
+							else {
+								const val = this.SurroundOponentPoints();
+								if (val.owned.length > 0) {
+									this.Debug('Closing path', 0);
+									this.SendAsyncData(this.CreateXMLPutPathRequest(val), () => {
+										this.Debug('Wrong path', 0);
+										this.OnCancelClick();
+										val.OwnedPoints.forEach(p => {
+											p.$SetStatus(val.revertStatus);
+											p.$SetFillColor(val.revertFillColor);
+											p.$strokeColor(val.revertStrokeColor);
+										});
+										this.m_bMouseDown = false;
+										this.m_bHandlingEvent = false;
+									});
+								}
+								else
+									this.Debug('Wrong path, cancell it or refresh page', 0);
+							}
+						//}
+						//else {
+						//	this.m_Line.$RemoveLastPoint();
+						//}
 						this.m_iLastX = x;
 						this.m_iLastY = y;
 					}
@@ -1665,14 +1679,14 @@ class InkBallGame {
 					let p0 = this.m_Points.get(this.m_iLastY * this.m_iGridWidth + this.m_iLastX);
 					let p1 = this.m_Points.get(y * this.m_iGridWidth + x);
 
-					if (p0 !== undefined && p1 !== undefined && (p0.$GetStatus() !== StatusEnum.POINT_IN_PATH &&
-						p1.$GetStatus() !== StatusEnum.POINT_IN_PATH) &&
+					if (p0 !== undefined && p1 !== undefined &&
+						(p0.$GetStatus() !== StatusEnum.POINT_IN_PATH && p1.$GetStatus() !== StatusEnum.POINT_IN_PATH) &&
 						p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
 						const fromx = this.m_iLastX * this.m_iGridSizeX;
 						const fromy = this.m_iLastY * this.m_iGridSizeY;
 						const tox = x * this.m_iGridSizeX;
 						const toy = y * this.m_iGridSizeY;
-						this.m_Line = $createPolyline(3, fromx + "," + fromy + " " + tox + "," + toy, this.m_sDotColor);
+						this.m_Line = $createPolyline(6, fromx + "," + fromy + " " + tox + "," + toy, this.DRAWING_PATH_COLOR);
 						this.m_CancelPath.disabled = '';
 						if (p0.$GetStatus() !== StatusEnum.POINT_IN_PATH)
 							p0.$SetStatus(StatusEnum.POINT_STARTING);
@@ -1715,7 +1729,6 @@ class InkBallGame {
 			this.m_iLastX = this.m_iLastY = -1;
 			this.m_Line = null;
 		} else if (this.m_Line === null) {
-			//debugger;
 			//send On-Stop-And-Draw notification
 			this.SendAsyncData(new StopAndDrawCommand());
 		}
@@ -1724,7 +1737,7 @@ class InkBallGame {
 	OnCancelClick() {
 		if (this.m_bDrawLines) {
 			if (this.m_Line !== null) {
-				let points = this.m_Line.$GetPointsArray();
+				const points = this.m_Line.$GetPointsArray();
 				this.m_CancelPath.disabled = 'disabled';
 				for (const point of points) {
 					let x = point.x, y = point.y;
