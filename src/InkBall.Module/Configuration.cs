@@ -27,14 +27,16 @@ namespace InkBall.Module
 		#region JS/CSS variables
 
 #if DEBUG
-		public const string WwwIncludeJS = "~/js/inkball.js";
-		public const string WwwIncludeJSBabel = "~/js/inkball.babelify.js";
-		public const string WwwIncludeJSSvgVml = "~/js/svgvml.js";
+		public const string WwwIncludeInkballJS = "~/js/inkball.js";
+		public const string WwwIncludeInkballJSBabel = "~/js/inkball.babelify.js";
+		public const string WwwIncludeSvgVmlJS = "~/js/svgvml.js";
+		public const string WwwIncludeSvgVmlJSBabel = "~/js/svgvml.babelify.js";
 		public const string WwwIncludeCSS = "~/css/inkball.css";
 #else
-		public const string WwwIncludeJS = "~/js/inkball.min.js";
-		public const string WwwIncludeJSBabel = "~/js/inkball.babelify.min.js";
-		public const string WwwIncludeJSSvgVml = "~/js/svgvml.min.js";
+		public const string WwwIncludeInkballJS = "~/js/inkball.min.js";
+		public const string WwwIncludeInkballJSBabel = "~/js/inkball.babelify.min.js";
+		public const string WwwIncludeSvgVmlJS = "~/js/svgvml.min.js";
+		public const string WwwIncludeSvgVmlJSBabel = "~/js/svgvml.babelify.min.js";
 		public const string WwwIncludeCSS = "~/css/inkball.min.css";
 #endif
 
