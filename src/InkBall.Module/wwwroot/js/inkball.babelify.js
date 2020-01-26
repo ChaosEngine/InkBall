@@ -1595,7 +1595,7 @@ var InkBallGame = function () {
         if (this.m_Line !== null) this.OnCancelClick();
         this.m_StopAndDraw.disabled = '';
       } else {
-        var _points = this.m_Line.$GetPointsString();
+        var _points = this.m_Line.$GetPointsArray();
 
         var i = 0;
         var _x3 = _points[i],
@@ -1760,26 +1760,37 @@ var InkBallGame = function () {
               this.m_CancelPath.disabled = this.m_Line.$GetLength() >= 2 ? '' : 'disabled';
 
               if (p0 !== undefined && p1 !== undefined && p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
-                this.m_Line.$AppendPoints(tox, toy);
-                if (p1.$GetStatus() !== StatusEnum.POINT_STARTING) p1.$SetStatus(StatusEnum.POINT_IN_PATH);else {
-                  var val = this.SurroundOponentPoints();
+                var line_contains_point = this.m_Line.$ContainsPoint(tox, toy);
 
-                  if (val.owned.length > 0) {
-                    this.Debug('Closing path', 0);
-                    this.SendAsyncData(this.CreateXMLPutPathRequest(val), function () {
-                      _this15.OnCancelClick();
+                if (line_contains_point < 1 && p1.$GetStatus() !== StatusEnum.POINT_IN_PATH || line_contains_point === 1 && p1.$GetStatus() === StatusEnum.POINT_STARTING) {
+                  this.m_Line.$AppendPoints(tox, toy);
+                  if (p1.$GetStatus() !== StatusEnum.POINT_STARTING) p1.$SetStatus(StatusEnum.POINT_IN_PATH);else {
+                    var val = this.SurroundOponentPoints();
 
-                      val.OwnedPoints.forEach(function (p) {
-                        p.$SetStatus(val.revertStatus);
-                        p.$SetFillColor(val.revertFillColor);
-                        p.$strokeColor(val.revertStrokeColor);
+                    if (val.owned.length > 0) {
+                      this.Debug('Closing path', 0);
+                      this.SendAsyncData(this.CreateXMLPutPathRequest(val), function () {
+                        _this15.OnCancelClick();
+
+                        val.OwnedPoints.forEach(function (p) {
+                          p.$SetStatus(val.revertStatus);
+                          p.$SetFillColor(val.revertFillColor);
+                          p.$strokeColor(val.revertStrokeColor);
+                        });
+                        _this15.m_bHandlingEvent = false;
                       });
-                      _this15.m_bHandlingEvent = false;
-                    });
-                  } else this.Debug('Wrong path, cancell it or refresh page', 0);
+                    } else this.Debug('Wrong path, cancell it or refresh page', 0);
+                  }
+                  this.m_iLastX = x;
+                  this.m_iLastY = y;
+                } else if (line_contains_point >= 1 && p0.$GetStatus() === StatusEnum.POINT_IN_PATH && this.m_Line.$GetPointsString().endsWith("".concat(this.m_iLastX * this.m_iGridSizeX, ",").concat(this.m_iLastY * this.m_iGridSizeY))) {
+                  if (this.m_Line.$GetLength() > 2) {
+                    p0.$SetStatus(StatusEnum.POINT_FREE);
+                    this.m_Line.$RemoveLastPoint();
+                    this.m_iLastX = x;
+                    this.m_iLastY = y;
+                  } else this.OnCancelClick();
                 }
-                this.m_iLastX = x;
-                this.m_iLastY = y;
               }
             } else {
               var _p = this.m_Points.get(this.m_iLastY * this.m_iGridWidth + this.m_iLastX);
@@ -1847,29 +1858,40 @@ var InkBallGame = function () {
             if (p0 !== undefined && p1 !== undefined && p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
               var tox = x * this.m_iGridSizeX;
               var toy = y * this.m_iGridSizeY;
-              this.m_Line.$AppendPoints(tox, toy);
-              if (p1.$GetStatus() !== StatusEnum.POINT_STARTING) p1.$SetStatus(StatusEnum.POINT_IN_PATH);else {
-                var val = this.SurroundOponentPoints();
+              var line_contains_point = this.m_Line.$ContainsPoint(tox, toy);
 
-                if (val.owned.length > 0) {
-                  this.Debug('Closing path', 0);
-                  this.SendAsyncData(this.CreateXMLPutPathRequest(val), function () {
-                    _this16.Debug('Wrong path', 0);
+              if (line_contains_point < 1 && p1.$GetStatus() !== StatusEnum.POINT_IN_PATH || line_contains_point === 1 && p1.$GetStatus() === StatusEnum.POINT_STARTING) {
+                this.m_Line.$AppendPoints(tox, toy);
+                if (p1.$GetStatus() !== StatusEnum.POINT_STARTING) p1.$SetStatus(StatusEnum.POINT_IN_PATH);else {
+                  var val = this.SurroundOponentPoints();
 
-                    _this16.OnCancelClick();
+                  if (val.owned.length > 0) {
+                    this.Debug('Closing path', 0);
+                    this.SendAsyncData(this.CreateXMLPutPathRequest(val), function () {
+                      _this16.Debug('Wrong path', 0);
 
-                    val.OwnedPoints.forEach(function (p) {
-                      p.$SetStatus(val.revertStatus);
-                      p.$SetFillColor(val.revertFillColor);
-                      p.$strokeColor(val.revertStrokeColor);
+                      _this16.OnCancelClick();
+
+                      val.OwnedPoints.forEach(function (p) {
+                        p.$SetStatus(val.revertStatus);
+                        p.$SetFillColor(val.revertFillColor);
+                        p.$strokeColor(val.revertStrokeColor);
+                      });
+                      _this16.m_bMouseDown = false;
+                      _this16.m_bHandlingEvent = false;
                     });
-                    _this16.m_bMouseDown = false;
-                    _this16.m_bHandlingEvent = false;
-                  });
-                } else this.Debug('Wrong path, cancell it or refresh page', 0);
+                  } else this.Debug('Wrong path, cancell it or refresh page', 0);
+                }
+                this.m_iLastX = x;
+                this.m_iLastY = y;
+              } else if (line_contains_point >= 1 && p0.$GetStatus() === StatusEnum.POINT_IN_PATH && this.m_Line.$GetPointsString().endsWith("".concat(this.m_iLastX * this.m_iGridSizeX, ",").concat(this.m_iLastY * this.m_iGridSizeY))) {
+                if (this.m_Line.$GetLength() > 2) {
+                  p0.$SetStatus(StatusEnum.POINT_FREE);
+                  this.m_Line.$RemoveLastPoint();
+                  this.m_iLastX = x;
+                  this.m_iLastY = y;
+                } else this.OnCancelClick();
               }
-              this.m_iLastX = x;
-              this.m_iLastY = y;
             }
           } else {
             var _p3 = this.m_Points.get(this.m_iLastY * this.m_iGridWidth + this.m_iLastX);

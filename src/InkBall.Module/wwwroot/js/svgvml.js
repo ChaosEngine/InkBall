@@ -57,6 +57,8 @@ if (SVG) {
 		o.setAttribute("fill", col);
 		o.setAttribute("fill-opacity", "0.1");
 		if (points) o.setAttribute("points", points);
+		o.setAttribute("stroke-linecap", "round");
+		o.setAttribute("stroke-linejoin", "round");
 		cont.appendChild(o);
 		//ch_added start
 		o.$AppendPoints = function (x, y) {
@@ -70,11 +72,10 @@ if (SVG) {
 		o.$ContainsPoint = function (x, y) {
 			const regexstr = new RegExp(`${x},${y}`, 'g');
 			const cnt = (this.getAttribute("points").match(regexstr) || []).length;
-			//console.warn('regexstr = ' + regexstr + ' cnt = ' + cnt);
 			return cnt;
 		};
 		o.$GetPointsString = function () {
-			return this.getAttribute("points").replace(/,/g, " ").split(" ");
+			return this.getAttribute("points");
 		};
 		o.$GetPointsArray = function () {
 			//x0,y0 x1,y1 x2,y2
@@ -193,11 +194,10 @@ if (SVG) {
 		o.$ContainsPoint = function (x, y) {
 			const regexstr = new RegExp(`${x},${y}`, 'g');
 			const cnt = (this.m_sMyPoints.match(regexstr) || []).length;
-			//console.warn('regexstr = ' + regexstr + ' cnt = ' + cnt);
 			return cnt;
 		};
 		o.$GetPointsString = function () {
-			return o.m_sMyPoints.replace(/,/g, " ").split(" ");
+			return o.m_sMyPoints;
 		};
 		o.$GetPointsArray = function () {
 			//x0,y0 x1,y1 x2,y2

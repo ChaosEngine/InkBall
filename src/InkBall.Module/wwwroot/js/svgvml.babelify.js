@@ -52,6 +52,8 @@ if (SVG) {
     o.setAttribute("fill", col);
     o.setAttribute("fill-opacity", "0.1");
     if (points) o.setAttribute("points", points);
+    o.setAttribute("stroke-linecap", "round");
+    o.setAttribute("stroke-linejoin", "round");
     cont.appendChild(o);
 
     o.$AppendPoints = function (x, y) {
@@ -71,7 +73,7 @@ if (SVG) {
     };
 
     o.$GetPointsString = function () {
-      return this.getAttribute("points").replace(/,/g, " ").split(" ");
+      return this.getAttribute("points");
     };
 
     o.$GetPointsArray = function () {
@@ -244,7 +246,7 @@ if (SVG) {
     };
 
     o.$GetPointsString = function () {
-      return o.m_sMyPoints.replace(/,/g, " ").split(" ");
+      return o.m_sMyPoints;
     };
 
     o.$GetPointsArray = function () {

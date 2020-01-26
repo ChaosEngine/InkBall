@@ -1327,7 +1327,7 @@ class InkBallGame {
 		}
 		else {
 			//set starting point to POINT_IN_PATH to block further path closing with it
-			const points = this.m_Line.$GetPointsString();
+			const points = this.m_Line.$GetPointsArray();
 			let i = 0;
 			let x = points[i], y = points[i + 1];
 			x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
@@ -1529,12 +1529,12 @@ class InkBallGame {
 						let p1 = this.m_Points.get(y * this.m_iGridWidth + x);
 						this.m_CancelPath.disabled = this.m_Line.$GetLength() >= 2 ? '' : 'disabled';
 
-						if (p0 !== undefined && p1 !== undefined &&// (p1.$GetStatus() !== StatusEnum.POINT_IN_PATH) &&
+						if (p0 !== undefined && p1 !== undefined &&
 							p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
 							//debugger;
-							//const line_contains_point = this.m_Line.$ContainsPoint(tox, toy);
-							//if (line_contains_point <= 2) {
-
+							const line_contains_point = this.m_Line.$ContainsPoint(tox, toy);
+							if ((line_contains_point < 1 && p1.$GetStatus() !== StatusEnum.POINT_IN_PATH) ||
+								(line_contains_point === 1 && p1.$GetStatus() === StatusEnum.POINT_STARTING)) {
 								this.m_Line.$AppendPoints(tox, toy);
 								if (p1.$GetStatus() !== StatusEnum.POINT_STARTING)
 									p1.$SetStatus(StatusEnum.POINT_IN_PATH);
@@ -1555,12 +1555,21 @@ class InkBallGame {
 									else
 										this.Debug('Wrong path, cancell it or refresh page', 0);
 								}
-							//}
-							//else {
-							//	this.m_Line.$RemoveLastPoint();
-							//}
-							this.m_iLastX = x;
-							this.m_iLastY = y;
+								this.m_iLastX = x;
+								this.m_iLastY = y;
+							}
+							else if (line_contains_point >= 1 && p0.$GetStatus() === StatusEnum.POINT_IN_PATH &&
+								this.m_Line.$GetPointsString().endsWith(`${this.m_iLastX * this.m_iGridSizeX},${this.m_iLastY * this.m_iGridSizeY}`)) {
+
+								if (this.m_Line.$GetLength() > 2) {
+									p0.$SetStatus(StatusEnum.POINT_FREE);
+									this.m_Line.$RemoveLastPoint();
+									this.m_iLastX = x;
+									this.m_iLastY = y;
+								}
+								else
+									this.OnCancelClick();
+							}
 						}
 					}
 					else {
@@ -1637,14 +1646,14 @@ class InkBallGame {
 					let p1 = this.m_Points.get(y * this.m_iGridWidth + x);
 					this.m_CancelPath.disabled = this.m_Line.$GetLength() >= 2 ? '' : 'disabled';
 
-					if (p0 !== undefined && p1 !== undefined &&// (p1.$GetStatus() !== StatusEnum.POINT_IN_PATH) &&
+					if (p0 !== undefined && p1 !== undefined &&
 						p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
 						const tox = x * this.m_iGridSizeX;
 						const toy = y * this.m_iGridSizeY;
 						//debugger;
-						//const line_contains_point = this.m_Line.$ContainsPoint(tox, toy);
-						//if (line_contains_point <= 2) {
-
+						const line_contains_point = this.m_Line.$ContainsPoint(tox, toy);
+						if ((line_contains_point < 1 && p1.$GetStatus() !== StatusEnum.POINT_IN_PATH) ||
+							(line_contains_point === 1 && p1.$GetStatus() === StatusEnum.POINT_STARTING)) {
 							this.m_Line.$AppendPoints(tox, toy);
 							if (p1.$GetStatus() !== StatusEnum.POINT_STARTING)
 								p1.$SetStatus(StatusEnum.POINT_IN_PATH);
@@ -1667,12 +1676,21 @@ class InkBallGame {
 								else
 									this.Debug('Wrong path, cancell it or refresh page', 0);
 							}
-						//}
-						//else {
-						//	this.m_Line.$RemoveLastPoint();
-						//}
-						this.m_iLastX = x;
-						this.m_iLastY = y;
+							this.m_iLastX = x;
+							this.m_iLastY = y;
+						}
+						else if (line_contains_point >= 1 && p0.$GetStatus() === StatusEnum.POINT_IN_PATH &&
+							this.m_Line.$GetPointsString().endsWith(`${this.m_iLastX * this.m_iGridSizeX},${this.m_iLastY * this.m_iGridSizeY}`)) {
+
+							if (this.m_Line.$GetLength() > 2) {
+								p0.$SetStatus(StatusEnum.POINT_FREE);
+								this.m_Line.$RemoveLastPoint();
+								this.m_iLastX = x;
+								this.m_iLastY = y;
+							}
+							else
+								this.OnCancelClick();
+						}
 					}
 				}
 				else {
