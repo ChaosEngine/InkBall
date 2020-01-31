@@ -4,6 +4,7 @@
 // ==========================================
 // written by Gerard Ferrandez
 // initial version - June 28, 2006
+// modified - 2018-2020 - Andrzej Pauli polyline and oval functions & extensions
 // modified - July 21 - use object functions
 // modified - July 24 - debug
 // www.dhteumeuleu.com
@@ -56,30 +57,51 @@ if (SVG) {
 		o.setAttribute("fill", col);
 		o.setAttribute("fill-opacity", "0.1");
 		if (points) o.setAttribute("points", points);
+		o.setAttribute("stroke-linecap", "round");
+		o.setAttribute("stroke-linejoin", "round");
 		cont.appendChild(o);
 		//ch_added start
-		o.$AppendPoints = function (sPoints) {
-			this.setAttribute("points", this.getAttribute("points") + " " + sPoints);
+		o.m_iID = 0;
+		o.$AppendPoints = function (x, y) {
+			this.setAttribute("points", this.getAttribute("points") + ` ${x},${y}`);
+		};
+		o.$RemoveLastPoint = function () {
+			const newpts = this.getAttribute("points").replace(/(\s\d+,\d+)$/, "");
+			this.setAttribute("points", newpts);
+			return newpts;
+		};
+		o.$ContainsPoint = function (x, y) {
+			const regexstr = new RegExp(`${x},${y}`, 'g');
+			const cnt = (this.getAttribute("points").match(regexstr) || []).length;
+			return cnt;
 		};
 		o.$GetPointsString = function () {
-			return this.getAttribute("points").replace(/,/g, " ").split(" ");
+			return this.getAttribute("points");
 		};
 		o.$GetPointsArray = function () {
 			//x0,y0 x1,y1 x2,y2
-			let pts = [];
-			this.getAttribute("points").split(" ").forEach(function (pt) {
-				let tab = pt.split(',');
-				pts.push({ x: parseInt(tab[0]), y: parseInt(tab[1]) });
+			return this.getAttribute("points").split(" ").map(function (pt) {
+				const tab = pt.split(',');
+				return { x: parseInt(tab[0]), y: parseInt(tab[1]) };
 			});
-			return pts;
 		};
 		o.$SetPoints = function (sPoints) {
 			this.setAttribute("points", sPoints);
 		};
 		o.$GetIsClosed = function () {
-			let pts = this.getAttribute("points").split(" ");
+			const pts = this.getAttribute("points").split(" ");
 			return pts[0] === pts[pts.length - 1];
 		};
+		o.$GetLength = function () {
+			return this.getAttribute("points").split(" ").length;
+		};
+		o.$SetWidthAndColor = function (w, col) {
+			this.setAttribute("stroke", col);
+			this.setAttribute("fill", col);
+			this.setAttribute("stroke-width", Math.round(w));
+		};
+		o.$GetID = function () { return this.m_iID; };
+		o.$SetID = function (iID) { this.m_iID = iID; };
 		//ch_added end
 		return o;
 	};
@@ -162,31 +184,50 @@ if (SVG) {
 		o.appendChild(s);
 		cont.appendChild(o);
 		//ch_added start
+		o.m_iID = 0;
 		o.m_sMyPoints = points;
-		o.$AppendPoints = function (sPoints) {
-			this.m_sMyPoints = this.m_sMyPoints + " " + sPoints;
+		o.$AppendPoints = function (x, y) {
+			this.m_sMyPoints = this.m_sMyPoints + ` ${x},${y}`;
 			this.points.value = this.m_sMyPoints;
 		};
+		o.$RemoveLastPoint = function () {
+			this.m_sMyPoints = this.m_sMyPoints.replace(/(\s\d+,\d+)$/, "");
+			this.points.value = this.m_sMyPoints;
+			return this.m_sMyPoints;
+		};
+		o.$ContainsPoint = function (x, y) {
+			const regexstr = new RegExp(`${x},${y}`, 'g');
+			const cnt = (this.m_sMyPoints.match(regexstr) || []).length;
+			return cnt;
+		};
 		o.$GetPointsString = function () {
-			return o.m_sMyPoints.replace(/,/g, " ").split(" ");
+			return o.m_sMyPoints;
 		};
 		o.$GetPointsArray = function () {
 			//x0,y0 x1,y1 x2,y2
-			let pts = [];
-			this.m_sMyPoints.split(" ").forEach(function (pt) {
-				let tab = pt.split(',');
-				pts.push({ x: parseInt(tab[0]), y: parseInt(tab[1]) });
+			return this.m_sMyPoints.split(" ").map(function (pt) {
+				const tab = pt.split(',');
+				return { x: parseInt(tab[0]), y: parseInt(tab[1]) };
 			});
-			return pts;
 		};
 		o.$SetPoints = function (sPoints) {
 			this.m_sMyPoints = sPoints;
 			this.points.value = this.m_sMyPoints;
 		};
 		o.$GetIsClosed = function () {
-			let pts = this.m_sMyPoints.split(" ");
+			const pts = this.m_sMyPoints.split(" ");
 			return pts[0] === pts[pts.length - 1];
 		};
+		o.$GetLength = function () {
+			return this.m_sMyPoints.split(" ").length;
+		};
+		o.$SetWidthAndColor = function (w, col) {
+			this.strokecolor = col;
+			this.fill.color = col;
+			this.strokeweight = Math.round(w) + "px";
+		};
+		o.$GetID = function () { return this.m_iID; };
+		o.$SetID = function (iID) { this.m_iID = iID; };
 		//ch_added end
 		return o;
 	};

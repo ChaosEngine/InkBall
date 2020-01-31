@@ -23,8 +23,7 @@ namespace InkBall.Module.Model
 
 		static double DateTimeToUnixTimestamp(DateTime dateTime)
 		{
-			return (TimeZoneInfo.ConvertTimeToUtc(dateTime) -
-				   new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
+			return (TimeZoneInfo.ConvertTimeToUtc(dateTime) - UnixTime).TotalSeconds;
 		}
 
 		/// <summary>
@@ -95,7 +94,7 @@ namespace InkBall.Module.Model
 			switch (migrationBuilder.ActiveProvider)
 			{
 				case "Microsoft.EntityFrameworkCore.Sqlite":
-					var tableName = entityType.Relational().TableName;
+					var tableName = entityType.GetTableName();
 					//var primaryKey = entityType.FindPrimaryKey();
 
 					string command =
@@ -109,7 +108,7 @@ END;";
 					break;
 
 				case "Microsoft.EntityFrameworkCore.SqlServer":
-					tableName = entityType.Relational().TableName;
+					tableName = entityType.GetTableName();
 					//var primaryKey = entityType.FindPrimaryKey();
 
 					command =
@@ -131,7 +130,7 @@ END";
 					break;
 
 				case "Oracle.EntityFrameworkCore":
-					tableName = entityType.Relational().TableName;
+					tableName = entityType.GetTableName();
 					//var primaryKey = entityType.FindPrimaryKey();
 
 					command =
@@ -159,7 +158,7 @@ END;";
 			switch (migrationBuilder.ActiveProvider)
 			{
 				case "Microsoft.EntityFrameworkCore.Sqlite":
-					var tableName = entityType.Relational().TableName;
+					var tableName = entityType.GetTableName();
 
 					string command = $@"DROP TRIGGER IF EXISTS {tableName}_update_{timeStampColumnName}_Trigger;";
 
@@ -168,7 +167,7 @@ END;";
 					break;
 
 				case "Microsoft.EntityFrameworkCore.SqlServer":
-					tableName = entityType.Relational().TableName;
+					tableName = entityType.GetTableName();
 
 					command = $@"DROP TRIGGER [dbo].[{tableName}_update_{timeStampColumnName}_Trigger];";
 
@@ -177,7 +176,7 @@ END;";
 					break;
 
 				case "Oracle.EntityFrameworkCore":
-					tableName = entityType.Relational().TableName;
+					tableName = entityType.GetTableName();
 
 					command = $@"
 DECLARE

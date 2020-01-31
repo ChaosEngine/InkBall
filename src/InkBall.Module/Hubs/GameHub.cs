@@ -7,11 +7,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using Microsoft.Net.Http.Headers;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -30,6 +30,12 @@ namespace InkBall.Module.Hubs
 		Task ServerToClientPlayerSurrender(PlayerSurrenderingCommand surrender);
 
 		Task ServerToClientPlayerWin(WinCommand win);
+
+		Task ServerToClientStopAndDraw(StopAndDrawCommand notification);
+
+		Task ServerToClientOtherPlayerDisconnected(string message);
+
+		Task ServerToClientOtherPlayerConnected(string message);
 	}
 
 	public interface IGameServer
@@ -45,6 +51,8 @@ namespace InkBall.Module.Hubs
 		Task<PlayerPointsAndPathsDTO> GetPlayerPointsAndPaths(bool viewOnly, int gameID);
 
 		Task<string> GetUserSettings();
+
+		Task ClientToServerStopAndDraw(StopAndDrawCommand notification);
 	}
 
 	[Authorize(Policy = Constants.InkBallPolicyName)]
@@ -165,19 +173,22 @@ namespace InkBall.Module.Hubs
 			var claimsPrincipal = this.Context.User;
 			var thisUserIdentifier = ThisUserIdentifier;
 
-			//IPlayer<InkBallPoint, InkBallPath> this_Player = await GetPlayer(claimsPrincipal, this_UserIdentifier, token);
-			//ThisPlayer = this_Player;
-
-			(InkBallGame game, InkBallPlayer this_Player) = await GetGameAndThisPlayer(claimsPrincipal, thisUserIdentifier,
-				ThisGameID.Value, ThisPlayerID.Value, token);
-			ThisGame = game;
-			ThisPlayer = this_Player;
+			// if (ThisGame == null || ThisPlayer == null)
+			{
+				(InkBallGame game, InkBallPlayer this_Player) = await GetGameAndThisPlayer(claimsPrincipal, thisUserIdentifier,
+					ThisGameID.Value, ThisPlayerID.Value, token);
+				ThisGame = game;
+				ThisPlayer = this_Player;
+			}
 
 			ThisUserName = ThisPlayer.User.UserName;
 
-			(InkBallPlayer other_Player, string other_UserIdentifier) = GetOtherPlayer(ThisGame, thisUserIdentifier, this_Player);
-			OtherPlayer = other_Player;
-			OtherUserIdentifier = other_UserIdentifier;
+			// if (OtherPlayer == null || OtherUserIdentifier == null)
+			{
+				(InkBallPlayer other_Player, string other_UserIdentifier) = GetOtherPlayer(ThisGame, thisUserIdentifier, ThisPlayer);
+				OtherPlayer = other_Player;
+				OtherUserIdentifier = other_UserIdentifier;
+			}
 		}
 
 		private (InkBallPlayer other_Player, string other_UserIdentifier) GetOtherPlayer(InkBallGame game,
@@ -228,7 +239,7 @@ namespace InkBall.Module.Hubs
 					w => w.iId == gameID
 					&& (w.iPlayer1Id == playerID || w.iPlayer2Id == playerID)
 					&& (w.Player1.User.sExternalId == thisUserIdentifier || w.Player2.User.sExternalId == thisUserIdentifier)
-					&& (w.GameState == InkBallGame.GameStateEnum.ACTIVE || w.GameState == InkBallGame.GameStateEnum.AWAITING)
+					&& (GamesContext.ActiveVisibleGameStates.Contains(w.GameState))
 				, token);
 				if (dbGame == null)
 					throw new NullReferenceException("game == null");
@@ -247,14 +258,14 @@ namespace InkBall.Module.Hubs
 					bIsPlayer1 = false;
 				}
 				else
-					throw new NotSupportedException("player not found");
+					throw new ArgumentNullException(nameof(thisUserIdentifier), "player not found");
 				dbGame.bIsPlayer1 = bIsPlayer1;
 
 				//additional validation
 				string value = claimsPrincipal.FindFirstValue(nameof(Pages.BasePageModel.InkBallUserId));
 				int.TryParse(value, out int this_UserId);
 				if (this_UserId != this_Player.iUserId)
-					throw new ArgumentException("this_UserId != this_Player.iUserId");
+					throw new ArgumentException("this_UserId != this_Player.iUserId", nameof(this_Player.iUserId));
 
 				game = dbGame;
 				//this.Context.Items[nameof(ThisGame)] = game;
@@ -273,18 +284,57 @@ namespace InkBall.Module.Hubs
 				InkBallPlayer dbPlayer = await _dbContext.InkBallPlayer.Include(u => u.User)
 					.FirstOrDefaultAsync(p => p.User.sExternalId == thisUserIdentifier, token);
 				if (dbPlayer == null)
-					throw new NullReferenceException("no player");
+					throw new ArgumentNullException(nameof(dbPlayer), "no player");
 
 				//additional validation
 				string value = claimsPrincipal.FindFirstValue(nameof(Pages.BasePageModel.InkBallUserId));
 				int.TryParse(value, out int this_UserId);
 				if (this_UserId != dbPlayer.iUserId)
-					throw new ArgumentException("this_UserId != this_Player.iUserId");
+					throw new ArgumentException("this_UserId != this_Player.iUserId", nameof(dbPlayer.iUserId));
 
 				this_Player = dbPlayer;
 				//this.Context.Items[nameof(ThisPlayer)] = this_Player;
 			}
 			return this_Player;
+		}
+
+		private async Task OtherPlayerConnectNotification(CancellationToken token)
+		{
+			await LoadGameAndPlayerStructures(token);
+			try
+			{
+				if (ThisGame == null || ThisPlayer == null || OtherPlayer == null || string.IsNullOrEmpty(OtherUserIdentifier)
+					|| string.IsNullOrEmpty(ThisUserName))
+					return;
+
+				var msg = $"Other player {ThisPlayer?.User?.UserName} connected 😁";
+				await Clients.User(OtherUserIdentifier).ServerToClientOtherPlayerConnected(msg);
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex.Message);
+			}
+		}
+
+		private async Task OtherPlayerDisconnectNotification(Exception exception, CancellationToken token = default)
+		{
+			if (exception != null)
+				_logger.LogInformation(exception, nameof(OnDisconnectedAsync));
+
+			await LoadGameAndPlayerStructures(token);
+			try
+			{
+				if (ThisGame == null || ThisPlayer == null || OtherPlayer == null || string.IsNullOrEmpty(OtherUserIdentifier)
+					|| string.IsNullOrEmpty(ThisUserName))
+					return;
+
+				var msg = $"Other player {ThisPlayer?.User?.UserName} disconnected 😢";
+				await Clients.User(OtherUserIdentifier).ServerToClientOtherPlayerDisconnected(msg);
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex.Message);
+			}
 		}
 
 		#endregion Private methods
@@ -305,7 +355,13 @@ namespace InkBall.Module.Hubs
 			ThisGameID = gameID;
 			ThisPlayerID = playerID;
 
-			await base.OnConnectedAsync();
+
+			await OtherPlayerConnectNotification(this.Context.ConnectionAborted);
+		}
+
+		public override async Task OnDisconnectedAsync(Exception exception)
+		{
+			await OtherPlayerDisconnectNotification(exception);
 		}
 
 		#region IGameServer implementation
@@ -370,10 +426,10 @@ int before = await _dbContext.InkBallPoint.CountAsync(p => p.iGameId == ThisGame
 						ThisGame.bIsPlayer1Active = !ThisGame.bIsPlayer1Active;
 
 						new_point = new InkBallPointViewModel(db_point);
-						db_point_player.sLastMoveCode = JsonConvert.SerializeObject(new_point);
-// #if DEBUG
-// 						throw new Exception($"FAKE EXCEPTION {new_point}");
-// #endif
+						db_point_player.sLastMoveCode = JsonSerializer.Serialize(new_point);
+						// #if DEBUG
+						// 						throw new Exception($"FAKE EXCEPTION {new_point}");
+						// #endif
 						await _dbContext.SaveChangesAsync(token);
 int after = await _dbContext.InkBallPoint.CountAsync(p => p.iGameId == ThisGame.iId, token);
 int diff_should_be_one = after - before;
@@ -409,7 +465,9 @@ int diff_should_be_one = after - before;
 				if (ThisGame == null || ThisPlayer == null || OtherPlayer == null || string.IsNullOrEmpty(OtherUserIdentifier)
 					|| string.IsNullOrEmpty(ThisUserName))
 					throw new ArgumentException("bad game or player");
-				if (!ThisGame.IsThisPlayerActive())
+				bool isDelayedPathDrawn = false;
+				if (!ThisGame.IsThisPlayerActive()
+					&& !(isDelayedPathDrawn = ThisPlayer.IsDelayedPathDrawPossible()))
 					throw new ArgumentException("not your turn");
 
 				if (path == null || path.iPlayerId <= 0 || path.iGameId <= 0 || path.iGameId != ThisGame.iId)
@@ -479,7 +537,8 @@ int diff_should_be_one = after - before;
 							status = InkBallPoint.StatusEnum.POINT_IN_PATH;
 						}
 
-						ThisGame.bIsPlayer1Active = !ThisGame.bIsPlayer1Active;
+						if (!isDelayedPathDrawn)
+							ThisGame.bIsPlayer1Active = !ThisGame.bIsPlayer1Active;
 
 						var owning_points = path.GetOwnedPoints(owning_color, OtherPlayer.iId);
 						foreach (var op in owning_points)
@@ -498,15 +557,16 @@ int diff_should_be_one = after - before;
 							found.EnclosingPath = db_path;
 						}
 
-						db_path_player.sLastMoveCode = db_path.PointsAsString = JsonConvert.SerializeObject(path);
+						path.iId = db_path.iId;//get real DB id saved previously
+						db_path_player.sLastMoveCode = db_path.PointsAsString = JsonSerializer.Serialize(path);
 
 						await _dbContext.SaveChangesAsync(token);
-// #if DEBUG
-// 						var saved_pts = await _dbContext.LoadPointsAndPathsAsync(ThisGameID.Value, token);
-// 						var restored_from_db = saved_pts.Paths.LastOrDefault()?.InkBallPoint.Select(z => $"{z.iX},{z.iY}");
-// 						var str = InkBallPath.GetPathsAsJavaScriptArrayForPage2(saved_pts.Paths);
-// 						throw new Exception($"FAKE EXCEPTION org pts:[{path.PointsAsString}], restored pts:[{str}], owned:[{path.OwnedPointsAsString}]");
-// #endif
+						// #if DEBUG
+						// 						var saved_pts = await _dbContext.LoadPointsAndPathsAsync(ThisGameID.Value, token);
+						// 						var restored_from_db = saved_pts.Paths.LastOrDefault()?.InkBallPoint.Select(z => $"{z.iX},{z.iY}");
+						// 						var str = InkBallPath.GetPathsAsJavaScriptArrayForPage2(saved_pts.Paths);
+						// 						throw new Exception($"FAKE EXCEPTION org pts:[{path.PointsAsString}], restored pts:[{str}], owned:[{path.OwnedPointsAsString}]");
+						// #endif
 
 						var statisticalPointAndPathCounter = new StatisticalPointAndPathCounter(_dbContext, ThisGame.iId,
 							ThisPlayer.iId, OtherPlayer.iId, ref owning_color, ref other_owning_color, ref token);
@@ -621,7 +681,7 @@ int diff_should_be_one = after - before;
 			try
 			{
 				if (ping == null)
-					throw new NullReferenceException("ping == null");
+					throw new ArgumentNullException(nameof(ping), "ping == null");
 
 				var new_ping = new PingCommand(ping);
 
@@ -702,6 +762,25 @@ int diff_should_be_one = after - before;
 				}
 				else
 					return null;
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex.Message);
+				throw;
+			}
+		}
+
+		public async Task ClientToServerStopAndDraw(StopAndDrawCommand notification)
+		{
+			CancellationToken token = this.Context.ConnectionAborted;
+
+			await LoadGameAndPlayerStructures(token);
+			if (ThisGame == null || ThisPlayer == null || string.IsNullOrEmpty(ThisUserName))
+				throw new ArgumentException("bad player or game");
+
+			try
+			{
+				await Clients.User(OtherUserIdentifier).ServerToClientStopAndDraw(notification);
 			}
 			catch (Exception ex)
 			{

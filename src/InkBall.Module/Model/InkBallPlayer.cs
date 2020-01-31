@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using MessagePack;
-using Newtonsoft.Json;
 
 namespace InkBall.Module.Model
 {
@@ -53,7 +54,7 @@ namespace InkBall.Module.Model
 			{
 				if (!(_lastMoveDict?.Count > 0) && !string.IsNullOrEmpty(sLastMoveCode))
 				{
-					_lastMoveDict = JsonConvert.DeserializeObject<Dictionary<string, string>>(sLastMoveCode);
+					_lastMoveDict = JsonSerializer.Deserialize<Dictionary<string, string>>(sLastMoveCode);
 				}
 				return _lastMoveDict;
 			}
@@ -63,41 +64,38 @@ namespace InkBall.Module.Model
 		public abstract ICollection<Path> InkBallPath { get; set; }
 		public abstract ICollection<Point> InkBallPoint { get; set; }
 
-		public int GetWinCount()
-		{
-			return iWinCount;
-		}
+		public int GetWinCount() => iWinCount;
 
 		public void SetWinCount(int value)
 		{
 			iWinCount = value;
 		}
 
-		public int GetLossCount()
-		{
-			return iLossCount;
-		}
+		public int GetLossCount() => iLossCount;
 
 		public void SetLossCount(int value)
 		{
 			iLossCount = value;
 		}
 
-		public int GetDrawCount()
-		{
-			return iDrawCount;
-		}
+		public int GetDrawCount() => iDrawCount;
 
 		public void SetDrawCount(int value)
 		{
 			iDrawCount = value;
 		}
+
 		public bool IsLastMoveOverdue()
 		{
 			TimeSpan last_move = DateTime.Now - this.TimeStamp;
 			if (last_move > InkBallGame.GetDeactivationDelayInSeconds())
 				return true;
 			return false;
+		}
+
+		public bool IsDelayedPathDrawPossible()
+		{
+			return TimeStamp.AddSeconds(Constants.PathAfterPointDrawAllowanceSecAmount) > DateTime.Now;
 		}
 	}
 

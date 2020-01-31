@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 
 namespace InkBall.Module.Model
 {
@@ -42,10 +42,10 @@ namespace InkBall.Module.Model
 		where Point : IPoint
 		where Path : IPath<Point>
 	{
-		protected internal static TimeSpan _deactivationDelayInSeconds = TimeSpan.FromSeconds(120);
+		protected internal readonly static TimeSpan _deactivationDelayInSeconds = TimeSpan.FromSeconds(120);
 
 		[NotMapped]//Hide it from EF Core
-		[JsonProperty]//allow to serialize it
+		[JsonPropertyName("bIsPlayer1")]//allow to serialize it
 		protected internal bool bIsPlayer1 { get; set; }
 		public int iId { get; set; }
 		public abstract Player Player1 { get; set; }
@@ -58,8 +58,6 @@ namespace InkBall.Module.Model
 		public int iGridSize { get; set; }
 		public int iBoardWidth { get; set; }
 		public int iBoardHeight { get; set; }
-		// public int LogicalWidth => (int)(iBoardWidth / iGridSize);
-		// public int LogicalHeight => (int)(iBoardHeight / iGridSize);
 		public InkBallGame.GameTypeEnum GameType { get; set; }
 		public InkBallGame.GameStateEnum GameState { get; set; }
 		public DateTime TimeStamp { get; set; }
@@ -67,32 +65,19 @@ namespace InkBall.Module.Model
 
 		public static TimeSpan GetDeactivationDelayInSeconds() => InkBallGame._deactivationDelayInSeconds;
 
-		public bool IsThisPlayer1()
-		{
-			return this.bIsPlayer1;
-		}
+		public bool IsThisPlayer1() => this.bIsPlayer1;
 
-		public bool IsPlayer1Active()
-		{
-			return this.bIsPlayer1Active;
-		}
+		public bool IsPlayer1Active() => this.bIsPlayer1Active;
 
 		public bool IsThisPlayerActive()
 		{
 			if (this.bIsPlayer1)
-			{
-				return this.bIsPlayer1Active ? true : false;
-			}
+				return this.bIsPlayer1Active;
 			else
-			{
-				return this.bIsPlayer1Active ? false : true;
-			}
+				return !this.bIsPlayer1Active;
 		}
 
-		public bool IsThisPlayerPlayingWithRed()
-		{
-			return this.bIsPlayer1;
-		}
+		public bool IsThisPlayerPlayingWithRed() => this.bIsPlayer1;
 
 		public Player GetPlayer()
 		{
@@ -110,15 +95,9 @@ namespace InkBall.Module.Model
 				return this.Player2;
 		}
 
-		public Player GetPlayer1()
-		{
-			return this.Player1;
-		}
+		public Player GetPlayer1() => this.Player1;
 
-		public Player GetPlayer2()
-		{
-			return this.Player2;
-		}
+		public Player GetPlayer2() => this.Player2;
 
 		public void SetState(InkBallGame.GameStateEnum value)
 		{
@@ -204,7 +183,7 @@ namespace InkBall.Module.Model
 
 
 				default:
-					throw new Exception("Wrong game type");
+					throw new ArgumentException("Wrong game type", nameof(this.GameType));
 			}
 		}
 
@@ -286,7 +265,7 @@ namespace InkBall.Module.Model
 
 
 				default:
-					throw new Exception("Wrong game type");
+					throw new ArgumentException("Wrong game type", nameof(this.GameType));
 			}
 		}
 	}
@@ -322,7 +301,7 @@ namespace InkBall.Module.Model
 			SIZE_20x26 = 20,
 			SIZE_40x52 = 40,
 			SIZE_64x64 = 64,
-			SIZE_80x80 = 80
+			// SIZE_80x80 = 80
 		}
 
 		public override InkBallPlayer Player1 { get; set; }

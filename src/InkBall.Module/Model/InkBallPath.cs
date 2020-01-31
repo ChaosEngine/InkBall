@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using MessagePack;
 using Microsoft.Extensions.Primitives;
-using Newtonsoft.Json;
 
 namespace InkBall.Module.Model
 {
@@ -237,6 +238,7 @@ namespace InkBall.Module.Model
 		//legacy
 		public string OwnedPointsAsString { get; set; }
 
+		//public bool IsDelayed { get; set; }
 
 		///Points creating the path; path points
 		[JsonIgnore]
@@ -283,7 +285,7 @@ namespace InkBall.Module.Model
 		{
 			//basic string allowed char validation
 			if (!pointsAsString.All(c => c == ' ' || c == ',' || (c >= '0' && c <= '9')))
-				throw new ArgumentException("bad characters in path");
+				throw new ArgumentException("bad characters in path", nameof(pointsAsString));
 
 			var tokensP = new StringTokenizer(pointsAsString, _spaceSeparatorArr);
 			var collection = new HashSet<InkBallPointViewModel>();
@@ -385,6 +387,8 @@ namespace InkBall.Module.Model
 			{
 				this.InkBallPoint = path.InkBallPoint.Select(p => new InkBallPointViewModel(p)).ToArray();
 			}
+
+			Debug.Assert(this.iId >= 0);
 		}
 
 		public InkBallPathViewModel(InkBallPathViewModel path)
@@ -399,6 +403,8 @@ namespace InkBall.Module.Model
 			{
 				this.InkBallPoint = path.InkBallPoint;
 			}
+
+			Debug.Assert(this.iId >= 0);
 		}
 	}
 }

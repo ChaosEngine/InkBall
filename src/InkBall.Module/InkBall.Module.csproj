@@ -1,28 +1,47 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-	  <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+    <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="3.1.1" />
+    <!--<PackageReference Include="Microsoft.AspNetCore.Authorization" Version="3.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
-    <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.2.0" />
+
+    <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.2.0" />-->
     <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="2.2.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.2.6" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.2.4" />
-	  <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="2.2.0" />
-	  <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="2.2.6" />
-		<PackageReference Include="Oracle.EntityFrameworkCore" Version="2.19.30" />
+    <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="3.1.1" />
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="3.1.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.1" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="3.1.1" />
+	  <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="3.1.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="3.1.1" />
+		<PackageReference Include="Oracle.EntityFrameworkCore" Version="2.19.60" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
-	  <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="1.1.5" />
+	  <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="3.1.1" />
+		<PackageReference Include="MessagePack" Version="1.9.3" />
   </ItemGroup>
-  
-  <ItemGroup>
-    <EmbeddedResource Include="wwwroot\**\*" />
+
+  <ItemGroup Condition="'$(Configuration)'=='Debug'">
+    <EmbeddedResource Include="wwwroot\css\inkball.css" />
+    <EmbeddedResource Include="wwwroot\img\*" />
+    <EmbeddedResource Include="wwwroot\js\inkball.babelify.js" />
+    <EmbeddedResource Include="wwwroot\js\inkball.js" />
+    <EmbeddedResource Include="wwwroot\js\svgvml.babelify.js" />
+    <EmbeddedResource Include="wwwroot\js\svgvml.js" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)'!='Debug'">
+    <EmbeddedResource Include="wwwroot\css\inkball.min.css" />
+    <EmbeddedResource Include="wwwroot\img\*" />
+    <EmbeddedResource Include="wwwroot\js\inkball.babelify.min.js" />
+    <EmbeddedResource Include="wwwroot\js\inkball.min.js" />
+    <EmbeddedResource Include="wwwroot\js\svgvml.babelify.min.js" />
+    <EmbeddedResource Include="wwwroot\js\svgvml.min.js" />
   </ItemGroup>
 
 </Project>
