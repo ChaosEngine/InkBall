@@ -171,9 +171,9 @@ namespace InkBall.Module.Pages
 							case InkBallGame.BoardSizeEnum.SIZE_64x64:
 								width = 64; height = 64;
 								break;
-							case InkBallGame.BoardSizeEnum.SIZE_80x80:
-								width = 80; height = 80;
-								break;
+							// case InkBallGame.BoardSizeEnum.SIZE_80x80:
+							// 	width = 80; height = 80;
+							// 	break;
 							default:
 								break;
 						}
