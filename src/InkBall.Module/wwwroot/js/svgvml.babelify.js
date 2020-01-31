@@ -55,6 +55,7 @@ if (SVG) {
     o.setAttribute("stroke-linecap", "round");
     o.setAttribute("stroke-linejoin", "round");
     cont.appendChild(o);
+    o.m_iID = 0;
 
     o.$AppendPoints = function (x, y) {
       this.setAttribute("points", this.getAttribute("points") + " ".concat(x, ",").concat(y));
@@ -103,6 +104,14 @@ if (SVG) {
       this.setAttribute("stroke", col);
       this.setAttribute("fill", col);
       this.setAttribute("stroke-width", Math.round(w));
+    };
+
+    o.$GetID = function () {
+      return this.m_iID;
+    };
+
+    o.$SetID = function (iID) {
+      this.m_iID = iID;
     };
 
     return o;
@@ -226,6 +235,7 @@ if (SVG) {
     s.opacity = 0.1;
     o.appendChild(s);
     cont.appendChild(o);
+    o.m_iID = 0;
     o.m_sMyPoints = points;
 
     o.$AppendPoints = function (x, y) {
@@ -277,6 +287,14 @@ if (SVG) {
       this.strokecolor = col;
       this.fill.color = col;
       this.strokeweight = Math.round(w) + "px";
+    };
+
+    o.$GetID = function () {
+      return this.m_iID;
+    };
+
+    o.$SetID = function (iID) {
+      this.m_iID = iID;
     };
 
     return o;

@@ -900,10 +900,10 @@ class InkBallGame {
 		if (this.m_Points.has(iY * this.m_iGridWidth + iX))
 			return;
 
-		let x = iX * this.m_iGridSizeX;
-		let y = iY * this.m_iGridSizeY;
+		const x = iX * this.m_iGridSizeX;
+		const y = iY * this.m_iGridSizeY;
 
-		let oval = $createOval(this.m_PointRadius, 'true');
+		const oval = $createOval(this.m_PointRadius, 'true');
 		oval.$move(x, y, this.m_PointRadius);
 
 		let color;
@@ -975,7 +975,7 @@ class InkBallGame {
 		});
 	}
 
-	SetPath(packed, bIsRed, bBelong2ThisPlayer) {
+	SetPath(packed, bIsRed, bBelong2ThisPlayer, iId = 0) {
 		let sPoints = packed.split(" ");
 		let sDelimiter = "", sPathPoints = "", p = null, x, y,
 			status = StatusEnum.POINT_STARTING;
@@ -999,14 +999,16 @@ class InkBallGame {
 		p = this.m_Points.get(y * this.m_iGridWidth + x);
 		if (p !== null && p !== undefined) p.$SetStatus(status);
 
-		let line = $createPolyline(3, sPathPoints,
+		const line = $createPolyline(3, sPathPoints,
 			(bBelong2ThisPlayer ? this.m_sDotColor : (bIsRed ? this.COLOR_BLUE : this.COLOR_RED)));
+		line.$SetID(iId);
 		this.m_Lines.push(line);
 	}
 
 	SetAllPaths(paths) {
 		paths.forEach(p => {
-			this.SetPath(p[0]/*points*/, this.m_bIsPlayingWithRed, p[1] === this.g_iPlayerID/*isMainPlayerPoints*/);
+			this.SetPath(p[0]/*points*/, this.m_bIsPlayingWithRed, p[1] === this.g_iPlayerID/*isMainPlayerPoints*/,
+			p.iId/*real DB id*/);
 		});
 	}
 
@@ -1017,7 +1019,7 @@ class InkBallGame {
 				throw new Error("Bad game from path!");
 
 			this.SetPath(unpacked.PointsAsString/*points*/, this.m_bIsPlayingWithRed,
-				unpacked.iPlayerId === this.g_iPlayerID/*isMainPlayerPoints*/);
+				unpacked.iPlayerId === this.g_iPlayerID/*isMainPlayerPoints*/, unpacked.iId/*real DB id*/);
 		});
 	}
 
@@ -1299,7 +1301,7 @@ class InkBallGame {
 			let str_path = path.PointsAsString, owned = path.OwnedPointsAsString;
 
 			this.SetPath(str_path,
-				(this.m_sDotColor === this.COLOR_RED ? true : false), false);
+				(this.m_sDotColor === this.COLOR_RED ? true : false), false, path.iId/*real DB id*/);
 
 			let points = owned.split(" ");
 			let point_status = (this.m_sDotColor === this.COLOR_RED ? StatusEnum.POINT_OWNED_BY_RED : StatusEnum.POINT_OWNED_BY_BLUE);
@@ -1336,6 +1338,7 @@ class InkBallGame {
 				p0.$SetStatus(StatusEnum.POINT_IN_PATH);
 
 			this.m_Line.$SetWidthAndColor(3, this.m_sDotColor);
+			this.m_Line.$SetID(path.iId);
 			this.m_Lines.push(this.m_Line);
 			this.m_iLastX = this.m_iLastY = -1;
 			this.m_Line = null;

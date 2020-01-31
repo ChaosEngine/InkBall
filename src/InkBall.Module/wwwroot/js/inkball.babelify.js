@@ -4,7 +4,7 @@ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
-function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
 
@@ -1175,6 +1175,7 @@ var InkBallGame = function () {
   }, {
     key: "SetPath",
     value: function SetPath(packed, bIsRed, bBelong2ThisPlayer) {
+      var iId = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;
       var sPoints = packed.split(" ");
       var sDelimiter = "",
           sPathPoints = "",
@@ -1227,6 +1228,7 @@ var InkBallGame = function () {
       p = this.m_Points.get(y * this.m_iGridWidth + x);
       if (p !== null && p !== undefined) p.$SetStatus(status);
       var line = $createPolyline(3, sPathPoints, bBelong2ThisPlayer ? this.m_sDotColor : bIsRed ? this.COLOR_BLUE : this.COLOR_RED);
+      line.$SetID(iId);
       this.m_Lines.push(line);
     }
   }, {
@@ -1235,7 +1237,7 @@ var InkBallGame = function () {
       var _this12 = this;
 
       paths.forEach(function (p) {
-        _this12.SetPath(p[0], _this12.m_bIsPlayingWithRed, p[1] === _this12.g_iPlayerID);
+        _this12.SetPath(p[0], _this12.m_bIsPlayingWithRed, p[1] === _this12.g_iPlayerID, p.iId);
       });
     }
   }, {
@@ -1246,7 +1248,7 @@ var InkBallGame = function () {
       packedPaths.forEach(function (unpacked) {
         if (unpacked.iGameId !== _this13.g_iGameID) throw new Error("Bad game from path!");
 
-        _this13.SetPath(unpacked.PointsAsString, _this13.m_bIsPlayingWithRed, unpacked.iPlayerId === _this13.g_iPlayerID);
+        _this13.SetPath(unpacked.PointsAsString, _this13.m_bIsPlayingWithRed, unpacked.iPlayerId === _this13.g_iPlayerID, unpacked.iId);
       });
     }
   }, {
@@ -1552,7 +1554,7 @@ var InkBallGame = function () {
       if (this.g_iPlayerID !== path.iPlayerId) {
         var str_path = path.PointsAsString,
             owned = path.OwnedPointsAsString;
-        this.SetPath(str_path, this.m_sDotColor === this.COLOR_RED ? true : false, false);
+        this.SetPath(str_path, this.m_sDotColor === this.COLOR_RED ? true : false, false, path.iId);
         var points = owned.split(" ");
         var point_status = this.m_sDotColor === this.COLOR_RED ? StatusEnum.POINT_OWNED_BY_RED : StatusEnum.POINT_OWNED_BY_BLUE;
         var sOwnedCol = this.m_sDotColor === this.COLOR_RED ? this.COLOR_OWNED_BLUE : this.COLOR_OWNED_RED;
@@ -1605,6 +1607,7 @@ var InkBallGame = function () {
         var p0 = this.m_Points.get(_y * this.m_iGridWidth + _x3);
         if (p0 !== undefined) p0.$SetStatus(StatusEnum.POINT_IN_PATH);
         this.m_Line.$SetWidthAndColor(3, this.m_sDotColor);
+        this.m_Line.$SetID(path.iId);
         this.m_Lines.push(this.m_Line);
         this.m_iLastX = this.m_iLastY = -1;
         this.m_Line = null;

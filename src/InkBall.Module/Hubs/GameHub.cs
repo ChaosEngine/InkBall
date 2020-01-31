@@ -555,6 +555,7 @@ namespace InkBall.Module.Hubs
 							found.EnclosingPath = db_path;
 						}
 
+						path.iId = db_path.iId;//get real DB id saved previously
 						db_path_player.sLastMoveCode = db_path.PointsAsString = JsonSerializer.Serialize(path);
 
 						await _dbContext.SaveChangesAsync(token);
