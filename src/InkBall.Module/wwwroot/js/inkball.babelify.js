@@ -1673,7 +1673,7 @@ var InkBallGame = function () {
           points = playerPoints;
           count = 0;
           points.forEach(function (p) {
-            if (p.iEnclosingPathId !== null) ++count;
+            if (p.iEnclosingPathId !== null && (p.$GetStatus() === StatusEnum.COLOR_OWNED_BLUE || p.$GetStatus() === StatusEnum.COLOR_OWNED_RED)) ++count;
 
             if (count >= 5) {
               if (_this14.m_bIsPlayingWithRed) return WinStatusEnum.GREEN_WINS;else return WinStatusEnum.RED_WINS;
@@ -1765,7 +1765,7 @@ var InkBallGame = function () {
               if (p0 !== undefined && p1 !== undefined && p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
                 var line_contains_point = this.m_Line.$ContainsPoint(tox, toy);
 
-                if (line_contains_point < 1 && p1.$GetStatus() !== StatusEnum.POINT_IN_PATH || line_contains_point === 1 && p1.$GetStatus() === StatusEnum.POINT_STARTING) {
+                if (line_contains_point < 1 || line_contains_point === 1 && p1.$GetStatus() === StatusEnum.POINT_STARTING) {
                   this.m_Line.$AppendPoints(tox, toy);
                   if (p1.$GetStatus() !== StatusEnum.POINT_STARTING) p1.$SetStatus(StatusEnum.POINT_IN_PATH);else {
                     var val = this.SurroundOponentPoints();
@@ -1863,7 +1863,7 @@ var InkBallGame = function () {
               var toy = y * this.m_iGridSizeY;
               var line_contains_point = this.m_Line.$ContainsPoint(tox, toy);
 
-              if (line_contains_point < 1 && p1.$GetStatus() !== StatusEnum.POINT_IN_PATH || line_contains_point === 1 && p1.$GetStatus() === StatusEnum.POINT_STARTING) {
+              if (line_contains_point < 1 || line_contains_point === 1 && p1.$GetStatus() === StatusEnum.POINT_STARTING) {
                 this.m_Line.$AppendPoints(tox, toy);
                 if (p1.$GetStatus() !== StatusEnum.POINT_STARTING) p1.$SetStatus(StatusEnum.POINT_IN_PATH);else {
                   var val = this.SurroundOponentPoints();

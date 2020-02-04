@@ -489,11 +489,15 @@ namespace InkBall.Module.Hubs
 					owning_color = InkBallPoint.StatusEnum.POINT_OWNED_BY_BLUE;
 					other_owning_color = InkBallPoint.StatusEnum.POINT_OWNED_BY_RED;
 				}
+				InkBallPoint.StatusEnum[] free_colors = new[] { current_player_color, other_player_color };
+				InkBallPoint.StatusEnum[] in_path_colors = new[] { InkBallPoint.StatusEnum.POINT_IN_PATH, InkBallPoint.StatusEnum.POINT_STARTING };
 				var db_path_player = ThisPlayer.iId == path.iPlayerId ? ThisPlayer : OtherPlayer;
-
 				var all_placed_points_fromDB = await (from p in _dbContext.InkBallPoint
-													  where p.iGameId == ThisGame.iId && p.iEnclosingPathId == null
-													  && (p.Status == current_player_color || p.Status == other_player_color)
+													  where p.iGameId == ThisGame.iId &&
+													  (
+														  (p.iEnclosingPathId == null && free_colors.Contains(p.Status)) ||
+														  (p.iEnclosingPathId != null && in_path_colors.Contains(p.Status))
+													  )
 													  select p).Cast<IPoint>()
 													  .ToDictionaryAsync(pip => pip, _simpleCoordsPointComparer, token);
 
@@ -510,29 +514,27 @@ namespace InkBall.Module.Hubs
 					try
 					{
 						await _dbContext.InkBallPath.AddAsync(db_path, token);
-
 						await _dbContext.SaveChangesAsync(token);
 
 						var status = InkBallPoint.StatusEnum.POINT_STARTING;
-						// int order = 1;
+						var last_point_in_path = points_on_path.Last();
 						foreach (var pop in points_on_path)
 						{
 							//TODO: check in-path-next-point from start to end with closing
 							if (!(all_placed_points_fromDB.TryGetValue(pop, out IPoint iobj) && iobj is InkBallPoint found)
-								|| !((found.Status == current_player_color || _simpleCoordsPointComparer.Equals(found, points_on_path.Last())) && found.iPlayerId == ThisPlayer.iId))
+								|| !(found.iPlayerId == ThisPlayer.iId &&
+									(
+										((found.iEnclosingPathId == null && (found.Status == current_player_color || _simpleCoordsPointComparer.Equals(found, last_point_in_path))) ||
+										(found.iEnclosingPathId != null && in_path_colors.Contains(found.Status)))
+									))
+								)
 							{
 								throw new ArgumentOutOfRangeException($"point not in path [{pop}]");
 							}
 
-							//TODO: remove coz not needed anymore - points are stored inside InkBallPath.PointsAsString JSON field
-							// db_path.InkBallPointsInPath.Add(new InkBallPointsInPath
-							// {
-							// 	Path = db_path,
-							// 	Point = found,
-							// 	Order = order++
-							// });
 							found.Status = status;
 							status = InkBallPoint.StatusEnum.POINT_IN_PATH;
+							found.EnclosingPath = db_path;
 						}
 
 						if (!isDelayedPathDrawn)

@@ -349,6 +349,36 @@ function CountPointsDebug(sSelector2Set) {
 	});
 
 	document.querySelector(sSelector2Set).innerHTML = 'SVGs by tags: ' + aggregated;
+
+
+
+
+
+
+
+
+	/*//TODO: test code; to be disabled
+	const screen = document.querySelector('#screen');
+	screen.innerHTML += "<div id='divTooltip' " +
+		"style='position:absolute; top:0; right:0; z-index:33; background-color:#8886; display:none' " +
+		"data-toggle='tooltip' data-html='true'>XXXXXXXXXX</div>";
+	const tooltip = $('#divTooltip').tooltip('hide');
+	$('polyline').hover(function (event) {
+		const t = event.offsetY, l = event.offsetX;
+
+		tooltip.text(this.getAttribute("points").split(" ").map(function (pt) {
+			const tab = pt.split(',');
+			return (parseInt(tab[0]) >> 4) + "," + (parseInt(tab[1]) >> 4);
+		}).join(' 	'));
+		
+		tooltip.css({ "top": t + "px", "left": l + "px" }).show();
+	}, function () {
+		tooltip.hide();
+	});*/
+
+
+
+
 }
 
 function LocalLog(msg) {
@@ -1008,7 +1038,7 @@ class InkBallGame {
 	SetAllPaths(paths) {
 		paths.forEach(p => {
 			this.SetPath(p[0]/*points*/, this.m_bIsPlayingWithRed, p[1] === this.g_iPlayerID/*isMainPlayerPoints*/,
-			p.iId/*real DB id*/);
+				p.iId/*real DB id*/);
 		});
 	}
 
@@ -1414,7 +1444,8 @@ class InkBallGame {
 				points = playerPoints;
 				count = 0;
 				points.forEach(p => {
-					if (p.iEnclosingPathId !== null)
+					if (p.iEnclosingPathId !== null
+						&& (p.$GetStatus() === StatusEnum.COLOR_OWNED_BLUE || p.$GetStatus() === StatusEnum.COLOR_OWNED_RED))
 						++count;
 					if (count >= 5) {
 						if (this.m_bIsPlayingWithRed)
@@ -1536,7 +1567,7 @@ class InkBallGame {
 							p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
 							//debugger;
 							const line_contains_point = this.m_Line.$ContainsPoint(tox, toy);
-							if ((line_contains_point < 1 && p1.$GetStatus() !== StatusEnum.POINT_IN_PATH) ||
+							if ((line_contains_point < 1 /*&& p1.$GetStatus() !== StatusEnum.POINT_IN_PATH*/) ||
 								(line_contains_point === 1 && p1.$GetStatus() === StatusEnum.POINT_STARTING)) {
 								this.m_Line.$AppendPoints(tox, toy);
 								if (p1.$GetStatus() !== StatusEnum.POINT_STARTING)
@@ -1655,7 +1686,7 @@ class InkBallGame {
 						const toy = y * this.m_iGridSizeY;
 						//debugger;
 						const line_contains_point = this.m_Line.$ContainsPoint(tox, toy);
-						if ((line_contains_point < 1 && p1.$GetStatus() !== StatusEnum.POINT_IN_PATH) ||
+						if ((line_contains_point < 1 /*&& p1.$GetStatus() !== StatusEnum.POINT_IN_PATH*/) ||
 							(line_contains_point === 1 && p1.$GetStatus() === StatusEnum.POINT_STARTING)) {
 							this.m_Line.$AppendPoints(tox, toy);
 							if (p1.$GetStatus() !== StatusEnum.POINT_STARTING)
