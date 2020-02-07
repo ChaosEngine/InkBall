@@ -1640,67 +1640,55 @@ var InkBallGame = function () {
   }, {
     key: "Check4Win",
     value: function Check4Win(playerPaths, otherPlayerPaths, playerPoints, otherPlayerPoints) {
-      var _this14 = this;
-
-      var paths, points, count;
+      var owned_status, count;
 
       switch (this.GameType) {
         case GameTypeEnum.FIRST_CAPTURE:
-          paths = playerPaths;
-
-          if (paths.length > 0) {
+          if (playerPaths.length > 0) {
             if (this.m_bIsPlayingWithRed) return WinStatusEnum.RED_WINS;else return WinStatusEnum.GREEN_WINS;
           }
 
-          paths = otherPlayerPaths;
-
-          if (paths.length > 0) {
+          if (otherPlayerPaths.length > 0) {
             if (this.m_bIsPlayingWithRed) return WinStatusEnum.GREEN_WINS;else return WinStatusEnum.RED_WINS;
           }
 
           return WinStatusEnum.NO_WIN;
 
         case GameTypeEnum.FIRST_5_CAPTURES:
-          points = otherPlayerPoints;
-          count = 0;
-          points.forEach(function (p) {
-            if (p.iEnclosingPathId !== null) ++count;
+          owned_status = this.m_bIsPlayingWithRed ? StatusEnum.POINT_OWNED_BY_BLUE : StatusEnum.POINT_OWNED_BY_RED;
+          count = otherPlayerPoints.filter(function (p) {
+            return p.iEnclosingPathId !== null && p.$GetStatus() === owned_status;
+          }).length;
 
-            if (count >= 5) {
-              if (_this14.m_bIsPlayingWithRed) return WinStatusEnum.RED_WINS;else return WinStatusEnum.GREEN_WINS;
-            }
-          });
-          points = playerPoints;
-          count = 0;
-          points.forEach(function (p) {
-            if (p.iEnclosingPathId !== null && (p.$GetStatus() === StatusEnum.COLOR_OWNED_BLUE || p.$GetStatus() === StatusEnum.COLOR_OWNED_RED)) ++count;
+          if (count >= 5) {
+            if (this.m_bIsPlayingWithRed) return WinStatusEnum.GREEN_WINS;else return WinStatusEnum.RED_WINS;
+          }
 
-            if (count >= 5) {
-              if (_this14.m_bIsPlayingWithRed) return WinStatusEnum.GREEN_WINS;else return WinStatusEnum.RED_WINS;
-            }
-          });
-          return WinStatusEnum.NO_WIN;
+          owned_status = this.m_bIsPlayingWithRed ? StatusEnum.POINT_OWNED_BY_RED : StatusEnum.POINT_OWNED_BY_BLUE;
+          count = playerPoints.filter(function (p) {
+            return p.iEnclosingPathId !== null && p.$GetStatus() === owned_status;
+          }).length;
 
-        case GameTypeEnum.FIRST_5_PATHS:
-          paths = playerPaths;
-
-          if (paths.length >= 5) {
+          if (count >= 5) {
             if (this.m_bIsPlayingWithRed) return WinStatusEnum.RED_WINS;else return WinStatusEnum.GREEN_WINS;
           }
 
-          paths = otherPlayerPaths;
+          return WinStatusEnum.NO_WIN;
 
-          if (paths.length >= 5) {
+        case GameTypeEnum.FIRST_5_PATHS:
+          if (otherPlayerPaths.length >= 5) {
             if (this.m_bIsPlayingWithRed) return WinStatusEnum.GREEN_WINS;else return WinStatusEnum.RED_WINS;
+          }
+
+          if (playerPaths.length >= 5) {
+            if (this.m_bIsPlayingWithRed) return WinStatusEnum.RED_WINS;else return WinStatusEnum.GREEN_WINS;
           }
 
           return WinStatusEnum.NO_WIN;
 
         case GameTypeEnum.FIRST_5_ADVANTAGE_PATHS:
           {
-            var this_player_paths = playerPaths;
-            var other_player_paths = otherPlayerPaths;
-            var diff = this_player_paths.length - other_player_paths.length;
+            var diff = playerPaths.length - otherPlayerPaths.length;
 
             if (diff >= 5) {
               if (this.m_bIsPlayingWithRed) return WinStatusEnum.RED_WINS;else return WinStatusEnum.GREEN_WINS;
@@ -1732,7 +1720,7 @@ var InkBallGame = function () {
   }, {
     key: "OnMouseMove",
     value: function OnMouseMove(event) {
-      var _this15 = this;
+      var _this14 = this;
 
       if (!this.m_bIsPlayerActive || this.m_Player2Name.innerHTML === '???' || this.m_bHandlingEvent === true || this.iConnErrCount > 0) {
         if (this.iConnErrCount <= 0 && !this.m_bIsPlayerActive) {
@@ -1773,14 +1761,14 @@ var InkBallGame = function () {
                     if (val.owned.length > 0) {
                       this.Debug('Closing path', 0);
                       this.SendAsyncData(this.CreateXMLPutPathRequest(val), function () {
-                        _this15.OnCancelClick();
+                        _this14.OnCancelClick();
 
                         val.OwnedPoints.forEach(function (p) {
                           p.$SetStatus(val.revertStatus);
                           p.$SetFillColor(val.revertFillColor);
                           p.$strokeColor(val.revertStrokeColor);
                         });
-                        _this15.m_bHandlingEvent = false;
+                        _this14.m_bHandlingEvent = false;
                       });
                     } else this.Debug('Wrong path, cancell it or refresh page', 0);
                   }
@@ -1820,7 +1808,7 @@ var InkBallGame = function () {
   }, {
     key: "OnMouseDown",
     value: function OnMouseDown(event) {
-      var _this16 = this;
+      var _this15 = this;
 
       if (!this.m_bIsPlayerActive || this.m_Player2Name.innerHTML === '???' || this.m_bHandlingEvent === true || this.iConnErrCount > 0) return;
       var x = (event ? event.clientX : window.event.clientX) - this.m_Screen.offsetLeft + this.f_scrollLeft() + 0.5 * this.m_iGridSizeX;
@@ -1848,8 +1836,8 @@ var InkBallGame = function () {
         }
 
         this.SendAsyncData(this.CreateXMLPutPointRequest(loc_x, loc_y), function () {
-          _this16.m_bMouseDown = false;
-          _this16.m_bHandlingEvent = false;
+          _this15.m_bMouseDown = false;
+          _this15.m_bHandlingEvent = false;
         });
       } else {
         if ((this.m_iLastX !== x || this.m_iLastY !== y) && Math.abs(parseInt(this.m_iLastX - x)) <= 1 && Math.abs(parseInt(this.m_iLastY - y)) <= 1 && this.m_iLastX >= 0 && this.m_iLastY >= 0) {
@@ -1871,17 +1859,17 @@ var InkBallGame = function () {
                   if (val.owned.length > 0) {
                     this.Debug('Closing path', 0);
                     this.SendAsyncData(this.CreateXMLPutPathRequest(val), function () {
-                      _this16.Debug('Wrong path', 0);
+                      _this15.Debug('Wrong path', 0);
 
-                      _this16.OnCancelClick();
+                      _this15.OnCancelClick();
 
                       val.OwnedPoints.forEach(function (p) {
                         p.$SetStatus(val.revertStatus);
                         p.$SetFillColor(val.revertFillColor);
                         p.$strokeColor(val.revertStrokeColor);
                       });
-                      _this16.m_bMouseDown = false;
-                      _this16.m_bHandlingEvent = false;
+                      _this15.m_bMouseDown = false;
+                      _this15.m_bHandlingEvent = false;
                     });
                   } else this.Debug('Wrong path, cancell it or refresh page', 0);
                 }

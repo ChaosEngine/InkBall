@@ -55,7 +55,7 @@ if (SVG) {
     o.setAttribute("stroke-linecap", "round");
     o.setAttribute("stroke-linejoin", "round");
     cont.appendChild(o);
-    o.m_iID = 0;
+    o.setAttribute("data-myid", 0);
 
     o.$AppendPoints = function (x, y) {
       this.setAttribute("points", this.getAttribute("points") + " ".concat(x, ",").concat(y));
@@ -107,11 +107,11 @@ if (SVG) {
     };
 
     o.$GetID = function () {
-      return this.m_iID;
+      return parseInt(this.getAttribute("data-myid"));
     };
 
     o.$SetID = function (iID) {
-      this.m_iID = iID;
+      this.setAttribute("data-myid", iID);
     };
 
     return o;
@@ -122,7 +122,7 @@ if (SVG) {
     o.setAttribute("shape-rendering", svgAntialias ? "auto" : "optimizeSpeed");
     o.setAttribute("stroke-width", 0);
     o.setAttribute("r", Math.round(diam > 1));
-    o.m_iStatus = -1;
+    o.setAttribute("data-status", -1);
 
     o.$move = function (x1, y1, radius) {
       this.setAttribute("cx", x1);
@@ -150,11 +150,11 @@ if (SVG) {
     };
 
     o.$SetStatus = function (iStatus) {
-      this.m_iStatus = iStatus;
+      this.setAttribute("data-status", iStatus);
     };
 
     o.$GetStatus = function () {
-      return this.m_iStatus;
+      return parseInt(this.getAttribute("data-status"));
     };
 
     o.$GetZIndex = function () {
@@ -235,32 +235,31 @@ if (SVG) {
     s.opacity = 0.1;
     o.appendChild(s);
     cont.appendChild(o);
-    o.m_iID = 0;
-    o.m_sMyPoints = points;
+    o.setAttribute("data-myid", 0);
 
     o.$AppendPoints = function (x, y) {
-      this.m_sMyPoints = this.m_sMyPoints + " ".concat(x, ",").concat(y);
-      this.points.value = this.m_sMyPoints;
+      var str = this.points.value + " ".concat(x, ",").concat(y);
+      this.points.value = str;
     };
 
     o.$RemoveLastPoint = function () {
-      this.m_sMyPoints = this.m_sMyPoints.replace(/(\s\d+,\d+)$/, "");
-      this.points.value = this.m_sMyPoints;
-      return this.m_sMyPoints;
+      var str = this.points.value.replace(/(\s\d+,\d+)$/, "");
+      this.points.value = str;
+      return str;
     };
 
     o.$ContainsPoint = function (x, y) {
       var regexstr = new RegExp("".concat(x, ",").concat(y), 'g');
-      var cnt = (this.m_sMyPoints.match(regexstr) || []).length;
+      var cnt = (this.points.value.match(regexstr) || []).length;
       return cnt;
     };
 
     o.$GetPointsString = function () {
-      return o.m_sMyPoints;
+      return o.points.value;
     };
 
     o.$GetPointsArray = function () {
-      return this.m_sMyPoints.split(" ").map(function (pt) {
+      return this.points.value.split(" ").map(function (pt) {
         var tab = pt.split(',');
         return {
           x: parseInt(tab[0]),
@@ -270,17 +269,16 @@ if (SVG) {
     };
 
     o.$SetPoints = function (sPoints) {
-      this.m_sMyPoints = sPoints;
-      this.points.value = this.m_sMyPoints;
+      this.points.value = sPoints;
     };
 
     o.$GetIsClosed = function () {
-      var pts = this.m_sMyPoints.split(" ");
+      var pts = this.points.value.split(" ");
       return pts[0] === pts[pts.length - 1];
     };
 
     o.$GetLength = function () {
-      return this.m_sMyPoints.split(" ").length;
+      return this.points.value.split(" ").length;
     };
 
     o.$SetWidthAndColor = function (w, col) {
@@ -290,11 +288,11 @@ if (SVG) {
     };
 
     o.$GetID = function () {
-      return this.m_iID;
+      return parseInt(this.getAttribute("data-myid"));
     };
 
     o.$SetID = function (iID) {
-      this.m_iID = iID;
+      this.setAttribute("data-myid", iID);
     };
 
     return o;
@@ -303,7 +301,7 @@ if (SVG) {
   $createOval = function $createOval(diam, filled) {
     var o = document.createElement("v:oval");
     o.style.position = "absolute";
-    o.m_iStatus = -1;
+    o.setAttribute("data-status", -1);
     o.strokeweight = 1;
     o.filled = filled;
     o.style.width = diam + "px";
@@ -336,11 +334,11 @@ if (SVG) {
     };
 
     o.$SetStatus = function (iStatus) {
-      this.m_iStatus = iStatus;
+      this.setAttribute("data-status", iStatus);
     };
 
     o.$GetStatus = function () {
-      return this.m_iStatus;
+      return parseInt(this.getAttribute("data-status"));
     };
 
     o.$GetZIndex = function () {

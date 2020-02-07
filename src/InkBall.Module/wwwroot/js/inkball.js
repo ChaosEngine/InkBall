@@ -1409,18 +1409,16 @@ class InkBallGame {
 	}
 
 	Check4Win(playerPaths, otherPlayerPaths, playerPoints, otherPlayerPoints) {
-		let paths, points, count;
+		let owned_status, count;
 		switch (this.GameType) {
 			case GameTypeEnum.FIRST_CAPTURE:
-				paths = playerPaths;
-				if (paths.length > 0) {
+				if (playerPaths.length > 0) {
 					if (this.m_bIsPlayingWithRed)
 						return WinStatusEnum.RED_WINS;
 					else
 						return WinStatusEnum.GREEN_WINS;
 				}
-				paths = otherPlayerPaths;
-				if (paths.length > 0) {
+				if (otherPlayerPaths.length > 0) {
 					if (this.m_bIsPlayingWithRed)
 						return WinStatusEnum.GREEN_WINS;
 					else
@@ -1429,55 +1427,46 @@ class InkBallGame {
 				return WinStatusEnum.NO_WIN;//continue game
 
 			case GameTypeEnum.FIRST_5_CAPTURES:
-				points = otherPlayerPoints;
-				count = 0;
-				points.forEach(p => {
-					if (p.iEnclosingPathId !== null)//TODO: count closed paths owning points
-						++count;
-					if (count >= 5) {
-						if (this.m_bIsPlayingWithRed)
-							return WinStatusEnum.RED_WINS;
-						else
-							return WinStatusEnum.GREEN_WINS;
-					}
-				});
-				points = playerPoints;
-				count = 0;
-				points.forEach(p => {
-					if (p.iEnclosingPathId !== null
-						&& (p.$GetStatus() === StatusEnum.COLOR_OWNED_BLUE || p.$GetStatus() === StatusEnum.COLOR_OWNED_RED))
-						++count;
-					if (count >= 5) {
-						if (this.m_bIsPlayingWithRed)
-							return WinStatusEnum.GREEN_WINS;
-						else
-							return WinStatusEnum.RED_WINS;
-					}
-				});
-				return WinStatusEnum.NO_WIN;//continue game
-
-			case GameTypeEnum.FIRST_5_PATHS:
-				paths = playerPaths;
-				if (paths.length >= 5) {
+				owned_status = this.m_bIsPlayingWithRed ? StatusEnum.POINT_OWNED_BY_BLUE : StatusEnum.POINT_OWNED_BY_RED;
+				count = otherPlayerPoints.filter(function (p) {
+					return p.iEnclosingPathId !== null && p.$GetStatus() === owned_status;
+				}).length;
+				if (count >= 5) {
+					if (this.m_bIsPlayingWithRed)
+						return WinStatusEnum.GREEN_WINS;
+					else
+						return WinStatusEnum.RED_WINS;
+				}
+				owned_status = this.m_bIsPlayingWithRed ? StatusEnum.POINT_OWNED_BY_RED : StatusEnum.POINT_OWNED_BY_BLUE;
+				count = playerPoints.filter(function (p) {
+					return p.iEnclosingPathId !== null && p.$GetStatus() === owned_status;
+				}).length;
+				if (count >= 5) {
 					if (this.m_bIsPlayingWithRed)
 						return WinStatusEnum.RED_WINS;
 					else
 						return WinStatusEnum.GREEN_WINS;
 				}
-				paths = otherPlayerPaths;
-				if (paths.length >= 5) {
+				return WinStatusEnum.NO_WIN;//continue game
+
+			case GameTypeEnum.FIRST_5_PATHS:
+				if (otherPlayerPaths.length >= 5) {
 					if (this.m_bIsPlayingWithRed)
 						return WinStatusEnum.GREEN_WINS;
 					else
 						return WinStatusEnum.RED_WINS;
+				}
+				if (playerPaths.length >= 5) {
+					if (this.m_bIsPlayingWithRed)
+						return WinStatusEnum.RED_WINS;
+					else
+						return WinStatusEnum.GREEN_WINS;
 				}
 				return WinStatusEnum.NO_WIN;//continue game
 
 			case GameTypeEnum.FIRST_5_ADVANTAGE_PATHS:
 				{
-					let this_player_paths = playerPaths;
-					let other_player_paths = otherPlayerPaths;
-					let diff = this_player_paths.length - other_player_paths.length;
+					const diff = playerPaths.length - otherPlayerPaths.length;
 					if (diff >= 5) {
 						if (this.m_bIsPlayingWithRed)
 							return WinStatusEnum.RED_WINS;

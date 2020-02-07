@@ -61,7 +61,7 @@ if (SVG) {
 		o.setAttribute("stroke-linejoin", "round");
 		cont.appendChild(o);
 		//ch_added start
-		o.m_iID = 0;
+		o.setAttribute("data-myid", 0);
 		o.$AppendPoints = function (x, y) {
 			this.setAttribute("points", this.getAttribute("points") + ` ${x},${y}`);
 		};
@@ -100,8 +100,8 @@ if (SVG) {
 			this.setAttribute("fill", col);
 			this.setAttribute("stroke-width", Math.round(w));
 		};
-		o.$GetID = function () { return this.m_iID; };
-		o.$SetID = function (iID) { this.m_iID = iID; };
+		o.$GetID = function () { return parseInt(this.getAttribute("data-myid")); };
+		o.$SetID = function (iID) { this.setAttribute("data-myid", iID); };
 		//ch_added end
 		return o;
 	};
@@ -112,7 +112,7 @@ if (SVG) {
 		o.setAttribute("r", Math.round(diam > 1));
 		//ch_commented o.style.cursor = "pointer";
 		//ch_added
-		o.m_iStatus = -1;
+		o.setAttribute("data-status", -1);
 		o.$move = function (x1, y1, radius) {
 			this.setAttribute("cx", x1);
 			this.setAttribute("cy", y1);
@@ -125,8 +125,8 @@ if (SVG) {
 		};
 		o.$GetFillColor = function () { return this.getAttribute("fill"); };
 		o.$SetFillColor = function (col) { this.setAttribute("fill", col); };
-		o.$SetStatus = function (iStatus) { this.m_iStatus = iStatus; };
-		o.$GetStatus = function () { return this.m_iStatus; };
+		o.$SetStatus = function (iStatus) { this.setAttribute("data-status", iStatus); };
+		o.$GetStatus = function () { return parseInt(this.getAttribute("data-status")); };
 		o.$GetZIndex = function () { return this.getAttribute("z-index"); };
 		o.$SetZIndex = function (val) { this.setAttribute("z-index", val); };
 		o.$Hide = function () { this.setAttribute("visibility", 'hidden'); };
@@ -146,7 +146,6 @@ if (SVG) {
 	//ch_added end
 
 } else if (document.createStyleSheet) {
-
 	/* ============= VML ============== */
 	$createSVGVML = function (o, iWidth, iHeight, antialias) {
 		document.namespaces.add("v", "urn:schemas-microsoft-com:vml");
@@ -184,50 +183,48 @@ if (SVG) {
 		o.appendChild(s);
 		cont.appendChild(o);
 		//ch_added start
-		o.m_iID = 0;
-		o.m_sMyPoints = points;
+		o.setAttribute("data-myid", 0);
 		o.$AppendPoints = function (x, y) {
-			this.m_sMyPoints = this.m_sMyPoints + ` ${x},${y}`;
-			this.points.value = this.m_sMyPoints;
+			const str = this.points.value + ` ${x},${y}`;
+			this.points.value = str;
 		};
 		o.$RemoveLastPoint = function () {
-			this.m_sMyPoints = this.m_sMyPoints.replace(/(\s\d+,\d+)$/, "");
-			this.points.value = this.m_sMyPoints;
-			return this.m_sMyPoints;
+			const str = this.points.value.replace(/(\s\d+,\d+)$/, "");
+			this.points.value = str;
+			return str;
 		};
 		o.$ContainsPoint = function (x, y) {
 			const regexstr = new RegExp(`${x},${y}`, 'g');
-			const cnt = (this.m_sMyPoints.match(regexstr) || []).length;
+			const cnt = (this.points.value.match(regexstr) || []).length;
 			return cnt;
 		};
 		o.$GetPointsString = function () {
-			return o.m_sMyPoints;
+			return o.points.value;
 		};
 		o.$GetPointsArray = function () {
 			//x0,y0 x1,y1 x2,y2
-			return this.m_sMyPoints.split(" ").map(function (pt) {
+			return this.points.value.split(" ").map(function (pt) {
 				const tab = pt.split(',');
 				return { x: parseInt(tab[0]), y: parseInt(tab[1]) };
 			});
 		};
 		o.$SetPoints = function (sPoints) {
-			this.m_sMyPoints = sPoints;
-			this.points.value = this.m_sMyPoints;
+			this.points.value = sPoints;
 		};
 		o.$GetIsClosed = function () {
-			const pts = this.m_sMyPoints.split(" ");
+			const pts = this.points.value.split(" ");
 			return pts[0] === pts[pts.length - 1];
 		};
 		o.$GetLength = function () {
-			return this.m_sMyPoints.split(" ").length;
+			return this.points.value.split(" ").length;
 		};
 		o.$SetWidthAndColor = function (w, col) {
 			this.strokecolor = col;
 			this.fill.color = col;
 			this.strokeweight = Math.round(w) + "px";
 		};
-		o.$GetID = function () { return this.m_iID; };
-		o.$SetID = function (iID) { this.m_iID = iID; };
+		o.$GetID = function () { return parseInt(this.getAttribute("data-myid")); };
+		o.$SetID = function (iID) { this.setAttribute("data-myid", iID); };
 		//ch_added end
 		return o;
 	};
@@ -236,7 +233,7 @@ if (SVG) {
 		o.style.position = "absolute";
 		//ch_commented o.style.cursor = "pointer";
 		//ch_added
-		o.m_iStatus = -1;
+		o.setAttribute("data-status", -1);
 		o.strokeweight = 1;
 		o.filled = filled;
 		o.style.width = diam + "px";
@@ -257,8 +254,8 @@ if (SVG) {
 		};
 		o.$GetFillColor = function () { return this.fillcolor; };
 		o.$SetFillColor = function (col) { this.fillcolor = col; };
-		o.$SetStatus = function (iStatus) { this.m_iStatus = iStatus; };
-		o.$GetStatus = function () { return this.m_iStatus; };
+		o.$SetStatus = function (iStatus) { this.setAttribute("data-status", iStatus); };
+		o.$GetStatus = function () { return parseInt(this.getAttribute("data-status")); };
 		o.$GetZIndex = function () { return this.getAttribute("z-index"); };
 		o.$SetZIndex = function (val) { this.setAttribute("z-index", val); };
 		o.$Hide = function () { this.setAttribute("visibility", 'hidden'); };
