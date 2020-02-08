@@ -4,7 +4,9 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+#if INCLUDE_ORACLE
 using Oracle.EntityFrameworkCore.Metadata;
+#endif
 using System.Threading;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using System.Collections.Generic;
@@ -40,7 +42,7 @@ namespace InkBall.Module.Model
 		}
 
 		#region Helpers
-		
+
 		internal static readonly GameStateEnum[] ActiveVisibleGameStates =
 			new GameStateEnum[] { GameStateEnum.ACTIVE, GameStateEnum.AWAITING };
 
@@ -155,8 +157,10 @@ namespace InkBall.Module.Model
 					.HasAnnotation("Sqlite:Autoincrement", true)
 					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
 					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
-					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
-					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn);
+#if INCLUDE_ORACLE
+					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
+#endif
+					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
 
 				entity.Property(e => e.bIsPlayer1Active)
 					.HasColumnName("bIsPlayer1Active")
@@ -227,8 +231,10 @@ namespace InkBall.Module.Model
 					.HasAnnotation("Sqlite:Autoincrement", true)
 					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
 					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
-					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
-					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn);
+#if INCLUDE_ORACLE
+					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
+#endif
+					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
 
 				entity.Property(e => e.iGameId).HasColumnName("iGameID");
 
@@ -263,8 +269,10 @@ namespace InkBall.Module.Model
 					.HasAnnotation("Sqlite:Autoincrement", true)
 					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
 					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
-					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
+#if INCLUDE_ORACLE
 					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn);
+#endif
+					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
 
 				entity.Property(e => e.iUserId)
 					.HasColumnName("iUserID");
@@ -319,8 +327,10 @@ namespace InkBall.Module.Model
 					.HasAnnotation("Sqlite:Autoincrement", true)
 					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
 					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
-					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
-					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn);
+#if INCLUDE_ORACLE
+					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
+#endif
+					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
 
 				entity.Property(e => e.iEnclosingPathId).HasColumnName("iEnclosingPathId");
 
@@ -370,8 +380,10 @@ namespace InkBall.Module.Model
 					.HasAnnotation("Sqlite:Autoincrement", true)
 					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
 					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
-					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
-					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn);
+#if INCLUDE_ORACLE
+					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
+#endif
+					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
 
 				entity.Property(e => e.iPathId).HasColumnName("iPathId");
 
@@ -408,8 +420,10 @@ namespace InkBall.Module.Model
 					.HasAnnotation("Sqlite:Autoincrement", true)
 					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
 					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
-					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
-					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn);
+#if INCLUDE_ORACLE
+					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
+#endif
+					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
 
 				entity.Property(e => e.iPrivileges)
 					.HasColumnName("iPrivileges")
@@ -885,7 +899,7 @@ namespace InkBall.Module.Model
 			if (_ownedCountsDict == null)
 			{
 				var statuses = new[] { InkBallPoint.StatusEnum.POINT_OWNED_BY_RED, InkBallPoint.StatusEnum.POINT_OWNED_BY_BLUE };
-				
+
 				_ownedCountsDict = await (from pt in _dbContext.InkBallPoint
 										  where pt.iGameId == _gameID && pt.iEnclosingPathId.HasValue &&
 										  statuses.Contains(pt.Status)

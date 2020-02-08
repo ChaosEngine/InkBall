@@ -3,7 +3,9 @@ using InkBall.Module.Model;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+#if INCLUDE_ORACLE
 using Oracle.EntityFrameworkCore.Metadata;
+#endif
 
 namespace InkBall.Module.Migrations
 {
@@ -19,8 +21,10 @@ namespace InkBall.Module.Migrations
 						.Annotation("Sqlite:Autoincrement", true)
 						.Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
 						.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
-						.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
-						.Annotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn),
+#if INCLUDE_ORACLE
+						.Annotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
+#endif
+						.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
 					iPrivileges = table.Column<int>(nullable: false, defaultValue: 0)
 						.Annotation("Sqlite:Autoincrement", true),
 					sExternalId = table.Column<string>(nullable: true),
@@ -39,8 +43,10 @@ namespace InkBall.Module.Migrations
 						.Annotation("Sqlite:Autoincrement", true)
 						.Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
 						.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
-						.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
-						.Annotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn),
+#if INCLUDE_ORACLE
+						.Annotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
+#endif
+						.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
 					iUserID = table.Column<int>(nullable: true),
 					sLastMoveCode = table.Column<string>(type: GamesContext.JsonColumnTypeFromProvider(this.ActiveProvider), nullable: true),
 					iWinCount = table.Column<int>(nullable: false, defaultValue: 0)
@@ -71,8 +77,10 @@ namespace InkBall.Module.Migrations
 						.Annotation("Sqlite:Autoincrement", true)
 						.Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
 						.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
-						.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
-						.Annotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn),
+#if INCLUDE_ORACLE
+						.Annotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
+#endif
+						.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
 					iPlayer1ID = table.Column<int>(nullable: false),
 					iPlayer2ID = table.Column<int>(nullable: true),
 					bIsPlayer1Active = table.Column<bool>(nullable: false, defaultValue: true),
@@ -113,8 +121,10 @@ namespace InkBall.Module.Migrations
 						.Annotation("Sqlite:Autoincrement", true)
 						.Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
 						.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
-						.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
-						.Annotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn),
+#if INCLUDE_ORACLE
+						.Annotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
+#endif
+						.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
 					iGameID = table.Column<int>(nullable: false),
 					iPlayerID = table.Column<int>(nullable: false),
 					PointsAsString = table.Column<string>(type: GamesContext.JsonColumnTypeFromProvider(this.ActiveProvider), nullable: true),
@@ -144,8 +154,10 @@ namespace InkBall.Module.Migrations
 						.Annotation("Sqlite:Autoincrement", true)
 						.Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
 						.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
-						.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
-						.Annotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn),
+#if INCLUDE_ORACLE
+						.Annotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
+#endif
+						.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
 					iGameID = table.Column<int>(nullable: false),
 					iPlayerID = table.Column<int>(nullable: false),
 					iX = table.Column<int>(nullable: false),
@@ -184,8 +196,10 @@ namespace InkBall.Module.Migrations
 						.Annotation("Sqlite:Autoincrement", true)
 						.Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
 						.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
-						.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
-						.Annotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn),
+#if INCLUDE_ORACLE
+						.Annotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
+#endif
+						.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
 					iPathId = table.Column<int>(nullable: false),
 					iPointId = table.Column<int>(nullable: false),
 					Order = table.Column<int>(nullable: false, defaultValue: 0)
