@@ -13,6 +13,8 @@ if (document.createElementNS) {
 if (SVG) {
   var $createSVGVML = function $createSVGVML(o, iWidth, iHeight, antialias) {
     cont = document.createElementNS(svgNS, "svg");
+    if (iWidth) cont.setAttributeNS(null, 'width', iWidth);
+    if (iHeight) cont.setAttributeNS(null, 'height', iHeight);
     o.appendChild(cont);
     svgAntialias = antialias;
     return cont;
@@ -55,7 +57,7 @@ if (SVG) {
     o.setAttribute("stroke-linecap", "round");
     o.setAttribute("stroke-linejoin", "round");
     cont.appendChild(o);
-    o.setAttribute("data-myid", 0);
+    o.setAttribute("data-id", 0);
 
     o.$AppendPoints = function (x, y) {
       this.setAttribute("points", this.getAttribute("points") + " ".concat(x, ",").concat(y));
@@ -107,11 +109,11 @@ if (SVG) {
     };
 
     o.$GetID = function () {
-      return parseInt(this.getAttribute("data-myid"));
+      return parseInt(this.getAttribute("data-id"));
     };
 
     o.$SetID = function (iID) {
-      this.setAttribute("data-myid", iID);
+      this.setAttribute("data-id", iID);
     };
 
     return o;
@@ -130,7 +132,11 @@ if (SVG) {
       this.setAttribute("r", Math.round(radius));
     };
 
-    o.$strokeColor = function (col) {
+    o.$GetStrokeColor = function () {
+      return this.getAttribute("stroke");
+    };
+
+    o.$SetStrokeColor = function (col) {
       this.setAttribute("stroke", col);
     };
 
@@ -149,12 +155,26 @@ if (SVG) {
       this.setAttribute("fill", col);
     };
 
-    o.$SetStatus = function (iStatus) {
-      this.setAttribute("data-status", iStatus);
-    };
-
     o.$GetStatus = function () {
       return parseInt(this.getAttribute("data-status"));
+    };
+
+    o.$SetStatus = function (iStatus) {
+      var old_status = this.getAttribute("data-status");
+      this.setAttribute("data-status", iStatus);
+      if (old_status !== "-1" && old_status !== -1) this.setAttribute("data-old-status", old_status);
+    };
+
+    o.$RevertOldStatus = function () {
+      var old_status = this.getAttribute("data-old-status");
+
+      if (old_status) {
+        this.removeAttribute("data-old-status");
+        this.setAttribute("data-status", old_status);
+        return parseInt(old_status);
+      }
+
+      return -1;
     };
 
     o.$GetZIndex = function () {
@@ -194,6 +214,7 @@ if (SVG) {
     var style = document.createStyleSheet();
     style.addRule('v\\:*', "behavior: url(#default#VML);");
     style.addRule('v\\:*', "antialias: " + antialias + ";");
+    cont = o;
     return o;
   };
 
@@ -235,7 +256,7 @@ if (SVG) {
     s.opacity = 0.1;
     o.appendChild(s);
     cont.appendChild(o);
-    o.setAttribute("data-myid", 0);
+    o.setAttribute("data-id", 0);
 
     o.$AppendPoints = function (x, y) {
       var str = this.points.value + " ".concat(x, ",").concat(y);
@@ -288,11 +309,11 @@ if (SVG) {
     };
 
     o.$GetID = function () {
-      return parseInt(this.getAttribute("data-myid"));
+      return parseInt(this.getAttribute("data-id"));
     };
 
     o.$SetID = function (iID) {
-      this.setAttribute("data-myid", iID);
+      this.setAttribute("data-id", iID);
     };
 
     return o;
@@ -314,7 +335,11 @@ if (SVG) {
       this.style.height = Math.round(radius * 2) + "px";
     };
 
-    o.$strokeColor = function (col) {
+    o.$GetStrokeColor = function () {
+      return this.strokecolor;
+    };
+
+    o.$SetStrokeColor = function (col) {
       this.strokecolor = col;
     };
 
@@ -333,12 +358,26 @@ if (SVG) {
       this.fillcolor = col;
     };
 
-    o.$SetStatus = function (iStatus) {
-      this.setAttribute("data-status", iStatus);
-    };
-
     o.$GetStatus = function () {
       return parseInt(this.getAttribute("data-status"));
+    };
+
+    o.$SetStatus = function (iStatus) {
+      var old_status = this.getAttribute("data-status");
+      this.setAttribute("data-status", iStatus);
+      if (old_status !== "-1" && old_status !== -1) this.setAttribute("data-old-status", old_status);
+    };
+
+    o.$RevertOldStatus = function () {
+      var old_status = this.getAttribute("data-old-status");
+
+      if (old_status) {
+        this.removeAttribute("data-old-status");
+        this.setAttribute("data-status", old_status);
+        return parseInt(old_status);
+      }
+
+      return -1;
     };
 
     o.$GetZIndex = function () {

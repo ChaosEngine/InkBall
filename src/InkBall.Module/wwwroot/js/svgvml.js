@@ -11,8 +11,8 @@
 //////////////////////////////////////////////////////
 "use strict";
 
-var SVG = false;
-let svgNS = "http://www.w3.org/2000/svg";
+let SVG = false;
+const svgNS = "http://www.w3.org/2000/svg";
 let svgAntialias = false;
 let cont = null;
 if (document.createElementNS) {
@@ -25,8 +25,10 @@ if (SVG) {
 	var $createSVGVML = function (o, iWidth, iHeight, antialias) {
 		cont = document.createElementNS(svgNS, "svg");
 		//ch_added start
-		// cont.setAttributeNS(null, 'width', iWidth);
-		// cont.setAttributeNS(null, 'height', iHeight);
+		if (iWidth)
+			cont.setAttributeNS(null, 'width', iWidth);
+		if (iHeight)
+			cont.setAttributeNS(null, 'height', iHeight);
 		//ch_added end
 		o.appendChild(cont);
 		svgAntialias = antialias;
@@ -61,7 +63,7 @@ if (SVG) {
 		o.setAttribute("stroke-linejoin", "round");
 		cont.appendChild(o);
 		//ch_added start
-		o.setAttribute("data-myid", 0);
+		o.setAttribute("data-id", 0);
 		o.$AppendPoints = function (x, y) {
 			this.setAttribute("points", this.getAttribute("points") + ` ${x},${y}`);
 		};
@@ -100,8 +102,8 @@ if (SVG) {
 			this.setAttribute("fill", col);
 			this.setAttribute("stroke-width", Math.round(w));
 		};
-		o.$GetID = function () { return parseInt(this.getAttribute("data-myid")); };
-		o.$SetID = function (iID) { this.setAttribute("data-myid", iID); };
+		o.$GetID = function () { return parseInt(this.getAttribute("data-id")); };
+		o.$SetID = function (iID) { this.setAttribute("data-id", iID); };
 		//ch_added end
 		return o;
 	};
@@ -113,20 +115,36 @@ if (SVG) {
 		//ch_commented o.style.cursor = "pointer";
 		//ch_added
 		o.setAttribute("data-status", -1);
+		//o.setAttribute("data-old-status", -1);
 		o.$move = function (x1, y1, radius) {
 			this.setAttribute("cx", x1);
 			this.setAttribute("cy", y1);
 			this.setAttribute("r", Math.round(radius));
 		};
-		o.$strokeColor = function (col) { this.setAttribute("stroke", col); };
+		o.$GetStrokeColor = function () { return this.getAttribute("stroke"); };
+		o.$SetStrokeColor = function (col) { this.setAttribute("stroke", col); };
 		//ch_added/changed start
 		o.$GetPosition = function () {
 			return { x: this.getAttribute("cx"), y: this.getAttribute("cy") };
 		};
 		o.$GetFillColor = function () { return this.getAttribute("fill"); };
 		o.$SetFillColor = function (col) { this.setAttribute("fill", col); };
-		o.$SetStatus = function (iStatus) { this.setAttribute("data-status", iStatus); };
 		o.$GetStatus = function () { return parseInt(this.getAttribute("data-status")); };
+		o.$SetStatus = function (iStatus) {
+			const old_status = this.getAttribute("data-status");
+			this.setAttribute("data-status", iStatus);
+			if (old_status !== "-1" && old_status !== -1)
+				this.setAttribute("data-old-status", old_status);
+		};
+		o.$RevertOldStatus = function () {
+			const old_status = this.getAttribute("data-old-status");
+			if (old_status) {
+				this.removeAttribute("data-old-status");
+				this.setAttribute("data-status", old_status);
+				return parseInt(old_status);
+			}
+			return -1;
+		};
 		o.$GetZIndex = function () { return this.getAttribute("z-index"); };
 		o.$SetZIndex = function (val) { this.setAttribute("z-index", val); };
 		o.$Hide = function () { this.setAttribute("visibility", 'hidden'); };
@@ -152,6 +170,7 @@ if (SVG) {
 		var style = document.createStyleSheet();
 		style.addRule('v\\:*', "behavior: url(#default#VML);");
 		style.addRule('v\\:*', "antialias: " + antialias + ";");
+		cont = o;
 		return o;
 	};
 	$createLine = function (w, col, linecap) {
@@ -183,7 +202,7 @@ if (SVG) {
 		o.appendChild(s);
 		cont.appendChild(o);
 		//ch_added start
-		o.setAttribute("data-myid", 0);
+		o.setAttribute("data-id", 0);
 		o.$AppendPoints = function (x, y) {
 			const str = this.points.value + ` ${x},${y}`;
 			this.points.value = str;
@@ -223,8 +242,8 @@ if (SVG) {
 			this.fill.color = col;
 			this.strokeweight = Math.round(w) + "px";
 		};
-		o.$GetID = function () { return parseInt(this.getAttribute("data-myid")); };
-		o.$SetID = function (iID) { this.setAttribute("data-myid", iID); };
+		o.$GetID = function () { return parseInt(this.getAttribute("data-id")); };
+		o.$SetID = function (iID) { this.setAttribute("data-id", iID); };
 		//ch_added end
 		return o;
 	};
@@ -234,6 +253,7 @@ if (SVG) {
 		//ch_commented o.style.cursor = "pointer";
 		//ch_added
 		o.setAttribute("data-status", -1);
+		//o.setAttribute("data-old-status", -1);
 		o.strokeweight = 1;
 		o.filled = filled;
 		o.style.width = diam + "px";
@@ -244,7 +264,8 @@ if (SVG) {
 			this.style.width = Math.round(radius * 2) + "px";
 			this.style.height = Math.round(radius * 2) + "px";
 		};
-		o.$strokeColor = function (col) { this.strokecolor = col; };
+		o.$GetStrokeColor = function () { return this.strokecolor; };
+		o.$SetStrokeColor = function (col) { this.strokecolor = col; };
 		//ch_added/changed start
 		o.$GetPosition = function () {
 			return {
@@ -254,8 +275,22 @@ if (SVG) {
 		};
 		o.$GetFillColor = function () { return this.fillcolor; };
 		o.$SetFillColor = function (col) { this.fillcolor = col; };
-		o.$SetStatus = function (iStatus) { this.setAttribute("data-status", iStatus); };
 		o.$GetStatus = function () { return parseInt(this.getAttribute("data-status")); };
+		o.$SetStatus = function (iStatus) {
+			const old_status = this.getAttribute("data-status");
+			this.setAttribute("data-status", iStatus);
+			if (old_status !== "-1" && old_status !== -1)
+				this.setAttribute("data-old-status", old_status);
+		};
+		o.$RevertOldStatus = function () {
+			const old_status = this.getAttribute("data-old-status");
+			if (old_status) {
+				this.removeAttribute("data-old-status");
+				this.setAttribute("data-status", old_status);
+				return parseInt(old_status);
+			}
+			return -1;
+		};
 		o.$GetZIndex = function () { return this.getAttribute("z-index"); };
 		o.$SetZIndex = function (val) { this.setAttribute("z-index", val); };
 		o.$Hide = function () { this.setAttribute("visibility", 'hidden'); };

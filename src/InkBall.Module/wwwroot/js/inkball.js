@@ -926,7 +926,7 @@ class InkBallGame {
 		return n_body && (!n_result || (n_result > n_body)) ? n_body : n_result;
 	}
 
-	SetPoint(iX, iY, iStatus) {
+	SetPoint(iX, iY, iStatus, iPlayerId) {
 		if (this.m_Points.has(iY * this.m_iGridWidth + iX))
 			return;
 
@@ -940,22 +940,26 @@ class InkBallGame {
 		switch (iStatus) {
 			case StatusEnum.POINT_FREE_RED:
 				color = this.COLOR_RED;
-				oval.$SetStatus(StatusEnum.POINT_FREE);
+				oval.$SetStatus(iStatus/*StatusEnum.POINT_FREE*/);
 				break;
 			case StatusEnum.POINT_FREE_BLUE:
 				color = this.COLOR_BLUE;
-				oval.$SetStatus(StatusEnum.POINT_FREE);
+				oval.$SetStatus(iStatus/*StatusEnum.POINT_FREE*/);
 				break;
 			case StatusEnum.POINT_FREE:
 				color = this.m_sDotColor;
-				oval.$SetStatus(StatusEnum.POINT_FREE);
+				oval.$SetStatus(iStatus/*StatusEnum.POINT_FREE*/);
+				console.warn('TODO: generic FREE point, really? change it!');
 				break;
 			case StatusEnum.POINT_STARTING:
 				color = this.m_sDotColor;
-				oval.$SetStatus(/*iStatus*/StatusEnum.POINT_STARTING);
+				oval.$SetStatus(iStatus);
 				break;
 			case StatusEnum.POINT_IN_PATH:
-				color = this.m_sDotColor;
+				if (this.g_iPlayerID === iPlayerId)//bPlayingWithRed
+					color = this.m_bIsPlayingWithRed === true ? this.COLOR_RED : this.COLOR_BLUE;
+				else
+					color = this.m_bIsPlayingWithRed === true ? this.COLOR_BLUE : this.COLOR_RED;
 				oval.$SetStatus(iStatus);
 				break;
 			case StatusEnum.POINT_OWNED_BY_RED:
@@ -972,14 +976,14 @@ class InkBallGame {
 		}
 
 		oval.$SetFillColor(color);
-		oval.$strokeColor(color);
+		oval.$SetStrokeColor(color);
 
 		this.m_Points.set(iY * this.m_iGridWidth + iX, oval);
 	}
 
 	SetAllPoints(points) {
 		points.forEach(p => {
-			if (p[3] === this.g_iPlayerID) {//iPlayerID
+			/*if (p[3] === this.g_iPlayerID) {//iPlayerID
 			}
 			else {
 				switch (p[2]) {//Status
@@ -991,56 +995,66 @@ class InkBallGame {
 					case StatusEnum.POINT_OWNED_BY_BLUE:
 						break;
 					case StatusEnum.POINT_IN_PATH:
-						if (this.m_bIsPlayingWithRed === true) {//bPlayingWithRed
-							p[2] = StatusEnum.POINT_FREE_BLUE;
-						}
-						else {
-							p[2] = StatusEnum.POINT_FREE_RED;
-						}
+						// if (this.m_bIsPlayingWithRed === true) {//bPlayingWithRed
+						// 	p[2] = StatusEnum.POINT_FREE_BLUE;
+						// }
+						// else {
+						// 	p[2] = StatusEnum.POINT_FREE_RED;
+						// }
 						break;
 				}
-			}
+			}*/
 
-			this.SetPoint(p[0]/*x*/, p[1]/*y*/, p[2]/*Status*/);
+			this.SetPoint(p[0]/*x*/, p[1]/*y*/, p[2]/*Status*/, p[3]/*iPlayerId*/);
 		});
 	}
 
-	SetPath(packed, bIsRed, bBelong2ThisPlayer, iId = 0) {
-		let sPoints = packed.split(" ");
+	SetPath(packed, bIsRed, bBelong2ThisPlayer, iPathId = 0) {
+		const sPoints = packed.split(" ");
 		let sDelimiter = "", sPathPoints = "", p = null, x, y,
 			status = StatusEnum.POINT_STARTING;
 		for (const packed of sPoints) {
 			p = packed.split(",");
 			x = parseInt(p[0]); y = parseInt(p[1]);
-			x *= this.m_iGridSizeX; y *= this.m_iGridSizeY;
-			sPathPoints += `${sDelimiter}${x},${y}`;
-			sDelimiter = " ";
 
 			p = this.m_Points.get(y * this.m_iGridWidth + x);
 			if (p !== null && p !== undefined) {
 				p.$SetStatus(status);
 				status = StatusEnum.POINT_IN_PATH;
 			}
+			else {
+				debugger;
+			}
+
+			x *= this.m_iGridSizeX; y *= this.m_iGridSizeY;
+			sPathPoints += `${sDelimiter}${x},${y}`;
+			sDelimiter = " ";
 		}
 		p = sPoints[0].split(",");
 		x = parseInt(p[0]); y = parseInt(p[1]);
-		x *= this.m_iGridSizeX; y *= this.m_iGridSizeY;
-		sPathPoints = sPathPoints + sDelimiter + x + "," + y;
+
 		p = this.m_Points.get(y * this.m_iGridWidth + x);
-		if (p !== null && p !== undefined) p.$SetStatus(status);
+		if (p !== null && p !== undefined)
+			p.$SetStatus(status);
+		else {
+			debugger;
+		}
+
+		x *= this.m_iGridSizeX; y *= this.m_iGridSizeY;
+		sPathPoints += `${sDelimiter}${x},${y}`;
 
 		const line = $createPolyline(3, sPathPoints,
 			(bBelong2ThisPlayer ? this.m_sDotColor : (bIsRed ? this.COLOR_BLUE : this.COLOR_RED)));
-		line.$SetID(iId);
+		line.$SetID(iPathId);
 		this.m_Lines.push(line);
 	}
 
-	SetAllPaths(paths) {
-		paths.forEach(p => {
-			this.SetPath(p[0]/*points*/, this.m_bIsPlayingWithRed, p[1] === this.g_iPlayerID/*isMainPlayerPoints*/,
-				p.iId/*real DB id*/);
-		});
-	}
+	// SetAllPaths(paths) {
+	// 	paths.forEach(p => {
+	// 		this.SetPath(p[0]/*points*/, this.m_bIsPlayingWithRed, p[1] === this.g_iPlayerID/*isMainPlayerPoints*/,
+	// 			p.iId/*real DB id*/);
+	// 	});
+	// }
 
 	SetAllPaths2(packedPaths) {
 		packedPaths.forEach(unpacked => {
@@ -1126,30 +1140,45 @@ class InkBallGame {
 		const sColor = (this.m_sDotColor === this.COLOR_RED ? this.COLOR_BLUE : this.COLOR_RED);
 		const owned_by = (this.m_sDotColor === this.COLOR_RED ? StatusEnum.POINT_OWNED_BY_RED : StatusEnum.POINT_OWNED_BY_BLUE);
 		const sOwnedCol = (this.m_sDotColor === this.COLOR_RED ? this.COLOR_OWNED_RED : this.COLOR_OWNED_BLUE);
-		let x, y, sPathPoints = "", sOwnedPoints = "", sDelimiter = "", ownedPoints = [];
+		let x, y, sPathPoints = "", sOwnedPoints = "", sDelimiter = "", ownedPoints = [], pathPoints = [];
 
-		for (const p0 of this.m_Points.values()) {
-			if (p0 !== undefined && p0.$GetStatus() === StatusEnum.POINT_FREE && p0.$GetFillColor() === sColor) {
-				const pos = p0.$GetPosition();
+		for (const pt of this.m_Points.values()) {
+			if (pt !== undefined && pt.$GetFillColor() === sColor &&
+				(pt.$GetStatus() === StatusEnum.POINT_FREE_BLUE || pt.$GetStatus() === StatusEnum.POINT_FREE_RED)) {
+				const pos = pt.$GetPosition();
 				x = pos.x; y = pos.y;
 				if (false !== this.pnpoly2(points, x, y)) {
-					p0.$SetStatus(owned_by);
-					p0.$SetFillColor(sOwnedCol);
-					p0.$strokeColor(sOwnedCol);
-
 					x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
 					sOwnedPoints += `${sDelimiter}${x},${y}`;
-					ownedPoints.push(p0);
 					sDelimiter = " ";
+					ownedPoints.push({
+						point: pt,
+						revertStatus: pt.$GetStatus(),
+						revertFillColor: pt.$GetFillColor(),
+						revertStrokeColor: pt.$GetStrokeColor()
+					});
+
+					pt.$SetStatus(owned_by);
+					pt.$SetFillColor(sOwnedCol);
+					pt.$SetStrokeColor(sOwnedCol);
 				}
 			}
 		}
-		if (sOwnedPoints) {
+		if (sOwnedPoints !== "") {
 			sPathPoints = points.map(function (pt) {
 				x = pt.x;
 				y = pt.y;
 				if (x === null || y === null) return '';
 				x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
+				// const circle = this.m_Points.get(y * this.m_iGridWidth + x);
+				// if (circle) {
+				// 	pathPoints.push({
+				// 		point: circle,
+				// 		revertStatus: circle.$GetOldStatus(),
+				// 		revertFillColor: this.m_sDotColor,//circle.$GetFillColor(),
+				// 		revertStrokeColor: this.m_sDotColor//circle.$GetStrokeColor()
+				// 	});
+				// }
 
 				return `${x},${y}`;
 			}.bind(this)).join(' ');
@@ -1157,10 +1186,11 @@ class InkBallGame {
 		return {
 			OwnedPoints: ownedPoints,
 			owned: sOwnedPoints,
-			path: sPathPoints,
-			revertFillColor: sColor,
-			revertStatus: StatusEnum.POINT_FREE,
-			revertStrokeColor: (this.m_sDotColor === this.COLOR_RED ? this.COLOR_OWNED_BLUE : this.COLOR_OWNED_RED)
+			PathPoints: pathPoints,
+			path: sPathPoints
+			// revertFillColor: sColor,
+			// revertStatus: StatusEnum.POINT_FREE,
+			// revertStrokeColor: (this.m_sDotColor === this.COLOR_RED ? this.COLOR_OWNED_BLUE : this.COLOR_OWNED_RED)
 		};
 	}
 
@@ -1288,7 +1318,7 @@ class InkBallGame {
 		let x = point.iX, y = point.iY, iStatus = point.Status;
 
 
-		this.SetPoint(x, y, iStatus);
+		this.SetPoint(x, y, iStatus, point.iPlayerId);
 		if (this.g_iPlayerID !== point.iPlayerId) {
 			this.m_bIsPlayerActive = true;
 			this.ShowMobileStatus('Oponent has moved, your turn');
@@ -1328,22 +1358,25 @@ class InkBallGame {
 	ReceivedPathProcessing(path) {
 		if (this.g_iPlayerID !== path.iPlayerId) {
 
-			let str_path = path.PointsAsString, owned = path.OwnedPointsAsString;
+			const str_path = path.PointsAsString, owned = path.OwnedPointsAsString;
 
 			this.SetPath(str_path,
 				(this.m_sDotColor === this.COLOR_RED ? true : false), false, path.iId/*real DB id*/);
 
-			let points = owned.split(" ");
-			let point_status = (this.m_sDotColor === this.COLOR_RED ? StatusEnum.POINT_OWNED_BY_RED : StatusEnum.POINT_OWNED_BY_BLUE);
-			let sOwnedCol = (this.m_sDotColor === this.COLOR_RED ? this.COLOR_OWNED_BLUE : this.COLOR_OWNED_RED);
+			const points = owned.split(" ");
+			const point_status = (this.m_sDotColor === this.COLOR_RED ? StatusEnum.POINT_OWNED_BY_RED : StatusEnum.POINT_OWNED_BY_BLUE);
+			const sOwnedCol = (this.m_sDotColor === this.COLOR_RED ? this.COLOR_OWNED_RED : this.COLOR_OWNED_BLUE);
 			for (const packed of points) {
 				let p = packed.split(",");
-				let x = parseInt(p[0]), y = parseInt(p[1]);
+				const x = parseInt(p[0]), y = parseInt(p[1]);
 				p = this.m_Points.get(y * this.m_iGridWidth + x);
 				if (p !== undefined) {
 					p.$SetStatus(point_status);
 					p.$SetFillColor(sOwnedCol);
-					p.$strokeColor(sOwnedCol);
+					p.$SetStrokeColor(sOwnedCol);
+				}
+				else {
+					debugger;
 				}
 			}
 
@@ -1360,12 +1393,14 @@ class InkBallGame {
 		else {
 			//set starting point to POINT_IN_PATH to block further path closing with it
 			const points = this.m_Line.$GetPointsArray();
-			let i = 0;
-			let x = points[i], y = points[i + 1];
+			let x = points[0].x, y = points[0].y;
 			x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
-			let p0 = this.m_Points.get(y * this.m_iGridWidth + x);
+			const p0 = this.m_Points.get(y * this.m_iGridWidth + x);
 			if (p0 !== undefined)
 				p0.$SetStatus(StatusEnum.POINT_IN_PATH);
+			else {
+				debugger;
+			}
 
 			this.m_Line.$SetWidthAndColor(3, this.m_sDotColor);
 			this.m_Line.$SetID(path.iId);
@@ -1567,11 +1602,24 @@ class InkBallGame {
 										this.Debug('Closing path', 0);
 										this.SendAsyncData(this.CreateXMLPutPathRequest(val), () => {
 											this.OnCancelClick();
-											val.OwnedPoints.forEach(p => {
-												p.$SetStatus(val.revertStatus);
-												p.$SetFillColor(val.revertFillColor);
-												p.$strokeColor(val.revertStrokeColor);
+											val.OwnedPoints.forEach(revData => {
+												const p = revData.point;
+												const revertStatus = revData.revertStatus;
+												const revertFillColor = revData.revertFillColor;
+												const revertStrokeColor = revData.revertStrokeColor;
+												p.$SetStatus(revertStatus);
+												p.$SetFillColor(revertFillColor);
+												p.$SetStrokeColor(revertStrokeColor);
 											});
+											// val.PathPoints.forEach(revData => {
+											// 	const p = revData.point;
+											// 	const revertStatus = revData.revertStatus;
+											// 	const revertFillColor = revData.revertFillColor;
+											// 	const revertStrokeColor = revData.revertStrokeColor;
+											// 	p.$SetStatus(revertStatus);
+											// 	p.$SetFillColor(revertFillColor);
+											// 	p.$SetStrokeColor(revertStrokeColor);
+											// });
 											this.m_bHandlingEvent = false;
 										});
 									}
@@ -1585,7 +1633,8 @@ class InkBallGame {
 								this.m_Line.$GetPointsString().endsWith(`${this.m_iLastX * this.m_iGridSizeX},${this.m_iLastY * this.m_iGridSizeY}`)) {
 
 								if (this.m_Line.$GetLength() > 2) {
-									p0.$SetStatus(StatusEnum.POINT_FREE);
+									// p0.$SetStatus(StatusEnum.POINT_FREE);
+									p0.$RevertOldStatus();
 									this.m_Line.$RemoveLastPoint();
 									this.m_iLastX = x;
 									this.m_iLastY = y;
@@ -1687,11 +1736,24 @@ class InkBallGame {
 									this.SendAsyncData(this.CreateXMLPutPathRequest(val), () => {
 										this.Debug('Wrong path', 0);
 										this.OnCancelClick();
-										val.OwnedPoints.forEach(p => {
-											p.$SetStatus(val.revertStatus);
-											p.$SetFillColor(val.revertFillColor);
-											p.$strokeColor(val.revertStrokeColor);
+										val.OwnedPoints.forEach(revData => {
+											const p = revData.point;
+											const revertStatus = revData.revertStatus;
+											const revertFillColor = revData.revertFillColor;
+											const revertStrokeColor = revData.revertStrokeColor;
+											p.$SetStatus(revertStatus);
+											p.$SetFillColor(revertFillColor);
+											p.$SetStrokeColor(revertStrokeColor);
 										});
+										// val.PathPoints.forEach(revData => {
+										// 	const p = revData.point;
+										// 	const revertStatus = revData.revertStatus;
+										// 	const revertFillColor = revData.revertFillColor;
+										// 	const revertStrokeColor = revData.revertStrokeColor;
+										// 	p.$SetStatus(revertStatus);
+										// 	p.$SetFillColor(revertFillColor);
+										// 	p.$SetStrokeColor(revertStrokeColor);
+										// });
 										this.m_bMouseDown = false;
 										this.m_bHandlingEvent = false;
 									});
@@ -1706,7 +1768,8 @@ class InkBallGame {
 							this.m_Line.$GetPointsString().endsWith(`${this.m_iLastX * this.m_iGridSizeX},${this.m_iLastY * this.m_iGridSizeY}`)) {
 
 							if (this.m_Line.$GetLength() > 2) {
-								p0.$SetStatus(StatusEnum.POINT_FREE);
+								// p0.$SetStatus(StatusEnum.POINT_FREE);
+								p0.$RevertOldStatus();
 								this.m_Line.$RemoveLastPoint();
 								this.m_iLastX = x;
 								this.m_iLastY = y;
@@ -1740,7 +1803,8 @@ class InkBallGame {
 			}
 			else if (this.m_iLastX < 0 || this.m_iLastY < 0) {
 				let p1 = this.m_Points.get(y * this.m_iGridWidth + x);
-				if (p1 !== undefined && p1.$GetStatus() === StatusEnum.POINT_FREE && p1.$GetFillColor() === this.m_sDotColor) {
+				if (p1 !== undefined && p1.$GetFillColor() === this.m_sDotColor &&
+					(p1.$GetStatus() === StatusEnum.POINT_FREE_BLUE || p1.$GetStatus() === StatusEnum.POINT_FREE_RED)) {
 					this.m_iLastX = x;
 					this.m_iLastY = y;
 					//this.Debug('first point registered m_iLastX = '+this.m_iLastX+' m_iLastY = '+this.m_iLastY, 1);
@@ -1784,9 +1848,14 @@ class InkBallGame {
 					let x = point.x, y = point.y;
 					if (x === null || y === null) continue;
 					x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
-					let p0 = this.m_Points.get(y * this.m_iGridWidth + x);
-					if (p0 !== undefined)
-						p0.$SetStatus(StatusEnum.POINT_FREE);
+					const p0 = this.m_Points.get(y * this.m_iGridWidth + x);
+					if (p0 !== undefined) {
+						//p0.$SetStatus(p0.$GetOldStatus());
+						p0.$RevertOldStatus();
+					}
+					else {
+						debugger;
+					}
 				}
 				$RemovePolyline(this.m_Line);
 				this.m_Line = null;
@@ -1863,7 +1932,7 @@ class InkBallGame {
 			if (this.m_MouseCursorOval === null) {
 				this.m_MouseCursorOval = $createOval(this.m_PointRadius, 'true');
 				this.m_MouseCursorOval.$SetFillColor(this.m_sDotColor);
-				this.m_MouseCursorOval.$strokeColor(this.m_sDotColor);
+				this.m_MouseCursorOval.$SetStrokeColor(this.m_sDotColor);
 				this.m_MouseCursorOval.$SetZIndex(-1);
 				this.m_MouseCursorOval.$Hide();
 			}

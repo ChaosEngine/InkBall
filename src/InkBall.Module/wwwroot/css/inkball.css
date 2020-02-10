@@ -34,6 +34,23 @@ p.inkgame {
 		height: 100%;
 	}
 
+	/*.inkgame div#screen > svg > circle[data-status='-3'] {
+		stroke:red;
+		fill:red;
+	}
+	.inkgame div#screen > svg > circle[data-status='-2'] {
+		stroke:blue;
+		fill:blue;
+	}
+	.inkgame div#screen > svg > circle[data-status='2'] {
+		stroke:#DC143C;
+		fill:#DC143C;
+	}
+	.inkgame div#screen > svg > circle[data-status='3'] {
+		stroke:#8A2BE2;
+		fill:#8A2BE2;
+	}*/
+
 .inkgame ul#messagesList {
 	overflow: auto;
 	height: calc(26em * 1);
