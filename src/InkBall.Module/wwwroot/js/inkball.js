@@ -334,11 +334,11 @@ function CountPointsDebug(sSelector2Set) {
 			display: "lines: %s, "
 		},
 		{
-			query: "circle[fill='#DC143C']",
+			query: "circle[data-status='2']",
 			display: "intercepted(P1:%s, "
 		},
 		{
-			query: "circle[fill='#8A2BE2']",
+			query: "circle[data-status='3']",
 			display: "P2:%s)"
 		}
 	];
@@ -1034,8 +1034,9 @@ class InkBallGame {
 		x = parseInt(p[0]); y = parseInt(p[1]);
 
 		p = this.m_Points.get(y * this.m_iGridWidth + x);
-		if (p !== null && p !== undefined)
+		if (p !== null && p !== undefined) {
 			p.$SetStatus(status);
+		}
 		else {
 			debugger;
 		}

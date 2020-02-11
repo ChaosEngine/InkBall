@@ -131,9 +131,9 @@ if (SVG) {
 		o.$SetFillColor = function (col) { this.setAttribute("fill", col); };
 		o.$GetStatus = function () { return parseInt(this.getAttribute("data-status")); };
 		o.$SetStatus = function (iStatus) {
-			const old_status = this.getAttribute("data-status");
+			const old_status = parseInt(this.getAttribute("data-status"));
 			this.setAttribute("data-status", iStatus);
-			if (old_status !== "-1" && old_status !== -1)
+			if (old_status !== -1 && old_status !== iStatus)
 				this.setAttribute("data-old-status", old_status);
 		};
 		o.$RevertOldStatus = function () {
@@ -277,9 +277,9 @@ if (SVG) {
 		o.$SetFillColor = function (col) { this.fillcolor = col; };
 		o.$GetStatus = function () { return parseInt(this.getAttribute("data-status")); };
 		o.$SetStatus = function (iStatus) {
-			const old_status = this.getAttribute("data-status");
+			const old_status = parseInt(this.getAttribute("data-status"));
 			this.setAttribute("data-status", iStatus);
-			if (old_status !== "-1" && old_status !== -1)
+			if (old_status !== -1 && old_status !== iStatus)
 				this.setAttribute("data-old-status", old_status);
 		};
 		o.$RevertOldStatus = function () {

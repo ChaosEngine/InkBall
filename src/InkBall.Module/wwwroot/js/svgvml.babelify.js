@@ -160,9 +160,9 @@ if (SVG) {
     };
 
     o.$SetStatus = function (iStatus) {
-      var old_status = this.getAttribute("data-status");
+      var old_status = parseInt(this.getAttribute("data-status"));
       this.setAttribute("data-status", iStatus);
-      if (old_status !== "-1" && old_status !== -1) this.setAttribute("data-old-status", old_status);
+      if (old_status !== -1 && old_status !== iStatus) this.setAttribute("data-old-status", old_status);
     };
 
     o.$RevertOldStatus = function () {
@@ -363,9 +363,9 @@ if (SVG) {
     };
 
     o.$SetStatus = function (iStatus) {
-      var old_status = this.getAttribute("data-status");
+      var old_status = parseInt(this.getAttribute("data-status"));
       this.setAttribute("data-status", iStatus);
-      if (old_status !== "-1" && old_status !== -1) this.setAttribute("data-old-status", old_status);
+      if (old_status !== -1 && old_status !== iStatus) this.setAttribute("data-old-status", old_status);
     };
 
     o.$RevertOldStatus = function () {

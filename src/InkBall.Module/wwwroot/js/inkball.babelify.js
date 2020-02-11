@@ -516,10 +516,10 @@ function CountPointsDebug(sSelector2Set) {
     query: "polyline",
     display: "lines: %s, "
   }, {
-    query: "circle[fill='#DC143C']",
+    query: "circle[data-status='2']",
     display: "intercepted(P1:%s, "
   }, {
-    query: "circle[fill='#8A2BE2']",
+    query: "circle[data-status='3']",
     display: "P2:%s)"
   }];
   var aggregated = "";
@@ -1206,9 +1206,13 @@ var InkBallGame = function () {
       x = parseInt(p[0]);
       y = parseInt(p[1]);
       p = this.m_Points.get(y * this.m_iGridWidth + x);
-      if (p !== null && p !== undefined) p.$SetStatus(status);else {
+
+      if (p !== null && p !== undefined) {
+        p.$SetStatus(status);
+      } else {
         debugger;
       }
+
       x *= this.m_iGridSizeX;
       y *= this.m_iGridSizeY;
       sPathPoints += "".concat(sDelimiter).concat(x, ",").concat(y);
