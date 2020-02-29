@@ -1159,7 +1159,7 @@ class InkBallGame {
 						revertStrokeColor: pt.$GetStrokeColor()
 					});
 
-					pt.$SetStatus(owned_by);
+					pt.$SetStatus(owned_by, true);
 					pt.$SetFillColor(sOwnedCol);
 					pt.$SetStrokeColor(sOwnedCol);
 				}
@@ -1592,41 +1592,34 @@ class InkBallGame {
 							p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
 							//debugger;
 							const line_contains_point = this.m_Line.$ContainsPoint(tox, toy);
-							if ((line_contains_point < 1 /*&& p1.$GetStatus() !== StatusEnum.POINT_IN_PATH*/) ||
-								(line_contains_point === 1 && p1.$GetStatus() === StatusEnum.POINT_STARTING)) {
-								this.m_Line.$AppendPoints(tox, toy);
-								if (p1.$GetStatus() !== StatusEnum.POINT_STARTING)
-									p1.$SetStatus(StatusEnum.POINT_IN_PATH);
-								else {
-									const val = this.SurroundOponentPoints();
-									if (val.owned.length > 0) {
-										this.Debug('Closing path', 0);
-										this.SendAsyncData(this.CreateXMLPutPathRequest(val), () => {
-											this.OnCancelClick();
-											val.OwnedPoints.forEach(revData => {
-												const p = revData.point;
-												const revertStatus = revData.revertStatus;
-												const revertFillColor = revData.revertFillColor;
-												const revertStrokeColor = revData.revertStrokeColor;
-												p.$SetStatus(revertStatus);
-												p.$SetFillColor(revertFillColor);
-												p.$SetStrokeColor(revertStrokeColor);
-											});
-											// val.PathPoints.forEach(revData => {
-											// 	const p = revData.point;
-											// 	const revertStatus = revData.revertStatus;
-											// 	const revertFillColor = revData.revertFillColor;
-											// 	const revertStrokeColor = revData.revertStrokeColor;
-											// 	p.$SetStatus(revertStatus);
-											// 	p.$SetFillColor(revertFillColor);
-											// 	p.$SetStrokeColor(revertStrokeColor);
-											// });
-											this.m_bHandlingEvent = false;
+							if (line_contains_point < 1 && p1.$GetStatus() !== StatusEnum.POINT_STARTING &&
+								true === this.m_Line.$AppendPoints(tox, toy, this.m_iGridSizeX)) {
+								p1.$SetStatus(StatusEnum.POINT_IN_PATH, true);
+								this.m_iLastX = x;
+								this.m_iLastY = y;
+							}
+							else if (line_contains_point === 1 && p1.$GetStatus() === StatusEnum.POINT_STARTING &&
+								true === this.m_Line.$AppendPoints(tox, toy, this.m_iGridSizeX)) {
+								const val = this.SurroundOponentPoints();
+								if (val.owned.length > 0) {
+									this.Debug('Closing path', 0);
+									this.SendAsyncData(this.CreateXMLPutPathRequest(val), () => {
+										this.OnCancelClick();
+										val.OwnedPoints.forEach(revData => {
+											const p = revData.point;
+											const revertFillColor = revData.revertFillColor;
+											const revertStrokeColor = revData.revertStrokeColor;
+											//const revertStatus = revData.revertStatus;
+											//p.$SetStatus(revertStatus);
+											p.$RevertOldStatus();
+											p.$SetFillColor(revertFillColor);
+											p.$SetStrokeColor(revertStrokeColor);
 										});
-									}
-									else
-										this.Debug('Wrong path, cancell it or refresh page', 0);
+										this.m_bHandlingEvent = false;
+									});
 								}
+								else
+									this.Debug('Wrong path, cancell it or refresh page', 0);
 								this.m_iLastX = x;
 								this.m_iLastY = y;
 							}
@@ -1634,7 +1627,6 @@ class InkBallGame {
 								this.m_Line.$GetPointsString().endsWith(`${this.m_iLastX * this.m_iGridSizeX},${this.m_iLastY * this.m_iGridSizeY}`)) {
 
 								if (this.m_Line.$GetLength() > 2) {
-									// p0.$SetStatus(StatusEnum.POINT_FREE);
 									p0.$RevertOldStatus();
 									this.m_Line.$RemoveLastPoint();
 									this.m_iLastX = x;
@@ -1657,9 +1649,9 @@ class InkBallGame {
 							this.m_Line = $createPolyline(6, fromx + "," + fromy + " " + tox + "," + toy, this.DRAWING_PATH_COLOR);
 							this.m_CancelPath.disabled = '';
 							if (p0.$GetStatus() !== StatusEnum.POINT_IN_PATH)
-								p0.$SetStatus(StatusEnum.POINT_STARTING);
+								p0.$SetStatus(StatusEnum.POINT_STARTING, true);
 							if (p1.$GetStatus() !== StatusEnum.POINT_IN_PATH)
-								p1.$SetStatus(StatusEnum.POINT_IN_PATH);
+								p1.$SetStatus(StatusEnum.POINT_IN_PATH, true);
 
 							this.m_iLastX = x;
 							this.m_iLastY = y;
@@ -1725,43 +1717,36 @@ class InkBallGame {
 						const toy = y * this.m_iGridSizeY;
 						//debugger;
 						const line_contains_point = this.m_Line.$ContainsPoint(tox, toy);
-						if ((line_contains_point < 1 /*&& p1.$GetStatus() !== StatusEnum.POINT_IN_PATH*/) ||
-							(line_contains_point === 1 && p1.$GetStatus() === StatusEnum.POINT_STARTING)) {
-							this.m_Line.$AppendPoints(tox, toy);
-							if (p1.$GetStatus() !== StatusEnum.POINT_STARTING)
-								p1.$SetStatus(StatusEnum.POINT_IN_PATH);
-							else {
-								const val = this.SurroundOponentPoints();
-								if (val.owned.length > 0) {
-									this.Debug('Closing path', 0);
-									this.SendAsyncData(this.CreateXMLPutPathRequest(val), () => {
-										this.Debug('Wrong path', 0);
-										this.OnCancelClick();
-										val.OwnedPoints.forEach(revData => {
-											const p = revData.point;
-											const revertStatus = revData.revertStatus;
-											const revertFillColor = revData.revertFillColor;
-											const revertStrokeColor = revData.revertStrokeColor;
-											p.$SetStatus(revertStatus);
-											p.$SetFillColor(revertFillColor);
-											p.$SetStrokeColor(revertStrokeColor);
-										});
-										// val.PathPoints.forEach(revData => {
-										// 	const p = revData.point;
-										// 	const revertStatus = revData.revertStatus;
-										// 	const revertFillColor = revData.revertFillColor;
-										// 	const revertStrokeColor = revData.revertStrokeColor;
-										// 	p.$SetStatus(revertStatus);
-										// 	p.$SetFillColor(revertFillColor);
-										// 	p.$SetStrokeColor(revertStrokeColor);
-										// });
-										this.m_bMouseDown = false;
-										this.m_bHandlingEvent = false;
+						if (line_contains_point < 1 && p1.$GetStatus() !== StatusEnum.POINT_STARTING &&
+							true === this.m_Line.$AppendPoints(tox, toy, this.m_iGridSizeX)) {
+							p1.$SetStatus(StatusEnum.POINT_IN_PATH, true);
+							this.m_iLastX = x;
+							this.m_iLastY = y;
+						}
+						else if (line_contains_point === 1 && p1.$GetStatus() === StatusEnum.POINT_STARTING &&
+							true === this.m_Line.$AppendPoints(tox, toy, this.m_iGridSizeX)) {
+							const val = this.SurroundOponentPoints();
+							if (val.owned.length > 0) {
+								this.Debug('Closing path', 0);
+								this.SendAsyncData(this.CreateXMLPutPathRequest(val), () => {
+									this.Debug('Wrong path', 0);
+									this.OnCancelClick();
+									val.OwnedPoints.forEach(revData => {
+										const p = revData.point;
+										const revertFillColor = revData.revertFillColor;
+										const revertStrokeColor = revData.revertStrokeColor;
+										// const revertStatus = revData.revertStatus;
+										// p.$SetStatus(revertStatus);
+										p.$RevertOldStatus();
+										p.$SetFillColor(revertFillColor);
+										p.$SetStrokeColor(revertStrokeColor);
 									});
-								}
-								else
-									this.Debug('Wrong path, cancell it or refresh page', 0);
+									this.m_bMouseDown = false;
+									this.m_bHandlingEvent = false;
+								});
 							}
+							else
+								this.Debug('Wrong path, cancell it or refresh page', 0);
 							this.m_iLastX = x;
 							this.m_iLastY = y;
 						}
@@ -1769,7 +1754,6 @@ class InkBallGame {
 							this.m_Line.$GetPointsString().endsWith(`${this.m_iLastX * this.m_iGridSizeX},${this.m_iLastY * this.m_iGridSizeY}`)) {
 
 							if (this.m_Line.$GetLength() > 2) {
-								// p0.$SetStatus(StatusEnum.POINT_FREE);
 								p0.$RevertOldStatus();
 								this.m_Line.$RemoveLastPoint();
 								this.m_iLastX = x;
@@ -1794,9 +1778,9 @@ class InkBallGame {
 						this.m_Line = $createPolyline(6, fromx + "," + fromy + " " + tox + "," + toy, this.DRAWING_PATH_COLOR);
 						this.m_CancelPath.disabled = '';
 						if (p0.$GetStatus() !== StatusEnum.POINT_IN_PATH)
-							p0.$SetStatus(StatusEnum.POINT_STARTING);
+							p0.$SetStatus(StatusEnum.POINT_STARTING, true);
 						if (p1.$GetStatus() !== StatusEnum.POINT_IN_PATH)
-							p1.$SetStatus(StatusEnum.POINT_IN_PATH);
+							p1.$SetStatus(StatusEnum.POINT_IN_PATH, true);
 					}
 					this.m_iLastX = x;
 					this.m_iLastY = y;

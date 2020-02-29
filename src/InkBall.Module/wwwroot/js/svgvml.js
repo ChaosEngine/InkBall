@@ -19,6 +19,14 @@ if (document.createElementNS) {
 	let svg = document.createElementNS(svgNS, "svg");
 	SVG = (svg.x !== null);
 }
+/**
+ * Test for array uniquness unig default object comparator
+ * @param {array} array of objects that are tested againstn uniqenes
+ * @returns {boolean} true - has duplicates
+ */
+function hasDuplicates(array) {
+	return (new Set(array)).size !== array.length;
+}
 
 if (SVG) {
 	/* ============= SVG ============== */
@@ -64,8 +72,30 @@ if (SVG) {
 		cont.appendChild(o);
 		//ch_added start
 		o.setAttribute("data-id", 0);
-		o.$AppendPoints = function (x, y) {
-			this.setAttribute("points", this.getAttribute("points") + ` ${x},${y}`);
+		o.$AppendPoints = function (x, y, diff = 16) {
+			const pts_str = this.getAttribute("points");
+			const pts = pts_str.split(" ");
+
+			if (true === hasDuplicates(pts)) {
+				debugger;
+				return false;
+			}
+
+			let arr;//obtain last point coords
+			if (pts.length <= 1 || (arr = pts[pts.length - 1].split(",")).length !== 2) {
+				debugger;
+				return false;
+			}
+
+			const last_x = parseInt(arr[0]), last_y = parseInt(arr[1]);
+			const x_diff = parseInt(x), y_diff = parseInt(y);
+			if (!(Math.abs(last_x - x_diff) <= diff && Math.abs(last_y - y_diff) <= diff)) {
+				debugger;
+				return false;
+			}
+
+			this.setAttribute("points", pts_str + ` ${x},${y}`);
+			return true;
 		};
 		o.$RemoveLastPoint = function () {
 			const newpts = this.getAttribute("points").replace(/(\s\d+,\d+)$/, "");
@@ -130,11 +160,16 @@ if (SVG) {
 		o.$GetFillColor = function () { return this.getAttribute("fill"); };
 		o.$SetFillColor = function (col) { this.setAttribute("fill", col); };
 		o.$GetStatus = function () { return parseInt(this.getAttribute("data-status")); };
-		o.$SetStatus = function (iStatus) {
-			const old_status = parseInt(this.getAttribute("data-status"));
-			this.setAttribute("data-status", iStatus);
-			if (old_status !== -1 && old_status !== iStatus)
-				this.setAttribute("data-old-status", old_status);
+		o.$SetStatus = function (iStatus, saveOldPoint = false) {
+			if (saveOldPoint) {
+				const old_status = parseInt(this.getAttribute("data-status"));
+				this.setAttribute("data-status", iStatus);
+				if (old_status !== -1 && old_status !== iStatus)
+					this.setAttribute("data-old-status", old_status);
+			}
+			else {
+				this.setAttribute("data-status", iStatus);
+			}
 		};
 		o.$RevertOldStatus = function () {
 			const old_status = this.getAttribute("data-old-status");
@@ -203,9 +238,27 @@ if (SVG) {
 		cont.appendChild(o);
 		//ch_added start
 		o.setAttribute("data-id", 0);
-		o.$AppendPoints = function (x, y) {
-			const str = this.points.value + ` ${x},${y}`;
-			this.points.value = str;
+		o.$AppendPoints = function (x, y, diff = 16) {
+			const pts_str = this.points.value;
+			const pts = pts_str.split(" ");
+
+			if (true === hasDuplicates(pts)) {
+				return false;
+			}
+
+			let arr;//obtain last two point
+			if (pts.length <= 1 || (arr = pts[pts.length - 1].split(",")).length !== 2) {
+				return false;
+			}
+
+			const last_x = parseInt(arr[0]), last_y = parseInt(arr[1]);
+			const x_diff = parseInt(x), y_diff = parseInt(y);
+			if (!(Math.abs(last_x - x_diff) <= diff && Math.abs(last_y - y_diff) <= diff)) {
+				return false;
+			}
+
+			this.points.value = pts_str + ` ${x},${y}`;
+			return true;
 		};
 		o.$RemoveLastPoint = function () {
 			const str = this.points.value.replace(/(\s\d+,\d+)$/, "");
@@ -276,11 +329,16 @@ if (SVG) {
 		o.$GetFillColor = function () { return this.fillcolor; };
 		o.$SetFillColor = function (col) { this.fillcolor = col; };
 		o.$GetStatus = function () { return parseInt(this.getAttribute("data-status")); };
-		o.$SetStatus = function (iStatus) {
-			const old_status = parseInt(this.getAttribute("data-status"));
-			this.setAttribute("data-status", iStatus);
-			if (old_status !== -1 && old_status !== iStatus)
-				this.setAttribute("data-old-status", old_status);
+		o.$SetStatus = function (iStatus, saveOldPoint = false) {
+			if (saveOldPoint) {
+				const old_status = parseInt(this.getAttribute("data-status"));
+				this.setAttribute("data-status", iStatus);
+				if (old_status !== -1 && old_status !== iStatus)
+					this.setAttribute("data-old-status", old_status);
+			}
+			else {
+				this.setAttribute("data-status", iStatus);
+			}
 		};
 		o.$RevertOldStatus = function () {
 			const old_status = this.getAttribute("data-old-status");

@@ -10,6 +10,10 @@ if (document.createElementNS) {
   SVG = svg.x !== null;
 }
 
+function hasDuplicates(array) {
+  return new Set(array).size !== array.length;
+}
+
 if (SVG) {
   var $createSVGVML = function $createSVGVML(o, iWidth, iHeight, antialias) {
     cont = document.createElementNS(svgNS, "svg");
@@ -60,7 +64,34 @@ if (SVG) {
     o.setAttribute("data-id", 0);
 
     o.$AppendPoints = function (x, y) {
-      this.setAttribute("points", this.getAttribute("points") + " ".concat(x, ",").concat(y));
+      var diff = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 16;
+      var pts_str = this.getAttribute("points");
+      var pts = pts_str.split(" ");
+
+      if (true === hasDuplicates(pts)) {
+        debugger;
+        return false;
+      }
+
+      var arr;
+
+      if (pts.length <= 1 || (arr = pts[pts.length - 1].split(",")).length !== 2) {
+        debugger;
+        return false;
+      }
+
+      var last_x = parseInt(arr[0]),
+          last_y = parseInt(arr[1]);
+      var x_diff = parseInt(x),
+          y_diff = parseInt(y);
+
+      if (!(Math.abs(last_x - x_diff) <= diff && Math.abs(last_y - y_diff) <= diff)) {
+        debugger;
+        return false;
+      }
+
+      this.setAttribute("points", pts_str + " ".concat(x, ",").concat(y));
+      return true;
     };
 
     o.$RemoveLastPoint = function () {
@@ -160,9 +191,15 @@ if (SVG) {
     };
 
     o.$SetStatus = function (iStatus) {
-      var old_status = parseInt(this.getAttribute("data-status"));
-      this.setAttribute("data-status", iStatus);
-      if (old_status !== -1 && old_status !== iStatus) this.setAttribute("data-old-status", old_status);
+      var saveOldPoint = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+      if (saveOldPoint) {
+        var old_status = parseInt(this.getAttribute("data-status"));
+        this.setAttribute("data-status", iStatus);
+        if (old_status !== -1 && old_status !== iStatus) this.setAttribute("data-old-status", old_status);
+      } else {
+        this.setAttribute("data-status", iStatus);
+      }
     };
 
     o.$RevertOldStatus = function () {
@@ -259,8 +296,31 @@ if (SVG) {
     o.setAttribute("data-id", 0);
 
     o.$AppendPoints = function (x, y) {
-      var str = this.points.value + " ".concat(x, ",").concat(y);
-      this.points.value = str;
+      var diff = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 16;
+      var pts_str = this.points.value;
+      var pts = pts_str.split(" ");
+
+      if (true === hasDuplicates(pts)) {
+        return false;
+      }
+
+      var arr;
+
+      if (pts.length <= 1 || (arr = pts[pts.length - 1].split(",")).length !== 2) {
+        return false;
+      }
+
+      var last_x = parseInt(arr[0]),
+          last_y = parseInt(arr[1]);
+      var x_diff = parseInt(x),
+          y_diff = parseInt(y);
+
+      if (!(Math.abs(last_x - x_diff) <= diff && Math.abs(last_y - y_diff) <= diff)) {
+        return false;
+      }
+
+      this.points.value = pts_str + " ".concat(x, ",").concat(y);
+      return true;
     };
 
     o.$RemoveLastPoint = function () {
@@ -363,9 +423,15 @@ if (SVG) {
     };
 
     o.$SetStatus = function (iStatus) {
-      var old_status = parseInt(this.getAttribute("data-status"));
-      this.setAttribute("data-status", iStatus);
-      if (old_status !== -1 && old_status !== iStatus) this.setAttribute("data-old-status", old_status);
+      var saveOldPoint = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+      if (saveOldPoint) {
+        var old_status = parseInt(this.getAttribute("data-status"));
+        this.setAttribute("data-status", iStatus);
+        if (old_status !== -1 && old_status !== iStatus) this.setAttribute("data-old-status", old_status);
+      } else {
+        this.setAttribute("data-status", iStatus);
+      }
     };
 
     o.$RevertOldStatus = function () {
