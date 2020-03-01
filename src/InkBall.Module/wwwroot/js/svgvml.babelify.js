@@ -69,14 +69,12 @@ if (SVG) {
       var pts = pts_str.split(" ");
 
       if (true === hasDuplicates(pts)) {
-        debugger;
         return false;
       }
 
       var arr;
 
       if (pts.length <= 1 || (arr = pts[pts.length - 1].split(",")).length !== 2) {
-        debugger;
         return false;
       }
 
@@ -86,7 +84,6 @@ if (SVG) {
           y_diff = parseInt(y);
 
       if (!(Math.abs(last_x - x_diff) <= diff && Math.abs(last_y - y_diff) <= diff)) {
-        debugger;
         return false;
       }
 

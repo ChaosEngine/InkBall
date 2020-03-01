@@ -77,20 +77,20 @@ if (SVG) {
 			const pts = pts_str.split(" ");
 
 			if (true === hasDuplicates(pts)) {
-				debugger;
+				// debugger;
 				return false;
 			}
 
 			let arr;//obtain last point coords
 			if (pts.length <= 1 || (arr = pts[pts.length - 1].split(",")).length !== 2) {
-				debugger;
+				// debugger;
 				return false;
 			}
 
 			const last_x = parseInt(arr[0]), last_y = parseInt(arr[1]);
 			const x_diff = parseInt(x), y_diff = parseInt(y);
 			if (!(Math.abs(last_x - x_diff) <= diff && Math.abs(last_y - y_diff) <= diff)) {
-				debugger;
+				// debugger;
 				return false;
 			}
 
@@ -243,17 +243,20 @@ if (SVG) {
 			const pts = pts_str.split(" ");
 
 			if (true === hasDuplicates(pts)) {
+				//debugger;
 				return false;
 			}
 
 			let arr;//obtain last two point
 			if (pts.length <= 1 || (arr = pts[pts.length - 1].split(",")).length !== 2) {
+				//debugger;
 				return false;
 			}
 
 			const last_x = parseInt(arr[0]), last_y = parseInt(arr[1]);
 			const x_diff = parseInt(x), y_diff = parseInt(y);
 			if (!(Math.abs(last_x - x_diff) <= diff && Math.abs(last_y - y_diff) <= diff)) {
+				//debugger;
 				return false;
 			}
 

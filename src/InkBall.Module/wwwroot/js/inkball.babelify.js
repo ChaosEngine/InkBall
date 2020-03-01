@@ -1026,16 +1026,16 @@ var InkBallGame = function () {
   }, {
     key: "Debug",
     value: function Debug() {
-      var d;
-
       switch (arguments.length) {
         case 1:
           this.m_Debug.innerHTML = arguments.length <= 0 ? undefined : arguments[0];
           break;
 
         case 2:
-          d = document.getElementById('debug' + (arguments.length <= 1 ? undefined : arguments[1]));
-          d.innerHTML = arguments.length <= 0 ? undefined : arguments[0];
+          {
+            var d = document.getElementById('debug' + (arguments.length <= 1 ? undefined : arguments[1]));
+            d.innerHTML = arguments.length <= 0 ? undefined : arguments[0];
+          }
           break;
 
         default:
@@ -1043,8 +1043,9 @@ var InkBallGame = function () {
             var msg = i < 0 || arguments.length <= i ? undefined : arguments[i];
 
             if (msg) {
-              d = document.getElementById('debug' + i);
-              if (d) d.innerHTML = msg;
+              var _d = document.getElementById('debug' + i);
+
+              if (_d) _d.innerHTML = msg;
             }
           }
 
@@ -1296,19 +1297,16 @@ var InkBallGame = function () {
     key: "SurroundOponentPoints",
     value: function SurroundOponentPoints() {
       var points = this.m_Line.$GetPointsArray();
-      var unique_hashset = new Set();
-      var hasDuplicates = points.slice(0, -1).some(function (pt) {
-        return unique_hashset.size === unique_hashset.add(pt.x + '_' + pt.y).size;
-      });
+      var pts_not_unique = hasDuplicates(points.slice(0, -1).map(function (pt) {
+        return pt.x + '_' + pt.y;
+      }));
 
-      if (hasDuplicates || !(points[0].x === points[points.length - 1].x && points[0].y === points[points.length - 1].y)) {
+      if (pts_not_unique || !(points[0].x === points[points.length - 1].x && points[0].y === points[points.length - 1].y)) {
         return {
           OwnedPoints: undefined,
           owned: "",
           path: "",
-          revertFillColor: undefined,
-          revertStatus: undefined,
-          revertStrokeColor: undefined
+          errorDesc: "Points not unique"
         };
       }
 
@@ -1382,7 +1380,8 @@ var InkBallGame = function () {
         OwnedPoints: ownedPoints,
         owned: sOwnedPoints,
         PathPoints: pathPoints,
-        path: sPathPoints
+        path: sPathPoints,
+        errorDesc: "No surrounded points"
       };
     }
   }, {
@@ -1762,7 +1761,7 @@ var InkBallGame = function () {
                       });
                       _this13.m_bHandlingEvent = false;
                     });
-                  } else this.Debug('Wrong path, cancell it or refresh page', 0);
+                  } else this.Debug("".concat(val.errorDesc ? val.errorDesc : 'Wrong path', ", cancell it or refresh page"), 0);
 
                   this.m_iLastX = x;
                   this.m_iLastY = y;
@@ -1780,13 +1779,16 @@ var InkBallGame = function () {
 
               var _p2 = this.m_Points.get(y * this.m_iGridWidth + x);
 
-              if (_p !== undefined && _p2 !== undefined && _p.$GetStatus() !== StatusEnum.POINT_IN_PATH && _p2.$GetStatus() !== StatusEnum.POINT_IN_PATH && _p.$GetFillColor() === this.m_sDotColor && _p2.$GetFillColor() === this.m_sDotColor) {
+              if (_p !== undefined && _p2 !== undefined && _p.$GetFillColor() === this.m_sDotColor && _p2.$GetFillColor() === this.m_sDotColor) {
                 var fromx = this.m_iLastX * this.m_iGridSizeX;
                 var fromy = this.m_iLastY * this.m_iGridSizeY;
                 this.m_Line = $createPolyline(6, fromx + "," + fromy + " " + tox + "," + toy, this.DRAWING_PATH_COLOR);
                 this.m_CancelPath.disabled = '';
-                if (_p.$GetStatus() !== StatusEnum.POINT_IN_PATH) _p.$SetStatus(StatusEnum.POINT_STARTING, true);
-                if (_p2.$GetStatus() !== StatusEnum.POINT_IN_PATH) _p2.$SetStatus(StatusEnum.POINT_IN_PATH, true);
+
+                _p.$SetStatus(StatusEnum.POINT_STARTING, true);
+
+                _p2.$SetStatus(StatusEnum.POINT_IN_PATH, true);
+
                 this.m_iLastX = x;
                 this.m_iLastY = y;
               }
@@ -1853,8 +1855,6 @@ var InkBallGame = function () {
                 if (val.owned.length > 0) {
                   this.Debug('Closing path', 0);
                   this.SendAsyncData(this.CreateXMLPutPathRequest(val), function () {
-                    _this14.Debug('Wrong path', 0);
-
                     _this14.OnCancelClick();
 
                     val.OwnedPoints.forEach(function (revData) {
@@ -1868,7 +1868,7 @@ var InkBallGame = function () {
                     _this14.m_bMouseDown = false;
                     _this14.m_bHandlingEvent = false;
                   });
-                } else this.Debug('Wrong path, cancell it or refresh page', 0);
+                } else this.Debug("".concat(val.errorDesc ? val.errorDesc : 'Wrong path', ", cancell it or refresh page"), 0);
 
                 this.m_iLastX = x;
                 this.m_iLastY = y;
@@ -1886,7 +1886,7 @@ var InkBallGame = function () {
 
             var _p4 = this.m_Points.get(y * this.m_iGridWidth + x);
 
-            if (_p3 !== undefined && _p4 !== undefined && _p3.$GetStatus() !== StatusEnum.POINT_IN_PATH && _p4.$GetStatus() !== StatusEnum.POINT_IN_PATH && _p3.$GetFillColor() === this.m_sDotColor && _p4.$GetFillColor() === this.m_sDotColor) {
+            if (_p3 !== undefined && _p4 !== undefined && _p3.$GetFillColor() === this.m_sDotColor && _p4.$GetFillColor() === this.m_sDotColor) {
               var fromx = this.m_iLastX * this.m_iGridSizeX;
               var fromy = this.m_iLastY * this.m_iGridSizeY;
 
@@ -1896,8 +1896,10 @@ var InkBallGame = function () {
 
               this.m_Line = $createPolyline(6, fromx + "," + fromy + " " + _tox + "," + _toy, this.DRAWING_PATH_COLOR);
               this.m_CancelPath.disabled = '';
-              if (_p3.$GetStatus() !== StatusEnum.POINT_IN_PATH) _p3.$SetStatus(StatusEnum.POINT_STARTING, true);
-              if (_p4.$GetStatus() !== StatusEnum.POINT_IN_PATH) _p4.$SetStatus(StatusEnum.POINT_IN_PATH, true);
+
+              _p3.$SetStatus(StatusEnum.POINT_STARTING, true);
+
+              _p4.$SetStatus(StatusEnum.POINT_IN_PATH, true);
             }
 
             this.m_iLastX = x;
@@ -1906,10 +1908,10 @@ var InkBallGame = function () {
         } else if (this.m_iLastX < 0 || this.m_iLastY < 0) {
           var _p5 = this.m_Points.get(y * this.m_iGridWidth + x);
 
-          if (_p5 !== undefined && _p5.$GetFillColor() === this.m_sDotColor && (_p5.$GetStatus() === StatusEnum.POINT_FREE_BLUE || _p5.$GetStatus() === StatusEnum.POINT_FREE_RED)) {
-            this.m_iLastX = x;
-            this.m_iLastY = y;
-          }
+          if (_p5 !== undefined && _p5.$GetFillColor() === this.m_sDotColor) {
+              this.m_iLastX = x;
+              this.m_iLastY = y;
+            }
         }
       }
     }
@@ -1985,6 +1987,7 @@ var InkBallGame = function () {
 
         this.m_iLastX = this.m_iLastY = -1;
         if (this.m_Timer) this.m_StopAndDraw.disabled = 'disabled';
+        this.Debug('', 0);
       }
     }
   }, {
