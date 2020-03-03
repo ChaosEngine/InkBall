@@ -18,8 +18,6 @@ namespace InkBall.Module.Model
 		InkBallGame.GameTypeEnum GameType { get; set; }
 		int iBoardHeight { get; set; }
 		int iBoardWidth { get; set; }
-		int LogicalWidth { get; }
-		int LogicalHeight { get; }
 		int iGridSize { get; set; }
 		int iId { get; set; }
 		ICollection<Path> InkBallPath { get; set; }
@@ -29,7 +27,7 @@ namespace InkBall.Module.Model
 		Player Player1 { get; set; }
 		Player Player2 { get; set; }
 		DateTime TimeStamp { get; set; }
-
+		bool CpuOponent { get; set; }
 		bool IsThisPlayer1();
 		Player GetPlayer();
 		Player GetOtherPlayer();
@@ -37,7 +35,7 @@ namespace InkBall.Module.Model
 		bool IsThisPlayerPlayingWithRed();
 	}
 
-	public abstract class CommonGame<Player, Point, Path>
+	public abstract class CommonGame<Player, Point, Path> : IGame<Player, Point, Path>
 		where Player : IPlayer<Point, Path>
 		where Point : IPoint
 		where Path : IPath<Point>
@@ -68,6 +66,8 @@ namespace InkBall.Module.Model
 		public bool IsThisPlayer1() => this.bIsPlayer1;
 
 		public bool IsPlayer1Active() => this.bIsPlayer1Active;
+
+		public bool CpuOponent { get; set; }
 
 		public bool IsThisPlayerActive()
 		{

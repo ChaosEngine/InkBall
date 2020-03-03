@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace InkBall.Module.Model
 {
 	//TODO: remove coz not needed anymore - points are stored inside InkBallPath.PointsAsString JSON field
-	public partial class InkBallPointsInPath
+	/*public partial class InkBallPointsInPath
 	{
 		public int iId { get; set; }
 		public int iPathId { get; set; }
@@ -27,5 +27,5 @@ namespace InkBall.Module.Model
 				iY = point.iY
 			};
 		}
-	}
+	}*/
 }

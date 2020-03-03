@@ -19,7 +19,7 @@ namespace InkBall.Module.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "2.2.0-rtm-35687");
+                .HasAnnotation("ProductVersion", "3.1.2");
 
             modelBuilder.Entity("InkBall.Module.Model.InkBallGame", b =>
                 {
@@ -37,9 +37,11 @@ namespace InkBall.Module.Migrations
                     b.Property<DateTime>("CreateTime");
 
                     b.Property<string>("GameState")
+						.HasMaxLength(256)
                         .IsRequired();
 
                     b.Property<string>("GameType")
+						.HasMaxLength(256)
                         .IsRequired();
 
                     b.Property<DateTime>("TimeStamp")
@@ -71,6 +73,11 @@ namespace InkBall.Module.Migrations
 
                     b.Property<int?>("iPlayer2Id")
                         .HasColumnName("iPlayer2ID");
+
+                    b.Property<bool>("CpuOponent")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnName("CpuOponent")
+                        .HasDefaultValue(false);
 
                     b.HasKey("iId");
 
@@ -162,6 +169,18 @@ namespace InkBall.Module.Migrations
                         .HasName("ByUser");
 
                     b.ToTable("InkBallPlayer");
+                    
+					b.HasData(
+                        new
+                        {
+                            iId = -1,
+                            TimeStamp = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            iDrawCount = 0,
+                            iLossCount = 0,
+                            iUserId = -1,
+                            iWinCount = 0,
+                            sLastMoveCode = "{}"
+                        });
                 });
 
             modelBuilder.Entity("InkBall.Module.Model.InkBallPoint", b =>
@@ -204,40 +223,6 @@ namespace InkBall.Module.Migrations
                     b.ToTable("InkBallPoint");
                 });
 
-            modelBuilder.Entity("InkBall.Module.Model.InkBallPointsInPath", b =>
-                {
-                    b.Property<int>("iId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnName("iId")
-                        .HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
-                        .HasAnnotation("Sqlite:Autoincrement", true)
-#if INCLUDE_ORACLE
-						.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
-#endif
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<int>("iPathId")
-                        .HasColumnName("iPathId");
-
-                    b.Property<int>("iPointId")
-                        .HasColumnName("iPointId");
-
-                    b.Property<int>("Order")
-                        .HasColumnName("Order")
-                        .HasDefaultValue(0);
-
-                    b.HasKey("iId");
-
-                    b.HasIndex("iPathId")
-                        .HasName("ByPath");
-
-                    b.HasIndex("iPointId")
-                        .HasName("ByPoint");
-
-                    b.ToTable("InkBallPointsInPath");
-                });
-
             modelBuilder.Entity("InkBall.Module.Model.InkBallUser", b =>
                 {
                     b.Property<int>("iId")
@@ -268,6 +253,14 @@ namespace InkBall.Module.Migrations
                         .HasColumnName("UserName");
 
                     b.ToTable("InkBallUsers");
+
+                    b.HasData(
+                        new
+                        {
+                            iId = -1,
+                            UserName = "Multi CPU Oponent UserPlayer",
+                            iPrivileges = 1
+                        });
                 });
 
             modelBuilder.Entity("InkBall.Module.Model.InkBallGame", b =>
@@ -322,18 +315,6 @@ namespace InkBall.Module.Migrations
                         .HasConstraintName("InkBallPoint_ibfk_4");
                 });
 
-            modelBuilder.Entity("InkBall.Module.Model.InkBallPointsInPath", b =>
-                {
-                    b.HasOne("InkBall.Module.Model.InkBallPath", "Path")
-                        .WithMany("InkBallPointsInPath")
-                        .HasForeignKey("iPathId")
-                        .HasConstraintName("InkBallPointsInPath_ibfk_1");
-
-                    b.HasOne("InkBall.Module.Model.InkBallPoint", "Point")
-                        .WithMany("InkBallPointsInPath")
-                        .HasForeignKey("iPointId")
-                        .HasConstraintName("InkBallPointsInPath_ibfk_2");
-                });
 #pragma warning restore 612, 618
         }
     }

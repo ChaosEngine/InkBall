@@ -48,7 +48,8 @@ namespace InkBall.Module.Pages
 			//Message = $"ExternalId = [{GameUser.sExternalId}] PlayerID = [{GameUser.InkBallPlayer.FirstOrDefault()?.iId}]";
 		}
 
-		public async Task<IActionResult> OnPostAsync(string action, int gameID, string gameType, InkBallGame.BoardSizeEnum boardSize)
+		public async Task<IActionResult> OnPostAsync(string action, int gameID, string gameType, InkBallGame.BoardSizeEnum boardSize,
+			bool cpuOponent)
 		{
 			await base.LoadUserPlayerAndGameAsync();
 

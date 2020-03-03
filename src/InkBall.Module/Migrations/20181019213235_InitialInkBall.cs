@@ -90,8 +90,8 @@ namespace InkBall.Module.Migrations
 						.Annotation("Sqlite:Autoincrement", true),
 					iBoardHeight = table.Column<int>(nullable: false, defaultValue: 26)
 						.Annotation("Sqlite:Autoincrement", true),
-					GameType = table.Column<string>(nullable: false),
-					GameState = table.Column<string>(nullable: false),
+					GameType = table.Column<string>(maxLength: 256, nullable: false),
+					GameState = table.Column<string>(maxLength: 256, nullable: false),
 					TimeStamp = table.Column<DateTime>(type: GamesContext.TimeStampColumnTypeFromProvider(this.ActiveProvider), nullable: false,
 						defaultValueSql: GamesContext.TimeStampDefaultValueFromProvider(this.ActiveProvider)),
 					CreateTime = table.Column<DateTime>(nullable: false)
@@ -188,7 +188,8 @@ namespace InkBall.Module.Migrations
 						onDelete: ReferentialAction.Restrict);
 				});
 
-			migrationBuilder.CreateTable(
+			//TODO: remove coz not needed anymore - points are stored inside InkBallPath.PointsAsString JSON field
+			/*migrationBuilder.CreateTable(
 				name: "InkBallPointsInPath",
 				columns: table => new
 				{
@@ -219,7 +220,7 @@ namespace InkBall.Module.Migrations
 						principalTable: "InkBallPoint",
 						principalColumn: "iId",
 						onDelete: ReferentialAction.Restrict);
-				});
+				});*/
 
 			migrationBuilder.CreateIndex(
 				name: "ByPlayer1",
@@ -261,7 +262,8 @@ namespace InkBall.Module.Migrations
 				table: "InkBallPoint",
 				column: "iPlayerID");
 
-			migrationBuilder.CreateIndex(
+			//TODO: remove coz not needed anymore - points are stored inside InkBallPath.PointsAsString JSON field
+			/*migrationBuilder.CreateIndex(
 				name: "ByPath",
 				table: "InkBallPointsInPath",
 				column: "iPathId");
@@ -269,7 +271,7 @@ namespace InkBall.Module.Migrations
 			migrationBuilder.CreateIndex(
 				name: "ByPoint",
 				table: "InkBallPointsInPath",
-				column: "iPointId");
+				column: "iPointId");*/
 
 			migrationBuilder.CreateIndex(
 				name: "sExternalId",
@@ -280,8 +282,9 @@ namespace InkBall.Module.Migrations
 
 		protected override void Down(MigrationBuilder migrationBuilder)
 		{
-			migrationBuilder.DropTable(
-				name: "InkBallPointsInPath");
+			//TODO: remove coz not needed anymore - points are stored inside InkBallPath.PointsAsString JSON field
+			// migrationBuilder.DropTable(
+			// 	name: "InkBallPointsInPath");
 
 			migrationBuilder.DropTable(
 				name: "InkBallPoint");

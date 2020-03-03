@@ -39,9 +39,11 @@ namespace InkBall.Module.Migrations
                     b.Property<DateTime>("CreateTime");
 
                     b.Property<string>("GameState")
+						.HasMaxLength(256)
                         .IsRequired();
 
                     b.Property<string>("GameType")
+						.HasMaxLength(256)
                         .IsRequired();
 
                     b.Property<DateTime>("TimeStamp")
@@ -208,7 +210,8 @@ namespace InkBall.Module.Migrations
                     b.ToTable("InkBallPoint");
                 });
 
-            modelBuilder.Entity("InkBall.Module.Model.InkBallPointsInPath", b =>
+			//TODO: remove coz not needed anymore - points are stored inside InkBallPath.PointsAsString JSON field
+            /*modelBuilder.Entity("InkBall.Module.Model.InkBallPointsInPath", b =>
                 {
                     b.Property<int>("iId")
                         .ValueGeneratedOnAdd()
@@ -240,7 +243,7 @@ namespace InkBall.Module.Migrations
                         .HasName("ByPoint");
 
                     b.ToTable("InkBallPointsInPath");
-                });
+                });*/
 
             modelBuilder.Entity("InkBall.Module.Model.InkBallUser", b =>
                 {
@@ -326,7 +329,8 @@ namespace InkBall.Module.Migrations
                         .HasConstraintName("InkBallPoint_ibfk_4");
                 });
 
-            modelBuilder.Entity("InkBall.Module.Model.InkBallPointsInPath", b =>
+			//TODO: remove coz not needed anymore - points are stored inside InkBallPath.PointsAsString JSON field
+            /*modelBuilder.Entity("InkBall.Module.Model.InkBallPointsInPath", b =>
                 {
                     b.HasOne("InkBall.Module.Model.InkBallPath", "Path")
                         .WithMany("InkBallPointsInPath")
@@ -337,7 +341,7 @@ namespace InkBall.Module.Migrations
                         .WithMany("InkBallPointsInPath")
                         .HasForeignKey("iPointId")
                         .HasConstraintName("InkBallPointsInPath_ibfk_2");
-                });
+                });*/
 #pragma warning restore 612, 618
         }
     }

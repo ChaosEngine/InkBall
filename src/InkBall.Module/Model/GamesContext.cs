@@ -22,7 +22,7 @@ namespace InkBall.Module.Model
 		DbSet<InkBallPath> InkBallPath { get; set; }
 		DbSet<InkBallPlayer> InkBallPlayer { get; set; }
 		DbSet<InkBallPoint> InkBallPoint { get; set; }
-		DbSet<InkBallPointsInPath> InkBallPointsInPath { get; set; }
+		//DbSet<InkBallPointsInPath> InkBallPointsInPath { get; set; }
 		DbSet<InkBallUser> InkBallUsers { get; set; }
 	}
 
@@ -34,7 +34,7 @@ namespace InkBall.Module.Model
 		public virtual DbSet<InkBallPath> InkBallPath { get; set; }
 		public virtual DbSet<InkBallPlayer> InkBallPlayer { get; set; }
 		public virtual DbSet<InkBallPoint> InkBallPoint { get; set; }
-		public virtual DbSet<InkBallPointsInPath> InkBallPointsInPath { get; set; }
+		//public virtual DbSet<InkBallPointsInPath> InkBallPointsInPath { get; set; }
 		public virtual DbSet<InkBallUser> InkBallUsers { get; set; }
 
 		public GamesContext(DbContextOptions<GamesContext> options) : base(options)
@@ -177,14 +177,14 @@ namespace InkBall.Module.Model
 					.HasDefaultValue(20);
 
 				entity.Property(e => e.GameType)
-					//.HasMaxLength(50)
+					.HasMaxLength(256)
 					//.IsUnicode(false)
 					.HasConversion(
 						v => v.ToString(),
 						v => (InkBallGame.GameTypeEnum)Enum.Parse(typeof(InkBallGame.GameTypeEnum), v));
 
 				entity.Property(e => e.GameState)
-					//.HasMaxLength(50)
+					.HasMaxLength(256)
 					//.IsUnicode(false)
 					.HasConversion(
 						v => v.ToString(),
@@ -193,6 +193,10 @@ namespace InkBall.Module.Model
 				entity.Property(e => e.iGridSize)
 					.HasColumnName("iGridSize")
 					.HasDefaultValue(16);
+
+				entity.Property(e => e.CpuOponent)
+					.HasColumnName("CpuOponent")
+					.HasDefaultValue(false);
 
 				entity.Property(e => e.iPlayer1Id).HasColumnName("iPlayer1ID");
 
@@ -307,6 +311,16 @@ namespace InkBall.Module.Model
 					.HasPrincipalKey(u => u.iId)
 					.HasForeignKey(pd => pd.iUserId)
 					.HasConstraintName("InkBallPlayer_ibfk_1");
+
+				entity.HasData(new InkBallPlayer
+				{
+					iId = -1,
+					iUserId = -1,
+					sLastMoveCode = "{}",
+					iWinCount = 0,
+					iLossCount = 0,
+					iDrawCount = 0
+				});
 			});
 
 			modelBuilder.Entity<InkBallPoint>(entity =>
@@ -364,8 +378,10 @@ namespace InkBall.Module.Model
 					.HasConstraintName("InkBallPoint_ibfk_4");
 			});
 
+			#region Old code
+
 			//TODO: remove coz not needed anymore - points are stored inside InkBallPath.PointsAsString JSON field
-			modelBuilder.Entity<InkBallPointsInPath>(entity =>
+			/*modelBuilder.Entity<InkBallPointsInPath>(entity =>
 			{
 				entity.HasKey(e => e.iId);
 
@@ -404,7 +420,9 @@ namespace InkBall.Module.Model
 					.HasForeignKey(d => d.iPointId)
 					.OnDelete(DeleteBehavior.Restrict)
 					.HasConstraintName("InkBallPointsInPath_ibfk_2");
-			});
+			});*/
+
+			#endregion Old code
 
 			modelBuilder.Entity<InkBallUser>(entity =>
 			{
@@ -431,6 +449,14 @@ namespace InkBall.Module.Model
 
 				entity.Property(e => e.UserName)
 					.HasColumnName("UserName");
+
+				entity.HasData(new InkBallUser
+				{
+					iId = -1,
+					sExternalId = null,
+					iPrivileges = 1,
+					UserName = "Multi CPU Oponent UserPlayer"
+				});
 			});
 		}
 
@@ -765,12 +791,12 @@ namespace InkBall.Module.Model
 			return await query.ToArrayAsync(token);
 		}
 
-		private static InkBallPath LoadPointsInPathFromRelationTable(InkBallPath path)
+		/*private static InkBallPath LoadPointsInPathFromRelationTable(InkBallPath path)
 		{
 			path.InkBallPointsInPath = path.InkBallPointsInPath.OrderBy(o => o.Order).ToArray();
 
 			return path;
-		}
+		}*/
 
 		private static InkBallPath LoadPointsInPathFromJson(InkBallPath path)
 		{
