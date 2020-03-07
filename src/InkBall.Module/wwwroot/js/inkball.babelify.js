@@ -107,8 +107,9 @@ var InkBallPointViewModel = function (_DtoMsg) {
     key: "Format",
     value: function Format(sUser, point) {
       var msg = '(' + point.iX + ',' + point.iY + ' - ';
+      var status = point.Status || point.status;
 
-      switch (point.Status) {
+      switch (status) {
         case StatusEnum.POINT_FREE_RED:
           msg += 'red';
           break;
@@ -179,7 +180,7 @@ var InkBallPathViewModel = function (_DtoMsg2) {
   }], [{
     key: "Format",
     value: function Format(sUser, path) {
-      var msg = "(".concat(path.PointsAsString, ") [").concat(path.OwnedPointsAsString, "]");
+      var msg = "(".concat(path.PointsAsString || path.pointsAsString, ") [").concat(path.OwnedPointsAsString || path.ownedPointsAsString, "]");
       return "".concat(sUser, " places ").concat(msg, " path");
     }
   }]);
@@ -210,7 +211,7 @@ var PlayerJoiningCommand = function (_DtoMsg3) {
   }], [{
     key: "Format",
     value: function Format(join) {
-      return join.Message;
+      return join.Message || join.message;
     }
   }]);
 
@@ -240,7 +241,7 @@ var PlayerSurrenderingCommand = function (_DtoMsg4) {
   }], [{
     key: "Format",
     value: function Format(surrender) {
-      return surrender.Message;
+      return surrender.Message || surrender.message;
     }
   }]);
 
@@ -270,7 +271,7 @@ var PingCommand = function (_DtoMsg5) {
   }], [{
     key: "Format",
     value: function Format(sUser, ping) {
-      var txt = ping.Message;
+      var txt = ping.Message || ping.message;
       return sUser + " says '" + txt + "'";
     }
   }]);
@@ -306,14 +307,15 @@ var WinCommand = function (_DtoMsg6) {
     key: "Format",
     value: function Format(win) {
       var msg = '';
+      var status = win.Status || win.status;
 
-      switch (win.Status) {
+      switch (status) {
         case WinStatusEnum.RED_WINS:
           msg = 'red.';
           break;
 
         case WinStatusEnum.GREEN_WINS:
-          msg = 'green.';
+          msg = 'blue.';
           break;
 
         case WinStatusEnum.NO_WIN:
@@ -381,7 +383,7 @@ var PlayerPointsAndPathsDTO = function (_DtoMsg8) {
   }], [{
     key: "Deserialize",
     value: function Deserialize(ppDTO) {
-      var serialized = '{ "Points": ' + ppDTO.Points + ', "Paths": ' + ppDTO.Paths + ' }';
+      var serialized = "{ \"Points\": ".concat(ppDTO.Points || ppDTO.points, ", \"Paths\": ").concat(ppDTO.Paths || ppDTO.paths, " }");
       var path_and_point = JSON.parse(serialized);
       return path_and_point;
     }
@@ -894,7 +896,7 @@ var InkBallGame = function () {
         this.NotifyBrowser('New Point', encodedMsg);
       }.bind(this));
       this.g_SignalRConnection.on("ServerToClientPath", function (dto) {
-        if (Object.prototype.hasOwnProperty.call(dto, 'PointsAsString')) {
+        if (Object.prototype.hasOwnProperty.call(dto, 'PointsAsString') || Object.prototype.hasOwnProperty.call(dto, 'pointsAsString')) {
           var path = dto;
           var user = this.m_Player2Name.innerHTML;
           var encodedMsg = InkBallPathViewModel.Format(user, path);
@@ -903,7 +905,7 @@ var InkBallGame = function () {
           document.querySelector(sMsgListSel).appendChild(li);
           this.ReceivedPathProcessing(path);
           this.NotifyBrowser('New Path', encodedMsg);
-        } else if (Object.prototype.hasOwnProperty.call(dto, 'WinningPlayerId')) {
+        } else if (Object.prototype.hasOwnProperty.call(dto, 'WinningPlayerId') || Object.prototype.hasOwnProperty.call(dto, 'winningPlayerId')) {
           var win = dto;
 
           var _encodedMsg = WinCommand.Format(win);
@@ -924,7 +926,7 @@ var InkBallGame = function () {
 
         if (this.m_SurrenderButton !== null) {
           if (join.OtherPlayerName !== '') {
-            this.m_Player2Name.innerHTML = join.OtherPlayerName;
+            this.m_Player2Name.innerHTML = join.OtherPlayerName || join.otherPlayerName;
             this.m_SurrenderButton.value = 'surrender';
             this.ShowMobileStatus('Your move');
           }
@@ -1452,10 +1454,10 @@ var InkBallGame = function () {
           LocalLog(InkBallPathViewModel.Format('some player', payload));
           this.m_bHandlingEvent = true;
           this.g_SignalRConnection.invoke("ClientToServerPath", payload).then(function (dto) {
-            if (Object.prototype.hasOwnProperty.call(dto, 'WinningPlayerId')) {
+            if (Object.prototype.hasOwnProperty.call(dto, 'WinningPlayerId') || Object.prototype.hasOwnProperty.call(dto, 'winningPlayerId')) {
               var win = dto;
               this.ReceivedWinProcessing(win);
-            } else if (Object.prototype.hasOwnProperty.call(dto, 'PointsAsString')) {
+            } else if (Object.prototype.hasOwnProperty.call(dto, 'PointsAsString') || Object.prototype.hasOwnProperty.call(dto, 'pointsAsString')) {
               var path = dto;
               this.ReceivedPathProcessing(path);
             } else throw new Error("ClientToServerPath bad GetKind!");
@@ -1504,7 +1506,7 @@ var InkBallGame = function () {
     value: function ReceivedPointProcessing(point) {
       var x = point.iX,
           y = point.iY,
-          iStatus = point.Status;
+          iStatus = point.Status || point.status;
       this.SetPoint(x, y, iStatus, point.iPlayerId);
 
       if (this.g_iPlayerID !== point.iPlayerId) {
@@ -1535,8 +1537,8 @@ var InkBallGame = function () {
     key: "ReceivedPathProcessing",
     value: function ReceivedPathProcessing(path) {
       if (this.g_iPlayerID !== path.iPlayerId) {
-        var str_path = path.PointsAsString,
-            owned = path.OwnedPointsAsString;
+        var str_path = path.PointsAsString || path.pointsAsString,
+            owned = path.OwnedPointsAsString || path.ownedPointsAsString;
         this.SetPath(str_path, this.m_sDotColor === this.COLOR_RED ? true : false, false, path.iId);
         var points = owned.split(" ");
         var point_status = this.m_sDotColor === this.COLOR_RED ? StatusEnum.POINT_OWNED_BY_RED : StatusEnum.POINT_OWNED_BY_BLUE;
@@ -1617,8 +1619,10 @@ var InkBallGame = function () {
       this.ShowMobileStatus('Win situation');
       this.m_bHandlingEvent = false;
       var encodedMsg = WinCommand.Format(win);
+      var status = win.Status || win.status;
+      var winningPlayerId = win.WinningPlayerId || win.winningPlayerId;
 
-      if ((win.Status === WinStatusEnum.RED_WINS || win.Status === WinStatusEnum.GREEN_WINS) && win.WinningPlayerId > 0 || win.Status === WinStatusEnum.DRAW_WIN) {
+      if ((status === WinStatusEnum.RED_WINS || status === WinStatusEnum.GREEN_WINS) && winningPlayerId > 0 || status === WinStatusEnum.DRAW_WIN) {
         alert(encodedMsg === '' ? 'Game won!' : encodedMsg);
         window.location.href = "Games";
       }

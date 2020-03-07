@@ -61,8 +61,9 @@ class InkBallPointViewModel extends DtoMsg {
 
 	static Format(sUser, point) {
 		let msg = '(' + point.iX + ',' + point.iY + ' - ';// + point.Status;
+		const status = point.Status || point.status;
 
-		switch (point.Status) {
+		switch (status) {
 			case StatusEnum.POINT_FREE_RED:
 				msg += 'red';
 				break;
@@ -108,7 +109,7 @@ class InkBallPathViewModel extends DtoMsg {
 	GetKind() { return CommandKindEnum.PATH; }
 
 	static Format(sUser, path) {
-		let msg = `(${path.PointsAsString}) [${path.OwnedPointsAsString}]`;
+		let msg = `(${path.PointsAsString || path.pointsAsString}) [${path.OwnedPointsAsString || path.ownedPointsAsString}]`;
 
 		return `${sUser} places ${msg} path`;
 	}
@@ -136,7 +137,7 @@ class PlayerJoiningCommand extends DtoMsg {
 	GetKind() { return CommandKindEnum.PLAYER_JOINING; }
 
 	static Format(join) {
-		return join.Message;
+		return join.Message || join.message;
 	}
 }
 
@@ -152,7 +153,7 @@ class PlayerSurrenderingCommand extends DtoMsg {
 	GetKind() { return CommandKindEnum.PLAYER_SURRENDER; }
 
 	static Format(surrender) {
-		return surrender.Message;
+		return surrender.Message || surrender.message;
 	}
 }
 
@@ -166,7 +167,7 @@ class PingCommand extends DtoMsg {
 	GetKind() { return CommandKindEnum.PING; }
 
 	static Format(sUser, ping) {
-		let txt = ping.Message;
+		let txt = ping.Message || ping.message;
 
 		return sUser + " says '" + txt + "'";
 	}
@@ -185,12 +186,13 @@ class WinCommand extends DtoMsg {
 
 	static Format(win) {
 		let msg = '';
-		switch (win.Status) {
+		const status = win.Status || win.status;
+		switch (status) {
 			case WinStatusEnum.RED_WINS:
 				msg = 'red.';
 				break;
 			case WinStatusEnum.GREEN_WINS:
-				msg = 'green.';
+				msg = 'blue.';
 				break;
 			case WinStatusEnum.NO_WIN:
 				msg = 'no one!';
@@ -226,7 +228,7 @@ class PlayerPointsAndPathsDTO extends DtoMsg {
 	GetKind() { return CommandKindEnum.POINTS_AND_PATHS; }
 
 	static Deserialize(ppDTO) {
-		const serialized = '{ "Points": ' + ppDTO.Points + ', "Paths": ' + ppDTO.Paths + ' }';
+		const serialized = `{ "Points": ${ppDTO.Points || ppDTO.points}, "Paths": ${ppDTO.Paths || ppDTO.paths} }`;
 		const path_and_point = JSON.parse(serialized);
 		return path_and_point;
 	}
@@ -668,7 +670,7 @@ class InkBallGame {
 		}.bind(this));
 
 		this.g_SignalRConnection.on("ServerToClientPath", function (dto) {
-			if (Object.prototype.hasOwnProperty.call(dto, 'PointsAsString')) {
+			if (Object.prototype.hasOwnProperty.call(dto, 'PointsAsString') || Object.prototype.hasOwnProperty.call(dto, 'pointsAsString')) {
 				let path = dto;
 
 				const user = this.m_Player2Name.innerHTML;
@@ -681,7 +683,7 @@ class InkBallGame {
 				this.ReceivedPathProcessing(path);
 				this.NotifyBrowser('New Path', encodedMsg);
 			}
-			else if (Object.prototype.hasOwnProperty.call(dto, 'WinningPlayerId')) {
+			else if (Object.prototype.hasOwnProperty.call(dto, 'WinningPlayerId') || Object.prototype.hasOwnProperty.call(dto, 'winningPlayerId')) {
 				let win = dto;
 				let encodedMsg = WinCommand.Format(win);
 
@@ -707,7 +709,7 @@ class InkBallGame {
 
 			if (this.m_SurrenderButton !== null) {
 				if (join.OtherPlayerName !== '') {
-					this.m_Player2Name.innerHTML = join.OtherPlayerName;
+					this.m_Player2Name.innerHTML = join.OtherPlayerName || join.otherPlayerName;
 					this.m_SurrenderButton.value = 'surrender';
 					this.ShowMobileStatus('Your move');
 				}
@@ -1259,11 +1261,11 @@ class InkBallGame {
 
 				this.g_SignalRConnection.invoke("ClientToServerPath", payload).then(function (dto) {
 
-					if (Object.prototype.hasOwnProperty.call(dto, 'WinningPlayerId')) {
+					if (Object.prototype.hasOwnProperty.call(dto, 'WinningPlayerId') || Object.prototype.hasOwnProperty.call(dto, 'winningPlayerId')) {
 						let win = dto;
 						this.ReceivedWinProcessing(win);
 					}
-					else if (Object.prototype.hasOwnProperty.call(dto, 'PointsAsString')) {
+					else if (Object.prototype.hasOwnProperty.call(dto, 'PointsAsString') || Object.prototype.hasOwnProperty.call(dto, 'pointsAsString')) {
 						let path = dto;
 						this.ReceivedPathProcessing(path);
 					}
@@ -1316,7 +1318,7 @@ class InkBallGame {
 	}
 
 	ReceivedPointProcessing(point) {
-		let x = point.iX, y = point.iY, iStatus = point.Status;
+		let x = point.iX, y = point.iY, iStatus = point.Status || point.status;
 
 
 		this.SetPoint(x, y, iStatus, point.iPlayerId);
@@ -1359,7 +1361,7 @@ class InkBallGame {
 	ReceivedPathProcessing(path) {
 		if (this.g_iPlayerID !== path.iPlayerId) {
 
-			const str_path = path.PointsAsString, owned = path.OwnedPointsAsString;
+			const str_path = path.PointsAsString || path.pointsAsString, owned = path.OwnedPointsAsString || path.ownedPointsAsString;
 
 			this.SetPath(str_path,
 				(this.m_sDotColor === this.COLOR_RED ? true : false), false, path.iId/*real DB id*/);
@@ -1434,13 +1436,14 @@ class InkBallGame {
 		this.m_bHandlingEvent = false;
 
 		let encodedMsg = WinCommand.Format(win);
+		const status = win.Status || win.status;
+		const winningPlayerId = win.WinningPlayerId || win.winningPlayerId;
 
-		if (((win.Status === WinStatusEnum.RED_WINS || win.Status === WinStatusEnum.GREEN_WINS) && win.WinningPlayerId > 0) ||
-			win.Status === WinStatusEnum.DRAW_WIN) {
+		if (((status === WinStatusEnum.RED_WINS || status === WinStatusEnum.GREEN_WINS) && winningPlayerId > 0) ||
+			status === WinStatusEnum.DRAW_WIN) {
 
 			alert(encodedMsg === '' ? 'Game won!' : encodedMsg);
 			window.location.href = "Games";
-
 		}
 	}
 
