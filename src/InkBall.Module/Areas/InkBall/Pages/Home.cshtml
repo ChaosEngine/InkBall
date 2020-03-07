@@ -20,7 +20,7 @@
 </div>
 
 <div class="container inkhome">
-	<div class="row" role="group" aria-label="Vertical button group">
+	<div class="row" role="group" aria-label="Game menu">
 		<form method='post' class="order-last order-sm-first pr-md-2 btn-group-vertical was-validated">
 		</form>
 		<div class="order-first order-sm-last pb-2 pb-md-0">
@@ -76,7 +76,7 @@
 			//new game
 			innerForm +=
 				"<input type='submit' name='action' value='New game' class='btn btn-primary btn-lg rounded-top' />" +
-				"<select name='GameType' id='GameType' class='custom-select' required>" +
+				"<div class='w-100'><select name='GameType' id='GameType' class='custom-select' required>" +
 					"<option value='' selected='selected'>Choose game type</option>" +
 					"<optgroup label='Game types'>" +
 						"<option value='0'>First capture wins</option>" +
@@ -85,9 +85,9 @@
 						"<option value='3'>Advantage of 5 paths wins</option>" +
 					"</optgroup>" +
 				"</select>" +
-				"<div class='invalid-feedback'>Invalid game type</div>" +
+				"<div class='invalid-feedback'>Invalid game type</div></div>" +
 
-				"<select name='BoardSize' id='BoardSize' class='custom-select' required>" +
+				"<div class='w-100'><select name='BoardSize' id='BoardSize' class='custom-select' required>" +
 					"<option value='' selected='selected'>Choose board size</option>" +
 					"<optgroup label='Board sizes'>" +
 						"<option value='20'>20 x 26</option>" +
@@ -95,7 +95,12 @@
 						"<option value='64'>64 x 64</option>" +
 					"</optgroup>" +
 				"</select>" +
-				"<div class='invalid-feedback'>Invalid bard size</div>";
+				"<div class='invalid-feedback'>Invalid board size</div></div>" +
+
+				"<div class='form-group custom-control custom-switch w-100'>" +
+					"<input type='checkbox' class='custom-control-input' name='CpuOponent' id='CpuOponent' />" +
+					"<label class='custom-control-label' for='CpuOponent'>Play against CPU</label>" +
+				"</div>";
 		}
 		const logoutPath = '@commonUIConfigureOptions.Value.LogoutPath';
 

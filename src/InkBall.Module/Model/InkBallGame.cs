@@ -27,7 +27,7 @@ namespace InkBall.Module.Model
 		Player Player1 { get; set; }
 		Player Player2 { get; set; }
 		DateTime TimeStamp { get; set; }
-		bool CpuOponent { get; set; }
+		bool CpuOponent { get; }
 		bool IsThisPlayer1();
 		Player GetPlayer();
 		Player GetOtherPlayer();
@@ -67,7 +67,7 @@ namespace InkBall.Module.Model
 
 		public bool IsPlayer1Active() => this.bIsPlayer1Active;
 
-		public bool CpuOponent { get; set; }
+		public bool CpuOponent => iPlayer2Id.HasValue && iPlayer2Id == -1;
 
 		public bool IsThisPlayerActive()
 		{

@@ -194,9 +194,9 @@ namespace InkBall.Module.Model
 					.HasColumnName("iGridSize")
 					.HasDefaultValue(16);
 
-				entity.Property(e => e.CpuOponent)
-					.HasColumnName("CpuOponent")
-					.HasDefaultValue(false);
+				// entity.Property(e => e.CpuOponent)
+				// 	.HasColumnName("CpuOponent")
+				// 	.HasDefaultValue(false);
 
 				entity.Property(e => e.iPlayer1Id).HasColumnName("iPlayer1ID");
 
@@ -463,7 +463,7 @@ namespace InkBall.Module.Model
 		#region Business logic methods
 
 		public async Task<InkBallGame> CreateNewGameFromExternalUserIDAsync(string sPlayer1ExternaUserID, InkBallGame.GameStateEnum gameState, InkBallGame.GameTypeEnum gameType,
-			int gridSize, int width, int height, bool bIsPlayer1Active = true, CancellationToken token = default)
+			int gridSize, int width, int height, bool cpuOponent = false, CancellationToken token = default)
 		{
 			try
 			{
@@ -478,8 +478,9 @@ namespace InkBall.Module.Model
 			}
 
 
-
-			int game_id = await PrivInkBallGameInsertAsync(null, sPlayer1ExternaUserID, null, null, gridSize, width, height, bIsPlayer1Active, gameState, gameType);
+			bool bIsPlayer1Active = cpuOponent;
+			int game_id = await PrivInkBallGameInsertAsync(null, sPlayer1ExternaUserID, gridSize, width, height, bIsPlayer1Active,
+				gameState, gameType, cpuOponent);
 
 			if (game_id <= -1)
 				throw new ArgumentNullException(nameof(game_id), "Could not create new game");
@@ -492,9 +493,8 @@ namespace InkBall.Module.Model
 			//
 			async Task<int> PrivInkBallGameInsertAsync(
 				int? iPlayer1ID, string iPlayer1ExternalUserID,
-				int? iPlayer2ID, string iPlayer2ExternalUserID,
 				int iGridSize, int iBoardWidth, int iBoardHeight, bool bIsPlayer1ActiveHere,
-				InkBallGame.GameStateEnum GameState, InkBallGame.GameTypeEnum GameType)
+				InkBallGame.GameStateEnum GameState, InkBallGame.GameTypeEnum GameType, bool cpuOponent)
 			{
 				var cp1_query = from cp1 in this.InkBallPlayer//.Include(u => u.User)
 								where ((!iPlayer1ID.HasValue || cp1.iId == iPlayer1ID.Value)
@@ -506,16 +506,18 @@ namespace InkBall.Module.Model
 								select (int?)cp1.iId;
 				int? p1 = await cp1_query.FirstOrDefaultAsync(token);
 
-				var cp2_query = from cp2 in this.InkBallPlayer//.Include(u => u.User)
-								where ((!iPlayer2ID.HasValue || cp2.iId == iPlayer2ID.Value)
-								&& (string.IsNullOrEmpty(iPlayer2ExternalUserID) || cp2.User.sExternalId == iPlayer2ExternalUserID)
-								&& (iPlayer2ID.HasValue || !string.IsNullOrEmpty(iPlayer2ExternalUserID)))
-								&& !InkBallGame.Any(tmp => (tmp.iPlayer1Id == cp2.iId || tmp.iPlayer2Id == cp2.iId)
-									&& (ActiveVisibleGameStates.Contains(tmp.GameState)))
-
-								select (int?)cp2.iId;
-				int? p2 = await cp2_query.FirstOrDefaultAsync(token);
-
+				int? p2;
+				if (cpuOponent == true)
+				{
+					var cp2_query = from cp2 in this.InkBallPlayer//.Include(u => u.User)
+									where cp2.iId == -1 && cp2.iUserId == -1
+									select (int?)cp2.iId;
+					p2 = await cp2_query.FirstOrDefaultAsync(token);
+					if (p2 == null)
+						throw new ArgumentNullException(nameof(game_id), "CPU player not found");
+				}
+				else
+					p2 = null;
 
 				//check for proper IDs
 				if (p1.HasValue/* || p2.HasValue*/)
@@ -535,7 +537,7 @@ namespace InkBall.Module.Model
 						GameType = gameType,
 						GameState = gameState,
 						//TimeStamp = DateTime.Now,
-						CreateTime = DateTime.Now,
+						CreateTime = DateTime.Now
 					};
 					await InkBallGame.AddAsync(gm, token);
 

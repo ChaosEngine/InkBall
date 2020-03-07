@@ -34,7 +34,8 @@ namespace InkBall.Module.Pages
 			// Message = "start1ng info end0";
 		}
 
-		public async Task<IActionResult> OnPostAsync(string action, string gameType, InkBallGame.BoardSizeEnum boardSize)
+		public async Task<IActionResult> OnPostAsync(string action, string gameType, InkBallGame.BoardSizeEnum boardSize,
+			string cpuOponent)
 		{
 			await LoadUserPlayerAndGameAsync();
 
@@ -99,13 +100,28 @@ namespace InkBall.Module.Pages
 							msg = "Wrong board size";
 							break;
 						}
+						bool bCpuOponent;
+						switch (cpuOponent)
+						{
+							case "on":
+							case "1":
+							case "checked":
+								bCpuOponent = true;
+								break;
+							case "off":
+							case "0":
+							case "":
+							default:
+								bCpuOponent = false;
+								break;
+						}
 
 						using (var trans = await _dbContext.Database.BeginTransactionAsync(token))
 						{
 							try
 							{
 								var dbGame = await _dbContext.CreateNewGameFromExternalUserIDAsync(GameUser.sExternalId, InkBallGame.GameStateEnum.AWAITING,
-									selectedGameType, grid_size, width, height, true, token);
+									selectedGameType, grid_size, width, height, bCpuOponent, token);
 
 								trans.Commit();
 								return Redirect("Index");

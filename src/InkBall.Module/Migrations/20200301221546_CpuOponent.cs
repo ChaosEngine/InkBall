@@ -7,11 +7,11 @@ namespace InkBall.Module.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<bool>(
-                name: "CpuOponent",
-                table: "InkBallGame",
-                nullable: false,
-                defaultValue: false);
+            // migrationBuilder.AddColumn<bool>(
+            //     name: "CpuOponent",
+            //     table: "InkBallGame",
+            //     nullable: false,
+            //     defaultValue: false);
 
             migrationBuilder.InsertData(
                 table: "InkBallUsers",
@@ -26,9 +26,9 @@ namespace InkBall.Module.Migrations
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "CpuOponent",
-                table: "InkBallGame");
+            // migrationBuilder.DropColumn(
+            //     name: "CpuOponent",
+            //     table: "InkBallGame");
         }
     }
 }

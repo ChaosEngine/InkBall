@@ -74,10 +74,10 @@ namespace InkBall.Module.Migrations
 				b.Property<int?>("iPlayer2Id")
 					.HasColumnName("iPlayer2ID");
 
-				b.Property<bool>("CpuOponent")
-					.ValueGeneratedOnAdd()
-					.HasColumnName("CpuOponent")
-					.HasDefaultValue(0);
+				// b.Property<bool>("CpuOponent")
+				// 	.ValueGeneratedOnAdd()
+				// 	.HasColumnName("CpuOponent")
+				// 	.HasDefaultValue(0);
 
 				b.HasKey("iId");
 

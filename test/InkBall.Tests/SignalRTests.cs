@@ -671,7 +671,7 @@ namespace InkBall.Tests
 				//Arrange
 				//Act
 				var new_game = await db.CreateNewGameFromExternalUserIDAsync("xxxxx", InkBallGame.GameStateEnum.AWAITING,
-					InkBallGame.GameTypeEnum.FIRST_CAPTURE, 16, 20, 26, true, token);
+					InkBallGame.GameTypeEnum.FIRST_CAPTURE, 16, 20, 26, false, token);
 				//Assert
 				Assert.NotNull(new_game);
 				Assert.NotNull(new_game.Player1);
