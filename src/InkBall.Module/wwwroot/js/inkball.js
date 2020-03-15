@@ -417,6 +417,8 @@ class InkBallGame {
 
 		this.g_iGameID = null;
 		this.g_iPlayerID = null;
+		this.m_iOtherPlayerId = null;
+		this.m_bIsCPUGame = false;
 		this.GameType = GameTypeEnum[gameType];
 		this.iConnErrCount = 0;
 		this.iExponentialBackOffMillis = 2000;
@@ -642,15 +644,18 @@ class InkBallGame {
 	 * Start connection to SignalR
 	 * @param {number} iGameID ID of a game
 	 * @param {number} iPlayerID player ID
+	 * @param {number} iOtherPlayerID player ID
 	 * @param {boolean} loadPointsAndPathsFromSignalR load points and path thriugh SignalR
 	 * @param {string} sMsgListSel ul html element selector
 	 * @param {string} sMsgSendButtonSel input button html element selector
 	 * @param {string} sMsgInputSel input textbox html element selector
 	 */
-	StartSignalRConnection(iGameID, iPlayerID, loadPointsAndPathsFromSignalR, sMsgListSel, sMsgSendButtonSel, sMsgInputSel) {
+	StartSignalRConnection(iGameID, iPlayerID, iOtherPlayerID, loadPointsAndPathsFromSignalR, sMsgListSel, sMsgSendButtonSel, sMsgInputSel) {
 		if (this.g_SignalRConnection === null) return;
 		this.g_iGameID = iGameID;
 		this.g_iPlayerID = iPlayerID;
+		this.m_iOtherPlayerId = iOtherPlayerID;
+		this.m_bIsCPUGame = this.m_iOtherPlayerId === -1;
 		this.m_sMsgInputSel = sMsgInputSel;
 		this.m_sMsgSendButtonSel = sMsgSendButtonSel;
 		this.m_bPointsAndPathsLoaded = !loadPointsAndPathsFromSignalR;
@@ -700,8 +705,9 @@ class InkBallGame {
 		}.bind(this));
 
 		this.g_SignalRConnection.on("ServerToClientPlayerJoin", function (join) {
-
-			let encodedMsg = PlayerJoiningCommand.Format(join);
+			const iOtherPlayerId = join.OtherPlayerId || join.otherPlayerId;
+			this.m_iOtherPlayerId = iOtherPlayerId;
+			const encodedMsg = PlayerJoiningCommand.Format(join);
 
 			let li = document.createElement("li");
 			li.innerHTML = `<strong class="text-primary">${encodedMsg}</strong>`;
@@ -810,27 +816,29 @@ class InkBallGame {
 			this.NotifyBrowser('User ' + user + ' started drawing new path', encodedMsg);
 		}.bind(this));
 
-		document.querySelector(this.m_sMsgSendButtonSel).addEventListener("click", function (event) {
-			event.preventDefault();
+		if (false === this.m_bIsCPUGame) {
+			document.querySelector(this.m_sMsgSendButtonSel).addEventListener("click", function (event) {
+				event.preventDefault();
 
-			let encodedMsg = document.querySelector(this.m_sMsgInputSel).value.trim();
-			if (encodedMsg === '') return;
+				let encodedMsg = document.querySelector(this.m_sMsgInputSel).value.trim();
+				if (encodedMsg === '') return;
 
-			let ping = new PingCommand(encodedMsg);
+				let ping = new PingCommand(encodedMsg);
 
-			this.SendAsyncData(ping);
+				this.SendAsyncData(ping);
 
-		}.bind(this), false);
+			}.bind(this), false);
 
-		// Execute a function when the user releases a key on the keyboard
-		document.querySelector(this.m_sMsgInputSel).addEventListener("keyup", function (event) {
-			event.preventDefault();// Cancel the default action, if needed
+			// Execute a function when the user releases a key on the keyboard
+			document.querySelector(this.m_sMsgInputSel).addEventListener("keyup", function (event) {
+				event.preventDefault();// Cancel the default action, if needed
 
-			if (event.keyCode === 13) {// Number 13 is the "Enter" key on the keyboard
-				// Trigger the button element with a click
-				document.querySelector(this.m_sMsgSendButtonSel).click();
-			}
-		}.bind(this), false);
+				if (event.keyCode === 13) {// Number 13 is the "Enter" key on the keyboard
+					// Trigger the button element with a click
+					document.querySelector(this.m_sMsgSendButtonSel).click();
+				}
+			}.bind(this), false);
+		}
 
 		this.Connect();
 	}
@@ -1930,10 +1938,10 @@ class InkBallGame {
 			this.m_Screen.onmouseup = this.OnMouseUp.bind(this);
 			this.m_Screen.onmouseleave = this.OnMouseLeave.bind(this);
 
-			//this.m_DrawMode.onclick = this.OnDrawModeClick.bind(this);
 			this.m_CancelPath.onclick = this.OnCancelClick.bind(this);
 			this.m_StopAndDraw.onclick = this.OnStopAndDraw.bind(this);
-			document.querySelector(this.m_sMsgInputSel).disabled = '';
+			if (false === this.m_bIsCPUGame)
+				document.querySelector(this.m_sMsgInputSel).disabled = '';
 			this.m_SurrenderButton.disabled = '';
 
 			if (this.m_Player2Name.innerHTML === '???') {

@@ -558,6 +558,8 @@ var InkBallGame = function () {
 
     this.g_iGameID = null;
     this.g_iPlayerID = null;
+    this.m_iOtherPlayerId = null;
+    this.m_bIsCPUGame = false;
     this.GameType = GameTypeEnum[gameType];
     this.iConnErrCount = 0;
     this.iExponentialBackOffMillis = 2000;
@@ -879,10 +881,12 @@ var InkBallGame = function () {
     }
   }, {
     key: "StartSignalRConnection",
-    value: function StartSignalRConnection(iGameID, iPlayerID, loadPointsAndPathsFromSignalR, sMsgListSel, sMsgSendButtonSel, sMsgInputSel) {
+    value: function StartSignalRConnection(iGameID, iPlayerID, iOtherPlayerID, loadPointsAndPathsFromSignalR, sMsgListSel, sMsgSendButtonSel, sMsgInputSel) {
       if (this.g_SignalRConnection === null) return;
       this.g_iGameID = iGameID;
       this.g_iPlayerID = iPlayerID;
+      this.m_iOtherPlayerId = iOtherPlayerID;
+      this.m_bIsCPUGame = this.m_iOtherPlayerId === -1;
       this.m_sMsgInputSel = sMsgInputSel;
       this.m_sMsgSendButtonSel = sMsgSendButtonSel;
       this.m_bPointsAndPathsLoaded = !loadPointsAndPathsFromSignalR;
@@ -919,6 +923,8 @@ var InkBallGame = function () {
         } else throw new Error("ServerToClientPath bad GetKind!");
       }.bind(this));
       this.g_SignalRConnection.on("ServerToClientPlayerJoin", function (join) {
+        var iOtherPlayerId = join.OtherPlayerId || join.otherPlayerId;
+        this.m_iOtherPlayerId = iOtherPlayerId;
         var encodedMsg = PlayerJoiningCommand.Format(join);
         var li = document.createElement("li");
         li.innerHTML = "<strong class=\"text-primary\">".concat(encodedMsg, "</strong>");
@@ -999,20 +1005,24 @@ var InkBallGame = function () {
         document.querySelector(sMsgListSel).appendChild(li);
         this.NotifyBrowser('User ' + user + ' started drawing new path', encodedMsg);
       }.bind(this));
-      document.querySelector(this.m_sMsgSendButtonSel).addEventListener("click", function (event) {
-        event.preventDefault();
-        var encodedMsg = document.querySelector(this.m_sMsgInputSel).value.trim();
-        if (encodedMsg === '') return;
-        var ping = new PingCommand(encodedMsg);
-        this.SendAsyncData(ping);
-      }.bind(this), false);
-      document.querySelector(this.m_sMsgInputSel).addEventListener("keyup", function (event) {
-        event.preventDefault();
 
-        if (event.keyCode === 13) {
-          document.querySelector(this.m_sMsgSendButtonSel).click();
-        }
-      }.bind(this), false);
+      if (false === this.m_bIsCPUGame) {
+        document.querySelector(this.m_sMsgSendButtonSel).addEventListener("click", function (event) {
+          event.preventDefault();
+          var encodedMsg = document.querySelector(this.m_sMsgInputSel).value.trim();
+          if (encodedMsg === '') return;
+          var ping = new PingCommand(encodedMsg);
+          this.SendAsyncData(ping);
+        }.bind(this), false);
+        document.querySelector(this.m_sMsgInputSel).addEventListener("keyup", function (event) {
+          event.preventDefault();
+
+          if (event.keyCode === 13) {
+            document.querySelector(this.m_sMsgSendButtonSel).click();
+          }
+        }.bind(this), false);
+      }
+
       this.Connect();
     }
   }, {
@@ -2059,7 +2069,7 @@ var InkBallGame = function () {
         this.m_Screen.onmouseleave = this.OnMouseLeave.bind(this);
         this.m_CancelPath.onclick = this.OnCancelClick.bind(this);
         this.m_StopAndDraw.onclick = this.OnStopAndDraw.bind(this);
-        document.querySelector(this.m_sMsgInputSel).disabled = '';
+        if (false === this.m_bIsCPUGame) document.querySelector(this.m_sMsgInputSel).disabled = '';
         this.m_SurrenderButton.disabled = '';
 
         if (this.m_Player2Name.innerHTML === '???') {

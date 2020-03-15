@@ -120,7 +120,7 @@ namespace InkBall.Module.Pages
 						{
 							try
 							{
-								var dbGame = await _dbContext.CreateNewGameFromExternalUserIDAsync(GameUser.sExternalId, InkBallGame.GameStateEnum.AWAITING,
+								var dbGame = await _dbContext.CreateNewGameFromExternalUserIDAsync(GameUser.sExternalId,
 									selectedGameType, grid_size, width, height, bCpuOponent, token);
 
 								trans.Commit();

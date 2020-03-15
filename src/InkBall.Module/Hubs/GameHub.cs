@@ -209,6 +209,10 @@ namespace InkBall.Module.Hubs
 						throw new ArgumentException("both game players ar the same");
 					other_Player = otherDbPlayer;
 					other_UserIdentifier = otherDbPlayer.User.sExternalId;
+					if (string.IsNullOrEmpty(other_UserIdentifier) && otherDbPlayer.iId == -1 && otherDbPlayer.iUserId == -1)
+					{
+						other_UserIdentifier = thisUserIdentifier;
+					}
 				}
 				else
 				{
@@ -300,9 +304,10 @@ namespace InkBall.Module.Hubs
 
 		private async Task OtherPlayerConnectNotification(CancellationToken token)
 		{
-			await LoadGameAndPlayerStructures(token);
 			try
 			{
+				await LoadGameAndPlayerStructures(token);
+
 				if (ThisGame == null || ThisPlayer == null || OtherPlayer == null || string.IsNullOrEmpty(OtherUserIdentifier)
 					|| string.IsNullOrEmpty(ThisUserName))
 					return;
@@ -321,9 +326,10 @@ namespace InkBall.Module.Hubs
 			if (exception != null)
 				_logger.LogInformation(exception, nameof(OnDisconnectedAsync));
 
-			await LoadGameAndPlayerStructures(token);
 			try
 			{
+				await LoadGameAndPlayerStructures(token);
+
 				if (ThisGame == null || ThisPlayer == null || OtherPlayer == null || string.IsNullOrEmpty(OtherUserIdentifier)
 					|| string.IsNullOrEmpty(ThisUserName))
 					return;

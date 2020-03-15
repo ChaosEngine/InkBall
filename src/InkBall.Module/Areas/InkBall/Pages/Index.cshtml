@@ -95,6 +95,7 @@
 		document.getElementById('gameID').innerHTML = iGameID;
 		document.querySelector(".container .inkgame form > input[type='hidden'][name='GameID']").value = iGameID;
 		const iPlayerID = @Model.Player.iId;
+		const iOtherPlayerID = parseInt("@Model.Game.GetOtherPlayer()?.iId") || null;
 		document.getElementById('playerID').innerHTML = iPlayerID;
 		const boardSize = { width: @Model.Game.iBoardWidth, height: @Model.Game.iBoardHeight };
 		const bPlayingWithRed = JSON.parse('@Model.Game.IsThisPlayerPlayingWithRed()'.toLowerCase());
@@ -114,7 +115,7 @@
 		@if(Model.PlayerPointsAndPaths.Points != null)
 		{
 		@:const loadPointsAndPathsFromSignalR = false;
-		@:game.StartSignalRConnection(iGameID, iPlayerID, loadPointsAndPathsFromSignalR, '#messagesList', '#sendButton', '#messageInput');
+		@:game.StartSignalRConnection(iGameID, iPlayerID, iOtherPlayerID, loadPointsAndPathsFromSignalR, '#messagesList', '#sendButton', '#messageInput');
 		@:game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw');
 
 		@:game.SetAllPoints(@Model.PointsAsJavaScriptArray);
@@ -123,12 +124,12 @@
 		else
 		{
 		@:const loadPointsAndPathsFromSignalR = true;
-		@:game.StartSignalRConnection(iGameID, iPlayerID, loadPointsAndPathsFromSignalR, '#messagesList', '#sendButton', '#messageInput');
+		@:game.StartSignalRConnection(iGameID, iPlayerID, iOtherPlayerID, loadPointsAndPathsFromSignalR, '#messagesList', '#sendButton', '#messageInput');
 		@:game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw');
 		}
 		
 		//alert('a QQ');
-		$('.whichColor').css('color', bPlayingWithRed ? "red" : "blue");
+		document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
 		CountPointsDebug("#debug2");
 	});
 

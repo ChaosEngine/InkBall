@@ -115,7 +115,7 @@ namespace InkBall.Module.Pages
 												_logger.LogError(ex.Message);
 											}
 										},
-										Tuple.Create(new_game.GetOtherPlayer()?.User?.sExternalId, new_game.GetOtherPlayer()?.iId, this.GameUser.UserName),
+										Tuple.Create(new_game.GetOtherPlayer()?.User?.sExternalId, new_game.GetPlayer()?.iId, this.GameUser.UserName),
 										token);
 									}
 
@@ -203,7 +203,7 @@ namespace InkBall.Module.Pages
 						{
 							try
 							{
-								new_game = await _dbContext.CreateNewGameFromExternalUserIDAsync(sExternalUserID, InkBallGame.GameStateEnum.AWAITING,
+								new_game = await _dbContext.CreateNewGameFromExternalUserIDAsync(sExternalUserID,
 									selectedGameType, grid_size, width, height, bCpuOponent, token);
 
 								trans.Commit();

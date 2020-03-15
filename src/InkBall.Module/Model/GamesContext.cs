@@ -462,7 +462,7 @@ namespace InkBall.Module.Model
 
 		#region Business logic methods
 
-		public async Task<InkBallGame> CreateNewGameFromExternalUserIDAsync(string sPlayer1ExternaUserID, InkBallGame.GameStateEnum gameState, InkBallGame.GameTypeEnum gameType,
+		public async Task<InkBallGame> CreateNewGameFromExternalUserIDAsync(string sPlayer1ExternaUserID, InkBallGame.GameTypeEnum gameType,
 			int gridSize, int width, int height, bool cpuOponent = false, CancellationToken token = default)
 		{
 			try
@@ -479,6 +479,7 @@ namespace InkBall.Module.Model
 
 
 			bool bIsPlayer1Active = cpuOponent;
+			GameStateEnum gameState = cpuOponent ? GameStateEnum.ACTIVE : GameStateEnum.AWAITING;
 			int game_id = await PrivInkBallGameInsertAsync(null, sPlayer1ExternaUserID, gridSize, width, height, bIsPlayer1Active,
 				gameState, gameType, cpuOponent);
 
