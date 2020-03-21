@@ -7,6 +7,9 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+#if INCLUDE_ORACLE
+using Oracle.EntityFrameworkCore.Metadata;
+#endif
 
 namespace InkBall.Module.Migrations
 {
