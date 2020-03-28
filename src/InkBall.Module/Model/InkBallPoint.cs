@@ -6,7 +6,12 @@ using System.Text;
 
 namespace InkBall.Module.Model
 {
-	public interface IPoint
+	public interface IBelongingToCPU
+	{
+		bool BelongsToCPU { get; }
+	}
+
+	public interface IPoint : IBelongingToCPU
 	{
 		int iId { get; set; }
 
@@ -39,6 +44,8 @@ namespace InkBall.Module.Model
 		public InkBallPoint.StatusEnum Status { get; set; }
 
 		public int? iEnclosingPathId { get; set; }
+
+		public bool BelongsToCPU => iPlayerId == -1;
 
 		#region Overrides
 

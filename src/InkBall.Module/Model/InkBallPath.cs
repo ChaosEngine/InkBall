@@ -9,7 +9,7 @@ using Microsoft.Extensions.Primitives;
 
 namespace InkBall.Module.Model
 {
-	public interface IPath<Point>
+	public interface IPath<Point> : IBelongingToCPU
 		where Point : IPoint
 	{
 		int iId { get; set; }
@@ -28,6 +28,8 @@ namespace InkBall.Module.Model
 		public string PointsAsString { get; set; }
 
 		public abstract ICollection<Point> InkBallPoint { get; set; }
+
+		public bool BelongsToCPU => iPlayerId == -1;
 
 		/**
 		 * Based on http://www.faqs.org/faqs/graphics/algorithms-faq/

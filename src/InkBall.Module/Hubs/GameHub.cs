@@ -209,6 +209,8 @@ namespace InkBall.Module.Hubs
 						throw new ArgumentException("both game players ar the same");
 					other_Player = otherDbPlayer;
 					other_UserIdentifier = otherDbPlayer.User.sExternalId;
+
+					//Check for other player being CPU player which is treated specially.
 					if (string.IsNullOrEmpty(other_UserIdentifier) && otherDbPlayer.iId == -1 && otherDbPlayer.iUserId == -1)
 					{
 						other_UserIdentifier = thisUserIdentifier;
@@ -385,12 +387,12 @@ namespace InkBall.Module.Hubs
 				{
 					throw new ArgumentException("bad player or game");
 				}
-				if (!ThisGame.IsThisPlayerActive())
+				if (!ThisGame.IsThisPlayerActive(point))
 				{
 					throw new ArgumentException("not your turn");
 				}
 
-				var current_player_color = ThisGame.IsThisPlayerPlayingWithRed() ? InkBallPoint.StatusEnum.POINT_FREE_RED : InkBallPoint.StatusEnum.POINT_FREE_BLUE;
+				var current_player_color = ThisGame.IsThisPlayerPlayingWithRed(point) ? InkBallPoint.StatusEnum.POINT_FREE_RED : InkBallPoint.StatusEnum.POINT_FREE_BLUE;
 
 				if (point == null || point.iGameId != ThisGame.iId || point.Status != current_player_color
 					|| point.iX < 0 || point.iY < 0 || point.iX > ThisGame.iBoardWidth || point.iY > this.ThisGame.iBoardHeight)
@@ -447,7 +449,8 @@ namespace InkBall.Module.Hubs
 					}
 				}
 
-				await Clients.User(OtherUserIdentifier).ServerToClientPoint(new_point);
+				if (!new_point.BelongsToCPU)
+					await Clients.User(OtherUserIdentifier).ServerToClientPoint(new_point);
 
 				return new_point;
 			}

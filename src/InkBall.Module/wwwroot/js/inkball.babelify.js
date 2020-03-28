@@ -1,14 +1,24 @@
 "use strict";
 
+function _createForOfIteratorHelper(o) { if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (o = _unsupportedIterableToArray(o))) { var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var it, normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(n); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
+function _createSuper(Derived) { return function () { var Super = _getPrototypeOf(Derived), result; if (_isNativeReflectConstruct()) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+
 function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
 
 function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
 
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 
@@ -74,6 +84,8 @@ var DtoMsg = function () {
 var InkBallPointViewModel = function (_DtoMsg) {
   _inherits(InkBallPointViewModel, _DtoMsg);
 
+  var _super = _createSuper(InkBallPointViewModel);
+
   function InkBallPointViewModel() {
     var _this;
 
@@ -87,7 +99,7 @@ var InkBallPointViewModel = function (_DtoMsg) {
 
     _classCallCheck(this, InkBallPointViewModel);
 
-    _this = _possibleConstructorReturn(this, _getPrototypeOf(InkBallPointViewModel).call(this));
+    _this = _super.call(this);
     _this.iId = iId;
     _this.iGameId = iGameId;
     _this.iPlayerId = iPlayerId;
@@ -107,7 +119,7 @@ var InkBallPointViewModel = function (_DtoMsg) {
     key: "Format",
     value: function Format(sUser, point) {
       var msg = '(' + point.iX + ',' + point.iY + ' - ';
-      var status = point.Status || point.status;
+      var status = point.Status !== undefined ? point.Status : point.status;
 
       switch (status) {
         case StatusEnum.POINT_FREE_RED:
@@ -152,6 +164,8 @@ var InkBallPointViewModel = function (_DtoMsg) {
 var InkBallPathViewModel = function (_DtoMsg2) {
   _inherits(InkBallPathViewModel, _DtoMsg2);
 
+  var _super2 = _createSuper(InkBallPathViewModel);
+
   function InkBallPathViewModel() {
     var _this2;
 
@@ -163,7 +177,7 @@ var InkBallPathViewModel = function (_DtoMsg2) {
 
     _classCallCheck(this, InkBallPathViewModel);
 
-    _this2 = _possibleConstructorReturn(this, _getPrototypeOf(InkBallPathViewModel).call(this));
+    _this2 = _super2.call(this);
     _this2.iId = iId;
     _this2.iGameId = iGameId;
     _this2.iPlayerId = iPlayerId;
@@ -191,12 +205,14 @@ var InkBallPathViewModel = function (_DtoMsg2) {
 var PlayerJoiningCommand = function (_DtoMsg3) {
   _inherits(PlayerJoiningCommand, _DtoMsg3);
 
+  var _super3 = _createSuper(PlayerJoiningCommand);
+
   function PlayerJoiningCommand(otherPlayerId, otherPlayerName, message) {
     var _this3;
 
     _classCallCheck(this, PlayerJoiningCommand);
 
-    _this3 = _possibleConstructorReturn(this, _getPrototypeOf(PlayerJoiningCommand).call(this));
+    _this3 = _super3.call(this);
     _this3.OtherPlayerId = otherPlayerId;
     _this3.OtherPlayerName = otherPlayerName;
     _this3.Message = message;
@@ -221,12 +237,14 @@ var PlayerJoiningCommand = function (_DtoMsg3) {
 var PlayerSurrenderingCommand = function (_DtoMsg4) {
   _inherits(PlayerSurrenderingCommand, _DtoMsg4);
 
+  var _super4 = _createSuper(PlayerSurrenderingCommand);
+
   function PlayerSurrenderingCommand(otherPlayerId, thisOrOtherPlayerSurrenders, message) {
     var _this4;
 
     _classCallCheck(this, PlayerSurrenderingCommand);
 
-    _this4 = _possibleConstructorReturn(this, _getPrototypeOf(PlayerSurrenderingCommand).call(this));
+    _this4 = _super4.call(this);
     _this4.OtherPlayerId = otherPlayerId;
     _this4.thisOrOtherPlayerSurrenders = thisOrOtherPlayerSurrenders;
     _this4.Message = message;
@@ -251,6 +269,8 @@ var PlayerSurrenderingCommand = function (_DtoMsg4) {
 var PingCommand = function (_DtoMsg5) {
   _inherits(PingCommand, _DtoMsg5);
 
+  var _super5 = _createSuper(PingCommand);
+
   function PingCommand() {
     var _this5;
 
@@ -258,7 +278,7 @@ var PingCommand = function (_DtoMsg5) {
 
     _classCallCheck(this, PingCommand);
 
-    _this5 = _possibleConstructorReturn(this, _getPrototypeOf(PingCommand).call(this));
+    _this5 = _super5.call(this);
     _this5.Message = message;
     return _this5;
   }
@@ -282,6 +302,8 @@ var PingCommand = function (_DtoMsg5) {
 var WinCommand = function (_DtoMsg6) {
   _inherits(WinCommand, _DtoMsg6);
 
+  var _super6 = _createSuper(WinCommand);
+
   function WinCommand() {
     var _this6;
 
@@ -291,7 +313,7 @@ var WinCommand = function (_DtoMsg6) {
 
     _classCallCheck(this, WinCommand);
 
-    _this6 = _possibleConstructorReturn(this, _getPrototypeOf(WinCommand).call(this));
+    _this6 = _super6.call(this);
     _this6.Status = status;
     _this6.WinningPlayerId = winningPlayerId;
     _this6.Message = message;
@@ -307,7 +329,7 @@ var WinCommand = function (_DtoMsg6) {
     key: "Format",
     value: function Format(win) {
       var msg = '';
-      var status = win.Status || win.status;
+      var status = win.Status !== undefined ? win.Status : win.status;
 
       switch (status) {
         case WinStatusEnum.RED_WINS:
@@ -337,10 +359,12 @@ var WinCommand = function (_DtoMsg6) {
 var StopAndDrawCommand = function (_DtoMsg7) {
   _inherits(StopAndDrawCommand, _DtoMsg7);
 
+  var _super7 = _createSuper(StopAndDrawCommand);
+
   function StopAndDrawCommand() {
     _classCallCheck(this, StopAndDrawCommand);
 
-    return _possibleConstructorReturn(this, _getPrototypeOf(StopAndDrawCommand).call(this));
+    return _super7.call(this);
   }
 
   _createClass(StopAndDrawCommand, [{
@@ -361,6 +385,8 @@ var StopAndDrawCommand = function (_DtoMsg7) {
 var PlayerPointsAndPathsDTO = function (_DtoMsg8) {
   _inherits(PlayerPointsAndPathsDTO, _DtoMsg8);
 
+  var _super8 = _createSuper(PlayerPointsAndPathsDTO);
+
   function PlayerPointsAndPathsDTO() {
     var _this7;
 
@@ -369,7 +395,7 @@ var PlayerPointsAndPathsDTO = function (_DtoMsg8) {
 
     _classCallCheck(this, PlayerPointsAndPathsDTO);
 
-    _this7 = _possibleConstructorReturn(this, _getPrototypeOf(PlayerPointsAndPathsDTO).call(this));
+    _this7 = _super8.call(this);
     _this7.Points = points;
     _this7.Paths = paths;
     return _this7;
@@ -395,6 +421,8 @@ var PlayerPointsAndPathsDTO = function (_DtoMsg8) {
 var ApplicationUserSettings = function (_DtoMsg9) {
   _inherits(ApplicationUserSettings, _DtoMsg9);
 
+  var _super9 = _createSuper(ApplicationUserSettings);
+
   function ApplicationUserSettings() {
     var _this8;
 
@@ -402,7 +430,7 @@ var ApplicationUserSettings = function (_DtoMsg9) {
 
     _classCallCheck(this, ApplicationUserSettings);
 
-    _this8 = _possibleConstructorReturn(this, _getPrototypeOf(ApplicationUserSettings).call(this));
+    _this8 = _super9.call(this);
     _this8.DesktopNotifications = desktopNotifications;
     return _this8;
   }
@@ -881,7 +909,7 @@ var InkBallGame = function () {
     }
   }, {
     key: "StartSignalRConnection",
-    value: function StartSignalRConnection(iGameID, iPlayerID, iOtherPlayerID, loadPointsAndPathsFromSignalR, sMsgListSel, sMsgSendButtonSel, sMsgInputSel) {
+    value: function StartSignalRConnection(iGameID, iPlayerID, iOtherPlayerID, loadPointsAndPathsFromSignalR, sMsgListSel, sMsgSendButtonSel, sMsgInputSel, afterConnectionCallback) {
       if (this.g_SignalRConnection === null) return;
       this.g_iGameID = iGameID;
       this.g_iPlayerID = iPlayerID;
@@ -891,24 +919,31 @@ var InkBallGame = function () {
       this.m_sMsgSendButtonSel = sMsgSendButtonSel;
       this.m_bPointsAndPathsLoaded = !loadPointsAndPathsFromSignalR;
       this.g_SignalRConnection.on("ServerToClientPoint", function (point) {
-        var user = this.m_Player2Name.innerHTML;
-        var encodedMsg = InkBallPointViewModel.Format(user, point);
-        var li = document.createElement("li");
-        li.textContent = encodedMsg;
-        document.querySelector(sMsgListSel).appendChild(li);
+        if (this.g_iPlayerID !== point.iPlayerId) {
+          var user = this.m_Player2Name.innerHTML;
+          var encodedMsg = InkBallPointViewModel.Format(user, point);
+          var li = document.createElement("li");
+          li.textContent = encodedMsg;
+          document.querySelector(sMsgListSel).appendChild(li);
+          this.NotifyBrowser('New Point', encodedMsg);
+        }
+
         this.ReceivedPointProcessing(point);
-        this.NotifyBrowser('New Point', encodedMsg);
       }.bind(this));
       this.g_SignalRConnection.on("ServerToClientPath", function (dto) {
         if (Object.prototype.hasOwnProperty.call(dto, 'PointsAsString') || Object.prototype.hasOwnProperty.call(dto, 'pointsAsString')) {
           var path = dto;
-          var user = this.m_Player2Name.innerHTML;
-          var encodedMsg = InkBallPathViewModel.Format(user, path);
-          var li = document.createElement("li");
-          li.textContent = encodedMsg;
-          document.querySelector(sMsgListSel).appendChild(li);
+
+          if (this.g_iPlayerID !== path.iPlayerId) {
+            var user = this.m_Player2Name.innerHTML;
+            var encodedMsg = InkBallPathViewModel.Format(user, path);
+            var li = document.createElement("li");
+            li.textContent = encodedMsg;
+            document.querySelector(sMsgListSel).appendChild(li);
+            this.NotifyBrowser('New Path', encodedMsg);
+          }
+
           this.ReceivedPathProcessing(path);
-          this.NotifyBrowser('New Path', encodedMsg);
         } else if (Object.prototype.hasOwnProperty.call(dto, 'WinningPlayerId') || Object.prototype.hasOwnProperty.call(dto, 'winningPlayerId')) {
           var win = dto;
 
@@ -1023,7 +1058,7 @@ var InkBallGame = function () {
         }.bind(this), false);
       }
 
-      this.Connect();
+      this.Connect().then(afterConnectionCallback);
     }
   }, {
     key: "StopSignalRConnection",
@@ -1176,12 +1211,12 @@ var InkBallGame = function () {
           x,
           y,
           status = StatusEnum.POINT_STARTING;
-      var _iteratorNormalCompletion = true;
-      var _didIteratorError = false;
-      var _iteratorError = undefined;
+
+      var _iterator = _createForOfIteratorHelper(sPoints),
+          _step;
 
       try {
-        for (var _iterator = sPoints[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+        for (_iterator.s(); !(_step = _iterator.n()).done;) {
           var _packed = _step.value;
           p = _packed.split(",");
           x = parseInt(p[0]);
@@ -1201,18 +1236,9 @@ var InkBallGame = function () {
           sDelimiter = " ";
         }
       } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
+        _iterator.e(err);
       } finally {
-        try {
-          if (!_iteratorNormalCompletion && _iterator["return"] != null) {
-            _iterator["return"]();
-          }
-        } finally {
-          if (_didIteratorError) {
-            throw _iteratorError;
-          }
-        }
+        _iterator.f();
       }
 
       p = sPoints[0].split(",");
@@ -1247,12 +1273,11 @@ var InkBallGame = function () {
   }, {
     key: "IsPointBelongingToLine",
     value: function IsPointBelongingToLine(sPoints, iX, iY) {
-      var _iteratorNormalCompletion2 = true;
-      var _didIteratorError2 = false;
-      var _iteratorError2 = undefined;
+      var _iterator2 = _createForOfIteratorHelper(sPoints),
+          _step2;
 
       try {
-        for (var _iterator2 = sPoints[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+        for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
           var packed = _step2.value;
           var pnt = packed.split(",");
           var x = pnt[0],
@@ -1260,18 +1285,9 @@ var InkBallGame = function () {
           if (x === iX && y === iY) return true;
         }
       } catch (err) {
-        _didIteratorError2 = true;
-        _iteratorError2 = err;
+        _iterator2.e(err);
       } finally {
-        try {
-          if (!_iteratorNormalCompletion2 && _iterator2["return"] != null) {
-            _iterator2["return"]();
-          }
-        } finally {
-          if (_didIteratorError2) {
-            throw _iteratorError2;
-          }
-        }
+        _iterator2.f();
       }
 
       return false;
@@ -1332,12 +1348,12 @@ var InkBallGame = function () {
           sDelimiter = "",
           ownedPoints = [],
           pathPoints = [];
-      var _iteratorNormalCompletion3 = true;
-      var _didIteratorError3 = false;
-      var _iteratorError3 = undefined;
+
+      var _iterator3 = _createForOfIteratorHelper(this.m_Points.values()),
+          _step3;
 
       try {
-        for (var _iterator3 = this.m_Points.values()[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+        for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
           var pt = _step3.value;
 
           if (pt !== undefined && pt.$GetFillColor() === sColor && (pt.$GetStatus() === StatusEnum.POINT_FREE_BLUE || pt.$GetStatus() === StatusEnum.POINT_FREE_RED)) {
@@ -1363,18 +1379,9 @@ var InkBallGame = function () {
           }
         }
       } catch (err) {
-        _didIteratorError3 = true;
-        _iteratorError3 = err;
+        _iterator3.e(err);
       } finally {
-        try {
-          if (!_iteratorNormalCompletion3 && _iterator3["return"] != null) {
-            _iterator3["return"]();
-          }
-        } finally {
-          if (_didIteratorError3) {
-            throw _iteratorError3;
-          }
-        }
+        _iterator3.f();
       }
 
       if (sOwnedPoints !== "") {
@@ -1401,29 +1408,20 @@ var InkBallGame = function () {
     value: function IsPointOutsideAllPaths(iX, iY) {
       var xmul = iX * this.m_iGridSizeX,
           ymul = iY * this.m_iGridSizeY;
-      var _iteratorNormalCompletion4 = true;
-      var _didIteratorError4 = false;
-      var _iteratorError4 = undefined;
+
+      var _iterator4 = _createForOfIteratorHelper(this.m_Lines),
+          _step4;
 
       try {
-        for (var _iterator4 = this.m_Lines[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+        for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
           var line = _step4.value;
           var points = line.$GetPointsArray();
           if (false !== this.pnpoly2(points, xmul, ymul)) return false;
         }
       } catch (err) {
-        _didIteratorError4 = true;
-        _iteratorError4 = err;
+        _iterator4.e(err);
       } finally {
-        try {
-          if (!_iteratorNormalCompletion4 && _iterator4["return"] != null) {
-            _iterator4["return"]();
-          }
-        } finally {
-          if (_didIteratorError4) {
-            throw _iteratorError4;
-          }
-        }
+        _iterator4.f();
       }
 
       return true;
@@ -1516,7 +1514,7 @@ var InkBallGame = function () {
     value: function ReceivedPointProcessing(point) {
       var x = point.iX,
           y = point.iY,
-          iStatus = point.Status || point.status;
+          iStatus = point.Status !== undefined ? point.Status : point.status;
       this.SetPoint(x, y, iStatus, point.iPlayerId);
 
       if (this.g_iPlayerID !== point.iPlayerId) {
@@ -1539,6 +1537,7 @@ var InkBallGame = function () {
         this.m_StopAndDraw.disabled = '';
         this.m_StopAndDraw.value = 'Stop and Draw';
         if (this.m_Timer) this.m_Timer.Reset(this.m_TimerOpts);else this.m_Timer = new CountdownTimer(this.m_TimerOpts);
+        if (true === this.m_bIsCPUGame && !this.m_bIsPlayerActive) this.StartCPUCalculation();
       }
 
       this.m_bHandlingEvent = false;
@@ -1553,12 +1552,12 @@ var InkBallGame = function () {
         var points = owned.split(" ");
         var point_status = this.m_sDotColor === this.COLOR_RED ? StatusEnum.POINT_OWNED_BY_RED : StatusEnum.POINT_OWNED_BY_BLUE;
         var sOwnedCol = this.m_sDotColor === this.COLOR_RED ? this.COLOR_OWNED_RED : this.COLOR_OWNED_BLUE;
-        var _iteratorNormalCompletion5 = true;
-        var _didIteratorError5 = false;
-        var _iteratorError5 = undefined;
+
+        var _iterator5 = _createForOfIteratorHelper(points),
+            _step5;
 
         try {
-          for (var _iterator5 = points[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+          for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
             var packed = _step5.value;
             var p = packed.split(",");
             var x = parseInt(p[0]),
@@ -1574,18 +1573,9 @@ var InkBallGame = function () {
             }
           }
         } catch (err) {
-          _didIteratorError5 = true;
-          _iteratorError5 = err;
+          _iterator5.e(err);
         } finally {
-          try {
-            if (!_iteratorNormalCompletion5 && _iterator5["return"] != null) {
-              _iterator5["return"]();
-            }
-          } finally {
-            if (_didIteratorError5) {
-              throw _iteratorError5;
-            }
-          }
+          _iterator5.f();
         }
 
         this.m_bIsPlayerActive = true;
@@ -1629,7 +1619,7 @@ var InkBallGame = function () {
       this.ShowMobileStatus('Win situation');
       this.m_bHandlingEvent = false;
       var encodedMsg = WinCommand.Format(win);
-      var status = win.Status || win.status;
+      var status = win.Status !== undefined ? win.Status : win.status;
       var winningPlayerId = win.WinningPlayerId || win.winningPlayerId;
 
       if ((status === WinStatusEnum.RED_WINS || status === WinStatusEnum.GREEN_WINS) && winningPlayerId > 0 || status === WinStatusEnum.DRAW_WIN) {
@@ -1843,6 +1833,7 @@ var InkBallGame = function () {
           return;
         }
 
+        this.rAF_FrameID = null;
         this.SendAsyncData(this.CreateXMLPutPointRequest(loc_x, loc_y), function () {
           _this14.m_bMouseDown = false;
           _this14.m_bHandlingEvent = false;
@@ -1960,12 +1951,12 @@ var InkBallGame = function () {
         if (this.m_Line !== null) {
           var points = this.m_Line.$GetPointsArray();
           this.m_CancelPath.disabled = 'disabled';
-          var _iteratorNormalCompletion6 = true;
-          var _didIteratorError6 = false;
-          var _iteratorError6 = undefined;
+
+          var _iterator6 = _createForOfIteratorHelper(points),
+              _step6;
 
           try {
-            for (var _iterator6 = points[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
+            for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
               var point = _step6.value;
               var x = point.x,
                   y = point.y;
@@ -1981,18 +1972,9 @@ var InkBallGame = function () {
               }
             }
           } catch (err) {
-            _didIteratorError6 = true;
-            _iteratorError6 = err;
+            _iterator6.e(err);
           } finally {
-            try {
-              if (!_iteratorNormalCompletion6 && _iterator6["return"] != null) {
-                _iterator6["return"]();
-              }
-            } finally {
-              if (_didIteratorError6) {
-                throw _iteratorError6;
-              }
-            }
+            _iterator6.f();
           }
 
           $RemovePolyline(this.m_Line);
@@ -2051,6 +2033,8 @@ var InkBallGame = function () {
       this.m_iGridSizeY = parseInt(Math.ceil(iClientHeight / this.m_BoardSize.height));
       this.m_iGridWidth = parseInt(Math.ceil(iClientWidth / this.m_iGridSizeX));
       this.m_iGridHeight = parseInt(Math.ceil(iClientHeight / this.m_iGridSizeY));
+      this.rAF_StartTimestamp = null;
+      this.rAF_FrameID = null;
       $createSVGVML(this.m_Screen, this.m_Screen.style.width, this.m_Screen.style.height, true);
       this.DisableSelection(this.m_Screen);
 
@@ -2069,7 +2053,7 @@ var InkBallGame = function () {
         this.m_Screen.onmouseleave = this.OnMouseLeave.bind(this);
         this.m_CancelPath.onclick = this.OnCancelClick.bind(this);
         this.m_StopAndDraw.onclick = this.OnStopAndDraw.bind(this);
-        if (false === this.m_bIsCPUGame) document.querySelector(this.m_sMsgInputSel).disabled = '';
+        if (false === this.m_bIsCPUGame) document.querySelector(this.m_sMsgInputSel).disabled = '';else if (!this.m_bIsPlayerActive) this.StartCPUCalculation();
         this.m_SurrenderButton.disabled = '';
 
         if (this.m_Player2Name.innerHTML === '???') {
@@ -2092,6 +2076,44 @@ var InkBallGame = function () {
       } else {
         document.querySelector(sPause).innerHTML = 'back to Game List';
       }
+    }
+  }, {
+    key: "GetRandomInt",
+    value: function GetRandomInt(min, max) {
+      min = Math.ceil(min);
+      max = Math.floor(max);
+      return Math.floor(Math.random() * (max - min)) + min;
+    }
+  }, {
+    key: "FindCPUPoint",
+    value: function FindCPUPoint() {
+      var x = this.GetRandomInt(0, this.m_iGridWidth);
+      var y = this.GetRandomInt(0, this.m_iGridHeight);
+      var cmd = new InkBallPointViewModel(0, this.g_iGameID, -1, x, y, StatusEnum.POINT_FREE_BLUE, 0);
+      return cmd;
+    }
+  }, {
+    key: "rAFCallBack",
+    value: function rAFCallBack(timeStamp) {
+      var _this15 = this;
+
+      if (!this.rAF_StartTimestamp) this.rAF_StartTimestamp = timeStamp;
+      var progress = timeStamp - this.rAF_StartTimestamp;
+      var point = this.FindCPUPoint();
+
+      if (point === null) {
+        if (progress < 2000) this.rAF_FrameID = window.requestAnimationFrame(this.rAFCallBack.bind(this));
+      } else {
+        this.SendAsyncData(point, function () {
+          _this15.m_bMouseDown = false;
+          _this15.m_bHandlingEvent = false;
+        });
+      }
+    }
+  }, {
+    key: "StartCPUCalculation",
+    value: function StartCPUCalculation() {
+      if (this.rAF_FrameID === null) this.rAF_FrameID = window.requestAnimationFrame(this.rAFCallBack.bind(this));
     }
   }]);
 

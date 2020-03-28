@@ -61,7 +61,7 @@ class InkBallPointViewModel extends DtoMsg {
 
 	static Format(sUser, point) {
 		let msg = '(' + point.iX + ',' + point.iY + ' - ';// + point.Status;
-		const status = point.Status || point.status;
+		const status = point.Status !== undefined ? point.Status : point.status;
 
 		switch (status) {
 			case StatusEnum.POINT_FREE_RED:
@@ -186,7 +186,7 @@ class WinCommand extends DtoMsg {
 
 	static Format(win) {
 		let msg = '';
-		const status = win.Status || win.status;
+		const status = win.Status !== undefined ? win.Status : win.status;
 		switch (status) {
 			case WinStatusEnum.RED_WINS:
 				msg = 'red.';
@@ -649,8 +649,10 @@ class InkBallGame {
 	 * @param {string} sMsgListSel ul html element selector
 	 * @param {string} sMsgSendButtonSel input button html element selector
 	 * @param {string} sMsgInputSel input textbox html element selector
+	 * @param {function} afterConnectionCallback after connected callback
 	 */
-	StartSignalRConnection(iGameID, iPlayerID, iOtherPlayerID, loadPointsAndPathsFromSignalR, sMsgListSel, sMsgSendButtonSel, sMsgInputSel) {
+	StartSignalRConnection(iGameID, iPlayerID, iOtherPlayerID, loadPointsAndPathsFromSignalR, sMsgListSel, sMsgSendButtonSel, sMsgInputSel,
+		afterConnectionCallback) {
 		if (this.g_SignalRConnection === null) return;
 		this.g_iGameID = iGameID;
 		this.g_iPlayerID = iPlayerID;
@@ -661,32 +663,34 @@ class InkBallGame {
 		this.m_bPointsAndPathsLoaded = !loadPointsAndPathsFromSignalR;
 
 		this.g_SignalRConnection.on("ServerToClientPoint", function (point) {
+			if (this.g_iPlayerID !== point.iPlayerId) {
+				const user = this.m_Player2Name.innerHTML;
+				let encodedMsg = InkBallPointViewModel.Format(user, point);
 
-			const user = this.m_Player2Name.innerHTML;
-			let encodedMsg = InkBallPointViewModel.Format(user, point);
+				const li = document.createElement("li");
+				li.textContent = encodedMsg;
+				document.querySelector(sMsgListSel).appendChild(li);
 
-			const li = document.createElement("li");
-			li.textContent = encodedMsg;
-			document.querySelector(sMsgListSel).appendChild(li);
-
+				this.NotifyBrowser('New Point', encodedMsg);
+			}
 			this.ReceivedPointProcessing(point);
-			this.NotifyBrowser('New Point', encodedMsg);
 
 		}.bind(this));
 
 		this.g_SignalRConnection.on("ServerToClientPath", function (dto) {
 			if (Object.prototype.hasOwnProperty.call(dto, 'PointsAsString') || Object.prototype.hasOwnProperty.call(dto, 'pointsAsString')) {
 				let path = dto;
+				if (this.g_iPlayerID !== path.iPlayerId) {
+					const user = this.m_Player2Name.innerHTML;
+					let encodedMsg = InkBallPathViewModel.Format(user, path);
 
-				const user = this.m_Player2Name.innerHTML;
-				let encodedMsg = InkBallPathViewModel.Format(user, path);
+					const li = document.createElement("li");
+					li.textContent = encodedMsg;
+					document.querySelector(sMsgListSel).appendChild(li);
 
-				const li = document.createElement("li");
-				li.textContent = encodedMsg;
-				document.querySelector(sMsgListSel).appendChild(li);
-
+					this.NotifyBrowser('New Path', encodedMsg);
+				}
 				this.ReceivedPathProcessing(path);
-				this.NotifyBrowser('New Path', encodedMsg);
 			}
 			else if (Object.prototype.hasOwnProperty.call(dto, 'WinningPlayerId') || Object.prototype.hasOwnProperty.call(dto, 'winningPlayerId')) {
 				let win = dto;
@@ -840,7 +844,7 @@ class InkBallGame {
 			}.bind(this), false);
 		}
 
-		this.Connect();
+		this.Connect().then(afterConnectionCallback);
 	}
 
 	StopSignalRConnection() {
@@ -1326,10 +1330,10 @@ class InkBallGame {
 	}
 
 	ReceivedPointProcessing(point) {
-		let x = point.iX, y = point.iY, iStatus = point.Status || point.status;
-
+		const x = point.iX, y = point.iY, iStatus = point.Status !== undefined ? point.Status : point.status;
 
 		this.SetPoint(x, y, iStatus, point.iPlayerId);
+
 		if (this.g_iPlayerID !== point.iPlayerId) {
 			this.m_bIsPlayerActive = true;
 			this.ShowMobileStatus('Oponent has moved, your turn');
@@ -1362,6 +1366,9 @@ class InkBallGame {
 				this.m_Timer.Reset(this.m_TimerOpts);
 			else
 				this.m_Timer = new CountdownTimer(this.m_TimerOpts);
+
+			if (true === this.m_bIsCPUGame && !this.m_bIsPlayerActive)
+				this.StartCPUCalculation();
 		}
 		this.m_bHandlingEvent = false;
 	}
@@ -1444,7 +1451,7 @@ class InkBallGame {
 		this.m_bHandlingEvent = false;
 
 		let encodedMsg = WinCommand.Format(win);
-		const status = win.Status || win.status;
+		const status = win.Status !== undefined ? win.Status : win.status;
 		const winningPlayerId = win.WinningPlayerId || win.winningPlayerId;
 
 		if (((status === WinStatusEnum.RED_WINS || status === WinStatusEnum.GREEN_WINS) && winningPlayerId > 0) ||
@@ -1659,9 +1666,9 @@ class InkBallGame {
 							this.m_Line = $createPolyline(6, fromx + "," + fromy + " " + tox + "," + toy, this.DRAWING_PATH_COLOR);
 							this.m_CancelPath.disabled = '';
 							// if (p0.$GetStatus() !== StatusEnum.POINT_IN_PATH)
-								p0.$SetStatus(StatusEnum.POINT_STARTING, true);
+							p0.$SetStatus(StatusEnum.POINT_STARTING, true);
 							// if (p1.$GetStatus() !== StatusEnum.POINT_IN_PATH)
-								p1.$SetStatus(StatusEnum.POINT_IN_PATH, true);
+							p1.$SetStatus(StatusEnum.POINT_IN_PATH, true);
 
 							this.m_iLastX = x;
 							this.m_iLastY = y;
@@ -1705,6 +1712,7 @@ class InkBallGame {
 				return;
 			}
 
+			this.rAF_FrameID = null;
 			this.SendAsyncData(this.CreateXMLPutPointRequest(loc_x, loc_y), () => {
 				this.m_bMouseDown = false;
 				this.m_bHandlingEvent = false;
@@ -1786,9 +1794,9 @@ class InkBallGame {
 						this.m_Line = $createPolyline(6, fromx + "," + fromy + " " + tox + "," + toy, this.DRAWING_PATH_COLOR);
 						this.m_CancelPath.disabled = '';
 						// if (p0.$GetStatus() !== StatusEnum.POINT_IN_PATH)
-							p0.$SetStatus(StatusEnum.POINT_STARTING, true);
+						p0.$SetStatus(StatusEnum.POINT_STARTING, true);
 						// if (p1.$GetStatus() !== StatusEnum.POINT_IN_PATH)
-							p1.$SetStatus(StatusEnum.POINT_IN_PATH, true);
+						p1.$SetStatus(StatusEnum.POINT_IN_PATH, true);
 					}
 					this.m_iLastX = x;
 					this.m_iLastY = y;
@@ -1798,7 +1806,7 @@ class InkBallGame {
 				let p1 = this.m_Points.get(y * this.m_iGridWidth + x);
 				if (p1 !== undefined && p1.$GetFillColor() === this.m_sDotColor
 					//&& (p1.$GetStatus() === StatusEnum.POINT_FREE_BLUE || p1.$GetStatus() === StatusEnum.POINT_FREE_RED)
-					) {
+				) {
 					this.m_iLastX = x;
 					this.m_iLastY = y;
 					//this.Debug('first point registered m_iLastX = '+this.m_iLastX+' m_iLastY = '+this.m_iLastY, 1);
@@ -1919,6 +1927,8 @@ class InkBallGame {
 		this.m_iGridSizeY = parseInt(Math.ceil(iClientHeight / this.m_BoardSize.height));
 		this.m_iGridWidth = parseInt(Math.ceil(iClientWidth / this.m_iGridSizeX));
 		this.m_iGridHeight = parseInt(Math.ceil(iClientHeight / this.m_iGridSizeY));
+		this.rAF_StartTimestamp = null;
+		this.rAF_FrameID = null;
 
 		$createSVGVML(this.m_Screen, this.m_Screen.style.width, this.m_Screen.style.height, true);
 
@@ -1942,6 +1952,9 @@ class InkBallGame {
 			this.m_StopAndDraw.onclick = this.OnStopAndDraw.bind(this);
 			if (false === this.m_bIsCPUGame)
 				document.querySelector(this.m_sMsgInputSel).disabled = '';
+			else if (!this.m_bIsPlayerActive)
+				this.StartCPUCalculation();
+
 			this.m_SurrenderButton.disabled = '';
 
 			if (this.m_Player2Name.innerHTML === '???') {
@@ -1971,6 +1984,55 @@ class InkBallGame {
 		else {
 			document.querySelector(sPause).innerHTML = 'back to Game List';
 		}
+	}
+
+	GetRandomInt(min, max) {
+		min = Math.ceil(min);
+		max = Math.floor(max);
+		return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
+	}
+
+	FindCPUPoint() {
+		const x = this.GetRandomInt(0, this.m_iGridWidth);
+		const y = this.GetRandomInt(0, this.m_iGridHeight);
+
+		const cmd = new InkBallPointViewModel(0, this.g_iGameID, -1/*player*/,
+			x, y,
+			/*this.m_bIsPlayingWithRed === false ? StatusEnum.POINT_FREE_RED : */StatusEnum.POINT_FREE_BLUE, 0);
+
+		return cmd;
+	}
+
+	rAFCallBack(timeStamp) {
+		if (!this.rAF_StartTimestamp) this.rAF_StartTimestamp = timeStamp;
+		const progress = timeStamp - this.rAF_StartTimestamp;
+
+		//element.style.transform = 'translateX(' + Math.min(progress / 10, 200) + 'px)';
+
+		const point = this.FindCPUPoint();
+
+		if (point === null) {
+			if (progress < 2000)
+				this.rAF_FrameID = window.requestAnimationFrame(this.rAFCallBack.bind(this));
+		}
+		else {
+			//if (this.rAF_FrameID !== null) {
+			//	window.cancelAnimationFrame(this.rAF_FrameID);
+			//this.rAF_FrameID = null;
+			//}
+
+			this.SendAsyncData(point, () => {
+				this.m_bMouseDown = false;
+				this.m_bHandlingEvent = false;
+			});
+
+			//this.ReceivedPointProcessing(point);
+		}
+	}
+
+	StartCPUCalculation() {
+		if (this.rAF_FrameID === null)
+			this.rAF_FrameID = window.requestAnimationFrame(this.rAFCallBack.bind(this));
 	}
 }
 /******** /funcs-n-classes ********/

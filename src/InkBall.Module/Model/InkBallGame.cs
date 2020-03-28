@@ -31,8 +31,8 @@ namespace InkBall.Module.Model
 		bool IsThisPlayer1();
 		Player GetPlayer();
 		Player GetOtherPlayer();
-		bool IsThisPlayerActive();
-		bool IsThisPlayerPlayingWithRed();
+		bool IsThisPlayerActive(IPoint point = null);
+		bool IsThisPlayerPlayingWithRed(IPoint point = null);
 	}
 
 	public abstract class CommonGame<Player, Point, Path> : IGame<Player, Point, Path>
@@ -69,15 +69,17 @@ namespace InkBall.Module.Model
 
 		public bool CpuOponent => iPlayer2Id.HasValue && iPlayer2Id == -1;
 
-		public bool IsThisPlayerActive()
+		public bool IsThisPlayerActive(IPoint point = null)
 		{
+			if (point != null && point.BelongsToCPU) return true;
+
 			if (this.bIsPlayer1)
 				return this.bIsPlayer1Active;
 			else
 				return !this.bIsPlayer1Active;
 		}
 
-		public bool IsThisPlayerPlayingWithRed() => this.bIsPlayer1;
+		public bool IsThisPlayerPlayingWithRed(IPoint point = null) => (point != null && point.BelongsToCPU) ? false : this.bIsPlayer1;
 
 		public Player GetPlayer()
 		{
