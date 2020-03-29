@@ -94,76 +94,49 @@ namespace InkBall.Tests
 			return mockHubCallerContext;
 		}
 
-		async Task SetAllPoints(GameHub p1, GameHub p2, GamesContext contex, InkBallGame game, IEnumerable<int[]> points)
+		async Task SetAllPoints(GameHub p1, GameHub p2, IEnumerable<int[]> points)
 		{
 			foreach (int[] arr in points)
 			{
 				int x = arr[0], y = arr[1], int_status = arr[2], playerId = arr[3];
-
 				var status = (InkBallPoint.StatusEnum)int_status;
-				switch (status)
-				{
-					case InkBallPoint.StatusEnum.POINT_FREE:
-					case InkBallPoint.StatusEnum.POINT_STARTING:
-					case InkBallPoint.StatusEnum.POINT_IN_PATH:
-						if (playerId == p1.ThisPlayerID/*playerId == 1*/)
-						{
-							//status = p1.ThisGame.IsThisPlayerPlayingWithRed() ?
-							//	InkBallPoint.StatusEnum.POINT_FREE_RED : InkBallPoint.StatusEnum.POINT_FREE_BLUE;
-							status = InkBallPoint.StatusEnum.POINT_FREE_RED;
-						}
-						else
-						{
-							//status = p2.ThisGame.IsThisPlayerPlayingWithRed() ?
-							//	InkBallPoint.StatusEnum.POINT_FREE_RED : InkBallPoint.StatusEnum.POINT_FREE_BLUE;
-							status = InkBallPoint.StatusEnum.POINT_FREE_BLUE;
-						}
-						break;
-					case InkBallPoint.StatusEnum.POINT_OWNED_BY_RED:
-						status = InkBallPoint.StatusEnum.POINT_FREE_BLUE;
-						break;
-					case InkBallPoint.StatusEnum.POINT_OWNED_BY_BLUE:
-						status = InkBallPoint.StatusEnum.POINT_FREE_RED;
-						break;
-					case InkBallPoint.StatusEnum.POINT_FREE_RED:
-					case InkBallPoint.StatusEnum.POINT_FREE_BLUE:
-					default:
-						break;
-				}
 
 				var point = new InkBallPointViewModel
 				{
 					//Game = game,
-					iGameId = game.iId,
+					iGameId = p1.ThisGame.iId,
 					iPlayerId = playerId,
 					iX = x,
 					iY = y,
 					Status = status,
 				};
 
-				if (/*p1.ThisPlayerID == playerId*/playerId == 1)
+				if (p1.ThisPlayerID == playerId)
+				{
+					point.Status = InkBallPoint.StatusEnum.POINT_FREE_RED;
 					await p1.ClientToServerPoint(point);
+				}
 				else
+				{
+					point.Status = InkBallPoint.StatusEnum.POINT_FREE_BLUE;
 					await p2.ClientToServerPoint(point);
-
-				//contex.Add(point);
+				}
 			}
-
-			//await contex.SaveChangesAsync();
 		}
 
 		async Task SetAllPaths2(GameHub p1, GameHub p2, IEnumerable<InkBallPathViewModel> allPaths)
 		{
+			var allowed_time_limit_datetime = DateTime.Now.Subtract(TimeSpan.FromSeconds(0.5));
 			foreach (InkBallPathViewModel path in allPaths)
 			{
 				if (p1.ThisPlayerID == path.iPlayerId)
 				{
-					p1.ThisPlayer.TimeStamp = DateTime.Now.Subtract(TimeSpan.FromSeconds(0.5));
+					p1.ThisPlayer.TimeStamp = allowed_time_limit_datetime;
 					await p1.ClientToServerPath(path);
 				}
 				else
 				{
-					p2.ThisPlayer.TimeStamp = DateTime.Now.Subtract(TimeSpan.FromSeconds(0.5));
+					p2.ThisPlayer.TimeStamp = allowed_time_limit_datetime;
 					await p2.ClientToServerPath(path);
 				}
 			}
@@ -194,12 +167,12 @@ namespace InkBall.Tests
 				var mockHubCallerContext_P1 = GetMockHubCallerContext(gameID: 1, playerID: 1, userID: 1, externalUserIdentifier: "xxxxx");
 				var mockHubCallerContext_P2 = GetMockHubCallerContext(gameID: 1, playerID: 2, userID: 2, externalUserIdentifier: "yyyyy");
 
-				var hub_P1 = new GameHub(db, Setup.Logger)
+				using var hub_P1 = new GameHub(db, Setup.Logger)
 				{
 					Clients = mockHubCallerClients.Object,
 					Context = mockHubCallerContext_P1.Object
 				};
-				var hub_P2 = new GameHub(db, Setup.Logger)
+				using var hub_P2 = new GameHub(db, Setup.Logger)
 				{
 					Clients = mockHubCallerClients.Object,
 					Context = mockHubCallerContext_P2.Object
@@ -345,12 +318,12 @@ namespace InkBall.Tests
 				var mockHubCallerContext_P1 = GetMockHubCallerContext(gameID: 1, playerID: 1, userID: 1, externalUserIdentifier: "xxxxx");
 				var mockHubCallerContext_P2 = GetMockHubCallerContext(gameID: 1, playerID: 2, userID: 2, externalUserIdentifier: "yyyyy");
 
-				var hub_P1 = new GameHub(db, Setup.Logger)
+				using var hub_P1 = new GameHub(db, Setup.Logger)
 				{
 					Clients = mockHubCallerClients.Object,
 					Context = mockHubCallerContext_P1.Object
 				};
-				var hub_P2 = new GameHub(db, Setup.Logger)
+				using var hub_P2 = new GameHub(db, Setup.Logger)
 				{
 					Clients = mockHubCallerClients.Object,
 					Context = mockHubCallerContext_P2.Object
@@ -508,12 +481,12 @@ namespace InkBall.Tests
 				//wrong player context
 				var mockHubCallerContext_P2 = GetMockHubCallerContext(gameID: 1, playerID: 2, userID: 2, externalUserIdentifier: "yyyyy");
 
-				var hub_P1 = new GameHub(db, Setup.Logger)
+				using var hub_P1 = new GameHub(db, Setup.Logger)
 				{
 					Clients = mockHubCallerClients.Object,
 					Context = mockHubCallerContext_P1.Object
 				};
-				var hub_P2 = new GameHub(db, Setup.Logger)
+				using var hub_P2 = new GameHub(db, Setup.Logger)
 				{
 					Clients = mockHubCallerClients.Object,
 					Context = mockHubCallerContext_P2.Object
@@ -535,7 +508,7 @@ namespace InkBall.Tests
 						iPlayerId = 2
 					});
 				});
-				Assert.Equal("not your turn", exception.Message);
+				Assert.StartsWith("not your turn", exception.Message);
 
 				exception = await Assert.ThrowsAsync<ArgumentException>(async () =>
 				{
@@ -644,12 +617,12 @@ namespace InkBall.Tests
 				var mockHubCallerContext_P1 = GetMockHubCallerContext(gameID: 1, playerID: 1, userID: 1, externalUserIdentifier: "xxxxx");
 				var mockHubCallerContext_P2 = GetMockHubCallerContext(gameID: 1, playerID: 2, userID: 2, externalUserIdentifier: "yyyyy");
 
-				var hub_P1 = new GameHub(db, Setup.Logger)
+				using var hub_P1 = new GameHub(db, Setup.Logger)
 				{
 					Clients = mockHubCallerClients.Object,
 					Context = mockHubCallerContext_P1.Object
 				};
-				var hub_P2 = new GameHub(db, Setup.Logger)
+				using var hub_P2 = new GameHub(db, Setup.Logger)
 				{
 					Clients = mockHubCallerClients.Object,
 					Context = mockHubCallerContext_P2.Object
@@ -782,7 +755,7 @@ namespace InkBall.Tests
 				mockHubCallerClients.Setup(c => c.User(It.IsAny<string>())).Returns(mockGameClient.Object);
 
 				var mockHubCallerContext_P1 = GetMockHubCallerContext(gameID: 1, playerID: 1, userID: 1, externalUserIdentifier: "xxxxx");
-				var hub_P1 = new GameHub(db, Setup.Logger)
+				using var hub_P1 = new GameHub(db, Setup.Logger)
 				{
 					Clients = mockHubCallerClients.Object,
 					Context = mockHubCallerContext_P1.Object
@@ -820,7 +793,7 @@ namespace InkBall.Tests
 
 				//Arrange
 				var mockHubCallerContext_P2 = GetMockHubCallerContext(gameID: 1, playerID: 2, userID: 2, externalUserIdentifier: "yyyyy");
-				var hub_P2 = new GameHub(db, Setup.Logger)
+				using var hub_P2 = new GameHub(db, Setup.Logger)
 				{
 					Clients = mockHubCallerClients.Object,
 					Context = mockHubCallerContext_P2.Object
@@ -873,12 +846,12 @@ namespace InkBall.Tests
 				var mockHubCallerContext_P1 = GetMockHubCallerContext(gameID: 1, playerID: 1, userID: 1, externalUserIdentifier: "xxxxx");
 				var mockHubCallerContext_P2 = GetMockHubCallerContext(gameID: 1, playerID: 2, userID: 2, externalUserIdentifier: "yyyyy");
 
-				var hub_P1 = new GameHub(db, Setup.Logger)
+				using var hub_P1 = new GameHub(db, Setup.Logger)
 				{
 					Clients = mockHubCallerClients.Object,
 					Context = mockHubCallerContext_P1.Object
 				};
-				var hub_P2 = new GameHub(db, Setup.Logger)
+				using var hub_P2 = new GameHub(db, Setup.Logger)
 				{
 					Clients = mockHubCallerClients.Object,
 					Context = mockHubCallerContext_P2.Object
@@ -1037,12 +1010,12 @@ namespace InkBall.Tests
 				var mockHubCallerContext_P1 = GetMockHubCallerContext(gameID: 1, playerID: 1, userID: 1, externalUserIdentifier: "xxxxx");
 				var mockHubCallerContext_P2 = GetMockHubCallerContext(gameID: 1, playerID: 2, userID: 2, externalUserIdentifier: "yyyyy");
 
-				var hub_P1 = new GameHub(db, Setup.Logger)
+				using var hub_P1 = new GameHub(db, Setup.Logger)
 				{
 					Clients = mockHubCallerClients.Object,
 					Context = mockHubCallerContext_P1.Object
 				};
-				var hub_P2 = new GameHub(db, Setup.Logger)
+				using var hub_P2 = new GameHub(db, Setup.Logger)
 				{
 					Clients = mockHubCallerClients.Object,
 					Context = mockHubCallerContext_P2.Object
@@ -1128,7 +1101,7 @@ namespace InkBall.Tests
 		[InlineData(true, false)]
 		[InlineData(false, true)]
 		[InlineData(true, true)]
-		public async Task SignalR_ClientToServer_AdjacentPaths_BadlyInterleaved(bool properlyInterleavedPoints, bool properlyInterleavedPaths)
+		public async Task SignalR_ClientToServer_AdjacentPaths_Interleaved(bool properlyInterleavedPoints, bool properlyInterleavedPaths)
 		{
 			//Arrange
 			var token = base.CancellationToken;
@@ -1186,15 +1159,23 @@ namespace InkBall.Tests
 				mockHubCallerClients.Setup(c => c.Client(It.IsAny<string>())).Returns(mockGameClient.Object);
 				mockHubCallerClients.Setup(c => c.User(It.IsAny<string>())).Returns(mockGameClient.Object);
 
-				var mockHubCallerContext_P1 = GetMockHubCallerContext(gameID: 35, playerID: 1, userID: 1, externalUserIdentifier: "xxxxx");
-				var mockHubCallerContext_P2 = GetMockHubCallerContext(gameID: 35, playerID: 3, userID: 2, externalUserIdentifier: "yyyyy");
+				var mockHubCallerContext_P1 = GetMockHubCallerContext(
+					gameID: game.iId,
+					playerID: game.Player1.iId,
+					userID: game.Player1.iUserId.GetValueOrDefault(0),
+					externalUserIdentifier: game.Player1.User.sExternalId);
+				var mockHubCallerContext_P2 = GetMockHubCallerContext(
+					gameID: game.iId,
+					playerID: game.Player2.iId,
+					userID: game.Player2.iUserId.GetValueOrDefault(0),
+					externalUserIdentifier: game.Player2.User.sExternalId);
 
-				var hub_P1 = new GameHub(db, Setup.Logger)
+				using var hub_P1 = new GameHub(db, Setup.Logger)
 				{
 					Clients = mockHubCallerClients.Object,
 					Context = mockHubCallerContext_P1.Object
 				};
-				var hub_P2 = new GameHub(db, Setup.Logger)
+				using var hub_P2 = new GameHub(db, Setup.Logger)
 				{
 					Clients = mockHubCallerClients.Object,
 					Context = mockHubCallerContext_P2.Object
@@ -1209,7 +1190,7 @@ namespace InkBall.Tests
 				{
 					var exception = await Record.ExceptionAsync(async () =>
 					{
-						await SetAllPoints(hub_P1, hub_P2, db, game, new int[][] {
+						await SetAllPoints(hub_P1, hub_P2, new int[][] {
 							new int[]{24, 8, 3, 1},
 							new int[]{12, 8, 2, 3},
 							new int[]{12, 9, 1, 1},
@@ -1268,13 +1249,13 @@ namespace InkBall.Tests
 					});
 					Assert.NotNull(exception);
 					Assert.IsType<ArgumentException>(exception);
-					Assert.Equal("not your turn", exception.Message);
+					Assert.StartsWith("not your turn", exception.Message);
 
 					return;//we must exit 'coz there are no points added for proper path adding
 				}
 				else
 				{
-					await SetAllPoints(hub_P1, hub_P2, db, game, new int[][] {
+					await SetAllPoints(hub_P1, hub_P2, new int[][] {
 						new int[]{24, 8, 3, 1},//p1
 						new int[]{12, 8, 2, 3},//p2
 						new int[]{12, 9, 1, 1},//p1
@@ -1356,7 +1337,7 @@ new InkBallPathViewModel{ iId = 86, iGameId = 35, iPlayerId = 3, PointsAsString 
 					});
 					Assert.NotNull(exception);
 					Assert.IsType<ArgumentException>(exception);
-					Assert.Equal("not your turn", exception.Message);
+					Assert.StartsWith("not your turn", exception.Message);
 				}
 				else
 				{
@@ -1387,8 +1368,151 @@ new InkBallPathViewModel{ iId = 85, iGameId = 35, iPlayerId = 1, PointsAsString 
 new InkBallPathViewModel{ iId = 86, iGameId = 35, iPlayerId = 3, PointsAsString = "22,12 22,13 23,13 24,12 23,11 22,12", OwnedPointsAsString = "23,12"}
 					});
 				}
-			}
-		}
+			}//end using
+		}//end method
+
+
+		[Fact]
+		public async Task SignalR_ClientToServer_AdjacentPaths_SimpleTest()
+		{
+			//Arrange
+			var token = base.CancellationToken;
+			var game = new InkBallGame
+			{
+				iId = 85,
+				CreateTime = DateTime.Now,
+				GameState = InkBallGame.GameStateEnum.ACTIVE,
+				GameType = InkBallGame.GameTypeEnum.FIRST_5_ADVANTAGE_PATHS,
+				Player1 = new InkBallPlayer
+				{
+					iId = 4,
+					sLastMoveCode = "{}",
+					User = new InkBallUser
+					{
+						iId = 4,
+						UserName = "test_p1",
+						iPrivileges = 0,
+						sExternalId = "xxxxx",
+					}
+				},
+				iPlayer1Id = 4,
+				Player2 = new InkBallPlayer
+				{
+					iId = 1,
+					sLastMoveCode = "{}",
+					User = new InkBallUser
+					{
+						iId = 1,
+						UserName = "test_p2",
+						iPrivileges = 0,
+						sExternalId = "yyyyy",
+					}
+				},
+				iPlayer2Id = 1,
+				iBoardWidth = 20,
+				iBoardHeight = 26
+			};
+			using (var db = new GamesContext(Setup.DbOpts))
+			{
+				await db.AddAsync(game, token);
+				await db.SaveChangesAsync(token);
+
+
+
+				var mockGameClient = new Mock<IGameClient>();
+				mockGameClient.Setup(c => c.ServerToClientPath(It.IsAny<InkBallPathViewModel>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPing(It.IsAny<PingCommand>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPlayerJoin(It.IsAny<PlayerJoiningCommand>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPlayerSurrender(It.IsAny<PlayerSurrenderingCommand>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPlayerWin(It.IsAny<WinCommand>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPoint(It.IsAny<InkBallPointViewModel>())).Returns(Task.FromResult(0));
+
+				var mockHubCallerClients = new Mock<IHubCallerClients<IGameClient>>();
+				mockHubCallerClients.Setup(c => c.Client(It.IsAny<string>())).Returns(mockGameClient.Object);
+				mockHubCallerClients.Setup(c => c.User(It.IsAny<string>())).Returns(mockGameClient.Object);
+
+				var mockHubCallerContext_P1 = GetMockHubCallerContext(
+					gameID: game.iId,
+					playerID: game.Player1.iId,
+					userID: game.Player1.iUserId.GetValueOrDefault(0),
+					externalUserIdentifier: game.Player1.User.sExternalId);
+				var mockHubCallerContext_P2 = GetMockHubCallerContext(
+					gameID: game.iId,
+					playerID: game.Player2.iId,
+					userID: game.Player2.iUserId.GetValueOrDefault(0),
+					externalUserIdentifier: game.Player2.User.sExternalId);
+
+				using var hub_P1 = new GameHub(db, Setup.Logger)
+				{
+					Clients = mockHubCallerClients.Object,
+					Context = mockHubCallerContext_P1.Object
+				};
+				using var hub_P2 = new GameHub(db, Setup.Logger)
+				{
+					Clients = mockHubCallerClients.Object,
+					Context = mockHubCallerContext_P2.Object
+				};
+
+				await hub_P1.OnConnectedAsync();
+				await hub_P2.OnConnectedAsync();
+
+
+				//Act
+				await SetAllPoints(hub_P1, hub_P2, new int[][] {
+new []{/*id=691*/14/*x*/, 4/*y*/, 1/*val*/, 4/*playerID*/},
+new []{/*id=692*/14/*x*/, 5/*y*/, 2/*val*/, 1/*playerID*/},
+new []{/*id=693*/8/*x*/, 4/*y*/, 3/*val*/, 4/*playerID*/},
+new []{/*id=694*/8/*x*/, 3/*y*/, 1/*val*/, 1/*playerID*/},
+new []{/*id=695*/14/*x*/, 6/*y*/, 1/*val*/, 4/*playerID*/},
+new []{/*id=696*/8/*x*/, 5/*y*/, 1/*val*/, 1/*playerID*/},
+new []{/*id=697*/13/*x*/, 5/*y*/, 1/*val*/, 4/*playerID*/},
+new []{/*id=698*/7/*x*/, 4/*y*/, 1/*val*/, 1/*playerID*/},
+new []{/*id=699*/15/*x*/, 5/*y*/, 1/*val*/, 4/*playerID*/},
+new []{/*id=700*/9/*x*/, 4/*y*/, 1/*val*/, 1/*playerID*/},
+new []{/*id=701*/11/*x*/, 7/*y*/, 1/*val*/, 4/*playerID*/},
+new []{/*id=702*/11/*x*/, 8/*y*/, 2/*val*/, 1/*playerID*/},
+new []{/*id=703*/11/*x*/, 9/*y*/, 1/*val*/, 4/*playerID*/},
+new []{/*id=704*/7/*x*/, 7/*y*/, 1/*val*/, 1/*playerID*/},
+new []{/*id=705*/7/*x*/, 8/*y*/, 3/*val*/, 4/*playerID*/},
+new []{/*id=706*/7/*x*/, 9/*y*/, 1/*val*/, 1/*playerID*/},
+new []{/*id=707*/10/*x*/, 8/*y*/, 1/*val*/, 4/*playerID*/},
+new []{/*id=708*/12/*x*/, 8/*y*/, 2/*val*/, 1/*playerID*/},
+new []{/*id=709*/12/*x*/, 7/*y*/, 1/*val*/, 4/*playerID*/},
+new []{/*id=710*/6/*x*/, 8/*y*/, 1/*val*/, 1/*playerID*/},
+new []{/*id=711*/12/*x*/, 9/*y*/, 1/*val*/, 4/*playerID*/},
+new []{/*id=712*/8/*x*/, 8/*y*/, 1/*val*/, 1/*playerID*/},
+new []{/*id=713*/13/*x*/, 8/*y*/, 1/*val*/, 4/*playerID*/},
+new []{/*id=715*/6/*x*/, 6/*y*/, 1/*val*/, 1/*playerID*/},
+new []{/*id=716*/6/*x*/, 7/*y*/, 3/*val*/, 4/*playerID*/},
+new []{/*id=717*/5/*x*/, 7/*y*/, 1/*val*/, 1/*playerID*/},
+new []{/*id=718*/9/*x*/, 9/*y*/, 1/*val*/, 4/*playerID*/},
+new []{/*id=719*/10/*x*/, 9/*y*/, 2/*val*/, 1/*playerID*/},
+new []{/*id=720*/10/*x*/, 10/*y*/, 1/*val*/, 4/*playerID*/},
+new []{/*id=721*/12/*x*/, 10/*y*/, 2/*val*/, 1/*playerID*/},
+new []{/*id=722*/5/*x*/, 8/*y*/, 3/*val*/, 4/*playerID*/},
+new []{/*id=723*/4/*x*/, 7/*y*/, 1/*val*/, 1/*playerID*/},
+new []{/*id=724*/11/*x*/, 10/*y*/, 1/*val*/, 4/*playerID*/},
+new []{/*id=725*/3/*x*/, 8/*y*/, 1/*val*/, 1/*playerID*/},
+new []{/*id=726*/12/*x*/, 11/*y*/, 1/*val*/, 4/*playerID*/},
+new []{/*id=727*/4/*x*/, 9/*y*/, 1/*val*/, 1/*playerID*/},
+new []{/*id=728*/13/*x*/, 10/*y*/, 1/*val*/, 4/*playerID*/},
+new []{/*id=729*/5/*x*/, 9/*y*/, 1/*val*/, 1/*playerID*/},
+new []{/*id=714*/4/*x*/, 8/*y*/, 3/*val*/, 4/*playerID*/},
+				});
+
+				await SetAllPaths2(hub_P1, hub_P2, new InkBallPathViewModel[] {
+/*ID=37*/new InkBallPathViewModel { OwnedPointsAsString = "14,5",iId = 37,iGameId = 85,iPlayerId = 4,PointsAsString = "14,4 15,5 14,6 13,5 14,4"},
+/*ID=38*/new InkBallPathViewModel { OwnedPointsAsString = "8,4",iId = 38,iGameId = 85,iPlayerId = 1,PointsAsString = "8,3 9,4 8,5 7,4 8,3"},
+/*ID=39*/new InkBallPathViewModel { OwnedPointsAsString = "11,8 12,8",iId = 39,iGameId = 85,iPlayerId = 4,PointsAsString = "11,7 10,8 11,9 12,9 13,8 12,7 11,7"},
+/*ID=40*/new InkBallPathViewModel { OwnedPointsAsString = "7,8",iId = 40,iGameId = 85,iPlayerId = 1,PointsAsString = "7,7 6,8 7,9 8,8 7,7"},
+/*ID=42*/new InkBallPathViewModel { OwnedPointsAsString = "10,9",iId = 42,iGameId = 85,iPlayerId = 4,PointsAsString = "11,7 10,8 9,9 10,10 11,9 12,9 13,8 12,7 11,7"},
+/*ID=41*/new InkBallPathViewModel { OwnedPointsAsString = "6,7",iId = 41,iGameId = 85,iPlayerId = 1,PointsAsString = "6,8 5,7 6,6 7,7 6,8"},
+/*ID=43*/new InkBallPathViewModel { OwnedPointsAsString = "12,10",iId = 43,iGameId = 85,iPlayerId = 4,PointsAsString = "12,9 13,10 12,11 11,10 11,9 12,9"},
+/*ID=44*/new InkBallPathViewModel { OwnedPointsAsString = "4,8 5,8",iId = 44,iGameId = 85,iPlayerId = 1,PointsAsString = "5,7 4,7 3,8 4,9 5,9 6,8 7,7 6,6 5,7"}
+			});
+
+			}//end using
+		}//end method
 
 	}//end class
 }

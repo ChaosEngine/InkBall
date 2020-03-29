@@ -44,6 +44,8 @@ namespace InkBall.Module.Model
 		public int iDrawCount { get; set; }
 		public DateTime TimeStamp { get; set; }
 
+		#region Old code
+
 		//protected internal Dictionary<string, string> _lastMoveDict;
 		//[NotMapped]//Hide it from EF Core
 		//[JsonIgnore]//disallow to serialize it with Newtonsoft.Json
@@ -60,6 +62,8 @@ namespace InkBall.Module.Model
 		//	}
 		//	//set { _lastMoveDict = value; }
 		//}
+
+		#endregion Old code
 
 		public abstract ICollection<Path> InkBallPath { get; set; }
 		public abstract ICollection<Point> InkBallPoint { get; set; }
@@ -95,7 +99,7 @@ namespace InkBall.Module.Model
 
 		public bool IsDelayedPathDrawPossible()
 		{
-			bool last_move_was_point = sLastMoveCode.Contains("iX", StringComparison.InvariantCultureIgnoreCase);
+			bool last_move_was_point = sLastMoveCode.Contains(nameof(IPoint.iX), StringComparison.InvariantCultureIgnoreCase);
 			return last_move_was_point && TimeStamp.AddSeconds(Constants.PathAfterPointDrawAllowanceSecAmount) > DateTime.Now;
 		}
 	}
