@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace InkBall.Module.Model
 {
@@ -45,6 +46,8 @@ namespace InkBall.Module.Model
 
 		public int? iEnclosingPathId { get; set; }
 
+		[JsonIgnore]
+		[IgnoreMember]
 		public bool BelongsToCPU => iPlayerId == -1;
 
 		#region Overrides

@@ -247,8 +247,11 @@ namespace InkBall.Tests
 			}
 		}
 
-		protected async Task CreateInitialUsers(CancellationToken token = default, params string[] userIDs)
+		protected async Task CreateInitialUsers(string[] userIDs, int[] playerIDs, CancellationToken token = default)
 		{
+			if (playerIDs != null && userIDs?.Length != playerIDs?.Length)
+				throw new ArgumentException("userIDs?.Length != playerIDs?.Length");
+
 			using (var context = new GamesContext(Setup.DbOpts))
 			{
 				int i = 1;
@@ -261,8 +264,18 @@ namespace InkBall.Tests
 						iPrivileges = 0,
 						sExternalId = uid,
 					};
-
 					await context.AddAsync(user, token);
+
+					if (playerIDs != null)
+					{
+						var player = new InkBallPlayer
+						{
+							User = user,
+							iUserId = user.iId,
+							iId = playerIDs[i - 1],
+						};
+						await context.AddAsync(player, token);
+					}
 					i++;
 				}
 

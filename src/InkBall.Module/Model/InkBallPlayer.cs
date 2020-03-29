@@ -44,22 +44,22 @@ namespace InkBall.Module.Model
 		public int iDrawCount { get; set; }
 		public DateTime TimeStamp { get; set; }
 
-		protected internal Dictionary<string, string> _lastMoveDict;
-		[NotMapped]//Hide it from EF Core
-		[JsonIgnore]//disallow to serialize it with Newtonsoft.Json
-		[IgnoreMember]//hide from serializer in MessagePack
-		public Dictionary<string, string> LastMoveDict
-		{
-			get
-			{
-				if (!(_lastMoveDict?.Count > 0) && !string.IsNullOrEmpty(sLastMoveCode))
-				{
-					_lastMoveDict = JsonSerializer.Deserialize<Dictionary<string, string>>(sLastMoveCode);
-				}
-				return _lastMoveDict;
-			}
-			//set { _lastMoveDict = value; }
-		}
+		//protected internal Dictionary<string, string> _lastMoveDict;
+		//[NotMapped]//Hide it from EF Core
+		//[JsonIgnore]//disallow to serialize it with Newtonsoft.Json
+		//[IgnoreMember]//hide from serializer in MessagePack
+		//public Dictionary<string, string> LastMoveDict
+		//{
+		//	get
+		//	{
+		//		if (!(_lastMoveDict?.Count > 0) && !string.IsNullOrEmpty(sLastMoveCode))
+		//		{
+		//			_lastMoveDict = JsonSerializer.Deserialize<Dictionary<string, string>>(sLastMoveCode);
+		//		}
+		//		return _lastMoveDict;
+		//	}
+		//	//set { _lastMoveDict = value; }
+		//}
 
 		public abstract ICollection<Path> InkBallPath { get; set; }
 		public abstract ICollection<Point> InkBallPoint { get; set; }
@@ -95,7 +95,8 @@ namespace InkBall.Module.Model
 
 		public bool IsDelayedPathDrawPossible()
 		{
-			return TimeStamp.AddSeconds(Constants.PathAfterPointDrawAllowanceSecAmount) > DateTime.Now;
+			bool last_move_was_point = sLastMoveCode.Contains("iX", StringComparison.InvariantCultureIgnoreCase);
+			return last_move_was_point && TimeStamp.AddSeconds(Constants.PathAfterPointDrawAllowanceSecAmount) > DateTime.Now;
 		}
 	}
 
@@ -132,7 +133,7 @@ namespace InkBall.Module.Model
 			iId = player.iId;
 			iUserId = player.iUserId;
 			sLastMoveCode = player.sLastMoveCode;
-			_lastMoveDict = player._lastMoveDict;
+			//_lastMoveDict = player._lastMoveDict;
 			iWinCount = player.iWinCount;
 			iLossCount = player.iLossCount;
 			iDrawCount = player.iDrawCount;
@@ -157,7 +158,7 @@ namespace InkBall.Module.Model
 			iId = player.iId;
 			iUserId = player.iUserId;
 			sLastMoveCode = player.sLastMoveCode;
-			_lastMoveDict = player._lastMoveDict;
+			//_lastMoveDict = player._lastMoveDict;
 			iWinCount = player.iWinCount;
 			iLossCount = player.iLossCount;
 			iDrawCount = player.iDrawCount;

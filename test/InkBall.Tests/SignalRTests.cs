@@ -94,6 +94,81 @@ namespace InkBall.Tests
 			return mockHubCallerContext;
 		}
 
+		async Task SetAllPoints(GameHub p1, GameHub p2, GamesContext contex, InkBallGame game, IEnumerable<int[]> points)
+		{
+			foreach (int[] arr in points)
+			{
+				int x = arr[0], y = arr[1], int_status = arr[2], playerId = arr[3];
+
+				var status = (InkBallPoint.StatusEnum)int_status;
+				switch (status)
+				{
+					case InkBallPoint.StatusEnum.POINT_FREE:
+					case InkBallPoint.StatusEnum.POINT_STARTING:
+					case InkBallPoint.StatusEnum.POINT_IN_PATH:
+						if (playerId == p1.ThisPlayerID/*playerId == 1*/)
+						{
+							//status = p1.ThisGame.IsThisPlayerPlayingWithRed() ?
+							//	InkBallPoint.StatusEnum.POINT_FREE_RED : InkBallPoint.StatusEnum.POINT_FREE_BLUE;
+							status = InkBallPoint.StatusEnum.POINT_FREE_RED;
+						}
+						else
+						{
+							//status = p2.ThisGame.IsThisPlayerPlayingWithRed() ?
+							//	InkBallPoint.StatusEnum.POINT_FREE_RED : InkBallPoint.StatusEnum.POINT_FREE_BLUE;
+							status = InkBallPoint.StatusEnum.POINT_FREE_BLUE;
+						}
+						break;
+					case InkBallPoint.StatusEnum.POINT_OWNED_BY_RED:
+						status = InkBallPoint.StatusEnum.POINT_FREE_BLUE;
+						break;
+					case InkBallPoint.StatusEnum.POINT_OWNED_BY_BLUE:
+						status = InkBallPoint.StatusEnum.POINT_FREE_RED;
+						break;
+					case InkBallPoint.StatusEnum.POINT_FREE_RED:
+					case InkBallPoint.StatusEnum.POINT_FREE_BLUE:
+					default:
+						break;
+				}
+
+				var point = new InkBallPointViewModel
+				{
+					//Game = game,
+					iGameId = game.iId,
+					iPlayerId = playerId,
+					iX = x,
+					iY = y,
+					Status = status,
+				};
+
+				if (/*p1.ThisPlayerID == playerId*/playerId == 1)
+					await p1.ClientToServerPoint(point);
+				else
+					await p2.ClientToServerPoint(point);
+
+				//contex.Add(point);
+			}
+
+			//await contex.SaveChangesAsync();
+		}
+
+		async Task SetAllPaths2(GameHub p1, GameHub p2, IEnumerable<InkBallPathViewModel> allPaths)
+		{
+			foreach (InkBallPathViewModel path in allPaths)
+			{
+				if (p1.ThisPlayerID == path.iPlayerId)
+				{
+					p1.ThisPlayer.TimeStamp = DateTime.Now.Subtract(TimeSpan.FromSeconds(0.5));
+					await p1.ClientToServerPath(path);
+				}
+				else
+				{
+					p2.ThisPlayer.TimeStamp = DateTime.Now.Subtract(TimeSpan.FromSeconds(0.5));
+					await p2.ClientToServerPath(path);
+				}
+			}
+		}
+
 		[Fact]
 		public async Task SignalR_ClientToServer_ValidBehavior()
 		{
@@ -663,7 +738,7 @@ namespace InkBall.Tests
 
 			//Start from creating a user
 			//Arrange
-			await CreateInitialUsers(token, new[] { "xxxxx", "yyyyy" });
+			await CreateInitialUsers(new[] { "xxxxx", "yyyyy" }, null, token);
 
 			using (var db = new GamesContext(Setup.DbOpts))
 			{
@@ -1044,6 +1119,273 @@ namespace InkBall.Tests
 					Assert.NotNull(exception);
 					Assert.IsType<ArgumentException>(exception);
 					Assert.Equal("not your turn", exception.Message);
+				}
+			}
+		}
+
+		[Theory]
+		[InlineData(false, false)]
+		[InlineData(true, false)]
+		[InlineData(false, true)]
+		[InlineData(true, true)]
+		public async Task SignalR_ClientToServer_AdjacentPaths_BadlyInterleaved(bool properlyInterleavedPoints, bool properlyInterleavedPaths)
+		{
+			//Arrange
+			var token = base.CancellationToken;
+			var game = new InkBallGame
+			{
+				iId = 35,
+				CreateTime = DateTime.Now,
+				GameState = InkBallGame.GameStateEnum.ACTIVE,
+				GameType = InkBallGame.GameTypeEnum.FIRST_5_ADVANTAGE_PATHS,
+				Player1 = new InkBallPlayer
+				{
+					iId = 1,
+					sLastMoveCode = "{}",
+					User = new InkBallUser
+					{
+						//iId = 1,
+						UserName = "test_p1",
+						iPrivileges = 0,
+						sExternalId = "xxxxx",
+					}
+				},
+				iPlayer1Id = 1,
+				Player2 = new InkBallPlayer
+				{
+					iId = 3,
+					sLastMoveCode = "{}",
+					User = new InkBallUser
+					{
+						//iId = 3,
+						UserName = "test_p2",
+						iPrivileges = 0,
+						sExternalId = "yyyyy",
+					}
+				},
+				iPlayer2Id = 3,
+				iBoardWidth = 40,
+				iBoardHeight = 52
+			};
+			using (var db = new GamesContext(Setup.DbOpts))
+			{
+				await db.AddAsync(game, token);
+				await db.SaveChangesAsync(token);
+
+
+
+				var mockGameClient = new Mock<IGameClient>();
+				mockGameClient.Setup(c => c.ServerToClientPath(It.IsAny<InkBallPathViewModel>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPing(It.IsAny<PingCommand>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPlayerJoin(It.IsAny<PlayerJoiningCommand>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPlayerSurrender(It.IsAny<PlayerSurrenderingCommand>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPlayerWin(It.IsAny<WinCommand>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPoint(It.IsAny<InkBallPointViewModel>())).Returns(Task.FromResult(0));
+
+				var mockHubCallerClients = new Mock<IHubCallerClients<IGameClient>>();
+				mockHubCallerClients.Setup(c => c.Client(It.IsAny<string>())).Returns(mockGameClient.Object);
+				mockHubCallerClients.Setup(c => c.User(It.IsAny<string>())).Returns(mockGameClient.Object);
+
+				var mockHubCallerContext_P1 = GetMockHubCallerContext(gameID: 35, playerID: 1, userID: 1, externalUserIdentifier: "xxxxx");
+				var mockHubCallerContext_P2 = GetMockHubCallerContext(gameID: 35, playerID: 3, userID: 2, externalUserIdentifier: "yyyyy");
+
+				var hub_P1 = new GameHub(db, Setup.Logger)
+				{
+					Clients = mockHubCallerClients.Object,
+					Context = mockHubCallerContext_P1.Object
+				};
+				var hub_P2 = new GameHub(db, Setup.Logger)
+				{
+					Clients = mockHubCallerClients.Object,
+					Context = mockHubCallerContext_P2.Object
+				};
+
+				await hub_P1.OnConnectedAsync();
+				await hub_P2.OnConnectedAsync();
+
+
+				//Act
+				if (!properlyInterleavedPoints)
+				{
+					var exception = await Record.ExceptionAsync(async () =>
+					{
+						await SetAllPoints(hub_P1, hub_P2, db, game, new int[][] {
+							new int[]{24, 8, 3, 1},
+							new int[]{12, 8, 2, 3},
+							new int[]{12, 9, 1, 1},
+							new int[]{23, 8, 1, 3},
+							new int[]{12, 7, 1, 1},
+							new int[]{25, 8, 1, 3},
+							new int[]{11, 8, 1, 1},
+							new int[]{24, 7, 1, 3},
+							new int[]{13, 8, 1, 1},
+							new int[]{24, 9, 1, 3},
+							new int[]{14, 9, 1, 1},
+							new int[]{13, 9, 2, 3},
+							new int[]{13, 10, 1, 1},
+							new int[]{22, 9, 1, 3},
+							new int[]{23, 9, 3, 1},
+							new int[]{24, 10, 1, 3},
+							new int[]{14, 10, 1, 1},
+							new int[]{23, 10, 1, 3},
+							new int[]{11, 10, 1, 1},
+							new int[]{25, 10, 1, 3},
+							new int[]{12, 11, 1, 1},
+							new int[]{26, 9, 1, 3},
+							new int[]{10, 9, 1, 1},
+							new int[]{23, 11, 1, 3},
+							new int[]{24, 11, 3, 1},
+							new int[]{12, 10, 2, 3},
+							new int[]{25, 9, 3, 1},
+							new int[]{24, 12, 1, 3},
+							new int[]{13, 11, 1, 1},
+							new int[]{25, 11, 1, 3},//player 2
+							new int[]{21, 11, 1, 3},//player 2 after player 2 move!! should be player 1
+							new int[]{22, 10, 3, 1},
+							new int[]{21, 10, 1, 3},
+							new int[]{22, 11, 3, 1},
+							new int[]{11, 9, 2, 3},
+							new int[]{10, 8, 1, 1},
+							new int[]{22, 12, 1, 3},//player 2
+							new int[]{11, 7, 2, 3},//player 2 after player 2!! should be player 1
+							new int[]{25, 7, 3, 1},
+							new int[]{25, 6, 1, 3},
+							new int[]{10, 7, 1, 1},
+							new int[]{26, 7, 1, 3},
+							new int[]{11, 6, 1, 1},
+							new int[]{26, 8, 1, 3},
+							new int[]{12, 6, 1, 1},
+							new int[]{16, 13, -3, 1},
+							new int[]{20, 7, -2, 3},
+							new int[]{17, 15, -3, 1},
+							new int[]{22, 13, 1, 3},
+							new int[]{14, 7, 1, 1},
+							new int[]{23, 13, 1, 3},
+							new int[]{13, 6, 1, 1},
+							new int[]{13, 7, 2, 3},
+							new int[]{23, 12, 3, 1}
+						});
+					});
+					Assert.NotNull(exception);
+					Assert.IsType<ArgumentException>(exception);
+					Assert.Equal("not your turn", exception.Message);
+
+					return;//we must exit 'coz there are no points added for proper path adding
+				}
+				else
+				{
+					await SetAllPoints(hub_P1, hub_P2, db, game, new int[][] {
+						new int[]{24, 8, 3, 1},//p1
+						new int[]{12, 8, 2, 3},//p2
+						new int[]{12, 9, 1, 1},//p1
+						new int[]{23, 8, 1, 3},//p2
+						new int[]{12, 7, 1, 1},//p1
+						new int[]{25, 8, 1, 3},//p2
+						new int[]{11, 8, 1, 1},//p1
+						new int[]{24, 7, 1, 3},//p2
+						new int[]{13, 8, 1, 1},//p1
+						new int[]{24, 9, 1, 3},//p2
+						new int[]{14, 9, 1, 1},//p1
+						new int[]{13, 9, 2, 3},//p2
+						new int[]{13, 10, 1, 1},//p1
+						new int[]{22, 9, 1, 3},//p2
+						new int[]{23, 9, 3, 1},//p1
+						new int[]{24, 10, 1, 3},//p2
+						new int[]{14, 10, 1, 1},//p1
+						new int[]{23, 10, 1, 3},//p2
+						new int[]{11, 10, 1, 1},//p1
+						new int[]{25, 10, 1, 3},//p2
+						new int[]{12, 11, 1, 1},//p1
+						new int[]{26, 9, 1, 3},//p2
+						new int[]{10, 9, 1, 1},//p1
+						new int[]{23, 11, 1, 3},//p2
+						new int[]{24, 11, 3, 1},//p1
+						new int[]{12, 10, 2, 3},//p2
+						new int[]{25, 9, 3, 1},//p1
+						new int[]{24, 12, 1, 3},//p2
+						new int[]{13, 11, 1, 1},//p1
+						new int[]{25, 11, 1, 3},//p2
+						new int[]{22, 10, 3, 1},//p1
+						new int[]{21, 10, 1, 3},//p2
+						new int[]{22, 11, 3, 1},//p1
+						new int[]{11, 9, 2, 3},//p2
+						new int[]{10, 8, 1, 1},//p1
+						new int[]{22, 12, 1, 3},//p2
+						new int[]{25, 7, 3, 1},//p1
+						new int[]{25, 6, 1, 3},//p2
+						new int[]{10, 7, 1, 1},//p1
+						new int[]{26, 7, 1, 3},//p2
+						new int[]{11, 6, 1, 1},//p1
+						new int[]{26, 8, 1, 3},//p2
+						new int[]{12, 6, 1, 1},//p1
+						new int[]{20, 7, -2, 3},//p2
+						new int[]{17, 15, -3, 1},//p1
+						new int[]{22, 13, 1, 3},//p2
+						new int[]{14, 7, 1, 1},//p1
+						new int[]{23, 13, 1, 3},//p2
+						new int[]{13, 6, 1, 1},//p1
+						new int[]{13, 7, 2, 3},//p2
+						new int[]{23, 12, 3, 1},//p1
+						new int[]{21, 11, 1, 3},//p2
+						new int[]{16, 13, -3, 1},//p1
+						new int[]{11, 7, 2, 3},//p2
+					});
+
+					//we continue to paths testing
+				}
+				if (!properlyInterleavedPaths)
+				{
+					var exception = await Record.ExceptionAsync(async () =>
+					{
+						await SetAllPaths2(hub_P1, hub_P2, new InkBallPathViewModel[] {
+new InkBallPathViewModel{ iId = 75, iGameId = 35, iPlayerId = 1, PointsAsString = "13,8 12,9 11,8 12,7 13,8", OwnedPointsAsString = "12,8"},
+new InkBallPathViewModel{ iId = 76, iGameId = 35, iPlayerId = 3, PointsAsString = "24,7 23,8 24,9 25,8 24,7", OwnedPointsAsString = "24,8"},
+new InkBallPathViewModel{ iId = 77, iGameId = 35, iPlayerId = 1, PointsAsString = "14,9 14,10 13,10 12,9 11,8 12,7 13,8 14,9", OwnedPointsAsString = "13,9"},
+new InkBallPathViewModel{ iId = 78, iGameId = 35, iPlayerId = 3, PointsAsString = "22,9 23,10 24,10 24,9 25,8 24,7 23,8 22,9", OwnedPointsAsString = "23,9"},
+//player 2 path after player 2 path. Should be point (not too late!) or player 1 path only
+new InkBallPathViewModel{ iId = 79, iGameId = 35, iPlayerId = 3, PointsAsString = "26,9 25,10 25,11 24,12 23,11 23,10 24,10 24,9 25,8 26,9", OwnedPointsAsString = "24,11 25,9"},
+new InkBallPathViewModel{ iId = 80, iGameId = 35, iPlayerId = 1, PointsAsString = "11,10 12,11 13,11 14,10 13,10 12,9 11,10", OwnedPointsAsString = "12,10"},
+new InkBallPathViewModel{ iId = 81, iGameId = 35, iPlayerId = 3, PointsAsString = "21,10 21,11 22,12 23,11 23,10 22,9 21,10", OwnedPointsAsString = "22,10 22,11"},
+new InkBallPathViewModel{ iId = 82, iGameId = 35, iPlayerId = 1, PointsAsString = "10,8 10,9 11,10 12,9 11,8 10,8", OwnedPointsAsString = "11,9"},
+//player 1 path after player 1 path. Should be point (not too late!) or player 2 path only
+new InkBallPathViewModel{ iId = 83, iGameId = 35, iPlayerId = 1, PointsAsString = "11,6 10,7 10,8 11,8 12,7 12,6 11,6", OwnedPointsAsString = "11,7"},
+new InkBallPathViewModel{ iId = 84, iGameId = 35, iPlayerId = 3, PointsAsString = "25,6 26,7 26,8 25,8 24,7 25,6", OwnedPointsAsString = "25,7"},
+new InkBallPathViewModel{ iId = 85, iGameId = 35, iPlayerId = 1, PointsAsString = "12,6 13,6 14,7 13,8 12,7 12,6", OwnedPointsAsString = "13,7"},
+new InkBallPathViewModel{ iId = 86, iGameId = 35, iPlayerId = 3, PointsAsString = "22,12 22,13 23,13 24,12 23,11 22,12", OwnedPointsAsString = "23,12"}
+						});
+					});
+					Assert.NotNull(exception);
+					Assert.IsType<ArgumentException>(exception);
+					Assert.Equal("not your turn", exception.Message);
+				}
+				else
+				{
+					await SetAllPaths2(hub_P1, hub_P2, new InkBallPathViewModel[] {
+					//p1
+new InkBallPathViewModel{ iId = 75, iGameId = 35, iPlayerId = 1, PointsAsString = "13,8 12,9 11,8 12,7 13,8", OwnedPointsAsString = "12,8"},
+					//p2
+new InkBallPathViewModel{ iId = 76, iGameId = 35, iPlayerId = 3, PointsAsString = "24,7 23,8 24,9 25,8 24,7", OwnedPointsAsString = "24,8"},
+					//p1
+new InkBallPathViewModel{ iId = 77, iGameId = 35, iPlayerId = 1, PointsAsString = "14,9 14,10 13,10 12,9 11,8 12,7 13,8 14,9", OwnedPointsAsString = "13,9"},
+					//p2
+new InkBallPathViewModel{ iId = 78, iGameId = 35, iPlayerId = 3, PointsAsString = "22,9 23,10 24,10 24,9 25,8 24,7 23,8 22,9", OwnedPointsAsString = "23,9"},
+					//p1
+new InkBallPathViewModel{ iId = 80, iGameId = 35, iPlayerId = 1, PointsAsString = "11,10 12,11 13,11 14,10 13,10 12,9 11,10", OwnedPointsAsString = "12,10"},
+					//p2
+new InkBallPathViewModel{ iId = 81, iGameId = 35, iPlayerId = 3, PointsAsString = "21,10 21,11 22,12 23,11 23,10 22,9 21,10", OwnedPointsAsString = "22,10 22,11"},
+					//p1
+new InkBallPathViewModel{ iId = 82, iGameId = 35, iPlayerId = 1, PointsAsString = "10,8 10,9 11,10 12,9 11,8 10,8", OwnedPointsAsString = "11,9"},
+					//p2
+new InkBallPathViewModel{ iId = 79, iGameId = 35, iPlayerId = 3, PointsAsString = "26,9 25,10 25,11 24,12 23,11 23,10 24,10 24,9 25,8 26,9", OwnedPointsAsString = "24,11 25,9"},
+					//p1
+new InkBallPathViewModel{ iId = 83, iGameId = 35, iPlayerId = 1, PointsAsString = "11,6 10,7 10,8 11,8 12,7 12,6 11,6", OwnedPointsAsString = "11,7"},
+					//p2
+new InkBallPathViewModel{ iId = 84, iGameId = 35, iPlayerId = 3, PointsAsString = "25,6 26,7 26,8 25,8 24,7 25,6", OwnedPointsAsString = "25,7"},
+					//p1
+new InkBallPathViewModel{ iId = 85, iGameId = 35, iPlayerId = 1, PointsAsString = "12,6 13,6 14,7 13,8 12,7 12,6", OwnedPointsAsString = "13,7"},
+					//p2
+new InkBallPathViewModel{ iId = 86, iGameId = 35, iPlayerId = 3, PointsAsString = "22,12 22,13 23,13 24,12 23,11 22,12", OwnedPointsAsString = "23,12"}
+					});
 				}
 			}
 		}

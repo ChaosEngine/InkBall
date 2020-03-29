@@ -29,6 +29,8 @@ namespace InkBall.Module.Model
 
 		public abstract ICollection<Point> InkBallPoint { get; set; }
 
+		[JsonIgnore]
+		[IgnoreMember]
 		public bool BelongsToCPU => iPlayerId == -1;
 
 		/**
