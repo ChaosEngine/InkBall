@@ -695,7 +695,7 @@ var InkBallGame = function () {
                 return this.g_SignalRConnection.invoke("GetPlayerPointsAndPaths", this.m_bViewOnly, this.g_iGameID).then(function (ppDTO) {
                   var path_and_point = PlayerPointsAndPathsDTO.Deserialize(ppDTO);
                   if (path_and_point.Points !== undefined) this.SetAllPoints(path_and_point.Points);
-                  if (path_and_point.Paths !== undefined) this.SetAllPaths2(path_and_point.Paths);
+                  if (path_and_point.Paths !== undefined) this.SetAllPaths(path_and_point.Paths);
                   this.m_bPointsAndPathsLoaded = true;
                   return true;
                 }.bind(this));
@@ -1260,8 +1260,8 @@ var InkBallGame = function () {
       this.m_Lines.push(line);
     }
   }, {
-    key: "SetAllPaths2",
-    value: function SetAllPaths2(packedPaths) {
+    key: "SetAllPaths",
+    value: function SetAllPaths(packedPaths) {
       var _this12 = this;
 
       packedPaths.forEach(function (unpacked) {
@@ -1603,6 +1603,7 @@ var InkBallGame = function () {
         this.ShowMobileStatus('Waiting for oponent move');
         this.m_Screen.style.cursor = "wait";
         this.m_StopAndDraw.disabled = this.m_CancelPath.disabled = 'disabled';
+        if (true === this.m_bIsCPUGame && !this.m_bIsPlayerActive) this.StartCPUCalculation();
       }
 
       if (!this.m_bDrawLines) this.m_StopAndDraw.value = 'Draw line';else this.m_StopAndDraw.value = 'Draw dot';
@@ -1752,6 +1753,7 @@ var InkBallGame = function () {
 
                   if (val.owned.length > 0) {
                     this.Debug('Closing path', 0);
+                    this.rAF_FrameID = null;
                     this.SendAsyncData(this.CreateXMLPutPathRequest(val), function () {
                       _this13.OnCancelClick();
 
@@ -1859,6 +1861,7 @@ var InkBallGame = function () {
 
                 if (val.owned.length > 0) {
                   this.Debug('Closing path', 0);
+                  this.rAF_FrameID = null;
                   this.SendAsyncData(this.CreateXMLPutPathRequest(val), function () {
                     _this14.OnCancelClick();
 
@@ -1914,9 +1917,9 @@ var InkBallGame = function () {
           var _p5 = this.m_Points.get(y * this.m_iGridWidth + x);
 
           if (_p5 !== undefined && _p5.$GetFillColor() === this.m_sDotColor) {
-              this.m_iLastX = x;
-              this.m_iLastY = y;
-            }
+            this.m_iLastX = x;
+            this.m_iLastY = y;
+          }
         }
       }
     }

@@ -60,7 +60,7 @@ class InkBallPointViewModel extends DtoMsg {
 	GetKind() { return CommandKindEnum.POINT; }
 
 	static Format(sUser, point) {
-		let msg = '(' + point.iX + ',' + point.iY + ' - ';// + point.Status;
+		let msg = '(' + point.iX + ',' + point.iY + ' - ';
 		const status = point.Status !== undefined ? point.Status : point.status;
 
 		switch (status) {
@@ -95,7 +95,7 @@ class InkBallPointViewModel extends DtoMsg {
 }
 
 class InkBallPathViewModel extends DtoMsg {
-	constructor(iId = 0, iGameId = 0, iPlayerId = 0, PointsAsString = '', OwnedPointsAsString = ''/*, IsDelayed = false*/) {
+	constructor(iId = 0, iGameId = 0, iPlayerId = 0, PointsAsString = '', OwnedPointsAsString = '') {
 		super();
 
 		this.iId = iId;
@@ -103,7 +103,6 @@ class InkBallPathViewModel extends DtoMsg {
 		this.iPlayerId = iPlayerId;
 		this.PointsAsString = PointsAsString;
 		this.OwnedPointsAsString = OwnedPointsAsString;
-		//this.IsDelayed = IsDelayed;
 	}
 
 	GetKind() { return CommandKindEnum.PATH; }
@@ -458,7 +457,6 @@ class InkBallGame {
 		this.m_SurrenderButton = null;
 		this.m_sMsgInputSel = null;
 		this.m_sMsgSendButtonSel = null;
-		//this.m_DrawMode = null;
 		this.m_CancelPath = null;
 		this.m_StopAndDraw = null;
 		this.m_bMouseDown = false;
@@ -511,7 +509,7 @@ class InkBallGame {
 				if (path_and_point.Points !== undefined)
 					this.SetAllPoints(path_and_point.Points);
 				if (path_and_point.Paths !== undefined)
-					this.SetAllPaths2(path_and_point.Paths);
+					this.SetAllPaths(path_and_point.Paths);
 
 				this.m_bPointsAndPathsLoaded = true;
 
@@ -998,28 +996,6 @@ class InkBallGame {
 
 	SetAllPoints(points) {
 		points.forEach(p => {
-			/*if (p[3] === this.g_iPlayerID) {//iPlayerID
-			}
-			else {
-				switch (p[2]) {//Status
-					case StatusEnum.POINT_FREE:
-					case StatusEnum.POINT_FREE_RED:
-					case StatusEnum.POINT_FREE_BLUE:
-					case StatusEnum.POINT_STARTING:
-					case StatusEnum.POINT_OWNED_BY_RED:
-					case StatusEnum.POINT_OWNED_BY_BLUE:
-						break;
-					case StatusEnum.POINT_IN_PATH:
-						// if (this.m_bIsPlayingWithRed === true) {//bPlayingWithRed
-						// 	p[2] = StatusEnum.POINT_FREE_BLUE;
-						// }
-						// else {
-						// 	p[2] = StatusEnum.POINT_FREE_RED;
-						// }
-						break;
-				}
-			}*/
-
 			this.SetPoint(p[0]/*x*/, p[1]/*y*/, p[2]/*Status*/, p[3]/*iPlayerId*/);
 		});
 	}
@@ -1065,14 +1041,7 @@ class InkBallGame {
 		this.m_Lines.push(line);
 	}
 
-	// SetAllPaths(paths) {
-	// 	paths.forEach(p => {
-	// 		this.SetPath(p[0]/*points*/, this.m_bIsPlayingWithRed, p[1] === this.g_iPlayerID/*isMainPlayerPoints*/,
-	// 			p.iId/*real DB id*/);
-	// 	});
-	// }
-
-	SetAllPaths2(packedPaths) {
+	SetAllPaths(packedPaths) {
 		packedPaths.forEach(unpacked => {
 			//const unpacked = JSON.parse(packed.Serialized);
 			if (unpacked.iGameId !== this.g_iGameID)
@@ -1144,9 +1113,6 @@ class InkBallGame {
 				OwnedPoints: undefined,
 				owned: "",
 				path: "",
-				// revertFillColor: undefined,
-				// revertStatus: undefined,
-				// revertStrokeColor: undefined,
 				errorDesc: "Points not unique"
 			};
 		}
@@ -1184,15 +1150,6 @@ class InkBallGame {
 				y = pt.y;
 				if (x === null || y === null) return '';
 				x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
-				// const circle = this.m_Points.get(y * this.m_iGridWidth + x);
-				// if (circle) {
-				// 	pathPoints.push({
-				// 		point: circle,
-				// 		revertStatus: circle.$GetOldStatus(),
-				// 		revertFillColor: this.m_sDotColor,//circle.$GetFillColor(),
-				// 		revertStrokeColor: this.m_sDotColor//circle.$GetStrokeColor()
-				// 	});
-				// }
 
 				return `${x},${y}`;
 			}.bind(this)).join(' ');
@@ -1202,9 +1159,6 @@ class InkBallGame {
 			owned: sOwnedPoints,
 			PathPoints: pathPoints,
 			path: sPathPoints,
-			// revertFillColor: sColor,
-			// revertStatus: StatusEnum.POINT_FREE,
-			// revertStrokeColor: (this.m_sDotColor === this.COLOR_RED ? this.COLOR_OWNED_BLUE : this.COLOR_OWNED_RED),
 			errorDesc: "No surrounded points"
 		};
 	}
@@ -1323,7 +1277,6 @@ class InkBallGame {
 		if (label)
 			label.innerHTML = '';
 		//this.NotifyBrowser('Time is running out', 'make a move');
-		//this.m_DrawMode.disabled = 'disabled';
 		this.m_StopAndDraw.disabled = this.m_CancelPath.disabled = 'disabled';
 		this.m_Timer = null;
 		this.m_bIsPlayerActive = false;
@@ -1339,7 +1292,6 @@ class InkBallGame {
 			this.ShowMobileStatus('Oponent has moved, your turn');
 			this.m_Screen.style.cursor = "crosshair";
 
-			//this.m_DrawMode.disabled = 'disabled';
 			if (this.m_Line !== null)
 				this.OnCancelClick();
 			this.m_StopAndDraw.disabled = '';
@@ -1357,7 +1309,6 @@ class InkBallGame {
 			this.m_bIsPlayerActive = false;
 			this.ShowMobileStatus('Waiting for oponent move');
 			this.m_Screen.style.cursor = "wait";
-			// this.m_DrawMode.disabled = 'disabled';
 			this.m_CancelPath.disabled = 'disabled';
 			this.m_StopAndDraw.disabled = '';
 			this.m_StopAndDraw.value = 'Stop and Draw';
@@ -1403,7 +1354,6 @@ class InkBallGame {
 			this.ShowMobileStatus('Oponent has moved, your turn');
 			this.m_Screen.style.cursor = "crosshair";
 
-			//this.m_DrawMode.disabled = 'disabled';
 			if (this.m_Line !== null)
 				this.OnCancelClick();
 			this.m_StopAndDraw.disabled = '';
@@ -1431,8 +1381,10 @@ class InkBallGame {
 			this.ShowMobileStatus('Waiting for oponent move');
 			this.m_Screen.style.cursor = "wait";
 
-			//this.m_DrawMode.disabled = 'disabled';
 			this.m_StopAndDraw.disabled = this.m_CancelPath.disabled = 'disabled';
+
+			if (true === this.m_bIsCPUGame && !this.m_bIsPlayerActive)
+				this.StartCPUCalculation();
 		}
 		if (!this.m_bDrawLines)
 			this.m_StopAndDraw.value = 'Draw line';
@@ -1620,14 +1572,13 @@ class InkBallGame {
 								const val = this.SurroundOponentPoints();
 								if (val.owned.length > 0) {
 									this.Debug('Closing path', 0);
+									this.rAF_FrameID = null;
 									this.SendAsyncData(this.CreateXMLPutPathRequest(val), () => {
 										this.OnCancelClick();
 										val.OwnedPoints.forEach(revData => {
 											const p = revData.point;
 											const revertFillColor = revData.revertFillColor;
 											const revertStrokeColor = revData.revertStrokeColor;
-											//const revertStatus = revData.revertStatus;
-											//p.$SetStatus(revertStatus);
 											p.$RevertOldStatus();
 											p.$SetFillColor(revertFillColor);
 											p.$SetStrokeColor(revertStrokeColor);
@@ -1659,15 +1610,12 @@ class InkBallGame {
 						let p1 = this.m_Points.get(y * this.m_iGridWidth + x);
 
 						if (p0 !== undefined && p1 !== undefined &&
-							//(p0.$GetStatus() !== StatusEnum.POINT_IN_PATH && p1.$GetStatus() !== StatusEnum.POINT_IN_PATH) &&
 							p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
 							const fromx = this.m_iLastX * this.m_iGridSizeX;
 							const fromy = this.m_iLastY * this.m_iGridSizeY;
 							this.m_Line = $createPolyline(6, fromx + "," + fromy + " " + tox + "," + toy, this.DRAWING_PATH_COLOR);
 							this.m_CancelPath.disabled = '';
-							// if (p0.$GetStatus() !== StatusEnum.POINT_IN_PATH)
 							p0.$SetStatus(StatusEnum.POINT_STARTING, true);
-							// if (p1.$GetStatus() !== StatusEnum.POINT_IN_PATH)
 							p1.$SetStatus(StatusEnum.POINT_IN_PATH, true);
 
 							this.m_iLastX = x;
@@ -1745,14 +1693,13 @@ class InkBallGame {
 							const val = this.SurroundOponentPoints();
 							if (val.owned.length > 0) {
 								this.Debug('Closing path', 0);
+								this.rAF_FrameID = null;
 								this.SendAsyncData(this.CreateXMLPutPathRequest(val), () => {
 									this.OnCancelClick();
 									val.OwnedPoints.forEach(revData => {
 										const p = revData.point;
 										const revertFillColor = revData.revertFillColor;
 										const revertStrokeColor = revData.revertStrokeColor;
-										// const revertStatus = revData.revertStatus;
-										// p.$SetStatus(revertStatus);
 										p.$RevertOldStatus();
 										p.$SetFillColor(revertFillColor);
 										p.$SetStrokeColor(revertStrokeColor);
@@ -1785,7 +1732,6 @@ class InkBallGame {
 					let p1 = this.m_Points.get(y * this.m_iGridWidth + x);
 
 					if (p0 !== undefined && p1 !== undefined &&
-						//(p0.$GetStatus() !== StatusEnum.POINT_IN_PATH && p1.$GetStatus() !== StatusEnum.POINT_IN_PATH) &&
 						p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
 						const fromx = this.m_iLastX * this.m_iGridSizeX;
 						const fromy = this.m_iLastY * this.m_iGridSizeY;
@@ -1793,9 +1739,7 @@ class InkBallGame {
 						const toy = y * this.m_iGridSizeY;
 						this.m_Line = $createPolyline(6, fromx + "," + fromy + " " + tox + "," + toy, this.DRAWING_PATH_COLOR);
 						this.m_CancelPath.disabled = '';
-						// if (p0.$GetStatus() !== StatusEnum.POINT_IN_PATH)
 						p0.$SetStatus(StatusEnum.POINT_STARTING, true);
-						// if (p1.$GetStatus() !== StatusEnum.POINT_IN_PATH)
 						p1.$SetStatus(StatusEnum.POINT_IN_PATH, true);
 					}
 					this.m_iLastX = x;
@@ -1804,12 +1748,9 @@ class InkBallGame {
 			}
 			else if (this.m_iLastX < 0 || this.m_iLastY < 0) {
 				let p1 = this.m_Points.get(y * this.m_iGridWidth + x);
-				if (p1 !== undefined && p1.$GetFillColor() === this.m_sDotColor
-					//&& (p1.$GetStatus() === StatusEnum.POINT_FREE_BLUE || p1.$GetStatus() === StatusEnum.POINT_FREE_RED)
-				) {
+				if (p1 !== undefined && p1.$GetFillColor() === this.m_sDotColor) {
 					this.m_iLastX = x;
 					this.m_iLastY = y;
-					//this.Debug('first point registered m_iLastX = '+this.m_iLastX+' m_iLastY = '+this.m_iLastY, 1);
 				}
 			}
 		}
@@ -1852,7 +1793,6 @@ class InkBallGame {
 					x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
 					const p0 = this.m_Points.get(y * this.m_iGridWidth + x);
 					if (p0 !== undefined) {
-						//p0.$SetStatus(p0.$GetOldStatus());
 						p0.$RevertOldStatus();
 					}
 					else {
@@ -1911,7 +1851,6 @@ class InkBallGame {
 		this.m_SurrenderButton = document.querySelector(sSurrenderButton);
 		this.m_CancelPath = document.querySelector(sCancelPath);
 		this.m_StopAndDraw = document.querySelector(sStopAndDraw);
-		//this.m_DrawMode = document.querySelector(sDrawMode);
 		this.m_Screen = document.querySelector(sScreen);
 		if (!this.m_Screen) {
 			alert("no board");
@@ -1967,13 +1906,11 @@ class InkBallGame {
 				if (this.m_bIsPlayerActive) {
 					this.ShowMobileStatus('Your move');
 					this.m_Screen.style.cursor = "crosshair";
-					// this.m_DrawMode.disabled = this.m_CancelPath.disabled = '';
 					this.m_StopAndDraw.disabled = '';
 				}
 				else {
 					this.ShowMobileStatus('Waiting for oponent move');
 					this.m_Screen.style.cursor = "wait";
-					// this.m_DrawMode.disabled = this.m_CancelPath.disabled = 'disabled';
 				}
 				if (!this.m_bDrawLines)
 					this.m_StopAndDraw.value = 'Draw line';
@@ -2007,7 +1944,6 @@ class InkBallGame {
 		if (!this.rAF_StartTimestamp) this.rAF_StartTimestamp = timeStamp;
 		const progress = timeStamp - this.rAF_StartTimestamp;
 
-		//element.style.transform = 'translateX(' + Math.min(progress / 10, 200) + 'px)';
 
 		const point = this.FindCPUPoint();
 
@@ -2025,8 +1961,6 @@ class InkBallGame {
 				this.m_bMouseDown = false;
 				this.m_bHandlingEvent = false;
 			});
-
-			//this.ReceivedPointProcessing(point);
 		}
 	}
 

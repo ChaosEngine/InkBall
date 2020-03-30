@@ -1514,5 +1514,11 @@ new []{/*id=714*/4/*x*/, 8/*y*/, 3/*val*/, 4/*playerID*/},
 			}//end using
 		}//end method
 
+		[Fact]
+		public void SignalR_ClientToServer_CPUOponent()
+		{
+			//TODO: implement this someday :-)
+		}
+
 	}//end class
 }

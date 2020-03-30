@@ -449,7 +449,7 @@ namespace InkBall.Module.Hubs
 					}
 				}
 
-				if (!new_point.BelongsToCPU)
+				if (!ThisGame.CpuOponent)
 					await Clients.User(OtherUserIdentifier).ServerToClientPoint(new_point);
 
 				return new_point;
@@ -473,7 +473,7 @@ namespace InkBall.Module.Hubs
 					|| string.IsNullOrEmpty(ThisUserName))
 					throw new ArgumentException("bad game or player");
 				bool isDelayedPathDrawn = false;
-				if (!ThisGame.IsThisPlayerActive()
+				if (!ThisGame.IsThisPlayerActive(path)
 					&& !(isDelayedPathDrawn = ThisPlayer.IsDelayedPathDrawPossible()))
 					throw new ArgumentException("not your turn");
 
@@ -510,7 +510,6 @@ namespace InkBall.Module.Hubs
 													  select p).Cast<IPoint>()
 													  .ToDictionaryAsync(pip => pip, _simpleCoordsPointComparer, token);
 
-				IDtoMsg new_path;
 				var db_path = new InkBallPath
 				{
 					// iId = path.iId,
@@ -580,6 +579,7 @@ namespace InkBall.Module.Hubs
 						var statisticalPointAndPathCounter = new StatisticalPointAndPathCounter(_dbContext, ThisGame.iId,
 							ThisPlayer.iId, OtherPlayer.iId, ref owning_color, ref other_owning_color, ref token);
 
+						IDtoMsg dto;
 						var win_status = await ThisGame.Check4Win(statisticalPointAndPathCounter);
 						if (win_status != InkBallGame.WinStatusEnum.NO_WIN)
 						{
@@ -588,19 +588,20 @@ namespace InkBall.Module.Hubs
 							var win = new WinCommand(win_status, winningPlayerID.GetValueOrDefault(0),
 								$"Bravo {(win_status == InkBallGame.WinStatusEnum.GREEN_WINS ? "green" : "red")}!");
 
-							new_path = win;
+							dto = win;
 							await Clients.User(OtherUserIdentifier).ServerToClientPlayerWin(win);
 						}
 						else
 						{
 							path = new InkBallPathViewModel(db_path, path.PointsAsString, path.OwnedPointsAsString);
-							new_path = path;
-							await Clients.User(OtherUserIdentifier).ServerToClientPath(path);
+							dto = path;
+							if (!ThisGame.CpuOponent)
+								await Clients.User(OtherUserIdentifier).ServerToClientPath(path);
 						}
 
 						trans.Commit();
 
-						return new_path;
+						return dto;
 					}
 					catch (Exception ex)
 					{
