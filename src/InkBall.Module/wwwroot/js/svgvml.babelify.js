@@ -17,8 +17,6 @@ function hasDuplicates(array) {
 if (SVG) {
   var $createSVGVML = function $createSVGVML(o, iWidth, iHeight, antialias) {
     cont = document.createElementNS(svgNS, "svg");
-    if (iWidth) cont.setAttributeNS(null, 'width', iWidth);
-    if (iHeight) cont.setAttributeNS(null, 'height', iHeight);
     o.appendChild(cont);
     svgAntialias = antialias;
     return cont;

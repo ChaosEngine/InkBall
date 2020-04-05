@@ -1163,8 +1163,8 @@ class InkBallGame {
 		};
 	}
 
-	IsPointOutsideAllPaths(iX, iY) {
-		const xmul = iX * this.m_iGridSizeX, ymul = iY * this.m_iGridSizeY;
+	IsPointOutsideAllPaths(x, y) {
+		const xmul = x * this.m_iGridSizeX, ymul = y * this.m_iGridSizeY;
 
 		for (const line of this.m_Lines) {
 			const points = line.$GetPointsArray();
@@ -1929,23 +1929,120 @@ class InkBallGame {
 		return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
 	}
 
-	FindCPUPoint() {
-		const x = this.GetRandomInt(0, this.m_iGridWidth);
-		const y = this.GetRandomInt(0, this.m_iGridHeight);
+	FindRandomCPUPoint() {
+		let max_random_pick_amount = 100, x, y;
+		while (--max_random_pick_amount > 0) {
+			x = this.GetRandomInt(0, this.m_iGridWidth);
+			y = this.GetRandomInt(0, this.m_iGridHeight);
 
-		const cmd = new InkBallPointViewModel(0, this.g_iGameID, -1/*player*/,
-			x, y,
-			/*this.m_bIsPlayingWithRed === false ? StatusEnum.POINT_FREE_RED : */StatusEnum.POINT_FREE_BLUE, 0);
+			if (!this.m_Points.has(y * this.m_iGridWidth + x) && this.IsPointOutsideAllPaths(x, y)) {
+				break;
+			}
+		}
 
+		const cmd = new InkBallPointViewModel(0, this.g_iGameID, -1/*player*/, x, y, StatusEnum.POINT_FREE_BLUE, 0);
 		return cmd;
 	}
 
+	CalculateCPUCentroid() {
+		let centroidX = 0, centroidY = 0, count = 0, x, y;
+		const sHumanColor = this.COLOR_RED;
+
+		for (const pt of this.m_Points.values()) {
+			if (pt !== undefined && pt.$GetFillColor() === sHumanColor && pt.$GetStatus() === StatusEnum.POINT_FREE_RED) {
+				const pos = pt.$GetPosition();
+				x = pos.x; y = pos.y;
+				x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
+
+				centroidX += x; centroidY += y;
+				count++;
+			}
+		}
+		if (count <= 0)
+			return null;
+
+		x = centroidX / count;
+		y = centroidY / count;
+		x = x * this.m_iGridSizeX;
+		y = y * this.m_iGridSizeY;
+		const tox = parseInt(x / this.m_iGridSizeX);
+		const toy = parseInt(y / this.m_iGridSizeY);
+		x = tox; y = toy;
+
+		let max_random_pick_amount = 20;
+		while (--max_random_pick_amount > 0) {
+			if (!this.m_Points.has(y * this.m_iGridWidth + x) && this.IsPointOutsideAllPaths(x, y)) {
+				break;
+			}
+
+			x = this.GetRandomInt(tox - 2, tox + 3);
+			y = this.GetRandomInt(toy - 2, toy + 3);
+		}
+		if (max_random_pick_amount <= 0)
+			return null;
+
+		const pt = new InkBallPointViewModel(0, this.g_iGameID, -1/*player*/, x, y, StatusEnum.POINT_FREE_BLUE, 0);
+		return pt;
+	}
+
+	IsPathPossible({
+		freeStat: freePointStatus = StatusEnum.POINT_FREE_RED,
+		fillCol: fillColor = this.COLOR_RED
+	} = {}) {
+
+		const isPointFreeForePath = function (freePointStatusArr, fillColor, pt) {
+			const status = pt.$GetStatus();
+
+			if (freePointStatusArr.includes(status) &&
+				(/*(status === StatusEnum.POINT_STARTING || status === StatusEnum.POINT_IN_PATH) && */pt.$GetFillColor() === fillColor)
+			) {
+				return true;
+			}
+			return false;
+		};
+
+		const path_creating_points = [];
+		for (const pt of this.m_Points.values()) {
+			if (pt && isPointFreeForePath([freePointStatus, StatusEnum.POINT_STARTING, StatusEnum.POINT_IN_PATH], fillColor, pt) === true) {
+				let { x: x, y: y } = pt.$GetPosition();
+				x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
+
+				const east = this.m_Points.get((y - 1) * this.m_iGridWidth + x);
+				const west = this.m_Points.get((y + 1) * this.m_iGridWidth + x);
+				const north = this.m_Points.get(y * this.m_iGridWidth + x - 1);
+				const south = this.m_Points.get(y * this.m_iGridWidth + x + 1);
+				const north_west = this.m_Points.get((y - 1) * this.m_iGridWidth + x - 1);
+				const north_east = this.m_Points.get((y - 1) * this.m_iGridWidth + x + 1);
+				const south_west = this.m_Points.get((y + 1) * this.m_iGridWidth + x - 1);
+				const south_east = this.m_Points.get((y + 1) * this.m_iGridWidth + x + 1);
+
+				if ((east && isPointFreeForePath([freePointStatus], fillColor, east) === true) ||
+					(west && isPointFreeForePath([freePointStatus], fillColor, west) === true) ||
+					(north && isPointFreeForePath([freePointStatus], fillColor, north) === true) ||
+					(south && isPointFreeForePath([freePointStatus], fillColor, south) === true) ||
+					(north_west && isPointFreeForePath([freePointStatus], fillColor, north_west) === true) ||
+					(north_east && isPointFreeForePath([freePointStatus], fillColor, north_east) === true) ||
+					(south_west && isPointFreeForePath([freePointStatus], fillColor, south_west) === true) ||
+					(south_east && isPointFreeForePath([freePointStatus], fillColor, south_east) === true)
+				) {
+					path_creating_points.push(pt);
+				}
+			}
+		}
+		return path_creating_points;
+	}
+
 	rAFCallBack(timeStamp) {
-		if (!this.rAF_StartTimestamp) this.rAF_StartTimestamp = timeStamp;
+		if (this.rAF_StartTimestamp === null) this.rAF_StartTimestamp = timeStamp;
 		const progress = timeStamp - this.rAF_StartTimestamp;
 
 
-		const point = this.FindCPUPoint();
+		let point = null;
+		const centroid = this.CalculateCPUCentroid();
+		if (centroid !== null)
+			point = centroid;
+		else
+			point = this.FindRandomCPUPoint();
 
 		if (point === null) {
 			if (progress < 2000)

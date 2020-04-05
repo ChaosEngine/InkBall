@@ -311,7 +311,7 @@ namespace InkBall.Module.Hubs
 				await LoadGameAndPlayerStructures(token);
 
 				if (ThisGame == null || ThisPlayer == null || OtherPlayer == null || string.IsNullOrEmpty(OtherUserIdentifier)
-					|| string.IsNullOrEmpty(ThisUserName))
+					|| string.IsNullOrEmpty(ThisUserName) || ThisGame.CpuOponent == true)
 					return;
 
 				var msg = $"Other player {ThisPlayer?.User?.UserName} connected 😁";
@@ -333,7 +333,7 @@ namespace InkBall.Module.Hubs
 				await LoadGameAndPlayerStructures(token);
 
 				if (ThisGame == null || ThisPlayer == null || OtherPlayer == null || string.IsNullOrEmpty(OtherUserIdentifier)
-					|| string.IsNullOrEmpty(ThisUserName))
+					|| string.IsNullOrEmpty(ThisUserName) || ThisGame.CpuOponent == true)
 					return;
 
 				var msg = $"Other player {ThisPlayer?.User?.UserName} disconnected 😢";

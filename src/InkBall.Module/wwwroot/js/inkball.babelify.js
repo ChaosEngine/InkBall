@@ -1405,9 +1405,9 @@ var InkBallGame = function () {
     }
   }, {
     key: "IsPointOutsideAllPaths",
-    value: function IsPointOutsideAllPaths(iX, iY) {
-      var xmul = iX * this.m_iGridSizeX,
-          ymul = iY * this.m_iGridSizeY;
+    value: function IsPointOutsideAllPaths(x, y) {
+      var xmul = x * this.m_iGridSizeX,
+          ymul = y * this.m_iGridSizeY;
 
       var _iterator4 = _createForOfIteratorHelper(this.m_Lines),
           _step4;
@@ -2088,21 +2088,150 @@ var InkBallGame = function () {
       return Math.floor(Math.random() * (max - min)) + min;
     }
   }, {
-    key: "FindCPUPoint",
-    value: function FindCPUPoint() {
-      var x = this.GetRandomInt(0, this.m_iGridWidth);
-      var y = this.GetRandomInt(0, this.m_iGridHeight);
+    key: "FindRandomCPUPoint",
+    value: function FindRandomCPUPoint() {
+      var max_random_pick_amount = 100,
+          x,
+          y;
+
+      while (--max_random_pick_amount > 0) {
+        x = this.GetRandomInt(0, this.m_iGridWidth);
+        y = this.GetRandomInt(0, this.m_iGridHeight);
+
+        if (!this.m_Points.has(y * this.m_iGridWidth + x) && this.IsPointOutsideAllPaths(x, y)) {
+          break;
+        }
+      }
+
       var cmd = new InkBallPointViewModel(0, this.g_iGameID, -1, x, y, StatusEnum.POINT_FREE_BLUE, 0);
       return cmd;
+    }
+  }, {
+    key: "CalculateCPUCentroid",
+    value: function CalculateCPUCentroid() {
+      var centroidX = 0,
+          centroidY = 0,
+          count = 0,
+          x,
+          y;
+      var sHumanColor = this.COLOR_RED;
+
+      var _iterator7 = _createForOfIteratorHelper(this.m_Points.values()),
+          _step7;
+
+      try {
+        for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
+          var _pt = _step7.value;
+
+          if (_pt !== undefined && _pt.$GetFillColor() === sHumanColor && _pt.$GetStatus() === StatusEnum.POINT_FREE_RED) {
+            var pos = _pt.$GetPosition();
+
+            x = pos.x;
+            y = pos.y;
+            x /= this.m_iGridSizeX;
+            y /= this.m_iGridSizeY;
+            centroidX += x;
+            centroidY += y;
+            count++;
+          }
+        }
+      } catch (err) {
+        _iterator7.e(err);
+      } finally {
+        _iterator7.f();
+      }
+
+      if (count <= 0) return null;
+      x = centroidX / count;
+      y = centroidY / count;
+      x = x * this.m_iGridSizeX;
+      y = y * this.m_iGridSizeY;
+      var tox = parseInt(x / this.m_iGridSizeX);
+      var toy = parseInt(y / this.m_iGridSizeY);
+      x = tox;
+      y = toy;
+      var max_random_pick_amount = 20;
+
+      while (--max_random_pick_amount > 0) {
+        if (!this.m_Points.has(y * this.m_iGridWidth + x) && this.IsPointOutsideAllPaths(x, y)) {
+          break;
+        }
+
+        x = this.GetRandomInt(tox - 2, tox + 3);
+        y = this.GetRandomInt(toy - 2, toy + 3);
+      }
+
+      if (max_random_pick_amount <= 0) return null;
+      var pt = new InkBallPointViewModel(0, this.g_iGameID, -1, x, y, StatusEnum.POINT_FREE_BLUE, 0);
+      return pt;
+    }
+  }, {
+    key: "IsPathPossible",
+    value: function IsPathPossible() {
+      var _ref6 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+          _ref6$freeStat = _ref6.freeStat,
+          freePointStatus = _ref6$freeStat === void 0 ? StatusEnum.POINT_FREE_RED : _ref6$freeStat,
+          _ref6$fillCol = _ref6.fillCol,
+          fillColor = _ref6$fillCol === void 0 ? this.COLOR_RED : _ref6$fillCol;
+
+      var isPointFreeForePath = function isPointFreeForePath(freePointStatusArr, fillColor, pt) {
+        var status = pt.$GetStatus();
+
+        if (freePointStatusArr.includes(status) && pt.$GetFillColor() === fillColor) {
+          return true;
+        }
+
+        return false;
+      };
+
+      var path_creating_points = [];
+
+      var _iterator8 = _createForOfIteratorHelper(this.m_Points.values()),
+          _step8;
+
+      try {
+        for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
+          var pt = _step8.value;
+
+          if (pt && isPointFreeForePath([freePointStatus, StatusEnum.POINT_STARTING, StatusEnum.POINT_IN_PATH], fillColor, pt) === true) {
+            var _pt$$GetPosition = pt.$GetPosition(),
+                x = _pt$$GetPosition.x,
+                y = _pt$$GetPosition.y;
+
+            x /= this.m_iGridSizeX;
+            y /= this.m_iGridSizeY;
+            var east = this.m_Points.get((y - 1) * this.m_iGridWidth + x);
+            var west = this.m_Points.get((y + 1) * this.m_iGridWidth + x);
+            var north = this.m_Points.get(y * this.m_iGridWidth + x - 1);
+            var south = this.m_Points.get(y * this.m_iGridWidth + x + 1);
+            var north_west = this.m_Points.get((y - 1) * this.m_iGridWidth + x - 1);
+            var north_east = this.m_Points.get((y - 1) * this.m_iGridWidth + x + 1);
+            var south_west = this.m_Points.get((y + 1) * this.m_iGridWidth + x - 1);
+            var south_east = this.m_Points.get((y + 1) * this.m_iGridWidth + x + 1);
+
+            if (east && isPointFreeForePath([freePointStatus], fillColor, east) === true || west && isPointFreeForePath([freePointStatus], fillColor, west) === true || north && isPointFreeForePath([freePointStatus], fillColor, north) === true || south && isPointFreeForePath([freePointStatus], fillColor, south) === true || north_west && isPointFreeForePath([freePointStatus], fillColor, north_west) === true || north_east && isPointFreeForePath([freePointStatus], fillColor, north_east) === true || south_west && isPointFreeForePath([freePointStatus], fillColor, south_west) === true || south_east && isPointFreeForePath([freePointStatus], fillColor, south_east) === true) {
+              path_creating_points.push(pt);
+            }
+          }
+        }
+      } catch (err) {
+        _iterator8.e(err);
+      } finally {
+        _iterator8.f();
+      }
+
+      return path_creating_points;
     }
   }, {
     key: "rAFCallBack",
     value: function rAFCallBack(timeStamp) {
       var _this15 = this;
 
-      if (!this.rAF_StartTimestamp) this.rAF_StartTimestamp = timeStamp;
+      if (this.rAF_StartTimestamp === null) this.rAF_StartTimestamp = timeStamp;
       var progress = timeStamp - this.rAF_StartTimestamp;
-      var point = this.FindCPUPoint();
+      var point = null;
+      var centroid = this.CalculateCPUCentroid();
+      if (centroid !== null) point = centroid;else point = this.FindRandomCPUPoint();
 
       if (point === null) {
         if (progress < 2000) this.rAF_FrameID = window.requestAnimationFrame(this.rAFCallBack.bind(this));
