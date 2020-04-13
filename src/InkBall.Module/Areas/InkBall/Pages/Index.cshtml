@@ -144,15 +144,15 @@
         {
             WriteLiteral(
                 (
-				env.IsDevelopment() ?
+                env.IsDevelopment() ?
                 $"<script src='{Url.Content("~/lib/signalr/dist/browser/signalr.js")}'></script>\r" +
                 (useMessagePackBinaryTransport ? $"<script src='{Url.Content("~/lib/msgpack5/dist/msgpack5.js")}'></script>\r" +
-                $"<script src='{Url.Content("~/lib/signalr-protocol-msgpack/dist/browser/signalr-protocol-msgpack.js")}'></script>\r" : "\r")                
+                $"<script src='{Url.Content("~/lib/signalr-protocol-msgpack/dist/browser/signalr-protocol-msgpack.js")}'></script>\r" : "\r")
                 :
                 @"<script src='https://cdn.jsdelivr.net/npm/@microsoft/signalr@3.1.3/dist/browser/signalr.min.js' integrity='sha256-AFxHLNsgi3fhSvU3kbJ1nLfgnOnxtdpHJhQCIITSj1c=' crossorigin='anonymous'></script>" +
                 (useMessagePackBinaryTransport ? @"<script src='https://cdn.jsdelivr.net/npm/msgpack5@4.2.1/dist/msgpack5.min.js' integrity='sha256-mY/RhkCJfd98j3c5s1EcUDJdRzffTeKzEzFIaI/2KQg=' crossorigin='anonymous'></script>
 				<script src='https://cdn.jsdelivr.net/npm/@microsoft/signalr-protocol-msgpack@3.1.3/dist/browser/signalr-protocol-msgpack.min.js' integrity='sha256-qRmBWzBPG/VfZgmUME9SFcj7scornw58glKaeh5/VqY=' crossorigin='anonymous'></script>" : "")
-				) +
+                ) +
 
 
                 @"<script type='text/javascript'>
@@ -166,7 +166,8 @@
 					""<script async src='" + Url.Content(Constants.WwwIncludeInkballJSBabel) + @"'><\/script>"" +
 					""<script async src='" + Url.Content(Constants.WwwIncludeSvgVmlJSBabel) + @"'><\/script>"");
 				}
-				</script>"
+				</script>\r" +
+                $"<script src='{Url.Content(Constants.WwwConcavemanBundle)}'></script>"
             );
         });
     }

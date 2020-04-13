@@ -12,6 +12,10 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
 
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
+
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+
 function _createSuper(Derived) { return function () { var Super = _getPrototypeOf(Derived), result; if (_isNativeReflectConstruct()) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
 function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
@@ -21,10 +25,6 @@ function _assertThisInitialized(self) { if (self === void 0) { throw new Referen
 function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
 
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
-
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -2174,7 +2174,7 @@ var InkBallGame = function () {
           _ref6$fillCol = _ref6.fillCol,
           fillColor = _ref6$fillCol === void 0 ? this.COLOR_RED : _ref6$fillCol;
 
-      var isPointFreeForePath = function isPointFreeForePath(freePointStatusArr, fillColor, pt) {
+      var isPointFreeForePath = function isPointFreeForePath(freePointStatusArr, pt) {
         var status = pt.$GetStatus();
 
         if (freePointStatusArr.includes(status) && pt.$GetFillColor() === fillColor) {
@@ -2193,23 +2193,23 @@ var InkBallGame = function () {
         for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
           var pt = _step8.value;
 
-          if (pt && isPointFreeForePath([freePointStatus, StatusEnum.POINT_STARTING, StatusEnum.POINT_IN_PATH], fillColor, pt) === true) {
+          if (pt && isPointFreeForePath([freePointStatus, StatusEnum.POINT_STARTING, StatusEnum.POINT_IN_PATH], pt) === true) {
             var _pt$$GetPosition = pt.$GetPosition(),
                 x = _pt$$GetPosition.x,
                 y = _pt$$GetPosition.y;
 
             x /= this.m_iGridSizeX;
             y /= this.m_iGridSizeY;
-            var east = this.m_Points.get((y - 1) * this.m_iGridWidth + x);
-            var west = this.m_Points.get((y + 1) * this.m_iGridWidth + x);
-            var north = this.m_Points.get(y * this.m_iGridWidth + x - 1);
-            var south = this.m_Points.get(y * this.m_iGridWidth + x + 1);
+            var east = this.m_Points.get(y * this.m_iGridWidth + x + 1);
+            var west = this.m_Points.get(y * this.m_iGridWidth + x - 1);
+            var north = this.m_Points.get((y - 1) * this.m_iGridWidth + x);
+            var south = this.m_Points.get((y + 1) * this.m_iGridWidth + x);
             var north_west = this.m_Points.get((y - 1) * this.m_iGridWidth + x - 1);
             var north_east = this.m_Points.get((y - 1) * this.m_iGridWidth + x + 1);
             var south_west = this.m_Points.get((y + 1) * this.m_iGridWidth + x - 1);
             var south_east = this.m_Points.get((y + 1) * this.m_iGridWidth + x + 1);
 
-            if (east && isPointFreeForePath([freePointStatus], fillColor, east) === true || west && isPointFreeForePath([freePointStatus], fillColor, west) === true || north && isPointFreeForePath([freePointStatus], fillColor, north) === true || south && isPointFreeForePath([freePointStatus], fillColor, south) === true || north_west && isPointFreeForePath([freePointStatus], fillColor, north_west) === true || north_east && isPointFreeForePath([freePointStatus], fillColor, north_east) === true || south_west && isPointFreeForePath([freePointStatus], fillColor, south_west) === true || south_east && isPointFreeForePath([freePointStatus], fillColor, south_east) === true) {
+            if (east && isPointFreeForePath([freePointStatus], east) === true || west && isPointFreeForePath([freePointStatus], west) === true || north && isPointFreeForePath([freePointStatus], north) === true || south && isPointFreeForePath([freePointStatus], south) === true || north_west && isPointFreeForePath([freePointStatus], north_west) === true || north_east && isPointFreeForePath([freePointStatus], north_east) === true || south_west && isPointFreeForePath([freePointStatus], south_west) === true || south_east && isPointFreeForePath([freePointStatus], south_east) === true) {
               path_creating_points.push(pt);
             }
           }
@@ -2221,6 +2221,41 @@ var InkBallGame = function () {
       }
 
       return path_creating_points;
+    }
+  }, {
+    key: "GroupPointsRecurse",
+    value: function GroupPointsRecurse(currPointsArr, point) {
+      if (point === undefined || currPointsArr.includes(point)) return currPointsArr;
+
+      if ([StatusEnum.POINT_FREE_BLUE, StatusEnum.POINT_STARTING, StatusEnum.POINT_IN_PATH].includes(point.$GetStatus()) === false || point.$GetFillColor() !== this.COLOR_BLUE) {
+        return currPointsArr;
+      }
+
+      currPointsArr.push(point);
+
+      var _point$$GetPosition = point.$GetPosition(),
+          x = _point$$GetPosition.x,
+          y = _point$$GetPosition.y;
+
+      x /= this.m_iGridSizeX;
+      y /= this.m_iGridSizeY;
+      var east = this.m_Points.get(y * this.m_iGridWidth + x + 1);
+      var west = this.m_Points.get(y * this.m_iGridWidth + x - 1);
+      var north = this.m_Points.get((y - 1) * this.m_iGridWidth + x);
+      var south = this.m_Points.get((y + 1) * this.m_iGridWidth + x);
+      var north_west = this.m_Points.get((y - 1) * this.m_iGridWidth + x - 1);
+      var north_east = this.m_Points.get((y - 1) * this.m_iGridWidth + x + 1);
+      var south_west = this.m_Points.get((y + 1) * this.m_iGridWidth + x - 1);
+      var south_east = this.m_Points.get((y + 1) * this.m_iGridWidth + x + 1);
+      if (east) this.GroupPointsRecurse(currPointsArr, east);
+      if (west) this.GroupPointsRecurse(currPointsArr, west);
+      if (north) this.GroupPointsRecurse(currPointsArr, north);
+      if (south) this.GroupPointsRecurse(currPointsArr, south);
+      if (north_west) this.GroupPointsRecurse(currPointsArr, north_west);
+      if (north_east) this.GroupPointsRecurse(currPointsArr, north_east);
+      if (south_west) this.GroupPointsRecurse(currPointsArr, south_west);
+      if (south_east) this.GroupPointsRecurse(currPointsArr, south_east);
+      return currPointsArr;
     }
   }, {
     key: "rAFCallBack",

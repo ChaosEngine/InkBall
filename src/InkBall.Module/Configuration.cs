@@ -39,6 +39,7 @@ namespace InkBall.Module
 		public const string WwwIncludeSvgVmlJSBabel = "~/js/svgvml.babelify.min.js";
 		public const string WwwIncludeCSS = "~/css/inkball.min.css";
 #endif
+		public const string WwwConcavemanBundle = "~/js/concavemanBundle.js";
 
 		#endregion JS/CSS variables
 	}

@@ -1990,7 +1990,7 @@ class InkBallGame {
 		fillCol: fillColor = this.COLOR_RED
 	} = {}) {
 
-		const isPointFreeForePath = function (freePointStatusArr, fillColor, pt) {
+		const isPointFreeForePath = function (freePointStatusArr, pt) {
 			const status = pt.$GetStatus();
 
 			if (freePointStatusArr.includes(status) &&
@@ -2003,33 +2003,76 @@ class InkBallGame {
 
 		const path_creating_points = [];
 		for (const pt of this.m_Points.values()) {
-			if (pt && isPointFreeForePath([freePointStatus, StatusEnum.POINT_STARTING, StatusEnum.POINT_IN_PATH], fillColor, pt) === true) {
+			if (pt && isPointFreeForePath([freePointStatus, StatusEnum.POINT_STARTING, StatusEnum.POINT_IN_PATH], pt) === true) {
 				let { x: x, y: y } = pt.$GetPosition();
 				x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
 
-				const east = this.m_Points.get((y - 1) * this.m_iGridWidth + x);
-				const west = this.m_Points.get((y + 1) * this.m_iGridWidth + x);
-				const north = this.m_Points.get(y * this.m_iGridWidth + x - 1);
-				const south = this.m_Points.get(y * this.m_iGridWidth + x + 1);
+				const east = this.m_Points.get(y * this.m_iGridWidth + x + 1);
+				const west = this.m_Points.get(y * this.m_iGridWidth + x - 1);
+				const north = this.m_Points.get((y - 1) * this.m_iGridWidth + x);
+				const south = this.m_Points.get((y + 1) * this.m_iGridWidth + x);
 				const north_west = this.m_Points.get((y - 1) * this.m_iGridWidth + x - 1);
 				const north_east = this.m_Points.get((y - 1) * this.m_iGridWidth + x + 1);
 				const south_west = this.m_Points.get((y + 1) * this.m_iGridWidth + x - 1);
 				const south_east = this.m_Points.get((y + 1) * this.m_iGridWidth + x + 1);
 
-				if ((east && isPointFreeForePath([freePointStatus], fillColor, east) === true) ||
-					(west && isPointFreeForePath([freePointStatus], fillColor, west) === true) ||
-					(north && isPointFreeForePath([freePointStatus], fillColor, north) === true) ||
-					(south && isPointFreeForePath([freePointStatus], fillColor, south) === true) ||
-					(north_west && isPointFreeForePath([freePointStatus], fillColor, north_west) === true) ||
-					(north_east && isPointFreeForePath([freePointStatus], fillColor, north_east) === true) ||
-					(south_west && isPointFreeForePath([freePointStatus], fillColor, south_west) === true) ||
-					(south_east && isPointFreeForePath([freePointStatus], fillColor, south_east) === true)
+				if ((east && isPointFreeForePath([freePointStatus], east) === true) ||
+					(west && isPointFreeForePath([freePointStatus], west) === true) ||
+					(north && isPointFreeForePath([freePointStatus], north) === true) ||
+					(south && isPointFreeForePath([freePointStatus], south) === true) ||
+					(north_west && isPointFreeForePath([freePointStatus], north_west) === true) ||
+					(north_east && isPointFreeForePath([freePointStatus], north_east) === true) ||
+					(south_west && isPointFreeForePath([freePointStatus], south_west) === true) ||
+					(south_east && isPointFreeForePath([freePointStatus], south_east) === true)
 				) {
 					path_creating_points.push(pt);
 				}
 			}
 		}
 		return path_creating_points;
+	}
+
+	GroupPointsRecurse(currPointsArr, point) {
+		if (point === undefined || currPointsArr.includes(point))
+			return currPointsArr;
+
+		if ([StatusEnum.POINT_FREE_BLUE, StatusEnum.POINT_STARTING, StatusEnum.POINT_IN_PATH].includes(point.$GetStatus()) === false ||
+			point.$GetFillColor() !== this.COLOR_BLUE) {
+			return currPointsArr;
+		}
+
+		currPointsArr.push(point);
+
+		let { x: x, y: y } = point.$GetPosition();
+		x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
+
+		const east = this.m_Points.get(y * this.m_iGridWidth + x + 1);
+		const west = this.m_Points.get(y * this.m_iGridWidth + x - 1);
+		const north = this.m_Points.get((y - 1) * this.m_iGridWidth + x);
+		const south = this.m_Points.get((y + 1) * this.m_iGridWidth + x);
+		const north_west = this.m_Points.get((y - 1) * this.m_iGridWidth + x - 1);
+		const north_east = this.m_Points.get((y - 1) * this.m_iGridWidth + x + 1);
+		const south_west = this.m_Points.get((y + 1) * this.m_iGridWidth + x - 1);
+		const south_east = this.m_Points.get((y + 1) * this.m_iGridWidth + x + 1);
+
+		if (east)
+			this.GroupPointsRecurse(currPointsArr, east);
+		if (west)
+			this.GroupPointsRecurse(currPointsArr, west);
+		if (north)
+			this.GroupPointsRecurse(currPointsArr, north);
+		if (south)
+			this.GroupPointsRecurse(currPointsArr, south);
+		if (north_west)
+			this.GroupPointsRecurse(currPointsArr, north_west);
+		if (north_east)
+			this.GroupPointsRecurse(currPointsArr, north_east);
+		if (south_west)
+			this.GroupPointsRecurse(currPointsArr, south_west);
+		if (south_east)
+			this.GroupPointsRecurse(currPointsArr, south_east);
+
+		return currPointsArr;
 	}
 
 	rAFCallBack(timeStamp) {
