@@ -752,9 +752,8 @@ var InkBallGame = function () {
 
                 _context5.next = 9;
                 return this.g_SignalRConnection.invoke("GetUserSettings").then(function (settings) {
-                  LocalLog(settings);
-
                   if (settings) {
+                    LocalLog(settings);
                     settings = ApplicationUserSettings.Deserialize(settings);
                     var to_store = ApplicationUserSettings.Serialize(settings);
                     sessionStorage.setItem("ApplicationUserSettings", to_store);
@@ -2038,6 +2037,7 @@ var InkBallGame = function () {
       this.m_iGridHeight = parseInt(Math.ceil(iClientHeight / this.m_iGridSizeY));
       this.rAF_StartTimestamp = null;
       this.rAF_FrameID = null;
+      this.lastCycle = [];
       $createSVGVML(this.m_Screen, this.m_Screen.style.width, this.m_Screen.style.height, true);
       this.DisableSelection(this.m_Screen);
 
@@ -2172,46 +2172,98 @@ var InkBallGame = function () {
           _ref6$freeStat = _ref6.freeStat,
           freePointStatus = _ref6$freeStat === void 0 ? StatusEnum.POINT_FREE_RED : _ref6$freeStat,
           _ref6$fillCol = _ref6.fillCol,
-          fillColor = _ref6$fillCol === void 0 ? this.COLOR_RED : _ref6$fillCol;
+          fillColor = _ref6$fillCol === void 0 ? this.COLOR_RED : _ref6$fillCol,
+          _ref6$visuals = _ref6.visuals,
+          presentVisually = _ref6$visuals === void 0 ? true : _ref6$visuals;
 
-      var isPointFreeForePath = function isPointFreeForePath(freePointStatusArr, pt) {
+      var graph_points = [],
+          graph_edges = new Map();
+
+      var isPointOKForPath = function isPointOKForPath(freePointStatusArr, pt) {
         var status = pt.$GetStatus();
 
         if (freePointStatusArr.includes(status) && pt.$GetFillColor() === fillColor) {
-          return true;
-        }
+            return true;
+          }
 
         return false;
       };
 
-      var path_creating_points = [];
+      var addPointsAndEdgestoGraph = function (point, next, view_x, view_y, x, y) {
+        if (next && isPointOKForPath([freePointStatus], next) === true) {
+          var next_pos = next.$GetPosition();
+          var to_x = next_pos.x / this.m_iGridSizeX,
+              to_y = next_pos.y / this.m_iGridSizeY;
+
+          if (graph_edges.has("".concat(x, ",").concat(y, "_").concat(to_x, ",").concat(to_y)) === false && graph_edges.has("".concat(to_x, ",").concat(to_y, "_").concat(x, ",").concat(y)) === false) {
+            var edge = {
+              from: point,
+              to: next
+            };
+
+            if (presentVisually === true) {
+              var line = $createLine(3, 'green');
+              line.$move(view_x, view_y, next_pos.x, next_pos.y);
+              edge.line = line;
+            }
+
+            graph_edges.set("".concat(x, ",").concat(y, "_").concat(to_x, ",").concat(to_y), edge);
+
+            if (graph_points.includes(point) === false) {
+              point.adjacents = [next];
+              graph_points.push(point);
+            } else {
+              var pt = graph_points.find(function (x) {
+                return x === point;
+              });
+              pt.adjacents.push(next);
+            }
+
+            if (graph_points.includes(next) === false) {
+              next.adjacents = [point];
+              graph_points.push(next);
+            } else {
+              var _pt2 = graph_points.find(function (x) {
+                return x === next;
+              });
+
+              _pt2.adjacents.push(point);
+            }
+          }
+        }
+      }.bind(this);
 
       var _iterator8 = _createForOfIteratorHelper(this.m_Points.values()),
           _step8;
 
       try {
         for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
-          var pt = _step8.value;
+          var point = _step8.value;
 
-          if (pt && isPointFreeForePath([freePointStatus, StatusEnum.POINT_STARTING, StatusEnum.POINT_IN_PATH], pt) === true) {
-            var _pt$$GetPosition = pt.$GetPosition(),
-                x = _pt$$GetPosition.x,
-                y = _pt$$GetPosition.y;
+          if (point && isPointOKForPath([freePointStatus, StatusEnum.POINT_STARTING, StatusEnum.POINT_IN_PATH], point) === true) {
+            var _point$$GetPosition = point.$GetPosition(),
+                view_x = _point$$GetPosition.x,
+                view_y = _point$$GetPosition.y;
 
-            x /= this.m_iGridSizeX;
-            y /= this.m_iGridSizeY;
-            var east = this.m_Points.get(y * this.m_iGridWidth + x + 1);
-            var west = this.m_Points.get(y * this.m_iGridWidth + x - 1);
-            var north = this.m_Points.get((y - 1) * this.m_iGridWidth + x);
-            var south = this.m_Points.get((y + 1) * this.m_iGridWidth + x);
-            var north_west = this.m_Points.get((y - 1) * this.m_iGridWidth + x - 1);
-            var north_east = this.m_Points.get((y - 1) * this.m_iGridWidth + x + 1);
-            var south_west = this.m_Points.get((y + 1) * this.m_iGridWidth + x - 1);
-            var south_east = this.m_Points.get((y + 1) * this.m_iGridWidth + x + 1);
-
-            if (east && isPointFreeForePath([freePointStatus], east) === true || west && isPointFreeForePath([freePointStatus], west) === true || north && isPointFreeForePath([freePointStatus], north) === true || south && isPointFreeForePath([freePointStatus], south) === true || north_west && isPointFreeForePath([freePointStatus], north_west) === true || north_east && isPointFreeForePath([freePointStatus], north_east) === true || south_west && isPointFreeForePath([freePointStatus], south_west) === true || south_east && isPointFreeForePath([freePointStatus], south_east) === true) {
-              path_creating_points.push(pt);
-            }
+            var x = view_x / this.m_iGridSizeX,
+                y = view_y / this.m_iGridSizeY;
+            var next = void 0;
+            next = this.m_Points.get(y * this.m_iGridWidth + x + 1);
+            addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y);
+            next = this.m_Points.get(y * this.m_iGridWidth + x - 1);
+            addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y);
+            next = this.m_Points.get((y - 1) * this.m_iGridWidth + x);
+            addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y);
+            next = this.m_Points.get((y + 1) * this.m_iGridWidth + x);
+            addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y);
+            next = this.m_Points.get((y - 1) * this.m_iGridWidth + x - 1);
+            addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y);
+            next = this.m_Points.get((y - 1) * this.m_iGridWidth + x + 1);
+            addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y);
+            next = this.m_Points.get((y + 1) * this.m_iGridWidth + x - 1);
+            addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y);
+            next = this.m_Points.get((y + 1) * this.m_iGridWidth + x + 1);
+            addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y);
           }
         }
       } catch (err) {
@@ -2220,25 +2272,182 @@ var InkBallGame = function () {
         _iterator8.f();
       }
 
-      return path_creating_points;
+      return {
+        vertices: graph_points,
+        edges: Array.from(graph_edges.values())
+      };
+    }
+  }, {
+    key: "IsGraphCyclic",
+    value: function IsGraphCyclic(graph) {
+      var vertices = graph.vertices;
+
+      var isCyclicUtil = function (v, parent) {
+        v.visited = true;
+
+        var _iterator9 = _createForOfIteratorHelper(v.adjacents),
+            _step9;
+
+        try {
+          for (_iterator9.s(); !(_step9 = _iterator9.n()).done;) {
+            var i = _step9.value;
+
+            if (!i.visited) {
+              if (isCyclicUtil(i, v)) return true;
+            } else if (i !== parent) {
+                var _i$$GetPosition = i.$GetPosition(),
+                    view_x = _i$$GetPosition.x,
+                    view_y = _i$$GetPosition.y;
+
+                var x = view_x / this.m_iGridSizeX,
+                    y = view_y / this.m_iGridSizeY;
+                LocalLog("cycle found at ".concat(x, ",").concat(y));
+                return true;
+              }
+          }
+        } catch (err) {
+          _iterator9.e(err);
+        } finally {
+          _iterator9.f();
+        }
+
+        return false;
+      }.bind(this);
+
+      for (var i = 0; i < vertices.length; i++) {
+        vertices[i].visited = false;
+      }
+
+      for (var u = 0; u < vertices.length; u++) {
+        if (!vertices[u].visited) if (isCyclicUtil(vertices[u], -1)) return true;
+      }
+
+      return false;
+    }
+  }, {
+    key: "MarkAllCycles",
+    value: function MarkAllCycles(graph) {
+      var vertices = graph.vertices;
+      var N = vertices.length;
+      var cycles = new Array(N);
+      var mark = new Array(N);
+
+      for (var i = 0; i < N; i++) {
+        mark[i] = [];
+        cycles[i] = [];
+      }
+
+      var dfs_cycle = function dfs_cycle(u, p, color, mark, par) {
+        if (color[u] === 2) return;
+
+        if (color[u] === 1) {
+          cyclenumber++;
+          var cur = p;
+          mark[cur].push(cyclenumber);
+
+          while (cur !== u) {
+            cur = par[cur];
+            mark[cur].push(cyclenumber);
+          }
+
+          return;
+        }
+
+        par[u] = p;
+        color[u] = 1;
+        var vertex = vertices[u];
+
+        var _iterator10 = _createForOfIteratorHelper(vertex.adjacents),
+            _step10;
+
+        try {
+          for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
+            var adj = _step10.value;
+            var v = vertices.indexOf(adj);
+            if (v === par[u]) continue;
+            dfs_cycle(v, u, color, mark, par);
+          }
+        } catch (err) {
+          _iterator10.e(err);
+        } finally {
+          _iterator10.f();
+        }
+
+        color[u] = 2;
+      };
+
+      var printCycles = function (edges, mark) {
+        for (var e = 0; e < edges; e++) {
+          if (mark[e] !== undefined && mark[e].length > 0) {
+            for (var m = 0; m < mark[e].length; m++) {
+              cycles[mark[e][m]].push(e);
+            }
+          }
+        }
+
+        var tab = [];
+
+        for (var _i = 1; _i <= cyclenumber; _i++) {
+          if (cycles[_i].length > 0) {
+            var str = "Cycle Number ".concat(_i, ": "),
+                trailing_points = [];
+
+            var _iterator11 = _createForOfIteratorHelper(cycles[_i]),
+                _step11;
+
+            try {
+              for (_iterator11.s(); !(_step11 = _iterator11.n()).done;) {
+                var vert = _step11.value;
+
+                var _vertices$vert$$GetPo = vertices[vert].$GetPosition(),
+                    view_x = _vertices$vert$$GetPo.x,
+                    view_y = _vertices$vert$$GetPo.y;
+
+                var x = view_x / this.m_iGridSizeX,
+                    y = view_y / this.m_iGridSizeY;
+                str += "".concat(vert, "(").concat(x, ",").concat(y, ") ");
+                trailing_points.push(vertices[vert]);
+              }
+            } catch (err) {
+              _iterator11.e(err);
+            } finally {
+              _iterator11.f();
+            }
+
+            trailing_points.unshift(str);
+            tab.push(trailing_points);
+          }
+        }
+
+        return tab;
+      }.bind(this);
+
+      var color = new Array(N),
+          par = new Array(N);
+      var cyclenumber = 0,
+          edges = N;
+      dfs_cycle(1, 0, color, mark, par);
+      return printCycles(edges, mark);
     }
   }, {
     key: "GroupPointsRecurse",
     value: function GroupPointsRecurse(currPointsArr, point) {
-      if (point === undefined || currPointsArr.includes(point)) return currPointsArr;
+      if (point === undefined || currPointsArr.includes(point)) {
+        return currPointsArr;
+      }
 
       if ([StatusEnum.POINT_FREE_BLUE, StatusEnum.POINT_STARTING, StatusEnum.POINT_IN_PATH].includes(point.$GetStatus()) === false || point.$GetFillColor() !== this.COLOR_BLUE) {
         return currPointsArr;
       }
 
-      currPointsArr.push(point);
-
-      var _point$$GetPosition = point.$GetPosition(),
-          x = _point$$GetPosition.x,
-          y = _point$$GetPosition.y;
+      var _point$$GetPosition2 = point.$GetPosition(),
+          x = _point$$GetPosition2.x,
+          y = _point$$GetPosition2.y;
 
       x /= this.m_iGridSizeX;
       y /= this.m_iGridSizeY;
+      currPointsArr.push(point);
+      this.lastCycle.push(point);
       var east = this.m_Points.get(y * this.m_iGridWidth + x + 1);
       var west = this.m_Points.get(y * this.m_iGridWidth + x - 1);
       var north = this.m_Points.get((y - 1) * this.m_iGridWidth + x);

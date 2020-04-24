@@ -1,5 +1,5 @@
 /*eslint no-unused-vars: ["error", { "varsIgnorePattern": "InkBallGame|CountPointsDebug" }]*/
-/*global signalR $createOval $createPolyline $RemovePolyline $createSVGVML hasDuplicates*/
+/*global signalR $createOval $createPolyline $RemovePolyline $createSVGVML $createLine hasDuplicates*/
 "use strict";
 
 /******** funcs-n-classes ********/
@@ -529,8 +529,8 @@ class InkBallGame {
 			if (this.m_bViewOnly === false) {
 				if (sessionStorage.getItem("ApplicationUserSettings") === null) {
 					await this.g_SignalRConnection.invoke("GetUserSettings").then(function (settings) {
-						LocalLog(settings);
 						if (settings) {
+							LocalLog(settings);
 							settings = ApplicationUserSettings.Deserialize(settings);
 							const to_store = ApplicationUserSettings.Serialize(settings);
 
@@ -1866,8 +1866,11 @@ class InkBallGame {
 		this.m_iGridSizeY = parseInt(Math.ceil(iClientHeight / this.m_BoardSize.height));
 		this.m_iGridWidth = parseInt(Math.ceil(iClientWidth / this.m_iGridSizeX));
 		this.m_iGridHeight = parseInt(Math.ceil(iClientHeight / this.m_iGridSizeY));
+		///////CpuGame variables start//////
 		this.rAF_StartTimestamp = null;
 		this.rAF_FrameID = null;
+		this.lastCycle = [];
+		///////CpuGame variables end//////
 
 		$createSVGVML(this.m_Screen, this.m_Screen.style.width, this.m_Screen.style.height, true);
 
@@ -1923,6 +1926,11 @@ class InkBallGame {
 		}
 	}
 
+
+
+
+
+	///////CpuGame variables methods start//////
 	GetRandomInt(min, max) {
 		min = Math.ceil(min);
 		max = Math.floor(max);
@@ -1987,64 +1995,269 @@ class InkBallGame {
 
 	IsPathPossible({
 		freeStat: freePointStatus = StatusEnum.POINT_FREE_RED,
-		fillCol: fillColor = this.COLOR_RED
+		fillCol: fillColor = this.COLOR_RED,
+		visuals: presentVisually = true
 	} = {}) {
+		const graph_points = [], graph_edges = new Map();
 
-		const isPointFreeForePath = function (freePointStatusArr, pt) {
+		const isPointOKForPath = function (freePointStatusArr, pt) {
 			const status = pt.$GetStatus();
 
 			if (freePointStatusArr.includes(status) &&
 				(/*(status === StatusEnum.POINT_STARTING || status === StatusEnum.POINT_IN_PATH) && */pt.$GetFillColor() === fillColor)
+				//&& graph_points.includes(pt) === false
 			) {
 				return true;
 			}
 			return false;
 		};
 
-		const path_creating_points = [];
-		for (const pt of this.m_Points.values()) {
-			if (pt && isPointFreeForePath([freePointStatus, StatusEnum.POINT_STARTING, StatusEnum.POINT_IN_PATH], pt) === true) {
-				let { x: x, y: y } = pt.$GetPosition();
-				x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
+		const addPointsAndEdgestoGraph = function (point, next, view_x, view_y, x, y) {
+			if (next && isPointOKForPath([freePointStatus], next) === true) {
+				const next_pos = next.$GetPosition();
 
-				const east = this.m_Points.get(y * this.m_iGridWidth + x + 1);
-				const west = this.m_Points.get(y * this.m_iGridWidth + x - 1);
-				const north = this.m_Points.get((y - 1) * this.m_iGridWidth + x);
-				const south = this.m_Points.get((y + 1) * this.m_iGridWidth + x);
-				const north_west = this.m_Points.get((y - 1) * this.m_iGridWidth + x - 1);
-				const north_east = this.m_Points.get((y - 1) * this.m_iGridWidth + x + 1);
-				const south_west = this.m_Points.get((y + 1) * this.m_iGridWidth + x - 1);
-				const south_east = this.m_Points.get((y + 1) * this.m_iGridWidth + x + 1);
+				const to_x = next_pos.x / this.m_iGridSizeX, to_y = next_pos.y / this.m_iGridSizeY;
+				if (graph_edges.has(`${x},${y}_${to_x},${to_y}`) === false && graph_edges.has(`${to_x},${to_y}_${x},${y}`) === false) {
 
-				if ((east && isPointFreeForePath([freePointStatus], east) === true) ||
-					(west && isPointFreeForePath([freePointStatus], west) === true) ||
-					(north && isPointFreeForePath([freePointStatus], north) === true) ||
-					(south && isPointFreeForePath([freePointStatus], south) === true) ||
-					(north_west && isPointFreeForePath([freePointStatus], north_west) === true) ||
-					(north_east && isPointFreeForePath([freePointStatus], north_east) === true) ||
-					(south_west && isPointFreeForePath([freePointStatus], south_west) === true) ||
-					(south_east && isPointFreeForePath([freePointStatus], south_east) === true)
-				) {
-					path_creating_points.push(pt);
+					const edge = {
+						from: point,
+						to: next,
+						//from_x: x,
+						//from_y: y,
+						//to_x: to_x,
+						//to_y: to_y
+					};
+					if (presentVisually === true) {
+						const line = $createLine(3, 'green');
+						line.$move(view_x, view_y, next_pos.x, next_pos.y);
+						edge.line = line;
+					}
+					graph_edges.set(`${x},${y}_${to_x},${to_y}`, edge);
+
+
+					if (graph_points.includes(point) === false) {
+						point.adjacents = [next];
+						graph_points.push(point);
+					} else {
+						const pt = graph_points.find(x => x === point);
+						pt.adjacents.push(next);
+					}
+					if (graph_points.includes(next) === false) {
+						next.adjacents = [point];
+						graph_points.push(next);
+					} else {
+						const pt = graph_points.find(x => x === next);
+						pt.adjacents.push(point);
+					}
 				}
 			}
+		}.bind(this);
+
+		for (const point of this.m_Points.values()) {
+			if (point && isPointOKForPath([freePointStatus, StatusEnum.POINT_STARTING, StatusEnum.POINT_IN_PATH], point) === true) {
+				const { x: view_x, y: view_y } = point.$GetPosition();
+				const x = view_x / this.m_iGridSizeX, y = view_y / this.m_iGridSizeY;
+				let next;
+
+				//east
+				next = this.m_Points.get(y * this.m_iGridWidth + x + 1);
+				addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y);
+				//west
+				next = this.m_Points.get(y * this.m_iGridWidth + x - 1);
+				addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y);
+				//north
+				next = this.m_Points.get((y - 1) * this.m_iGridWidth + x);
+				addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y);
+				//south
+				next = this.m_Points.get((y + 1) * this.m_iGridWidth + x);
+				addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y);
+				//north_west
+				next = this.m_Points.get((y - 1) * this.m_iGridWidth + x - 1);
+				addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y);
+				//north_east
+				next = this.m_Points.get((y - 1) * this.m_iGridWidth + x + 1);
+				addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y);
+				//south_west
+				next = this.m_Points.get((y + 1) * this.m_iGridWidth + x - 1);
+				addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y);
+				//south_east
+				next = this.m_Points.get((y + 1) * this.m_iGridWidth + x + 1);
+				addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y);
+			}
 		}
-		return path_creating_points;
+		//return graph
+		return { vertices: graph_points, edges: Array.from(graph_edges.values()) };
+	}
+
+	// Returns true if the graph contains a cycle, else false. 
+	IsGraphCyclic(graph) {
+		const vertices = graph.vertices;
+
+		const isCyclicUtil = function (v, parent) {
+			// Mark the current node as visited 
+			v.visited = true;
+
+			// Recur for all the vertices  
+			// adjacent to this vertex
+			for (let i of v.adjacents) {
+				// If an adjacent is not visited,  
+				// then recur for that adjacent 
+				if (!i.visited) {
+					if (isCyclicUtil(i, v))
+						return true;
+				}
+
+				// If an adjacent is visited and  
+				// not parent of current vertex, 
+				// then there is a cycle. 
+				else if (i !== parent) {
+					const { x: view_x, y: view_y } = i.$GetPosition();
+					const x = view_x / this.m_iGridSizeX, y = view_y / this.m_iGridSizeY;
+
+					LocalLog(`cycle found at ${x},${y}`);
+					return true;
+				}
+			}
+			return false;
+		}.bind(this);
+
+		// Mark all the vertices as not visited  
+		// and not part of recursion stack 
+		for (let i = 0; i < vertices.length; i++) {
+			vertices[i].visited = false;
+		}
+
+		// Call the recursive helper function  
+		// to detect cycle in different DFS trees 
+		for (let u = 0; u < vertices.length; u++) {
+			// Don't recur for u if already visited 
+			if (!vertices[u].visited)
+				if (isCyclicUtil(vertices[u], -1))
+					return true;
+		}
+
+		return false;
+	}
+
+	MarkAllCycles(graph) {
+		const vertices = graph.vertices;
+		const N = vertices.length;
+		const cycles = new Array(N);
+		// mark with unique numbers
+		const mark = new Array(N);
+
+		for (let i = 0; i < N; i++) {
+			mark[i] = [];
+			cycles[i] = [];
+		}
+
+		const dfs_cycle = function (u, p, color, mark, par) {
+			// already (completely) visited vertex. 
+			if (color[u] === 2)
+				return;
+
+			// seen vertex, but was not completely visited -> cycle detected. 
+			// backtrack based on parents to find the complete cycle. 
+			if (color[u] === 1) {
+				cyclenumber++;
+				let cur = p;
+				mark[cur].push(cyclenumber);
+
+				// backtrack the vertex which are
+				// in the current cycle thats found
+				while (cur !== u) {
+					cur = par[cur];
+					mark[cur].push(cyclenumber);
+				}
+				return;
+			}
+			par[u] = p;
+
+			// partially visited.
+			color[u] = 1;
+			const vertex = vertices[u];
+			// simple dfs on graph
+			for (const adj of vertex.adjacents) {
+				const v = vertices.indexOf(adj);
+				// if it has not been visited previously
+				if (v === par[u])
+					continue;
+
+				dfs_cycle(v, u, color, mark, par);
+			}
+
+			// completely visited. 
+			color[u] = 2;
+		};
+
+		const printCycles = function (edges, mark) {
+			// push the edges that into the 
+			// cycle adjacency list 
+			for (let e = 0; e < edges; e++) {
+				if (mark[e] !== undefined && mark[e].length > 0) {
+					for (let m = 0; m < mark[e].length; m++) {
+						cycles[mark[e][m]].push(e);
+					}
+				}
+			}
+
+			const tab = [];
+			// print all the vertex with same cycle 
+			for (let i = 1; i <= cyclenumber; i++) {
+				if (cycles[i].length > 0) {
+					// Print the i-th cycle 
+					let str = (`Cycle Number ${i}: `), trailing_points = [];
+					for (const vert of cycles[i]) {
+						const { x: view_x, y: view_y } = vertices[vert].$GetPosition();
+						const x = view_x / this.m_iGridSizeX, y = view_y / this.m_iGridSizeY;
+
+						str += (`${vert}(${x},${y}) `);
+						trailing_points.push(vertices[vert]);
+					}
+					trailing_points.unshift(str);
+					tab.push(trailing_points);
+				}
+			}
+			//console.log(str);
+			return tab;
+		}.bind(this);
+
+		// arrays required to color the 
+		// graph, store the parent of node 
+		const color = new Array(N), par = new Array(N);
+		// store the numbers of cycle 
+		let cyclenumber = 0, edges = N;
+
+		// call DFS to mark the cycles 
+		dfs_cycle(1, 0, color, mark, par);
+
+		// function to print the cycles 
+		return printCycles(edges, mark);
 	}
 
 	GroupPointsRecurse(currPointsArr, point) {
-		if (point === undefined || currPointsArr.includes(point))
+		if (point === undefined || currPointsArr.includes(point)) {
+			//if (currPointsArr.lenth > 2 && currPointsArr[currPointsArr.length - 1] === currPointsArr[0]) {
+			//	const tmp = [];
+			//	currPointsArr.forEach((value) => {
+			//		tmp.push(value);
+			//	});
+			//	tmp.push(point);
+			//	this.lastCycle.push(tmp);
+			//}
 			return currPointsArr;
+		}
 
 		if ([StatusEnum.POINT_FREE_BLUE, StatusEnum.POINT_STARTING, StatusEnum.POINT_IN_PATH].includes(point.$GetStatus()) === false ||
 			point.$GetFillColor() !== this.COLOR_BLUE) {
 			return currPointsArr;
 		}
 
-		currPointsArr.push(point);
-
 		let { x: x, y: y } = point.$GetPosition();
 		x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
+
+		currPointsArr.push(point);
+		this.lastCycle.push(point);
 
 		const east = this.m_Points.get(y * this.m_iGridWidth + x + 1);
 		const west = this.m_Points.get(y * this.m_iGridWidth + x - 1);
@@ -2071,6 +2284,16 @@ class InkBallGame {
 			this.GroupPointsRecurse(currPointsArr, south_west);
 		if (south_east)
 			this.GroupPointsRecurse(currPointsArr, south_east);
+
+		//if (currPointsArr.length > 2) {
+		//	//const last = currPointsArr[currPointsArr.length - 1];
+		//	//let { x: last_pos_x, y: last_pos_y } = last.$GetPosition();
+		//	//last_pos_x /= this.m_iGridSizeX; last_pos_y /= this.m_iGridSizeY;
+		//	//if (Math.abs(parseInt(last_pos_x - x)) <= 1 && Math.abs(parseInt(last_pos_y - y)) <= 1) {
+		//	//	//currPointsArr.splice(-1, 1);
+		//	this.lastCycle.push(point);
+		//	//}
+		//}
 
 		return currPointsArr;
 	}
@@ -2108,5 +2331,6 @@ class InkBallGame {
 		if (this.rAF_FrameID === null)
 			this.rAF_FrameID = window.requestAnimationFrame(this.rAFCallBack.bind(this));
 	}
+	///////CpuGame variables methods end//////
 }
 /******** /funcs-n-classes ********/

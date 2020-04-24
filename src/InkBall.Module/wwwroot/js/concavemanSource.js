@@ -5,8 +5,7 @@ if(isTest) {
 	const root = document.createElement("div");
 	root.innerHTML = '<p>Hello concaveman.</p>';
 	document.body.appendChild(root);
-} else
-	console.log('Hello concaveman.');
+}
 
 const precision_points = [[484.01, 480.14], [676.57, 363.96], [944.68, 342.39],
 	[678.41, 41.09], [286.88, 237.09], [758.96, 215.69], [752.92, 117.69], [282.75, 492.97], [609.21, 262.15], [129.41, 252.79]
@@ -20,7 +19,7 @@ if(isTest) {
 	concaveman_output.innerHTML = 'concaveman output points: ' + JSON.stringify(output);
 	document.body.appendChild(concaveman_output);
 } else
-	console.info('concaveman simple test output points: \n' + JSON.stringify(output));
+	console.info('Hello concaveman. Simple test output points: \n' + JSON.stringify(output));
 
 /*if(concavemanBundle !== undefined)
 	concavemanBundle.prototype.concaveman = concaveman;
