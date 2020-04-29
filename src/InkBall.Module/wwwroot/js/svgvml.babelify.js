@@ -40,6 +40,10 @@ if (SVG) {
       this.setAttribute("stroke", "rgb(" + Math.round(R) + "," + Math.round(G) + "," + Math.round(B) + ")");
     };
 
+    o.$SetColor = function (color) {
+      this.setAttribute("stroke", color);
+    };
+
     o.$strokeWidth = function (s) {
       this.setAttribute("stroke-width", Math.round(s) + "px");
     };
@@ -262,6 +266,10 @@ if (SVG) {
 
     o.$RGBcolor = function (R, G, B) {
       this.strokecolor = "rgb(" + Math.round(R) + "," + Math.round(G) + "," + Math.round(B) + ")";
+    };
+
+    o.$SetColor = function (color) {
+      this.strokecolor = color;
     };
 
     o.$strokeWidth = function (s) {

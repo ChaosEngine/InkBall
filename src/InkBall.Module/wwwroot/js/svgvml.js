@@ -55,6 +55,7 @@ if (SVG) {
 			this.setAttribute("y2", y2);
 		};
 		o.$RGBcolor = function (R, G, B) { this.setAttribute("stroke", "rgb(" + Math.round(R) + "," + Math.round(G) + "," + Math.round(B) + ")"); };
+		o.$SetColor = function (color) { this.setAttribute("stroke", color); };
 		o.$strokeWidth = function (s) { this.setAttribute("stroke-width", Math.round(s) + "px"); };
 		cont.appendChild(o);
 		return o;
@@ -217,6 +218,7 @@ if (SVG) {
 			this.from = x2 + "," + y2;
 		};
 		o.$RGBcolor = function (R, G, B) { this.strokecolor = "rgb(" + Math.round(R) + "," + Math.round(G) + "," + Math.round(B) + ")"; };
+		o.$SetColor = function (color) { this.strokecolor = color; };
 		o.$strokeWidth = function (s) { this.strokeweight = Math.round(s) + "px"; };
 		if (linecap) {
 			let s = document.createElement("v:stroke");

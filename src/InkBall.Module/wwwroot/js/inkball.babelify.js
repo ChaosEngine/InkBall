@@ -2202,7 +2202,7 @@ var InkBallGame = function () {
             };
 
             if (presentVisually === true) {
-              var line = $createLine(3, 'green');
+              var line = $createLine(5, 'green');
               line.$move(view_x, view_y, next_pos.x, next_pos.y);
               edge.line = line;
             }
@@ -2331,13 +2331,15 @@ var InkBallGame = function () {
       var N = vertices.length;
       var cycles = new Array(N);
       var mark = new Array(N);
+      var color = new Array(N),
+          par = new Array(N);
 
       for (var i = 0; i < N; i++) {
         mark[i] = [];
         cycles[i] = [];
       }
 
-      var dfs_cycle = function dfs_cycle(u, p, color, mark, par) {
+      var dfs_cycle = function dfs_cycle(u, p) {
         if (color[u] === 2) return;
 
         if (color[u] === 1) {
@@ -2365,7 +2367,7 @@ var InkBallGame = function () {
             var adj = _step10.value;
             var v = vertices.indexOf(adj);
             if (v === par[u]) continue;
-            dfs_cycle(v, u, color, mark, par);
+            dfs_cycle(v, u);
           }
         } catch (err) {
           _iterator10.e(err);
@@ -2376,54 +2378,69 @@ var InkBallGame = function () {
         color[u] = 2;
       };
 
+      var randColor = function randColor() {
+        return '#' + Math.floor(Math.random() * 16777215).toString(16);
+      };
+
       var printCycles = function (edges, mark) {
+        var _this15 = this;
+
         for (var e = 0; e < edges; e++) {
-          if (mark[e] !== undefined && mark[e].length > 0) {
-            for (var m = 0; m < mark[e].length; m++) {
-              cycles[mark[e][m]].push(e);
+          var mark_e = mark[e];
+
+          if (mark_e !== undefined && mark_e.length > 0) {
+            for (var m = 0; m < mark_e.length; m++) {
+              cycles[mark_e[m]].push(e);
             }
           }
         }
 
+        cycles = cycles.sort(function (b, a) {
+          return a.length - b.length;
+        });
         var tab = [];
 
         for (var _i = 1; _i <= cyclenumber; _i++) {
           if (cycles[_i].length > 0) {
-            var str = "Cycle Number ".concat(_i, ": "),
-                trailing_points = [];
+            (function () {
+              var str = "Cycle Number ".concat(_i, ": "),
+                  trailing_points = [];
+              var randomColor = randColor();
 
-            var _iterator11 = _createForOfIteratorHelper(cycles[_i]),
-                _step11;
+              var _iterator11 = _createForOfIteratorHelper(cycles[_i]),
+                  _step11;
 
-            try {
-              for (_iterator11.s(); !(_step11 = _iterator11.n()).done;) {
-                var vert = _step11.value;
+              try {
+                for (_iterator11.s(); !(_step11 = _iterator11.n()).done;) {
+                  var vert = _step11.value;
 
-                var _vertices$vert$$GetPo = vertices[vert].$GetPosition(),
-                    view_x = _vertices$vert$$GetPo.x,
-                    view_y = _vertices$vert$$GetPo.y;
+                  var _vertices$vert$$GetPo = vertices[vert].$GetPosition(),
+                      view_x = _vertices$vert$$GetPo.x,
+                      view_y = _vertices$vert$$GetPo.y;
 
-                var x = view_x / this.m_iGridSizeX,
-                    y = view_y / this.m_iGridSizeY;
-                str += "".concat(vert, "(").concat(x, ",").concat(y, ") ");
-                trailing_points.push(vertices[vert]);
+                  var x = view_x / _this15.m_iGridSizeX,
+                      y = view_y / _this15.m_iGridSizeY;
+                  str += "".concat(vert, "(").concat(x, ",").concat(y, ") ");
+                  trailing_points.push(vertices[vert]);
+                  Array.from(document.querySelectorAll("svg > line[x1=\"".concat(view_x, "\"][y1=\"").concat(view_y, "\"]"))).concat(Array.from(document.querySelectorAll("svg > line[x2=\"".concat(view_x, "\"][y2=\"").concat(view_y, "\"]")))).forEach(function (line) {
+                    line.$SetColor(randomColor);
+                  });
+                }
+              } catch (err) {
+                _iterator11.e(err);
+              } finally {
+                _iterator11.f();
               }
-            } catch (err) {
-              _iterator11.e(err);
-            } finally {
-              _iterator11.f();
-            }
 
-            trailing_points.unshift(str);
-            tab.push(trailing_points);
+              trailing_points.unshift(str);
+              tab.push(trailing_points);
+            })();
           }
         }
 
         return tab;
       }.bind(this);
 
-      var color = new Array(N),
-          par = new Array(N);
       var cyclenumber = 0,
           edges = N;
       dfs_cycle(1, 0, color, mark, par);
@@ -2469,7 +2486,7 @@ var InkBallGame = function () {
   }, {
     key: "rAFCallBack",
     value: function rAFCallBack(timeStamp) {
-      var _this15 = this;
+      var _this16 = this;
 
       if (this.rAF_StartTimestamp === null) this.rAF_StartTimestamp = timeStamp;
       var progress = timeStamp - this.rAF_StartTimestamp;
@@ -2481,8 +2498,8 @@ var InkBallGame = function () {
         if (progress < 2000) this.rAF_FrameID = window.requestAnimationFrame(this.rAFCallBack.bind(this));
       } else {
         this.SendAsyncData(point, function () {
-          _this15.m_bMouseDown = false;
-          _this15.m_bHandlingEvent = false;
+          _this16.m_bMouseDown = false;
+          _this16.m_bHandlingEvent = false;
         });
       }
     }

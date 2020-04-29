@@ -2028,7 +2028,7 @@ class InkBallGame {
 						//to_y: to_y
 					};
 					if (presentVisually === true) {
-						const line = $createLine(3, 'green');
+						const line = $createLine(5, 'green');
 						line.$move(view_x, view_y, next_pos.x, next_pos.y);
 						edge.line = line;
 					}
@@ -2142,16 +2142,19 @@ class InkBallGame {
 	MarkAllCycles(graph) {
 		const vertices = graph.vertices;
 		const N = vertices.length;
-		const cycles = new Array(N);
+		let cycles = new Array(N);
 		// mark with unique numbers
 		const mark = new Array(N);
+		// arrays required to color the 
+		// graph, store the parent of node 
+		const color = new Array(N), par = new Array(N);
 
 		for (let i = 0; i < N; i++) {
 			mark[i] = [];
 			cycles[i] = [];
 		}
 
-		const dfs_cycle = function (u, p, color, mark, par) {
+		const dfs_cycle = function (u, p) {
 			// already (completely) visited vertex. 
 			if (color[u] === 2)
 				return;
@@ -2183,23 +2186,36 @@ class InkBallGame {
 				if (v === par[u])
 					continue;
 
-				dfs_cycle(v, u, color, mark, par);
+				dfs_cycle(v, u);
 			}
 
 			// completely visited. 
 			color[u] = 2;
 		};
 
+		const randColor = function () {
+			return '#' + Math.floor(Math.random() * 16777215).toString(16);
+			//const str = Math.random().toString(16) + Math.random().toString(16),
+			//	sg = str.replace(/0./g, '').match(/.{1,6}/g),
+			//	col = parseInt(sg[0], 16) ^
+			//		parseInt(sg[1], 16) ^
+			//		parseInt(sg[2], 16);
+			//return '#' + ("000000" + col.toString(16)).slice(-6);
+		};
+
 		const printCycles = function (edges, mark) {
 			// push the edges that into the 
 			// cycle adjacency list 
 			for (let e = 0; e < edges; e++) {
-				if (mark[e] !== undefined && mark[e].length > 0) {
-					for (let m = 0; m < mark[e].length; m++) {
-						cycles[mark[e][m]].push(e);
+				const mark_e = mark[e];
+				if (mark_e !== undefined && mark_e.length > 0) {
+					for (let m = 0; m < mark_e.length; m++) {
+						cycles[mark_e[m]].push(e);
 					}
 				}
 			}
+
+			cycles = cycles.sort((b, a) => a.length - b.length);
 
 			const tab = [];
 			// print all the vertex with same cycle 
@@ -2207,12 +2223,18 @@ class InkBallGame {
 				if (cycles[i].length > 0) {
 					// Print the i-th cycle 
 					let str = (`Cycle Number ${i}: `), trailing_points = [];
+					const randomColor = randColor();
 					for (const vert of cycles[i]) {
 						const { x: view_x, y: view_y } = vertices[vert].$GetPosition();
 						const x = view_x / this.m_iGridSizeX, y = view_y / this.m_iGridSizeY;
 
 						str += (`${vert}(${x},${y}) `);
 						trailing_points.push(vertices[vert]);
+
+						Array.from(document.querySelectorAll(`svg > line[x1="${view_x}"][y1="${view_y}"]`))
+							.concat(Array.from(document.querySelectorAll(`svg > line[x2="${view_x}"][y2="${view_y}"]`))).forEach((line) => {
+								line.$SetColor(randomColor);
+							});
 					}
 					trailing_points.unshift(str);
 					tab.push(trailing_points);
@@ -2222,9 +2244,6 @@ class InkBallGame {
 			return tab;
 		}.bind(this);
 
-		// arrays required to color the 
-		// graph, store the parent of node 
-		const color = new Array(N), par = new Array(N);
 		// store the numbers of cycle 
 		let cyclenumber = 0, edges = N;
 
