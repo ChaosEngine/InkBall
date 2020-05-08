@@ -457,6 +457,7 @@ class InkBallGame {
 		this.m_SurrenderButton = null;
 		this.m_sMsgInputSel = null;
 		this.m_sMsgSendButtonSel = null;
+		this.m_sMsgListSel = null;
 		this.m_CancelPath = null;
 		this.m_StopAndDraw = null;
 		this.m_bMouseDown = false;
@@ -502,19 +503,18 @@ class InkBallGame {
 
 	async GetPlayerPointsAndPaths() {
 		if (!this.m_bPointsAndPathsLoaded) {
-			await this.g_SignalRConnection.invoke("GetPlayerPointsAndPaths", this.m_bViewOnly, this.g_iGameID).then(function (ppDTO) {
-				//LocalLog(ppDTO);
+			const ppDTO = await this.g_SignalRConnection.invoke("GetPlayerPointsAndPaths", this.m_bViewOnly, this.g_iGameID);
+			//LocalLog(ppDTO);
 
-				const path_and_point = PlayerPointsAndPathsDTO.Deserialize(ppDTO);
-				if (path_and_point.Points !== undefined)
-					this.SetAllPoints(path_and_point.Points);
-				if (path_and_point.Paths !== undefined)
-					this.SetAllPaths(path_and_point.Paths);
+			const path_and_point = PlayerPointsAndPathsDTO.Deserialize(ppDTO);
+			if (path_and_point.Points !== undefined)
+				this.SetAllPoints(path_and_point.Points);
+			if (path_and_point.Paths !== undefined)
+				this.SetAllPaths(path_and_point.Paths);
 
-				this.m_bPointsAndPathsLoaded = true;
+			this.m_bPointsAndPathsLoaded = true;
 
-				return true;
-			}.bind(this));
+			return true;
 		}
 		else
 			return false;
@@ -557,6 +557,9 @@ class InkBallGame {
 			if (this.m_ApplicationUserSettings !== null && this.m_ApplicationUserSettings.DesktopNotifications === true) {
 				this.SetupNotifications();
 			}
+
+			if (true === this.m_bIsCPUGame && !this.m_bIsPlayerActive)
+				this.StartCPUCalculation();
 		}
 		catch (err) {
 			LocalError(err + '; iConnErrCount = ' + this.iConnErrCount);
@@ -644,20 +647,13 @@ class InkBallGame {
 	 * @param {number} iPlayerID player ID
 	 * @param {number} iOtherPlayerID player ID
 	 * @param {boolean} loadPointsAndPathsFromSignalR load points and path thriugh SignalR
-	 * @param {string} sMsgListSel ul html element selector
-	 * @param {string} sMsgSendButtonSel input button html element selector
-	 * @param {string} sMsgInputSel input textbox html element selector
-	 * @param {function} afterConnectionCallback after connected callback
 	 */
-	StartSignalRConnection(iGameID, iPlayerID, iOtherPlayerID, loadPointsAndPathsFromSignalR, sMsgListSel, sMsgSendButtonSel, sMsgInputSel,
-		afterConnectionCallback) {
-		if (this.g_SignalRConnection === null) return;
+	async StartSignalRConnection(iGameID, iPlayerID, iOtherPlayerID, loadPointsAndPathsFromSignalR) {
+		if (this.g_SignalRConnection === null) return Promise.reject("signalr conn is null");
 		this.g_iGameID = iGameID;
 		this.g_iPlayerID = iPlayerID;
 		this.m_iOtherPlayerId = iOtherPlayerID;
 		this.m_bIsCPUGame = this.m_iOtherPlayerId === -1;
-		this.m_sMsgInputSel = sMsgInputSel;
-		this.m_sMsgSendButtonSel = sMsgSendButtonSel;
 		this.m_bPointsAndPathsLoaded = !loadPointsAndPathsFromSignalR;
 
 		this.g_SignalRConnection.on("ServerToClientPoint", function (point) {
@@ -667,7 +663,7 @@ class InkBallGame {
 
 				const li = document.createElement("li");
 				li.textContent = encodedMsg;
-				document.querySelector(sMsgListSel).appendChild(li);
+				document.querySelector(this.m_sMsgListSel).appendChild(li);
 
 				this.NotifyBrowser('New Point', encodedMsg);
 			}
@@ -684,7 +680,7 @@ class InkBallGame {
 
 					const li = document.createElement("li");
 					li.textContent = encodedMsg;
-					document.querySelector(sMsgListSel).appendChild(li);
+					document.querySelector(this.m_sMsgListSel).appendChild(li);
 
 					this.NotifyBrowser('New Path', encodedMsg);
 				}
@@ -696,7 +692,7 @@ class InkBallGame {
 
 				let li = document.createElement("li");
 				li.textContent = encodedMsg;
-				document.querySelector(sMsgListSel).appendChild(li);
+				document.querySelector(this.m_sMsgListSel).appendChild(li);
 
 				this.ReceivedWinProcessing(win);
 				this.NotifyBrowser('We have a winner', encodedMsg);
@@ -713,7 +709,7 @@ class InkBallGame {
 
 			let li = document.createElement("li");
 			li.innerHTML = `<strong class="text-primary">${encodedMsg}</strong>`;
-			document.querySelector(sMsgListSel).appendChild(li);
+			document.querySelector(this.m_sMsgListSel).appendChild(li);
 
 			if (this.m_SurrenderButton !== null) {
 				if (join.OtherPlayerName !== '') {
@@ -734,7 +730,7 @@ class InkBallGame {
 
 			let li = document.createElement("li");
 			li.innerHTML = `<strong class="text-warning">${encodedMsg}</strong>`;
-			document.querySelector(sMsgListSel).appendChild(li);
+			document.querySelector(this.m_sMsgListSel).appendChild(li);
 
 
 			this.m_bHandlingEvent = false;
@@ -749,7 +745,7 @@ class InkBallGame {
 
 			let li = document.createElement("li");
 			li.innerHTML = `<strong class="text-warning">${encodedMsg}</strong>`;
-			document.querySelector(sMsgListSel).appendChild(li);
+			document.querySelector(this.m_sMsgListSel).appendChild(li);
 
 			this.ReceivedWinProcessing(win);
 			this.NotifyBrowser('We have a winner', encodedMsg);
@@ -763,7 +759,7 @@ class InkBallGame {
 
 			let li = document.createElement("li");
 			li.textContent = encodedMsg;
-			document.querySelector(sMsgListSel).appendChild(li);
+			document.querySelector(this.m_sMsgListSel).appendChild(li);
 			this.NotifyBrowser('User Message', encodedMsg);
 
 		}.bind(this));
@@ -777,7 +773,7 @@ class InkBallGame {
 					let encodedMsg = sMsg;
 					let li = document.createElement("li");
 					li.innerHTML = `<strong class="text-warning">${encodedMsg}</strong>`;
-					document.querySelector(sMsgListSel).appendChild(li);
+					document.querySelector(this.m_sMsgListSel).appendChild(li);
 
 					this.NotifyBrowser('User disconnected', encodedMsg);
 					this.m_ReconnectTimer = null;
@@ -798,7 +794,7 @@ class InkBallGame {
 				let encodedMsg = sMsg;
 				let li = document.createElement("li");
 				li.innerHTML = `<strong class="text-primary">${encodedMsg}</strong>`;
-				document.querySelector(sMsgListSel).appendChild(li);
+				document.querySelector(this.m_sMsgListSel).appendChild(li);
 
 				this.NotifyBrowser('User disconnected', encodedMsg);
 				this.m_ReconnectTimer = null;
@@ -813,7 +809,7 @@ class InkBallGame {
 
 			let li = document.createElement("li");
 			li.innerHTML = `<strong class="text-info">${encodedMsg}</strong>`;
-			document.querySelector(sMsgListSel).appendChild(li);
+			document.querySelector(this.m_sMsgListSel).appendChild(li);
 
 			this.NotifyBrowser('User ' + user + ' started drawing new path', encodedMsg);
 		}.bind(this));
@@ -842,7 +838,7 @@ class InkBallGame {
 			}.bind(this), false);
 		}
 
-		this.Connect().then(afterConnectionCallback);
+		return this.Connect();
 	}
 
 	StopSignalRConnection() {
@@ -962,7 +958,7 @@ class InkBallGame {
 			case StatusEnum.POINT_FREE:
 				color = this.m_sDotColor;
 				oval.$SetStatus(iStatus/*StatusEnum.POINT_FREE*/);
-				console.warn('TODO: generic FREE point, really? change it!');
+				//console.warn('TODO: generic FREE point, really? change it!');
 				break;
 			case StatusEnum.POINT_STARTING:
 				color = this.m_sDotColor;
@@ -1014,7 +1010,7 @@ class InkBallGame {
 				status = StatusEnum.POINT_IN_PATH;
 			}
 			else {
-				debugger;
+				//debugger;
 			}
 
 			x *= this.m_iGridSizeX; y *= this.m_iGridSizeY;
@@ -1029,7 +1025,7 @@ class InkBallGame {
 			p.$SetStatus(status);
 		}
 		else {
-			debugger;
+			//debugger;
 		}
 
 		x *= this.m_iGridSizeX; y *= this.m_iGridSizeY;
@@ -1345,7 +1341,7 @@ class InkBallGame {
 					p.$SetStrokeColor(sOwnedCol);
 				}
 				else {
-					debugger;
+					//debugger;
 				}
 			}
 
@@ -1367,7 +1363,7 @@ class InkBallGame {
 			if (p0 !== undefined)
 				p0.$SetStatus(StatusEnum.POINT_IN_PATH);
 			else {
-				debugger;
+				//debugger;
 			}
 
 			this.m_Line.$SetWidthAndColor(3, this.m_sDotColor);
@@ -1796,7 +1792,7 @@ class InkBallGame {
 						p0.$RevertOldStatus();
 					}
 					else {
-						debugger;
+						//debugger;
 					}
 				}
 				$RemovePolyline(this.m_Line);
@@ -1820,10 +1816,13 @@ class InkBallGame {
 	 * @param {HTMLElement} sCancelPath cancel path button element selector
 	 * @param {HTMLElement} sPause pause button element selector
 	 * @param {HTMLElement} sStopAndDraw stop-and-draw action button element selector
+	 * @param {string} sMsgInputSel input textbox html element selector
+	 * @param {string} sMsgListSel ul html element selector
+	 * @param {string} sMsgSendButtonSel input button html element selector
 	 * @param {number} iTooLong2Duration how long waiting is too long
 	 */
-	PrepareDrawing(sScreen, sPlayer2Name, sGameStatus, sSurrenderButton, sCancelPath, sPause, sStopAndDraw,
-		iTooLong2Duration = 125) {
+	PrepareDrawing(sScreen, sPlayer2Name, sGameStatus, sSurrenderButton, sCancelPath, sPause, sStopAndDraw, sMsgInputSel,
+		sMsgListSel, sMsgSendButtonSel, iTooLong2Duration = 125) {
 		this.m_bIsWon = false;
 		this.m_iDelayBetweenMultiCaptures = 4000;
 		this.m_iTooLong2Duration = iTooLong2Duration/*125*/;
@@ -1851,6 +1850,9 @@ class InkBallGame {
 		this.m_SurrenderButton = document.querySelector(sSurrenderButton);
 		this.m_CancelPath = document.querySelector(sCancelPath);
 		this.m_StopAndDraw = document.querySelector(sStopAndDraw);
+		this.m_sMsgInputSel = sMsgInputSel;
+		this.m_sMsgListSel = sMsgListSel;
+		this.m_sMsgSendButtonSel = sMsgSendButtonSel;
 		this.m_Screen = document.querySelector(sScreen);
 		if (!this.m_Screen) {
 			alert("no board");
@@ -1894,8 +1896,8 @@ class InkBallGame {
 			this.m_StopAndDraw.onclick = this.OnStopAndDraw.bind(this);
 			if (false === this.m_bIsCPUGame)
 				document.querySelector(this.m_sMsgInputSel).disabled = '';
-			else if (!this.m_bIsPlayerActive)
-				this.StartCPUCalculation();
+			//else if (!this.m_bIsPlayerActive)
+			//	this.StartCPUCalculation();
 
 			this.m_SurrenderButton.disabled = '';
 
@@ -1931,6 +1933,12 @@ class InkBallGame {
 
 
 	///////CpuGame variables methods start//////
+	/**
+	 * Gets random number in range: min(inclusive) - max (exclusive)
+	 * @param {any} min - from(inclusive)
+	 * @param {any} max - to (exclusive)
+	 * @returns {integer} random numba
+	 */
 	GetRandomInt(min, max) {
 		min = Math.ceil(min);
 		max = Math.floor(max);
@@ -1993,9 +2001,9 @@ class InkBallGame {
 		return pt;
 	}
 
-	IsPathPossible({
-		freeStat: freePointStatus = StatusEnum.POINT_FREE_RED,
-		fillCol: fillColor = this.COLOR_RED,
+	BuildGraph({
+		freeStat: freePointStatus = StatusEnum.POINT_FREE_BLUE,
+		fillCol: fillColor = this.COLOR_BLUE,
 		visuals: presentVisually = true
 	} = {}) {
 		const graph_points = [], graph_edges = new Map();
@@ -2021,8 +2029,8 @@ class InkBallGame {
 
 					const edge = {
 						from: point,
-						to: next,
-						//from_x: x,
+						to: next
+						//,from_x: x,
 						//from_y: y,
 						//to_x: to_x,
 						//to_y: to_y
@@ -2256,17 +2264,8 @@ class InkBallGame {
 
 	GroupPointsRecurse(currPointsArr, point) {
 		if (point === undefined || currPointsArr.includes(point)) {
-			//if (currPointsArr.lenth > 2 && currPointsArr[currPointsArr.length - 1] === currPointsArr[0]) {
-			//	const tmp = [];
-			//	currPointsArr.forEach((value) => {
-			//		tmp.push(value);
-			//	});
-			//	tmp.push(point);
-			//	this.lastCycle.push(tmp);
-			//}
 			return currPointsArr;
 		}
-
 		if ([StatusEnum.POINT_FREE_BLUE, StatusEnum.POINT_STARTING, StatusEnum.POINT_IN_PATH].includes(point.$GetStatus()) === false ||
 			point.$GetFillColor() !== this.COLOR_BLUE) {
 			return currPointsArr;
@@ -2274,9 +2273,36 @@ class InkBallGame {
 
 		let { x: x, y: y } = point.$GetPosition();
 		x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
+		let last = null, last_x, last_y;
+		if (currPointsArr.length > 0) {
+			last = currPointsArr[currPointsArr.length - 1];
+			const last_pos = last.$GetPosition();
+			last_x = last_pos.x, last_y = last_pos.y;
+			last_x /= this.m_iGridSizeX; last_y /= this.m_iGridSizeY;
+			if (Math.abs(parseInt(last_x - x)) <= 1 && Math.abs(parseInt(last_y - y)) <= 1) {
+				currPointsArr.push(point);
+			}
+			else
+				return currPointsArr;
+		}
+		else
+			currPointsArr.push(point);
 
-		currPointsArr.push(point);
-		this.lastCycle.push(point);
+		if (currPointsArr.length > 2 && last !== null) {
+			const first = currPointsArr[0];
+			const first_pos = first.$GetPosition();
+			first_pos.x /= this.m_iGridSizeX; first_pos.y /= this.m_iGridSizeY;
+			last = currPointsArr[currPointsArr.length - 1];
+			const last_pos = last.$GetPosition();
+			last_x = last_pos.x, last_y = last_pos.y;
+			last_x /= this.m_iGridSizeX; last_y /= this.m_iGridSizeY;
+
+			if (Math.abs(parseInt(last_x - first_pos.x)) <= 1 && Math.abs(parseInt(last_y - first_pos.y)) <= 1) {
+				const tmp = [];
+				currPointsArr.forEach((value) => tmp.push(value));
+				this.lastCycle.push(tmp);
+			}
+		}
 
 		const east = this.m_Points.get(y * this.m_iGridWidth + x + 1);
 		const west = this.m_Points.get(y * this.m_iGridWidth + x - 1);
@@ -2304,17 +2330,87 @@ class InkBallGame {
 		if (south_east)
 			this.GroupPointsRecurse(currPointsArr, south_east);
 
-		//if (currPointsArr.length > 2) {
-		//	//const last = currPointsArr[currPointsArr.length - 1];
-		//	//let { x: last_pos_x, y: last_pos_y } = last.$GetPosition();
-		//	//last_pos_x /= this.m_iGridSizeX; last_pos_y /= this.m_iGridSizeY;
-		//	//if (Math.abs(parseInt(last_pos_x - x)) <= 1 && Math.abs(parseInt(last_pos_y - y)) <= 1) {
-		//	//	//currPointsArr.splice(-1, 1);
-		//	this.lastCycle.push(point);
-		//	//}
-		//}
-
 		return currPointsArr;
+	}
+
+	GroupPointsIterative({
+		g: graph = null,
+		freeStat: freePointStatus = StatusEnum.POINT_FREE_BLUE,
+		fillCol: fillColor = this.COLOR_BLUE
+		//visuals: presentVisually = true
+	} = {}) {
+		if (!graph) return;
+		const vertices = graph.vertices, cycles = [];
+		let point, next;
+
+		const isPointOKForPath = function (freePointStatusArr, pt) {
+			const status = pt.$GetStatus();
+			if (freePointStatusArr.includes(status) && (pt.$GetFillColor() === fillColor))
+				return true;
+			return false;
+		};
+
+		const actAndReplace = function (pointsArr) {
+			if (next && isPointOKForPath([freePointStatus, StatusEnum.POINT_STARTING, StatusEnum.POINT_IN_PATH], next) === true) {
+				if (pointsArr.includes(next) === false) {
+					pointsArr.push(next);
+					point = next;
+					return 1;
+				}
+				else if (pointsArr.length >= 4 && pointsArr[0] === next) {
+					pointsArr.push(next);
+					cycles.push(pointsArr);
+					return 2;
+				}
+			}
+			return 0;
+		};
+
+		for (const start of vertices) {
+			point = start;
+			const currPointsArr = [];
+
+			const traversed_path = this.GroupPointsRecurse(currPointsArr, point);
+			if (traversed_path.length > 0 && this.lastCycle.length > 0) {
+				cycles.push(this.lastCycle);
+				this.lastCycle = [];
+			}
+
+			/*let cnter = 100;//safety cnter
+			while (cnter-- > 0) {
+				let { x: x, y: y } = point.$GetPosition(), tmp;
+				x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
+
+				//east
+				next = this.m_Points.get(y * this.m_iGridWidth + x + 1);
+				tmp = actAndReplace(currPointsArr); if (1 === tmp) continue; else if (2 === tmp) break;
+				//west
+				next = this.m_Points.get(y * this.m_iGridWidth + x - 1);
+				tmp = actAndReplace(currPointsArr); if (1 === tmp) continue; else if (2 === tmp) break;
+				//north
+				next = this.m_Points.get((y - 1) * this.m_iGridWidth + x);
+				tmp = actAndReplace(currPointsArr); if (1 === tmp) continue; else if (2 === tmp) break;
+				//south
+				next = this.m_Points.get((y + 1) * this.m_iGridWidth + x);
+				tmp = actAndReplace(currPointsArr); if (1 === tmp) continue; else if (2 === tmp) break;
+				//north_west
+				next = this.m_Points.get((y - 1) * this.m_iGridWidth + x - 1);
+				tmp = actAndReplace(currPointsArr); if (1 === tmp) continue; else if (2 === tmp) break;
+				//north_east
+				next = this.m_Points.get((y - 1) * this.m_iGridWidth + x + 1);
+				tmp = actAndReplace(currPointsArr); if (1 === tmp) continue; else if (2 === tmp) break;
+				//south_west
+				next = this.m_Points.get((y + 1) * this.m_iGridWidth + x - 1);
+				tmp = actAndReplace(currPointsArr); if (1 === tmp) continue; else if (2 === tmp) break;
+				//south_east
+				next = this.m_Points.get((y + 1) * this.m_iGridWidth + x + 1);
+				tmp = actAndReplace(currPointsArr); if (1 === tmp) continue; else if (2 === tmp) break;
+
+				break;
+			}//while end*/
+		}
+
+		return cycles;
 	}
 
 	rAFCallBack(timeStamp) {

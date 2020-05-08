@@ -2,7 +2,7 @@
 
 function _createForOfIteratorHelper(o) { if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (o = _unsupportedIterableToArray(o))) { var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var it, normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
 
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(n); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
 
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
 
@@ -16,7 +16,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
 
-function _createSuper(Derived) { return function () { var Super = _getPrototypeOf(Derived), result; if (_isNativeReflectConstruct()) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function () { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
 function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
 
@@ -627,6 +627,7 @@ var InkBallGame = function () {
     this.m_SurrenderButton = null;
     this.m_sMsgInputSel = null;
     this.m_sMsgSendButtonSel = null;
+    this.m_sMsgListSel = null;
     this.m_CancelPath = null;
     this.m_StopAndDraw = null;
     this.m_bMouseDown = false;
@@ -682,32 +683,31 @@ var InkBallGame = function () {
     key: "GetPlayerPointsAndPaths",
     value: function () {
       var _GetPlayerPointsAndPaths = _asyncToGenerator(regeneratorRuntime.mark(function _callee2() {
+        var ppDTO, path_and_point;
         return regeneratorRuntime.wrap(function _callee2$(_context2) {
           while (1) {
             switch (_context2.prev = _context2.next) {
               case 0:
                 if (this.m_bPointsAndPathsLoaded) {
-                  _context2.next = 5;
+                  _context2.next = 11;
                   break;
                 }
 
                 _context2.next = 3;
-                return this.g_SignalRConnection.invoke("GetPlayerPointsAndPaths", this.m_bViewOnly, this.g_iGameID).then(function (ppDTO) {
-                  var path_and_point = PlayerPointsAndPathsDTO.Deserialize(ppDTO);
-                  if (path_and_point.Points !== undefined) this.SetAllPoints(path_and_point.Points);
-                  if (path_and_point.Paths !== undefined) this.SetAllPaths(path_and_point.Paths);
-                  this.m_bPointsAndPathsLoaded = true;
-                  return true;
-                }.bind(this));
+                return this.g_SignalRConnection.invoke("GetPlayerPointsAndPaths", this.m_bViewOnly, this.g_iGameID);
 
               case 3:
-                _context2.next = 6;
-                break;
+                ppDTO = _context2.sent;
+                path_and_point = PlayerPointsAndPathsDTO.Deserialize(ppDTO);
+                if (path_and_point.Points !== undefined) this.SetAllPoints(path_and_point.Points);
+                if (path_and_point.Paths !== undefined) this.SetAllPaths(path_and_point.Paths);
+                this.m_bPointsAndPathsLoaded = true;
+                return _context2.abrupt("return", true);
 
-              case 5:
+              case 11:
                 return _context2.abrupt("return", false);
 
-              case 6:
+              case 12:
               case "end":
                 return _context2.stop();
             }
@@ -819,11 +819,12 @@ var InkBallGame = function () {
                   this.SetupNotifications();
                 }
 
-                _context5.next = 26;
+                if (true === this.m_bIsCPUGame && !this.m_bIsPlayerActive) this.StartCPUCalculation();
+                _context5.next = 27;
                 break;
 
-              case 20:
-                _context5.prev = 20;
+              case 21:
+                _context5.prev = 21;
                 _context5.t0 = _context5["catch"](0);
                 LocalError(_context5.t0 + '; iConnErrCount = ' + this.iConnErrCount);
                 this.m_Screen.style.cursor = "not-allowed";
@@ -832,12 +833,12 @@ var InkBallGame = function () {
                   return _this10.Connect();
                 }, 4000 + this.iExponentialBackOffMillis * Math.max(this.iConnErrCount, 5));
 
-              case 26:
+              case 27:
               case "end":
                 return _context5.stop();
             }
           }
-        }, _callee5, this, [[0, 20]]);
+        }, _callee5, this, [[0, 21]]);
       }));
 
       function Connect() {
@@ -908,157 +909,181 @@ var InkBallGame = function () {
     }
   }, {
     key: "StartSignalRConnection",
-    value: function StartSignalRConnection(iGameID, iPlayerID, iOtherPlayerID, loadPointsAndPathsFromSignalR, sMsgListSel, sMsgSendButtonSel, sMsgInputSel, afterConnectionCallback) {
-      if (this.g_SignalRConnection === null) return;
-      this.g_iGameID = iGameID;
-      this.g_iPlayerID = iPlayerID;
-      this.m_iOtherPlayerId = iOtherPlayerID;
-      this.m_bIsCPUGame = this.m_iOtherPlayerId === -1;
-      this.m_sMsgInputSel = sMsgInputSel;
-      this.m_sMsgSendButtonSel = sMsgSendButtonSel;
-      this.m_bPointsAndPathsLoaded = !loadPointsAndPathsFromSignalR;
-      this.g_SignalRConnection.on("ServerToClientPoint", function (point) {
-        if (this.g_iPlayerID !== point.iPlayerId) {
-          var user = this.m_Player2Name.innerHTML;
-          var encodedMsg = InkBallPointViewModel.Format(user, point);
-          var li = document.createElement("li");
-          li.textContent = encodedMsg;
-          document.querySelector(sMsgListSel).appendChild(li);
-          this.NotifyBrowser('New Point', encodedMsg);
-        }
+    value: function () {
+      var _StartSignalRConnection = _asyncToGenerator(regeneratorRuntime.mark(function _callee6(iGameID, iPlayerID, iOtherPlayerID, loadPointsAndPathsFromSignalR) {
+        return regeneratorRuntime.wrap(function _callee6$(_context6) {
+          while (1) {
+            switch (_context6.prev = _context6.next) {
+              case 0:
+                if (!(this.g_SignalRConnection === null)) {
+                  _context6.next = 2;
+                  break;
+                }
 
-        this.ReceivedPointProcessing(point);
-      }.bind(this));
-      this.g_SignalRConnection.on("ServerToClientPath", function (dto) {
-        if (Object.prototype.hasOwnProperty.call(dto, 'PointsAsString') || Object.prototype.hasOwnProperty.call(dto, 'pointsAsString')) {
-          var path = dto;
+                return _context6.abrupt("return", Promise.reject("signalr conn is null"));
 
-          if (this.g_iPlayerID !== path.iPlayerId) {
-            var user = this.m_Player2Name.innerHTML;
-            var encodedMsg = InkBallPathViewModel.Format(user, path);
-            var li = document.createElement("li");
-            li.textContent = encodedMsg;
-            document.querySelector(sMsgListSel).appendChild(li);
-            this.NotifyBrowser('New Path', encodedMsg);
+              case 2:
+                this.g_iGameID = iGameID;
+                this.g_iPlayerID = iPlayerID;
+                this.m_iOtherPlayerId = iOtherPlayerID;
+                this.m_bIsCPUGame = this.m_iOtherPlayerId === -1;
+                this.m_bPointsAndPathsLoaded = !loadPointsAndPathsFromSignalR;
+                this.g_SignalRConnection.on("ServerToClientPoint", function (point) {
+                  if (this.g_iPlayerID !== point.iPlayerId) {
+                    var user = this.m_Player2Name.innerHTML;
+                    var encodedMsg = InkBallPointViewModel.Format(user, point);
+                    var li = document.createElement("li");
+                    li.textContent = encodedMsg;
+                    document.querySelector(this.m_sMsgListSel).appendChild(li);
+                    this.NotifyBrowser('New Point', encodedMsg);
+                  }
+
+                  this.ReceivedPointProcessing(point);
+                }.bind(this));
+                this.g_SignalRConnection.on("ServerToClientPath", function (dto) {
+                  if (Object.prototype.hasOwnProperty.call(dto, 'PointsAsString') || Object.prototype.hasOwnProperty.call(dto, 'pointsAsString')) {
+                    var path = dto;
+
+                    if (this.g_iPlayerID !== path.iPlayerId) {
+                      var user = this.m_Player2Name.innerHTML;
+                      var encodedMsg = InkBallPathViewModel.Format(user, path);
+                      var li = document.createElement("li");
+                      li.textContent = encodedMsg;
+                      document.querySelector(this.m_sMsgListSel).appendChild(li);
+                      this.NotifyBrowser('New Path', encodedMsg);
+                    }
+
+                    this.ReceivedPathProcessing(path);
+                  } else if (Object.prototype.hasOwnProperty.call(dto, 'WinningPlayerId') || Object.prototype.hasOwnProperty.call(dto, 'winningPlayerId')) {
+                    var win = dto;
+
+                    var _encodedMsg = WinCommand.Format(win);
+
+                    var _li = document.createElement("li");
+
+                    _li.textContent = _encodedMsg;
+                    document.querySelector(this.m_sMsgListSel).appendChild(_li);
+                    this.ReceivedWinProcessing(win);
+                    this.NotifyBrowser('We have a winner', _encodedMsg);
+                  } else throw new Error("ServerToClientPath bad GetKind!");
+                }.bind(this));
+                this.g_SignalRConnection.on("ServerToClientPlayerJoin", function (join) {
+                  var iOtherPlayerId = join.OtherPlayerId || join.otherPlayerId;
+                  this.m_iOtherPlayerId = iOtherPlayerId;
+                  var encodedMsg = PlayerJoiningCommand.Format(join);
+                  var li = document.createElement("li");
+                  li.innerHTML = "<strong class=\"text-primary\">".concat(encodedMsg, "</strong>");
+                  document.querySelector(this.m_sMsgListSel).appendChild(li);
+
+                  if (this.m_SurrenderButton !== null) {
+                    if (join.OtherPlayerName !== '') {
+                      this.m_Player2Name.innerHTML = join.OtherPlayerName || join.otherPlayerName;
+                      this.m_SurrenderButton.value = 'surrender';
+                      this.ShowMobileStatus('Your move');
+                    }
+                  }
+
+                  this.NotifyBrowser('Player joininig', encodedMsg);
+                  this.m_bHandlingEvent = false;
+                }.bind(this));
+                this.g_SignalRConnection.on("ServerToClientPlayerSurrender", function (surrender) {
+                  var encodedMsg = PlayerSurrenderingCommand.Format(surrender);
+                  var li = document.createElement("li");
+                  li.innerHTML = "<strong class=\"text-warning\">".concat(encodedMsg, "</strong>");
+                  document.querySelector(this.m_sMsgListSel).appendChild(li);
+                  this.m_bHandlingEvent = false;
+                  encodedMsg = encodedMsg === '' ? 'Game interrupted!' : encodedMsg;
+                  this.NotifyBrowser('Game interruption', encodedMsg);
+                  alert(encodedMsg);
+                  window.location.href = "Games";
+                }.bind(this));
+                this.g_SignalRConnection.on("ServerToClientPlayerWin", function (win) {
+                  var encodedMsg = WinCommand.Format(win);
+                  var li = document.createElement("li");
+                  li.innerHTML = "<strong class=\"text-warning\">".concat(encodedMsg, "</strong>");
+                  document.querySelector(this.m_sMsgListSel).appendChild(li);
+                  this.ReceivedWinProcessing(win);
+                  this.NotifyBrowser('We have a winner', encodedMsg);
+                }.bind(this));
+                this.g_SignalRConnection.on("ServerToClientPing", function (ping) {
+                  var user = this.m_Player2Name.innerHTML;
+                  var encodedMsg = PingCommand.Format(user, ping);
+                  var li = document.createElement("li");
+                  li.textContent = encodedMsg;
+                  document.querySelector(this.m_sMsgListSel).appendChild(li);
+                  this.NotifyBrowser('User Message', encodedMsg);
+                }.bind(this));
+                this.g_SignalRConnection.on("ServerToClientOtherPlayerDisconnected", function (sMsg) {
+                  var opts = {
+                    countdownSeconds: 5,
+                    initialStart: true,
+                    countdownReachedHandler: function () {
+                      var encodedMsg = sMsg;
+                      var li = document.createElement("li");
+                      li.innerHTML = "<strong class=\"text-warning\">".concat(encodedMsg, "</strong>");
+                      document.querySelector(this.m_sMsgListSel).appendChild(li);
+                      this.NotifyBrowser('User disconnected', encodedMsg);
+                      this.m_ReconnectTimer = null;
+                    }.bind(this)
+                  };
+                  if (this.m_ReconnectTimer) this.m_ReconnectTimer.Reset(opts);else this.m_ReconnectTimer = new CountdownTimer(opts);
+                }.bind(this));
+                this.g_SignalRConnection.on("ServerToClientOtherPlayerConnected", function (sMsg) {
+                  if (this.m_ReconnectTimer) {
+                    this.m_ReconnectTimer.Stop();
+                    this.m_ReconnectTimer = null;
+                  } else {
+                    var encodedMsg = sMsg;
+                    var li = document.createElement("li");
+                    li.innerHTML = "<strong class=\"text-primary\">".concat(encodedMsg, "</strong>");
+                    document.querySelector(this.m_sMsgListSel).appendChild(li);
+                    this.NotifyBrowser('User disconnected', encodedMsg);
+                    this.m_ReconnectTimer = null;
+                  }
+                }.bind(this));
+                this.g_SignalRConnection.on("ServerToClientStopAndDraw", function (cmd) {
+                  if (!cmd) return;
+                  var user = this.m_Player2Name.innerHTML;
+                  var encodedMsg = StopAndDrawCommand.Format(user);
+                  var li = document.createElement("li");
+                  li.innerHTML = "<strong class=\"text-info\">".concat(encodedMsg, "</strong>");
+                  document.querySelector(this.m_sMsgListSel).appendChild(li);
+                  this.NotifyBrowser('User ' + user + ' started drawing new path', encodedMsg);
+                }.bind(this));
+
+                if (false === this.m_bIsCPUGame) {
+                  document.querySelector(this.m_sMsgSendButtonSel).addEventListener("click", function (event) {
+                    event.preventDefault();
+                    var encodedMsg = document.querySelector(this.m_sMsgInputSel).value.trim();
+                    if (encodedMsg === '') return;
+                    var ping = new PingCommand(encodedMsg);
+                    this.SendAsyncData(ping);
+                  }.bind(this), false);
+                  document.querySelector(this.m_sMsgInputSel).addEventListener("keyup", function (event) {
+                    event.preventDefault();
+
+                    if (event.keyCode === 13) {
+                      document.querySelector(this.m_sMsgSendButtonSel).click();
+                    }
+                  }.bind(this), false);
+                }
+
+                return _context6.abrupt("return", this.Connect());
+
+              case 18:
+              case "end":
+                return _context6.stop();
+            }
           }
+        }, _callee6, this);
+      }));
 
-          this.ReceivedPathProcessing(path);
-        } else if (Object.prototype.hasOwnProperty.call(dto, 'WinningPlayerId') || Object.prototype.hasOwnProperty.call(dto, 'winningPlayerId')) {
-          var win = dto;
-
-          var _encodedMsg = WinCommand.Format(win);
-
-          var _li = document.createElement("li");
-
-          _li.textContent = _encodedMsg;
-          document.querySelector(sMsgListSel).appendChild(_li);
-          this.ReceivedWinProcessing(win);
-          this.NotifyBrowser('We have a winner', _encodedMsg);
-        } else throw new Error("ServerToClientPath bad GetKind!");
-      }.bind(this));
-      this.g_SignalRConnection.on("ServerToClientPlayerJoin", function (join) {
-        var iOtherPlayerId = join.OtherPlayerId || join.otherPlayerId;
-        this.m_iOtherPlayerId = iOtherPlayerId;
-        var encodedMsg = PlayerJoiningCommand.Format(join);
-        var li = document.createElement("li");
-        li.innerHTML = "<strong class=\"text-primary\">".concat(encodedMsg, "</strong>");
-        document.querySelector(sMsgListSel).appendChild(li);
-
-        if (this.m_SurrenderButton !== null) {
-          if (join.OtherPlayerName !== '') {
-            this.m_Player2Name.innerHTML = join.OtherPlayerName || join.otherPlayerName;
-            this.m_SurrenderButton.value = 'surrender';
-            this.ShowMobileStatus('Your move');
-          }
-        }
-
-        this.NotifyBrowser('Player joininig', encodedMsg);
-        this.m_bHandlingEvent = false;
-      }.bind(this));
-      this.g_SignalRConnection.on("ServerToClientPlayerSurrender", function (surrender) {
-        var encodedMsg = PlayerSurrenderingCommand.Format(surrender);
-        var li = document.createElement("li");
-        li.innerHTML = "<strong class=\"text-warning\">".concat(encodedMsg, "</strong>");
-        document.querySelector(sMsgListSel).appendChild(li);
-        this.m_bHandlingEvent = false;
-        encodedMsg = encodedMsg === '' ? 'Game interrupted!' : encodedMsg;
-        this.NotifyBrowser('Game interruption', encodedMsg);
-        alert(encodedMsg);
-        window.location.href = "Games";
-      }.bind(this));
-      this.g_SignalRConnection.on("ServerToClientPlayerWin", function (win) {
-        var encodedMsg = WinCommand.Format(win);
-        var li = document.createElement("li");
-        li.innerHTML = "<strong class=\"text-warning\">".concat(encodedMsg, "</strong>");
-        document.querySelector(sMsgListSel).appendChild(li);
-        this.ReceivedWinProcessing(win);
-        this.NotifyBrowser('We have a winner', encodedMsg);
-      }.bind(this));
-      this.g_SignalRConnection.on("ServerToClientPing", function (ping) {
-        var user = this.m_Player2Name.innerHTML;
-        var encodedMsg = PingCommand.Format(user, ping);
-        var li = document.createElement("li");
-        li.textContent = encodedMsg;
-        document.querySelector(sMsgListSel).appendChild(li);
-        this.NotifyBrowser('User Message', encodedMsg);
-      }.bind(this));
-      this.g_SignalRConnection.on("ServerToClientOtherPlayerDisconnected", function (sMsg) {
-        var opts = {
-          countdownSeconds: 5,
-          initialStart: true,
-          countdownReachedHandler: function () {
-            var encodedMsg = sMsg;
-            var li = document.createElement("li");
-            li.innerHTML = "<strong class=\"text-warning\">".concat(encodedMsg, "</strong>");
-            document.querySelector(sMsgListSel).appendChild(li);
-            this.NotifyBrowser('User disconnected', encodedMsg);
-            this.m_ReconnectTimer = null;
-          }.bind(this)
-        };
-        if (this.m_ReconnectTimer) this.m_ReconnectTimer.Reset(opts);else this.m_ReconnectTimer = new CountdownTimer(opts);
-      }.bind(this));
-      this.g_SignalRConnection.on("ServerToClientOtherPlayerConnected", function (sMsg) {
-        if (this.m_ReconnectTimer) {
-          this.m_ReconnectTimer.Stop();
-          this.m_ReconnectTimer = null;
-        } else {
-          var encodedMsg = sMsg;
-          var li = document.createElement("li");
-          li.innerHTML = "<strong class=\"text-primary\">".concat(encodedMsg, "</strong>");
-          document.querySelector(sMsgListSel).appendChild(li);
-          this.NotifyBrowser('User disconnected', encodedMsg);
-          this.m_ReconnectTimer = null;
-        }
-      }.bind(this));
-      this.g_SignalRConnection.on("ServerToClientStopAndDraw", function (cmd) {
-        if (!cmd) return;
-        var user = this.m_Player2Name.innerHTML;
-        var encodedMsg = StopAndDrawCommand.Format(user);
-        var li = document.createElement("li");
-        li.innerHTML = "<strong class=\"text-info\">".concat(encodedMsg, "</strong>");
-        document.querySelector(sMsgListSel).appendChild(li);
-        this.NotifyBrowser('User ' + user + ' started drawing new path', encodedMsg);
-      }.bind(this));
-
-      if (false === this.m_bIsCPUGame) {
-        document.querySelector(this.m_sMsgSendButtonSel).addEventListener("click", function (event) {
-          event.preventDefault();
-          var encodedMsg = document.querySelector(this.m_sMsgInputSel).value.trim();
-          if (encodedMsg === '') return;
-          var ping = new PingCommand(encodedMsg);
-          this.SendAsyncData(ping);
-        }.bind(this), false);
-        document.querySelector(this.m_sMsgInputSel).addEventListener("keyup", function (event) {
-          event.preventDefault();
-
-          if (event.keyCode === 13) {
-            document.querySelector(this.m_sMsgSendButtonSel).click();
-          }
-        }.bind(this), false);
+      function StartSignalRConnection(_x3, _x4, _x5, _x6) {
+        return _StartSignalRConnection.apply(this, arguments);
       }
 
-      this.Connect().then(afterConnectionCallback);
-    }
+      return StartSignalRConnection;
+    }()
   }, {
     key: "StopSignalRConnection",
     value: function StopSignalRConnection() {
@@ -1158,7 +1183,6 @@ var InkBallGame = function () {
         case StatusEnum.POINT_FREE:
           color = this.m_sDotColor;
           oval.$SetStatus(iStatus);
-          console.warn('TODO: generic FREE point, really? change it!');
           break;
 
         case StatusEnum.POINT_STARTING:
@@ -1225,9 +1249,7 @@ var InkBallGame = function () {
           if (p !== null && p !== undefined) {
             p.$SetStatus(status);
             status = StatusEnum.POINT_IN_PATH;
-          } else {
-            debugger;
-          }
+          } else {}
 
           x *= this.m_iGridSizeX;
           y *= this.m_iGridSizeY;
@@ -1247,9 +1269,7 @@ var InkBallGame = function () {
 
       if (p !== null && p !== undefined) {
         p.$SetStatus(status);
-      } else {
-        debugger;
-      }
+      } else {}
 
       x *= this.m_iGridSizeX;
       y *= this.m_iGridSizeY;
@@ -1567,9 +1587,7 @@ var InkBallGame = function () {
               p.$SetStatus(point_status);
               p.$SetFillColor(sOwnedCol);
               p.$SetStrokeColor(sOwnedCol);
-            } else {
-              debugger;
-            }
+            } else {}
           }
         } catch (err) {
           _iterator5.e(err);
@@ -1585,14 +1603,12 @@ var InkBallGame = function () {
       } else {
         var _points = this.m_Line.$GetPointsArray();
 
-        var _x3 = _points[0].x,
+        var _x7 = _points[0].x,
             _y = _points[0].y;
-        _x3 /= this.m_iGridSizeX;
+        _x7 /= this.m_iGridSizeX;
         _y /= this.m_iGridSizeY;
-        var p0 = this.m_Points.get(_y * this.m_iGridWidth + _x3);
-        if (p0 !== undefined) p0.$SetStatus(StatusEnum.POINT_IN_PATH);else {
-          debugger;
-        }
+        var p0 = this.m_Points.get(_y * this.m_iGridWidth + _x7);
+        if (p0 !== undefined) p0.$SetStatus(StatusEnum.POINT_IN_PATH);else {}
         this.m_Line.$SetWidthAndColor(3, this.m_sDotColor);
         this.m_Line.$SetID(path.iId);
         this.m_Lines.push(this.m_Line);
@@ -1969,9 +1985,7 @@ var InkBallGame = function () {
 
               if (p0 !== undefined) {
                 p0.$RevertOldStatus();
-              } else {
-                debugger;
-              }
+              } else {}
             }
           } catch (err) {
             _iterator6.e(err);
@@ -1990,8 +2004,8 @@ var InkBallGame = function () {
     }
   }, {
     key: "PrepareDrawing",
-    value: function PrepareDrawing(sScreen, sPlayer2Name, sGameStatus, sSurrenderButton, sCancelPath, sPause, sStopAndDraw) {
-      var iTooLong2Duration = arguments.length > 7 && arguments[7] !== undefined ? arguments[7] : 125;
+    value: function PrepareDrawing(sScreen, sPlayer2Name, sGameStatus, sSurrenderButton, sCancelPath, sPause, sStopAndDraw, sMsgInputSel, sMsgListSel, sMsgSendButtonSel) {
+      var iTooLong2Duration = arguments.length > 10 && arguments[10] !== undefined ? arguments[10] : 125;
       this.m_bIsWon = false;
       this.m_iDelayBetweenMultiCaptures = 4000;
       this.m_iTooLong2Duration = iTooLong2Duration;
@@ -2018,6 +2032,9 @@ var InkBallGame = function () {
       this.m_SurrenderButton = document.querySelector(sSurrenderButton);
       this.m_CancelPath = document.querySelector(sCancelPath);
       this.m_StopAndDraw = document.querySelector(sStopAndDraw);
+      this.m_sMsgInputSel = sMsgInputSel;
+      this.m_sMsgListSel = sMsgListSel;
+      this.m_sMsgSendButtonSel = sMsgSendButtonSel;
       this.m_Screen = document.querySelector(sScreen);
 
       if (!this.m_Screen) {
@@ -2056,7 +2073,7 @@ var InkBallGame = function () {
         this.m_Screen.onmouseleave = this.OnMouseLeave.bind(this);
         this.m_CancelPath.onclick = this.OnCancelClick.bind(this);
         this.m_StopAndDraw.onclick = this.OnStopAndDraw.bind(this);
-        if (false === this.m_bIsCPUGame) document.querySelector(this.m_sMsgInputSel).disabled = '';else if (!this.m_bIsPlayerActive) this.StartCPUCalculation();
+        if (false === this.m_bIsCPUGame) document.querySelector(this.m_sMsgInputSel).disabled = '';
         this.m_SurrenderButton.disabled = '';
 
         if (this.m_Player2Name.innerHTML === '???') {
@@ -2166,13 +2183,13 @@ var InkBallGame = function () {
       return pt;
     }
   }, {
-    key: "IsPathPossible",
-    value: function IsPathPossible() {
+    key: "BuildGraph",
+    value: function BuildGraph() {
       var _ref6 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
           _ref6$freeStat = _ref6.freeStat,
-          freePointStatus = _ref6$freeStat === void 0 ? StatusEnum.POINT_FREE_RED : _ref6$freeStat,
+          freePointStatus = _ref6$freeStat === void 0 ? StatusEnum.POINT_FREE_BLUE : _ref6$freeStat,
           _ref6$fillCol = _ref6.fillCol,
-          fillColor = _ref6$fillCol === void 0 ? this.COLOR_RED : _ref6$fillCol,
+          fillColor = _ref6$fillCol === void 0 ? this.COLOR_BLUE : _ref6$fillCol,
           _ref6$visuals = _ref6.visuals,
           presentVisually = _ref6$visuals === void 0 ? true : _ref6$visuals;
 
@@ -2463,8 +2480,44 @@ var InkBallGame = function () {
 
       x /= this.m_iGridSizeX;
       y /= this.m_iGridSizeY;
-      currPointsArr.push(point);
-      this.lastCycle.push(point);
+      var last = null,
+          last_x,
+          last_y;
+
+      if (currPointsArr.length > 0) {
+        last = currPointsArr[currPointsArr.length - 1];
+        var last_pos = last.$GetPosition();
+        last_x = last_pos.x, last_y = last_pos.y;
+        last_x /= this.m_iGridSizeX;
+        last_y /= this.m_iGridSizeY;
+
+        if (Math.abs(parseInt(last_x - x)) <= 1 && Math.abs(parseInt(last_y - y)) <= 1) {
+          currPointsArr.push(point);
+        } else return currPointsArr;
+      } else currPointsArr.push(point);
+
+      if (currPointsArr.length > 2 && last !== null) {
+        var first = currPointsArr[0];
+        var first_pos = first.$GetPosition();
+        first_pos.x /= this.m_iGridSizeX;
+        first_pos.y /= this.m_iGridSizeY;
+        last = currPointsArr[currPointsArr.length - 1];
+
+        var _last_pos = last.$GetPosition();
+
+        last_x = _last_pos.x, last_y = _last_pos.y;
+        last_x /= this.m_iGridSizeX;
+        last_y /= this.m_iGridSizeY;
+
+        if (Math.abs(parseInt(last_x - first_pos.x)) <= 1 && Math.abs(parseInt(last_y - first_pos.y)) <= 1) {
+          var tmp = [];
+          currPointsArr.forEach(function (value) {
+            return tmp.push(value);
+          });
+          this.lastCycle.push(tmp);
+        }
+      }
+
       var east = this.m_Points.get(y * this.m_iGridWidth + x + 1);
       var west = this.m_Points.get(y * this.m_iGridWidth + x - 1);
       var north = this.m_Points.get((y - 1) * this.m_iGridWidth + x);
@@ -2482,6 +2535,67 @@ var InkBallGame = function () {
       if (south_west) this.GroupPointsRecurse(currPointsArr, south_west);
       if (south_east) this.GroupPointsRecurse(currPointsArr, south_east);
       return currPointsArr;
+    }
+  }, {
+    key: "GroupPointsIterative",
+    value: function GroupPointsIterative() {
+      var _ref7 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+          _ref7$g = _ref7.g,
+          graph = _ref7$g === void 0 ? null : _ref7$g,
+          _ref7$freeStat = _ref7.freeStat,
+          freePointStatus = _ref7$freeStat === void 0 ? StatusEnum.POINT_FREE_BLUE : _ref7$freeStat,
+          _ref7$fillCol = _ref7.fillCol,
+          fillColor = _ref7$fillCol === void 0 ? this.COLOR_BLUE : _ref7$fillCol;
+
+      if (!graph) return;
+      var vertices = graph.vertices,
+          cycles = [];
+      var point, next;
+
+      var isPointOKForPath = function isPointOKForPath(freePointStatusArr, pt) {
+        var status = pt.$GetStatus();
+        if (freePointStatusArr.includes(status) && pt.$GetFillColor() === fillColor) return true;
+        return false;
+      };
+
+      var actAndReplace = function actAndReplace(pointsArr) {
+        if (next && isPointOKForPath([freePointStatus, StatusEnum.POINT_STARTING, StatusEnum.POINT_IN_PATH], next) === true) {
+          if (pointsArr.includes(next) === false) {
+            pointsArr.push(next);
+            point = next;
+            return 1;
+          } else if (pointsArr.length >= 4 && pointsArr[0] === next) {
+            pointsArr.push(next);
+            cycles.push(pointsArr);
+            return 2;
+          }
+        }
+
+        return 0;
+      };
+
+      var _iterator12 = _createForOfIteratorHelper(vertices),
+          _step12;
+
+      try {
+        for (_iterator12.s(); !(_step12 = _iterator12.n()).done;) {
+          var start = _step12.value;
+          point = start;
+          var currPointsArr = [];
+          var traversed_path = this.GroupPointsRecurse(currPointsArr, point);
+
+          if (traversed_path.length > 0 && this.lastCycle.length > 0) {
+            cycles.push(this.lastCycle);
+            this.lastCycle = [];
+          }
+        }
+      } catch (err) {
+        _iterator12.e(err);
+      } finally {
+        _iterator12.f();
+      }
+
+      return cycles;
     }
   }, {
     key: "rAFCallBack",

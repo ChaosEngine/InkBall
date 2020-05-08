@@ -110,26 +110,29 @@
 			},
 			gameType, bPlayingWithRed, bPlayerActive, boardSize, isReadonly, pathAfterPointDrawAllowanceSecAmount
 		);
+		game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw',
+            '#messageInput', '#messagesList', '#sendButton');
 
 		@if(Model.PlayerPointsAndPaths.Points != null)
 		{
-		@:game.StartSignalRConnection(iGameID, iPlayerID, iOtherPlayerID, false, '#messagesList', '#sendButton', '#messageInput', function () {
-			@:game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw');
-
+		@:game.StartSignalRConnection(iGameID, iPlayerID, iOtherPlayerID, false).then(function () {
 			@:game.SetAllPoints(@Model.PointsAsJavaScriptArray);
 			@:game.SetAllPaths(@Model.PathsAsJavaScriptArray);
+
+            //alert('a QQ');
+            @:document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
+            @:CountPointsDebug("#debug2");
 		@:});
 		}
 		else
 		{
-		@:game.StartSignalRConnection(iGameID, iPlayerID, iOtherPlayerID, true, '#messagesList', '#sendButton', '#messageInput', function () {
-			@:game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw');
+		@:game.StartSignalRConnection(iGameID, iPlayerID, iOtherPlayerID, true).then(function () {
+
+            //alert('a QQ');
+            @:document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
+            @:CountPointsDebug("#debug2");
 		@:});
 		}
-
-		//alert('a QQ');
-		document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
-		CountPointsDebug("#debug2");
 	});
 
 	window.addEventListener('beforeunload', function (e) {
