@@ -396,12 +396,14 @@ class InkBallGame {
 
 	/**
 	 * InkBallGame contructor
+	 * @param {number} iGameID ID of a game
+	 * @param {number} iPlayerID player ID
+	 * @param {number} iOtherPlayerID player ID
 	 * @param {string} sHubName SignalR hub name
 	 * @param {enum} loggingLevel log level for SignalR
 	 * @param {enum} hubProtocol Json or messagePack
 	 * @param {enum} transportType websocket, server events or long polling
 	 * @param {number} serverTimeoutInMilliseconds If the server hasn't sent a message in this interval, the client considers the server disconnected
-	 * @param {function} tokenFactory auth token factory
 	 * @param {enum} gameType of game enum as string
 	 * @param {bool} bIsPlayingWithRed true - red, false - blue
 	 * @param {bool} bIsPlayerActive is this player acive now
@@ -410,13 +412,12 @@ class InkBallGame {
 	 * @param {number} pathAfterPointDrawAllowanceSecAmount is number of seconds, a player is allowed to start drawing path after putting point
 	 * @param {number} iTooLong2Duration too long wait duration
 	 */
-	constructor(sHubName, loggingLevel, hubProtocol, transportType, serverTimeoutInMilliseconds, tokenFactory, gameType,
+	constructor(iGameID, iPlayerID, iOtherPlayerID, sHubName, loggingLevel, hubProtocol, transportType, serverTimeoutInMilliseconds, gameType,
 		bIsPlayingWithRed = true, bIsPlayerActive = true, BoardSize = { width: 32, height: 32 }, bViewOnly = false,
 		pathAfterPointDrawAllowanceSecAmount = 60, iTooLong2Duration = 125) {
-
-		this.g_iGameID = null;
-		this.g_iPlayerID = null;
-		this.m_iOtherPlayerId = null;
+		this.g_iGameID = iGameID;
+		this.g_iPlayerID = iPlayerID;
+		this.m_iOtherPlayerId = iOtherPlayerID;
 		this.m_bIsCPUGame = false;
 		this.GameType = GameTypeEnum[gameType];
 		this.iConnErrCount = 0;
@@ -480,7 +481,9 @@ class InkBallGame {
 		this.g_SignalRConnection = new signalR.HubConnectionBuilder()
 			.withUrl(sHubName, {
 				transport: transportType,
-				accessTokenFactory: tokenFactory
+				accessTokenFactory: function () {
+					return `iGameID=${this.g_iGameID}&iPlayerID=${this.g_iPlayerID}`;
+				}.bind(this)
 			})
 			.withHubProtocol(hubProtocol)
 			.configureLogging(loggingLevel)
@@ -643,16 +646,10 @@ class InkBallGame {
 
 	/**
 	 * Start connection to SignalR
-	 * @param {number} iGameID ID of a game
-	 * @param {number} iPlayerID player ID
-	 * @param {number} iOtherPlayerID player ID
 	 * @param {boolean} loadPointsAndPathsFromSignalR load points and path thriugh SignalR
 	 */
-	async StartSignalRConnection(iGameID, iPlayerID, iOtherPlayerID, loadPointsAndPathsFromSignalR) {
-		if (this.g_SignalRConnection === null) return Promise.reject("signalr conn is null");
-		this.g_iGameID = iGameID;
-		this.g_iPlayerID = iPlayerID;
-		this.m_iOtherPlayerId = iOtherPlayerID;
+	async StartSignalRConnection(loadPointsAndPathsFromSignalR) {
+		if (this.g_SignalRConnection === null) return Promise.reject(new Error("signalr conn is null"));
 		this.m_bIsCPUGame = this.m_iOtherPlayerId === -1;
 		this.m_bPointsAndPathsLoaded = !loadPointsAndPathsFromSignalR;
 

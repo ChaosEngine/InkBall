@@ -87,6 +87,7 @@
 <script type='text/javascript'>
 "use strict";
 	var game = null;
+	const iOtherPlayerID = parseInt("@Model.Game.GetOtherPlayer()?.iId") || null;
 
 	window.addEventListener('load', function() {
 		const inkBallHubName = '@(commonUIConfigureOptions.Value.AppRootPath + InkBall.Module.Hubs.GameHub.HubName)';
@@ -94,7 +95,6 @@
 		document.getElementById('gameID').innerHTML = iGameID;
 		document.querySelector(".container .inkgame form > input[type='hidden'][name='GameID']").value = iGameID;
 		const iPlayerID = @Model.Player.iId;
-		const iOtherPlayerID = parseInt("@Model.Game.GetOtherPlayer()?.iId") || null;
 		document.getElementById('playerID').innerHTML = iPlayerID;
 		const boardSize = { width: @Model.Game.iBoardWidth, height: @Model.Game.iBoardHeight };
 		const bPlayingWithRed = JSON.parse('@Model.Game.IsThisPlayerPlayingWithRed()'.toLowerCase());
@@ -104,10 +104,8 @@
 		const servTimeoutMillis = @Model.ClientTimeoutInterval.TotalMilliseconds;
 		const isReadonly = JSON.parse('@Model.IsReadonly'.toLowerCase());
 		const pathAfterPointDrawAllowanceSecAmount = @Constants.PathAfterPointDrawAllowanceSecAmount;
-		game = new InkBallGame(inkBallHubName, signalR.LogLevel.Warning, protocol, signalR.HttpTransportType.None, servTimeoutMillis,
-			function () {
-				return 'iGameID=' + iGameID + '&iPlayerID=' + iPlayerID;
-			},
+		game = new InkBallGame(iGameID, iPlayerID, iOtherPlayerID, inkBallHubName, signalR.LogLevel.Warning, protocol,
+			signalR.HttpTransportType.None, servTimeoutMillis,
 			gameType, bPlayingWithRed, bPlayerActive, boardSize, isReadonly, pathAfterPointDrawAllowanceSecAmount
 		);
 		game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw',
@@ -115,7 +113,7 @@
 
 		@if(Model.PlayerPointsAndPaths.Points != null)
 		{
-		@:game.StartSignalRConnection(iGameID, iPlayerID, iOtherPlayerID, false).then(function () {
+		@:game.StartSignalRConnection(false).then(function () {
 			@:game.SetAllPoints(@Model.PointsAsJavaScriptArray);
 			@:game.SetAllPaths(@Model.PathsAsJavaScriptArray);
 
@@ -126,7 +124,7 @@
 		}
 		else
 		{
-		@:game.StartSignalRConnection(iGameID, iPlayerID, iOtherPlayerID, true).then(function () {
+		@:game.StartSignalRConnection(true).then(function () {
 
             //alert('a QQ');
             @:document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
@@ -152,7 +150,8 @@
                 ) +
 
 
-                @"<script type='text/javascript'>
+                @"
+				<script type='text/javascript'>
 				const doPolyfill = JSON.parse('" + commonUIConfigureOptions.Value.EnablePolyfill + @"'.toLowerCase());
 				const notIE11 = navigator.userAgent.indexOf('Trident') < 0;
 				if(!doPolyfill || notIE11) {
@@ -163,8 +162,9 @@
 					""<script async src='" + Url.Content(Constants.WwwIncludeInkballJSBabel) + @"'><\/script>"" +
 					""<script async src='" + Url.Content(Constants.WwwIncludeSvgVmlJSBabel) + @"'><\/script>"");
 				}
-				</script>\r" +
-                $"<script src='{Url.Content(Constants.WwwConcavemanBundle)}'></script>"
+				if(iOtherPlayerID === -1)//CPU oponent game
+					document.write(""<script async src='" + Url.Content(Constants.WwwConcavemanBundle) + @"'><\/script>"");
+				</script>"
             );
         });
     }

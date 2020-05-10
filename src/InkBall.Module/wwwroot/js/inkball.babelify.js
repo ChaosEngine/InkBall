@@ -569,24 +569,24 @@ function LocalError(msg) {
 }
 
 var InkBallGame = function () {
-  function InkBallGame(sHubName, loggingLevel, hubProtocol, transportType, serverTimeoutInMilliseconds, tokenFactory, gameType) {
+  function InkBallGame(iGameID, iPlayerID, iOtherPlayerID, sHubName, loggingLevel, hubProtocol, transportType, serverTimeoutInMilliseconds, gameType) {
     var _this9 = this;
 
-    var bIsPlayingWithRed = arguments.length > 7 && arguments[7] !== undefined ? arguments[7] : true;
-    var bIsPlayerActive = arguments.length > 8 && arguments[8] !== undefined ? arguments[8] : true;
-    var BoardSize = arguments.length > 9 && arguments[9] !== undefined ? arguments[9] : {
+    var bIsPlayingWithRed = arguments.length > 9 && arguments[9] !== undefined ? arguments[9] : true;
+    var bIsPlayerActive = arguments.length > 10 && arguments[10] !== undefined ? arguments[10] : true;
+    var BoardSize = arguments.length > 11 && arguments[11] !== undefined ? arguments[11] : {
       width: 32,
       height: 32
     };
-    var bViewOnly = arguments.length > 10 && arguments[10] !== undefined ? arguments[10] : false;
-    var pathAfterPointDrawAllowanceSecAmount = arguments.length > 11 && arguments[11] !== undefined ? arguments[11] : 60;
-    var iTooLong2Duration = arguments.length > 12 && arguments[12] !== undefined ? arguments[12] : 125;
+    var bViewOnly = arguments.length > 12 && arguments[12] !== undefined ? arguments[12] : false;
+    var pathAfterPointDrawAllowanceSecAmount = arguments.length > 13 && arguments[13] !== undefined ? arguments[13] : 60;
+    var iTooLong2Duration = arguments.length > 14 && arguments[14] !== undefined ? arguments[14] : 125;
 
     _classCallCheck(this, InkBallGame);
 
-    this.g_iGameID = null;
-    this.g_iPlayerID = null;
-    this.m_iOtherPlayerId = null;
+    this.g_iGameID = iGameID;
+    this.g_iPlayerID = iPlayerID;
+    this.m_iOtherPlayerId = iOtherPlayerID;
     this.m_bIsCPUGame = false;
     this.GameType = GameTypeEnum[gameType];
     this.iConnErrCount = 0;
@@ -647,7 +647,9 @@ var InkBallGame = function () {
     if (sHubName === null || sHubName === "") return;
     this.g_SignalRConnection = new signalR.HubConnectionBuilder().withUrl(sHubName, {
       transport: transportType,
-      accessTokenFactory: tokenFactory
+      accessTokenFactory: function () {
+        return "iGameID=".concat(this.g_iGameID, "&iPlayerID=").concat(this.g_iPlayerID);
+      }.bind(this)
     }).withHubProtocol(hubProtocol).configureLogging(loggingLevel).build();
     this.g_SignalRConnection.serverTimeoutInMilliseconds = serverTimeoutInMilliseconds;
     this.g_SignalRConnection.onclose(function () {
@@ -910,7 +912,7 @@ var InkBallGame = function () {
   }, {
     key: "StartSignalRConnection",
     value: function () {
-      var _StartSignalRConnection = _asyncToGenerator(regeneratorRuntime.mark(function _callee6(iGameID, iPlayerID, iOtherPlayerID, loadPointsAndPathsFromSignalR) {
+      var _StartSignalRConnection = _asyncToGenerator(regeneratorRuntime.mark(function _callee6(loadPointsAndPathsFromSignalR) {
         return regeneratorRuntime.wrap(function _callee6$(_context6) {
           while (1) {
             switch (_context6.prev = _context6.next) {
@@ -920,12 +922,9 @@ var InkBallGame = function () {
                   break;
                 }
 
-                return _context6.abrupt("return", Promise.reject("signalr conn is null"));
+                return _context6.abrupt("return", Promise.reject(new Error("signalr conn is null")));
 
               case 2:
-                this.g_iGameID = iGameID;
-                this.g_iPlayerID = iPlayerID;
-                this.m_iOtherPlayerId = iOtherPlayerID;
                 this.m_bIsCPUGame = this.m_iOtherPlayerId === -1;
                 this.m_bPointsAndPathsLoaded = !loadPointsAndPathsFromSignalR;
                 this.g_SignalRConnection.on("ServerToClientPoint", function (point) {
@@ -1070,7 +1069,7 @@ var InkBallGame = function () {
 
                 return _context6.abrupt("return", this.Connect());
 
-              case 18:
+              case 15:
               case "end":
                 return _context6.stop();
             }
@@ -1078,7 +1077,7 @@ var InkBallGame = function () {
         }, _callee6, this);
       }));
 
-      function StartSignalRConnection(_x3, _x4, _x5, _x6) {
+      function StartSignalRConnection(_x3) {
         return _StartSignalRConnection.apply(this, arguments);
       }
 
@@ -1603,11 +1602,11 @@ var InkBallGame = function () {
       } else {
         var _points = this.m_Line.$GetPointsArray();
 
-        var _x7 = _points[0].x,
+        var _x4 = _points[0].x,
             _y = _points[0].y;
-        _x7 /= this.m_iGridSizeX;
+        _x4 /= this.m_iGridSizeX;
         _y /= this.m_iGridSizeY;
-        var p0 = this.m_Points.get(_y * this.m_iGridWidth + _x7);
+        var p0 = this.m_Points.get(_y * this.m_iGridWidth + _x4);
         if (p0 !== undefined) p0.$SetStatus(StatusEnum.POINT_IN_PATH);else {}
         this.m_Line.$SetWidthAndColor(3, this.m_sDotColor);
         this.m_Line.$SetID(path.iId);

@@ -1,3 +1,4 @@
+"use strict";
 import concaveman from "concaveman";
 
 const isTest = document.querySelector('title').innerHTML === 'Hello concaveman';
@@ -19,7 +20,7 @@ if(isTest) {
 	concaveman_output.innerHTML = 'concaveman output points: ' + JSON.stringify(output);
 	document.body.appendChild(concaveman_output);
 } else
-	console.info('Hello concaveman. Simple test output points: \n' + JSON.stringify(output));
+	console.log('Hello concaveman. Simple test output points: \n' + JSON.stringify(output));
 
 /*if(concavemanBundle !== undefined)
 	concavemanBundle.prototype.concaveman = concaveman;
