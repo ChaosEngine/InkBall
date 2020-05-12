@@ -531,21 +531,17 @@ class InkBallGame {
 
 			if (this.m_bViewOnly === false) {
 				if (sessionStorage.getItem("ApplicationUserSettings") === null) {
-					await this.g_SignalRConnection.invoke("GetUserSettings").then(function (settings) {
-						if (settings) {
-							LocalLog(settings);
-							settings = ApplicationUserSettings.Deserialize(settings);
-							const to_store = ApplicationUserSettings.Serialize(settings);
+					let settings = await this.g_SignalRConnection.invoke("GetUserSettings");
+					if (settings) {
+						LocalLog(settings);
+						settings = ApplicationUserSettings.Deserialize(settings);
+						const to_store = ApplicationUserSettings.Serialize(settings);
 
-							sessionStorage.setItem("ApplicationUserSettings", to_store);
-						}
-						return settings;
-					}.bind(this)).then(async function (settings) {
-						this.m_ApplicationUserSettings = new ApplicationUserSettings(settings.DesktopNotifications);
+						sessionStorage.setItem("ApplicationUserSettings", to_store);
+					}
+					this.m_ApplicationUserSettings = new ApplicationUserSettings(settings.DesktopNotifications);
 
-						return await this.GetPlayerPointsAndPaths();
-					}.bind(this)).then(async function () {
-					});
+					await this.GetPlayerPointsAndPaths();
 				}
 				else {
 					const json = sessionStorage.getItem("ApplicationUserSettings");
