@@ -1,5 +1,6 @@
 ﻿@page
 @using Microsoft.Extensions.Hosting
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment env
 @inject Microsoft.Extensions.Options.IOptions<InkBallOptions> commonUIConfigureOptions
 @model IndexModel
 @{
@@ -16,11 +17,11 @@
 
     string P2Name = Model.Game.Player2 != null ? Model.Game.Player2?.User?.UserName : "???";
     string surrender_win_cancel_name;
-	bool isThisPlayerActive = Model.Game.IsThisPlayerActive();
-	bool useMessagePackBinaryTransport = commonUIConfigureOptions.Value.UseMessagePackBinaryTransport;
-    if(Model.Game.Player2 != null)
+    bool isThisPlayerActive = Model.Game.IsThisPlayerActive();
+    bool useMessagePackBinaryTransport = commonUIConfigureOptions.Value.UseMessagePackBinaryTransport;
+    if (Model.Game.Player2 != null)
     {
-        if(Model.Game.GetOtherPlayer().IsLastMoveOverdue() && isThisPlayerActive)
+        if (Model.Game.GetOtherPlayer().IsLastMoveOverdue() && isThisPlayerActive)
         {
             surrender_win_cancel_name = "win";
         }
@@ -35,52 +36,52 @@
     }
 }
 <h3 class="inkgame">
-	This is Inball Game page
+    This is Inball Game page
 </h3>
 <p class="inkgame">
-	<!-- Debug State -->
-	iGameID=<span id="gameID"></span>
-	iPlayerID=<span id="playerID"></span>
-	Player=@(Model.Game.IsThisPlayer1() ? "P1" : "P2")
-	<span class="whichColor">Play color</span>
+    <!-- Debug State -->
+    iGameID=<span id="gameID"></span>
+    iPlayerID=<span id="playerID"></span>
+    Player=@(Model.Game.IsThisPlayer1() ? "P1" : "P2")
+    <span class="whichColor">Play color</span>
 </p>
 <p class="inkgame">
-@Model.Game.Player1?.User?.UserName vs <span id='Player2Name'>@P2Name</span>
+    @Model.Game.Player1?.User?.UserName vs <span id='Player2Name'>@P2Name</span>
 </p>
 <div class="container inkgame">
-	<form action="Games" method="post" asp-antiforgery="true" class="row">
-		<input type='hidden' name='GameID' />
-		<div class="col-xs-6 col-sm-auto pl-0">
-			<a id='Pause' href='Games' class="btn btn-outline-primary">pause</a>
-			<input id='SurrenderButton' type='submit' name='action' value="@surrender_win_cancel_name" class='btn btn-outline-primary' disabled />
-		</div>
-		<div class="col-xs-6 col-sm-auto pl-0">
-			<input id="StopAndDraw" type="button" value="Stop and Draw" class='btn btn-warning' disabled />
-			<input id="CancelPath" type="button" value="Cancel path" class='btn btn-primary' disabled />
-		</div>
-	</form>
-	<div id="status" class="row">
-		<div class="col-auto px-0">
-			<span id="gameStatus">•</span>&nbsp;
-			<span id="debug0"></span>&nbsp;
-			<span id="debug1"></span>&nbsp;
-			<span id="debug2"></span>
-		</div>
-	</div>
-	<div class="row mx-auto">
-		<div id="screen" class="col-auto p-0 mb-3 mx-auto">
-		</div>
-		<div class="col">
-			<div class="input-group">
-				<input id="messageInput" type="text" class="form-control" placeholder="Message..." aria-label="Message to send" aria-describedby="sendButton"
-					onkeyup="document.querySelector('#sendButton').disabled = this.value == ''" disabled />
-				<div class="input-group-append">
-					<input id="sendButton" type="button" value="Send Message" class="btn btn-secondary" disabled />
-				</div>
-			</div>
-			<ul id="messagesList" class="list-group list-group-flush"></ul>
-		</div>
-	</div>
+    <form action="Games" method="post" asp-antiforgery="true" class="row">
+        <input type='hidden' name='GameID' />
+        <div class="col-xs-6 col-sm-auto pl-0">
+            <a id='Pause' href='Games' class="btn btn-outline-primary">pause</a>
+            <input id='SurrenderButton' type='submit' name='action' value="@surrender_win_cancel_name" class='btn btn-outline-primary' disabled />
+        </div>
+        <div class="col-xs-6 col-sm-auto pl-0">
+            <input id="StopAndDraw" type="button" value="Stop and Draw" class='btn btn-warning' disabled />
+            <input id="CancelPath" type="button" value="Cancel path" class='btn btn-primary' disabled />
+        </div>
+    </form>
+    <div id="status" class="row">
+        <div class="col-auto px-0">
+            <span id="gameStatus">•</span>&nbsp;
+            <span id="debug0"></span>&nbsp;
+            <span id="debug1"></span>&nbsp;
+            <span id="debug2"></span>
+        </div>
+    </div>
+    <div class="row mx-auto">
+        <div id="screen" class="col-auto p-0 mb-3 mx-auto">
+        </div>
+        <div class="col">
+            <div class="input-group">
+                <input id="messageInput" type="text" class="form-control" placeholder="Message..." aria-label="Message to send" aria-describedby="sendButton"
+                       onkeyup="document.querySelector('#sendButton').disabled = this.value == ''" disabled />
+                <div class="input-group-append">
+                    <input id="sendButton" type="button" value="Send Message" class="btn btn-secondary" disabled />
+                </div>
+            </div>
+            <ul id="messagesList" class="list-group list-group-flush"></ul>
+        </div>
+    </div>
 </div>
 
 
@@ -144,27 +145,32 @@
         {
             WriteLiteral(
                 (
+                env.IsDevelopment() ?
+                $"<script src='{Url.Content("~/lib/signalr/dist/browser/signalr.min.js")}'></script>\n" +
+                (useMessagePackBinaryTransport ? $"<script src='{Url.Content("~/lib/msgpack5/dist/msgpack5.min.js")}'></script>\n" +
+                $"<script src='{Url.Content("~/lib/signalr-protocol-msgpack/dist/browser/signalr-protocol-msgpack.min.js")}'></script>\n" : "\n")
+                :
                 @"<script src='https://cdn.jsdelivr.net/npm/@microsoft/signalr@3.1.4/dist/browser/signalr.min.js' integrity='sha256-9UZeAJOBJM5Y/VMhCSBAestJ+hoyLfeA6Mglts+CQqI=' crossorigin='anonymous'></script>" +
                 (useMessagePackBinaryTransport ? @"<script src='https://cdn.jsdelivr.net/npm/msgpack5@4.2.1/dist/msgpack5.min.js' integrity='sha256-mY/RhkCJfd98j3c5s1EcUDJdRzffTeKzEzFIaI/2KQg=' crossorigin='anonymous'></script>
-				<script src='https://cdn.jsdelivr.net/npm/@microsoft/signalr-protocol-msgpack@3.1.4/dist/browser/signalr-protocol-msgpack.min.js' integrity='sha256-4q/9DwJRlgWaT7y1gmg8vvuZmq82sVxCveIf7eTD5tk=' crossorigin='anonymous'></script>" : "")
+                <script src='https://cdn.jsdelivr.net/npm/@microsoft/signalr-protocol-msgpack@3.1.4/dist/browser/signalr-protocol-msgpack.min.js' integrity='sha256-4q/9DwJRlgWaT7y1gmg8vvuZmq82sVxCveIf7eTD5tk=' crossorigin='anonymous'></script>" : "")
                 ) +
 
 
                 @"
-				<script type='text/javascript'>
-				const doPolyfill = JSON.parse('" + commonUIConfigureOptions.Value.EnablePolyfill + @"'.toLowerCase());
-				const notIE11 = navigator.userAgent.indexOf('Trident') < 0;
-				if(!doPolyfill || notIE11) {
-					document.write(""<script async src='" + Url.Content(Constants.WwwIncludeInkballJS) + @"'><\/script>"" +
-					""<script async src='" + Url.Content(Constants.WwwIncludeSvgVmlJS) + @"'><\/script>"");
-				} else {
-					document.write(""<script src='https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/7.8.7/polyfill.min.js' integrity='sha256-025dcygmjSHGlBA5p7ahXH7XQU9g2+5y0iMdEayb2vM=' crossorigin='anonymous'><\/script>"" +
-					""<script async src='" + Url.Content(Constants.WwwIncludeInkballJSBabel) + @"'><\/script>"" +
-					""<script async src='" + Url.Content(Constants.WwwIncludeSvgVmlJSBabel) + @"'><\/script>"");
-				}
-				if(iOtherPlayerID === -1)//CPU oponent game
-					document.write(""<script async src='" + Url.Content(Constants.WwwConcavemanBundle) + @"'><\/script>"");
-				</script>"
+        <script type='text/javascript'>
+        const doPolyfill = JSON.parse('" + commonUIConfigureOptions.Value.EnablePolyfill + @"'.toLowerCase());
+        const notIE11 = navigator.userAgent.indexOf('Trident') < 0;
+        if(!doPolyfill || notIE11) {
+            document.write(""<script async src='" + Url.Content(Constants.WwwIncludeInkballJS) + @"'><\/script>"" +
+            ""<script async src='" + Url.Content(Constants.WwwIncludeSvgVmlJS) + @"'><\/script>"");
+        } else {
+            document.write(""<script src='https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/7.8.7/polyfill.min.js' integrity='sha256-025dcygmjSHGlBA5p7ahXH7XQU9g2+5y0iMdEayb2vM=' crossorigin='anonymous'><\/script>"" +
+            ""<script async src='" + Url.Content(Constants.WwwIncludeInkballJSBabel) + @"'><\/script>"" +
+            ""<script async src='" + Url.Content(Constants.WwwIncludeSvgVmlJSBabel) + @"'><\/script>"");
+        }
+        if(iOtherPlayerID === -1)//CPU oponent game
+            document.write(""<script async src='" + Url.Content(Constants.WwwConcavemanBundle) + @"'><\/script>"");
+        </script>"
             );
         });
     }

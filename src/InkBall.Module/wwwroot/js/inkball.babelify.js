@@ -726,16 +726,17 @@ var InkBallGame = function () {
   }, {
     key: "Connect",
     value: function () {
-      var _Connect = _asyncToGenerator(regeneratorRuntime.mark(function _callee5() {
+      var _Connect = _asyncToGenerator(regeneratorRuntime.mark(function _callee3() {
         var _this10 = this;
 
-        var json, settings;
-        return regeneratorRuntime.wrap(function _callee5$(_context5) {
+        var settings, to_store, json, _settings;
+
+        return regeneratorRuntime.wrap(function _callee3$(_context3) {
           while (1) {
-            switch (_context5.prev = _context5.next) {
+            switch (_context3.prev = _context3.next) {
               case 0:
-                _context5.prev = 0;
-                _context5.next = 3;
+                _context3.prev = 0;
+                _context3.next = 3;
                 return this.g_SignalRConnection.start();
 
               case 3:
@@ -743,104 +744,75 @@ var InkBallGame = function () {
                 LocalLog('connected; iConnErrCount = ' + this.iConnErrCount);
 
                 if (!(this.m_bViewOnly === false)) {
-                  _context5.next = 14;
+                  _context3.next = 19;
                   break;
                 }
 
                 if (!(sessionStorage.getItem("ApplicationUserSettings") === null)) {
-                  _context5.next = 11;
+                  _context3.next = 16;
                   break;
                 }
 
-                _context5.next = 9;
-                return this.g_SignalRConnection.invoke("GetUserSettings").then(function (settings) {
-                  if (settings) {
-                    LocalLog(settings);
-                    settings = ApplicationUserSettings.Deserialize(settings);
-                    var to_store = ApplicationUserSettings.Serialize(settings);
-                    sessionStorage.setItem("ApplicationUserSettings", to_store);
-                  }
-
-                  return settings;
-                }.bind(this)).then(function () {
-                  var _ref4 = _asyncToGenerator(regeneratorRuntime.mark(function _callee3(settings) {
-                    return regeneratorRuntime.wrap(function _callee3$(_context3) {
-                      while (1) {
-                        switch (_context3.prev = _context3.next) {
-                          case 0:
-                            this.m_ApplicationUserSettings = new ApplicationUserSettings(settings.DesktopNotifications);
-                            _context3.next = 3;
-                            return this.GetPlayerPointsAndPaths();
-
-                          case 3:
-                            return _context3.abrupt("return", _context3.sent);
-
-                          case 4:
-                          case "end":
-                            return _context3.stop();
-                        }
-                      }
-                    }, _callee3, this);
-                  }));
-
-                  return function (_x2) {
-                    return _ref4.apply(this, arguments);
-                  };
-                }().bind(this)).then(_asyncToGenerator(regeneratorRuntime.mark(function _callee4() {
-                  return regeneratorRuntime.wrap(function _callee4$(_context4) {
-                    while (1) {
-                      switch (_context4.prev = _context4.next) {
-                        case 0:
-                        case "end":
-                          return _context4.stop();
-                      }
-                    }
-                  }, _callee4);
-                })));
+                _context3.next = 9;
+                return this.g_SignalRConnection.invoke("GetUserSettings");
 
               case 9:
-                _context5.next = 14;
-                break;
+                settings = _context3.sent;
 
-              case 11:
-                json = sessionStorage.getItem("ApplicationUserSettings");
-                settings = ApplicationUserSettings.Deserialize(json);
+                if (settings) {
+                  LocalLog(settings);
+                  settings = ApplicationUserSettings.Deserialize(settings);
+                  to_store = ApplicationUserSettings.Serialize(settings);
+                  sessionStorage.setItem("ApplicationUserSettings", to_store);
+                }
+
                 this.m_ApplicationUserSettings = new ApplicationUserSettings(settings.DesktopNotifications);
+                _context3.next = 14;
+                return this.GetPlayerPointsAndPaths();
 
               case 14:
+                _context3.next = 19;
+                break;
+
+              case 16:
+                json = sessionStorage.getItem("ApplicationUserSettings");
+                _settings = ApplicationUserSettings.Deserialize(json);
+                this.m_ApplicationUserSettings = new ApplicationUserSettings(_settings.DesktopNotifications);
+
+              case 19:
                 if (this.m_bPointsAndPathsLoaded) {
-                  _context5.next = 17;
+                  _context3.next = 22;
                   break;
                 }
 
-                _context5.next = 17;
+                _context3.next = 22;
                 return this.GetPlayerPointsAndPaths();
 
-              case 17:
+              case 22:
                 if (this.m_ApplicationUserSettings !== null && this.m_ApplicationUserSettings.DesktopNotifications === true) {
                   this.SetupNotifications();
                 }
 
                 if (true === this.m_bIsCPUGame && !this.m_bIsPlayerActive) this.StartCPUCalculation();
-                _context5.next = 27;
+                _context3.next = 32;
                 break;
 
-              case 21:
-                _context5.prev = 21;
-                _context5.t0 = _context5["catch"](0);
-                LocalError(_context5.t0 + '; iConnErrCount = ' + this.iConnErrCount);
+              case 26:
+                _context3.prev = 26;
+                _context3.t0 = _context3["catch"](0);
+                LocalError(_context3.t0 + '; iConnErrCount = ' + this.iConnErrCount);
                 this.m_Screen.style.cursor = "not-allowed";
                 this.iConnErrCount++;
                 setTimeout(function () {
                   return _this10.Connect();
                 }, 4000 + this.iExponentialBackOffMillis * Math.max(this.iConnErrCount, 5));
 
-              case 27:
+              case 32:
               case "end":
-                return _context5.stop();
+                return _context3.stop();
             }
           }
-        }, _callee5, this, [[0, 21]]);
+        }, _callee3, this, [[0, 26]]);
       }));
 
       function Connect() {
@@ -912,17 +884,17 @@ var InkBallGame = function () {
   }, {
     key: "StartSignalRConnection",
     value: function () {
-      var _StartSignalRConnection = _asyncToGenerator(regeneratorRuntime.mark(function _callee6(loadPointsAndPathsFromSignalR) {
-        return regeneratorRuntime.wrap(function _callee6$(_context6) {
+      var _StartSignalRConnection = _asyncToGenerator(regeneratorRuntime.mark(function _callee4(loadPointsAndPathsFromSignalR) {
+        return regeneratorRuntime.wrap(function _callee4$(_context4) {
           while (1) {
-            switch (_context6.prev = _context6.next) {
+            switch (_context4.prev = _context4.next) {
               case 0:
                 if (!(this.g_SignalRConnection === null)) {
-                  _context6.next = 2;
+                  _context4.next = 2;
                   break;
                 }
 
-                return _context6.abrupt("return", Promise.reject(new Error("signalr conn is null")));
+                return _context4.abrupt("return", Promise.reject(new Error("signalr conn is null")));
 
               case 2:
                 this.m_bIsCPUGame = this.m_iOtherPlayerId === -1;
@@ -1067,17 +1039,17 @@ var InkBallGame = function () {
                   }.bind(this), false);
                 }
 
-                return _context6.abrupt("return", this.Connect());
+                return _context4.abrupt("return", this.Connect());
 
               case 15:
               case "end":
-                return _context6.stop();
+                return _context4.stop();
             }
           }
-        }, _callee6, this);
+        }, _callee4, this);
       }));
 
-      function StartSignalRConnection(_x3) {
+      function StartSignalRConnection(_x2) {
         return _StartSignalRConnection.apply(this, arguments);
       }
 
@@ -1602,11 +1574,11 @@ var InkBallGame = function () {
       } else {
         var _points = this.m_Line.$GetPointsArray();
 
-        var _x4 = _points[0].x,
+        var _x3 = _points[0].x,
             _y = _points[0].y;
-        _x4 /= this.m_iGridSizeX;
+        _x3 /= this.m_iGridSizeX;
         _y /= this.m_iGridSizeY;
-        var p0 = this.m_Points.get(_y * this.m_iGridWidth + _x4);
+        var p0 = this.m_Points.get(_y * this.m_iGridWidth + _x3);
         if (p0 !== undefined) p0.$SetStatus(StatusEnum.POINT_IN_PATH);else {}
         this.m_Line.$SetWidthAndColor(3, this.m_sDotColor);
         this.m_Line.$SetID(path.iId);
@@ -2184,13 +2156,13 @@ var InkBallGame = function () {
   }, {
     key: "BuildGraph",
     value: function BuildGraph() {
-      var _ref6 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-          _ref6$freeStat = _ref6.freeStat,
-          freePointStatus = _ref6$freeStat === void 0 ? StatusEnum.POINT_FREE_BLUE : _ref6$freeStat,
-          _ref6$fillCol = _ref6.fillCol,
-          fillColor = _ref6$fillCol === void 0 ? this.COLOR_BLUE : _ref6$fillCol,
-          _ref6$visuals = _ref6.visuals,
-          presentVisually = _ref6$visuals === void 0 ? true : _ref6$visuals;
+      var _ref4 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+          _ref4$freeStat = _ref4.freeStat,
+          freePointStatus = _ref4$freeStat === void 0 ? StatusEnum.POINT_FREE_BLUE : _ref4$freeStat,
+          _ref4$fillCol = _ref4.fillCol,
+          fillColor = _ref4$fillCol === void 0 ? this.COLOR_BLUE : _ref4$fillCol,
+          _ref4$visuals = _ref4.visuals,
+          presentVisually = _ref4$visuals === void 0 ? true : _ref4$visuals;
 
       var graph_points = [],
           graph_edges = new Map();
@@ -2538,13 +2510,13 @@ var InkBallGame = function () {
   }, {
     key: "GroupPointsIterative",
     value: function GroupPointsIterative() {
-      var _ref7 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-          _ref7$g = _ref7.g,
-          graph = _ref7$g === void 0 ? null : _ref7$g,
-          _ref7$freeStat = _ref7.freeStat,
-          freePointStatus = _ref7$freeStat === void 0 ? StatusEnum.POINT_FREE_BLUE : _ref7$freeStat,
-          _ref7$fillCol = _ref7.fillCol,
-          fillColor = _ref7$fillCol === void 0 ? this.COLOR_BLUE : _ref7$fillCol;
+      var _ref5 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+          _ref5$g = _ref5.g,
+          graph = _ref5$g === void 0 ? null : _ref5$g,
+          _ref5$freeStat = _ref5.freeStat,
+          freePointStatus = _ref5$freeStat === void 0 ? StatusEnum.POINT_FREE_BLUE : _ref5$freeStat,
+          _ref5$fillCol = _ref5.fillCol,
+          fillColor = _ref5$fillCol === void 0 ? this.COLOR_BLUE : _ref5$fillCol;
 
       if (!graph) return;
       var vertices = graph.vertices,
