@@ -2140,6 +2140,11 @@ class InkBallGame {
 		return false;
 	}
 
+	/**
+	 * Based on https://www.geeksforgeeks.org/print-all-the-cycles-in-an-undirected-graph/
+	 * @param {any} graph constructed earlier with BuildGraph
+	 * @returns {array} of cycles
+	 */
 	MarkAllCycles(graph) {
 		const vertices = graph.vertices;
 		const N = vertices.length;
@@ -2273,13 +2278,13 @@ class InkBallGame {
 			last_x = last_pos.x, last_y = last_pos.y;
 			last_x /= this.m_iGridSizeX; last_y /= this.m_iGridSizeY;
 			if (Math.abs(parseInt(last_x - x)) <= 1 && Math.abs(parseInt(last_y - y)) <= 1) {
-				currPointsArr.push(point);
+				currPointsArr.push(point);//nearby point 1 jump away
 			}
 			else
-				return currPointsArr;
+				return currPointsArr;//not nearby point
 		}
 		else
-			currPointsArr.push(point);
+			currPointsArr.push(point);//1st starting point
 
 		if (currPointsArr.length > 2 && last !== null) {
 			const first = currPointsArr[0];
@@ -2327,37 +2332,11 @@ class InkBallGame {
 	}
 
 	GroupPointsIterative({
-		g: graph = null,
-		freeStat: freePointStatus = StatusEnum.POINT_FREE_BLUE,
-		fillCol: fillColor = this.COLOR_BLUE
-		//visuals: presentVisually = true
+		g: graph = null
 	} = {}) {
 		if (!graph) return;
 		const vertices = graph.vertices, cycles = [];
-		let point, next;
-
-		const isPointOKForPath = function (freePointStatusArr, pt) {
-			const status = pt.$GetStatus();
-			if (freePointStatusArr.includes(status) && (pt.$GetFillColor() === fillColor))
-				return true;
-			return false;
-		};
-
-		const actAndReplace = function (pointsArr) {
-			if (next && isPointOKForPath([freePointStatus, StatusEnum.POINT_STARTING, StatusEnum.POINT_IN_PATH], next) === true) {
-				if (pointsArr.includes(next) === false) {
-					pointsArr.push(next);
-					point = next;
-					return 1;
-				}
-				else if (pointsArr.length >= 4 && pointsArr[0] === next) {
-					pointsArr.push(next);
-					cycles.push(pointsArr);
-					return 2;
-				}
-			}
-			return 0;
-		};
+		let point;
 
 		for (const start of vertices) {
 			point = start;
@@ -2368,39 +2347,6 @@ class InkBallGame {
 				cycles.push(this.lastCycle);
 				this.lastCycle = [];
 			}
-
-			/*let cnter = 100;//safety cnter
-			while (cnter-- > 0) {
-				let { x: x, y: y } = point.$GetPosition(), tmp;
-				x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
-
-				//east
-				next = this.m_Points.get(y * this.m_iGridWidth + x + 1);
-				tmp = actAndReplace(currPointsArr); if (1 === tmp) continue; else if (2 === tmp) break;
-				//west
-				next = this.m_Points.get(y * this.m_iGridWidth + x - 1);
-				tmp = actAndReplace(currPointsArr); if (1 === tmp) continue; else if (2 === tmp) break;
-				//north
-				next = this.m_Points.get((y - 1) * this.m_iGridWidth + x);
-				tmp = actAndReplace(currPointsArr); if (1 === tmp) continue; else if (2 === tmp) break;
-				//south
-				next = this.m_Points.get((y + 1) * this.m_iGridWidth + x);
-				tmp = actAndReplace(currPointsArr); if (1 === tmp) continue; else if (2 === tmp) break;
-				//north_west
-				next = this.m_Points.get((y - 1) * this.m_iGridWidth + x - 1);
-				tmp = actAndReplace(currPointsArr); if (1 === tmp) continue; else if (2 === tmp) break;
-				//north_east
-				next = this.m_Points.get((y - 1) * this.m_iGridWidth + x + 1);
-				tmp = actAndReplace(currPointsArr); if (1 === tmp) continue; else if (2 === tmp) break;
-				//south_west
-				next = this.m_Points.get((y + 1) * this.m_iGridWidth + x - 1);
-				tmp = actAndReplace(currPointsArr); if (1 === tmp) continue; else if (2 === tmp) break;
-				//south_east
-				next = this.m_Points.get((y + 1) * this.m_iGridWidth + x + 1);
-				tmp = actAndReplace(currPointsArr); if (1 === tmp) continue; else if (2 === tmp) break;
-
-				break;
-			}//while end*/
 		}
 
 		return cycles;

@@ -1,4 +1,3 @@
-"use strict";
 import concaveman from "concaveman";
 
 const isTest = document.querySelector('title').innerHTML === 'Hello concaveman';

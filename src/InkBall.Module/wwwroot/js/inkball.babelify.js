@@ -1,6 +1,6 @@
 "use strict";
 
-function _createForOfIteratorHelper(o) { if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (o = _unsupportedIterableToArray(o))) { var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var it, normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
+function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
 
 function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
 
@@ -16,7 +16,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
 
-function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function () { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
 function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
 
@@ -2512,38 +2512,12 @@ var InkBallGame = function () {
     value: function GroupPointsIterative() {
       var _ref5 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
           _ref5$g = _ref5.g,
-          graph = _ref5$g === void 0 ? null : _ref5$g,
-          _ref5$freeStat = _ref5.freeStat,
-          freePointStatus = _ref5$freeStat === void 0 ? StatusEnum.POINT_FREE_BLUE : _ref5$freeStat,
-          _ref5$fillCol = _ref5.fillCol,
-          fillColor = _ref5$fillCol === void 0 ? this.COLOR_BLUE : _ref5$fillCol;
+          graph = _ref5$g === void 0 ? null : _ref5$g;
 
       if (!graph) return;
       var vertices = graph.vertices,
           cycles = [];
-      var point, next;
-
-      var isPointOKForPath = function isPointOKForPath(freePointStatusArr, pt) {
-        var status = pt.$GetStatus();
-        if (freePointStatusArr.includes(status) && pt.$GetFillColor() === fillColor) return true;
-        return false;
-      };
-
-      var actAndReplace = function actAndReplace(pointsArr) {
-        if (next && isPointOKForPath([freePointStatus, StatusEnum.POINT_STARTING, StatusEnum.POINT_IN_PATH], next) === true) {
-          if (pointsArr.includes(next) === false) {
-            pointsArr.push(next);
-            point = next;
-            return 1;
-          } else if (pointsArr.length >= 4 && pointsArr[0] === next) {
-            pointsArr.push(next);
-            cycles.push(pointsArr);
-            return 2;
-          }
-        }
-
-        return 0;
-      };
+      var point;
 
       var _iterator12 = _createForOfIteratorHelper(vertices),
           _step12;
