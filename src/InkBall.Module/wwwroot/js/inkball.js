@@ -2,6 +2,8 @@
 /*global signalR $createOval $createPolyline $RemovePolyline $createSVGVML $createLine hasDuplicates*/
 "use strict";
 
+import { $createOval, $createPolyline, $RemovePolyline, $createSVGVML, $createLine, hasDuplicates } from './svgvml.js';
+
 /******** funcs-n-classes ********/
 const StatusEnum = Object.freeze({
 	POINT_FREE_RED: -3,
@@ -2388,3 +2390,5 @@ class InkBallGame {
 	///////CpuGame variables methods end//////
 }
 /******** /funcs-n-classes ********/
+
+export { InkBallGame, CountPointsDebug };

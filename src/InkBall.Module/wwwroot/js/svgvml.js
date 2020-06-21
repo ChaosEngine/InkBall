@@ -13,8 +13,9 @@
 
 let SVG = false;
 const svgNS = "http://www.w3.org/2000/svg";
-let svgAntialias = false;
-let cont = null;
+let svgAntialias = false, cont = null;
+let $createOval, $createPolyline, $RemovePolyline, $createSVGVML, $createLine;
+
 if (document.createElementNS) {
 	let svg = document.createElementNS(svgNS, "svg");
 	SVG = (svg.x !== null);
@@ -30,7 +31,7 @@ function hasDuplicates(array) {
 
 if (SVG) {
 	/* ============= SVG ============== */
-	var $createSVGVML = function (o, iWidth, iHeight, antialias) {
+	$createSVGVML = function (o, iWidth, iHeight, antialias) {
 		cont = document.createElementNS(svgNS, "svg");
 		//ch_added start
 		//if (iWidth)
@@ -42,7 +43,7 @@ if (SVG) {
 		svgAntialias = antialias;
 		return cont;
 	};
-	var $createLine = function (w, col, linecap) {
+	$createLine = function (w, col, linecap) {
 		var o = document.createElementNS(svgNS, "line");
 		o.setAttribute("shape-rendering", svgAntialias ? "auto" : "optimizeSpeed");
 		o.setAttribute("stroke-width", Math.round(w) + "px");
@@ -60,7 +61,7 @@ if (SVG) {
 		cont.appendChild(o);
 		return o;
 	};
-	var $createPolyline = function (w, points, col) {
+	$createPolyline = function (w, points, col) {
 		var o = document.createElementNS(svgNS, "polyline");
 		o.setAttribute("shape-rendering", svgAntialias ? "auto" : "optimizeSpeed");
 		o.setAttribute("stroke-width", Math.round(w));
@@ -138,7 +139,7 @@ if (SVG) {
 		//ch_added end
 		return o;
 	};
-	var $createOval = function (diam) {
+	$createOval = function (diam) {
 		var o = document.createElementNS(svgNS, "circle");
 		o.setAttribute("shape-rendering", svgAntialias ? "auto" : "optimizeSpeed");
 		o.setAttribute("stroke-width", 0);
@@ -194,7 +195,7 @@ if (SVG) {
 	var $RemoveOval = function (Oval) {
 		cont.removeChild(Oval);
 	};
-	var $RemovePolyline = function (Polyline) {
+	$RemovePolyline = function (Polyline) {
 		cont.removeChild(Polyline);
 	};
 	//ch_added end
@@ -378,3 +379,5 @@ if (SVG) {
 		return false;
 	};
 }
+
+export { $createOval, $createPolyline, $RemovePolyline, $createSVGVML, $createLine, hasDuplicates };

@@ -34,10 +34,10 @@
   <ItemGroup Condition="'$(Configuration)'=='Debug'">
     <EmbeddedResource Include="wwwroot\css\inkball.css" />
     <EmbeddedResource Include="wwwroot\img\*" />
-    <EmbeddedResource Include="wwwroot\js\inkball.babelify.js" />
     <EmbeddedResource Include="wwwroot\js\inkball.js" />
-    <EmbeddedResource Include="wwwroot\js\svgvml.babelify.js" />
     <EmbeddedResource Include="wwwroot\js\svgvml.js" />
+    <EmbeddedResource Include="wwwroot\js\inkballBundle.js" />
+    <EmbeddedResource Include="wwwroot\js\concavemanSource.js" />
     <EmbeddedResource Include="wwwroot\js\concavemanBundle.js" />
   </ItemGroup>
   <ItemGroup Condition="'$(Configuration)'!='Debug'">

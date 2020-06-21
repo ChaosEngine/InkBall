@@ -84,10 +84,11 @@
     </div>
 </div>
 
+<script nomodule src='https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/7.10.1/polyfill.min.js' integrity='sha256-025dcygmjSHGlBA5p7ahXH7XQU9g2+5y0iMdEayb2vM=' crossorigin='anonymous'></script>
 
-<script type='text/javascript'>
-"use strict";
-	var game = null;
+<script type='module'>
+    import { InkBallGame, CountPointsDebug } from '@Url.Content(Constants.WwwIncludeInkballJS)';
+
 	const iOtherPlayerID = parseInt("@Model.Game.GetOtherPlayer()?.iId") || null;
 
 	window.addEventListener('load', function() {
@@ -105,7 +106,7 @@
 		const servTimeoutMillis = @Model.ClientTimeoutInterval.TotalMilliseconds;
 		const isReadonly = JSON.parse('@Model.IsReadonly'.toLowerCase());
 		const pathAfterPointDrawAllowanceSecAmount = @Constants.PathAfterPointDrawAllowanceSecAmount;
-		game = new InkBallGame(iGameID, iPlayerID, iOtherPlayerID, inkBallHubName, signalR.LogLevel.Warning, protocol,
+        const game = new InkBallGame(iGameID, iPlayerID, iOtherPlayerID, inkBallHubName, signalR.LogLevel.Warning, protocol,
 			signalR.HttpTransportType.None, servTimeoutMillis,
 			gameType, bPlayingWithRed, bPlayerActive, boardSize, isReadonly, pathAfterPointDrawAllowanceSecAmount
 		);
@@ -132,6 +133,8 @@
             @:CountPointsDebug("#debug2");
 		@:});
 		}
+
+        this.window.game = game;//exporting for dev-tools
 	});
 
 	window.addEventListener('beforeunload', function (e) {
@@ -152,25 +155,13 @@
                 :
                 @"<script src='https://cdn.jsdelivr.net/npm/@microsoft/signalr@3.1.5/dist/browser/signalr.min.js' integrity='sha256-si8igieTzuETDYPQKZvNpGAw5a6Xs72ZwnCWC8Z9esI=' crossorigin='anonymous'></script>" +
                 (useMessagePackBinaryTransport ? @"<script src='https://cdn.jsdelivr.net/npm/msgpack5@4.2.1/dist/msgpack5.min.js' integrity='sha256-mY/RhkCJfd98j3c5s1EcUDJdRzffTeKzEzFIaI/2KQg=' crossorigin='anonymous'></script>
-                <script src='https://cdn.jsdelivr.net/npm/@microsoft/signalr-protocol-msgpack@3.1.5/dist/browser/signalr-protocol-msgpack.min.js' integrity='sha256-Ozvj/246LbN0/yMugNnXVHWFWGJsSQIemINNxFhbAMs=' crossorigin='anonymous'></script>" : "")
+        <script src='https://cdn.jsdelivr.net/npm/@microsoft/signalr-protocol-msgpack@3.1.5/dist/browser/signalr-protocol-msgpack.min.js' integrity='sha256-Ozvj/246LbN0/yMugNnXVHWFWGJsSQIemINNxFhbAMs=' crossorigin='anonymous'></script>" : "")
                 ) +
 
 
                 @"
-        <script type='text/javascript'>
-        const doPolyfill = JSON.parse('" + commonUIConfigureOptions.Value.EnablePolyfill + @"'.toLowerCase());
-        const notIE11 = navigator.userAgent.indexOf('Trident') < 0;
-        if(!doPolyfill || notIE11) {
-            document.write(""<script async src='" + Url.Content(Constants.WwwIncludeInkballJS) + @"'><\/script>"" +
-            ""<script async src='" + Url.Content(Constants.WwwIncludeSvgVmlJS) + @"'><\/script>"");
-        } else {
-            document.write(""<script src='https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/7.10.1/polyfill.min.js' integrity='sha256-025dcygmjSHGlBA5p7ahXH7XQU9g2+5y0iMdEayb2vM=' crossorigin='anonymous'><\/script>"" +
-            ""<script async src='" + Url.Content(Constants.WwwIncludeInkballJSBabel) + @"'><\/script>"" +
-            ""<script async src='" + Url.Content(Constants.WwwIncludeSvgVmlJSBabel) + @"'><\/script>"");
-        }
-        if(iOtherPlayerID === -1)//CPU oponent game
-            document.write(""<script async src='" + Url.Content(Constants.WwwConcavemanBundle) + @"'><\/script>"");
-        </script>"
+        <script nomodule src='/dotnet/js/inkballBundle.js'></script>
+"
             );
         });
     }

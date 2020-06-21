@@ -1,4 +1,650 @@
+/******/ (function(modules) { // webpackBootstrap
+/******/ 	// The module cache
+/******/ 	var installedModules = {};
+/******/
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/
+/******/ 		// Check if module is in cache
+/******/ 		if(installedModules[moduleId]) {
+/******/ 			return installedModules[moduleId].exports;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = installedModules[moduleId] = {
+/******/ 			i: moduleId,
+/******/ 			l: false,
+/******/ 			exports: {}
+/******/ 		};
+/******/
+/******/ 		// Execute the module function
+/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+/******/
+/******/ 		// Flag the module as loaded
+/******/ 		module.l = true;
+/******/
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/
+/******/
+/******/ 	// expose the modules object (__webpack_modules__)
+/******/ 	__webpack_require__.m = modules;
+/******/
+/******/ 	// expose the module cache
+/******/ 	__webpack_require__.c = installedModules;
+/******/
+/******/ 	// define getter function for harmony exports
+/******/ 	__webpack_require__.d = function(exports, name, getter) {
+/******/ 		if(!__webpack_require__.o(exports, name)) {
+/******/ 			Object.defineProperty(exports, name, { enumerable: true, get: getter });
+/******/ 		}
+/******/ 	};
+/******/
+/******/ 	// define __esModule on exports
+/******/ 	__webpack_require__.r = function(exports) {
+/******/ 		if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 			Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 		}
+/******/ 		Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 	};
+/******/
+/******/ 	// create a fake namespace object
+/******/ 	// mode & 1: value is a module id, require it
+/******/ 	// mode & 2: merge all properties of value into the ns
+/******/ 	// mode & 4: return value when already ns object
+/******/ 	// mode & 8|1: behave like require
+/******/ 	__webpack_require__.t = function(value, mode) {
+/******/ 		if(mode & 1) value = __webpack_require__(value);
+/******/ 		if(mode & 8) return value;
+/******/ 		if((mode & 4) && typeof value === 'object' && value && value.__esModule) return value;
+/******/ 		var ns = Object.create(null);
+/******/ 		__webpack_require__.r(ns);
+/******/ 		Object.defineProperty(ns, 'default', { enumerable: true, value: value });
+/******/ 		if(mode & 2 && typeof value != 'string') for(var key in value) __webpack_require__.d(ns, key, function(key) { return value[key]; }.bind(null, key));
+/******/ 		return ns;
+/******/ 	};
+/******/
+/******/ 	// getDefaultExport function for compatibility with non-harmony modules
+/******/ 	__webpack_require__.n = function(module) {
+/******/ 		var getter = module && module.__esModule ?
+/******/ 			function getDefault() { return module['default']; } :
+/******/ 			function getModuleExports() { return module; };
+/******/ 		__webpack_require__.d(getter, 'a', getter);
+/******/ 		return getter;
+/******/ 	};
+/******/
+/******/ 	// Object.prototype.hasOwnProperty.call
+/******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
+/******/
+/******/ 	// __webpack_public_path__
+/******/ 	__webpack_require__.p = "";
+/******/
+/******/
+/******/ 	// Load entry module and return exports
+/******/ 	return __webpack_require__(__webpack_require__.s = 13);
+/******/ })
+/************************************************************************/
+/******/ ({
+
+/***/ 13:
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
 "use strict";
+// ESM COMPAT FLAG
+__webpack_require__.r(__webpack_exports__);
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, "InkBallGame", function() { return /* binding */ inkball_InkBallGame; });
+__webpack_require__.d(__webpack_exports__, "CountPointsDebug", function() { return /* binding */ CountPointsDebug; });
+
+// CONCATENATED MODULE: ../InkBall/src/InkBall.Module/wwwroot/js/svgvml.js
+/*eslint no-unused-vars: ["error", { "varsIgnorePattern": "$" }]*/
+//////////////////////////////////////////////////////
+// SVG-VML mini graphic library 
+// ==========================================
+// written by Gerard Ferrandez
+// initial version - June 28, 2006
+// modified - 2018-2020 - Andrzej Pauli polyline and oval functions & extensions
+// modified - July 21 - use object functions
+// modified - July 24 - debug
+// www.dhteumeuleu.com
+//////////////////////////////////////////////////////
+
+
+var SVG = false;
+var svgNS = "http://www.w3.org/2000/svg";
+var svgAntialias = false,
+    cont = null;
+var $createOval, $createPolyline, $RemovePolyline, $createSVGVML, $createLine;
+
+if (document.createElementNS) {
+  var svg = document.createElementNS(svgNS, "svg");
+  SVG = svg.x !== null;
+}
+/**
+ * Test for array uniquness unig default object comparator
+ * @param {array} array of objects that are tested againstn uniqenes
+ * @returns {boolean} true - has duplicates
+ */
+
+
+function hasDuplicates(array) {
+  return new Set(array).size !== array.length;
+}
+
+if (SVG) {
+  /* ============= SVG ============== */
+  $createSVGVML = function $createSVGVML(o, iWidth, iHeight, antialias) {
+    cont = document.createElementNS(svgNS, "svg"); //ch_added start
+    //if (iWidth)
+    //	cont.setAttributeNS(null, 'width', iWidth);
+    //if (iHeight)
+    //	cont.setAttributeNS(null, 'height', iHeight);
+    //ch_added end
+
+    o.appendChild(cont);
+    svgAntialias = antialias;
+    return cont;
+  };
+
+  $createLine = function $createLine(w, col, linecap) {
+    var o = document.createElementNS(svgNS, "line");
+    o.setAttribute("shape-rendering", svgAntialias ? "auto" : "optimizeSpeed");
+    o.setAttribute("stroke-width", Math.round(w) + "px");
+    if (col) o.setAttribute("stroke", col);
+    if (linecap) o.setAttribute("stroke-linecap", linecap);
+
+    o.$move = function (x1, y1, x2, y2) {
+      this.setAttribute("x1", x1);
+      this.setAttribute("y1", y1);
+      this.setAttribute("x2", x2);
+      this.setAttribute("y2", y2);
+    };
+
+    o.$RGBcolor = function (R, G, B) {
+      this.setAttribute("stroke", "rgb(" + Math.round(R) + "," + Math.round(G) + "," + Math.round(B) + ")");
+    };
+
+    o.$SetColor = function (color) {
+      this.setAttribute("stroke", color);
+    };
+
+    o.$strokeWidth = function (s) {
+      this.setAttribute("stroke-width", Math.round(s) + "px");
+    };
+
+    cont.appendChild(o);
+    return o;
+  };
+
+  $createPolyline = function $createPolyline(w, points, col) {
+    var o = document.createElementNS(svgNS, "polyline");
+    o.setAttribute("shape-rendering", svgAntialias ? "auto" : "optimizeSpeed");
+    o.setAttribute("stroke-width", Math.round(w));
+    if (col) o.setAttribute("stroke", col);
+    o.setAttribute("fill", col);
+    o.setAttribute("fill-opacity", "0.1");
+    if (points) o.setAttribute("points", points);
+    o.setAttribute("stroke-linecap", "round");
+    o.setAttribute("stroke-linejoin", "round");
+    cont.appendChild(o); //ch_added start
+
+    o.setAttribute("data-id", 0);
+
+    o.$AppendPoints = function (x, y) {
+      var diff = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 16;
+      var pts_str = this.getAttribute("points");
+      var pts = pts_str.split(" ");
+
+      if (true === hasDuplicates(pts)) {
+        // debugger;
+        return false;
+      }
+
+      var arr; //obtain last point coords
+
+      if (pts.length <= 1 || (arr = pts[pts.length - 1].split(",")).length !== 2) {
+        // debugger;
+        return false;
+      }
+
+      var last_x = parseInt(arr[0]),
+          last_y = parseInt(arr[1]);
+      var x_diff = parseInt(x),
+          y_diff = parseInt(y);
+
+      if (!(Math.abs(last_x - x_diff) <= diff && Math.abs(last_y - y_diff) <= diff)) {
+        // debugger;
+        return false;
+      }
+
+      this.setAttribute("points", pts_str + " ".concat(x, ",").concat(y));
+      return true;
+    };
+
+    o.$RemoveLastPoint = function () {
+      var newpts = this.getAttribute("points").replace(/(\s\d+,\d+)$/, "");
+      this.setAttribute("points", newpts);
+      return newpts;
+    };
+
+    o.$ContainsPoint = function (x, y) {
+      var regexstr = new RegExp("".concat(x, ",").concat(y), 'g');
+      var cnt = (this.getAttribute("points").match(regexstr) || []).length;
+      return cnt;
+    };
+
+    o.$GetPointsString = function () {
+      return this.getAttribute("points");
+    };
+
+    o.$GetPointsArray = function () {
+      //x0,y0 x1,y1 x2,y2
+      return this.getAttribute("points").split(" ").map(function (pt) {
+        var tab = pt.split(',');
+        return {
+          x: parseInt(tab[0]),
+          y: parseInt(tab[1])
+        };
+      });
+    };
+
+    o.$SetPoints = function (sPoints) {
+      this.setAttribute("points", sPoints);
+    };
+
+    o.$GetIsClosed = function () {
+      var pts = this.getAttribute("points").split(" ");
+      return pts[0] === pts[pts.length - 1];
+    };
+
+    o.$GetLength = function () {
+      return this.getAttribute("points").split(" ").length;
+    };
+
+    o.$SetWidthAndColor = function (w, col) {
+      this.setAttribute("stroke", col);
+      this.setAttribute("fill", col);
+      this.setAttribute("stroke-width", Math.round(w));
+    };
+
+    o.$GetID = function () {
+      return parseInt(this.getAttribute("data-id"));
+    };
+
+    o.$SetID = function (iID) {
+      this.setAttribute("data-id", iID);
+    }; //ch_added end
+
+
+    return o;
+  };
+
+  $createOval = function $createOval(diam) {
+    var o = document.createElementNS(svgNS, "circle");
+    o.setAttribute("shape-rendering", svgAntialias ? "auto" : "optimizeSpeed");
+    o.setAttribute("stroke-width", 0);
+    o.setAttribute("r", Math.round(diam > 1)); //ch_commented o.style.cursor = "pointer";
+    //ch_added
+
+    o.setAttribute("data-status", -1); //o.setAttribute("data-old-status", -1);
+
+    o.$move = function (x1, y1, radius) {
+      this.setAttribute("cx", x1);
+      this.setAttribute("cy", y1);
+      this.setAttribute("r", Math.round(radius));
+    };
+
+    o.$GetStrokeColor = function () {
+      return this.getAttribute("stroke");
+    };
+
+    o.$SetStrokeColor = function (col) {
+      this.setAttribute("stroke", col);
+    }; //ch_added/changed start
+
+
+    o.$GetPosition = function () {
+      return {
+        x: this.getAttribute("cx"),
+        y: this.getAttribute("cy")
+      };
+    };
+
+    o.$GetFillColor = function () {
+      return this.getAttribute("fill");
+    };
+
+    o.$SetFillColor = function (col) {
+      this.setAttribute("fill", col);
+    };
+
+    o.$GetStatus = function () {
+      return parseInt(this.getAttribute("data-status"));
+    };
+
+    o.$SetStatus = function (iStatus) {
+      var saveOldPoint = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+      if (saveOldPoint) {
+        var old_status = parseInt(this.getAttribute("data-status"));
+        this.setAttribute("data-status", iStatus);
+        if (old_status !== -1 && old_status !== iStatus) this.setAttribute("data-old-status", old_status);
+      } else {
+        this.setAttribute("data-status", iStatus);
+      }
+    };
+
+    o.$RevertOldStatus = function () {
+      var old_status = this.getAttribute("data-old-status");
+
+      if (old_status) {
+        this.removeAttribute("data-old-status");
+        this.setAttribute("data-status", old_status);
+        return parseInt(old_status);
+      }
+
+      return -1;
+    };
+
+    o.$GetZIndex = function () {
+      return this.getAttribute("z-index");
+    };
+
+    o.$SetZIndex = function (val) {
+      this.setAttribute("z-index", val);
+    };
+
+    o.$Hide = function () {
+      this.setAttribute("visibility", 'hidden');
+    };
+
+    o.$Show = function () {
+      this.setAttribute("visibility", 'visible');
+    }; //ch_added/changed end
+
+
+    o.$strokeWeight = function (sw) {
+      this.setAttribute("stroke-width", sw);
+    };
+
+    cont.appendChild(o);
+    return o;
+  }; //ch_added start
+
+
+  var $RemoveOval = function $RemoveOval(Oval) {
+    cont.removeChild(Oval);
+  };
+
+  $RemovePolyline = function $RemovePolyline(Polyline) {
+    cont.removeChild(Polyline);
+  }; //ch_added end
+
+} else if (document.createStyleSheet) {
+  /* ============= VML ============== */
+  $createSVGVML = function $createSVGVML(o, iWidth, iHeight, antialias) {
+    document.namespaces.add("v", "urn:schemas-microsoft-com:vml");
+    var style = document.createStyleSheet();
+    style.addRule('v\\:*', "behavior: url(#default#VML);");
+    style.addRule('v\\:*', "antialias: " + antialias + ";");
+    cont = o;
+    return o;
+  };
+
+  $createLine = function $createLine(w, col, linecap) {
+    var o = document.createElement("v:line");
+    o.strokeweight = Math.round(w) + "px";
+    if (col) o.strokecolor = col;
+
+    o.$move = function (x1, y1, x2, y2) {
+      this.to = x1 + "," + y1;
+      this.from = x2 + "," + y2;
+    };
+
+    o.$RGBcolor = function (R, G, B) {
+      this.strokecolor = "rgb(" + Math.round(R) + "," + Math.round(G) + "," + Math.round(B) + ")";
+    };
+
+    o.$SetColor = function (color) {
+      this.strokecolor = color;
+    };
+
+    o.$strokeWidth = function (s) {
+      this.strokeweight = Math.round(s) + "px";
+    };
+
+    if (linecap) {
+      var s = document.createElement("v:stroke");
+      s.endcap = linecap;
+      o.appendChild(s);
+    }
+
+    cont.appendChild(o);
+    return o;
+  };
+
+  $createPolyline = function $createPolyline(w, points, col) {
+    var o = document.createElement("v:polyline");
+    o.strokeweight = Math.round(w) + "px";
+    if (col) o.strokecolor = col;
+    o.points = points;
+    var s = document.createElement("v:fill");
+    s.color = col;
+    s.opacity = 0.1;
+    o.appendChild(s);
+    cont.appendChild(o); //ch_added start
+
+    o.setAttribute("data-id", 0);
+
+    o.$AppendPoints = function (x, y) {
+      var diff = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 16;
+      var pts_str = this.points.value;
+      var pts = pts_str.split(" ");
+
+      if (true === hasDuplicates(pts)) {
+        //debugger;
+        return false;
+      }
+
+      var arr; //obtain last two point
+
+      if (pts.length <= 1 || (arr = pts[pts.length - 1].split(",")).length !== 2) {
+        //debugger;
+        return false;
+      }
+
+      var last_x = parseInt(arr[0]),
+          last_y = parseInt(arr[1]);
+      var x_diff = parseInt(x),
+          y_diff = parseInt(y);
+
+      if (!(Math.abs(last_x - x_diff) <= diff && Math.abs(last_y - y_diff) <= diff)) {
+        //debugger;
+        return false;
+      }
+
+      this.points.value = pts_str + " ".concat(x, ",").concat(y);
+      return true;
+    };
+
+    o.$RemoveLastPoint = function () {
+      var str = this.points.value.replace(/(\s\d+,\d+)$/, "");
+      this.points.value = str;
+      return str;
+    };
+
+    o.$ContainsPoint = function (x, y) {
+      var regexstr = new RegExp("".concat(x, ",").concat(y), 'g');
+      var cnt = (this.points.value.match(regexstr) || []).length;
+      return cnt;
+    };
+
+    o.$GetPointsString = function () {
+      return o.points.value;
+    };
+
+    o.$GetPointsArray = function () {
+      //x0,y0 x1,y1 x2,y2
+      return this.points.value.split(" ").map(function (pt) {
+        var tab = pt.split(',');
+        return {
+          x: parseInt(tab[0]),
+          y: parseInt(tab[1])
+        };
+      });
+    };
+
+    o.$SetPoints = function (sPoints) {
+      this.points.value = sPoints;
+    };
+
+    o.$GetIsClosed = function () {
+      var pts = this.points.value.split(" ");
+      return pts[0] === pts[pts.length - 1];
+    };
+
+    o.$GetLength = function () {
+      return this.points.value.split(" ").length;
+    };
+
+    o.$SetWidthAndColor = function (w, col) {
+      this.strokecolor = col;
+      this.fill.color = col;
+      this.strokeweight = Math.round(w) + "px";
+    };
+
+    o.$GetID = function () {
+      return parseInt(this.getAttribute("data-id"));
+    };
+
+    o.$SetID = function (iID) {
+      this.setAttribute("data-id", iID);
+    }; //ch_added end
+
+
+    return o;
+  };
+
+  $createOval = function $createOval(diam, filled) {
+    var o = document.createElement("v:oval");
+    o.style.position = "absolute"; //ch_commented o.style.cursor = "pointer";
+    //ch_added
+
+    o.setAttribute("data-status", -1); //o.setAttribute("data-old-status", -1);
+
+    o.strokeweight = 1;
+    o.filled = filled;
+    o.style.width = diam + "px";
+    o.style.height = diam + "px";
+
+    o.$move = function (x1, y1, radius) {
+      this.style.left = Math.round(x1 - radius) + "px";
+      this.style.top = Math.round(y1 - radius) + "px";
+      this.style.width = Math.round(radius * 2) + "px";
+      this.style.height = Math.round(radius * 2) + "px";
+    };
+
+    o.$GetStrokeColor = function () {
+      return this.strokecolor;
+    };
+
+    o.$SetStrokeColor = function (col) {
+      this.strokecolor = col;
+    }; //ch_added/changed start
+
+
+    o.$GetPosition = function () {
+      return {
+        x: parseInt(this.style.left) + parseInt(this.style.width) * 0.5,
+        y: parseInt(this.style.top) + parseInt(this.style.height) * 0.5
+      };
+    };
+
+    o.$GetFillColor = function () {
+      return this.fillcolor;
+    };
+
+    o.$SetFillColor = function (col) {
+      this.fillcolor = col;
+    };
+
+    o.$GetStatus = function () {
+      return parseInt(this.getAttribute("data-status"));
+    };
+
+    o.$SetStatus = function (iStatus) {
+      var saveOldPoint = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+      if (saveOldPoint) {
+        var old_status = parseInt(this.getAttribute("data-status"));
+        this.setAttribute("data-status", iStatus);
+        if (old_status !== -1 && old_status !== iStatus) this.setAttribute("data-old-status", old_status);
+      } else {
+        this.setAttribute("data-status", iStatus);
+      }
+    };
+
+    o.$RevertOldStatus = function () {
+      var old_status = this.getAttribute("data-old-status");
+
+      if (old_status) {
+        this.removeAttribute("data-old-status");
+        this.setAttribute("data-status", old_status);
+        return parseInt(old_status);
+      }
+
+      return -1;
+    };
+
+    o.$GetZIndex = function () {
+      return this.getAttribute("z-index");
+    };
+
+    o.$SetZIndex = function (val) {
+      this.setAttribute("z-index", val);
+    };
+
+    o.$Hide = function () {
+      this.setAttribute("visibility", 'hidden');
+    };
+
+    o.$Show = function () {
+      this.setAttribute("visibility", 'visible');
+    }; //ch_added/changed end
+
+
+    o.$strokeWeight = function (sw) {
+      this.strokeweight = sw;
+    };
+
+    cont.appendChild(o);
+    return o;
+  }; //ch_added start
+
+
+  $RemoveOval = function $RemoveOval(Oval) {
+    cont.removeChild(Oval);
+  };
+
+  $RemovePolyline = function $RemovePolyline(Polyline) {
+    cont.removeChild(Polyline);
+  }; //ch_added end
+
+} else {
+  /* ==== no script ==== */
+  $createSVGVML = function $createSVGVML() {
+    alert('SVG or VML is not supported!');
+    return false;
+  };
+}
+
+
+// CONCATENATED MODULE: ../InkBall/src/InkBall.Module/wwwroot/js/inkball.js
+/*eslint no-unused-vars: ["error", { "varsIgnorePattern": "InkBallGame|CountPointsDebug" }]*/
+
+/*global signalR $createOval $createPolyline $RemovePolyline $createSVGVML $createLine hasDuplicates*/
+
 
 function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
 
@@ -31,6 +677,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+
+/******** funcs-n-classes ********/
 
 var StatusEnum = Object.freeze({
   POINT_FREE_RED: -3,
@@ -66,7 +715,7 @@ var WinStatusEnum = Object.freeze({
   DRAW_WIN: 3
 });
 
-var DtoMsg = function () {
+var DtoMsg = /*#__PURE__*/function () {
   function DtoMsg() {
     _classCallCheck(this, DtoMsg);
   }
@@ -81,7 +730,7 @@ var DtoMsg = function () {
   return DtoMsg;
 }();
 
-var InkBallPointViewModel = function (_DtoMsg) {
+var InkBallPointViewModel = /*#__PURE__*/function (_DtoMsg) {
   _inherits(InkBallPointViewModel, _DtoMsg);
 
   var _super = _createSuper(InkBallPointViewModel);
@@ -161,7 +810,7 @@ var InkBallPointViewModel = function (_DtoMsg) {
   return InkBallPointViewModel;
 }(DtoMsg);
 
-var InkBallPathViewModel = function (_DtoMsg2) {
+var InkBallPathViewModel = /*#__PURE__*/function (_DtoMsg2) {
   _inherits(InkBallPathViewModel, _DtoMsg2);
 
   var _super2 = _createSuper(InkBallPathViewModel);
@@ -201,8 +850,18 @@ var InkBallPathViewModel = function (_DtoMsg2) {
 
   return InkBallPathViewModel;
 }(DtoMsg);
+/*class WaitForPlayerCommand extends DtoMsg {
+	constructor(showP2Name = false) {
+		super();
 
-var PlayerJoiningCommand = function (_DtoMsg3) {
+		this.ShowP2Name = showP2Name;
+	}
+
+	//GetDtoType() { return "WaitForPlayerCommand"; }
+}*/
+
+
+var PlayerJoiningCommand = /*#__PURE__*/function (_DtoMsg3) {
   _inherits(PlayerJoiningCommand, _DtoMsg3);
 
   var _super3 = _createSuper(PlayerJoiningCommand);
@@ -234,7 +893,7 @@ var PlayerJoiningCommand = function (_DtoMsg3) {
   return PlayerJoiningCommand;
 }(DtoMsg);
 
-var PlayerSurrenderingCommand = function (_DtoMsg4) {
+var PlayerSurrenderingCommand = /*#__PURE__*/function (_DtoMsg4) {
   _inherits(PlayerSurrenderingCommand, _DtoMsg4);
 
   var _super4 = _createSuper(PlayerSurrenderingCommand);
@@ -266,7 +925,7 @@ var PlayerSurrenderingCommand = function (_DtoMsg4) {
   return PlayerSurrenderingCommand;
 }(DtoMsg);
 
-var PingCommand = function (_DtoMsg5) {
+var PingCommand = /*#__PURE__*/function (_DtoMsg5) {
   _inherits(PingCommand, _DtoMsg5);
 
   var _super5 = _createSuper(PingCommand);
@@ -299,7 +958,7 @@ var PingCommand = function (_DtoMsg5) {
   return PingCommand;
 }(DtoMsg);
 
-var WinCommand = function (_DtoMsg6) {
+var WinCommand = /*#__PURE__*/function (_DtoMsg6) {
   _inherits(WinCommand, _DtoMsg6);
 
   var _super6 = _createSuper(WinCommand);
@@ -356,7 +1015,7 @@ var WinCommand = function (_DtoMsg6) {
   return WinCommand;
 }(DtoMsg);
 
-var StopAndDrawCommand = function (_DtoMsg7) {
+var StopAndDrawCommand = /*#__PURE__*/function (_DtoMsg7) {
   _inherits(StopAndDrawCommand, _DtoMsg7);
 
   var _super7 = _createSuper(StopAndDrawCommand);
@@ -382,7 +1041,7 @@ var StopAndDrawCommand = function (_DtoMsg7) {
   return StopAndDrawCommand;
 }(DtoMsg);
 
-var PlayerPointsAndPathsDTO = function (_DtoMsg8) {
+var PlayerPointsAndPathsDTO = /*#__PURE__*/function (_DtoMsg8) {
   _inherits(PlayerPointsAndPathsDTO, _DtoMsg8);
 
   var _super8 = _createSuper(PlayerPointsAndPathsDTO);
@@ -418,7 +1077,7 @@ var PlayerPointsAndPathsDTO = function (_DtoMsg8) {
   return PlayerPointsAndPathsDTO;
 }(DtoMsg);
 
-var ApplicationUserSettings = function (_DtoMsg9) {
+var ApplicationUserSettings = /*#__PURE__*/function (_DtoMsg9) {
   _inherits(ApplicationUserSettings, _DtoMsg9);
 
   var _super9 = _createSuper(ApplicationUserSettings);
@@ -457,7 +1116,7 @@ var ApplicationUserSettings = function (_DtoMsg9) {
   return ApplicationUserSettings;
 }(DtoMsg);
 
-var CountdownTimer = function () {
+var CountdownTimer = /*#__PURE__*/function () {
   function CountdownTimer() {
     var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
         _ref$countdownSeconds = _ref.countdownSeconds,
@@ -536,9 +1195,11 @@ var CountdownTimer = function () {
   }]);
 
   return CountdownTimer;
-}();
+}(); //Debug function
+
 
 function CountPointsDebug(sSelector2Set) {
+  //document.querySelector("div.user-panel.main input[z-index='-1']");
   var tags = [{
     query: "circle:not([z-index])",
     display: "circles: %s, "
@@ -558,17 +1219,54 @@ function CountPointsDebug(sSelector2Set) {
     aggregated += tag.display.replace('%s', cnt.length);
   });
   document.querySelector(sSelector2Set).innerHTML = 'SVGs by tags: ' + aggregated;
+  /*//TODO: test code; to be disabled
+  const screen = document.querySelector('#screen');
+  screen.innerHTML += "<div id='divTooltip' " +
+  	"style='position:absolute; top:0; right:0; z-index:33; background-color:#8886; display:none' " +
+  	"data-toggle='tooltip' data-html='true'>XXXXXXXXXX</div>";
+  const tooltip = $('#divTooltip').tooltip('hide');
+  $('polyline').hover(function (event) {
+  	const t = event.offsetY, l = event.offsetX;
+  		tooltip.text(this.getAttribute("points").split(" ").map(function (pt) {
+  		const tab = pt.split(',');
+  		return (parseInt(tab[0]) >> 4) + "," + (parseInt(tab[1]) >> 4);
+  	}).join(' 	'));
+  	
+  	tooltip.css({ "top": t + "px", "left": l + "px" }).show();
+  }, function () {
+  	tooltip.hide();
+  });*/
 }
 
 function LocalLog(msg) {
+  // eslint-disable-next-line no-console
   console.log(msg);
 }
 
 function LocalError(msg) {
+  // eslint-disable-next-line no-console
   console.error(msg);
 }
 
-var InkBallGame = function () {
+var inkball_InkBallGame = /*#__PURE__*/function () {
+  /**
+   * InkBallGame contructor
+   * @param {number} iGameID ID of a game
+   * @param {number} iPlayerID player ID
+   * @param {number} iOtherPlayerID player ID
+   * @param {string} sHubName SignalR hub name
+   * @param {enum} loggingLevel log level for SignalR
+   * @param {enum} hubProtocol Json or messagePack
+   * @param {enum} transportType websocket, server events or long polling
+   * @param {number} serverTimeoutInMilliseconds If the server hasn't sent a message in this interval, the client considers the server disconnected
+   * @param {enum} gameType of game enum as string
+   * @param {bool} bIsPlayingWithRed true - red, false - blue
+   * @param {bool} bIsPlayerActive is this player acive now
+   * @param {object} BoardSize defines logical width and height of grid size
+   * @param {bool} bViewOnly only viewing the game no interaction
+   * @param {number} pathAfterPointDrawAllowanceSecAmount is number of seconds, a player is allowed to start drawing path after putting point
+   * @param {number} iTooLong2Duration too long wait duration
+   */
   function InkBallGame(iGameID, iPlayerID, iOtherPlayerID, sHubName, loggingLevel, hubProtocol, transportType, serverTimeoutInMilliseconds, gameType) {
     var _this9 = this;
 
@@ -599,7 +1297,9 @@ var InkBallGame = function () {
     this.m_bIsWon = false;
     this.m_bPointsAndPathsLoaded = false;
     this.m_iDelayBetweenMultiCaptures = 4000;
-    this.m_iTooLong2Duration = iTooLong2Duration;
+    this.m_iTooLong2Duration = iTooLong2Duration
+    /*125*/
+    ;
     this.m_Timer = null;
     this.m_ReconnectTimer = null;
     this.m_WaitStartTime = null;
@@ -652,8 +1352,8 @@ var InkBallGame = function () {
       }.bind(this)
     }).withHubProtocol(hubProtocol).configureLogging(loggingLevel).build();
     this.g_SignalRConnection.serverTimeoutInMilliseconds = serverTimeoutInMilliseconds;
-    this.g_SignalRConnection.onclose(function () {
-      var _ref3 = _asyncToGenerator(regeneratorRuntime.mark(function _callee(err) {
+    this.g_SignalRConnection.onclose( /*#__PURE__*/function () {
+      var _ref3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(err) {
         return regeneratorRuntime.wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
@@ -664,7 +1364,8 @@ var InkBallGame = function () {
                   _this9.iConnErrCount++;
                   setTimeout(function () {
                     return _this9.Connect();
-                  }, 4000 + _this9.iExponentialBackOffMillis * Math.max(_this9.iConnErrCount, 5));
+                  }, 4000 + _this9.iExponentialBackOffMillis * Math.max(_this9.iConnErrCount, 5) //exponential back-off
+                  );
                 }
 
               case 1:
@@ -684,7 +1385,7 @@ var InkBallGame = function () {
   _createClass(InkBallGame, [{
     key: "GetPlayerPointsAndPaths",
     value: function () {
-      var _GetPlayerPointsAndPaths = _asyncToGenerator(regeneratorRuntime.mark(function _callee2() {
+      var _GetPlayerPointsAndPaths = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2() {
         var ppDTO, path_and_point;
         return regeneratorRuntime.wrap(function _callee2$(_context2) {
           while (1) {
@@ -700,6 +1401,7 @@ var InkBallGame = function () {
 
               case 3:
                 ppDTO = _context2.sent;
+                //LocalLog(ppDTO);
                 path_and_point = PlayerPointsAndPathsDTO.Deserialize(ppDTO);
                 if (path_and_point.Points !== undefined) this.SetAllPoints(path_and_point.Points);
                 if (path_and_point.Paths !== undefined) this.SetAllPaths(path_and_point.Paths);
@@ -726,7 +1428,7 @@ var InkBallGame = function () {
   }, {
     key: "Connect",
     value: function () {
-      var _Connect = _asyncToGenerator(regeneratorRuntime.mark(function _callee3() {
+      var _Connect = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3() {
         var _this10 = this;
 
         var settings, to_store, json, _settings;
@@ -805,7 +1507,8 @@ var InkBallGame = function () {
                 this.iConnErrCount++;
                 setTimeout(function () {
                   return _this10.Connect();
-                }, 4000 + this.iExponentialBackOffMillis * Math.max(this.iConnErrCount, 5));
+                }, 4000 + this.iExponentialBackOffMillis * Math.max(this.iConnErrCount, 5) //exponential back-off
+                );
 
               case 32:
               case "end":
@@ -828,9 +1531,11 @@ var InkBallGame = function () {
         LocalLog('Browser does not support notifications.');
         return false;
       } else {
+        // check if permission is already granted
         if (Notification.permission === 'granted') {
           return true;
         } else {
+          // request permission from user
           Notification.requestPermission().then(function (p) {
             if (p === 'granted') {
               return true;
@@ -856,15 +1561,19 @@ var InkBallGame = function () {
         LocalLog('Browser does not support notifications.');
         return false;
       } else {
+        // check if permission is already granted
         if (Notification.permission === 'granted') {
+          // show notification here
           new Notification(title, {
             body: body,
             icon: '../img/homescreen.webp'
           });
           return true;
         } else {
+          // request permission from user
           Notification.requestPermission().then(function (p) {
             if (p === 'granted') {
+              // show notification here
               new Notification(title, {
                 body: body,
                 icon: '../img/homescreen.webp'
@@ -881,10 +1590,15 @@ var InkBallGame = function () {
         }
       }
     }
+    /**
+     * Start connection to SignalR
+     * @param {boolean} loadPointsAndPathsFromSignalR load points and path thriugh SignalR
+     */
+
   }, {
     key: "StartSignalRConnection",
     value: function () {
-      var _StartSignalRConnection = _asyncToGenerator(regeneratorRuntime.mark(function _callee4(loadPointsAndPathsFromSignalR) {
+      var _StartSignalRConnection = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(loadPointsAndPathsFromSignalR) {
         return regeneratorRuntime.wrap(function _callee4$(_context4) {
           while (1) {
             switch (_context4.prev = _context4.next) {
@@ -987,6 +1701,7 @@ var InkBallGame = function () {
                 this.g_SignalRConnection.on("ServerToClientOtherPlayerDisconnected", function (sMsg) {
                   var opts = {
                     countdownSeconds: 5,
+                    //labelSelector: "#debug2",
                     initialStart: true,
                     countdownReachedHandler: function () {
                       var encodedMsg = sMsg;
@@ -1029,11 +1744,14 @@ var InkBallGame = function () {
                     if (encodedMsg === '') return;
                     var ping = new PingCommand(encodedMsg);
                     this.SendAsyncData(ping);
-                  }.bind(this), false);
+                  }.bind(this), false); // Execute a function when the user releases a key on the keyboard
+
                   document.querySelector(this.m_sMsgInputSel).addEventListener("keyup", function (event) {
-                    event.preventDefault();
+                    event.preventDefault(); // Cancel the default action, if needed
 
                     if (event.keyCode === 13) {
+                      // Number 13 is the "Enter" key on the keyboard
+                      // Trigger the button element with a click
                       document.querySelector(this.m_sMsgSendButtonSel).click();
                     }
                   }.bind(this), false);
@@ -1059,7 +1777,8 @@ var InkBallGame = function () {
     key: "StopSignalRConnection",
     value: function StopSignalRConnection() {
       if (this.g_SignalRConnection !== null) {
-        this.g_SignalRConnection.stop();
+        this.g_SignalRConnection.stop(); //cleanup
+
         if (this.m_ReconnectTimer) this.m_ReconnectTimer.Stop();
         if (this.m_Timer) this.m_Timer.Stop();
         LocalLog('Stopped SignalR connection');
@@ -1094,14 +1813,25 @@ var InkBallGame = function () {
           break;
       }
     }
+    /**
+     * Disable Text Selection script- © Dynamic Drive DHTML code library (www.dynamicdrive.com)
+     * This notice MUST stay intact for legal use
+     * Visit Dynamic Drive at http://www.dynamicdrive.com/ for full source code
+     *
+     * @param {element} Target is the element with disabled selection of text
+     */
+
   }, {
     key: "DisableSelection",
     value: function DisableSelection(Target) {
-      if (_typeof(Target.onselectstart) !== undefined) Target.onselectstart = function () {
+      if (_typeof(Target.onselectstart) !== undefined) //IE route
+        Target.onselectstart = function () {
           return false;
-        };else if (_typeof(Target.style.MozUserSelect) !== undefined) Target.style.MozUserSelect = "none";else Target.onmousedown = function () {
+        };else if (_typeof(Target.style.MozUserSelect) !== undefined) //Firefox route
+        Target.style.MozUserSelect = "none";else //All other route (ie: Opera)
+        Target.onmousedown = function () {
           return false;
-        };
+        }; //Target.style.cursor = "default";
     }
   }, {
     key: "f_clientWidth",
@@ -1143,17 +1873,24 @@ var InkBallGame = function () {
       switch (iStatus) {
         case StatusEnum.POINT_FREE_RED:
           color = this.COLOR_RED;
-          oval.$SetStatus(iStatus);
+          oval.$SetStatus(iStatus
+          /*StatusEnum.POINT_FREE*/
+          );
           break;
 
         case StatusEnum.POINT_FREE_BLUE:
           color = this.COLOR_BLUE;
-          oval.$SetStatus(iStatus);
+          oval.$SetStatus(iStatus
+          /*StatusEnum.POINT_FREE*/
+          );
           break;
 
         case StatusEnum.POINT_FREE:
           color = this.m_sDotColor;
-          oval.$SetStatus(iStatus);
+          oval.$SetStatus(iStatus
+          /*StatusEnum.POINT_FREE*/
+          ); //console.warn('TODO: generic FREE point, really? change it!');
+
           break;
 
         case StatusEnum.POINT_STARTING:
@@ -1162,7 +1899,8 @@ var InkBallGame = function () {
           break;
 
         case StatusEnum.POINT_IN_PATH:
-          if (this.g_iPlayerID === iPlayerId) color = this.m_bIsPlayingWithRed === true ? this.COLOR_RED : this.COLOR_BLUE;else color = this.m_bIsPlayingWithRed === true ? this.COLOR_BLUE : this.COLOR_RED;
+          if (this.g_iPlayerID === iPlayerId) //bPlayingWithRed
+            color = this.m_bIsPlayingWithRed === true ? this.COLOR_RED : this.COLOR_BLUE;else color = this.m_bIsPlayingWithRed === true ? this.COLOR_BLUE : this.COLOR_RED;
           oval.$SetStatus(iStatus);
           break;
 
@@ -1191,7 +1929,15 @@ var InkBallGame = function () {
       var _this11 = this;
 
       points.forEach(function (p) {
-        _this11.SetPoint(p[0], p[1], p[2], p[3]);
+        _this11.SetPoint(p[0]
+        /*x*/
+        , p[1]
+        /*y*/
+        , p[2]
+        /*Status*/
+        , p[3]
+        /*iPlayerId*/
+        );
       });
     }
   }, {
@@ -1220,7 +1966,8 @@ var InkBallGame = function () {
           if (p !== null && p !== undefined) {
             p.$SetStatus(status);
             status = StatusEnum.POINT_IN_PATH;
-          } else {}
+          } else {//debugger;
+          }
 
           x *= this.m_iGridSizeX;
           y *= this.m_iGridSizeY;
@@ -1240,7 +1987,8 @@ var InkBallGame = function () {
 
       if (p !== null && p !== undefined) {
         p.$SetStatus(status);
-      } else {}
+      } else {//debugger;
+      }
 
       x *= this.m_iGridSizeX;
       y *= this.m_iGridSizeY;
@@ -1255,9 +2003,16 @@ var InkBallGame = function () {
       var _this12 = this;
 
       packedPaths.forEach(function (unpacked) {
+        //const unpacked = JSON.parse(packed.Serialized);
         if (unpacked.iGameId !== _this12.g_iGameID) throw new Error("Bad game from path!");
 
-        _this12.SetPath(unpacked.PointsAsString, _this12.m_bIsPlayingWithRed, unpacked.iPlayerId === _this12.g_iPlayerID, unpacked.iId);
+        _this12.SetPath(unpacked.PointsAsString
+        /*points*/
+        , _this12.m_bIsPlayingWithRed, unpacked.iPlayerId === _this12.g_iPlayerID
+        /*isMainPlayerPoints*/
+        , unpacked.iId
+        /*real DB id*/
+        );
       });
     }
   }, {
@@ -1282,6 +2037,18 @@ var InkBallGame = function () {
 
       return false;
     }
+    /**
+     * Based on http://www.faqs.org/faqs/graphics/algorithms-faq/
+     * but mainly on http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+     * returns != 0 if point is inside path
+     * @param {number} npol points count
+     * @param {number} xp x point coordinates
+     * @param {number} yp y point coordinates
+     * @param {number} x point to check x coordinate
+     * @param {number} y point to check y coordinate
+     * @returns {boolean} if point lies inside the polygon
+     */
+
   }, {
     key: "pnpoly",
     value: function pnpoly(npol, xp, yp, x, y) {
@@ -1314,7 +2081,8 @@ var InkBallGame = function () {
   }, {
     key: "SurroundOponentPoints",
     value: function SurroundOponentPoints() {
-      var points = this.m_Line.$GetPointsArray();
+      var points = this.m_Line.$GetPointsArray(); //uniqe point path test (no duplicates except starting-ending point)
+
       var pts_not_unique = hasDuplicates(points.slice(0, -1).map(function (pt) {
         return pt.x + '_' + pt.y;
       }));
@@ -1326,7 +2094,8 @@ var InkBallGame = function () {
           path: "",
           errorDesc: "Points not unique"
         };
-      }
+      } //make the test!
+
 
       var sColor = this.m_sDotColor === this.COLOR_RED ? this.COLOR_BLUE : this.COLOR_RED;
       var owned_by = this.m_sDotColor === this.COLOR_RED ? StatusEnum.POINT_OWNED_BY_RED : StatusEnum.POINT_OWNED_BY_BLUE;
@@ -1418,19 +2187,37 @@ var InkBallGame = function () {
     }
   }, {
     key: "CreateXMLWaitForPlayerRequest",
-    value: function CreateXMLWaitForPlayerRequest() {}
+    value: function CreateXMLWaitForPlayerRequest()
+    /*...args*/
+    {//let cmd = new WaitForPlayerCommand((args.length > 0 && args[0] === true) ? true : false);
+      //return cmd;
+    }
   }, {
     key: "CreateXMLPutPointRequest",
     value: function CreateXMLPutPointRequest(iX, iY) {
       var cmd = new InkBallPointViewModel(0, this.g_iGameID, this.g_iPlayerID, iX, iY, this.m_bIsPlayingWithRed ? StatusEnum.POINT_FREE_RED : StatusEnum.POINT_FREE_BLUE, 0);
       return cmd;
     }
+    /**
+     * Create transferable object holding path points creating it as well as owned points by it
+     * @param {object} dto with path, owned
+     * @returns {object} command
+     */
+
   }, {
     key: "CreateXMLPutPathRequest",
     value: function CreateXMLPutPathRequest(dto) {
-      var cmd = new InkBallPathViewModel(0, this.g_iGameID, this.g_iPlayerID, dto.path, dto.owned);
+      var cmd = new InkBallPathViewModel(0, this.g_iGameID, this.g_iPlayerID, dto.path, dto.owned
+      /*, this.m_Timer !== null*/
+      );
       return cmd;
     }
+    /**
+     * Send data through signalR
+     * @param {object} payload transferrableObject (DTO)
+     * @param {function} revertFunction on-error revert/rollback function
+     */
+
   }, {
     key: "SendAsyncData",
     value: function SendAsyncData(payload) {
@@ -1494,7 +2281,8 @@ var InkBallGame = function () {
   }, {
     key: "CountDownReachedHandler",
     value: function CountDownReachedHandler(label) {
-      if (label) label.innerHTML = '';
+      if (label) label.innerHTML = ''; //this.NotifyBrowser('Time is running out', 'make a move');
+
       this.m_StopAndDraw.disabled = this.m_CancelPath.disabled = 'disabled';
       this.m_Timer = null;
       this.m_bIsPlayerActive = false;
@@ -1538,7 +2326,9 @@ var InkBallGame = function () {
       if (this.g_iPlayerID !== path.iPlayerId) {
         var str_path = path.PointsAsString || path.pointsAsString,
             owned = path.OwnedPointsAsString || path.ownedPointsAsString;
-        this.SetPath(str_path, this.m_sDotColor === this.COLOR_RED ? true : false, false, path.iId);
+        this.SetPath(str_path, this.m_sDotColor === this.COLOR_RED ? true : false, false, path.iId
+        /*real DB id*/
+        );
         var points = owned.split(" ");
         var point_status = this.m_sDotColor === this.COLOR_RED ? StatusEnum.POINT_OWNED_BY_RED : StatusEnum.POINT_OWNED_BY_BLUE;
         var sOwnedCol = this.m_sDotColor === this.COLOR_RED ? this.COLOR_OWNED_RED : this.COLOR_OWNED_BLUE;
@@ -1558,7 +2348,8 @@ var InkBallGame = function () {
               p.$SetStatus(point_status);
               p.$SetFillColor(sOwnedCol);
               p.$SetStrokeColor(sOwnedCol);
-            } else {}
+            } else {//debugger;
+            }
           }
         } catch (err) {
           _iterator5.e(err);
@@ -1572,6 +2363,7 @@ var InkBallGame = function () {
         if (this.m_Line !== null) this.OnCancelClick();
         this.m_StopAndDraw.disabled = '';
       } else {
+        //set starting point to POINT_IN_PATH to block further path closing with it
         var _points = this.m_Line.$GetPointsArray();
 
         var _x3 = _points[0].x,
@@ -1579,7 +2371,8 @@ var InkBallGame = function () {
         _x3 /= this.m_iGridSizeX;
         _y /= this.m_iGridSizeY;
         var p0 = this.m_Points.get(_y * this.m_iGridWidth + _x3);
-        if (p0 !== undefined) p0.$SetStatus(StatusEnum.POINT_IN_PATH);else {}
+        if (p0 !== undefined) p0.$SetStatus(StatusEnum.POINT_IN_PATH);else {//debugger;
+        }
         this.m_Line.$SetWidthAndColor(3, this.m_sDotColor);
         this.m_Line.$SetID(path.iId);
         this.m_Lines.push(this.m_Line);
@@ -1630,6 +2423,7 @@ var InkBallGame = function () {
           }
 
           return WinStatusEnum.NO_WIN;
+        //continue game
 
         case GameTypeEnum.FIRST_5_CAPTURES:
           owned_status = this.m_bIsPlayingWithRed ? StatusEnum.POINT_OWNED_BY_BLUE : StatusEnum.POINT_OWNED_BY_RED;
@@ -1651,6 +2445,7 @@ var InkBallGame = function () {
           }
 
           return WinStatusEnum.NO_WIN;
+        //continue game
 
         case GameTypeEnum.FIRST_5_PATHS:
           if (otherPlayerPaths.length >= 5) {
@@ -1662,6 +2457,7 @@ var InkBallGame = function () {
           }
 
           return WinStatusEnum.NO_WIN;
+        //continue game
 
         case GameTypeEnum.FIRST_5_ADVANTAGE_PATHS:
           {
@@ -1674,6 +2470,7 @@ var InkBallGame = function () {
             }
           }
           return WinStatusEnum.NO_WIN;
+        //continue game
 
         default:
           throw new Error("Wrong game type");
@@ -1721,6 +2518,7 @@ var InkBallGame = function () {
         if (this.m_Line !== null) this.m_Screen.style.cursor = "move";else this.m_Screen.style.cursor = "crosshair";
 
         if (this.m_bMouseDown === true) {
+          //lines
           if ((this.m_iLastX !== x || this.m_iLastY !== y) && Math.abs(parseInt(this.m_iLastX - x)) <= 1 && Math.abs(parseInt(this.m_iLastY - y)) <= 1 && this.m_iLastX >= 0 && this.m_iLastY >= 0) {
             if (this.m_Line !== null) {
               var p0 = this.m_Points.get(this.m_iLastY * this.m_iGridWidth + this.m_iLastX);
@@ -1804,6 +2602,7 @@ var InkBallGame = function () {
       this.m_bMouseDown = true;
 
       if (!this.m_bDrawLines) {
+        //points
         this.m_iLastX = x;
         this.m_iLastY = y;
         var loc_x = x;
@@ -1827,7 +2626,11 @@ var InkBallGame = function () {
           _this14.m_bHandlingEvent = false;
         });
       } else {
-        if ((this.m_iLastX !== x || this.m_iLastY !== y) && Math.abs(parseInt(this.m_iLastX - x)) <= 1 && Math.abs(parseInt(this.m_iLastY - y)) <= 1 && this.m_iLastX >= 0 && this.m_iLastY >= 0) {
+        //lines
+        //this.Debug('m_iMouseX = '+this.m_iMouseX+' m_iMouseY = '+this.m_iMouseY, 1);
+        if (
+        /*this.m_bMouseDown === true && */
+        (this.m_iLastX !== x || this.m_iLastY !== y) && Math.abs(parseInt(this.m_iLastX - x)) <= 1 && Math.abs(parseInt(this.m_iLastY - y)) <= 1 && this.m_iLastX >= 0 && this.m_iLastY >= 0) {
           if (this.m_Line !== null) {
             var p0 = this.m_Points.get(this.m_iLastY * this.m_iGridWidth + this.m_iLastX);
             var p1 = this.m_Points.get(y * this.m_iGridWidth + x);
@@ -1930,6 +2733,7 @@ var InkBallGame = function () {
         this.m_iLastX = this.m_iLastY = -1;
         this.m_Line = null;
       } else if (this.m_Line === null) {
+        //send On-Stop-And-Draw notification
         this.SendAsyncData(new StopAndDrawCommand());
       }
     }
@@ -1956,7 +2760,8 @@ var InkBallGame = function () {
 
               if (p0 !== undefined) {
                 p0.$RevertOldStatus();
-              } else {}
+              } else {//debugger;
+              }
             }
           } catch (err) {
             _iterator6.e(err);
@@ -1973,13 +2778,30 @@ var InkBallGame = function () {
         this.Debug('', 0);
       }
     }
+    /**
+     * Start drawing routines
+     * @param {HTMLElement} sScreen screen dontainer selector
+     * @param {HTMLElement} sPlayer2Name displaying element selector
+     * @param {HTMLElement} sGameStatus game stat element selector
+     * @param {HTMLElement} sSurrenderButton surrender button element selector
+     * @param {HTMLElement} sCancelPath cancel path button element selector
+     * @param {HTMLElement} sPause pause button element selector
+     * @param {HTMLElement} sStopAndDraw stop-and-draw action button element selector
+     * @param {string} sMsgInputSel input textbox html element selector
+     * @param {string} sMsgListSel ul html element selector
+     * @param {string} sMsgSendButtonSel input button html element selector
+     * @param {number} iTooLong2Duration how long waiting is too long
+     */
+
   }, {
     key: "PrepareDrawing",
     value: function PrepareDrawing(sScreen, sPlayer2Name, sGameStatus, sSurrenderButton, sCancelPath, sPause, sStopAndDraw, sMsgInputSel, sMsgListSel, sMsgSendButtonSel) {
       var iTooLong2Duration = arguments.length > 10 && arguments[10] !== undefined ? arguments[10] : 125;
       this.m_bIsWon = false;
       this.m_iDelayBetweenMultiCaptures = 4000;
-      this.m_iTooLong2Duration = iTooLong2Duration;
+      this.m_iTooLong2Duration = iTooLong2Duration
+      /*125*/
+      ;
       this.m_Timer = null;
       this.m_WaitStartTime = null;
       this.m_iSlowdownLevel = 0;
@@ -2022,10 +2844,12 @@ var InkBallGame = function () {
       this.m_iGridSizeX = parseInt(Math.ceil(iClientWidth / this.m_BoardSize.width));
       this.m_iGridSizeY = parseInt(Math.ceil(iClientHeight / this.m_BoardSize.height));
       this.m_iGridWidth = parseInt(Math.ceil(iClientWidth / this.m_iGridSizeX));
-      this.m_iGridHeight = parseInt(Math.ceil(iClientHeight / this.m_iGridSizeY));
+      this.m_iGridHeight = parseInt(Math.ceil(iClientHeight / this.m_iGridSizeY)); ///////CpuGame variables start//////
+
       this.rAF_StartTimestamp = null;
       this.rAF_FrameID = null;
-      this.lastCycle = [];
+      this.lastCycle = []; ///////CpuGame variables end//////
+
       $createSVGVML(this.m_Screen, this.m_Screen.style.width, this.m_Screen.style.height, true);
       this.DisableSelection(this.m_Screen);
 
@@ -2044,7 +2868,9 @@ var InkBallGame = function () {
         this.m_Screen.onmouseleave = this.OnMouseLeave.bind(this);
         this.m_CancelPath.onclick = this.OnCancelClick.bind(this);
         this.m_StopAndDraw.onclick = this.OnStopAndDraw.bind(this);
-        if (false === this.m_bIsCPUGame) document.querySelector(this.m_sMsgInputSel).disabled = '';
+        if (false === this.m_bIsCPUGame) document.querySelector(this.m_sMsgInputSel).disabled = ''; //else if (!this.m_bIsPlayerActive)
+        //	this.StartCPUCalculation();
+
         this.m_SurrenderButton.disabled = '';
 
         if (this.m_Player2Name.innerHTML === '???') {
@@ -2067,13 +2893,21 @@ var InkBallGame = function () {
       } else {
         document.querySelector(sPause).innerHTML = 'back to Game List';
       }
-    }
+    } ///////CpuGame variables methods start//////
+
+    /**
+     * Gets random number in range: min(inclusive) - max (exclusive)
+     * @param {any} min - from(inclusive)
+     * @param {any} max - to (exclusive)
+     * @returns {integer} random numba
+     */
+
   }, {
     key: "GetRandomInt",
     value: function GetRandomInt(min, max) {
       min = Math.ceil(min);
       max = Math.floor(max);
-      return Math.floor(Math.random() * (max - min)) + min;
+      return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
     }
   }, {
     key: "FindRandomCPUPoint",
@@ -2091,7 +2925,9 @@ var InkBallGame = function () {
         }
       }
 
-      var cmd = new InkBallPointViewModel(0, this.g_iGameID, -1, x, y, StatusEnum.POINT_FREE_BLUE, 0);
+      var cmd = new InkBallPointViewModel(0, this.g_iGameID, -1
+      /*player*/
+      , x, y, StatusEnum.POINT_FREE_BLUE, 0);
       return cmd;
     }
   }, {
@@ -2150,7 +2986,9 @@ var InkBallGame = function () {
       }
 
       if (max_random_pick_amount <= 0) return null;
-      var pt = new InkBallPointViewModel(0, this.g_iGameID, -1, x, y, StatusEnum.POINT_FREE_BLUE, 0);
+      var pt = new InkBallPointViewModel(0, this.g_iGameID, -1
+      /*player*/
+      , x, y, StatusEnum.POINT_FREE_BLUE, 0);
       return pt;
     }
   }, {
@@ -2170,7 +3008,10 @@ var InkBallGame = function () {
       var isPointOKForPath = function isPointOKForPath(freePointStatusArr, pt) {
         var status = pt.$GetStatus();
 
-        if (freePointStatusArr.includes(status) && pt.$GetFillColor() === fillColor) {
+        if (freePointStatusArr.includes(status) &&
+        /*(status === StatusEnum.POINT_STARTING || status === StatusEnum.POINT_IN_PATH) && */
+        pt.$GetFillColor() === fillColor //&& graph_points.includes(pt) === false
+        ) {
             return true;
           }
 
@@ -2186,7 +3027,11 @@ var InkBallGame = function () {
           if (graph_edges.has("".concat(x, ",").concat(y, "_").concat(to_x, ",").concat(to_y)) === false && graph_edges.has("".concat(to_x, ",").concat(to_y, "_").concat(x, ",").concat(y)) === false) {
             var edge = {
               from: point,
-              to: next
+              to: next //,from_x: x,
+              //from_y: y,
+              //to_x: to_x,
+              //to_y: to_y
+
             };
 
             if (presentVisually === true) {
@@ -2235,25 +3080,34 @@ var InkBallGame = function () {
 
             var x = view_x / this.m_iGridSizeX,
                 y = view_y / this.m_iGridSizeY;
-            var next = void 0;
+            var next = void 0; //east
+
             next = this.m_Points.get(y * this.m_iGridWidth + x + 1);
-            addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y);
+            addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y); //west
+
             next = this.m_Points.get(y * this.m_iGridWidth + x - 1);
-            addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y);
+            addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y); //north
+
             next = this.m_Points.get((y - 1) * this.m_iGridWidth + x);
-            addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y);
+            addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y); //south
+
             next = this.m_Points.get((y + 1) * this.m_iGridWidth + x);
-            addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y);
+            addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y); //north_west
+
             next = this.m_Points.get((y - 1) * this.m_iGridWidth + x - 1);
-            addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y);
+            addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y); //north_east
+
             next = this.m_Points.get((y - 1) * this.m_iGridWidth + x + 1);
-            addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y);
+            addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y); //south_west
+
             next = this.m_Points.get((y + 1) * this.m_iGridWidth + x - 1);
-            addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y);
+            addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y); //south_east
+
             next = this.m_Points.get((y + 1) * this.m_iGridWidth + x + 1);
             addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y);
           }
-        }
+        } //return graph
+
       } catch (err) {
         _iterator8.e(err);
       } finally {
@@ -2264,14 +3118,17 @@ var InkBallGame = function () {
         vertices: graph_points,
         edges: Array.from(graph_edges.values())
       };
-    }
+    } // Returns true if the graph contains a cycle, else false. 
+
   }, {
     key: "IsGraphCyclic",
     value: function IsGraphCyclic(graph) {
       var vertices = graph.vertices;
 
       var isCyclicUtil = function (v, parent) {
-        v.visited = true;
+        // Mark the current node as visited 
+        v.visited = true; // Recur for all the vertices  
+        // adjacent to this vertex
 
         var _iterator9 = _createForOfIteratorHelper(v.adjacents),
             _step9;
@@ -2280,9 +3137,14 @@ var InkBallGame = function () {
           for (_iterator9.s(); !(_step9 = _iterator9.n()).done;) {
             var i = _step9.value;
 
+            // If an adjacent is not visited,  
+            // then recur for that adjacent 
             if (!i.visited) {
               if (isCyclicUtil(i, v)) return true;
-            } else if (i !== parent) {
+            } // If an adjacent is visited and  
+            // not parent of current vertex, 
+            // then there is a cycle. 
+            else if (i !== parent) {
                 var _i$$GetPosition = i.$GetPosition(),
                     view_x = _i$$GetPosition.x,
                     view_y = _i$$GetPosition.y;
@@ -2300,25 +3162,39 @@ var InkBallGame = function () {
         }
 
         return false;
-      }.bind(this);
+      }.bind(this); // Mark all the vertices as not visited  
+      // and not part of recursion stack 
+
 
       for (var i = 0; i < vertices.length; i++) {
         vertices[i].visited = false;
-      }
+      } // Call the recursive helper function  
+      // to detect cycle in different DFS trees 
+
 
       for (var u = 0; u < vertices.length; u++) {
+        // Don't recur for u if already visited 
         if (!vertices[u].visited) if (isCyclicUtil(vertices[u], -1)) return true;
       }
 
       return false;
     }
+    /**
+     * Based on https://www.geeksforgeeks.org/print-all-the-cycles-in-an-undirected-graph/
+     * @param {any} graph constructed earlier with BuildGraph
+     * @returns {array} of cycles
+     */
+
   }, {
     key: "MarkAllCycles",
     value: function MarkAllCycles(graph) {
       var vertices = graph.vertices;
       var N = vertices.length;
-      var cycles = new Array(N);
-      var mark = new Array(N);
+      var cycles = new Array(N); // mark with unique numbers
+
+      var mark = new Array(N); // arrays required to color the 
+      // graph, store the parent of node 
+
       var color = new Array(N),
           par = new Array(N);
 
@@ -2328,12 +3204,15 @@ var InkBallGame = function () {
       }
 
       var dfs_cycle = function dfs_cycle(u, p) {
-        if (color[u] === 2) return;
+        // already (completely) visited vertex. 
+        if (color[u] === 2) return; // seen vertex, but was not completely visited -> cycle detected. 
+        // backtrack based on parents to find the complete cycle. 
 
         if (color[u] === 1) {
           cyclenumber++;
           var cur = p;
-          mark[cur].push(cyclenumber);
+          mark[cur].push(cyclenumber); // backtrack the vertex which are
+          // in the current cycle thats found
 
           while (cur !== u) {
             cur = par[cur];
@@ -2343,9 +3222,10 @@ var InkBallGame = function () {
           return;
         }
 
-        par[u] = p;
+        par[u] = p; // partially visited.
+
         color[u] = 1;
-        var vertex = vertices[u];
+        var vertex = vertices[u]; // simple dfs on graph
 
         var _iterator10 = _createForOfIteratorHelper(vertex.adjacents),
             _step10;
@@ -2353,10 +3233,12 @@ var InkBallGame = function () {
         try {
           for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
             var adj = _step10.value;
-            var v = vertices.indexOf(adj);
+            var v = vertices.indexOf(adj); // if it has not been visited previously
+
             if (v === par[u]) continue;
             dfs_cycle(v, u);
-          }
+          } // completely visited. 
+
         } catch (err) {
           _iterator10.e(err);
         } finally {
@@ -2367,12 +3249,19 @@ var InkBallGame = function () {
       };
 
       var randColor = function randColor() {
-        return '#' + Math.floor(Math.random() * 16777215).toString(16);
+        return '#' + Math.floor(Math.random() * 16777215).toString(16); //const str = Math.random().toString(16) + Math.random().toString(16),
+        //	sg = str.replace(/0./g, '').match(/.{1,6}/g),
+        //	col = parseInt(sg[0], 16) ^
+        //		parseInt(sg[1], 16) ^
+        //		parseInt(sg[2], 16);
+        //return '#' + ("000000" + col.toString(16)).slice(-6);
       };
 
       var printCycles = function (edges, mark) {
         var _this15 = this;
 
+        // push the edges that into the 
+        // cycle adjacency list 
         for (var e = 0; e < edges; e++) {
           var mark_e = mark[e];
 
@@ -2386,11 +3275,12 @@ var InkBallGame = function () {
         cycles = cycles.sort(function (b, a) {
           return a.length - b.length;
         });
-        var tab = [];
+        var tab = []; // print all the vertex with same cycle 
 
         for (var _i = 1; _i <= cyclenumber; _i++) {
           if (cycles[_i].length > 0) {
             (function () {
+              // Print the i-th cycle 
               var str = "Cycle Number ".concat(_i, ": "),
                   trailing_points = [];
               var randomColor = randColor();
@@ -2424,14 +3314,18 @@ var InkBallGame = function () {
               tab.push(trailing_points);
             })();
           }
-        }
+        } //console.log(str);
+
 
         return tab;
-      }.bind(this);
+      }.bind(this); // store the numbers of cycle 
+
 
       var cyclenumber = 0,
-          edges = N;
-      dfs_cycle(1, 0, color, mark, par);
+          edges = N; // call DFS to mark the cycles 
+
+      dfs_cycle(1, 0, color, mark, par); // function to print the cycles 
+
       return printCycles(edges, mark);
     }
   }, {
@@ -2463,9 +3357,11 @@ var InkBallGame = function () {
         last_y /= this.m_iGridSizeY;
 
         if (Math.abs(parseInt(last_x - x)) <= 1 && Math.abs(parseInt(last_y - y)) <= 1) {
-          currPointsArr.push(point);
-        } else return currPointsArr;
-      } else currPointsArr.push(point);
+          currPointsArr.push(point); //nearby point 1 jump away
+        } else return currPointsArr; //not nearby point
+
+      } else currPointsArr.push(point); //1st starting point
+
 
       if (currPointsArr.length > 2 && last !== null) {
         var first = currPointsArr[0];
@@ -2556,6 +3452,10 @@ var InkBallGame = function () {
       if (point === null) {
         if (progress < 2000) this.rAF_FrameID = window.requestAnimationFrame(this.rAFCallBack.bind(this));
       } else {
+        //if (this.rAF_FrameID !== null) {
+        //	window.cancelAnimationFrame(this.rAF_FrameID);
+        //this.rAF_FrameID = null;
+        //}
         this.SendAsyncData(point, function () {
           _this16.m_bMouseDown = false;
           _this16.m_bHandlingEvent = false;
@@ -2566,8 +3466,17 @@ var InkBallGame = function () {
     key: "StartCPUCalculation",
     value: function StartCPUCalculation() {
       if (this.rAF_FrameID === null) this.rAF_FrameID = window.requestAnimationFrame(this.rAFCallBack.bind(this));
-    }
+    } ///////CpuGame variables methods end//////
+
   }]);
 
   return InkBallGame;
 }();
+/******** /funcs-n-classes ********/
+
+
+
+
+/***/ })
+
+/******/ });
