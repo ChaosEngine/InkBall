@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 3);
+/******/ 	return __webpack_require__(__webpack_require__.s = 5);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -91,13 +91,13 @@
 "use strict";
 
 
-var rbush = __webpack_require__(4);
+var rbush = __webpack_require__(6);
 
-var convexHull = __webpack_require__(6);
+var convexHull = __webpack_require__(8);
 
-var Queue = __webpack_require__(11);
+var Queue = __webpack_require__(13);
 
-var pointInPolygon = __webpack_require__(12);
+var pointInPolygon = __webpack_require__(14);
 
 var orient = __webpack_require__(1)[3];
 
@@ -424,11 +424,11 @@ function sqSegSegDist(x0, y0, x1, y1, x2, y2, x3, y3) {
 
 var twoProduct = __webpack_require__(2);
 
-var robustSum = __webpack_require__(7);
+var robustSum = __webpack_require__(9);
 
-var robustScale = __webpack_require__(8);
+var robustScale = __webpack_require__(10);
 
-var robustSubtract = __webpack_require__(10);
+var robustSubtract = __webpack_require__(12);
 
 var NUM_EXPAND = 5;
 var EPSILON = 1.1102230246251565e-16;
@@ -665,7 +665,9 @@ function twoProduct(a, b, result) {
 }
 
 /***/ }),
-/* 3 */
+/* 3 */,
+/* 4 */,
+/* 5 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -673,6 +675,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var concaveman__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(0);
 /* harmony import */ var concaveman__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(concaveman__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony reexport (default from non-harmony) */ __webpack_require__.d(__webpack_exports__, "concaveman", function() { return concaveman__WEBPACK_IMPORTED_MODULE_0___default.a; });
+/*eslint-disable no-console*/
 
 var isTest = document.querySelector('title').innerHTML === 'Hello concaveman';
 
@@ -704,7 +707,7 @@ export default concaveman;*/
 
 
 /***/ }),
-/* 4 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -713,7 +716,7 @@ export default concaveman;*/
 module.exports = rbush;
 module.exports["default"] = rbush;
 
-var quickselect = __webpack_require__(5);
+var quickselect = __webpack_require__(7);
 
 function rbush(maxEntries, format) {
   if (!(this instanceof rbush)) return new rbush(maxEntries, format); // max entries in a node is 9 by default; min node fill is 40% for best performance
@@ -1216,7 +1219,7 @@ function multiSelect(arr, left, right, n, compare) {
 }
 
 /***/ }),
-/* 5 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
@@ -1290,7 +1293,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;function _type
 });
 
 /***/ }),
-/* 6 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1377,7 +1380,7 @@ function monotoneConvexHull2D(points) {
 }
 
 /***/ }),
-/* 7 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1568,7 +1571,7 @@ function linearExpansionSum(e, f) {
 }
 
 /***/ }),
-/* 8 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1576,7 +1579,7 @@ function linearExpansionSum(e, f) {
 
 var twoProduct = __webpack_require__(2);
 
-var twoSum = __webpack_require__(9);
+var twoSum = __webpack_require__(11);
 
 module.exports = scaleLinearExpansion;
 
@@ -1637,7 +1640,7 @@ function scaleLinearExpansion(e, scale) {
 }
 
 /***/ }),
-/* 9 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1662,7 +1665,7 @@ function fastTwoSum(a, b, result) {
 }
 
 /***/ }),
-/* 10 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1853,7 +1856,7 @@ function robustSubtract(e, f) {
 }
 
 /***/ }),
-/* 11 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1944,7 +1947,7 @@ TinyQueue.prototype = {
 };
 
 /***/ }),
-/* 12 */
+/* 14 */
 /***/ (function(module, exports) {
 
 module.exports = function (point, vs) {

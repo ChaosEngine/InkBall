@@ -1,8 +1,22 @@
 /*eslint no-unused-vars: ["error", { "varsIgnorePattern": "InkBallGame|CountPointsDebug" }]*/
-/*global signalR $createOval $createPolyline $RemovePolyline $createSVGVML $createLine hasDuplicates*/
+/*global signalR*/
 "use strict";
 
-import { $createOval, $createPolyline, $RemovePolyline, $createSVGVML, $createLine, hasDuplicates } from './svgvml.js';
+//import { $createOval, $createPolyline, $RemovePolyline, $createSVGVML, $createLine, hasDuplicates } from './svgvml.js';
+let $createOval, $createPolyline, $RemovePolyline, $createSVGVML, $createLine, hasDuplicates;
+
+(async (script2Load) => {
+	const selfFileName = Array.prototype.slice.call(document.getElementsByTagName('script'))
+		.map(x => x.src).find(s => s.indexOf('inkball') !== -1).split('/').pop();
+	const isMinified = selfFileName.indexOf("min") !== -1;
+
+	const moduleSpecifier = `./${script2Load}${isMinified ? '.min' : ''}.js`;
+	LocalLog(`I am '${selfFileName}' loading: ${moduleSpecifier}`);
+	const module = await import(moduleSpecifier);
+
+	$createOval = module.$createOval, $createPolyline = module.$createPolyline, $RemovePolyline = module.$RemovePolyline,
+		$createSVGVML = module.$createSVGVML, $createLine = module.$createLine, hasDuplicates = module.hasDuplicates;
+})('svgvml');
 
 /******** funcs-n-classes ********/
 const StatusEnum = Object.freeze({
@@ -2391,4 +2405,62 @@ class InkBallGame {
 }
 /******** /funcs-n-classes ********/
 
-export { InkBallGame, CountPointsDebug };
+//export { InkBallGame, CountPointsDebug };
+
+
+
+
+
+//run code
+window.addEventListener('load', function () {
+	const gameOptions = this.window.gameOptions;
+
+	const inkBallHubName = gameOptions.inkBallHubName;
+	const iGameID = gameOptions.iGameID;
+	document.getElementById('gameID').innerHTML = iGameID;
+	document.querySelector(".container .inkgame form > input[type='hidden'][name='GameID']").value = iGameID;
+	const iPlayerID = gameOptions.iPlayerID;
+	const iOtherPlayerID = gameOptions.iOtherPlayerID;
+	document.getElementById('playerID').innerHTML = iPlayerID;
+	const boardSize = gameOptions.boardSize;
+	const bPlayingWithRed = gameOptions.bPlayingWithRed;
+	const bPlayerActive = gameOptions.bPlayerActive;
+	const gameType = gameOptions.gameType;
+	const protocol = gameOptions.protocol;
+	const servTimeoutMillis = gameOptions.servTimeoutMillis;
+	const isReadonly = gameOptions.isReadonly;
+	const pathAfterPointDrawAllowanceSecAmount = gameOptions.pathAfterPointDrawAllowanceSecAmount;
+    const game = new InkBallGame(iGameID, iPlayerID, iOtherPlayerID, inkBallHubName, signalR.LogLevel.Warning, protocol,
+		signalR.HttpTransportType.None, servTimeoutMillis,
+		gameType, bPlayingWithRed, bPlayerActive, boardSize, isReadonly, pathAfterPointDrawAllowanceSecAmount
+	);
+	game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw',
+        '#messageInput', '#messagesList', '#sendButton');
+
+	if (gameOptions.PointsAsJavaScriptArray !== null)
+	{
+		game.StartSignalRConnection(false).then(function () {
+			game.SetAllPoints(gameOptions.PointsAsJavaScriptArray);
+			game.SetAllPaths(gameOptions.PathsAsJavaScriptArray);
+			//alert('a QQ');
+			document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
+			CountPointsDebug("#debug2");
+		});
+	}
+	else
+	{
+		game.StartSignalRConnection(true).then(function () {
+			//alert('a QQ');
+			document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
+			CountPointsDebug("#debug2");
+		});
+	}
+
+	delete window.gameOptions;
+	window.game = game;
+});
+
+window.addEventListener('beforeunload', function () {
+	if (window.game)
+		window.game.StopSignalRConnection();
+});

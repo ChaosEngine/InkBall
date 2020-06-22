@@ -85,84 +85,53 @@
 </div>
 
 <script nomodule src='https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/7.10.1/polyfill.min.js' integrity='sha256-025dcygmjSHGlBA5p7ahXH7XQU9g2+5y0iMdEayb2vM=' crossorigin='anonymous'></script>
-
-<script type='module'>
-    import { InkBallGame, CountPointsDebug } from '@Url.Content(Constants.WwwIncludeInkballJS)';
-
-	const iOtherPlayerID = parseInt("@Model.Game.GetOtherPlayer()?.iId") || null;
-
-	window.addEventListener('load', function() {
-		const inkBallHubName = '@(commonUIConfigureOptions.Value.AppRootPath + InkBall.Module.Hubs.GameHub.HubName)';
-		const iGameID = @Model.Game.iId;
-		document.getElementById('gameID').innerHTML = iGameID;
-		document.querySelector(".container .inkgame form > input[type='hidden'][name='GameID']").value = iGameID;
-		const iPlayerID = @Model.Player.iId;
-		document.getElementById('playerID').innerHTML = iPlayerID;
-		const boardSize = { width: @Model.Game.iBoardWidth, height: @Model.Game.iBoardHeight };
-		const bPlayingWithRed = JSON.parse('@Model.Game.IsThisPlayerPlayingWithRed()'.toLowerCase());
-		const bPlayerActive = JSON.parse('@isThisPlayerActive'.toLowerCase());
-		const gameType = '@Model.Game.GameType';
-		const protocol = JSON.parse('@useMessagePackBinaryTransport'.toLowerCase()) ? new signalR.protocols.msgpack.MessagePackHubProtocol() : new signalR.JsonHubProtocol();
-		const servTimeoutMillis = @Model.ClientTimeoutInterval.TotalMilliseconds;
-		const isReadonly = JSON.parse('@Model.IsReadonly'.toLowerCase());
-		const pathAfterPointDrawAllowanceSecAmount = @Constants.PathAfterPointDrawAllowanceSecAmount;
-        const game = new InkBallGame(iGameID, iPlayerID, iOtherPlayerID, inkBallHubName, signalR.LogLevel.Warning, protocol,
-			signalR.HttpTransportType.None, servTimeoutMillis,
-			gameType, bPlayingWithRed, bPlayerActive, boardSize, isReadonly, pathAfterPointDrawAllowanceSecAmount
-		);
-		game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw',
-            '#messageInput', '#messagesList', '#sendButton');
-
-		@if(Model.PlayerPointsAndPaths.Points != null)
-		{
-		@:game.StartSignalRConnection(false).then(function () {
-			@:game.SetAllPoints(@Model.PointsAsJavaScriptArray);
-			@:game.SetAllPaths(@Model.PathsAsJavaScriptArray);
-
-            //alert('a QQ');
-            @:document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
-            @:CountPointsDebug("#debug2");
-		@:});
-		}
-		else
-		{
-		@:game.StartSignalRConnection(true).then(function () {
-
-            //alert('a QQ');
-            @:document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
-            @:CountPointsDebug("#debug2");
-		@:});
-		}
-
-        this.window.game = game;//exporting for dev-tools
-	});
-
-	window.addEventListener('beforeunload', function (e) {
-		game.StopSignalRConnection();
-	});
-</script>
 @{
-    if (!string.IsNullOrEmpty(commonUIConfigureOptions.Value.ScriptsSectionName))
+    if (env.IsDevelopment())
     {
-        DefineSection(commonUIConfigureOptions.Value.ScriptsSectionName, async () =>
+        @:<script src='@Url.Content("~/lib/signalr/dist/browser/signalr.min.js")'></script>
+        if (useMessagePackBinaryTransport)
         {
-            WriteLiteral(
-                (
-                env.IsDevelopment() ?
-                $"<script src='{Url.Content("~/lib/signalr/dist/browser/signalr.min.js")}'></script>\n" +
-                (useMessagePackBinaryTransport ? $"<script src='{Url.Content("~/lib/msgpack5/dist/msgpack5.min.js")}'></script>\n" +
-                $"<script src='{Url.Content("~/lib/signalr-protocol-msgpack/dist/browser/signalr-protocol-msgpack.min.js")}'></script>\n" : "\n")
-                :
-                @"<script src='https://cdn.jsdelivr.net/npm/@microsoft/signalr@3.1.5/dist/browser/signalr.min.js' integrity='sha256-si8igieTzuETDYPQKZvNpGAw5a6Xs72ZwnCWC8Z9esI=' crossorigin='anonymous'></script>" +
-                (useMessagePackBinaryTransport ? @"<script src='https://cdn.jsdelivr.net/npm/msgpack5@4.2.1/dist/msgpack5.min.js' integrity='sha256-mY/RhkCJfd98j3c5s1EcUDJdRzffTeKzEzFIaI/2KQg=' crossorigin='anonymous'></script>
-        <script src='https://cdn.jsdelivr.net/npm/@microsoft/signalr-protocol-msgpack@3.1.5/dist/browser/signalr-protocol-msgpack.min.js' integrity='sha256-Ozvj/246LbN0/yMugNnXVHWFWGJsSQIemINNxFhbAMs=' crossorigin='anonymous'></script>" : "")
-                ) +
-
-
-                @"
-        <script nomodule src='/dotnet/js/inkballBundle.js'></script>
-"
-            );
-        });
+            @:<script src='@Url.Content("~/lib/msgpack5/dist/msgpack5.min.js")'></script>
+            @:<script src='@Url.Content("~/lib/signalr-protocol-msgpack/dist/browser/signalr-protocol-msgpack.min.js")'></script>
+        }
+    }
+    else
+    {
+        @:<script src='https://cdn.jsdelivr.net/npm/@@microsoft/signalr@3.1.5/dist/browser/signalr.min.js' integrity='sha256-si8igieTzuETDYPQKZvNpGAw5a6Xs72ZwnCWC8Z9esI=' crossorigin='anonymous'></script>
+        if (useMessagePackBinaryTransport)
+        {
+            @:<script src='https://cdn.jsdelivr.net/npm/msgpack5@4.2.1/dist/msgpack5.min.js' integrity='sha256-mY/RhkCJfd98j3c5s1EcUDJdRzffTeKzEzFIaI/2KQg=' crossorigin='anonymous'></script>
+            @:<script src='https://cdn.jsdelivr.net/npm/@@microsoft/signalr-protocol-msgpack@3.1.5/dist/browser/signalr-protocol-msgpack.min.js' integrity='sha256-Ozvj/246LbN0/yMugNnXVHWFWGJsSQIemINNxFhbAMs=' crossorigin='anonymous'></script>
+        }
     }
 }
+<script type='text/javascript'>
+    const gameOptions = {
+	    inkBallHubName: '@(commonUIConfigureOptions.Value.AppRootPath + InkBall.Module.Hubs.GameHub.HubName)',
+	    iGameID: @Model.Game.iId,
+	    iPlayerID: @Model.Player.iId,
+	    iOtherPlayerID: parseInt("@Model.Game.GetOtherPlayer()?.iId") || null,
+	    boardSize: { width: @Model.Game.iBoardWidth, height: @Model.Game.iBoardHeight },
+	    bPlayingWithRed: JSON.parse('@Model.Game.IsThisPlayerPlayingWithRed()'.toLowerCase()),
+	    bPlayerActive: JSON.parse('@isThisPlayerActive'.toLowerCase()),
+	    gameType: '@Model.Game.GameType',
+	    protocol: JSON.parse('@useMessagePackBinaryTransport'.toLowerCase()) ? new signalR.protocols.msgpack.MessagePackHubProtocol() : new signalR.JsonHubProtocol(),
+	    servTimeoutMillis: @Model.ClientTimeoutInterval.TotalMilliseconds,
+	    isReadonly: JSON.parse('@Model.IsReadonly'.toLowerCase()),
+	    pathAfterPointDrawAllowanceSecAmount: @Constants.PathAfterPointDrawAllowanceSecAmount,
+
+	    @if(Model.PlayerPointsAndPaths.Points != null)
+	    {
+            @:PointsAsJavaScriptArray: @Model.PointsAsJavaScriptArray,
+            @:PathsAsJavaScriptArray: @Model.PathsAsJavaScriptArray,
+	    }
+        else
+        {
+            @:PlayerPointsAndPaths: null
+        }
+    };
+
+    window.gameOptions = gameOptions;
+</script>
+<script type='module' src='@Url.Content(Constants.WwwIncludeInkballJS)'></script>
+<script nomodule type='text/javascript' src='@Url.Content(Constants.WwwIncludeInkballJSBundle)'></script>

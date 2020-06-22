@@ -81,580 +81,27 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 13);
+/******/ 	return __webpack_require__(__webpack_require__.s = 3);
 /******/ })
 /************************************************************************/
-/******/ ({
-
-/***/ 13:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/******/ ([
+/* 0 */,
+/* 1 */,
+/* 2 */,
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-// ESM COMPAT FLAG
-__webpack_require__.r(__webpack_exports__);
-
-// EXPORTS
-__webpack_require__.d(__webpack_exports__, "InkBallGame", function() { return /* binding */ inkball_InkBallGame; });
-__webpack_require__.d(__webpack_exports__, "CountPointsDebug", function() { return /* binding */ CountPointsDebug; });
-
-// CONCATENATED MODULE: ../InkBall/src/InkBall.Module/wwwroot/js/svgvml.js
-/*eslint no-unused-vars: ["error", { "varsIgnorePattern": "$" }]*/
-//////////////////////////////////////////////////////
-// SVG-VML mini graphic library 
-// ==========================================
-// written by Gerard Ferrandez
-// initial version - June 28, 2006
-// modified - 2018-2020 - Andrzej Pauli polyline and oval functions & extensions
-// modified - July 21 - use object functions
-// modified - July 24 - debug
-// www.dhteumeuleu.com
-//////////////////////////////////////////////////////
-
-
-var SVG = false;
-var svgNS = "http://www.w3.org/2000/svg";
-var svgAntialias = false,
-    cont = null;
-var $createOval, $createPolyline, $RemovePolyline, $createSVGVML, $createLine;
-
-if (document.createElementNS) {
-  var svg = document.createElementNS(svgNS, "svg");
-  SVG = svg.x !== null;
-}
-/**
- * Test for array uniquness unig default object comparator
- * @param {array} array of objects that are tested againstn uniqenes
- * @returns {boolean} true - has duplicates
- */
-
-
-function hasDuplicates(array) {
-  return new Set(array).size !== array.length;
-}
-
-if (SVG) {
-  /* ============= SVG ============== */
-  $createSVGVML = function $createSVGVML(o, iWidth, iHeight, antialias) {
-    cont = document.createElementNS(svgNS, "svg"); //ch_added start
-    //if (iWidth)
-    //	cont.setAttributeNS(null, 'width', iWidth);
-    //if (iHeight)
-    //	cont.setAttributeNS(null, 'height', iHeight);
-    //ch_added end
-
-    o.appendChild(cont);
-    svgAntialias = antialias;
-    return cont;
-  };
-
-  $createLine = function $createLine(w, col, linecap) {
-    var o = document.createElementNS(svgNS, "line");
-    o.setAttribute("shape-rendering", svgAntialias ? "auto" : "optimizeSpeed");
-    o.setAttribute("stroke-width", Math.round(w) + "px");
-    if (col) o.setAttribute("stroke", col);
-    if (linecap) o.setAttribute("stroke-linecap", linecap);
-
-    o.$move = function (x1, y1, x2, y2) {
-      this.setAttribute("x1", x1);
-      this.setAttribute("y1", y1);
-      this.setAttribute("x2", x2);
-      this.setAttribute("y2", y2);
-    };
-
-    o.$RGBcolor = function (R, G, B) {
-      this.setAttribute("stroke", "rgb(" + Math.round(R) + "," + Math.round(G) + "," + Math.round(B) + ")");
-    };
-
-    o.$SetColor = function (color) {
-      this.setAttribute("stroke", color);
-    };
-
-    o.$strokeWidth = function (s) {
-      this.setAttribute("stroke-width", Math.round(s) + "px");
-    };
-
-    cont.appendChild(o);
-    return o;
-  };
-
-  $createPolyline = function $createPolyline(w, points, col) {
-    var o = document.createElementNS(svgNS, "polyline");
-    o.setAttribute("shape-rendering", svgAntialias ? "auto" : "optimizeSpeed");
-    o.setAttribute("stroke-width", Math.round(w));
-    if (col) o.setAttribute("stroke", col);
-    o.setAttribute("fill", col);
-    o.setAttribute("fill-opacity", "0.1");
-    if (points) o.setAttribute("points", points);
-    o.setAttribute("stroke-linecap", "round");
-    o.setAttribute("stroke-linejoin", "round");
-    cont.appendChild(o); //ch_added start
-
-    o.setAttribute("data-id", 0);
-
-    o.$AppendPoints = function (x, y) {
-      var diff = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 16;
-      var pts_str = this.getAttribute("points");
-      var pts = pts_str.split(" ");
-
-      if (true === hasDuplicates(pts)) {
-        // debugger;
-        return false;
-      }
-
-      var arr; //obtain last point coords
-
-      if (pts.length <= 1 || (arr = pts[pts.length - 1].split(",")).length !== 2) {
-        // debugger;
-        return false;
-      }
-
-      var last_x = parseInt(arr[0]),
-          last_y = parseInt(arr[1]);
-      var x_diff = parseInt(x),
-          y_diff = parseInt(y);
-
-      if (!(Math.abs(last_x - x_diff) <= diff && Math.abs(last_y - y_diff) <= diff)) {
-        // debugger;
-        return false;
-      }
-
-      this.setAttribute("points", pts_str + " ".concat(x, ",").concat(y));
-      return true;
-    };
-
-    o.$RemoveLastPoint = function () {
-      var newpts = this.getAttribute("points").replace(/(\s\d+,\d+)$/, "");
-      this.setAttribute("points", newpts);
-      return newpts;
-    };
-
-    o.$ContainsPoint = function (x, y) {
-      var regexstr = new RegExp("".concat(x, ",").concat(y), 'g');
-      var cnt = (this.getAttribute("points").match(regexstr) || []).length;
-      return cnt;
-    };
-
-    o.$GetPointsString = function () {
-      return this.getAttribute("points");
-    };
-
-    o.$GetPointsArray = function () {
-      //x0,y0 x1,y1 x2,y2
-      return this.getAttribute("points").split(" ").map(function (pt) {
-        var tab = pt.split(',');
-        return {
-          x: parseInt(tab[0]),
-          y: parseInt(tab[1])
-        };
-      });
-    };
-
-    o.$SetPoints = function (sPoints) {
-      this.setAttribute("points", sPoints);
-    };
-
-    o.$GetIsClosed = function () {
-      var pts = this.getAttribute("points").split(" ");
-      return pts[0] === pts[pts.length - 1];
-    };
-
-    o.$GetLength = function () {
-      return this.getAttribute("points").split(" ").length;
-    };
-
-    o.$SetWidthAndColor = function (w, col) {
-      this.setAttribute("stroke", col);
-      this.setAttribute("fill", col);
-      this.setAttribute("stroke-width", Math.round(w));
-    };
-
-    o.$GetID = function () {
-      return parseInt(this.getAttribute("data-id"));
-    };
-
-    o.$SetID = function (iID) {
-      this.setAttribute("data-id", iID);
-    }; //ch_added end
-
-
-    return o;
-  };
-
-  $createOval = function $createOval(diam) {
-    var o = document.createElementNS(svgNS, "circle");
-    o.setAttribute("shape-rendering", svgAntialias ? "auto" : "optimizeSpeed");
-    o.setAttribute("stroke-width", 0);
-    o.setAttribute("r", Math.round(diam > 1)); //ch_commented o.style.cursor = "pointer";
-    //ch_added
-
-    o.setAttribute("data-status", -1); //o.setAttribute("data-old-status", -1);
-
-    o.$move = function (x1, y1, radius) {
-      this.setAttribute("cx", x1);
-      this.setAttribute("cy", y1);
-      this.setAttribute("r", Math.round(radius));
-    };
-
-    o.$GetStrokeColor = function () {
-      return this.getAttribute("stroke");
-    };
-
-    o.$SetStrokeColor = function (col) {
-      this.setAttribute("stroke", col);
-    }; //ch_added/changed start
-
-
-    o.$GetPosition = function () {
-      return {
-        x: this.getAttribute("cx"),
-        y: this.getAttribute("cy")
-      };
-    };
-
-    o.$GetFillColor = function () {
-      return this.getAttribute("fill");
-    };
-
-    o.$SetFillColor = function (col) {
-      this.setAttribute("fill", col);
-    };
-
-    o.$GetStatus = function () {
-      return parseInt(this.getAttribute("data-status"));
-    };
-
-    o.$SetStatus = function (iStatus) {
-      var saveOldPoint = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-
-      if (saveOldPoint) {
-        var old_status = parseInt(this.getAttribute("data-status"));
-        this.setAttribute("data-status", iStatus);
-        if (old_status !== -1 && old_status !== iStatus) this.setAttribute("data-old-status", old_status);
-      } else {
-        this.setAttribute("data-status", iStatus);
-      }
-    };
-
-    o.$RevertOldStatus = function () {
-      var old_status = this.getAttribute("data-old-status");
-
-      if (old_status) {
-        this.removeAttribute("data-old-status");
-        this.setAttribute("data-status", old_status);
-        return parseInt(old_status);
-      }
-
-      return -1;
-    };
-
-    o.$GetZIndex = function () {
-      return this.getAttribute("z-index");
-    };
-
-    o.$SetZIndex = function (val) {
-      this.setAttribute("z-index", val);
-    };
-
-    o.$Hide = function () {
-      this.setAttribute("visibility", 'hidden');
-    };
-
-    o.$Show = function () {
-      this.setAttribute("visibility", 'visible');
-    }; //ch_added/changed end
-
-
-    o.$strokeWeight = function (sw) {
-      this.setAttribute("stroke-width", sw);
-    };
-
-    cont.appendChild(o);
-    return o;
-  }; //ch_added start
-
-
-  var $RemoveOval = function $RemoveOval(Oval) {
-    cont.removeChild(Oval);
-  };
-
-  $RemovePolyline = function $RemovePolyline(Polyline) {
-    cont.removeChild(Polyline);
-  }; //ch_added end
-
-} else if (document.createStyleSheet) {
-  /* ============= VML ============== */
-  $createSVGVML = function $createSVGVML(o, iWidth, iHeight, antialias) {
-    document.namespaces.add("v", "urn:schemas-microsoft-com:vml");
-    var style = document.createStyleSheet();
-    style.addRule('v\\:*', "behavior: url(#default#VML);");
-    style.addRule('v\\:*', "antialias: " + antialias + ";");
-    cont = o;
-    return o;
-  };
-
-  $createLine = function $createLine(w, col, linecap) {
-    var o = document.createElement("v:line");
-    o.strokeweight = Math.round(w) + "px";
-    if (col) o.strokecolor = col;
-
-    o.$move = function (x1, y1, x2, y2) {
-      this.to = x1 + "," + y1;
-      this.from = x2 + "," + y2;
-    };
-
-    o.$RGBcolor = function (R, G, B) {
-      this.strokecolor = "rgb(" + Math.round(R) + "," + Math.round(G) + "," + Math.round(B) + ")";
-    };
-
-    o.$SetColor = function (color) {
-      this.strokecolor = color;
-    };
-
-    o.$strokeWidth = function (s) {
-      this.strokeweight = Math.round(s) + "px";
-    };
-
-    if (linecap) {
-      var s = document.createElement("v:stroke");
-      s.endcap = linecap;
-      o.appendChild(s);
-    }
-
-    cont.appendChild(o);
-    return o;
-  };
-
-  $createPolyline = function $createPolyline(w, points, col) {
-    var o = document.createElement("v:polyline");
-    o.strokeweight = Math.round(w) + "px";
-    if (col) o.strokecolor = col;
-    o.points = points;
-    var s = document.createElement("v:fill");
-    s.color = col;
-    s.opacity = 0.1;
-    o.appendChild(s);
-    cont.appendChild(o); //ch_added start
-
-    o.setAttribute("data-id", 0);
-
-    o.$AppendPoints = function (x, y) {
-      var diff = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 16;
-      var pts_str = this.points.value;
-      var pts = pts_str.split(" ");
-
-      if (true === hasDuplicates(pts)) {
-        //debugger;
-        return false;
-      }
-
-      var arr; //obtain last two point
-
-      if (pts.length <= 1 || (arr = pts[pts.length - 1].split(",")).length !== 2) {
-        //debugger;
-        return false;
-      }
-
-      var last_x = parseInt(arr[0]),
-          last_y = parseInt(arr[1]);
-      var x_diff = parseInt(x),
-          y_diff = parseInt(y);
-
-      if (!(Math.abs(last_x - x_diff) <= diff && Math.abs(last_y - y_diff) <= diff)) {
-        //debugger;
-        return false;
-      }
-
-      this.points.value = pts_str + " ".concat(x, ",").concat(y);
-      return true;
-    };
-
-    o.$RemoveLastPoint = function () {
-      var str = this.points.value.replace(/(\s\d+,\d+)$/, "");
-      this.points.value = str;
-      return str;
-    };
-
-    o.$ContainsPoint = function (x, y) {
-      var regexstr = new RegExp("".concat(x, ",").concat(y), 'g');
-      var cnt = (this.points.value.match(regexstr) || []).length;
-      return cnt;
-    };
-
-    o.$GetPointsString = function () {
-      return o.points.value;
-    };
-
-    o.$GetPointsArray = function () {
-      //x0,y0 x1,y1 x2,y2
-      return this.points.value.split(" ").map(function (pt) {
-        var tab = pt.split(',');
-        return {
-          x: parseInt(tab[0]),
-          y: parseInt(tab[1])
-        };
-      });
-    };
-
-    o.$SetPoints = function (sPoints) {
-      this.points.value = sPoints;
-    };
-
-    o.$GetIsClosed = function () {
-      var pts = this.points.value.split(" ");
-      return pts[0] === pts[pts.length - 1];
-    };
-
-    o.$GetLength = function () {
-      return this.points.value.split(" ").length;
-    };
-
-    o.$SetWidthAndColor = function (w, col) {
-      this.strokecolor = col;
-      this.fill.color = col;
-      this.strokeweight = Math.round(w) + "px";
-    };
-
-    o.$GetID = function () {
-      return parseInt(this.getAttribute("data-id"));
-    };
-
-    o.$SetID = function (iID) {
-      this.setAttribute("data-id", iID);
-    }; //ch_added end
-
-
-    return o;
-  };
-
-  $createOval = function $createOval(diam, filled) {
-    var o = document.createElement("v:oval");
-    o.style.position = "absolute"; //ch_commented o.style.cursor = "pointer";
-    //ch_added
-
-    o.setAttribute("data-status", -1); //o.setAttribute("data-old-status", -1);
-
-    o.strokeweight = 1;
-    o.filled = filled;
-    o.style.width = diam + "px";
-    o.style.height = diam + "px";
-
-    o.$move = function (x1, y1, radius) {
-      this.style.left = Math.round(x1 - radius) + "px";
-      this.style.top = Math.round(y1 - radius) + "px";
-      this.style.width = Math.round(radius * 2) + "px";
-      this.style.height = Math.round(radius * 2) + "px";
-    };
-
-    o.$GetStrokeColor = function () {
-      return this.strokecolor;
-    };
-
-    o.$SetStrokeColor = function (col) {
-      this.strokecolor = col;
-    }; //ch_added/changed start
-
-
-    o.$GetPosition = function () {
-      return {
-        x: parseInt(this.style.left) + parseInt(this.style.width) * 0.5,
-        y: parseInt(this.style.top) + parseInt(this.style.height) * 0.5
-      };
-    };
-
-    o.$GetFillColor = function () {
-      return this.fillcolor;
-    };
-
-    o.$SetFillColor = function (col) {
-      this.fillcolor = col;
-    };
-
-    o.$GetStatus = function () {
-      return parseInt(this.getAttribute("data-status"));
-    };
-
-    o.$SetStatus = function (iStatus) {
-      var saveOldPoint = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-
-      if (saveOldPoint) {
-        var old_status = parseInt(this.getAttribute("data-status"));
-        this.setAttribute("data-status", iStatus);
-        if (old_status !== -1 && old_status !== iStatus) this.setAttribute("data-old-status", old_status);
-      } else {
-        this.setAttribute("data-status", iStatus);
-      }
-    };
-
-    o.$RevertOldStatus = function () {
-      var old_status = this.getAttribute("data-old-status");
-
-      if (old_status) {
-        this.removeAttribute("data-old-status");
-        this.setAttribute("data-status", old_status);
-        return parseInt(old_status);
-      }
-
-      return -1;
-    };
-
-    o.$GetZIndex = function () {
-      return this.getAttribute("z-index");
-    };
-
-    o.$SetZIndex = function (val) {
-      this.setAttribute("z-index", val);
-    };
-
-    o.$Hide = function () {
-      this.setAttribute("visibility", 'hidden');
-    };
-
-    o.$Show = function () {
-      this.setAttribute("visibility", 'visible');
-    }; //ch_added/changed end
-
-
-    o.$strokeWeight = function (sw) {
-      this.strokeweight = sw;
-    };
-
-    cont.appendChild(o);
-    return o;
-  }; //ch_added start
-
-
-  $RemoveOval = function $RemoveOval(Oval) {
-    cont.removeChild(Oval);
-  };
-
-  $RemovePolyline = function $RemovePolyline(Polyline) {
-    cont.removeChild(Polyline);
-  }; //ch_added end
-
-} else {
-  /* ==== no script ==== */
-  $createSVGVML = function $createSVGVML() {
-    alert('SVG or VML is not supported!');
-    return false;
-  };
-}
-
-
-// CONCATENATED MODULE: ../InkBall/src/InkBall.Module/wwwroot/js/inkball.js
 /*eslint no-unused-vars: ["error", { "varsIgnorePattern": "InkBallGame|CountPointsDebug" }]*/
 
-/*global signalR $createOval $createPolyline $RemovePolyline $createSVGVML $createLine hasDuplicates*/
-
+/*global signalR*/
+ //import { $createOval, $createPolyline, $RemovePolyline, $createSVGVML, $createLine, hasDuplicates } from './svgvml.js';
 
 function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
 
 function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
 
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
-function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
-
-function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
@@ -678,7 +125,45 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
+function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
 
+function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
+
+var $createOval, $createPolyline, $RemovePolyline, $createSVGVML, $createLine, hasDuplicates;
+(function () {
+  var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(script2Load) {
+    var selfFileName, isMinified, moduleSpecifier, module;
+    return regeneratorRuntime.wrap(function _callee$(_context) {
+      while (1) {
+        switch (_context.prev = _context.next) {
+          case 0:
+            selfFileName = Array.prototype.slice.call(document.getElementsByTagName('script')).map(function (x) {
+              return x.src;
+            }).find(function (s) {
+              return s.indexOf('inkball') !== -1;
+            }).split('/').pop();
+            isMinified = selfFileName.indexOf("min") !== -1;
+            moduleSpecifier = "./".concat(script2Load).concat(isMinified ? '.min' : '', ".js");
+            LocalLog("I am '".concat(selfFileName, "' loading: ").concat(moduleSpecifier));
+            _context.next = 6;
+            return __webpack_require__(4)(moduleSpecifier);
+
+          case 6:
+            module = _context.sent;
+            $createOval = module.$createOval, $createPolyline = module.$createPolyline, $RemovePolyline = module.$RemovePolyline, $createSVGVML = module.$createSVGVML, $createLine = module.$createLine, hasDuplicates = module.hasDuplicates;
+
+          case 8:
+          case "end":
+            return _context.stop();
+        }
+      }
+    }, _callee);
+  }));
+
+  return function (_x) {
+    return _ref.apply(this, arguments);
+  };
+})()('svgvml');
 /******** funcs-n-classes ********/
 
 var StatusEnum = Object.freeze({
@@ -1118,15 +603,15 @@ var ApplicationUserSettings = /*#__PURE__*/function (_DtoMsg9) {
 
 var CountdownTimer = /*#__PURE__*/function () {
   function CountdownTimer() {
-    var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-        _ref$countdownSeconds = _ref.countdownSeconds,
-        countdownSeconds = _ref$countdownSeconds === void 0 ? 60 : _ref$countdownSeconds,
-        _ref$labelSelector = _ref.labelSelector,
-        labelSelector = _ref$labelSelector === void 0 ? null : _ref$labelSelector,
-        _ref$initialStart = _ref.initialStart,
-        initialStart = _ref$initialStart === void 0 ? false : _ref$initialStart,
-        _ref$countdownReached = _ref.countdownReachedHandler,
-        countdownReachedHandler = _ref$countdownReached === void 0 ? undefined : _ref$countdownReached;
+    var _ref2 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+        _ref2$countdownSecond = _ref2.countdownSeconds,
+        countdownSeconds = _ref2$countdownSecond === void 0 ? 60 : _ref2$countdownSecond,
+        _ref2$labelSelector = _ref2.labelSelector,
+        labelSelector = _ref2$labelSelector === void 0 ? null : _ref2$labelSelector,
+        _ref2$initialStart = _ref2.initialStart,
+        initialStart = _ref2$initialStart === void 0 ? false : _ref2$initialStart,
+        _ref2$countdownReache = _ref2.countdownReachedHandler,
+        countdownReachedHandler = _ref2$countdownReache === void 0 ? undefined : _ref2$countdownReache;
 
     _classCallCheck(this, CountdownTimer);
 
@@ -1175,15 +660,15 @@ var CountdownTimer = /*#__PURE__*/function () {
   }, {
     key: "Reset",
     value: function Reset() {
-      var _ref2 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-          _ref2$countdownSecond = _ref2.countdownSeconds,
-          countdownSeconds = _ref2$countdownSecond === void 0 ? 60 : _ref2$countdownSecond,
-          _ref2$labelSelector = _ref2.labelSelector,
-          labelSelector = _ref2$labelSelector === void 0 ? null : _ref2$labelSelector,
-          _ref2$initialStart = _ref2.initialStart,
-          initialStart = _ref2$initialStart === void 0 ? false : _ref2$initialStart,
-          _ref2$countdownReache = _ref2.countdownReachedHandler,
-          countdownReachedHandler = _ref2$countdownReache === void 0 ? undefined : _ref2$countdownReache;
+      var _ref3 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+          _ref3$countdownSecond = _ref3.countdownSeconds,
+          countdownSeconds = _ref3$countdownSecond === void 0 ? 60 : _ref3$countdownSecond,
+          _ref3$labelSelector = _ref3.labelSelector,
+          labelSelector = _ref3$labelSelector === void 0 ? null : _ref3$labelSelector,
+          _ref3$initialStart = _ref3.initialStart,
+          initialStart = _ref3$initialStart === void 0 ? false : _ref3$initialStart,
+          _ref3$countdownReache = _ref3.countdownReachedHandler,
+          countdownReachedHandler = _ref3$countdownReache === void 0 ? undefined : _ref3$countdownReache;
 
       this.countdownSeconds = countdownSeconds;
       this.totalSeconds = this.countdownSeconds;
@@ -1248,7 +733,7 @@ function LocalError(msg) {
   console.error(msg);
 }
 
-var inkball_InkBallGame = /*#__PURE__*/function () {
+var InkBallGame = /*#__PURE__*/function () {
   /**
    * InkBallGame contructor
    * @param {number} iGameID ID of a game
@@ -1353,10 +838,10 @@ var inkball_InkBallGame = /*#__PURE__*/function () {
     }).withHubProtocol(hubProtocol).configureLogging(loggingLevel).build();
     this.g_SignalRConnection.serverTimeoutInMilliseconds = serverTimeoutInMilliseconds;
     this.g_SignalRConnection.onclose( /*#__PURE__*/function () {
-      var _ref3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(err) {
-        return regeneratorRuntime.wrap(function _callee$(_context) {
+      var _ref4 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(err) {
+        return regeneratorRuntime.wrap(function _callee2$(_context2) {
           while (1) {
-            switch (_context.prev = _context.next) {
+            switch (_context2.prev = _context2.next) {
               case 0:
                 if (err !== null && err !== undefined) {
                   LocalError(err);
@@ -1370,14 +855,14 @@ var inkball_InkBallGame = /*#__PURE__*/function () {
 
               case 1:
               case "end":
-                return _context.stop();
+                return _context2.stop();
             }
           }
-        }, _callee);
+        }, _callee2);
       }));
 
-      return function (_x) {
-        return _ref3.apply(this, arguments);
+      return function (_x2) {
+        return _ref4.apply(this, arguments);
       };
     }());
   }
@@ -1385,38 +870,38 @@ var inkball_InkBallGame = /*#__PURE__*/function () {
   _createClass(InkBallGame, [{
     key: "GetPlayerPointsAndPaths",
     value: function () {
-      var _GetPlayerPointsAndPaths = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2() {
+      var _GetPlayerPointsAndPaths = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3() {
         var ppDTO, path_and_point;
-        return regeneratorRuntime.wrap(function _callee2$(_context2) {
+        return regeneratorRuntime.wrap(function _callee3$(_context3) {
           while (1) {
-            switch (_context2.prev = _context2.next) {
+            switch (_context3.prev = _context3.next) {
               case 0:
                 if (this.m_bPointsAndPathsLoaded) {
-                  _context2.next = 11;
+                  _context3.next = 11;
                   break;
                 }
 
-                _context2.next = 3;
+                _context3.next = 3;
                 return this.g_SignalRConnection.invoke("GetPlayerPointsAndPaths", this.m_bViewOnly, this.g_iGameID);
 
               case 3:
-                ppDTO = _context2.sent;
+                ppDTO = _context3.sent;
                 //LocalLog(ppDTO);
                 path_and_point = PlayerPointsAndPathsDTO.Deserialize(ppDTO);
                 if (path_and_point.Points !== undefined) this.SetAllPoints(path_and_point.Points);
                 if (path_and_point.Paths !== undefined) this.SetAllPaths(path_and_point.Paths);
                 this.m_bPointsAndPathsLoaded = true;
-                return _context2.abrupt("return", true);
+                return _context3.abrupt("return", true);
 
               case 11:
-                return _context2.abrupt("return", false);
+                return _context3.abrupt("return", false);
 
               case 12:
               case "end":
-                return _context2.stop();
+                return _context3.stop();
             }
           }
-        }, _callee2, this);
+        }, _callee3, this);
       }));
 
       function GetPlayerPointsAndPaths() {
@@ -1428,17 +913,17 @@ var inkball_InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "Connect",
     value: function () {
-      var _Connect = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3() {
+      var _Connect = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4() {
         var _this10 = this;
 
         var settings, to_store, json, _settings;
 
-        return regeneratorRuntime.wrap(function _callee3$(_context3) {
+        return regeneratorRuntime.wrap(function _callee4$(_context4) {
           while (1) {
-            switch (_context3.prev = _context3.next) {
+            switch (_context4.prev = _context4.next) {
               case 0:
-                _context3.prev = 0;
-                _context3.next = 3;
+                _context4.prev = 0;
+                _context4.next = 3;
                 return this.g_SignalRConnection.start();
 
               case 3:
@@ -1446,20 +931,20 @@ var inkball_InkBallGame = /*#__PURE__*/function () {
                 LocalLog('connected; iConnErrCount = ' + this.iConnErrCount);
 
                 if (!(this.m_bViewOnly === false)) {
-                  _context3.next = 19;
+                  _context4.next = 19;
                   break;
                 }
 
                 if (!(sessionStorage.getItem("ApplicationUserSettings") === null)) {
-                  _context3.next = 16;
+                  _context4.next = 16;
                   break;
                 }
 
-                _context3.next = 9;
+                _context4.next = 9;
                 return this.g_SignalRConnection.invoke("GetUserSettings");
 
               case 9:
-                settings = _context3.sent;
+                settings = _context4.sent;
 
                 if (settings) {
                   LocalLog(settings);
@@ -1469,11 +954,11 @@ var inkball_InkBallGame = /*#__PURE__*/function () {
                 }
 
                 this.m_ApplicationUserSettings = new ApplicationUserSettings(settings.DesktopNotifications);
-                _context3.next = 14;
+                _context4.next = 14;
                 return this.GetPlayerPointsAndPaths();
 
               case 14:
-                _context3.next = 19;
+                _context4.next = 19;
                 break;
 
               case 16:
@@ -1483,11 +968,11 @@ var inkball_InkBallGame = /*#__PURE__*/function () {
 
               case 19:
                 if (this.m_bPointsAndPathsLoaded) {
-                  _context3.next = 22;
+                  _context4.next = 22;
                   break;
                 }
 
-                _context3.next = 22;
+                _context4.next = 22;
                 return this.GetPlayerPointsAndPaths();
 
               case 22:
@@ -1496,13 +981,13 @@ var inkball_InkBallGame = /*#__PURE__*/function () {
                 }
 
                 if (true === this.m_bIsCPUGame && !this.m_bIsPlayerActive) this.StartCPUCalculation();
-                _context3.next = 32;
+                _context4.next = 32;
                 break;
 
               case 26:
-                _context3.prev = 26;
-                _context3.t0 = _context3["catch"](0);
-                LocalError(_context3.t0 + '; iConnErrCount = ' + this.iConnErrCount);
+                _context4.prev = 26;
+                _context4.t0 = _context4["catch"](0);
+                LocalError(_context4.t0 + '; iConnErrCount = ' + this.iConnErrCount);
                 this.m_Screen.style.cursor = "not-allowed";
                 this.iConnErrCount++;
                 setTimeout(function () {
@@ -1512,10 +997,10 @@ var inkball_InkBallGame = /*#__PURE__*/function () {
 
               case 32:
               case "end":
-                return _context3.stop();
+                return _context4.stop();
             }
           }
-        }, _callee3, this, [[0, 26]]);
+        }, _callee4, this, [[0, 26]]);
       }));
 
       function Connect() {
@@ -1598,17 +1083,17 @@ var inkball_InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "StartSignalRConnection",
     value: function () {
-      var _StartSignalRConnection = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(loadPointsAndPathsFromSignalR) {
-        return regeneratorRuntime.wrap(function _callee4$(_context4) {
+      var _StartSignalRConnection = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(loadPointsAndPathsFromSignalR) {
+        return regeneratorRuntime.wrap(function _callee5$(_context5) {
           while (1) {
-            switch (_context4.prev = _context4.next) {
+            switch (_context5.prev = _context5.next) {
               case 0:
                 if (!(this.g_SignalRConnection === null)) {
-                  _context4.next = 2;
+                  _context5.next = 2;
                   break;
                 }
 
-                return _context4.abrupt("return", Promise.reject(new Error("signalr conn is null")));
+                return _context5.abrupt("return", Promise.reject(new Error("signalr conn is null")));
 
               case 2:
                 this.m_bIsCPUGame = this.m_iOtherPlayerId === -1;
@@ -1757,17 +1242,17 @@ var inkball_InkBallGame = /*#__PURE__*/function () {
                   }.bind(this), false);
                 }
 
-                return _context4.abrupt("return", this.Connect());
+                return _context5.abrupt("return", this.Connect());
 
               case 15:
               case "end":
-                return _context4.stop();
+                return _context5.stop();
             }
           }
-        }, _callee4, this);
+        }, _callee5, this);
       }));
 
-      function StartSignalRConnection(_x2) {
+      function StartSignalRConnection(_x3) {
         return _StartSignalRConnection.apply(this, arguments);
       }
 
@@ -2366,11 +1851,11 @@ var inkball_InkBallGame = /*#__PURE__*/function () {
         //set starting point to POINT_IN_PATH to block further path closing with it
         var _points = this.m_Line.$GetPointsArray();
 
-        var _x3 = _points[0].x,
+        var _x4 = _points[0].x,
             _y = _points[0].y;
-        _x3 /= this.m_iGridSizeX;
+        _x4 /= this.m_iGridSizeX;
         _y /= this.m_iGridSizeY;
-        var p0 = this.m_Points.get(_y * this.m_iGridWidth + _x3);
+        var p0 = this.m_Points.get(_y * this.m_iGridWidth + _x4);
         if (p0 !== undefined) p0.$SetStatus(StatusEnum.POINT_IN_PATH);else {//debugger;
         }
         this.m_Line.$SetWidthAndColor(3, this.m_sDotColor);
@@ -2994,13 +2479,13 @@ var inkball_InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "BuildGraph",
     value: function BuildGraph() {
-      var _ref4 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-          _ref4$freeStat = _ref4.freeStat,
-          freePointStatus = _ref4$freeStat === void 0 ? StatusEnum.POINT_FREE_BLUE : _ref4$freeStat,
-          _ref4$fillCol = _ref4.fillCol,
-          fillColor = _ref4$fillCol === void 0 ? this.COLOR_BLUE : _ref4$fillCol,
-          _ref4$visuals = _ref4.visuals,
-          presentVisually = _ref4$visuals === void 0 ? true : _ref4$visuals;
+      var _ref5 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+          _ref5$freeStat = _ref5.freeStat,
+          freePointStatus = _ref5$freeStat === void 0 ? StatusEnum.POINT_FREE_BLUE : _ref5$freeStat,
+          _ref5$fillCol = _ref5.fillCol,
+          fillColor = _ref5$fillCol === void 0 ? this.COLOR_BLUE : _ref5$fillCol,
+          _ref5$visuals = _ref5.visuals,
+          presentVisually = _ref5$visuals === void 0 ? true : _ref5$visuals;
 
       var graph_points = [],
           graph_edges = new Map();
@@ -3406,9 +2891,9 @@ var inkball_InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "GroupPointsIterative",
     value: function GroupPointsIterative() {
-      var _ref5 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-          _ref5$g = _ref5.g,
-          graph = _ref5$g === void 0 ? null : _ref5$g;
+      var _ref6 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+          _ref6$g = _ref6.g,
+          graph = _ref6$g === void 0 ? null : _ref6$g;
 
       if (!graph) return;
       var vertices = graph.vertices,
@@ -3473,10 +2958,70 @@ var inkball_InkBallGame = /*#__PURE__*/function () {
   return InkBallGame;
 }();
 /******** /funcs-n-classes ********/
+//export { InkBallGame, CountPointsDebug };
+//run code
 
 
+window.addEventListener('load', function () {
+  var gameOptions = this.window.gameOptions;
+  var inkBallHubName = gameOptions.inkBallHubName;
+  var iGameID = gameOptions.iGameID;
+  document.getElementById('gameID').innerHTML = iGameID;
+  document.querySelector(".container .inkgame form > input[type='hidden'][name='GameID']").value = iGameID;
+  var iPlayerID = gameOptions.iPlayerID;
+  var iOtherPlayerID = gameOptions.iOtherPlayerID;
+  document.getElementById('playerID').innerHTML = iPlayerID;
+  var boardSize = gameOptions.boardSize;
+  var bPlayingWithRed = gameOptions.bPlayingWithRed;
+  var bPlayerActive = gameOptions.bPlayerActive;
+  var gameType = gameOptions.gameType;
+  var protocol = gameOptions.protocol;
+  var servTimeoutMillis = gameOptions.servTimeoutMillis;
+  var isReadonly = gameOptions.isReadonly;
+  var pathAfterPointDrawAllowanceSecAmount = gameOptions.pathAfterPointDrawAllowanceSecAmount;
+  var game = new InkBallGame(iGameID, iPlayerID, iOtherPlayerID, inkBallHubName, signalR.LogLevel.Warning, protocol, signalR.HttpTransportType.None, servTimeoutMillis, gameType, bPlayingWithRed, bPlayerActive, boardSize, isReadonly, pathAfterPointDrawAllowanceSecAmount);
+  game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw', '#messageInput', '#messagesList', '#sendButton');
 
+  if (gameOptions.PointsAsJavaScriptArray !== null) {
+    game.StartSignalRConnection(false).then(function () {
+      game.SetAllPoints(gameOptions.PointsAsJavaScriptArray);
+      game.SetAllPaths(gameOptions.PathsAsJavaScriptArray); //alert('a QQ');
+
+      document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
+      CountPointsDebug("#debug2");
+    });
+  } else {
+    game.StartSignalRConnection(true).then(function () {
+      //alert('a QQ');
+      document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
+      CountPointsDebug("#debug2");
+    });
+  }
+
+  delete window.gameOptions;
+  window.game = game;
+});
+window.addEventListener('beforeunload', function () {
+  if (window.game) window.game.StopSignalRConnection();
+});
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports) {
+
+function webpackEmptyAsyncContext(req) {
+	// Here Promise.resolve().then() is used instead of new Promise() to prevent
+	// uncaught exception popping up in devtools
+	return Promise.resolve().then(function() {
+		var e = new Error("Cannot find module '" + req + "'");
+		e.code = 'MODULE_NOT_FOUND';
+		throw e;
+	});
+}
+webpackEmptyAsyncContext.keys = function() { return []; };
+webpackEmptyAsyncContext.resolve = webpackEmptyAsyncContext;
+module.exports = webpackEmptyAsyncContext;
+webpackEmptyAsyncContext.id = 4;
 
 /***/ })
-
-/******/ });
+/******/ ]);

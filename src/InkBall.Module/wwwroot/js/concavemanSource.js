@@ -1,3 +1,4 @@
+/*eslint-disable no-console*/
 import concaveman from "concaveman";
 
 const isTest = document.querySelector('title').innerHTML === 'Hello concaveman';
