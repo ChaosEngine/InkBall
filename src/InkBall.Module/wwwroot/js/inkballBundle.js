@@ -1,6 +1,50 @@
 /******/ (function(modules) { // webpackBootstrap
+/******/ 	// install a JSONP callback for chunk loading
+/******/ 	function webpackJsonpCallback(data) {
+/******/ 		var chunkIds = data[0];
+/******/ 		var moreModules = data[1];
+/******/
+/******/
+/******/ 		// add "moreModules" to the modules object,
+/******/ 		// then flag all "chunkIds" as loaded and fire callback
+/******/ 		var moduleId, chunkId, i = 0, resolves = [];
+/******/ 		for(;i < chunkIds.length; i++) {
+/******/ 			chunkId = chunkIds[i];
+/******/ 			if(Object.prototype.hasOwnProperty.call(installedChunks, chunkId) && installedChunks[chunkId]) {
+/******/ 				resolves.push(installedChunks[chunkId][0]);
+/******/ 			}
+/******/ 			installedChunks[chunkId] = 0;
+/******/ 		}
+/******/ 		for(moduleId in moreModules) {
+/******/ 			if(Object.prototype.hasOwnProperty.call(moreModules, moduleId)) {
+/******/ 				modules[moduleId] = moreModules[moduleId];
+/******/ 			}
+/******/ 		}
+/******/ 		if(parentJsonpFunction) parentJsonpFunction(data);
+/******/
+/******/ 		while(resolves.length) {
+/******/ 			resolves.shift()();
+/******/ 		}
+/******/
+/******/ 	};
+/******/
+/******/
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
+/******/
+/******/ 	// object to store loaded and loading chunks
+/******/ 	// undefined = chunk not loaded, null = chunk preloaded/prefetched
+/******/ 	// Promise = chunk loading, 0 = chunk loaded
+/******/ 	var installedChunks = {
+/******/ 		1: 0
+/******/ 	};
+/******/
+/******/
+/******/
+/******/ 	// script path function
+/******/ 	function jsonpScriptSrc(chunkId) {
+/******/ 		return __webpack_require__.p + "" + ({"2":"svgvml","3":"svgvmlMin"}[chunkId]||chunkId) + "Bundle.js"
+/******/ 	}
 /******/
 /******/ 	// The require function
 /******/ 	function __webpack_require__(moduleId) {
@@ -26,6 +70,67 @@
 /******/ 		return module.exports;
 /******/ 	}
 /******/
+/******/ 	// This file contains only the entry chunk.
+/******/ 	// The chunk loading function for additional chunks
+/******/ 	__webpack_require__.e = function requireEnsure(chunkId) {
+/******/ 		var promises = [];
+/******/
+/******/
+/******/ 		// JSONP chunk loading for javascript
+/******/
+/******/ 		var installedChunkData = installedChunks[chunkId];
+/******/ 		if(installedChunkData !== 0) { // 0 means "already installed".
+/******/
+/******/ 			// a Promise means "currently loading".
+/******/ 			if(installedChunkData) {
+/******/ 				promises.push(installedChunkData[2]);
+/******/ 			} else {
+/******/ 				// setup Promise in chunk cache
+/******/ 				var promise = new Promise(function(resolve, reject) {
+/******/ 					installedChunkData = installedChunks[chunkId] = [resolve, reject];
+/******/ 				});
+/******/ 				promises.push(installedChunkData[2] = promise);
+/******/
+/******/ 				// start chunk loading
+/******/ 				var script = document.createElement('script');
+/******/ 				var onScriptComplete;
+/******/
+/******/ 				script.charset = 'utf-8';
+/******/ 				script.timeout = 120;
+/******/ 				if (__webpack_require__.nc) {
+/******/ 					script.setAttribute("nonce", __webpack_require__.nc);
+/******/ 				}
+/******/ 				script.src = jsonpScriptSrc(chunkId);
+/******/
+/******/ 				// create error before stack unwound to get useful stacktrace later
+/******/ 				var error = new Error();
+/******/ 				onScriptComplete = function (event) {
+/******/ 					// avoid mem leaks in IE.
+/******/ 					script.onerror = script.onload = null;
+/******/ 					clearTimeout(timeout);
+/******/ 					var chunk = installedChunks[chunkId];
+/******/ 					if(chunk !== 0) {
+/******/ 						if(chunk) {
+/******/ 							var errorType = event && (event.type === 'load' ? 'missing' : event.type);
+/******/ 							var realSrc = event && event.target && event.target.src;
+/******/ 							error.message = 'Loading chunk ' + chunkId + ' failed.\n(' + errorType + ': ' + realSrc + ')';
+/******/ 							error.name = 'ChunkLoadError';
+/******/ 							error.type = errorType;
+/******/ 							error.request = realSrc;
+/******/ 							chunk[1](error);
+/******/ 						}
+/******/ 						installedChunks[chunkId] = undefined;
+/******/ 					}
+/******/ 				};
+/******/ 				var timeout = setTimeout(function(){
+/******/ 					onScriptComplete({ type: 'timeout', target: script });
+/******/ 				}, 120000);
+/******/ 				script.onerror = script.onload = onScriptComplete;
+/******/ 				document.head.appendChild(script);
+/******/ 			}
+/******/ 		}
+/******/ 		return Promise.all(promises);
+/******/ 	};
 /******/
 /******/ 	// expose the modules object (__webpack_modules__)
 /******/ 	__webpack_require__.m = modules;
@@ -77,18 +182,26 @@
 /******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
 /******/
 /******/ 	// __webpack_public_path__
-/******/ 	__webpack_require__.p = "";
+/******/ 	__webpack_require__.p = "../js/";
+/******/
+/******/ 	// on error function for async loading
+/******/ 	__webpack_require__.oe = function(err) { console.error(err); throw err; };
+/******/
+/******/ 	var jsonpArray = window["webpackJsonp"] = window["webpackJsonp"] || [];
+/******/ 	var oldJsonpFunction = jsonpArray.push.bind(jsonpArray);
+/******/ 	jsonpArray.push = webpackJsonpCallback;
+/******/ 	jsonpArray = jsonpArray.slice();
+/******/ 	for(var i = 0; i < jsonpArray.length; i++) webpackJsonpCallback(jsonpArray[i]);
+/******/ 	var parentJsonpFunction = oldJsonpFunction;
 /******/
 /******/
 /******/ 	// Load entry module and return exports
 /******/ 	return __webpack_require__(__webpack_require__.s = 3);
 /******/ })
 /************************************************************************/
-/******/ ([
-/* 0 */,
-/* 1 */,
-/* 2 */,
-/* 3 */
+/******/ ({
+
+/***/ 3:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -102,6 +215,10 @@ function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symb
 function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
 
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
+function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
+
+function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
@@ -125,45 +242,7 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
-
-function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
-
 var $createOval, $createPolyline, $RemovePolyline, $createSVGVML, $createLine, hasDuplicates;
-(function () {
-  var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(script2Load) {
-    var selfFileName, isMinified, moduleSpecifier, module;
-    return regeneratorRuntime.wrap(function _callee$(_context) {
-      while (1) {
-        switch (_context.prev = _context.next) {
-          case 0:
-            selfFileName = Array.prototype.slice.call(document.getElementsByTagName('script')).map(function (x) {
-              return x.src;
-            }).find(function (s) {
-              return s.indexOf('inkball') !== -1;
-            }).split('/').pop();
-            isMinified = selfFileName.indexOf("min") !== -1;
-            moduleSpecifier = "./".concat(script2Load).concat(isMinified ? '.min' : '', ".js");
-            LocalLog("I am '".concat(selfFileName, "' loading: ").concat(moduleSpecifier));
-            _context.next = 6;
-            return __webpack_require__(4)(moduleSpecifier);
-
-          case 6:
-            module = _context.sent;
-            $createOval = module.$createOval, $createPolyline = module.$createPolyline, $RemovePolyline = module.$RemovePolyline, $createSVGVML = module.$createSVGVML, $createLine = module.$createLine, hasDuplicates = module.hasDuplicates;
-
-          case 8:
-          case "end":
-            return _context.stop();
-        }
-      }
-    }, _callee);
-  }));
-
-  return function (_x) {
-    return _ref.apply(this, arguments);
-  };
-})()('svgvml');
 /******** funcs-n-classes ********/
 
 var StatusEnum = Object.freeze({
@@ -603,15 +682,15 @@ var ApplicationUserSettings = /*#__PURE__*/function (_DtoMsg9) {
 
 var CountdownTimer = /*#__PURE__*/function () {
   function CountdownTimer() {
-    var _ref2 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-        _ref2$countdownSecond = _ref2.countdownSeconds,
-        countdownSeconds = _ref2$countdownSecond === void 0 ? 60 : _ref2$countdownSecond,
-        _ref2$labelSelector = _ref2.labelSelector,
-        labelSelector = _ref2$labelSelector === void 0 ? null : _ref2$labelSelector,
-        _ref2$initialStart = _ref2.initialStart,
-        initialStart = _ref2$initialStart === void 0 ? false : _ref2$initialStart,
-        _ref2$countdownReache = _ref2.countdownReachedHandler,
-        countdownReachedHandler = _ref2$countdownReache === void 0 ? undefined : _ref2$countdownReache;
+    var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+        _ref$countdownSeconds = _ref.countdownSeconds,
+        countdownSeconds = _ref$countdownSeconds === void 0 ? 60 : _ref$countdownSeconds,
+        _ref$labelSelector = _ref.labelSelector,
+        labelSelector = _ref$labelSelector === void 0 ? null : _ref$labelSelector,
+        _ref$initialStart = _ref.initialStart,
+        initialStart = _ref$initialStart === void 0 ? false : _ref$initialStart,
+        _ref$countdownReached = _ref.countdownReachedHandler,
+        countdownReachedHandler = _ref$countdownReached === void 0 ? undefined : _ref$countdownReached;
 
     _classCallCheck(this, CountdownTimer);
 
@@ -660,15 +739,15 @@ var CountdownTimer = /*#__PURE__*/function () {
   }, {
     key: "Reset",
     value: function Reset() {
-      var _ref3 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-          _ref3$countdownSecond = _ref3.countdownSeconds,
-          countdownSeconds = _ref3$countdownSecond === void 0 ? 60 : _ref3$countdownSecond,
-          _ref3$labelSelector = _ref3.labelSelector,
-          labelSelector = _ref3$labelSelector === void 0 ? null : _ref3$labelSelector,
-          _ref3$initialStart = _ref3.initialStart,
-          initialStart = _ref3$initialStart === void 0 ? false : _ref3$initialStart,
-          _ref3$countdownReache = _ref3.countdownReachedHandler,
-          countdownReachedHandler = _ref3$countdownReache === void 0 ? undefined : _ref3$countdownReache;
+      var _ref2 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+          _ref2$countdownSecond = _ref2.countdownSeconds,
+          countdownSeconds = _ref2$countdownSecond === void 0 ? 60 : _ref2$countdownSecond,
+          _ref2$labelSelector = _ref2.labelSelector,
+          labelSelector = _ref2$labelSelector === void 0 ? null : _ref2$labelSelector,
+          _ref2$initialStart = _ref2.initialStart,
+          initialStart = _ref2$initialStart === void 0 ? false : _ref2$initialStart,
+          _ref2$countdownReache = _ref2.countdownReachedHandler,
+          countdownReachedHandler = _ref2$countdownReache === void 0 ? undefined : _ref2$countdownReache;
 
       this.countdownSeconds = countdownSeconds;
       this.totalSeconds = this.countdownSeconds;
@@ -680,8 +759,66 @@ var CountdownTimer = /*#__PURE__*/function () {
   }]);
 
   return CountdownTimer;
-}(); //Debug function
+}();
+/**
+ * Loads modules dynamically
+ * don't break webpack logic here! https://webpack.js.org/guides/code-splitting/
+ * */
 
+
+function importSvgVmlModuleAsync() {
+  return _importSvgVmlModuleAsync.apply(this, arguments);
+} //Debug function
+
+
+function _importSvgVmlModuleAsync() {
+  _importSvgVmlModuleAsync = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6() {
+    var selfFileName, isMinified, module;
+    return regeneratorRuntime.wrap(function _callee6$(_context6) {
+      while (1) {
+        switch (_context6.prev = _context6.next) {
+          case 0:
+            selfFileName = Array.prototype.slice.call(document.getElementsByTagName('script')).map(function (x) {
+              return x.src;
+            }).find(function (s) {
+              return s.indexOf('inkball') !== -1;
+            }).split('/').pop();
+            isMinified = selfFileName.indexOf("min") !== -1;
+
+            if (!isMinified) {
+              _context6.next = 9;
+              break;
+            }
+
+            LocalLog("I am '".concat(selfFileName, "' loading: ./svgvml.min.js"));
+            _context6.next = 6;
+            return __webpack_require__.e(/* import() | svgvmlMin */ 3).then(__webpack_require__.bind(null, 14));
+
+          case 6:
+            module = _context6.sent;
+            _context6.next = 13;
+            break;
+
+          case 9:
+            LocalLog("I am '".concat(selfFileName, "' loading: ./svgvml.js"));
+            _context6.next = 12;
+            return __webpack_require__.e(/* import() | svgvml */ 2).then(__webpack_require__.bind(null, 15));
+
+          case 12:
+            module = _context6.sent;
+
+          case 13:
+            $createOval = module.$createOval, $createPolyline = module.$createPolyline, $RemovePolyline = module.$RemovePolyline, $createSVGVML = module.$createSVGVML, $createLine = module.$createLine, hasDuplicates = module.hasDuplicates;
+
+          case 14:
+          case "end":
+            return _context6.stop();
+        }
+      }
+    }, _callee6);
+  }));
+  return _importSvgVmlModuleAsync.apply(this, arguments);
+}
 
 function CountPointsDebug(sSelector2Set) {
   //document.querySelector("div.user-panel.main input[z-index='-1']");
@@ -838,10 +975,10 @@ var InkBallGame = /*#__PURE__*/function () {
     }).withHubProtocol(hubProtocol).configureLogging(loggingLevel).build();
     this.g_SignalRConnection.serverTimeoutInMilliseconds = serverTimeoutInMilliseconds;
     this.g_SignalRConnection.onclose( /*#__PURE__*/function () {
-      var _ref4 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(err) {
-        return regeneratorRuntime.wrap(function _callee2$(_context2) {
+      var _ref3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(err) {
+        return regeneratorRuntime.wrap(function _callee$(_context) {
           while (1) {
-            switch (_context2.prev = _context2.next) {
+            switch (_context.prev = _context.next) {
               case 0:
                 if (err !== null && err !== undefined) {
                   LocalError(err);
@@ -855,14 +992,14 @@ var InkBallGame = /*#__PURE__*/function () {
 
               case 1:
               case "end":
-                return _context2.stop();
+                return _context.stop();
             }
           }
-        }, _callee2);
+        }, _callee);
       }));
 
-      return function (_x2) {
-        return _ref4.apply(this, arguments);
+      return function (_x) {
+        return _ref3.apply(this, arguments);
       };
     }());
   }
@@ -870,38 +1007,38 @@ var InkBallGame = /*#__PURE__*/function () {
   _createClass(InkBallGame, [{
     key: "GetPlayerPointsAndPaths",
     value: function () {
-      var _GetPlayerPointsAndPaths = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3() {
+      var _GetPlayerPointsAndPaths = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2() {
         var ppDTO, path_and_point;
-        return regeneratorRuntime.wrap(function _callee3$(_context3) {
+        return regeneratorRuntime.wrap(function _callee2$(_context2) {
           while (1) {
-            switch (_context3.prev = _context3.next) {
+            switch (_context2.prev = _context2.next) {
               case 0:
                 if (this.m_bPointsAndPathsLoaded) {
-                  _context3.next = 11;
+                  _context2.next = 11;
                   break;
                 }
 
-                _context3.next = 3;
+                _context2.next = 3;
                 return this.g_SignalRConnection.invoke("GetPlayerPointsAndPaths", this.m_bViewOnly, this.g_iGameID);
 
               case 3:
-                ppDTO = _context3.sent;
+                ppDTO = _context2.sent;
                 //LocalLog(ppDTO);
                 path_and_point = PlayerPointsAndPathsDTO.Deserialize(ppDTO);
                 if (path_and_point.Points !== undefined) this.SetAllPoints(path_and_point.Points);
                 if (path_and_point.Paths !== undefined) this.SetAllPaths(path_and_point.Paths);
                 this.m_bPointsAndPathsLoaded = true;
-                return _context3.abrupt("return", true);
+                return _context2.abrupt("return", true);
 
               case 11:
-                return _context3.abrupt("return", false);
+                return _context2.abrupt("return", false);
 
               case 12:
               case "end":
-                return _context3.stop();
+                return _context2.stop();
             }
           }
-        }, _callee3, this);
+        }, _callee2, this);
       }));
 
       function GetPlayerPointsAndPaths() {
@@ -913,17 +1050,17 @@ var InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "Connect",
     value: function () {
-      var _Connect = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4() {
+      var _Connect = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3() {
         var _this10 = this;
 
         var settings, to_store, json, _settings;
 
-        return regeneratorRuntime.wrap(function _callee4$(_context4) {
+        return regeneratorRuntime.wrap(function _callee3$(_context3) {
           while (1) {
-            switch (_context4.prev = _context4.next) {
+            switch (_context3.prev = _context3.next) {
               case 0:
-                _context4.prev = 0;
-                _context4.next = 3;
+                _context3.prev = 0;
+                _context3.next = 3;
                 return this.g_SignalRConnection.start();
 
               case 3:
@@ -931,20 +1068,20 @@ var InkBallGame = /*#__PURE__*/function () {
                 LocalLog('connected; iConnErrCount = ' + this.iConnErrCount);
 
                 if (!(this.m_bViewOnly === false)) {
-                  _context4.next = 19;
+                  _context3.next = 19;
                   break;
                 }
 
                 if (!(sessionStorage.getItem("ApplicationUserSettings") === null)) {
-                  _context4.next = 16;
+                  _context3.next = 16;
                   break;
                 }
 
-                _context4.next = 9;
+                _context3.next = 9;
                 return this.g_SignalRConnection.invoke("GetUserSettings");
 
               case 9:
-                settings = _context4.sent;
+                settings = _context3.sent;
 
                 if (settings) {
                   LocalLog(settings);
@@ -954,11 +1091,11 @@ var InkBallGame = /*#__PURE__*/function () {
                 }
 
                 this.m_ApplicationUserSettings = new ApplicationUserSettings(settings.DesktopNotifications);
-                _context4.next = 14;
+                _context3.next = 14;
                 return this.GetPlayerPointsAndPaths();
 
               case 14:
-                _context4.next = 19;
+                _context3.next = 19;
                 break;
 
               case 16:
@@ -968,11 +1105,11 @@ var InkBallGame = /*#__PURE__*/function () {
 
               case 19:
                 if (this.m_bPointsAndPathsLoaded) {
-                  _context4.next = 22;
+                  _context3.next = 22;
                   break;
                 }
 
-                _context4.next = 22;
+                _context3.next = 22;
                 return this.GetPlayerPointsAndPaths();
 
               case 22:
@@ -981,13 +1118,13 @@ var InkBallGame = /*#__PURE__*/function () {
                 }
 
                 if (true === this.m_bIsCPUGame && !this.m_bIsPlayerActive) this.StartCPUCalculation();
-                _context4.next = 32;
+                _context3.next = 32;
                 break;
 
               case 26:
-                _context4.prev = 26;
-                _context4.t0 = _context4["catch"](0);
-                LocalError(_context4.t0 + '; iConnErrCount = ' + this.iConnErrCount);
+                _context3.prev = 26;
+                _context3.t0 = _context3["catch"](0);
+                LocalError(_context3.t0 + '; iConnErrCount = ' + this.iConnErrCount);
                 this.m_Screen.style.cursor = "not-allowed";
                 this.iConnErrCount++;
                 setTimeout(function () {
@@ -997,10 +1134,10 @@ var InkBallGame = /*#__PURE__*/function () {
 
               case 32:
               case "end":
-                return _context4.stop();
+                return _context3.stop();
             }
           }
-        }, _callee4, this, [[0, 26]]);
+        }, _callee3, this, [[0, 26]]);
       }));
 
       function Connect() {
@@ -1083,17 +1220,17 @@ var InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "StartSignalRConnection",
     value: function () {
-      var _StartSignalRConnection = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(loadPointsAndPathsFromSignalR) {
-        return regeneratorRuntime.wrap(function _callee5$(_context5) {
+      var _StartSignalRConnection = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(loadPointsAndPathsFromSignalR) {
+        return regeneratorRuntime.wrap(function _callee4$(_context4) {
           while (1) {
-            switch (_context5.prev = _context5.next) {
+            switch (_context4.prev = _context4.next) {
               case 0:
                 if (!(this.g_SignalRConnection === null)) {
-                  _context5.next = 2;
+                  _context4.next = 2;
                   break;
                 }
 
-                return _context5.abrupt("return", Promise.reject(new Error("signalr conn is null")));
+                return _context4.abrupt("return", Promise.reject(new Error("signalr conn is null")));
 
               case 2:
                 this.m_bIsCPUGame = this.m_iOtherPlayerId === -1;
@@ -1242,17 +1379,17 @@ var InkBallGame = /*#__PURE__*/function () {
                   }.bind(this), false);
                 }
 
-                return _context5.abrupt("return", this.Connect());
+                return _context4.abrupt("return", this.Connect());
 
               case 15:
               case "end":
-                return _context5.stop();
+                return _context4.stop();
             }
           }
-        }, _callee5, this);
+        }, _callee4, this);
       }));
 
-      function StartSignalRConnection(_x3) {
+      function StartSignalRConnection(_x2) {
         return _StartSignalRConnection.apply(this, arguments);
       }
 
@@ -1851,11 +1988,11 @@ var InkBallGame = /*#__PURE__*/function () {
         //set starting point to POINT_IN_PATH to block further path closing with it
         var _points = this.m_Line.$GetPointsArray();
 
-        var _x4 = _points[0].x,
+        var _x3 = _points[0].x,
             _y = _points[0].y;
-        _x4 /= this.m_iGridSizeX;
+        _x3 /= this.m_iGridSizeX;
         _y /= this.m_iGridSizeY;
-        var p0 = this.m_Points.get(_y * this.m_iGridWidth + _x4);
+        var p0 = this.m_Points.get(_y * this.m_iGridWidth + _x3);
         if (p0 !== undefined) p0.$SetStatus(StatusEnum.POINT_IN_PATH);else {//debugger;
         }
         this.m_Line.$SetWidthAndColor(3, this.m_sDotColor);
@@ -2479,13 +2616,13 @@ var InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "BuildGraph",
     value: function BuildGraph() {
-      var _ref5 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-          _ref5$freeStat = _ref5.freeStat,
-          freePointStatus = _ref5$freeStat === void 0 ? StatusEnum.POINT_FREE_BLUE : _ref5$freeStat,
-          _ref5$fillCol = _ref5.fillCol,
-          fillColor = _ref5$fillCol === void 0 ? this.COLOR_BLUE : _ref5$fillCol,
-          _ref5$visuals = _ref5.visuals,
-          presentVisually = _ref5$visuals === void 0 ? true : _ref5$visuals;
+      var _ref4 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+          _ref4$freeStat = _ref4.freeStat,
+          freePointStatus = _ref4$freeStat === void 0 ? StatusEnum.POINT_FREE_BLUE : _ref4$freeStat,
+          _ref4$fillCol = _ref4.fillCol,
+          fillColor = _ref4$fillCol === void 0 ? this.COLOR_BLUE : _ref4$fillCol,
+          _ref4$visuals = _ref4.visuals,
+          presentVisually = _ref4$visuals === void 0 ? true : _ref4$visuals;
 
       var graph_points = [],
           graph_edges = new Map();
@@ -2891,9 +3028,9 @@ var InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "GroupPointsIterative",
     value: function GroupPointsIterative() {
-      var _ref6 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-          _ref6$g = _ref6.g,
-          graph = _ref6$g === void 0 ? null : _ref6$g;
+      var _ref5 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+          _ref5$g = _ref5.g,
+          graph = _ref5$g === void 0 ? null : _ref5$g;
 
       if (!graph) return;
       var vertices = graph.vertices,
@@ -2958,70 +3095,82 @@ var InkBallGame = /*#__PURE__*/function () {
   return InkBallGame;
 }();
 /******** /funcs-n-classes ********/
-//export { InkBallGame, CountPointsDebug };
-//run code
+
+/******** run code and events ********/
 
 
-window.addEventListener('load', function () {
-  var gameOptions = this.window.gameOptions;
-  var inkBallHubName = gameOptions.inkBallHubName;
-  var iGameID = gameOptions.iGameID;
-  document.getElementById('gameID').innerHTML = iGameID;
-  document.querySelector(".container .inkgame form > input[type='hidden'][name='GameID']").value = iGameID;
-  var iPlayerID = gameOptions.iPlayerID;
-  var iOtherPlayerID = gameOptions.iOtherPlayerID;
-  document.getElementById('playerID').innerHTML = iPlayerID;
-  var boardSize = gameOptions.boardSize;
-  var bPlayingWithRed = gameOptions.bPlayingWithRed;
-  var bPlayerActive = gameOptions.bPlayerActive;
-  var gameType = gameOptions.gameType;
-  var protocol = gameOptions.protocol;
-  var servTimeoutMillis = gameOptions.servTimeoutMillis;
-  var isReadonly = gameOptions.isReadonly;
-  var pathAfterPointDrawAllowanceSecAmount = gameOptions.pathAfterPointDrawAllowanceSecAmount;
-  var game = new InkBallGame(iGameID, iPlayerID, iOtherPlayerID, inkBallHubName, signalR.LogLevel.Warning, protocol, signalR.HttpTransportType.None, servTimeoutMillis, gameType, bPlayingWithRed, bPlayerActive, boardSize, isReadonly, pathAfterPointDrawAllowanceSecAmount);
-  game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw', '#messageInput', '#messagesList', '#sendButton');
+window.addEventListener('load', /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5() {
+  var gameOptions, inkBallHubName, iGameID, iPlayerID, iOtherPlayerID, boardSize, bPlayingWithRed, bPlayerActive, gameType, protocol, servTimeoutMillis, isReadonly, pathAfterPointDrawAllowanceSecAmount, game;
+  return regeneratorRuntime.wrap(function _callee5$(_context5) {
+    while (1) {
+      switch (_context5.prev = _context5.next) {
+        case 0:
+          gameOptions = this.window.gameOptions;
+          _context5.next = 3;
+          return importSvgVmlModuleAsync();
 
-  if (gameOptions.PointsAsJavaScriptArray !== null) {
-    game.StartSignalRConnection(false).then(function () {
-      game.SetAllPoints(gameOptions.PointsAsJavaScriptArray);
-      game.SetAllPaths(gameOptions.PathsAsJavaScriptArray); //alert('a QQ');
+        case 3:
+          inkBallHubName = gameOptions.inkBallHubName;
+          iGameID = gameOptions.iGameID;
+          document.getElementById('gameID').innerHTML = iGameID;
+          document.querySelector(".container .inkgame form > input[type='hidden'][name='GameID']").value = iGameID;
+          iPlayerID = gameOptions.iPlayerID;
+          iOtherPlayerID = gameOptions.iOtherPlayerID;
+          document.getElementById('playerID').innerHTML = iPlayerID;
+          boardSize = gameOptions.boardSize;
+          bPlayingWithRed = gameOptions.bPlayingWithRed;
+          bPlayerActive = gameOptions.bPlayerActive;
+          gameType = gameOptions.gameType;
+          protocol = gameOptions.protocol;
+          servTimeoutMillis = gameOptions.servTimeoutMillis;
+          isReadonly = gameOptions.isReadonly;
+          pathAfterPointDrawAllowanceSecAmount = gameOptions.pathAfterPointDrawAllowanceSecAmount;
+          game = new InkBallGame(iGameID, iPlayerID, iOtherPlayerID, inkBallHubName, signalR.LogLevel.Warning, protocol, signalR.HttpTransportType.None, servTimeoutMillis, gameType, bPlayingWithRed, bPlayerActive, boardSize, isReadonly, pathAfterPointDrawAllowanceSecAmount);
+          game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw', '#messageInput', '#messagesList', '#sendButton');
 
-      document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
-      CountPointsDebug("#debug2");
-    });
-  } else {
-    game.StartSignalRConnection(true).then(function () {
-      //alert('a QQ');
-      document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
-      CountPointsDebug("#debug2");
-    });
-  }
+          if (!(gameOptions.PointsAsJavaScriptArray !== null)) {
+            _context5.next = 29;
+            break;
+          }
 
-  delete window.gameOptions;
-  window.game = game;
-});
+          _context5.next = 23;
+          return game.StartSignalRConnection(false);
+
+        case 23:
+          game.SetAllPoints(gameOptions.PointsAsJavaScriptArray);
+          game.SetAllPaths(gameOptions.PathsAsJavaScriptArray); //alert('a QQ');
+
+          document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
+          CountPointsDebug("#debug2");
+          _context5.next = 33;
+          break;
+
+        case 29:
+          _context5.next = 31;
+          return game.StartSignalRConnection(true);
+
+        case 31:
+          //alert('a QQ');
+          document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
+          CountPointsDebug("#debug2");
+
+        case 33:
+          delete window.gameOptions;
+          window.game = game;
+
+        case 35:
+        case "end":
+          return _context5.stop();
+      }
+    }
+  }, _callee5, this);
+})));
 window.addEventListener('beforeunload', function () {
   if (window.game) window.game.StopSignalRConnection();
 });
-
-/***/ }),
-/* 4 */
-/***/ (function(module, exports) {
-
-function webpackEmptyAsyncContext(req) {
-	// Here Promise.resolve().then() is used instead of new Promise() to prevent
-	// uncaught exception popping up in devtools
-	return Promise.resolve().then(function() {
-		var e = new Error("Cannot find module '" + req + "'");
-		e.code = 'MODULE_NOT_FOUND';
-		throw e;
-	});
-}
-webpackEmptyAsyncContext.keys = function() { return []; };
-webpackEmptyAsyncContext.resolve = webpackEmptyAsyncContext;
-module.exports = webpackEmptyAsyncContext;
-webpackEmptyAsyncContext.id = 4;
+/******** /run code and events ********/
+//export { InkBallGame, CountPointsDebug };
 
 /***/ })
-/******/ ]);
+
+/******/ });

@@ -5,19 +5,6 @@
 //import { $createOval, $createPolyline, $RemovePolyline, $createSVGVML, $createLine, hasDuplicates } from './svgvml.js';
 let $createOval, $createPolyline, $RemovePolyline, $createSVGVML, $createLine, hasDuplicates;
 
-(async (script2Load) => {
-	const selfFileName = Array.prototype.slice.call(document.getElementsByTagName('script'))
-		.map(x => x.src).find(s => s.indexOf('inkball') !== -1).split('/').pop();
-	const isMinified = selfFileName.indexOf("min") !== -1;
-
-	const moduleSpecifier = `./${script2Load}${isMinified ? '.min' : ''}.js`;
-	LocalLog(`I am '${selfFileName}' loading: ${moduleSpecifier}`);
-	const module = await import(moduleSpecifier);
-
-	$createOval = module.$createOval, $createPolyline = module.$createPolyline, $RemovePolyline = module.$RemovePolyline,
-		$createSVGVML = module.$createSVGVML, $createLine = module.$createLine, hasDuplicates = module.hasDuplicates;
-})('svgvml');
-
 /******** funcs-n-classes ********/
 const StatusEnum = Object.freeze({
 	POINT_FREE_RED: -3,
@@ -336,6 +323,29 @@ class CountdownTimer {
 		if (initialStart)
 			this.Start();
 	}
+}
+
+/**
+ * Loads modules dynamically
+ * don't break webpack logic here! https://webpack.js.org/guides/code-splitting/
+ * */
+async function importSvgVmlModuleAsync() {
+	const selfFileName = Array.prototype.slice.call(document.getElementsByTagName('script'))
+		.map(x => x.src).find(s => s.indexOf('inkball') !== -1).split('/').pop();
+	const isMinified = selfFileName.indexOf("min") !== -1;
+
+	let module;
+	if (isMinified) {
+		LocalLog(`I am '${selfFileName}' loading: ./svgvml.min.js`);
+		module = await import(/* webpackChunkName: "svgvmlMin" */'./svgvml.min.js');
+	}
+	else {
+		LocalLog(`I am '${selfFileName}' loading: ./svgvml.js`);
+		module = await import(/* webpackChunkName: "svgvml" */'./svgvml.js');
+	}
+
+	$createOval = module.$createOval, $createPolyline = module.$createPolyline, $RemovePolyline = module.$RemovePolyline,
+		$createSVGVML = module.$createSVGVML, $createLine = module.$createLine, hasDuplicates = module.hasDuplicates;
 }
 
 //Debug function
@@ -2405,15 +2415,14 @@ class InkBallGame {
 }
 /******** /funcs-n-classes ********/
 
-//export { InkBallGame, CountPointsDebug };
 
 
 
-
-
-//run code
-window.addEventListener('load', function () {
+/******** run code and events ********/
+window.addEventListener('load', async function () {
 	const gameOptions = this.window.gameOptions;
+
+	await importSvgVmlModuleAsync();
 
 	const inkBallHubName = gameOptions.inkBallHubName;
 	const iGameID = gameOptions.iGameID;
@@ -2430,30 +2439,26 @@ window.addEventListener('load', function () {
 	const servTimeoutMillis = gameOptions.servTimeoutMillis;
 	const isReadonly = gameOptions.isReadonly;
 	const pathAfterPointDrawAllowanceSecAmount = gameOptions.pathAfterPointDrawAllowanceSecAmount;
-    const game = new InkBallGame(iGameID, iPlayerID, iOtherPlayerID, inkBallHubName, signalR.LogLevel.Warning, protocol,
+	const game = new InkBallGame(iGameID, iPlayerID, iOtherPlayerID, inkBallHubName, signalR.LogLevel.Warning, protocol,
 		signalR.HttpTransportType.None, servTimeoutMillis,
 		gameType, bPlayingWithRed, bPlayerActive, boardSize, isReadonly, pathAfterPointDrawAllowanceSecAmount
 	);
 	game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw',
-        '#messageInput', '#messagesList', '#sendButton');
+		'#messageInput', '#messagesList', '#sendButton');
 
-	if (gameOptions.PointsAsJavaScriptArray !== null)
-	{
-		game.StartSignalRConnection(false).then(function () {
-			game.SetAllPoints(gameOptions.PointsAsJavaScriptArray);
-			game.SetAllPaths(gameOptions.PathsAsJavaScriptArray);
-			//alert('a QQ');
-			document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
-			CountPointsDebug("#debug2");
-		});
+	if (gameOptions.PointsAsJavaScriptArray !== null) {
+		await game.StartSignalRConnection(false);
+		game.SetAllPoints(gameOptions.PointsAsJavaScriptArray);
+		game.SetAllPaths(gameOptions.PathsAsJavaScriptArray);
+		//alert('a QQ');
+		document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
+		CountPointsDebug("#debug2");
 	}
-	else
-	{
-		game.StartSignalRConnection(true).then(function () {
-			//alert('a QQ');
-			document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
-			CountPointsDebug("#debug2");
-		});
+	else {
+		await game.StartSignalRConnection(true);
+		//alert('a QQ');
+		document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
+		CountPointsDebug("#debug2");
 	}
 
 	delete window.gameOptions;
@@ -2464,3 +2469,6 @@ window.addEventListener('beforeunload', function () {
 	if (window.game)
 		window.game.StopSignalRConnection();
 });
+/******** /run code and events ********/
+
+//export { InkBallGame, CountPointsDebug };
