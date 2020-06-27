@@ -35,21 +35,18 @@
     <EmbeddedResource Include="wwwroot\css\inkball.css" />
     <EmbeddedResource Include="wwwroot\img\*" />
     <EmbeddedResource Include="wwwroot\js\inkball.js" />
-    <EmbeddedResource Include="wwwroot\js\inkballBundle.js" />
     <EmbeddedResource Include="wwwroot\js\svgvml.js" />
-    <EmbeddedResource Include="wwwroot\js\svgvmlBundle.js" />
-    <EmbeddedResource Include="wwwroot\js\svgvmlMinBundle.js" />
-    <EmbeddedResource Include="wwwroot\js\concavemanBundle.min.js" />
+    <EmbeddedResource Include="wwwroot\js\*Bundle.js" />
   </ItemGroup>
   <ItemGroup Condition="'$(Configuration)'!='Debug'">
     <EmbeddedResource Include="wwwroot\css\inkball.min.css" />
     <EmbeddedResource Include="wwwroot\img\*" />
     <EmbeddedResource Include="wwwroot\js\inkball.min.js" />
-    <EmbeddedResource Include="wwwroot\js\inkballBundle.min.js" />
     <EmbeddedResource Include="wwwroot\js\svgvml.min.js" />
-    <EmbeddedResource Include="wwwroot\js\svgvmlBundle.min.js" />
-    <EmbeddedResource Include="wwwroot\js\svgvmlMinBundle.min.js" />
-    <EmbeddedResource Include="wwwroot\js\concavemanBundle.min.js" />
+    <EmbeddedResource Include="wwwroot\js\*MinBundle.js" />
+    <EmbeddedResource Include="wwwroot\js\*DepsBundle.js" />
+    <EmbeddedResource Include="wwwroot\js\*Bundle.min.js" />
+    <EmbeddedResource Include="wwwroot\js\concavemanBundle.js" />
   </ItemGroup>
 
 </Project>

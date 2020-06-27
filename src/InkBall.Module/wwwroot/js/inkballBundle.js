@@ -43,7 +43,7 @@
 /******/
 /******/ 	// script path function
 /******/ 	function jsonpScriptSrc(chunkId) {
-/******/ 		return __webpack_require__.p + "" + ({"2":"svgvml","3":"svgvmlMin"}[chunkId]||chunkId) + "Bundle.js"
+/******/ 		return __webpack_require__.p + "" + ({"0":"concavemanDeps","2":"svgvml","3":"svgvmlMin"}[chunkId]||chunkId) + "Bundle.js"
 /******/ 	}
 /******/
 /******/ 	// The require function
@@ -196,12 +196,11 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 3);
+/******/ 	return __webpack_require__(__webpack_require__.s = 0);
 /******/ })
 /************************************************************************/
-/******/ ({
-
-/***/ 3:
+/******/ ([
+/* 0 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -763,21 +762,28 @@ var CountdownTimer = /*#__PURE__*/function () {
 /**
  * Loads modules dynamically
  * don't break webpack logic here! https://webpack.js.org/guides/code-splitting/
- * */
+ * @param {object} gameOptions is an entry starter object definint game parameters
+ */
 
 
-function importSvgVmlModuleAsync() {
-  return _importSvgVmlModuleAsync.apply(this, arguments);
+function importAllModulesAsync(_x) {
+  return _importAllModulesAsync.apply(this, arguments);
 } //Debug function
 
 
-function _importSvgVmlModuleAsync() {
-  _importSvgVmlModuleAsync = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6() {
+function _importAllModulesAsync() {
+  _importAllModulesAsync = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(gameOptions) {
     var selfFileName, isMinified, module;
     return regeneratorRuntime.wrap(function _callee6$(_context6) {
       while (1) {
         switch (_context6.prev = _context6.next) {
           case 0:
+            /*const IE11 = navigator.userAgent.indexOf('Trident') >= 0;
+            if (IE11) {
+            	await import('@babel/polyfill');
+            	//await import('core-js');
+            	//await import('regenerator-runtime/runtime');
+            }*/
             selfFileName = Array.prototype.slice.call(document.getElementsByTagName('script')).map(function (x) {
               return x.src;
             }).find(function (s) {
@@ -792,7 +798,7 @@ function _importSvgVmlModuleAsync() {
 
             LocalLog("I am '".concat(selfFileName, "' loading: ./svgvml.min.js"));
             _context6.next = 6;
-            return __webpack_require__.e(/* import() | svgvmlMin */ 3).then(__webpack_require__.bind(null, 14));
+            return __webpack_require__.e(/* import() | svgvmlMin */ 3).then(__webpack_require__.bind(null, 1));
 
           case 6:
             module = _context6.sent;
@@ -802,7 +808,7 @@ function _importSvgVmlModuleAsync() {
           case 9:
             LocalLog("I am '".concat(selfFileName, "' loading: ./svgvml.js"));
             _context6.next = 12;
-            return __webpack_require__.e(/* import() | svgvml */ 2).then(__webpack_require__.bind(null, 15));
+            return __webpack_require__.e(/* import() | svgvml */ 2).then(__webpack_require__.bind(null, 2));
 
           case 12:
             module = _context6.sent;
@@ -810,14 +816,26 @@ function _importSvgVmlModuleAsync() {
           case 13:
             $createOval = module.$createOval, $createPolyline = module.$createPolyline, $RemovePolyline = module.$RemovePolyline, $createSVGVML = module.$createSVGVML, $createLine = module.$createLine, hasDuplicates = module.hasDuplicates;
 
-          case 14:
+            if (!(gameOptions.iOtherPlayerID === -1)) {
+              _context6.next = 19;
+              break;
+            }
+
+            LocalLog("I am '".concat(selfFileName, "' loading: ./concavemanBundle.js"));
+            _context6.next = 18;
+            return __webpack_require__.e(/* import() | concavemanDeps */ 0).then(__webpack_require__.t.bind(null, 3, 7));
+
+          case 18:
+            module = _context6.sent;
+
+          case 19:
           case "end":
             return _context6.stop();
         }
       }
     }, _callee6);
   }));
-  return _importSvgVmlModuleAsync.apply(this, arguments);
+  return _importAllModulesAsync.apply(this, arguments);
 }
 
 function CountPointsDebug(sSelector2Set) {
@@ -998,7 +1016,7 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee);
       }));
 
-      return function (_x) {
+      return function (_x2) {
         return _ref3.apply(this, arguments);
       };
     }());
@@ -1389,7 +1407,7 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee4, this);
       }));
 
-      function StartSignalRConnection(_x2) {
+      function StartSignalRConnection(_x3) {
         return _StartSignalRConnection.apply(this, arguments);
       }
 
@@ -1988,11 +2006,11 @@ var InkBallGame = /*#__PURE__*/function () {
         //set starting point to POINT_IN_PATH to block further path closing with it
         var _points = this.m_Line.$GetPointsArray();
 
-        var _x3 = _points[0].x,
+        var _x4 = _points[0].x,
             _y = _points[0].y;
-        _x3 /= this.m_iGridSizeX;
+        _x4 /= this.m_iGridSizeX;
         _y /= this.m_iGridSizeY;
-        var p0 = this.m_Points.get(_y * this.m_iGridWidth + _x3);
+        var p0 = this.m_Points.get(_y * this.m_iGridWidth + _x4);
         if (p0 !== undefined) p0.$SetStatus(StatusEnum.POINT_IN_PATH);else {//debugger;
         }
         this.m_Line.$SetWidthAndColor(3, this.m_sDotColor);
@@ -3106,10 +3124,6 @@ window.addEventListener('load', /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/reg
       switch (_context5.prev = _context5.next) {
         case 0:
           gameOptions = this.window.gameOptions;
-          _context5.next = 3;
-          return importSvgVmlModuleAsync();
-
-        case 3:
           inkBallHubName = gameOptions.inkBallHubName;
           iGameID = gameOptions.iGameID;
           document.getElementById('gameID').innerHTML = iGameID;
@@ -3125,6 +3139,10 @@ window.addEventListener('load', /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/reg
           servTimeoutMillis = gameOptions.servTimeoutMillis;
           isReadonly = gameOptions.isReadonly;
           pathAfterPointDrawAllowanceSecAmount = gameOptions.pathAfterPointDrawAllowanceSecAmount;
+          _context5.next = 18;
+          return importAllModulesAsync(gameOptions);
+
+        case 18:
           game = new InkBallGame(iGameID, iPlayerID, iOtherPlayerID, inkBallHubName, signalR.LogLevel.Warning, protocol, signalR.HttpTransportType.None, servTimeoutMillis, gameType, bPlayingWithRed, bPlayerActive, boardSize, isReadonly, pathAfterPointDrawAllowanceSecAmount);
           game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw', '#messageInput', '#messagesList', '#sendButton');
 
@@ -3172,5 +3190,4 @@ window.addEventListener('beforeunload', function () {
 //export { InkBallGame, CountPointsDebug };
 
 /***/ })
-
-/******/ });
+/******/ ]);

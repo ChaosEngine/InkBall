@@ -22,12 +22,4 @@ if(isTest) {
 } else
 	console.log('Hello concaveman. Simple test output points: \n' + JSON.stringify(output));
 
-/*if(concavemanBundle !== undefined)
-	concavemanBundle.prototype.concaveman = concaveman;
-else if(this !== undefined)
-	this.prototype.concaveman = concaveman;
-else if(globalThis !== undefined)
-	globalThis.concaveman = concaveman;
-export default concaveman;*/
-
 export { concaveman };

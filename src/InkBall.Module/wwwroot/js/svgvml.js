@@ -22,7 +22,7 @@ if (document.createElementNS) {
 	SVG = (svg.x !== null);
 }
 /**
- * Test for array uniquness unig default object comparator
+ * Test for array uniquness using default object comparator
  * @param {array} array of objects that are tested againstn uniqenes
  * @returns {boolean} true - has duplicates
  */

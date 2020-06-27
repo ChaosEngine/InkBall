@@ -328,8 +328,16 @@ class CountdownTimer {
 /**
  * Loads modules dynamically
  * don't break webpack logic here! https://webpack.js.org/guides/code-splitting/
- * */
-async function importSvgVmlModuleAsync() {
+ * @param {object} gameOptions is an entry starter object definint game parameters
+ */
+async function importAllModulesAsync(gameOptions) {
+	/*const IE11 = navigator.userAgent.indexOf('Trident') >= 0;
+	if (IE11) {
+		await import('@babel/polyfill');
+		//await import('core-js');
+		//await import('regenerator-runtime/runtime');
+	}*/
+
 	const selfFileName = Array.prototype.slice.call(document.getElementsByTagName('script'))
 		.map(x => x.src).find(s => s.indexOf('inkball') !== -1).split('/').pop();
 	const isMinified = selfFileName.indexOf("min") !== -1;
@@ -346,6 +354,11 @@ async function importSvgVmlModuleAsync() {
 
 	$createOval = module.$createOval, $createPolyline = module.$createPolyline, $RemovePolyline = module.$RemovePolyline,
 		$createSVGVML = module.$createSVGVML, $createLine = module.$createLine, hasDuplicates = module.hasDuplicates;
+
+	if (gameOptions.iOtherPlayerID === -1) {
+		LocalLog(`I am '${selfFileName}' loading: ./concavemanBundle.js`);
+		module = await import(/* webpackChunkName: "concavemanDeps" */'./concavemanBundle.js');
+	}
 }
 
 //Debug function
@@ -2422,8 +2435,6 @@ class InkBallGame {
 window.addEventListener('load', async function () {
 	const gameOptions = this.window.gameOptions;
 
-	await importSvgVmlModuleAsync();
-
 	const inkBallHubName = gameOptions.inkBallHubName;
 	const iGameID = gameOptions.iGameID;
 	document.getElementById('gameID').innerHTML = iGameID;
@@ -2439,6 +2450,9 @@ window.addEventListener('load', async function () {
 	const servTimeoutMillis = gameOptions.servTimeoutMillis;
 	const isReadonly = gameOptions.isReadonly;
 	const pathAfterPointDrawAllowanceSecAmount = gameOptions.pathAfterPointDrawAllowanceSecAmount;
+
+	await importAllModulesAsync(gameOptions);
+
 	const game = new InkBallGame(iGameID, iPlayerID, iOtherPlayerID, inkBallHubName, signalR.LogLevel.Warning, protocol,
 		signalR.HttpTransportType.None, servTimeoutMillis,
 		gameType, bPlayingWithRed, bPlayerActive, boardSize, isReadonly, pathAfterPointDrawAllowanceSecAmount

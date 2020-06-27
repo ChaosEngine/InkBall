@@ -1,6 +1,6 @@
-(window["webpackJsonp"] = window["webpackJsonp"] || []).push([[3],{
-
-/***/ 14:
+(window["webpackJsonp"] = window["webpackJsonp"] || []).push([[3],[
+/* 0 */,
+/* 1 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -259,5 +259,4 @@ if (SVG) {
 
 
 /***/ })
-
-}]);
+]]);
