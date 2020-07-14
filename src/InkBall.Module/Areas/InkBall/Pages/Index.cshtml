@@ -84,7 +84,7 @@
     </div>
 </div>
 
-<script nomodule src='https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/7.10.1/polyfill.min.js' integrity='sha256-025dcygmjSHGlBA5p7ahXH7XQU9g2+5y0iMdEayb2vM=' crossorigin='anonymous'></script>
+<script nomodule src="https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/7.10.4/polyfill.min.js" integrity="sha512-pgx+g4+yrNG/DhUEosN7ontsnk2WayfSuK1Fmy2GrqNi8ktUpIlTpKj80dCLyoEELA6c6m5otWP9RM/lq5UTQg==" crossorigin="anonymous"></script>
 @{
     if (env.IsDevelopment())
     {
@@ -106,7 +106,7 @@
     }
 }
 <script type='text/javascript'>
-    const gameOptions = {
+    var gameOptions = {
 	    inkBallHubName: '@(commonUIConfigureOptions.Value.AppRootPath + InkBall.Module.Hubs.GameHub.HubName)',
 	    iGameID: @Model.Game.iId,
 	    iPlayerID: @Model.Player.iId,
@@ -131,7 +131,7 @@
         }
     };
 
-    window.gameOptions = gameOptions;
+    //window.gameOptions = gameOptions;
 </script>
 <script type='module' src='@Url.Content(Constants.WwwIncludeInkballJS)'></script>
 <script nomodule type='text/javascript' src='@Url.Content(Constants.WwwIncludeInkballJSBundle)'></script>

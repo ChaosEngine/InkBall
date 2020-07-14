@@ -1,5 +1,5 @@
 /*eslint no-unused-vars: ["error", { "varsIgnorePattern": "InkBallGame|CountPointsDebug" }]*/
-/*global signalR*/
+/*global signalR, gameOptions*/
 "use strict";
 
 //import { $createOval, $createPolyline, $RemovePolyline, $createSVGVML, $createLine, hasDuplicates } from './svgvml.js';
@@ -2433,7 +2433,7 @@ class InkBallGame {
 
 /******** run code and events ********/
 window.addEventListener('load', async function () {
-	const gameOptions = this.window.gameOptions;
+	//const gameOptions = this.window.gameOptions;
 
 	const inkBallHubName = gameOptions.inkBallHubName;
 	const iGameID = gameOptions.iGameID;
@@ -2475,7 +2475,7 @@ window.addEventListener('load', async function () {
 		CountPointsDebug("#debug2");
 	}
 
-	delete window.gameOptions;
+	//delete window.gameOptions;
 	window.game = game;
 });
 

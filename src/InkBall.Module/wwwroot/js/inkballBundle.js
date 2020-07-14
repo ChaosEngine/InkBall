@@ -206,7 +206,7 @@
 "use strict";
 /*eslint no-unused-vars: ["error", { "varsIgnorePattern": "InkBallGame|CountPointsDebug" }]*/
 
-/*global signalR*/
+/*global signalR, gameOptions*/
  //import { $createOval, $createPolyline, $RemovePolyline, $createSVGVML, $createLine, hasDuplicates } from './svgvml.js';
 
 function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
@@ -3118,12 +3118,12 @@ var InkBallGame = /*#__PURE__*/function () {
 
 
 window.addEventListener('load', /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5() {
-  var gameOptions, inkBallHubName, iGameID, iPlayerID, iOtherPlayerID, boardSize, bPlayingWithRed, bPlayerActive, gameType, protocol, servTimeoutMillis, isReadonly, pathAfterPointDrawAllowanceSecAmount, game;
+  var inkBallHubName, iGameID, iPlayerID, iOtherPlayerID, boardSize, bPlayingWithRed, bPlayerActive, gameType, protocol, servTimeoutMillis, isReadonly, pathAfterPointDrawAllowanceSecAmount, game;
   return regeneratorRuntime.wrap(function _callee5$(_context5) {
     while (1) {
       switch (_context5.prev = _context5.next) {
         case 0:
-          gameOptions = this.window.gameOptions;
+          //const gameOptions = this.window.gameOptions;
           inkBallHubName = gameOptions.inkBallHubName;
           iGameID = gameOptions.iGameID;
           document.getElementById('gameID').innerHTML = iGameID;
@@ -3139,49 +3139,49 @@ window.addEventListener('load', /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/reg
           servTimeoutMillis = gameOptions.servTimeoutMillis;
           isReadonly = gameOptions.isReadonly;
           pathAfterPointDrawAllowanceSecAmount = gameOptions.pathAfterPointDrawAllowanceSecAmount;
-          _context5.next = 18;
+          _context5.next = 17;
           return importAllModulesAsync(gameOptions);
 
-        case 18:
+        case 17:
           game = new InkBallGame(iGameID, iPlayerID, iOtherPlayerID, inkBallHubName, signalR.LogLevel.Warning, protocol, signalR.HttpTransportType.None, servTimeoutMillis, gameType, bPlayingWithRed, bPlayerActive, boardSize, isReadonly, pathAfterPointDrawAllowanceSecAmount);
           game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw', '#messageInput', '#messagesList', '#sendButton');
 
           if (!(gameOptions.PointsAsJavaScriptArray !== null)) {
-            _context5.next = 29;
+            _context5.next = 28;
             break;
           }
 
-          _context5.next = 23;
+          _context5.next = 22;
           return game.StartSignalRConnection(false);
 
-        case 23:
+        case 22:
           game.SetAllPoints(gameOptions.PointsAsJavaScriptArray);
           game.SetAllPaths(gameOptions.PathsAsJavaScriptArray); //alert('a QQ');
 
           document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
           CountPointsDebug("#debug2");
-          _context5.next = 33;
+          _context5.next = 32;
           break;
 
-        case 29:
-          _context5.next = 31;
+        case 28:
+          _context5.next = 30;
           return game.StartSignalRConnection(true);
 
-        case 31:
+        case 30:
           //alert('a QQ');
           document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
           CountPointsDebug("#debug2");
 
-        case 33:
-          delete window.gameOptions;
+        case 32:
+          //delete window.gameOptions;
           window.game = game;
 
-        case 35:
+        case 33:
         case "end":
           return _context5.stop();
       }
     }
-  }, _callee5, this);
+  }, _callee5);
 })));
 window.addEventListener('beforeunload', function () {
   if (window.game) window.game.StopSignalRConnection();
