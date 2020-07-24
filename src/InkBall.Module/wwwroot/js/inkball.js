@@ -358,6 +358,7 @@ async function importAllModulesAsync(gameOptions) {
 	if (gameOptions.iOtherPlayerID === -1) {
 		LocalLog(`I am '${selfFileName}' loading: ./concavemanBundle.js`);
 		module = await import(/* webpackChunkName: "concavemanDeps" */'./concavemanBundle.js');
+		window.concavemanBundle = module;
 	}
 }
 

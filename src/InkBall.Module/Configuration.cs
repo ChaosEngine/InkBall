@@ -26,23 +26,6 @@ namespace InkBall.Module
 
 		#region JS/CSS variables
 
-		/****
-		 concavemanBundle.js          
-		 inkball.min.js        
-		 svgvmlBundle.js
-		 concavemanDepsBundle.js      
-		 inkballBundle.js      
-		 svgvmlBundle.min.js
-		 concavemanDepsBundle.min.js
-		 inkballBundle.min.js  
-		 svgvmlMinBundle.js
-		 concavemanSource.js
-		 svgvml.js
-		 svgvmlMinBundle.min.js
-		 inkball.js
-		 svgvml.min.js
-		 * */
-
 #if DEBUG
 		public const string WwwIncludeInkballJS = "~/js/inkball.js";
 		public const string WwwIncludeInkballJSBundle = "~/js/inkballBundle.js";

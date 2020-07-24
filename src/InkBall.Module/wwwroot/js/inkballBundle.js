@@ -817,18 +817,19 @@ function _importAllModulesAsync() {
             $createOval = module.$createOval, $createPolyline = module.$createPolyline, $RemovePolyline = module.$RemovePolyline, $createSVGVML = module.$createSVGVML, $createLine = module.$createLine, hasDuplicates = module.hasDuplicates;
 
             if (!(gameOptions.iOtherPlayerID === -1)) {
-              _context6.next = 19;
+              _context6.next = 20;
               break;
             }
 
             LocalLog("I am '".concat(selfFileName, "' loading: ./concavemanBundle.js"));
             _context6.next = 18;
-            return __webpack_require__.e(/* import() | concavemanDeps */ 0).then(__webpack_require__.t.bind(null, 3, 7));
+            return __webpack_require__.e(/* import() | concavemanDeps */ 0).then(__webpack_require__.bind(null, 3));
 
           case 18:
             module = _context6.sent;
+            window.concavemanBundle = module;
 
-          case 19:
+          case 20:
           case "end":
             return _context6.stop();
         }
