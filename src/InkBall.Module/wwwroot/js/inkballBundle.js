@@ -2466,20 +2466,25 @@ var InkBallGame = /*#__PURE__*/function () {
     key: "OnTestConcaveman",
     value: function () {
       var _OnTestConcaveman = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(event) {
+        var vertices;
         return regeneratorRuntime.wrap(function _callee6$(_context6) {
           while (1) {
             switch (_context6.prev = _context6.next) {
               case 0:
                 event.preventDefault(); //LocalLog('OnTestConcaveman');
 
-                $createPolyline(6, concavemanBundle.concaveman(this.BuildGraph().vertices.map(function (pt) {
+                vertices = this.BuildGraph().vertices.map(function (pt) {
                   var pos = pt.$GetPosition();
                   return [pos.x / this.m_iGridSizeX, pos.y / this.m_iGridSizeX];
-                }.bind(this)), 2.0, 0.0).map(function (fnd) {
-                  return parseInt(fnd[0]) * this.m_iGridSizeX + ',' + parseInt(fnd[1]) * this.m_iGridSizeY;
-                }.bind(this)).join(' '), 'green');
+                }.bind(this));
 
-              case 2:
+                if (vertices && vertices.length > 0) {
+                  $createPolyline(6, concavemanBundle.concaveman(vertices, 2.0, 0.0).map(function (fnd) {
+                    return parseInt(fnd[0]) * this.m_iGridSizeX + ',' + parseInt(fnd[1]) * this.m_iGridSizeY;
+                  }.bind(this)).join(' '), 'green');
+                }
+
+              case 3:
               case "end":
                 return _context6.stop();
             }
@@ -2649,6 +2654,7 @@ var InkBallGame = /*#__PURE__*/function () {
 
         if (false === this.m_bIsCPUGame) {
           document.querySelector(this.m_sMsgInputSel).disabled = '';
+          document.getElementById('testArea').textContent = '';
         } else {
           var i = 0;
           if (ddlTestActions.length > i) document.querySelector(ddlTestActions[i++]).onclick = this.OnTestBuildCurrentGraph.bind(this);
@@ -3020,25 +3026,28 @@ var InkBallGame = /*#__PURE__*/function () {
                   par[u] = p; // partially visited.
 
                   color[u] = 1;
-                  var vertex = vertices[u]; // simple dfs on graph
+                  var vertex = vertices[u];
 
-                  var _iterator10 = _createForOfIteratorHelper(vertex.adjacents),
-                      _step10;
+                  if (vertex) {
+                    // simple dfs on graph
+                    var _iterator10 = _createForOfIteratorHelper(vertex.adjacents),
+                        _step10;
 
-                  try {
-                    for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
-                      var adj = _step10.value;
-                      var v = vertices.indexOf(adj); // if it has not been visited previously
+                    try {
+                      for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
+                        var adj = _step10.value;
+                        var v = vertices.indexOf(adj); // if it has not been visited previously
 
-                      if (v === par[u]) continue;
-                      dfs_cycle(v, u);
-                    } // completely visited. 
+                        if (v === par[u]) continue;
+                        dfs_cycle(v, u);
+                      }
+                    } catch (err) {
+                      _iterator10.e(err);
+                    } finally {
+                      _iterator10.f();
+                    }
+                  } // completely visited. 
 
-                  } catch (err) {
-                    _iterator10.e(err);
-                  } finally {
-                    _iterator10.f();
-                  }
 
                   color[u] = 2;
                 };
@@ -3080,7 +3089,7 @@ var InkBallGame = /*#__PURE__*/function () {
 
                             cycl = cycles[_i];
 
-                            if (!(cycl.length > 0)) {
+                            if (!(cycl && cycl.length > 0)) {
                               _context10.next = 8;
                               break;
                             }

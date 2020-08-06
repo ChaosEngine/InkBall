@@ -1848,11 +1848,16 @@ class InkBallGame {
 	async OnTestConcaveman(event) {
 		event.preventDefault();
 		//LocalLog('OnTestConcaveman');
-		$createPolyline(6, concavemanBundle.concaveman(this.BuildGraph().vertices.map(function (pt) {
+
+		const vertices = this.BuildGraph().vertices.map(function (pt) {
 			const pos = pt.$GetPosition(); return [pos.x / this.m_iGridSizeX, pos.y / this.m_iGridSizeX];
-		}.bind(this)), 2.0, 0.0).map(function (fnd) {
-			return parseInt(fnd[0]) * this.m_iGridSizeX + ',' + parseInt(fnd[1]) * this.m_iGridSizeY;
-		}.bind(this)).join(' '), 'green');
+		}.bind(this));
+
+		if (vertices && vertices.length > 0) {
+			$createPolyline(6, concavemanBundle.concaveman(vertices, 2.0, 0.0).map(function (fnd) {
+				return parseInt(fnd[0]) * this.m_iGridSizeX + ',' + parseInt(fnd[1]) * this.m_iGridSizeY;
+			}.bind(this)).join(' '), 'green');
+		}
 	}
 
 	async OnTestMarkAllCycles(event) {
@@ -1961,6 +1966,7 @@ class InkBallGame {
 			this.m_StopAndDraw.onclick = this.OnStopAndDraw.bind(this);
 			if (false === this.m_bIsCPUGame) {
 				document.querySelector(this.m_sMsgInputSel).disabled = '';
+				document.getElementById('testArea').textContent = '';
 			}
 			else {
 				let i = 0;
@@ -2271,14 +2277,16 @@ class InkBallGame {
 			// partially visited.
 			color[u] = 1;
 			const vertex = vertices[u];
-			// simple dfs on graph
-			for (const adj of vertex.adjacents) {
-				const v = vertices.indexOf(adj);
-				// if it has not been visited previously
-				if (v === par[u])
-					continue;
+			if (vertex) {
+				// simple dfs on graph
+				for (const adj of vertex.adjacents) {
+					const v = vertices.indexOf(adj);
+					// if it has not been visited previously
+					if (v === par[u])
+						continue;
 
-				dfs_cycle(v, u);
+					dfs_cycle(v, u);
+				}
 			}
 
 			// completely visited. 
@@ -2303,7 +2311,7 @@ class InkBallGame {
 			// print all the vertex with same cycle 
 			for (let i = 0; i <= cyclenumber; i++) {
 				const cycl = cycles[i];
-				if (cycl.length > 0) {
+				if (cycl && cycl.length > 0) {
 					// Print the i-th cycle 
 					let str = (`Cycle Number ${i}: `), trailing_points = [];
 					const rand_color = RandomColor();
