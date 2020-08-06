@@ -21,7 +21,7 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="3.1.4" />
 	  <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="3.1.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="3.1.6" />
-		<PackageReference Include="Oracle.EntityFrameworkCore" Version="3.19.0-beta1" Condition="$(DefineConstants.Contains('INCLUDE_ORACLE'))" />
+		<PackageReference Include="Oracle.EntityFrameworkCore" Version="3.19.0-beta2" Condition="$(DefineConstants.Contains('INCLUDE_ORACLE'))" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
 	  <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="3.1.6" />
 		<PackageReference Include="MessagePack" Version="[1.9.11, 2.0.0)" />
