@@ -56,7 +56,7 @@ p.inkgame {
 	height: calc(26em * 1);
 }
 
-/**********inkgames*********/
+/**********inkgames(list)*********/
 .inkgames.grid-striped .row:nth-of-type(odd) {
 	background-color: rgba(0,0,0,.05);
 }

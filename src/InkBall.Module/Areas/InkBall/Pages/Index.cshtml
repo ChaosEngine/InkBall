@@ -59,6 +59,17 @@
             <input id="StopAndDraw" type="button" value="Stop and Draw" class='btn btn-warning' disabled />
             <input id="CancelPath" type="button" value="Cancel path" class='btn btn-primary' disabled />
         </div>
+        <div class="dropdown dropright">
+            <button class="btn btn-secondary dropdown-toggle" type="button" id="ddlTest" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Test
+            </button>
+            <div class="dropdown-menu" aria-labelledby="ddlTest">
+                <a class="dropdown-item" href="#" id="TestBuildGraph">Build current graph</a>
+                <a class="dropdown-item" href="#" id="TestConcaveman">Concaveman</a>
+                <a class="dropdown-item" href="#" id="TestMarkAllCycles">Mark all cycles</a>
+                <a class="dropdown-item" href="#" id="TestGroupPoints">Group points recurse</a>
+            </div>
+        </div>
     </form>
     <div id="status" class="row">
         <div class="col-auto px-0">
@@ -71,7 +82,7 @@
     <div class="row mx-auto">
         <div id="screen" class="col-auto p-0 mb-3 mx-auto">
         </div>
-        <div class="col">
+        <div id="chatSection" class="col">
             <div class="input-group">
                 <input id="messageInput" type="text" class="form-control" placeholder="Message..." aria-label="Message to send" aria-describedby="sendButton"
                        onkeyup="document.querySelector('#sendButton').disabled = this.value == ''" disabled />
@@ -130,7 +141,6 @@
             @:PlayerPointsAndPaths: null
         }
     };
-
     //window.gameOptions = gameOptions;
 </script>
 <script type='module' src='@Url.Content(Constants.WwwIncludeInkballJS)'></script>

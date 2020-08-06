@@ -2,8 +2,7 @@
 /*global signalR, gameOptions*/
 "use strict";
 
-//import { $createOval, $createPolyline, $RemovePolyline, $createSVGVML, $createLine, hasDuplicates } from './svgvml.js';
-let $createOval, $createPolyline, $RemovePolyline, $createSVGVML, $createLine, hasDuplicates;
+let $createOval, $createPolyline, $RemovePolyline, $createSVGVML, $createLine, hasDuplicates, concavemanBundle;
 
 /******** funcs-n-classes ********/
 const StatusEnum = Object.freeze({
@@ -116,16 +115,6 @@ class InkBallPathViewModel extends DtoMsg {
 		return `${sUser} places ${msg} path`;
 	}
 }
-
-/*class WaitForPlayerCommand extends DtoMsg {
-	constructor(showP2Name = false) {
-		super();
-
-		this.ShowP2Name = showP2Name;
-	}
-
-	//GetDtoType() { return "WaitForPlayerCommand"; }
-}*/
 
 class PlayerJoiningCommand extends DtoMsg {
 	constructor(otherPlayerId, otherPlayerName, message) {
@@ -346,10 +335,12 @@ async function importAllModulesAsync(gameOptions) {
 	if (isMinified) {
 		LocalLog(`I am '${selfFileName}' loading: ./svgvml.min.js`);
 		module = await import(/* webpackChunkName: "svgvmlMin" */'./svgvml.min.js');
+		//window.$createPolyline = module.$createPolyline;
 	}
 	else {
 		LocalLog(`I am '${selfFileName}' loading: ./svgvml.js`);
 		module = await import(/* webpackChunkName: "svgvml" */'./svgvml.js');
+		//window.$createPolyline = module.$createPolyline;
 	}
 
 	$createOval = module.$createOval, $createPolyline = module.$createPolyline, $RemovePolyline = module.$RemovePolyline,
@@ -358,7 +349,8 @@ async function importAllModulesAsync(gameOptions) {
 	if (gameOptions.iOtherPlayerID === -1) {
 		LocalLog(`I am '${selfFileName}' loading: ./concavemanBundle.js`);
 		module = await import(/* webpackChunkName: "concavemanDeps" */'./concavemanBundle.js');
-		window.concavemanBundle = module;
+		concavemanBundle = module;
+		//window.concavemanBundle = module;
 	}
 }
 
@@ -432,6 +424,14 @@ function LocalError(msg) {
 	console.error(msg);
 }
 
+function RandomColor() {
+	return '#' + Math.floor(Math.random() * 16777215).toString(16);
+}
+
+async function Sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 class InkBallGame {
 
 	/**
@@ -458,7 +458,7 @@ class InkBallGame {
 		this.g_iGameID = iGameID;
 		this.g_iPlayerID = iPlayerID;
 		this.m_iOtherPlayerId = iOtherPlayerID;
-		this.m_bIsCPUGame = false;
+		this.m_bIsCPUGame = this.m_iOtherPlayerId === -1;
 		this.GameType = GameTypeEnum[gameType];
 		this.iConnErrCount = 0;
 		this.iExponentialBackOffMillis = 2000;
@@ -686,7 +686,7 @@ class InkBallGame {
 	 */
 	async StartSignalRConnection(loadPointsAndPathsFromSignalR) {
 		if (this.g_SignalRConnection === null) return Promise.reject(new Error("signalr conn is null"));
-		this.m_bIsCPUGame = this.m_iOtherPlayerId === -1;
+		//this.m_bIsCPUGame = this.m_iOtherPlayerId === -1;
 		this.m_bPointsAndPathsLoaded = !loadPointsAndPathsFromSignalR;
 
 		this.g_SignalRConnection.on("ServerToClientPoint", function (point) {
@@ -1840,6 +1840,37 @@ class InkBallGame {
 		}
 	}
 
+	async OnTestBuildCurrentGraph(event) {
+		event.preventDefault();
+		LocalLog(this.BuildGraph());
+	}
+
+	async OnTestConcaveman(event) {
+		event.preventDefault();
+		//LocalLog('OnTestConcaveman');
+		$createPolyline(6, concavemanBundle.concaveman(this.BuildGraph().vertices.map(function (pt) {
+			const pos = pt.$GetPosition(); return [pos.x / this.m_iGridSizeX, pos.y / this.m_iGridSizeX];
+		}.bind(this)), 2.0, 0.0).map(function (fnd) {
+			return parseInt(fnd[0]) * this.m_iGridSizeX + ',' + parseInt(fnd[1]) * this.m_iGridSizeY;
+		}.bind(this)).join(' '), 'green');
+	}
+
+	async OnTestMarkAllCycles(event) {
+		event.preventDefault();
+		//LocalLog('OnTestMarkAllCycles');
+		LocalLog(await this.MarkAllCycles(this.BuildGraph()));
+	}
+
+	async OnTestGroupPoints(event) {
+		event.preventDefault();
+		//LocalLog('OnTestGroupPoints');
+		$createPolyline(6, this.GroupPointsRecurse([], this.m_Points.get(9 * this.m_iGridWidth + 26)).map(function (fnd) {
+			const pt = fnd.$GetPosition();
+			return pt.x + ',' + pt.y;
+		}).join(' '), 'green');
+		LocalLog(`game.lastCycle = ${this.lastCycle}`);
+	}
+
 	/**
 	 * Start drawing routines
 	 * @param {HTMLElement} sScreen screen dontainer selector
@@ -1852,10 +1883,11 @@ class InkBallGame {
 	 * @param {string} sMsgInputSel input textbox html element selector
 	 * @param {string} sMsgListSel ul html element selector
 	 * @param {string} sMsgSendButtonSel input button html element selector
+	 * @param {Array} ddlTestActions array of test actions button ids
 	 * @param {number} iTooLong2Duration how long waiting is too long
 	 */
 	PrepareDrawing(sScreen, sPlayer2Name, sGameStatus, sSurrenderButton, sCancelPath, sPause, sStopAndDraw, sMsgInputSel,
-		sMsgListSel, sMsgSendButtonSel, iTooLong2Duration = 125) {
+		sMsgListSel, sMsgSendButtonSel, ddlTestActions, iTooLong2Duration = 125) {
 		this.m_bIsWon = false;
 		this.m_iDelayBetweenMultiCaptures = 4000;
 		this.m_iTooLong2Duration = iTooLong2Duration/*125*/;
@@ -1927,10 +1959,28 @@ class InkBallGame {
 
 			this.m_CancelPath.onclick = this.OnCancelClick.bind(this);
 			this.m_StopAndDraw.onclick = this.OnStopAndDraw.bind(this);
-			if (false === this.m_bIsCPUGame)
+			if (false === this.m_bIsCPUGame) {
 				document.querySelector(this.m_sMsgInputSel).disabled = '';
-			//else if (!this.m_bIsPlayerActive)
-			//	this.StartCPUCalculation();
+			}
+			else {
+				let i = 0;
+				if (ddlTestActions.length > i)
+					document.querySelector(ddlTestActions[i++]).onclick = this.OnTestBuildCurrentGraph.bind(this);
+				if (ddlTestActions.length > i)
+					document.querySelector(ddlTestActions[i++]).onclick = this.OnTestConcaveman.bind(this);
+				if (ddlTestActions.length > i)
+					document.querySelector(ddlTestActions[i++]).onclick = this.OnTestMarkAllCycles.bind(this);
+				if (ddlTestActions.length > i)
+					document.querySelector(ddlTestActions[i++]).onclick = this.OnTestGroupPoints.bind(this);
+
+				//disable or even delete chat functionality, coz we're not going to chat with CPU bot
+				const chatSection = document.getElementById('chatSection');
+				while (chatSection.lastElementChild)
+					chatSection.removeChild(chatSection.lastElementChild);
+
+				//if (!this.m_bIsPlayerActive)
+				//	this.StartCPUCalculation();
+			}
 
 			this.m_SurrenderButton.disabled = '';
 
@@ -2063,10 +2113,6 @@ class InkBallGame {
 					const edge = {
 						from: point,
 						to: next
-						//,from_x: x,
-						//from_y: y,
-						//to_x: to_x,
-						//to_y: to_y
 					};
 					if (presentVisually === true) {
 						const line = $createLine(5, 'green');
@@ -2185,10 +2231,10 @@ class InkBallGame {
 	 * @param {any} graph constructed earlier with BuildGraph
 	 * @returns {array} of cycles
 	 */
-	MarkAllCycles(graph) {
+	async MarkAllCycles(graph) {
 		const vertices = graph.vertices;
 		const N = vertices.length;
-		let cycles = new Array(N);
+		const cycles = new Array(N);
 		// mark with unique numbers
 		const mark = new Array(N);
 		// arrays required to color the 
@@ -2239,17 +2285,7 @@ class InkBallGame {
 			color[u] = 2;
 		};
 
-		const randColor = function () {
-			return '#' + Math.floor(Math.random() * 16777215).toString(16);
-			//const str = Math.random().toString(16) + Math.random().toString(16),
-			//	sg = str.replace(/0./g, '').match(/.{1,6}/g),
-			//	col = parseInt(sg[0], 16) ^
-			//		parseInt(sg[1], 16) ^
-			//		parseInt(sg[2], 16);
-			//return '#' + ("000000" + col.toString(16)).slice(-6);
-		};
-
-		const printCycles = function (edges, mark) {
+		const printCycles = async function (edges, mark) {
 			// push the edges that into the 
 			// cycle adjacency list 
 			for (let e = 0; e < edges; e++) {
@@ -2261,26 +2297,29 @@ class InkBallGame {
 				}
 			}
 
-			cycles = cycles.sort((b, a) => a.length - b.length);
+			cycles.sort((b, a) => a.length - b.length);
 
 			const tab = [];
 			// print all the vertex with same cycle 
-			for (let i = 1; i <= cyclenumber; i++) {
-				if (cycles[i].length > 0) {
+			for (let i = 0; i <= cyclenumber; i++) {
+				const cycl = cycles[i];
+				if (cycl.length > 0) {
 					// Print the i-th cycle 
 					let str = (`Cycle Number ${i}: `), trailing_points = [];
-					const randomColor = randColor();
-					for (const vert of cycles[i]) {
+					const rand_color = RandomColor();
+					for (const vert of cycl) {
 						const { x: view_x, y: view_y } = vertices[vert].$GetPosition();
 						const x = view_x / this.m_iGridSizeX, y = view_y / this.m_iGridSizeY;
 
 						str += (`${vert}(${x},${y}) `);
 						trailing_points.push(vertices[vert]);
 
-						Array.from(document.querySelectorAll(`svg > line[x1="${view_x}"][y1="${view_y}"]`))
-							.concat(Array.from(document.querySelectorAll(`svg > line[x2="${view_x}"][y2="${view_y}"]`))).forEach((line) => {
-								line.$SetColor(randomColor);
-							});
+						const line_pts = Array.from(document.querySelectorAll(`svg > line[x1="${view_x}"][y1="${view_y}"]`))
+							.concat(Array.from(document.querySelectorAll(`svg > line[x2="${view_x}"][y2="${view_y}"]`)));
+						line_pts.forEach(line => {
+							line.$SetColor(rand_color);
+						});
+						await Sleep(50);
 					}
 					trailing_points.unshift(str);
 					tab.push(trailing_points);
@@ -2297,7 +2336,7 @@ class InkBallGame {
 		dfs_cycle(1, 0, color, mark, par);
 
 		// function to print the cycles 
-		return printCycles(edges, mark);
+		return await printCycles(edges, mark);
 	}
 
 	GroupPointsRecurse(currPointsArr, point) {
@@ -2459,7 +2498,7 @@ window.addEventListener('load', async function () {
 		gameType, bPlayingWithRed, bPlayerActive, boardSize, isReadonly, pathAfterPointDrawAllowanceSecAmount
 	);
 	game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw',
-		'#messageInput', '#messagesList', '#sendButton');
+		'#messageInput', '#messagesList', '#sendButton', ['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints']);
 
 	if (gameOptions.PointsAsJavaScriptArray !== null) {
 		await game.StartSignalRConnection(false);
