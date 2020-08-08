@@ -11,6 +11,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "$createSVGVML", function() { return $createSVGVML; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "$createLine", function() { return $createLine; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "hasDuplicates", function() { return hasDuplicates; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "sortPointsClockwise", function() { return sortPointsClockwise; });
 
 
 var SVG = !1;
@@ -29,6 +30,60 @@ if (document.createElementNS) {
 
 function hasDuplicates(t) {
   return new Set(t).size !== t.length;
+}
+
+function sortPointsClockwise(t) {
+  t.sort(function (t, e) {
+    return t.y - e.y;
+  });
+  var e = (t[0].y + t[t.length - 1].y) / 2;
+  t.sort(function (t, e) {
+    return e.x - t.x;
+  });
+  var i = (t[0].x + t[t.length - 1].x) / 2,
+      n = e;
+  var s = void 0;
+  t.forEach(function (t) {
+    var e = Math.atan2(t.y - n, t.x - i);
+    void 0 === s ? s = e : e < s && (e += 2 * Math.PI), t.angle = e;
+  }), t.sort(function (t, e) {
+    return t.angle - e.angle;
+  });
+  var r = t.reverse();
+  return r.unshift(r.pop()), r;
+}
+
+function sortPointsClockwise_New(t) {
+  var e = function e(t) {
+    var e = 0;
+
+    switch (function (t) {
+      return t.x > 0 && t.y > 0 ? 1 : t.x < 0 && t.y > 0 ? 2 : t.x < 0 && t.y < 0 ? 3 : 4;
+    }(t)) {
+      case 1:
+        e = 180 * Math.atan2(t.x, t.y) / Math.PI;
+        break;
+
+      case 2:
+        e = 180 * Math.atan2(t.y, t.x) / Math.PI, e += Math.PI / 2;
+        break;
+
+      case 3:
+        e = 180 * Math.atan2(t.x, t.y) / Math.PI, e += Math.PI;
+        break;
+
+      case 4:
+        e = 180 * Math.atan2(t.y, t.x) / Math.PI, e += 3 * Math.PI / 2;
+    }
+
+    return e;
+  };
+
+  return t.sort(function (t, i) {
+    return function (t, i) {
+      return e(t) < e(i);
+    }(t, i);
+  }), t;
 }
 
 if (SVG) {

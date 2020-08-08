@@ -30,6 +30,114 @@ function hasDuplicates(array) {
 	return (new Set(array)).size !== array.length;
 }
 
+///////////sortPointsClockwise tests start////////////
+/**
+ * Sorting point clockwise/anticlockwise
+ * @param {array} points array of points to sort
+ * @returns {array} of points
+ */
+function sortPointsClockwise(points) {
+	// Find min max to get center
+	// Sort from top to bottom
+	points.sort((a, b) => a.y - b.y);
+
+	// Get center y
+	const cy = (points[0].y + points[points.length - 1].y) / 2;
+
+	// Sort from right to left
+	points.sort((a, b) => b.x - a.x);
+
+	// Get center x
+	const cx = (points[0].x + points[points.length - 1].x) / 2;
+
+	// Center point
+	const center = {
+		x: cx,
+		y: cy
+	};
+	// Pre calculate the angles as it will be slow in the sort
+	// As the points are sorted from right to left the first point
+	// is the rightmost
+
+	// Starting angle used to reference other angles
+	let startAng = undefined;
+	points.forEach(point => {
+		let ang = Math.atan2(point.y - center.y, point.x - center.x);
+		if (startAng === undefined) {
+			startAng = ang;
+		} else {
+			if (ang < startAng) { // ensure that all points are clockwise of the start point
+				ang += Math.PI * 2;
+			}
+		}
+		point.angle = ang; // add the angle to the point
+	});
+
+	// first sort clockwise
+	points.sort((a, b) => a.angle - b.angle);
+
+	// then reverse the order
+	const ccwPoints = points.reverse();
+
+	// move the last point back to the start
+	ccwPoints.unshift(ccwPoints.pop());
+	//drawPoints();
+	return ccwPoints;
+	//return points;
+}
+
+function sortPointsClockwise_New(points) {
+	const get_clockwise_angle = function (p) {
+		/* get quadrant from 12 o'clock*/
+		const get_quadrant = function (p) {
+			let result = 4; //origin
+
+			if (p.x > 0 && p.y > 0)
+				return 1;
+			else if (p.x < 0 && p.y > 0)
+				return 2;
+			else if (p.x < 0 && p.y < 0)
+				return 3;
+			//else 4th quadrant
+			return result;
+		};
+
+		let angle = 0.0;
+		let quadrant = get_quadrant(p);
+
+		/*making sure the quadrants are correct*/
+		//cout << "Point: " << p << " is on the " << quadrant << " quadrant" << endl;
+
+		/*add the appropriate pi/2 value based on the quadrant. (one of 0, pi/2, pi, 3pi/2)*/
+		switch (quadrant) {
+			case 1:
+				angle = Math.atan2(p.x, p.y) * 180 / Math.PI;
+				break;
+			case 2:
+				angle = Math.atan2(p.y, p.x) * 180 / Math.PI;
+				angle += Math.PI / 2;
+				break;
+			case 3:
+				angle = Math.atan2(p.x, p.y) * 180 / Math.PI;
+				angle += Math.PI;
+				break;
+			case 4:
+				angle = Math.atan2(p.y, p.x) * 180 / Math.PI;
+				angle += 3 * Math.PI / 2;
+				break;
+		}
+		return angle;
+	};
+
+	const compare_points = function (a, b) {
+		return (get_clockwise_angle(a) < get_clockwise_angle(b));
+	};
+
+	points.sort((a, b) => compare_points(a, b));
+	return points;
+}
+///////////sortPointsClockwise tests end////////////
+
 if (SVG) {
 	/* ============= SVG ============== */
 	$createSVGVML = function (o, iWidth, iHeight, antialias) {
@@ -381,4 +489,4 @@ if (SVG) {
 	};
 }
 
-export { $createOval, $createPolyline, $RemovePolyline, $createSVGVML, $createLine, hasDuplicates };
+export { $createOval, $createPolyline, $RemovePolyline, $createSVGVML, $createLine, hasDuplicates, sortPointsClockwise };

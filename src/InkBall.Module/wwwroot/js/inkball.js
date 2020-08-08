@@ -1,8 +1,8 @@
-/*eslint no-unused-vars: ["error", { "varsIgnorePattern": "InkBallGame|CountPointsDebug" }]*/
+/*eslint no-unused-vars: ["error", { "varsIgnorePattern": "InkBallGame" }]*/
 /*global signalR, gameOptions*/
 "use strict";
 
-let $createOval, $createPolyline, $RemovePolyline, $createSVGVML, $createLine, hasDuplicates, concavemanBundle;
+let $createOval, $createPolyline, $RemovePolyline, $createSVGVML, $createLine, hasDuplicates, sortPointsClockwise, concavemanBundle;
 
 /******** funcs-n-classes ********/
 const StatusEnum = Object.freeze({
@@ -344,7 +344,8 @@ async function importAllModulesAsync(gameOptions) {
 	}
 
 	$createOval = module.$createOval, $createPolyline = module.$createPolyline, $RemovePolyline = module.$RemovePolyline,
-		$createSVGVML = module.$createSVGVML, $createLine = module.$createLine, hasDuplicates = module.hasDuplicates;
+		$createSVGVML = module.$createSVGVML, $createLine = module.$createLine, hasDuplicates = module.hasDuplicates,
+		sortPointsClockwise = module.sortPointsClockwise;
 
 	if (gameOptions.iOtherPlayerID === -1) {
 		LocalLog(`I am '${selfFileName}' loading: ./concavemanBundle.js`);
@@ -352,66 +353,6 @@ async function importAllModulesAsync(gameOptions) {
 		concavemanBundle = module;
 		//window.concavemanBundle = module;
 	}
-}
-
-//Debug function
-function CountPointsDebug(sSelector2Set) {
-	//document.querySelector("div.user-panel.main input[z-index='-1']");
-	const tags = [
-		{
-			query: "circle:not([z-index])",
-			display: "circles: %s, "
-		},
-		{
-			query: "polyline",
-			display: "lines: %s, "
-		},
-		{
-			query: "circle[data-status='2']",
-			display: "intercepted(P1:%s, "
-		},
-		{
-			query: "circle[data-status='3']",
-			display: "P2:%s)"
-		}
-	];
-	let aggregated = "";
-	tags.forEach(function (tag) {
-		const cnt = document.querySelectorAll(tag.query);
-		aggregated += tag.display.replace('%s', cnt.length);
-	});
-
-	document.querySelector(sSelector2Set).innerHTML = 'SVGs by tags: ' + aggregated;
-
-
-
-
-
-
-
-
-	/*//TODO: test code; to be disabled
-	const screen = document.querySelector('#screen');
-	screen.innerHTML += "<div id='divTooltip' " +
-		"style='position:absolute; top:0; right:0; z-index:33; background-color:#8886; display:none' " +
-		"data-toggle='tooltip' data-html='true'>XXXXXXXXXX</div>";
-	const tooltip = $('#divTooltip').tooltip('hide');
-	$('polyline').hover(function (event) {
-		const t = event.offsetY, l = event.offsetX;
-
-		tooltip.text(this.getAttribute("points").split(" ").map(function (pt) {
-			const tab = pt.split(',');
-			return (parseInt(tab[0]) >> 4) + "," + (parseInt(tab[1]) >> 4);
-		}).join(' 	'));
-		
-		tooltip.css({ "top": t + "px", "left": l + "px" }).show();
-	}, function () {
-		tooltip.hide();
-	});*/
-
-
-
-
 }
 
 function LocalLog(msg) {
@@ -1840,6 +1781,58 @@ class InkBallGame {
 		}
 	}
 
+	/**
+	 * Debug function
+	 * @param {string} sSelector2Set selector where to display output
+	 */
+	CountPointsDebug(sSelector2Set) {
+		//document.querySelector("div.user-panel.main input[z-index='-1']");
+		const tags = [
+			{
+				query: "circle:not([z-index])",
+				display: "circles: %s, "
+			},
+			{
+				query: "polyline",
+				display: "lines: %s, "
+			},
+			{
+				query: "circle[data-status='2']",
+				display: "intercepted(P1:%s, "
+			},
+			{
+				query: "circle[data-status='3']",
+				display: "P2:%s)"
+			}
+		];
+		let aggregated = "";
+		tags.forEach(function (tag) {
+			const cnt = document.querySelectorAll(tag.query);
+			aggregated += tag.display.replace('%s', cnt.length);
+		});
+
+		document.querySelector(sSelector2Set).innerHTML = 'SVGs by tags: ' + aggregated;
+
+		/*//TODO: test code; to be disabled
+		const screen = document.querySelector('#screen');
+		screen.innerHTML += "<div id='divTooltip' " +
+			"style='position:absolute; top:0; right:0; z-index:33; background-color:#8886; display:none' " +
+			"data-toggle='tooltip' data-html='true'>XXXXXXXXXX</div>";
+		const tooltip = $('#divTooltip').tooltip('hide');
+		$('polyline').hover(function (event) {
+			const t = event.offsetY, l = event.offsetX;
+	
+			tooltip.text(this.getAttribute("points").split(" ").map(function (pt) {
+				const tab = pt.split(',');
+				return (parseInt(tab[0]) >> 4) + "," + (parseInt(tab[1]) >> 4);
+			}).join(' 	'));
+			
+			tooltip.css({ "top": t + "px", "left": l + "px" }).show();
+		}, function () {
+			tooltip.hide();
+		});*/
+	}
+
 	async OnTestBuildCurrentGraph(event) {
 		event.preventDefault();
 		LocalLog(this.BuildGraph());
@@ -2121,7 +2114,7 @@ class InkBallGame {
 						to: next
 					};
 					if (presentVisually === true) {
-						const line = $createLine(5, 'green');
+						const line = $createLine(3, 'green');
 						line.$move(view_x, view_y, next_pos.x, next_pos.y);
 						edge.line = line;
 					}
@@ -2315,18 +2308,33 @@ class InkBallGame {
 					// Print the i-th cycle 
 					let str = (`Cycle Number ${i}: `), trailing_points = [];
 					const rand_color = RandomColor();
-					for (const vert of cycl) {
-						const { x: view_x, y: view_y } = vertices[vert].$GetPosition();
+
+					const mapped_verts = cycl.map(function(c) {
+						//const { x, y } = vertices[c].$GetPosition();
+						//return { x: x / this.m_iGridSizeX, y: y / this.m_iGridSizeY };
+						return vertices[c].$GetPosition();
+					}.bind(this));
+					const cw_sorted_verts = sortPointsClockwise(mapped_verts);
+
+					for (const vert of cw_sorted_verts) {
+						//const { x: view_x, y: view_y } = vertices[vert].$GetPosition();
+						const { x: view_x, y: view_y } = vert;
 						const x = view_x / this.m_iGridSizeX, y = view_y / this.m_iGridSizeY;
 
-						str += (`${vert}(${x},${y}) `);
-						trailing_points.push(vertices[vert]);
+						str += (`(${x},${y}) `);
+						//trailing_points.push(vertices[vert]);
 
-						const line_pts = Array.from(document.querySelectorAll(`svg > line[x1="${view_x}"][y1="${view_y}"]`))
-							.concat(Array.from(document.querySelectorAll(`svg > line[x2="${view_x}"][y2="${view_y}"]`)));
-						line_pts.forEach(line => {
-							line.$SetColor(rand_color);
-						});
+						//const line_pts = Array.from(document.querySelectorAll(`svg > line[x1="${view_x}"][y1="${view_y}"]`))
+						//	.concat(Array.from(document.querySelectorAll(`svg > line[x2="${view_x}"][y2="${view_y}"]`)));
+						//line_pts.forEach(line => {
+						//	line.$SetColor(rand_color);
+						//});
+						const pt = document.querySelector(`svg > circle[cx="${view_x}"][cy="${view_y}"]`);
+						if (pt) {
+							pt.$SetStrokeColor(rand_color);
+							pt.$SetFillColor(rand_color);
+							pt.setAttribute('r', "6");
+						}
 						await Sleep(50);
 					}
 					trailing_points.unshift(str);
@@ -2514,13 +2522,13 @@ window.addEventListener('load', async function () {
 		game.SetAllPaths(gameOptions.PathsAsJavaScriptArray);
 		//alert('a QQ');
 		document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
-		CountPointsDebug("#debug2");
+		game.CountPointsDebug("#debug2");
 	}
 	else {
 		await game.StartSignalRConnection(true);
 		//alert('a QQ');
 		document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
-		CountPointsDebug("#debug2");
+		game.CountPointsDebug("#debug2");
 	}
 
 	//delete window.gameOptions;
@@ -2533,4 +2541,4 @@ window.addEventListener('beforeunload', function () {
 });
 /******** /run code and events ********/
 
-//export { InkBallGame, CountPointsDebug };
+//export { InkBallGame };

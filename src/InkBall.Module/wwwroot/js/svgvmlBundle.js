@@ -11,6 +11,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "$createSVGVML", function() { return $createSVGVML; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "$createLine", function() { return $createLine; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "hasDuplicates", function() { return hasDuplicates; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "sortPointsClockwise", function() { return sortPointsClockwise; });
 /*eslint no-unused-vars: ["error", { "varsIgnorePattern": "$" }]*/
 //////////////////////////////////////////////////////
 // SVG-VML mini graphic library 
@@ -43,7 +44,117 @@ if (document.createElementNS) {
 
 function hasDuplicates(array) {
   return new Set(array).size !== array.length;
+} ///////////sortPointsClockwise tests start////////////
+
+/**
+ * Sorting point clockwise/anticlockwise
+ * @param {array} points array of points to sort
+ * @returns {array} of points
+ */
+
+
+function sortPointsClockwise(points) {
+  // Find min max to get center
+  // Sort from top to bottom
+  points.sort(function (a, b) {
+    return a.y - b.y;
+  }); // Get center y
+
+  var cy = (points[0].y + points[points.length - 1].y) / 2; // Sort from right to left
+
+  points.sort(function (a, b) {
+    return b.x - a.x;
+  }); // Get center x
+
+  var cx = (points[0].x + points[points.length - 1].x) / 2; // Center point
+
+  var center = {
+    x: cx,
+    y: cy
+  }; // Pre calculate the angles as it will be slow in the sort
+  // As the points are sorted from right to left the first point
+  // is the rightmost
+  // Starting angle used to reference other angles
+
+  var startAng = undefined;
+  points.forEach(function (point) {
+    var ang = Math.atan2(point.y - center.y, point.x - center.x);
+
+    if (startAng === undefined) {
+      startAng = ang;
+    } else {
+      if (ang < startAng) {
+        // ensure that all points are clockwise of the start point
+        ang += Math.PI * 2;
+      }
+    }
+
+    point.angle = ang; // add the angle to the point
+  }); // first sort clockwise
+
+  points.sort(function (a, b) {
+    return a.angle - b.angle;
+  }); // then reverse the order
+
+  var ccwPoints = points.reverse(); // move the last point back to the start
+
+  ccwPoints.unshift(ccwPoints.pop()); //drawPoints();
+
+  return ccwPoints; //return points;
 }
+
+function sortPointsClockwise_New(points) {
+  var get_clockwise_angle = function get_clockwise_angle(p) {
+    /* get quadrant from 12 o'clock*/
+    var get_quadrant = function get_quadrant(p) {
+      var result = 4; //origin
+
+      if (p.x > 0 && p.y > 0) return 1;else if (p.x < 0 && p.y > 0) return 2;else if (p.x < 0 && p.y < 0) return 3; //else 4th quadrant
+
+      return result;
+    };
+
+    var angle = 0.0;
+    var quadrant = get_quadrant(p);
+    /*making sure the quadrants are correct*/
+    //cout << "Point: " << p << " is on the " << quadrant << " quadrant" << endl;
+
+    /*add the appropriate pi/2 value based on the quadrant. (one of 0, pi/2, pi, 3pi/2)*/
+
+    switch (quadrant) {
+      case 1:
+        angle = Math.atan2(p.x, p.y) * 180 / Math.PI;
+        break;
+
+      case 2:
+        angle = Math.atan2(p.y, p.x) * 180 / Math.PI;
+        angle += Math.PI / 2;
+        break;
+
+      case 3:
+        angle = Math.atan2(p.x, p.y) * 180 / Math.PI;
+        angle += Math.PI;
+        break;
+
+      case 4:
+        angle = Math.atan2(p.y, p.x) * 180 / Math.PI;
+        angle += 3 * Math.PI / 2;
+        break;
+    }
+
+    return angle;
+  };
+
+  var compare_points = function compare_points(a, b) {
+    return get_clockwise_angle(a) < get_clockwise_angle(b);
+  };
+
+  points.sort(function (a, b) {
+    return compare_points(a, b);
+  });
+  return points;
+} ///////////sortPointsClockwise tests end////////////
+
 
 if (SVG) {
   /* ============= SVG ============== */

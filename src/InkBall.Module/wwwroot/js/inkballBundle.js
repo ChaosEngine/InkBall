@@ -204,7 +204,7 @@
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-/*eslint no-unused-vars: ["error", { "varsIgnorePattern": "InkBallGame|CountPointsDebug" }]*/
+/*eslint no-unused-vars: ["error", { "varsIgnorePattern": "InkBallGame" }]*/
 
 /*global signalR, gameOptions*/
 
@@ -241,7 +241,7 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-var $createOval, $createPolyline, $RemovePolyline, $createSVGVML, $createLine, hasDuplicates, concavemanBundle;
+var $createOval, $createPolyline, $RemovePolyline, $createSVGVML, $createLine, hasDuplicates, sortPointsClockwise, concavemanBundle;
 /******** funcs-n-classes ********/
 
 var StatusEnum = Object.freeze({
@@ -758,15 +758,14 @@ var CountdownTimer = /*#__PURE__*/function () {
 
 function importAllModulesAsync(_x) {
   return _importAllModulesAsync.apply(this, arguments);
-} //Debug function
-
+}
 
 function _importAllModulesAsync() {
-  _importAllModulesAsync = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee13(gameOptions) {
+  _importAllModulesAsync = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee12(gameOptions) {
     var selfFileName, isMinified, module;
-    return regeneratorRuntime.wrap(function _callee13$(_context13) {
+    return regeneratorRuntime.wrap(function _callee12$(_context12) {
       while (1) {
-        switch (_context13.prev = _context13.next) {
+        switch (_context12.prev = _context12.next) {
           case 0:
             /*const IE11 = navigator.userAgent.indexOf('Trident') >= 0;
             if (IE11) {
@@ -782,91 +781,51 @@ function _importAllModulesAsync() {
             isMinified = selfFileName.indexOf("min") !== -1;
 
             if (!isMinified) {
-              _context13.next = 9;
+              _context12.next = 9;
               break;
             }
 
             LocalLog("I am '".concat(selfFileName, "' loading: ./svgvml.min.js"));
-            _context13.next = 6;
+            _context12.next = 6;
             return __webpack_require__.e(/* import() | svgvmlMin */ 3).then(__webpack_require__.bind(null, 1));
 
           case 6:
-            module = _context13.sent;
-            _context13.next = 13;
+            module = _context12.sent;
+            _context12.next = 13;
             break;
 
           case 9:
             LocalLog("I am '".concat(selfFileName, "' loading: ./svgvml.js"));
-            _context13.next = 12;
+            _context12.next = 12;
             return __webpack_require__.e(/* import() | svgvml */ 2).then(__webpack_require__.bind(null, 2));
 
           case 12:
-            module = _context13.sent;
+            module = _context12.sent;
 
           case 13:
-            $createOval = module.$createOval, $createPolyline = module.$createPolyline, $RemovePolyline = module.$RemovePolyline, $createSVGVML = module.$createSVGVML, $createLine = module.$createLine, hasDuplicates = module.hasDuplicates;
+            $createOval = module.$createOval, $createPolyline = module.$createPolyline, $RemovePolyline = module.$RemovePolyline, $createSVGVML = module.$createSVGVML, $createLine = module.$createLine, hasDuplicates = module.hasDuplicates, sortPointsClockwise = module.sortPointsClockwise;
 
             if (!(gameOptions.iOtherPlayerID === -1)) {
-              _context13.next = 20;
+              _context12.next = 20;
               break;
             }
 
             LocalLog("I am '".concat(selfFileName, "' loading: ./concavemanBundle.js"));
-            _context13.next = 18;
+            _context12.next = 18;
             return __webpack_require__.e(/* import() | concavemanDeps */ 0).then(__webpack_require__.bind(null, 3));
 
           case 18:
-            module = _context13.sent;
+            module = _context12.sent;
             concavemanBundle = module; //window.concavemanBundle = module;
 
           case 20:
           case "end":
-            return _context13.stop();
+            return _context12.stop();
         }
       }
-    }, _callee13);
+    }, _callee12);
   }));
   return _importAllModulesAsync.apply(this, arguments);
-}
-
-function CountPointsDebug(sSelector2Set) {
-  //document.querySelector("div.user-panel.main input[z-index='-1']");
-  var tags = [{
-    query: "circle:not([z-index])",
-    display: "circles: %s, "
-  }, {
-    query: "polyline",
-    display: "lines: %s, "
-  }, {
-    query: "circle[data-status='2']",
-    display: "intercepted(P1:%s, "
-  }, {
-    query: "circle[data-status='3']",
-    display: "P2:%s)"
-  }];
-  var aggregated = "";
-  tags.forEach(function (tag) {
-    var cnt = document.querySelectorAll(tag.query);
-    aggregated += tag.display.replace('%s', cnt.length);
-  });
-  document.querySelector(sSelector2Set).innerHTML = 'SVGs by tags: ' + aggregated;
-  /*//TODO: test code; to be disabled
-  const screen = document.querySelector('#screen');
-  screen.innerHTML += "<div id='divTooltip' " +
-  	"style='position:absolute; top:0; right:0; z-index:33; background-color:#8886; display:none' " +
-  	"data-toggle='tooltip' data-html='true'>XXXXXXXXXX</div>";
-  const tooltip = $('#divTooltip').tooltip('hide');
-  $('polyline').hover(function (event) {
-  	const t = event.offsetY, l = event.offsetX;
-  		tooltip.text(this.getAttribute("points").split(" ").map(function (pt) {
-  		const tab = pt.split(',');
-  		return (parseInt(tab[0]) >> 4) + "," + (parseInt(tab[1]) >> 4);
-  	}).join(' 	'));
-  	
-  	tooltip.css({ "top": t + "px", "left": l + "px" }).show();
-  }, function () {
-  	tooltip.hide();
-  });*/
 }
 
 function LocalLog(msg) {
@@ -888,21 +847,21 @@ function Sleep(_x2) {
 }
 
 function _Sleep() {
-  _Sleep = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee14(ms) {
-    return regeneratorRuntime.wrap(function _callee14$(_context14) {
+  _Sleep = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee13(ms) {
+    return regeneratorRuntime.wrap(function _callee13$(_context13) {
       while (1) {
-        switch (_context14.prev = _context14.next) {
+        switch (_context13.prev = _context13.next) {
           case 0:
-            return _context14.abrupt("return", new Promise(function (resolve) {
+            return _context13.abrupt("return", new Promise(function (resolve) {
               return setTimeout(resolve, ms);
             }));
 
           case 1:
           case "end":
-            return _context14.stop();
+            return _context13.stop();
         }
       }
-    }, _callee14);
+    }, _callee13);
   }));
   return _Sleep.apply(this, arguments);
 }
@@ -2437,6 +2396,52 @@ var InkBallGame = /*#__PURE__*/function () {
         this.Debug('', 0);
       }
     }
+    /**
+     * Debug function
+     * @param {string} sSelector2Set selector where to display output
+     */
+
+  }, {
+    key: "CountPointsDebug",
+    value: function CountPointsDebug(sSelector2Set) {
+      //document.querySelector("div.user-panel.main input[z-index='-1']");
+      var tags = [{
+        query: "circle:not([z-index])",
+        display: "circles: %s, "
+      }, {
+        query: "polyline",
+        display: "lines: %s, "
+      }, {
+        query: "circle[data-status='2']",
+        display: "intercepted(P1:%s, "
+      }, {
+        query: "circle[data-status='3']",
+        display: "P2:%s)"
+      }];
+      var aggregated = "";
+      tags.forEach(function (tag) {
+        var cnt = document.querySelectorAll(tag.query);
+        aggregated += tag.display.replace('%s', cnt.length);
+      });
+      document.querySelector(sSelector2Set).innerHTML = 'SVGs by tags: ' + aggregated;
+      /*//TODO: test code; to be disabled
+      const screen = document.querySelector('#screen');
+      screen.innerHTML += "<div id='divTooltip' " +
+      	"style='position:absolute; top:0; right:0; z-index:33; background-color:#8886; display:none' " +
+      	"data-toggle='tooltip' data-html='true'>XXXXXXXXXX</div>";
+      const tooltip = $('#divTooltip').tooltip('hide');
+      $('polyline').hover(function (event) {
+      	const t = event.offsetY, l = event.offsetX;
+      			tooltip.text(this.getAttribute("points").split(" ").map(function (pt) {
+      		const tab = pt.split(',');
+      		return (parseInt(tab[0]) >> 4) + "," + (parseInt(tab[1]) >> 4);
+      	}).join(' 	'));
+      	
+      	tooltip.css({ "top": t + "px", "left": l + "px" }).show();
+      }, function () {
+      	tooltip.hide();
+      });*/
+    }
   }, {
     key: "OnTestBuildCurrentGraph",
     value: function () {
@@ -2831,7 +2836,7 @@ var InkBallGame = /*#__PURE__*/function () {
             };
 
             if (presentVisually === true) {
-              var line = $createLine(5, 'green');
+              var line = $createLine(3, 'green');
               line.$move(view_x, view_y, next_pos.x, next_pos.y);
               edge.line = line;
             }
@@ -2984,11 +2989,11 @@ var InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "MarkAllCycles",
     value: function () {
-      var _MarkAllCycles = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11(graph) {
+      var _MarkAllCycles = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10(graph) {
         var vertices, N, cycles, mark, color, par, i, dfs_cycle, printCycles, cyclenumber, edges;
-        return regeneratorRuntime.wrap(function _callee11$(_context11) {
+        return regeneratorRuntime.wrap(function _callee10$(_context10) {
           while (1) {
-            switch (_context11.prev = _context11.next) {
+            switch (_context10.prev = _context10.next) {
               case 0:
                 vertices = graph.vertices;
                 N = vertices.length;
@@ -3053,14 +3058,12 @@ var InkBallGame = /*#__PURE__*/function () {
                 };
 
                 printCycles = /*#__PURE__*/function () {
-                  var _ref5 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10(edges, mark) {
-                    var _this15 = this;
+                  var _ref5 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(edges, mark) {
+                    var e, mark_e, m, tab, _i, cycl, str, trailing_points, rand_color, mapped_verts, cw_sorted_verts, _iterator11, _step11, vert, view_x, view_y, x, y, pt;
 
-                    var e, mark_e, m, tab, _i, cycl;
-
-                    return regeneratorRuntime.wrap(function _callee10$(_context10) {
+                    return regeneratorRuntime.wrap(function _callee9$(_context9) {
                       while (1) {
-                        switch (_context10.prev = _context10.next) {
+                        switch (_context9.prev = _context9.next) {
                           case 0:
                             // push the edges that into the 
                             // cycle adjacency list 
@@ -3083,97 +3086,98 @@ var InkBallGame = /*#__PURE__*/function () {
 
                           case 4:
                             if (!(_i <= cyclenumber)) {
-                              _context10.next = 11;
+                              _context9.next = 38;
                               break;
                             }
 
                             cycl = cycles[_i];
 
                             if (!(cycl && cycl.length > 0)) {
-                              _context10.next = 8;
+                              _context9.next = 35;
                               break;
                             }
 
-                            return _context10.delegateYield( /*#__PURE__*/regeneratorRuntime.mark(function _callee9() {
-                              var str, trailing_points, rand_color, _iterator11, _step11, vert, _vertices$vert$$GetPo, view_x, view_y, x, y, line_pts;
+                            // Print the i-th cycle 
+                            str = "Cycle Number ".concat(_i, ": "), trailing_points = [];
+                            rand_color = RandomColor();
+                            mapped_verts = cycl.map(function (c) {
+                              //const { x, y } = vertices[c].$GetPosition();
+                              //return { x: x / this.m_iGridSizeX, y: y / this.m_iGridSizeY };
+                              return vertices[c].$GetPosition();
+                            }.bind(this));
+                            cw_sorted_verts = sortPointsClockwise(mapped_verts);
+                            _iterator11 = _createForOfIteratorHelper(cw_sorted_verts);
+                            _context9.prev = 12;
 
-                              return regeneratorRuntime.wrap(function _callee9$(_context9) {
-                                while (1) {
-                                  switch (_context9.prev = _context9.next) {
-                                    case 0:
-                                      // Print the i-th cycle 
-                                      str = "Cycle Number ".concat(_i, ": "), trailing_points = [];
-                                      rand_color = RandomColor();
-                                      _iterator11 = _createForOfIteratorHelper(cycl);
-                                      _context9.prev = 3;
+                            _iterator11.s();
 
-                                      _iterator11.s();
+                          case 14:
+                            if ((_step11 = _iterator11.n()).done) {
+                              _context9.next = 25;
+                              break;
+                            }
 
-                                    case 5:
-                                      if ((_step11 = _iterator11.n()).done) {
-                                        _context9.next = 17;
-                                        break;
-                                      }
+                            vert = _step11.value;
+                            //const { x: view_x, y: view_y } = vertices[vert].$GetPosition();
+                            view_x = vert.x, view_y = vert.y;
+                            x = view_x / this.m_iGridSizeX, y = view_y / this.m_iGridSizeY;
+                            str += "(".concat(x, ",").concat(y, ") "); //trailing_points.push(vertices[vert]);
+                            //const line_pts = Array.from(document.querySelectorAll(`svg > line[x1="${view_x}"][y1="${view_y}"]`))
+                            //	.concat(Array.from(document.querySelectorAll(`svg > line[x2="${view_x}"][y2="${view_y}"]`)));
+                            //line_pts.forEach(line => {
+                            //	line.$SetColor(rand_color);
+                            //});
 
-                                      vert = _step11.value;
-                                      _vertices$vert$$GetPo = vertices[vert].$GetPosition(), view_x = _vertices$vert$$GetPo.x, view_y = _vertices$vert$$GetPo.y;
-                                      x = view_x / _this15.m_iGridSizeX, y = view_y / _this15.m_iGridSizeY;
-                                      str += "".concat(vert, "(").concat(x, ",").concat(y, ") ");
-                                      trailing_points.push(vertices[vert]);
-                                      line_pts = Array.from(document.querySelectorAll("svg > line[x1=\"".concat(view_x, "\"][y1=\"").concat(view_y, "\"]"))).concat(Array.from(document.querySelectorAll("svg > line[x2=\"".concat(view_x, "\"][y2=\"").concat(view_y, "\"]"))));
-                                      line_pts.forEach(function (line) {
-                                        line.$SetColor(rand_color);
-                                      });
-                                      _context9.next = 15;
-                                      return Sleep(50);
+                            pt = document.querySelector("svg > circle[cx=\"".concat(view_x, "\"][cy=\"").concat(view_y, "\"]"));
 
-                                    case 15:
-                                      _context9.next = 5;
-                                      break;
+                            if (pt) {
+                              pt.$SetStrokeColor(rand_color);
+                              pt.$SetFillColor(rand_color);
+                              pt.setAttribute('r', "6");
+                            }
 
-                                    case 17:
-                                      _context9.next = 22;
-                                      break;
+                            _context9.next = 23;
+                            return Sleep(50);
 
-                                    case 19:
-                                      _context9.prev = 19;
-                                      _context9.t0 = _context9["catch"](3);
-
-                                      _iterator11.e(_context9.t0);
-
-                                    case 22:
-                                      _context9.prev = 22;
-
-                                      _iterator11.f();
-
-                                      return _context9.finish(22);
-
-                                    case 25:
-                                      trailing_points.unshift(str);
-                                      tab.push(trailing_points);
-
-                                    case 27:
-                                    case "end":
-                                      return _context9.stop();
-                                  }
-                                }
-                              }, _callee9, null, [[3, 19, 22, 25]]);
-                            })(), "t0", 8);
-
-                          case 8:
-                            _i++;
-                            _context10.next = 4;
+                          case 23:
+                            _context9.next = 14;
                             break;
 
-                          case 11:
-                            return _context10.abrupt("return", tab);
+                          case 25:
+                            _context9.next = 30;
+                            break;
 
-                          case 12:
+                          case 27:
+                            _context9.prev = 27;
+                            _context9.t0 = _context9["catch"](12);
+
+                            _iterator11.e(_context9.t0);
+
+                          case 30:
+                            _context9.prev = 30;
+
+                            _iterator11.f();
+
+                            return _context9.finish(30);
+
+                          case 33:
+                            trailing_points.unshift(str);
+                            tab.push(trailing_points);
+
+                          case 35:
+                            _i++;
+                            _context9.next = 4;
+                            break;
+
+                          case 38:
+                            return _context9.abrupt("return", tab);
+
+                          case 39:
                           case "end":
-                            return _context10.stop();
+                            return _context9.stop();
                         }
                       }
-                    }, _callee10);
+                    }, _callee9, this, [[12, 27, 30, 33]]);
                   }));
 
                   return function (_x11, _x12) {
@@ -3186,18 +3190,18 @@ var InkBallGame = /*#__PURE__*/function () {
 
                 dfs_cycle(1, 0, color, mark, par); // function to print the cycles 
 
-                _context11.next = 12;
+                _context10.next = 12;
                 return printCycles(edges, mark);
 
               case 12:
-                return _context11.abrupt("return", _context11.sent);
+                return _context10.abrupt("return", _context10.sent);
 
               case 13:
               case "end":
-                return _context11.stop();
+                return _context10.stop();
             }
           }
-        }, _callee11, this);
+        }, _callee10, this);
       }));
 
       function MarkAllCycles(_x10) {
@@ -3319,7 +3323,7 @@ var InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "rAFCallBack",
     value: function rAFCallBack(timeStamp) {
-      var _this16 = this;
+      var _this15 = this;
 
       if (this.rAF_StartTimestamp === null) this.rAF_StartTimestamp = timeStamp;
       var progress = timeStamp - this.rAF_StartTimestamp;
@@ -3335,8 +3339,8 @@ var InkBallGame = /*#__PURE__*/function () {
         //this.rAF_FrameID = null;
         //}
         this.SendAsyncData(point, function () {
-          _this16.m_bMouseDown = false;
-          _this16.m_bHandlingEvent = false;
+          _this15.m_bMouseDown = false;
+          _this15.m_bHandlingEvent = false;
         });
       }
     }
@@ -3355,11 +3359,11 @@ var InkBallGame = /*#__PURE__*/function () {
 /******** run code and events ********/
 
 
-window.addEventListener('load', /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee12() {
+window.addEventListener('load', /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11() {
   var inkBallHubName, iGameID, iPlayerID, iOtherPlayerID, boardSize, bPlayingWithRed, bPlayerActive, gameType, protocol, servTimeoutMillis, isReadonly, pathAfterPointDrawAllowanceSecAmount, game;
-  return regeneratorRuntime.wrap(function _callee12$(_context12) {
+  return regeneratorRuntime.wrap(function _callee11$(_context11) {
     while (1) {
-      switch (_context12.prev = _context12.next) {
+      switch (_context11.prev = _context11.next) {
         case 0:
           //const gameOptions = this.window.gameOptions;
           inkBallHubName = gameOptions.inkBallHubName;
@@ -3377,7 +3381,7 @@ window.addEventListener('load', /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/reg
           servTimeoutMillis = gameOptions.servTimeoutMillis;
           isReadonly = gameOptions.isReadonly;
           pathAfterPointDrawAllowanceSecAmount = gameOptions.pathAfterPointDrawAllowanceSecAmount;
-          _context12.next = 17;
+          _context11.next = 17;
           return importAllModulesAsync(gameOptions);
 
         case 17:
@@ -3385,11 +3389,11 @@ window.addEventListener('load', /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/reg
           game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw', '#messageInput', '#messagesList', '#sendButton', ['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints']);
 
           if (!(gameOptions.PointsAsJavaScriptArray !== null)) {
-            _context12.next = 28;
+            _context11.next = 28;
             break;
           }
 
-          _context12.next = 22;
+          _context11.next = 22;
           return game.StartSignalRConnection(false);
 
         case 22:
@@ -3397,18 +3401,18 @@ window.addEventListener('load', /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/reg
           game.SetAllPaths(gameOptions.PathsAsJavaScriptArray); //alert('a QQ');
 
           document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
-          CountPointsDebug("#debug2");
-          _context12.next = 32;
+          game.CountPointsDebug("#debug2");
+          _context11.next = 32;
           break;
 
         case 28:
-          _context12.next = 30;
+          _context11.next = 30;
           return game.StartSignalRConnection(true);
 
         case 30:
           //alert('a QQ');
           document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
-          CountPointsDebug("#debug2");
+          game.CountPointsDebug("#debug2");
 
         case 32:
           //delete window.gameOptions;
@@ -3416,16 +3420,16 @@ window.addEventListener('load', /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/reg
 
         case 33:
         case "end":
-          return _context12.stop();
+          return _context11.stop();
       }
     }
-  }, _callee12);
+  }, _callee11);
 })));
 window.addEventListener('beforeunload', function () {
   if (window.game) window.game.StopSignalRConnection();
 });
 /******** /run code and events ********/
-//export { InkBallGame, CountPointsDebug };
+//export { InkBallGame };
 
 /***/ })
 /******/ ]);
