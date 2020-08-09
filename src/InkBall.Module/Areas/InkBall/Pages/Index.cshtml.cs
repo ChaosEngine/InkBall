@@ -1,4 +1,4 @@
-//#define LOAD_POINTS_AND_PATHS_FROM_SIGNALR
+#define LOAD_POINTS_AND_PATHS_FROM_SIGNALR
 
 using InkBall.Module.Hubs;
 using InkBall.Module.Model;

@@ -880,7 +880,6 @@ var InkBallGame = /*#__PURE__*/function () {
    * @param {enum} gameType of game enum as string
    * @param {bool} bIsPlayingWithRed true - red, false - blue
    * @param {bool} bIsPlayerActive is this player acive now
-   * @param {object} BoardSize defines logical width and height of grid size
    * @param {bool} bViewOnly only viewing the game no interaction
    * @param {number} pathAfterPointDrawAllowanceSecAmount is number of seconds, a player is allowed to start drawing path after putting point
    * @param {number} iTooLong2Duration too long wait duration
@@ -890,13 +889,9 @@ var InkBallGame = /*#__PURE__*/function () {
 
     var bIsPlayingWithRed = arguments.length > 9 && arguments[9] !== undefined ? arguments[9] : true;
     var bIsPlayerActive = arguments.length > 10 && arguments[10] !== undefined ? arguments[10] : true;
-    var BoardSize = arguments.length > 11 && arguments[11] !== undefined ? arguments[11] : {
-      width: 32,
-      height: 32
-    };
-    var bViewOnly = arguments.length > 12 && arguments[12] !== undefined ? arguments[12] : false;
-    var pathAfterPointDrawAllowanceSecAmount = arguments.length > 13 && arguments[13] !== undefined ? arguments[13] : 60;
-    var iTooLong2Duration = arguments.length > 14 && arguments[14] !== undefined ? arguments[14] : 125;
+    var bViewOnly = arguments.length > 11 && arguments[11] !== undefined ? arguments[11] : false;
+    var pathAfterPointDrawAllowanceSecAmount = arguments.length > 12 && arguments[12] !== undefined ? arguments[12] : 60;
+    var iTooLong2Duration = arguments.length > 13 && arguments[13] !== undefined ? arguments[13] : 125;
 
     _classCallCheck(this, InkBallGame);
 
@@ -932,7 +927,7 @@ var InkBallGame = /*#__PURE__*/function () {
     this.m_iGridSizeY = 0;
     this.m_iGridWidth = 0;
     this.m_iGridHeight = 0;
-    this.m_BoardSize = BoardSize;
+    this.m_BoardSize = null;
     this.m_iLastX = -1;
     this.m_iLastY = -1;
     this.m_iMouseX = 0;
@@ -2625,8 +2620,10 @@ var InkBallGame = /*#__PURE__*/function () {
 
       this.m_iPosX = this.m_Screen.offsetLeft;
       this.m_iPosY = this.m_Screen.offsetTop;
-      this.m_Screen.style.width = "calc(1em * ".concat(this.m_BoardSize.width, ")");
-      this.m_Screen.style.height = "calc(1em * ".concat(this.m_BoardSize.height, ")");
+      this.m_BoardSize = {
+        width: parseInt(this.m_Screen.style.width),
+        height: parseInt(this.m_Screen.style.height)
+      };
       var iClientWidth = this.m_Screen.clientWidth;
       var iClientHeight = this.m_Screen.clientHeight;
       this.m_iGridSizeX = parseInt(Math.ceil(iClientWidth / this.m_BoardSize.width));
@@ -3360,7 +3357,7 @@ var InkBallGame = /*#__PURE__*/function () {
 
 
 window.addEventListener('load', /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11() {
-  var inkBallHubName, iGameID, iPlayerID, iOtherPlayerID, boardSize, bPlayingWithRed, bPlayerActive, gameType, protocol, servTimeoutMillis, isReadonly, pathAfterPointDrawAllowanceSecAmount, game;
+  var inkBallHubName, iGameID, iPlayerID, iOtherPlayerID, bPlayingWithRed, bPlayerActive, gameType, protocol, servTimeoutMillis, isReadonly, pathAfterPointDrawAllowanceSecAmount, game;
   return regeneratorRuntime.wrap(function _callee11$(_context11) {
     while (1) {
       switch (_context11.prev = _context11.next) {
@@ -3373,7 +3370,6 @@ window.addEventListener('load', /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/reg
           iPlayerID = gameOptions.iPlayerID;
           iOtherPlayerID = gameOptions.iOtherPlayerID;
           document.getElementById('playerID').innerHTML = iPlayerID;
-          boardSize = gameOptions.boardSize;
           bPlayingWithRed = gameOptions.bPlayingWithRed;
           bPlayerActive = gameOptions.bPlayerActive;
           gameType = gameOptions.gameType;
@@ -3381,44 +3377,44 @@ window.addEventListener('load', /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/reg
           servTimeoutMillis = gameOptions.servTimeoutMillis;
           isReadonly = gameOptions.isReadonly;
           pathAfterPointDrawAllowanceSecAmount = gameOptions.pathAfterPointDrawAllowanceSecAmount;
-          _context11.next = 17;
+          _context11.next = 16;
           return importAllModulesAsync(gameOptions);
 
-        case 17:
-          game = new InkBallGame(iGameID, iPlayerID, iOtherPlayerID, inkBallHubName, signalR.LogLevel.Warning, protocol, signalR.HttpTransportType.None, servTimeoutMillis, gameType, bPlayingWithRed, bPlayerActive, boardSize, isReadonly, pathAfterPointDrawAllowanceSecAmount);
+        case 16:
+          game = new InkBallGame(iGameID, iPlayerID, iOtherPlayerID, inkBallHubName, signalR.LogLevel.Warning, protocol, signalR.HttpTransportType.None, servTimeoutMillis, gameType, bPlayingWithRed, bPlayerActive, isReadonly, pathAfterPointDrawAllowanceSecAmount);
           game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw', '#messageInput', '#messagesList', '#sendButton', ['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints']);
 
           if (!(gameOptions.PointsAsJavaScriptArray !== null)) {
-            _context11.next = 28;
+            _context11.next = 27;
             break;
           }
 
-          _context11.next = 22;
+          _context11.next = 21;
           return game.StartSignalRConnection(false);
 
-        case 22:
+        case 21:
           game.SetAllPoints(gameOptions.PointsAsJavaScriptArray);
           game.SetAllPaths(gameOptions.PathsAsJavaScriptArray); //alert('a QQ');
 
           document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
           game.CountPointsDebug("#debug2");
-          _context11.next = 32;
+          _context11.next = 31;
           break;
 
-        case 28:
-          _context11.next = 30;
+        case 27:
+          _context11.next = 29;
           return game.StartSignalRConnection(true);
 
-        case 30:
+        case 29:
           //alert('a QQ');
           document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
           game.CountPointsDebug("#debug2");
 
-        case 32:
+        case 31:
           //delete window.gameOptions;
           window.game = game;
 
-        case 33:
+        case 32:
         case "end":
           return _context11.stop();
       }

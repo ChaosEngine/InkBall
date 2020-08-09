@@ -388,14 +388,12 @@ class InkBallGame {
 	 * @param {enum} gameType of game enum as string
 	 * @param {bool} bIsPlayingWithRed true - red, false - blue
 	 * @param {bool} bIsPlayerActive is this player acive now
-	 * @param {object} BoardSize defines logical width and height of grid size
 	 * @param {bool} bViewOnly only viewing the game no interaction
 	 * @param {number} pathAfterPointDrawAllowanceSecAmount is number of seconds, a player is allowed to start drawing path after putting point
 	 * @param {number} iTooLong2Duration too long wait duration
 	 */
 	constructor(iGameID, iPlayerID, iOtherPlayerID, sHubName, loggingLevel, hubProtocol, transportType, serverTimeoutInMilliseconds, gameType,
-		bIsPlayingWithRed = true, bIsPlayerActive = true, BoardSize = { width: 32, height: 32 }, bViewOnly = false,
-		pathAfterPointDrawAllowanceSecAmount = 60, iTooLong2Duration = 125) {
+		bIsPlayingWithRed = true, bIsPlayerActive = true, bViewOnly = false, pathAfterPointDrawAllowanceSecAmount = 60, iTooLong2Duration = 125) {
 		this.g_iGameID = iGameID;
 		this.g_iPlayerID = iPlayerID;
 		this.m_iOtherPlayerId = iOtherPlayerID;
@@ -426,7 +424,7 @@ class InkBallGame {
 		this.m_iGridSizeY = 0;
 		this.m_iGridWidth = 0;
 		this.m_iGridHeight = 0;
-		this.m_BoardSize = BoardSize;
+		this.m_BoardSize = null;
 		this.m_iLastX = -1;
 		this.m_iLastY = -1;
 		this.m_iMouseX = 0;
@@ -1923,8 +1921,10 @@ class InkBallGame {
 		}
 		this.m_iPosX = this.m_Screen.offsetLeft;
 		this.m_iPosY = this.m_Screen.offsetTop;
-		this.m_Screen.style.width = `calc(1em * ${this.m_BoardSize.width})`;
-		this.m_Screen.style.height = `calc(1em * ${this.m_BoardSize.height})`;
+		this.m_BoardSize = {
+			width: parseInt(this.m_Screen.style.width),
+			height: parseInt(this.m_Screen.style.height)
+		};
 		let iClientWidth = this.m_Screen.clientWidth;
 		let iClientHeight = this.m_Screen.clientHeight;
 		this.m_iGridSizeX = parseInt(Math.ceil(iClientWidth / this.m_BoardSize.width));
@@ -2309,7 +2309,7 @@ class InkBallGame {
 					let str = (`Cycle Number ${i}: `), trailing_points = [];
 					const rand_color = RandomColor();
 
-					const mapped_verts = cycl.map(function(c) {
+					const mapped_verts = cycl.map(function (c) {
 						//const { x, y } = vertices[c].$GetPosition();
 						//return { x: x / this.m_iGridSizeX, y: y / this.m_iGridSizeY };
 						return vertices[c].$GetPosition();
@@ -2498,7 +2498,6 @@ window.addEventListener('load', async function () {
 	const iPlayerID = gameOptions.iPlayerID;
 	const iOtherPlayerID = gameOptions.iOtherPlayerID;
 	document.getElementById('playerID').innerHTML = iPlayerID;
-	const boardSize = gameOptions.boardSize;
 	const bPlayingWithRed = gameOptions.bPlayingWithRed;
 	const bPlayerActive = gameOptions.bPlayerActive;
 	const gameType = gameOptions.gameType;
@@ -2511,7 +2510,7 @@ window.addEventListener('load', async function () {
 
 	const game = new InkBallGame(iGameID, iPlayerID, iOtherPlayerID, inkBallHubName, signalR.LogLevel.Warning, protocol,
 		signalR.HttpTransportType.None, servTimeoutMillis,
-		gameType, bPlayingWithRed, bPlayerActive, boardSize, isReadonly, pathAfterPointDrawAllowanceSecAmount
+		gameType, bPlayingWithRed, bPlayerActive, isReadonly, pathAfterPointDrawAllowanceSecAmount
 	);
 	game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw',
 		'#messageInput', '#messagesList', '#sendButton', ['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints']);
