@@ -53,7 +53,8 @@ function hasDuplicates(array) {
  */
 
 
-function sortPointsClockwise(points) {
+function sortPointsClockwise_Old(points) {
+  //Old
   // Find min max to get center
   // Sort from top to bottom
   points.sort(function (a, b) {
@@ -94,65 +95,94 @@ function sortPointsClockwise(points) {
 
   points.sort(function (a, b) {
     return a.angle - b.angle;
-  }); // then reverse the order
+  }); //// then reverse the order
+  //const ccwPoints = points.reverse();
+  //// move the last point back to the start
+  //ccwPoints.unshift(ccwPoints.pop());
+  ////drawPoints();
+  //return ccwPoints;
 
-  var ccwPoints = points.reverse(); // move the last point back to the start
-
-  ccwPoints.unshift(ccwPoints.pop()); //drawPoints();
-
-  return ccwPoints; //return points;
+  return points;
 }
 
-function sortPointsClockwise_New(points) {
+function sortPointsClockwise(points) {
+  //Quadrant
   var get_clockwise_angle = function get_clockwise_angle(p) {
     /* get quadrant from 12 o'clock*/
-    var get_quadrant = function get_quadrant(p) {
-      var result = 4; //origin
 
-      if (p.x > 0 && p.y > 0) return 1;else if (p.x < 0 && p.y > 0) return 2;else if (p.x < 0 && p.y < 0) return 3; //else 4th quadrant
+    /*const get_quadrant = function (p) {
+    	let result = 4; //origin
+    			if (p.x > 0 && p.y > 0)
+    		return 1;
+    	else if (p.x < 0 && p.y > 0)
+    		return 2;
+    	else if (p.x < 0 && p.y < 0)
+    		return 3;
+    	//else 4th quadrant
+    	return result;
+    };*/
 
-      return result;
-    };
-
-    var angle = 0.0;
-    var quadrant = get_quadrant(p);
-    /*making sure the quadrants are correct*/
-    //cout << "Point: " << p << " is on the " << quadrant << " quadrant" << endl;
-
-    /*add the appropriate pi/2 value based on the quadrant. (one of 0, pi/2, pi, 3pi/2)*/
-
+    /*let angle = 0.0;
+    const quadrant = get_quadrant(p);
+    		//add the appropriate pi/2 value based on the quadrant. (one of 0, pi/2, pi, 3pi/2)
     switch (quadrant) {
-      case 1:
-        angle = Math.atan2(p.x, p.y) * 180 / Math.PI;
-        break;
-
-      case 2:
-        angle = Math.atan2(p.y, p.x) * 180 / Math.PI;
-        angle += Math.PI / 2;
-        break;
-
-      case 3:
-        angle = Math.atan2(p.x, p.y) * 180 / Math.PI;
-        angle += Math.PI;
-        break;
-
-      case 4:
-        angle = Math.atan2(p.y, p.x) * 180 / Math.PI;
-        angle += 3 * Math.PI / 2;
-        break;
+    	case 1:
+    		angle = Math.atan2(p.x, p.y) * 180 / Math.PI;
+    		break;
+    	case 2:
+    		angle = Math.atan2(p.y, p.x) * 180 / Math.PI;
+    		angle += Math.PI / 2;
+    		break;
+    	case 3:
+    		angle = Math.atan2(p.x, p.y) * 180 / Math.PI;
+    		angle += Math.PI;
+    		break;
+    	case 4:
+    		angle = Math.atan2(p.y, p.x) * 180 / Math.PI;
+    		angle += 3 * Math.PI / 2;
+    		break;
     }
-
+    return angle;*/
+    var angle = -Math.atan2(p.x, -p.y);
     return angle;
   };
 
-  var compare_points = function compare_points(a, b) {
-    return get_clockwise_angle(a) < get_clockwise_angle(b);
-  };
-
   points.sort(function (a, b) {
-    return compare_points(a, b);
+    return get_clockwise_angle(a) < get_clockwise_angle(b);
   });
   return points;
+}
+
+function sortPointsClockwise_Modern(points) {
+  //Modern
+  // Get the center (mean value) using reduce
+  var center = points.reduce(function (acc, _ref) {
+    var x = _ref.x,
+        y = _ref.y;
+    acc.x += x;
+    acc.y += y;
+    return acc;
+  }, {
+    x: 0,
+    y: 0
+  });
+  center.x /= points.length;
+  center.y /= points.length; // Add an angle property to each point using tan(angle) = y/x
+
+  var angles = points.map(function (_ref2) {
+    var x = _ref2.x,
+        y = _ref2.y;
+    return {
+      x: x,
+      y: y,
+      angle: Math.atan2(y - center.y, x - center.x) * 180 / Math.PI
+    };
+  }); // Sort your points by angle
+
+  var pointsSorted = angles.sort(function (a, b) {
+    return a.angle - b.angle;
+  });
+  return pointsSorted;
 } ///////////sortPointsClockwise tests end////////////
 
 

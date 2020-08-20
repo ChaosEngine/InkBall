@@ -1,5 +1,6 @@
 /*eslint-disable no-console*/
 import concaveman from "concaveman";
+import decomp from "poly-decomp";
 
 const isTest = document.querySelector('title').innerHTML === 'Hello concaveman';
 if (isTest) {
@@ -21,5 +22,17 @@ if (isTest) {
 	document.body.appendChild(concaveman_output);
 } else
 	console.log('Hello concaveman. Simple test output points: \n' + JSON.stringify(output));
+
+
+// Make sure the polygon has counter-clockwise winding. Skip this step if you know it's already counter-clockwise.
+console.log(`decomp => ${decomp}, decomp.makeCCW(concavePolygon) => ${decomp.makeCCW(precision_points)}`);
+let convexPolygons = decomp.quickDecomp(precision_points);
+// ==> [  [[1,0],[1,1],[0.5,0.5]],  [[0.5,0.5],[-1,1],[-1,0],[1,0]]  ]
+console.log(`decomp.quickDecomp => ${convexPolygons}`);
+// Decompose using the slow (but optimal) algorithm
+convexPolygons = decomp.decomp(precision_points);
+// ==> [  [[-1,1],[-1,0],[1,0],[0.5,0.5]],  [[1,0],[1,1],[0.5,0.5]]  ]
+console.log(`decomp.decomp => ${convexPolygons}`);
+
 
 export { concaveman };

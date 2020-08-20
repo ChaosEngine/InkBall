@@ -32,7 +32,7 @@ function hasDuplicates(t) {
   return new Set(t).size !== t.length;
 }
 
-function sortPointsClockwise(t) {
+function sortPointsClockwise_Old(t) {
   t.sort(function (t, e) {
     return t.y - e.y;
   });
@@ -43,47 +43,45 @@ function sortPointsClockwise(t) {
   var i = (t[0].x + t[t.length - 1].x) / 2,
       n = e;
   var s = void 0;
-  t.forEach(function (t) {
+  return t.forEach(function (t) {
     var e = Math.atan2(t.y - n, t.x - i);
     void 0 === s ? s = e : e < s && (e += 2 * Math.PI), t.angle = e;
   }), t.sort(function (t, e) {
     return t.angle - e.angle;
-  });
-  var r = t.reverse();
-  return r.unshift(r.pop()), r;
+  }), t;
 }
 
-function sortPointsClockwise_New(t) {
+function sortPointsClockwise(t) {
   var e = function e(t) {
-    var e = 0;
-
-    switch (function (t) {
-      return t.x > 0 && t.y > 0 ? 1 : t.x < 0 && t.y > 0 ? 2 : t.x < 0 && t.y < 0 ? 3 : 4;
-    }(t)) {
-      case 1:
-        e = 180 * Math.atan2(t.x, t.y) / Math.PI;
-        break;
-
-      case 2:
-        e = 180 * Math.atan2(t.y, t.x) / Math.PI, e += Math.PI / 2;
-        break;
-
-      case 3:
-        e = 180 * Math.atan2(t.x, t.y) / Math.PI, e += Math.PI;
-        break;
-
-      case 4:
-        e = 180 * Math.atan2(t.y, t.x) / Math.PI, e += 3 * Math.PI / 2;
-    }
-
-    return e;
+    return -Math.atan2(t.x, -t.y);
   };
 
   return t.sort(function (t, i) {
-    return function (t, i) {
-      return e(t) < e(i);
-    }(t, i);
+    return e(t) < e(i);
   }), t;
+}
+
+function sortPointsClockwise_Modern(t) {
+  var e = t.reduce(function (t, _ref) {
+    var e = _ref.x,
+        i = _ref.y;
+    return t.x += e, t.y += i, t;
+  }, {
+    x: 0,
+    y: 0
+  });
+  e.x /= t.length, e.y /= t.length;
+  return t.map(function (_ref2) {
+    var t = _ref2.x,
+        i = _ref2.y;
+    return {
+      x: t,
+      y: i,
+      angle: 180 * Math.atan2(i - e.y, t - e.x) / Math.PI
+    };
+  }).sort(function (t, e) {
+    return t.angle - e.angle;
+  });
 }
 
 if (SVG) {

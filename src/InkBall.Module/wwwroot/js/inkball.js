@@ -333,12 +333,10 @@ async function importAllModulesAsync(gameOptions) {
 
 	let module;
 	if (isMinified) {
-		LocalLog(`I am '${selfFileName}' loading: ./svgvml.min.js`);
 		module = await import(/* webpackChunkName: "svgvmlMin" */'./svgvml.min.js');
 		//window.$createPolyline = module.$createPolyline;
 	}
 	else {
-		LocalLog(`I am '${selfFileName}' loading: ./svgvml.js`);
 		module = await import(/* webpackChunkName: "svgvml" */'./svgvml.js');
 		//window.$createPolyline = module.$createPolyline;
 	}
@@ -348,7 +346,6 @@ async function importAllModulesAsync(gameOptions) {
 		sortPointsClockwise = module.sortPointsClockwise;
 
 	if (gameOptions.iOtherPlayerID === -1) {
-		LocalLog(`I am '${selfFileName}' loading: ./concavemanBundle.js`);
 		module = await import(/* webpackChunkName: "concavemanDeps" */'./concavemanBundle.js');
 		concavemanBundle = module;
 		//window.concavemanBundle = module;
@@ -1808,8 +1805,8 @@ class InkBallGame {
 			const cnt = document.querySelectorAll(tag.query);
 			aggregated += tag.display.replace('%s', cnt.length);
 		});
-
 		document.querySelector(sSelector2Set).innerHTML = 'SVGs by tags: ' + aggregated;
+
 
 		/*//TODO: test code; to be disabled
 		const screen = document.querySelector('#screen');
@@ -1845,9 +1842,44 @@ class InkBallGame {
 		}.bind(this));
 
 		if (vertices && vertices.length > 0) {
-			$createPolyline(6, concavemanBundle.concaveman(vertices, 2.0, 0.0).map(function (fnd) {
+			const convex_hull = concavemanBundle.concaveman(vertices, 2.0, 0.0);
+			$createPolyline(6, convex_hull.map(function (fnd) {
 				return parseInt(fnd[0]) * this.m_iGridSizeX + ',' + parseInt(fnd[1]) * this.m_iGridSizeY;
 			}.bind(this)).join(' '), 'green');
+			LocalLog(`convex_hull = ${convex_hull}`);
+
+			//aaa
+
+			const mapped_verts = convex_hull.map(function (pt) {
+				return { x: pt[0], y: pt[1] };
+			}.bind(this));
+			const cw_sorted_verts = sortPointsClockwise(mapped_verts);
+
+			const rand_color = 'purple';
+			for (const vert of cw_sorted_verts) {
+				//const { x: view_x, y: view_y } = vertices[vert].$GetPosition();
+				const { x: x, y: y } = vert;
+				const view_x = x * this.m_iGridSizeX, view_y = y * this.m_iGridSizeY;
+
+
+				//const line_pts = Array.from(document.querySelectorAll(`svg > line[x1="${view_x}"][y1="${view_y}"]`))
+				//	.concat(Array.from(document.querySelectorAll(`svg > line[x2="${view_x}"][y2="${view_y}"]`)));
+				//line_pts.forEach(line => {
+				//	line.$SetColor(rand_color);
+				//});
+				const pt = document.querySelector(`svg > circle[cx="${view_x}"][cy="${view_y}"]`);
+				if (pt) {
+					pt.$SetStrokeColor(rand_color);
+					pt.$SetFillColor(rand_color);
+					pt.$SetZIndex(100);
+					pt.setAttribute('r', "6");
+				}
+				await Sleep(50);
+			}
+
+
+
+
 		}
 	}
 
@@ -2519,16 +2551,13 @@ window.addEventListener('load', async function () {
 		await game.StartSignalRConnection(false);
 		game.SetAllPoints(gameOptions.PointsAsJavaScriptArray);
 		game.SetAllPaths(gameOptions.PathsAsJavaScriptArray);
-		//alert('a QQ');
-		document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
-		game.CountPointsDebug("#debug2");
 	}
 	else {
 		await game.StartSignalRConnection(true);
-		//alert('a QQ');
-		document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
-		game.CountPointsDebug("#debug2");
 	}
+	//alert('a QQ');
+	document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
+	game.CountPointsDebug("#debug2");
 
 	//delete window.gameOptions;
 	window.game = game;

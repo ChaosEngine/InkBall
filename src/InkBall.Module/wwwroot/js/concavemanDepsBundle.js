@@ -54,14 +54,291 @@ var concavemanBundle = function (t) {
     return r.d(n, "a", n), n;
   }, r.o = function (t, n) {
     return Object.prototype.hasOwnProperty.call(t, n);
-  }, r.p = "", r(r.s = 1);
-}([function (t, n, r) {
+  }, r.p = "", r(r.s = 2);
+}([function (t, n) {
+  function r(t, n, r) {
+    r = r || 0;
+    var e,
+        i,
+        o,
+        a,
+        h,
+        u,
+        f,
+        c = [0, 0];
+    return e = t[1][1] - t[0][1], i = t[0][0] - t[1][0], o = e * t[0][0] + i * t[0][1], a = n[1][1] - n[0][1], h = n[0][0] - n[1][0], u = a * n[0][0] + h * n[0][1], y(f = e * h - a * i, 0, r) || (c[0] = (h * o - i * u) / f, c[1] = (e * u - a * o) / f), c;
+  }
+
+  function e(t, n, r, e) {
+    var i = n[0] - t[0],
+        o = n[1] - t[1],
+        a = e[0] - r[0],
+        h = e[1] - r[1];
+    if (a * o - h * i == 0) return !1;
+    var u = (i * (r[1] - t[1]) + o * (t[0] - r[0])) / (a * o - h * i),
+        f = (a * (t[1] - r[1]) + h * (r[0] - t[0])) / (h * i - a * o);
+    return u >= 0 && u <= 1 && f >= 0 && f <= 1;
+  }
+
+  function i(t, n, r) {
+    return (n[0] - t[0]) * (r[1] - t[1]) - (r[0] - t[0]) * (n[1] - t[1]);
+  }
+
+  function o(t, n, r) {
+    return i(t, n, r) > 0;
+  }
+
+  function a(t, n, r) {
+    return i(t, n, r) >= 0;
+  }
+
+  function h(t, n, r) {
+    return i(t, n, r) < 0;
+  }
+
+  function u(t, n, r) {
+    return i(t, n, r) <= 0;
+  }
+
+  t.exports = {
+    decomp: function decomp(t) {
+      var n = function t(n) {
+        for (var r = [], e = [], i = [], o = [], a = Number.MAX_VALUE, h = 0; h < n.length; ++h) {
+          if (v(n, h)) for (var u = 0; u < n.length; ++u) {
+            if (x(n, h, u)) {
+              e = t(X(n, h, u, o)), i = t(X(n, u, h, o));
+
+              for (var f = 0; f < i.length; f++) {
+                e.push(i[f]);
+              }
+
+              e.length < a && (r = e, a = e.length, r.push([p(n, h), p(n, u)]));
+            }
+          }
+        }
+
+        return r;
+      }(t);
+
+      return n.length > 0 ? function t(n, r) {
+        if (0 === r.length) return [n];
+
+        if (r instanceof Array && r.length && r[0] instanceof Array && 2 === r[0].length && r[0][0] instanceof Array) {
+          for (var e = [n], i = 0; i < r.length; i++) {
+            for (var o = r[i], a = 0; a < e.length; a++) {
+              var h = e[a],
+                  u = t(h, o);
+
+              if (u) {
+                e.splice(a, 1), e.push(u[0], u[1]);
+                break;
+              }
+            }
+          }
+
+          return e;
+        }
+
+        o = r, i = n.indexOf(o[0]), a = n.indexOf(o[1]);
+        return -1 !== i && -1 !== a && [X(n, i, a), X(n, a, i)];
+      }(t, n) : [t];
+    },
+    quickDecomp: function t(n, r, e, i, f, c, l) {
+      c = c || 100, l = l || 0, f = f || 25, r = void 0 !== r ? r : [], e = e || [], i = i || [];
+      var d = [0, 0],
+          g = [0, 0],
+          x = [0, 0],
+          X = 0,
+          y = 0,
+          _ = 0,
+          B = 0,
+          b = 0,
+          S = 0,
+          O = 0,
+          k = [],
+          A = [],
+          E = n,
+          w = n;
+      if (w.length < 3) return r;
+      if (++l > c) return console.warn("quickDecomp: max level (" + c + ") reached."), r;
+
+      for (var P = 0; P < n.length; ++P) {
+        if (v(E, P)) {
+          e.push(E[P]), X = y = Number.MAX_VALUE;
+
+          for (var j = 0; j < n.length; ++j) {
+            o(p(E, P - 1), p(E, P), p(E, j)) && u(p(E, P - 1), p(E, P), p(E, j - 1)) && (x = Y(p(E, P - 1), p(E, P), p(E, j), p(E, j - 1)), h(p(E, P + 1), p(E, P), x) && (_ = s(E[P], x)) < y && (y = _, g = x, S = j)), o(p(E, P + 1), p(E, P), p(E, j + 1)) && u(p(E, P + 1), p(E, P), p(E, j)) && (x = Y(p(E, P + 1), p(E, P), p(E, j), p(E, j + 1)), o(p(E, P - 1), p(E, P), x) && (_ = s(E[P], x)) < X && (X = _, d = x, b = j));
+          }
+
+          if (S === (b + 1) % n.length) x[0] = (g[0] + d[0]) / 2, x[1] = (g[1] + d[1]) / 2, i.push(x), P < b ? (m(k, E, P, b + 1), k.push(x), A.push(x), 0 !== S && m(A, E, S, E.length), m(A, E, 0, P + 1)) : (0 !== P && m(k, E, P, E.length), m(k, E, 0, b + 1), k.push(x), A.push(x), m(A, E, S, P + 1));else {
+            if (S > b && (b += n.length), B = Number.MAX_VALUE, b < S) return r;
+
+            for (j = S; j <= b; ++j) {
+              a(p(E, P - 1), p(E, P), p(E, j)) && u(p(E, P + 1), p(E, P), p(E, j)) && (_ = s(p(E, P), p(E, j))) < B && M(E, P, j) && (B = _, O = j % n.length);
+            }
+
+            P < O ? (m(k, E, P, O + 1), 0 !== O && m(A, E, O, w.length), m(A, E, 0, P + 1)) : (0 !== P && m(k, E, P, w.length), m(k, E, 0, O + 1), m(A, E, O, P + 1));
+          }
+          return k.length < A.length ? (t(k, r, e, i, f, c, l), t(A, r, e, i, f, c, l)) : (t(A, r, e, i, f, c, l), t(k, r, e, i, f, c, l)), r;
+        }
+      }
+
+      return r.push(n), r;
+    },
+    isSimple: function isSimple(t) {
+      var n,
+          r = t;
+
+      for (n = 0; n < r.length - 1; n++) {
+        for (var i = 0; i < n - 1; i++) {
+          if (e(r[n], r[n + 1], r[i], r[i + 1])) return !1;
+        }
+      }
+
+      for (n = 1; n < r.length - 2; n++) {
+        if (e(r[0], r[r.length - 1], r[n], r[n + 1])) return !1;
+      }
+
+      return !0;
+    },
+    removeCollinearPoints: function removeCollinearPoints(t, n) {
+      for (var r = 0, e = t.length - 1; t.length > 3 && e >= 0; --e) {
+        l(p(t, e - 1), p(t, e), p(t, e + 1), n) && (t.splice(e % t.length, 1), r++);
+      }
+
+      return r;
+    },
+    removeDuplicatePoints: function removeDuplicatePoints(t, n) {
+      for (var r = t.length - 1; r >= 1; --r) {
+        for (var e = t[r], i = r - 1; i >= 0; --i) {
+          _(e, t[i], n) && t.splice(r, 1);
+        }
+      }
+    },
+    makeCCW: function makeCCW(t) {
+      for (var n = 0, r = t, e = 1; e < t.length; ++e) {
+        (r[e][1] < r[n][1] || r[e][1] === r[n][1] && r[e][0] > r[n][0]) && (n = e);
+      }
+
+      return !o(p(t, n - 1), p(t, n), p(t, n + 1)) && (function (t) {
+        for (var n = [], r = t.length, e = 0; e !== r; e++) {
+          n.push(t.pop());
+        }
+
+        for (e = 0; e !== r; e++) {
+          t[e] = n[e];
+        }
+      }(t), !0);
+    }
+  };
+  var f = [],
+      c = [];
+
+  function l(t, n, r, e) {
+    if (e) {
+      var o = f,
+          a = c;
+      o[0] = n[0] - t[0], o[1] = n[1] - t[1], a[0] = r[0] - n[0], a[1] = r[1] - n[1];
+      var h = o[0] * a[0] + o[1] * a[1],
+          u = Math.sqrt(o[0] * o[0] + o[1] * o[1]),
+          l = Math.sqrt(a[0] * a[0] + a[1] * a[1]);
+      return Math.acos(h / (u * l)) < e;
+    }
+
+    return 0 === i(t, n, r);
+  }
+
+  function s(t, n) {
+    var r = n[0] - t[0],
+        e = n[1] - t[1];
+    return r * r + e * e;
+  }
+
+  function p(t, n) {
+    var r = t.length;
+    return t[n < 0 ? n % r + r : n % r];
+  }
+
+  function m(t, n, r, e) {
+    for (var i = r; i < e; i++) {
+      t.push(n[i]);
+    }
+  }
+
+  function v(t, n) {
+    return h(p(t, n - 1), p(t, n), p(t, n + 1));
+  }
+
+  var d = [],
+      g = [];
+
+  function x(t, n, e) {
+    var i,
+        o,
+        h = d,
+        f = g;
+    if (a(p(t, n + 1), p(t, n), p(t, e)) && u(p(t, n - 1), p(t, n), p(t, e))) return !1;
+    o = s(p(t, n), p(t, e));
+
+    for (var c = 0; c !== t.length; ++c) {
+      if ((c + 1) % t.length !== n && c !== n && a(p(t, n), p(t, e), p(t, c + 1)) && u(p(t, n), p(t, e), p(t, c)) && (h[0] = p(t, n), h[1] = p(t, e), f[0] = p(t, c), f[1] = p(t, c + 1), i = r(h, f), s(p(t, n), i) < o)) return !1;
+    }
+
+    return !0;
+  }
+
+  function M(t, n, r) {
+    for (var i = 0; i !== t.length; ++i) {
+      if (i !== n && i !== r && (i + 1) % t.length !== n && (i + 1) % t.length !== r && e(p(t, n), p(t, r), p(t, i), p(t, i + 1))) return !1;
+    }
+
+    return !0;
+  }
+
+  function X(t, n, r, e) {
+    var i = e || [];
+    if (function (t) {
+      t.length = 0;
+    }(i), n < r) for (var o = n; o <= r; o++) {
+      i.push(t[o]);
+    } else {
+      for (o = 0; o <= r; o++) {
+        i.push(t[o]);
+      }
+
+      for (o = n; o < t.length; o++) {
+        i.push(t[o]);
+      }
+    }
+    return i;
+  }
+
+  function Y(t, n, r, e, i) {
+    i = i || 0;
+    var o = n[1] - t[1],
+        a = t[0] - n[0],
+        h = o * t[0] + a * t[1],
+        u = e[1] - r[1],
+        f = r[0] - e[0],
+        c = u * r[0] + f * r[1],
+        l = o * f - u * a;
+    return y(l, 0, i) ? [0, 0] : [(f * h - a * c) / l, (o * c - u * h) / l];
+  }
+
+  function y(t, n, r) {
+    return r = r || 0, Math.abs(t - n) <= r;
+  }
+
+  function _(t, n, r) {
+    return y(t[0], n[0], r) && y(t[1], n[1], r);
+  }
+}, function (t, n, r) {
   "use strict";
 
-  var e = r(2),
-      i = r(3),
-      o = r(4);
-  var a = r(5).orient2d;
+  var e = r(3),
+      i = r(4),
+      o = r(5);
+  var a = r(6).orient2d;
 
   function h(t, n, r) {
     n = Math.max(0, void 0 === n ? 2 : n), r = r || 0;
@@ -73,10 +350,10 @@ var concavemanBundle = function (t) {
       }
 
       var u = [n, r, e, i],
-          s = u.slice();
+          f = u.slice();
 
       for (a = 0; a < t.length; a++) {
-        o(t[a], u) || s.push(t[a]);
+        o(t[a], u) || f.push(t[a]);
       }
 
       return function (t) {
@@ -99,7 +376,7 @@ var concavemanBundle = function (t) {
         }
 
         return e.pop(), n.pop(), n.concat(e);
-      }(s);
+      }(f);
     }(t),
         a = new e(16);
 
@@ -116,26 +393,26 @@ var concavemanBundle = function (t) {
       return t[1] - n[1];
     }, a.load(t);
 
-    for (var h, s = [], c = 0; c < i.length; c++) {
+    for (var h, f = [], c = 0; c < i.length; c++) {
       var l = i[c];
-      a.remove(l), h = d(l, h), s.push(h);
+      a.remove(l), h = v(l, h), f.push(h);
     }
 
-    var f = new e(16);
+    var s = new e(16);
 
-    for (c = 0; c < s.length; c++) {
-      f.insert(m(s[c]));
+    for (c = 0; c < f.length; c++) {
+      s.insert(m(f[c]));
     }
 
-    for (var x = n * n, g = r * r; s.length;) {
-      var X = s.shift(),
+    for (var g = n * n, x = r * r; f.length;) {
+      var X = f.shift(),
           Y = X.p,
           y = X.next.p,
-          _ = v(Y, y);
+          _ = d(Y, y);
 
-      if (!(_ < g)) {
-        var B = _ / x;
-        (l = u(a, X.prev.p, Y, y, X.next.next.p, B, f)) && Math.min(v(l, Y), v(l, y)) <= B && (s.push(X), s.push(d(l, X)), a.remove(l), f.remove(X), f.insert(m(X)), f.insert(m(X.next)));
+      if (!(_ < x)) {
+        var B = _ / g;
+        (l = u(a, X.prev.p, Y, y, X.next.next.p, B, s)) && Math.min(d(l, Y), d(l, y)) <= B && (f.push(X), f.push(v(l, X)), a.remove(l), s.remove(X), s.insert(m(X)), s.insert(m(X.next)));
       }
     }
 
@@ -150,22 +427,22 @@ var concavemanBundle = function (t) {
   }
 
   function u(t, n, r, e, o, a, h) {
-    for (var u = new i([], s), l = t.data; l;) {
+    for (var u = new i([], f), l = t.data; l;) {
       for (var p = 0; p < l.children.length; p++) {
         var m = l.children[p],
-            d = l.leaf ? x(m, r, e) : c(r, e, m);
-        d > a || u.push({
+            v = l.leaf ? g(m, r, e) : c(r, e, m);
+        v > a || u.push({
           node: m,
-          dist: d
+          dist: v
         });
       }
 
       for (; u.length && !u.peek().node.children;) {
-        var v = u.pop(),
-            g = v.node,
-            M = x(g, n, r),
-            X = x(g, e, o);
-        if (v.dist < M && v.dist < X && f(r, g, h) && f(e, g, h)) return g;
+        var d = u.pop(),
+            x = d.node,
+            M = g(x, n, r),
+            X = g(x, e, o);
+        if (d.dist < M && d.dist < X && s(r, x, h) && s(e, x, h)) return x;
       }
 
       (l = u.pop()) && (l = l.node);
@@ -174,19 +451,19 @@ var concavemanBundle = function (t) {
     return null;
   }
 
-  function s(t, n) {
+  function f(t, n) {
     return t.dist - n.dist;
   }
 
   function c(t, n, r) {
     if (l(t, r) || l(n, r)) return 0;
-    var e = g(t[0], t[1], n[0], n[1], r.minX, r.minY, r.maxX, r.minY);
+    var e = x(t[0], t[1], n[0], n[1], r.minX, r.minY, r.maxX, r.minY);
     if (0 === e) return 0;
-    var i = g(t[0], t[1], n[0], n[1], r.minX, r.minY, r.minX, r.maxY);
+    var i = x(t[0], t[1], n[0], n[1], r.minX, r.minY, r.minX, r.maxY);
     if (0 === i) return 0;
-    var o = g(t[0], t[1], n[0], n[1], r.maxX, r.minY, r.maxX, r.maxY);
+    var o = x(t[0], t[1], n[0], n[1], r.maxX, r.minY, r.maxX, r.maxY);
     if (0 === o) return 0;
-    var a = g(t[0], t[1], n[0], n[1], r.minX, r.maxY, r.maxX, r.maxY);
+    var a = x(t[0], t[1], n[0], n[1], r.minX, r.maxY, r.maxX, r.maxY);
     return 0 === a ? 0 : Math.min(e, i, o, a);
   }
 
@@ -194,14 +471,14 @@ var concavemanBundle = function (t) {
     return t[0] >= n.minX && t[0] <= n.maxX && t[1] >= n.minY && t[1] <= n.maxY;
   }
 
-  function f(t, n, r) {
-    for (var e, i, o, a, h = Math.min(t[0], n[0]), u = Math.min(t[1], n[1]), s = Math.max(t[0], n[0]), c = Math.max(t[1], n[1]), l = r.search({
+  function s(t, n, r) {
+    for (var e, i, o, a, h = Math.min(t[0], n[0]), u = Math.min(t[1], n[1]), f = Math.max(t[0], n[0]), c = Math.max(t[1], n[1]), l = r.search({
       minX: h,
       minY: u,
-      maxX: s,
+      maxX: f,
       maxY: c
-    }), f = 0; f < l.length; f++) {
-      if (e = l[f].p, i = l[f].next.p, o = t, e !== (a = n) && i !== o && p(e, i, o) > 0 != p(e, i, a) > 0 && p(o, a, e) > 0 != p(o, a, i) > 0) return !1;
+    }), s = 0; s < l.length; s++) {
+      if (e = l[s].p, i = l[s].next.p, o = t, e !== (a = n) && i !== o && p(e, i, o) > 0 != p(e, i, a) > 0 && p(o, a, e) > 0 != p(o, a, i) > 0) return !1;
     }
 
     return !0;
@@ -217,7 +494,7 @@ var concavemanBundle = function (t) {
     return t.minX = Math.min(n[0], r[0]), t.minY = Math.min(n[1], r[1]), t.maxX = Math.max(n[0], r[0]), t.maxY = Math.max(n[1], r[1]), t;
   }
 
-  function d(t, n) {
+  function v(t, n) {
     var r = {
       p: t,
       prev: null,
@@ -230,13 +507,13 @@ var concavemanBundle = function (t) {
     return n ? (r.next = n.next, r.prev = n, n.next.prev = r, n.next = r) : (r.prev = r, r.next = r), r;
   }
 
-  function v(t, n) {
+  function d(t, n) {
     var r = t[0] - n[0],
         e = t[1] - n[1];
     return r * r + e * e;
   }
 
-  function x(t, n, r) {
+  function g(t, n, r) {
     var e = n[0],
         i = n[1],
         o = r[0] - e,
@@ -250,28 +527,28 @@ var concavemanBundle = function (t) {
     return (o = t[0] - e) * o + (a = t[1] - i) * a;
   }
 
-  function g(t, n, r, e, i, o, a, h) {
+  function x(t, n, r, e, i, o, a, h) {
     var u,
-        s,
+        f,
         c,
         l,
-        f = r - t,
+        s = r - t,
         p = e - n,
         m = a - i,
-        d = h - o,
-        v = t - i,
-        x = n - o,
-        g = f * f + p * p,
-        M = f * m + p * d,
-        X = m * m + d * d,
-        Y = f * v + p * x,
-        y = m * v + d * x,
-        _ = g * X - M * M,
+        v = h - o,
+        d = t - i,
+        g = n - o,
+        x = s * s + p * p,
+        M = s * m + p * v,
+        X = m * m + v * v,
+        Y = s * d + p * g,
+        y = m * d + v * g,
+        _ = x * X - M * M,
         B = _,
         b = _;
 
-    0 === _ ? (s = 0, B = 1, l = y, b = X) : (l = g * y - M * Y, (s = M * y - X * Y) < 0 ? (s = 0, l = y, b = X) : s > B && (s = B, l = y + M, b = X)), l < 0 ? (l = 0, -Y < 0 ? s = 0 : -Y > g ? s = B : (s = -Y, B = g)) : l > b && (l = b, -Y + M < 0 ? s = 0 : -Y + M > g ? s = B : (s = -Y + M, B = g));
-    var S = (1 - (c = 0 === l ? 0 : l / b)) * i + c * a - ((1 - (u = 0 === s ? 0 : s / B)) * t + u * r),
+    0 === _ ? (f = 0, B = 1, l = y, b = X) : (l = x * y - M * Y, (f = M * y - X * Y) < 0 ? (f = 0, l = y, b = X) : f > B && (f = B, l = y + M, b = X)), l < 0 ? (l = 0, -Y < 0 ? f = 0 : -Y > x ? f = B : (f = -Y, B = x)) : l > b && (l = b, -Y + M < 0 ? f = 0 : -Y + M > x ? f = B : (f = -Y + M, B = x));
+    var S = (1 - (c = 0 === l ? 0 : l / b)) * i + c * a - ((1 - (u = 0 === f ? 0 : f / B)) * t + u * r),
         O = (1 - c) * o + c * h - ((1 - u) * n + u * e);
     return S * S + O * O;
   }
@@ -285,26 +562,33 @@ var concavemanBundle = function (t) {
   "use strict";
 
   r.r(n);
-  var e = r(0),
+  var e = r(1),
       i = r.n(e);
   r.d(n, "concaveman", function () {
     return i.a;
   });
-  var o = "Hello concaveman" === document.querySelector("title").innerHTML;
+  var o = r(0),
+      a = r.n(o);
+  var h = "Hello concaveman" === document.querySelector("title").innerHTML;
 
-  if (o) {
+  if (h) {
     var _t = document.createElement("div");
 
     _t.innerHTML = "<p>Hello concaveman.</p>", document.body.appendChild(_t);
   }
 
-  var a = i()([[484, 480], [676, 363], [944, 342], [678, 41], [286, 237], [758, 215], [752, 117], [282, 492], [609, 262], [129, 252]], 2, 0);
+  var u = [[484, 480], [676, 363], [944, 342], [678, 41], [286, 237], [758, 215], [752, 117], [282, 492], [609, 262], [129, 252]],
+      f = i()(u, 2, 0);
 
-  if (o) {
+  if (h) {
     var _t2 = document.createElement("div");
 
-    _t2.innerHTML = "concaveman output points: " + JSON.stringify(a), document.body.appendChild(_t2);
-  } else console.log("Hello concaveman. Simple test output points: \n" + JSON.stringify(a));
+    _t2.innerHTML = "concaveman output points: " + JSON.stringify(f), document.body.appendChild(_t2);
+  } else console.log("Hello concaveman. Simple test output points: \n" + JSON.stringify(f));
+
+  console.log("decomp => ".concat(a.a, ", decomp.makeCCW(concavePolygon) => ").concat(a.a.makeCCW(u)));
+  var c = a.a.quickDecomp(u);
+  console.log("decomp.quickDecomp => " + c), c = a.a.decomp(u), console.log("decomp.decomp => " + c);
 }, function (t, n, r) {
   t.exports = function () {
     "use strict";
@@ -315,27 +599,27 @@ var concavemanBundle = function (t) {
           if (o - i > 600) {
             var h = o - i + 1,
                 u = e - i + 1,
-                s = Math.log(h),
-                c = .5 * Math.exp(2 * s / 3),
-                l = .5 * Math.sqrt(s * c * (h - c) / h) * (u - h / 2 < 0 ? -1 : 1);
+                f = Math.log(h),
+                c = .5 * Math.exp(2 * f / 3),
+                l = .5 * Math.sqrt(f * c * (h - c) / h) * (u - h / 2 < 0 ? -1 : 1);
             t(r, e, Math.max(i, Math.floor(e - u * c / h + l)), Math.min(o, Math.floor(e + (h - u) * c / h + l)), a);
           }
 
-          var f = r[e],
+          var s = r[e],
               p = i,
               m = o;
 
-          for (n(r, i, e), a(r[o], f) > 0 && n(r, i, o); p < m;) {
-            for (n(r, p, m), p++, m--; a(r[p], f) < 0;) {
+          for (n(r, i, e), a(r[o], s) > 0 && n(r, i, o); p < m;) {
+            for (n(r, p, m), p++, m--; a(r[p], s) < 0;) {
               p++;
             }
 
-            for (; a(r[m], f) > 0;) {
+            for (; a(r[m], s) > 0;) {
               m--;
             }
           }
 
-          0 === a(r[i], f) ? n(r, i, m) : n(r, ++m, o), m <= e && (i = m + 1), e <= m && (o = m - 1);
+          0 === a(r[i], s) ? n(r, i, m) : n(r, ++m, o), m <= e && (i = m + 1), e <= m && (o = m - 1);
         }
       }(t, e, i || 0, o || t.length - 1, a || r);
     }
@@ -386,7 +670,7 @@ var concavemanBundle = function (t) {
       return t.minX - n.minX;
     }
 
-    function s(t, n) {
+    function f(t, n) {
       return t.minY - n.minY;
     }
 
@@ -398,7 +682,7 @@ var concavemanBundle = function (t) {
       return t.maxX - t.minX + (t.maxY - t.minY);
     }
 
-    function f(t, n) {
+    function s(t, n) {
       return t.minX <= n.minX && t.minY <= n.minY && n.maxX <= t.maxX && n.maxY <= t.maxY;
     }
 
@@ -418,7 +702,7 @@ var concavemanBundle = function (t) {
       };
     }
 
-    function d(n, r, e, i, o) {
+    function v(n, r, e, i, o) {
       for (var a = [r, e]; a.length;) {
         if (!((e = a.pop()) - (r = a.pop()) <= i)) {
           var h = r + Math.ceil((e - r) / i / 2) * i;
@@ -438,7 +722,7 @@ var concavemanBundle = function (t) {
         for (var o = 0; o < n.children.length; o++) {
           var a = n.children[o],
               h = n.leaf ? e(a) : a;
-          p(t, h) && (n.leaf ? r.push(a) : f(t, h) ? this._all(a, r) : i.push(a));
+          p(t, h) && (n.leaf ? r.push(a) : s(t, h) ? this._all(a, r) : i.push(a));
         }
 
         n = i.pop();
@@ -455,7 +739,7 @@ var concavemanBundle = function (t) {
               o = n.leaf ? this.toBBox(i) : i;
 
           if (p(t, o)) {
-            if (n.leaf || f(t, o)) return !0;
+            if (n.leaf || s(t, o)) return !0;
             r.push(i);
           }
         }
@@ -495,13 +779,13 @@ var concavemanBundle = function (t) {
     }, e.prototype.remove = function (t, n) {
       if (!t) return this;
 
-      for (var r, e, o, a = this.data, h = this.toBBox(t), u = [], s = []; a || u.length;) {
-        if (a || (a = u.pop(), e = u[u.length - 1], r = s.pop(), o = !0), a.leaf) {
+      for (var r, e, o, a = this.data, h = this.toBBox(t), u = [], f = []; a || u.length;) {
+        if (a || (a = u.pop(), e = u[u.length - 1], r = f.pop(), o = !0), a.leaf) {
           var c = i(t, a.children, n);
           if (-1 !== c) return a.children.splice(c, 1), u.push(a), this._condense(u), this;
         }
 
-        o || a.leaf || !f(a, h) ? e ? (r++, a = e.children[r], o = !1) : a = null : (u.push(a), s.push(r), r = 0, e = a, a = a.children[0]);
+        o || a.leaf || !s(a, h) ? e ? (r++, a = e.children[r], o = !1) : a = null : (u.push(a), f.push(r), r = 0, e = a, a = a.children[0]);
       }
 
       return this;
@@ -528,16 +812,16 @@ var concavemanBundle = function (t) {
       if (a <= h) return o(i = m(t.slice(n, r + 1)), this.toBBox), i;
       e || (e = Math.ceil(Math.log(a) / Math.log(h)), h = Math.ceil(a / Math.pow(h, e - 1))), (i = m([])).leaf = !1, i.height = e;
       var u = Math.ceil(a / h),
-          s = u * Math.ceil(Math.sqrt(h));
-      d(t, n, r, s, this.compareMinX);
+          f = u * Math.ceil(Math.sqrt(h));
+      v(t, n, r, f, this.compareMinX);
 
-      for (var c = n; c <= r; c += s) {
-        var l = Math.min(c + s - 1, r);
-        d(t, c, l, u, this.compareMinY);
+      for (var c = n; c <= r; c += f) {
+        var l = Math.min(c + f - 1, r);
+        v(t, c, l, u, this.compareMinY);
 
-        for (var f = c; f <= l; f += u) {
-          var p = Math.min(f + u - 1, l);
-          i.children.push(this._build(t, f, p, e - 1));
+        for (var s = c; s <= l; s += u) {
+          var p = Math.min(s + u - 1, l);
+          i.children.push(this._build(t, s, p, e - 1));
         }
       }
 
@@ -546,15 +830,15 @@ var concavemanBundle = function (t) {
       for (; e.push(n), !n.leaf && e.length - 1 !== r;) {
         for (var i = 1 / 0, o = 1 / 0, a = void 0, h = 0; h < n.children.length; h++) {
           var u = n.children[h],
-              s = c(u),
-              l = (f = t, p = u, (Math.max(p.maxX, f.maxX) - Math.min(p.minX, f.minX)) * (Math.max(p.maxY, f.maxY) - Math.min(p.minY, f.minY)) - s);
-          l < o ? (o = l, i = s < i ? s : i, a = u) : l === o && s < i && (i = s, a = u);
+              f = c(u),
+              l = (s = t, p = u, (Math.max(p.maxX, s.maxX) - Math.min(p.minX, s.minX)) * (Math.max(p.maxY, s.maxY) - Math.min(p.minY, s.minY)) - f);
+          l < o ? (o = l, i = f < i ? f : i, a = u) : l === o && f < i && (i = f, a = u);
         }
 
         n = a || n.children[0];
       }
 
-      var f, p;
+      var s, p;
       return n;
     }, e.prototype._insert = function (t, n, r) {
       var e = r ? t : this.toBBox(t),
@@ -580,33 +864,33 @@ var concavemanBundle = function (t) {
     }, e.prototype._splitRoot = function (t, n) {
       this.data = m([t, n]), this.data.height = t.height + 1, this.data.leaf = !1, o(this.data, this.toBBox);
     }, e.prototype._chooseSplitIndex = function (t, n, r) {
-      for (var e, i, o, h, u, s, l, f = 1 / 0, p = 1 / 0, m = n; m <= r - n; m++) {
-        var d = a(t, 0, m, this.toBBox),
-            v = a(t, m, r, this.toBBox),
-            x = (i = d, o = v, h = Math.max(i.minX, o.minX), u = Math.max(i.minY, o.minY), s = Math.min(i.maxX, o.maxX), l = Math.min(i.maxY, o.maxY), Math.max(0, s - h) * Math.max(0, l - u)),
-            g = c(d) + c(v);
-        x < f ? (f = x, e = m, p = g < p ? g : p) : x === f && g < p && (p = g, e = m);
+      for (var e, i, o, h, u, f, l, s = 1 / 0, p = 1 / 0, m = n; m <= r - n; m++) {
+        var v = a(t, 0, m, this.toBBox),
+            d = a(t, m, r, this.toBBox),
+            g = (i = v, o = d, h = Math.max(i.minX, o.minX), u = Math.max(i.minY, o.minY), f = Math.min(i.maxX, o.maxX), l = Math.min(i.maxY, o.maxY), Math.max(0, f - h) * Math.max(0, l - u)),
+            x = c(v) + c(d);
+        g < s ? (s = g, e = m, p = x < p ? x : p) : g === s && x < p && (p = x, e = m);
       }
 
       return e || r - n;
     }, e.prototype._chooseSplitAxis = function (t, n, r) {
       var e = t.leaf ? this.compareMinX : u,
-          i = t.leaf ? this.compareMinY : s;
+          i = t.leaf ? this.compareMinY : f;
       this._allDistMargin(t, n, r, e) < this._allDistMargin(t, n, r, i) && t.children.sort(e);
     }, e.prototype._allDistMargin = function (t, n, r, e) {
       t.children.sort(e);
 
-      for (var i = this.toBBox, o = a(t, 0, n, i), u = a(t, r - n, r, i), s = l(o) + l(u), c = n; c < r - n; c++) {
-        var f = t.children[c];
-        h(o, t.leaf ? i(f) : f), s += l(o);
+      for (var i = this.toBBox, o = a(t, 0, n, i), u = a(t, r - n, r, i), f = l(o) + l(u), c = n; c < r - n; c++) {
+        var s = t.children[c];
+        h(o, t.leaf ? i(s) : s), f += l(o);
       }
 
       for (var p = r - n - 1; p >= n; p--) {
         var m = t.children[p];
-        h(u, t.leaf ? i(m) : m), s += l(u);
+        h(u, t.leaf ? i(m) : m), f += l(u);
       }
 
-      return s;
+      return f;
     }, e.prototype._adjustParentBBoxes = function (t, n, r) {
       for (var e = r; e >= 0; e--) {
         h(n[e], t);
@@ -667,9 +951,9 @@ var concavemanBundle = function (t) {
     for (var r = t[0], e = t[1], i = !1, o = 0, a = n.length - 1; o < n.length; a = o++) {
       var h = n[o][0],
           u = n[o][1],
-          s = n[a][0],
+          f = n[a][0],
           c = n[a][1];
-      u > e != c > e && r < (s - h) * (e - u) / (c - u) + h && (i = !i);
+      u > e != c > e && r < (f - h) * (e - u) / (c - u) + h && (i = !i);
     }
 
     return i;
@@ -685,22 +969,22 @@ var concavemanBundle = function (t) {
           a,
           h,
           u,
-          s = n[0],
+          f = n[0],
           c = e[0],
           l = 0,
-          f = 0;
-      c > s == c > -s ? (o = s, s = n[++l]) : (o = c, c = e[++f]);
+          s = 0;
+      c > f == c > -f ? (o = f, f = n[++l]) : (o = c, c = e[++s]);
       var p = 0;
-      if (l < t && f < r) for (c > s == c > -s ? (h = o - ((a = s + o) - s), s = n[++l]) : (h = o - ((a = c + o) - c), c = e[++f]), o = a, 0 !== h && (i[p++] = h); l < t && f < r;) {
-        c > s == c > -s ? (h = o - ((a = o + s) - (u = a - o)) + (s - u), s = n[++l]) : (h = o - ((a = o + c) - (u = a - o)) + (c - u), c = e[++f]), o = a, 0 !== h && (i[p++] = h);
+      if (l < t && s < r) for (c > f == c > -f ? (h = o - ((a = f + o) - f), f = n[++l]) : (h = o - ((a = c + o) - c), c = e[++s]), o = a, 0 !== h && (i[p++] = h); l < t && s < r;) {
+        c > f == c > -f ? (h = o - ((a = o + f) - (u = a - o)) + (f - u), f = n[++l]) : (h = o - ((a = o + c) - (u = a - o)) + (c - u), c = e[++s]), o = a, 0 !== h && (i[p++] = h);
       }
 
       for (; l < t;) {
-        h = o - ((a = o + s) - (u = a - o)) + (s - u), s = n[++l], o = a, 0 !== h && (i[p++] = h);
+        h = o - ((a = o + f) - (u = a - o)) + (f - u), f = n[++l], o = a, 0 !== h && (i[p++] = h);
       }
 
-      for (; f < r;) {
-        h = o - ((a = o + c) - (u = a - o)) + (c - u), c = e[++f], o = a, 0 !== h && (i[p++] = h);
+      for (; s < r;) {
+        h = o - ((a = o + c) - (u = a - o)) + (c - u), c = e[++s], o = a, 0 !== h && (i[p++] = h);
       }
 
       return 0 === o && 0 !== p || (i[p++] = o), p;
@@ -715,22 +999,22 @@ var concavemanBundle = function (t) {
         a = e(12),
         h = e(16),
         u = e(4);
-    t.orient2d = function (t, e, s, c, l, f) {
-      var p = (e - f) * (s - l),
-          m = (t - l) * (c - f),
-          d = p - m;
-      if (0 === p || 0 === m || p > 0 != m > 0) return d;
-      var v = Math.abs(p + m);
-      return Math.abs(d) >= 33306690738754716e-32 * v ? d : -function (t, e, s, c, l, f, p) {
-        var m, d, v, x, g, M, X, Y, y, _, B, b, S, O, j, w, E, P;
+    t.orient2d = function (t, e, f, c, l, s) {
+      var p = (e - s) * (f - l),
+          m = (t - l) * (c - s),
+          v = p - m;
+      if (0 === p || 0 === m || p > 0 != m > 0) return v;
+      var d = Math.abs(p + m);
+      return Math.abs(v) >= 33306690738754716e-32 * d ? v : -function (t, e, f, c, l, s, p) {
+        var m, v, d, g, x, M, X, Y, y, _, B, b, S, O, k, A, E, w;
 
-        var H = t - l,
-            T = s - l,
-            k = e - f,
-            J = c - f;
-        g = (j = (Y = H - (X = (M = n * H) - (M - H))) * (_ = J - (y = (M = n * J) - (M - J))) - ((O = H * J) - X * y - Y * y - X * _)) - (B = j - (E = (Y = k - (X = (M = n * k) - (M - k))) * (_ = T - (y = (M = n * T) - (M - T))) - ((w = k * T) - X * y - Y * y - X * _))), i[0] = j - (B + g) + (g - E), g = (S = O - ((b = O + B) - (g = b - O)) + (B - g)) - (B = S - w), i[1] = S - (B + g) + (g - w), g = (P = b + B) - b, i[2] = b - (P - g) + (B - g), i[3] = P;
+        var P = t - l,
+            j = f - l,
+            q = e - s,
+            C = c - s;
+        x = (k = (Y = P - (X = (M = n * P) - (M - P))) * (_ = C - (y = (M = n * C) - (M - C))) - ((O = P * C) - X * y - Y * y - X * _)) - (B = k - (E = (Y = q - (X = (M = n * q) - (M - q))) * (_ = j - (y = (M = n * j) - (M - j))) - ((A = q * j) - X * y - Y * y - X * _))), i[0] = k - (B + x) + (x - E), x = (S = O - ((b = O + B) - (x = b - O)) + (B - x)) - (B = S - A), i[1] = S - (B + x) + (x - A), x = (w = b + B) - b, i[2] = b - (w - x) + (B - x), i[3] = w;
 
-        var N = function (t, n) {
+        var D = function (t, n) {
           var r = n[0];
 
           for (var _t4 = 1; _t4 < 4; _t4++) {
@@ -739,19 +1023,19 @@ var concavemanBundle = function (t) {
 
           return r;
         }(0, i),
-            q = 22204460492503146e-32 * p;
+            N = 22204460492503146e-32 * p;
 
-        if (N >= q || -N >= q) return N;
-        if (m = t - (H + (g = t - H)) + (g - l), v = s - (T + (g = s - T)) + (g - l), d = e - (k + (g = e - k)) + (g - f), x = c - (J + (g = c - J)) + (g - f), 0 === m && 0 === d && 0 === v && 0 === x) return N;
-        if (q = 11093356479670487e-47 * p + 33306690738754706e-32 * Math.abs(N), (N += H * x + J * m - (k * v + T * d)) >= q || -N >= q) return N;
-        g = (j = (Y = m - (X = (M = n * m) - (M - m))) * (_ = J - (y = (M = n * J) - (M - J))) - ((O = m * J) - X * y - Y * y - X * _)) - (B = j - (E = (Y = d - (X = (M = n * d) - (M - d))) * (_ = T - (y = (M = n * T) - (M - T))) - ((w = d * T) - X * y - Y * y - X * _))), u[0] = j - (B + g) + (g - E), g = (S = O - ((b = O + B) - (g = b - O)) + (B - g)) - (B = S - w), u[1] = S - (B + g) + (g - w), g = (P = b + B) - b, u[2] = b - (P - g) + (B - g), u[3] = P;
-        var A = r(4, i, 4, u, o);
-        g = (j = (Y = H - (X = (M = n * H) - (M - H))) * (_ = x - (y = (M = n * x) - (M - x))) - ((O = H * x) - X * y - Y * y - X * _)) - (B = j - (E = (Y = k - (X = (M = n * k) - (M - k))) * (_ = v - (y = (M = n * v) - (M - v))) - ((w = k * v) - X * y - Y * y - X * _))), u[0] = j - (B + g) + (g - E), g = (S = O - ((b = O + B) - (g = b - O)) + (B - g)) - (B = S - w), u[1] = S - (B + g) + (g - w), g = (P = b + B) - b, u[2] = b - (P - g) + (B - g), u[3] = P;
-        var D = r(A, o, 4, u, a);
-        g = (j = (Y = m - (X = (M = n * m) - (M - m))) * (_ = x - (y = (M = n * x) - (M - x))) - ((O = m * x) - X * y - Y * y - X * _)) - (B = j - (E = (Y = d - (X = (M = n * d) - (M - d))) * (_ = v - (y = (M = n * v) - (M - v))) - ((w = d * v) - X * y - Y * y - X * _))), u[0] = j - (B + g) + (g - E), g = (S = O - ((b = O + B) - (g = b - O)) + (B - g)) - (B = S - w), u[1] = S - (B + g) + (g - w), g = (P = b + B) - b, u[2] = b - (P - g) + (B - g), u[3] = P;
-        var L = r(D, a, 4, u, h);
-        return h[L - 1];
-      }(t, e, s, c, l, f, v);
+        if (D >= N || -D >= N) return D;
+        if (m = t - (P + (x = t - P)) + (x - l), d = f - (j + (x = f - j)) + (x - l), v = e - (q + (x = e - q)) + (x - s), g = c - (C + (x = c - C)) + (x - s), 0 === m && 0 === v && 0 === d && 0 === g) return D;
+        if (N = 11093356479670487e-47 * p + 33306690738754706e-32 * Math.abs(D), (D += P * g + C * m - (q * d + j * v)) >= N || -D >= N) return D;
+        x = (k = (Y = m - (X = (M = n * m) - (M - m))) * (_ = C - (y = (M = n * C) - (M - C))) - ((O = m * C) - X * y - Y * y - X * _)) - (B = k - (E = (Y = v - (X = (M = n * v) - (M - v))) * (_ = j - (y = (M = n * j) - (M - j))) - ((A = v * j) - X * y - Y * y - X * _))), u[0] = k - (B + x) + (x - E), x = (S = O - ((b = O + B) - (x = b - O)) + (B - x)) - (B = S - A), u[1] = S - (B + x) + (x - A), x = (w = b + B) - b, u[2] = b - (w - x) + (B - x), u[3] = w;
+        var H = r(4, i, 4, u, o);
+        x = (k = (Y = P - (X = (M = n * P) - (M - P))) * (_ = g - (y = (M = n * g) - (M - g))) - ((O = P * g) - X * y - Y * y - X * _)) - (B = k - (E = (Y = q - (X = (M = n * q) - (M - q))) * (_ = d - (y = (M = n * d) - (M - d))) - ((A = q * d) - X * y - Y * y - X * _))), u[0] = k - (B + x) + (x - E), x = (S = O - ((b = O + B) - (x = b - O)) + (B - x)) - (B = S - A), u[1] = S - (B + x) + (x - A), x = (w = b + B) - b, u[2] = b - (w - x) + (B - x), u[3] = w;
+        var L = r(H, o, 4, u, a);
+        x = (k = (Y = m - (X = (M = n * m) - (M - m))) * (_ = g - (y = (M = n * g) - (M - g))) - ((O = m * g) - X * y - Y * y - X * _)) - (B = k - (E = (Y = v - (X = (M = n * v) - (M - v))) * (_ = d - (y = (M = n * d) - (M - d))) - ((A = v * d) - X * y - Y * y - X * _))), u[0] = k - (B + x) + (x - E), x = (S = O - ((b = O + B) - (x = b - O)) + (B - x)) - (B = S - A), u[1] = S - (B + x) + (x - A), x = (w = b + B) - b, u[2] = b - (w - x) + (B - x), u[3] = w;
+        var T = r(L, a, 4, u, h);
+        return h[T - 1];
+      }(t, e, f, c, l, s, d);
     }, t.orient2dfast = function (t, n, r, e, i, o) {
       return (n - o) * (r - i) - (t - i) * (e - o);
     }, Object.defineProperty(t, "__esModule", {

@@ -36,7 +36,9 @@ function hasDuplicates(array) {
  * @param {array} points array of points to sort
  * @returns {array} of points
  */
-function sortPointsClockwise(points) {
+function sortPointsClockwise_Old(points) {
+	//Old
+
 	// Find min max to get center
 	// Sort from top to bottom
 	points.sort((a, b) => a.y - b.y);
@@ -76,20 +78,21 @@ function sortPointsClockwise(points) {
 	// first sort clockwise
 	points.sort((a, b) => a.angle - b.angle);
 
-	// then reverse the order
-	const ccwPoints = points.reverse();
-
-	// move the last point back to the start
-	ccwPoints.unshift(ccwPoints.pop());
-	//drawPoints();
-	return ccwPoints;
-	//return points;
+	//// then reverse the order
+	//const ccwPoints = points.reverse();
+	//// move the last point back to the start
+	//ccwPoints.unshift(ccwPoints.pop());
+	////drawPoints();
+	//return ccwPoints;
+	return points;
 }
 
-function sortPointsClockwise_New(points) {
+function sortPointsClockwise(points) {
+	//Quadrant
+
 	const get_clockwise_angle = function (p) {
 		/* get quadrant from 12 o'clock*/
-		const get_quadrant = function (p) {
+		/*const get_quadrant = function (p) {
 			let result = 4; //origin
 
 			if (p.x > 0 && p.y > 0)
@@ -100,15 +103,12 @@ function sortPointsClockwise_New(points) {
 				return 3;
 			//else 4th quadrant
 			return result;
-		};
+		};*/
 
-		let angle = 0.0;
-		let quadrant = get_quadrant(p);
+		/*let angle = 0.0;
+		const quadrant = get_quadrant(p);
 
-		/*making sure the quadrants are correct*/
-		//cout << "Point: " << p << " is on the " << quadrant << " quadrant" << endl;
-
-		/*add the appropriate pi/2 value based on the quadrant. (one of 0, pi/2, pi, 3pi/2)*/
+		//add the appropriate pi/2 value based on the quadrant. (one of 0, pi/2, pi, 3pi/2)
 		switch (quadrant) {
 			case 1:
 				angle = Math.atan2(p.x, p.y) * 180 / Math.PI;
@@ -126,15 +126,35 @@ function sortPointsClockwise_New(points) {
 				angle += 3 * Math.PI / 2;
 				break;
 		}
+		return angle;*/
+		const angle = -Math.atan2(p.x, -p.y);
 		return angle;
 	};
 
-	const compare_points = function (a, b) {
-		return (get_clockwise_angle(a) < get_clockwise_angle(b));
-	};
-
-	points.sort((a, b) => compare_points(a, b));
+	points.sort((a, b) => get_clockwise_angle(a) < get_clockwise_angle(b));
 	return points;
+}
+
+function sortPointsClockwise_Modern(points) {
+	//Modern
+
+	// Get the center (mean value) using reduce
+	const center = points.reduce((acc, { x, y }) => {
+		acc.x += x;
+		acc.y += y;
+		return acc;
+	}, { x: 0, y: 0 });
+	center.x /= points.length;
+	center.y /= points.length;
+
+	// Add an angle property to each point using tan(angle) = y/x
+	const angles = points.map(({ x, y }) => {
+		return { x, y, angle: Math.atan2(y - center.y, x - center.x) * 180 / Math.PI };
+	});
+
+	// Sort your points by angle
+	const pointsSorted = angles.sort((a, b) => a.angle - b.angle);
+	return pointsSorted;
 }
 ///////////sortPointsClockwise tests end////////////
 
