@@ -3194,7 +3194,7 @@ var InkBallGame = /*#__PURE__*/function () {
                   var _ref5 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10(edges, mark) {
                     var _this15 = this;
 
-                    var e, mark_e, m, free_human_player_points, sHumanColor, _iterator13, _step13, _pt3, _pt3$$GetPosition, view_x, view_y, _x14, _y2, pt1, tab, _i, cycl, str, trailing_points, rand_color, mapped_verts, cw_sorted_verts, _iterator14, _step14, vert, x, y, pt, tmp, comma, _iterator15, _step15, possible_intercept, pts2reset;
+                    var e, mark_e, m, found, free_human_player_points, sHumanColor, _iterator13, _step13, _pt3, _pt3$$GetPosition, view_x, view_y, _x14, _y2, pt1, tab, _i, cycl, str, trailing_points, rand_color, mapped_verts, cw_sorted_verts, _iterator14, _step14, vert, x, y, pt, tmp, comma, _iterator15, _step15, possible_intercept, pts2reset;
 
                     return regeneratorRuntime.wrap(function _callee10$(_context10) {
                       while (1) {
@@ -3207,7 +3207,8 @@ var InkBallGame = /*#__PURE__*/function () {
 
                               if (mark_e !== undefined && mark_e.length > 0) {
                                 for (m = 0; m < mark_e.length; m++) {
-                                  cycles[mark_e[m]].push(e);
+                                  found = cycles[mark_e[m]];
+                                  if (found !== undefined) found.push(e);
                                 }
                               }
                             } //sort by point length: first longest cycles, most points

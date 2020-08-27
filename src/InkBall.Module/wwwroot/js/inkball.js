@@ -2374,7 +2374,9 @@ class InkBallGame {
 				const mark_e = mark[e];
 				if (mark_e !== undefined && mark_e.length > 0) {
 					for (let m = 0; m < mark_e.length; m++) {
-						cycles[mark_e[m]].push(e);
+						const found = cycles[mark_e[m]];
+						if (found !== undefined)
+							found.push(e);
 					}
 				}
 			}
