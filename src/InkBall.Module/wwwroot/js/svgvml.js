@@ -87,7 +87,7 @@ function sortPointsClockwise_Old(points) {
 	return points;
 }
 
-function sortPointsClockwise(points) {
+function sortPointsClockwise_Quadrant(points) {
 	//Quadrant
 
 	const get_clockwise_angle = function (p) {
@@ -135,7 +135,7 @@ function sortPointsClockwise(points) {
 	return points;
 }
 
-function sortPointsClockwise_Modern(points) {
+function sortPointsClockwise(points) {
 	//Modern
 
 	// Get the center (mean value) using reduce

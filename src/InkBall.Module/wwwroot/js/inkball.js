@@ -363,7 +363,8 @@ function LocalError(msg) {
 }
 
 function RandomColor() {
-	return '#' + Math.floor(Math.random() * 16777215).toString(16);
+	return 'var(--orange)';
+	//return '#' + Math.floor(Math.random() * 16777215).toString(16);
 }
 
 async function Sleep(ms) {
@@ -1081,17 +1082,25 @@ class InkBallGame {
 				errorDesc: "Points not unique"
 			};
 		}
-		//make the test!
-		const sColor = (this.m_sDotColor === this.COLOR_RED ? this.COLOR_BLUE : this.COLOR_RED);
-		const owned_by = (this.m_sDotColor === this.COLOR_RED ? StatusEnum.POINT_OWNED_BY_RED : StatusEnum.POINT_OWNED_BY_BLUE);
-		const sOwnedCol = (this.m_sDotColor === this.COLOR_RED ? this.COLOR_OWNED_RED : this.COLOR_OWNED_BLUE);
-		let x, y, sPathPoints = "", sOwnedPoints = "", sDelimiter = "", ownedPoints = [], pathPoints = [];
+		let sColor, owned_by, sOwnedCol;
+		//pick right color, status and owned by status
+		if (this.m_sDotColor === this.COLOR_RED) {
+			sColor = this.COLOR_BLUE;
+			owned_by = StatusEnum.POINT_OWNED_BY_RED;
+			sOwnedCol = this.COLOR_OWNED_RED;
+		}
+		else {
+			sColor = this.COLOR_RED;
+			owned_by = StatusEnum.POINT_OWNED_BY_BLUE;
+			sOwnedCol = this.COLOR_OWNED_BLUE;
+		}
+		let sPathPoints = "", sOwnedPoints = "", sDelimiter = "", ownedPoints = [];
 
+		//make the test!
 		for (const pt of this.m_Points.values()) {
 			if (pt !== undefined && pt.$GetFillColor() === sColor &&
-				(pt.$GetStatus() === StatusEnum.POINT_FREE_BLUE || pt.$GetStatus() === StatusEnum.POINT_FREE_RED)) {
-				const pos = pt.$GetPosition();
-				x = pos.x; y = pos.y;
+				([StatusEnum.POINT_FREE_BLUE, StatusEnum.POINT_FREE_RED].includes(pt.$GetStatus()))) {
+				let { x, y } = pt.$GetPosition();
 				if (false !== this.pnpoly2(points, x, y)) {
 					x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
 					sOwnedPoints += `${sDelimiter}${x},${y}`;
@@ -1109,20 +1118,21 @@ class InkBallGame {
 				}
 			}
 		}
+
 		if (sOwnedPoints !== "") {
 			sPathPoints = points.map(function (pt) {
-				x = pt.x;
-				y = pt.y;
+				let x = pt.x, y = pt.y;
 				if (x === null || y === null) return '';
 				x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
 
 				return `${x},${y}`;
 			}.bind(this)).join(' ');
 		}
+
 		return {
 			OwnedPoints: ownedPoints,
 			owned: sOwnedPoints,
-			PathPoints: pathPoints,
+			PathPoints: [],
 			path: sPathPoints,
 			errorDesc: "No surrounded points"
 		};
@@ -1848,14 +1858,13 @@ class InkBallGame {
 			}.bind(this)).join(' '), 'green');
 			LocalLog(`convex_hull = ${convex_hull}`);
 
-			//aaa
 
 			const mapped_verts = convex_hull.map(function (pt) {
 				return { x: pt[0], y: pt[1] };
 			}.bind(this));
 			const cw_sorted_verts = sortPointsClockwise(mapped_verts);
 
-			const rand_color = 'purple';
+			const rand_color = RandomColor();
 			for (const vert of cw_sorted_verts) {
 				//const { x: view_x, y: view_y } = vertices[vert].$GetPosition();
 				const { x: x, y: y } = vert;
@@ -1878,8 +1887,6 @@ class InkBallGame {
 			}
 
 
-
-
 		}
 	}
 
@@ -1897,6 +1904,46 @@ class InkBallGame {
 			return pt.x + ',' + pt.y;
 		}).join(' '), 'green');
 		LocalLog(`game.lastCycle = ${this.lastCycle}`);
+	}
+
+	async OnTestFindFullSurroundedPoints(event) {
+		event.preventDefault();
+
+		const sHumanColor = this.COLOR_RED/*, sCPUColor = this.COLOR_BLUE*/;
+		const rand_color = RandomColor();
+		for (const pt of this.m_Points.values()) {
+			if (pt !== undefined && pt.$GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.$GetStatus()) {
+				const { x: view_x, y: view_y } = pt.$GetPosition();
+				//const x = view_x / this.m_iGridSizeX, y = view_y / this.m_iGridSizeY;
+
+
+				//const east = this.m_Points.get(y * this.m_iGridWidth + x + 1);
+				//const west = this.m_Points.get(y * this.m_iGridWidth + x - 1);
+				//const north = this.m_Points.get((y - 1) * this.m_iGridWidth + x);
+				//const south = this.m_Points.get((y + 1) * this.m_iGridWidth + x);
+				//const north_west = this.m_Points.get((y - 1) * this.m_iGridWidth + x - 1);
+				//const north_east = this.m_Points.get((y - 1) * this.m_iGridWidth + x + 1);
+				//const south_west = this.m_Points.get((y + 1) * this.m_iGridWidth + x - 1);
+				//const south_east = this.m_Points.get((y + 1) * this.m_iGridWidth + x + 1);
+
+				//if (east !== undefined && west !== undefined && north !== undefined && south !== undefined
+				//	//&& east.$GetFillColor() === sCPUColor &&
+				//	//west.$GetFillColor() === sCPUColor &&
+				//	//north.$GetFillColor() === sCPUColor &&
+				//	//south.$GetFillColor() === sCPUColor
+				//) {
+				//visualise
+				const pt1 = document.querySelector(`svg > circle[cx="${view_x}"][cy="${view_y}"]`);
+				if (pt1) {
+					pt1.$SetStrokeColor(rand_color);
+					pt1.$SetFillColor(rand_color);
+					pt1.setAttribute("r", "6");
+				}
+				//}
+			}
+		}
+
+
 	}
 
 	/**
@@ -2003,6 +2050,8 @@ class InkBallGame {
 					document.querySelector(ddlTestActions[i++]).onclick = this.OnTestMarkAllCycles.bind(this);
 				if (ddlTestActions.length > i)
 					document.querySelector(ddlTestActions[i++]).onclick = this.OnTestGroupPoints.bind(this);
+				if (ddlTestActions.length > i)
+					document.querySelector(ddlTestActions[i++]).onclick = this.OnTestFindFullSurroundedPoints.bind(this);
 
 				//disable or even delete chat functionality, coz we're not going to chat with CPU bot
 				const chatSection = document.getElementById('chatSection');
@@ -2330,47 +2379,76 @@ class InkBallGame {
 				}
 			}
 
+			//sort by point length: first longest cycles, most points
 			cycles.sort((b, a) => a.length - b.length);
 
-			const tab = [];
-			// print all the vertex with same cycle 
-			for (let i = 0; i <= cyclenumber; i++) {
-				const cycl = cycles[i];
-				if (cycl && cycl.length > 0) {
-					// Print the i-th cycle 
-					let str = (`Cycle Number ${i}: `), trailing_points = [];
-					const rand_color = RandomColor();
+			//gather free human player points that could be intercepted.
+			const free_human_player_points = [];
+			const sHumanColor = this.COLOR_RED;
+			for (const pt of this.m_Points.values()) {
+				if (pt !== undefined && pt.$GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.$GetStatus()) {
+					const { x: view_x, y: view_y } = pt.$GetPosition();
+					const x = view_x / this.m_iGridSizeX, y = view_y / this.m_iGridSizeY;
+					//check if really exists
+					const pt1 = document.querySelector(`svg > circle[cx="${view_x}"][cy="${view_y}"]`);
+					if (pt1)
+						free_human_player_points.push({ x, y });
+				}
+			}
 
+
+			const tab = [];
+			// traverse through all the vertices with same cycle
+			for (let i = 0; i <= cyclenumber; i++) {
+				const cycl = cycles[i];//get cycle
+				if (cycl && cycl.length > 0) {	//somr checks
+					// Print the i-th cycle
+					let str = (`Cycle Number ${i}: `), trailing_points = [];
+					const rand_color = 'var(--indigo)';
+
+					//convert to logical space
 					const mapped_verts = cycl.map(function (c) {
-						//const { x, y } = vertices[c].$GetPosition();
-						//return { x: x / this.m_iGridSizeX, y: y / this.m_iGridSizeY };
-						return vertices[c].$GetPosition();
+						const pt = vertices[c].$GetPosition();
+						return { x: pt.x / this.m_iGridSizeX, y: pt.y / this.m_iGridSizeY };
 					}.bind(this));
+					//sort clockwise (https://stackoverflow.com/questions/45660743/sort-points-in-counter-clockwise-in-javascript)
 					const cw_sorted_verts = sortPointsClockwise(mapped_verts);
 
+					//disaaply for user for whcihc cycle wea are dealing with
 					for (const vert of cw_sorted_verts) {
-						//const { x: view_x, y: view_y } = vertices[vert].$GetPosition();
-						const { x: view_x, y: view_y } = vert;
-						const x = view_x / this.m_iGridSizeX, y = view_y / this.m_iGridSizeY;
+						const { x, y } = vert;
+						const pt = document.querySelector(`svg > circle[cx="${x * this.m_iGridSizeX}"][cy="${y * this.m_iGridSizeY}"]`);
+						if (pt) {//again some basic checks
+							str += (`(${x},${y})`);
 
-						str += (`(${x},${y}) `);
-						//trailing_points.push(vertices[vert]);
-
-						//const line_pts = Array.from(document.querySelectorAll(`svg > line[x1="${view_x}"][y1="${view_y}"]`))
-						//	.concat(Array.from(document.querySelectorAll(`svg > line[x2="${view_x}"][y2="${view_y}"]`)));
-						//line_pts.forEach(line => {
-						//	line.$SetColor(rand_color);
-						//});
-						const pt = document.querySelector(`svg > circle[cx="${view_x}"][cy="${view_y}"]`);
-						if (pt) {
 							pt.$SetStrokeColor(rand_color);
 							pt.$SetFillColor(rand_color);
-							pt.setAttribute('r', "6");
+							pt.setAttribute("r", "6");
 						}
 						await Sleep(50);
 					}
+
+					//find for all free_human_player_points which cycle might interepct it (surrounds)
+					//only convex, NOT concave :-(
+					let tmp = '', comma = '';
+					for (const possible_intercept of free_human_player_points) {
+						if (false !== this.pnpoly2(cw_sorted_verts, possible_intercept.x, possible_intercept.y)) {
+							tmp += `${comma}(${possible_intercept.x},${possible_intercept.y})`;
+							comma = ',';
+						}
+					}
+					//gaterhing of some data and console printing
 					trailing_points.unshift(str);
 					tab.push(trailing_points);
+					//log...
+					LocalLog(str + (tmp !== '' ? ` possible intercepts: ${tmp}` : ''));
+					//...and clear
+					const pts2reset = Array.from(document.querySelectorAll(`svg > circle[fill="${rand_color}"][r="6"]`));
+					pts2reset.forEach(pt => {
+						pt.$SetStrokeColor(this.COLOR_BLUE);
+						pt.$SetFillColor(this.COLOR_BLUE);
+						pt.setAttribute("r", "4");
+					});
 				}
 			}
 			//console.log(str);
@@ -2545,7 +2623,8 @@ window.addEventListener('load', async function () {
 		gameType, bPlayingWithRed, bPlayerActive, isReadonly, pathAfterPointDrawAllowanceSecAmount
 	);
 	game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw',
-		'#messageInput', '#messagesList', '#sendButton', ['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints']);
+		'#messageInput', '#messagesList', '#sendButton',
+		['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints', '#TestFindFullSurroundedPoints']);
 
 	if (gameOptions.PointsAsJavaScriptArray !== null) {
 		await game.StartSignalRConnection(false);

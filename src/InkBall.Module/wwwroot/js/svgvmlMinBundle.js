@@ -51,7 +51,7 @@ function sortPointsClockwise_Old(t) {
   }), t;
 }
 
-function sortPointsClockwise(t) {
+function sortPointsClockwise_Quadrant(t) {
   var e = function e(t) {
     return -Math.atan2(t.x, -t.y);
   };
@@ -61,7 +61,7 @@ function sortPointsClockwise(t) {
   }), t;
 }
 
-function sortPointsClockwise_Modern(t) {
+function sortPointsClockwise(t) {
   var e = t.reduce(function (t, _ref) {
     var e = _ref.x,
         i = _ref.y;

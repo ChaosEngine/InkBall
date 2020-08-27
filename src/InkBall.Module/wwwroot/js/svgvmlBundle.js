@@ -105,14 +105,14 @@ function sortPointsClockwise_Old(points) {
   return points;
 }
 
-function sortPointsClockwise(points) {
+function sortPointsClockwise_Quadrant(points) {
   //Quadrant
   var get_clockwise_angle = function get_clockwise_angle(p) {
     /* get quadrant from 12 o'clock*/
 
     /*const get_quadrant = function (p) {
     	let result = 4; //origin
-    			if (p.x > 0 && p.y > 0)
+    		if (p.x > 0 && p.y > 0)
     		return 1;
     	else if (p.x < 0 && p.y > 0)
     		return 2;
@@ -124,7 +124,7 @@ function sortPointsClockwise(points) {
 
     /*let angle = 0.0;
     const quadrant = get_quadrant(p);
-    		//add the appropriate pi/2 value based on the quadrant. (one of 0, pi/2, pi, 3pi/2)
+    	//add the appropriate pi/2 value based on the quadrant. (one of 0, pi/2, pi, 3pi/2)
     switch (quadrant) {
     	case 1:
     		angle = Math.atan2(p.x, p.y) * 180 / Math.PI;
@@ -153,7 +153,7 @@ function sortPointsClockwise(points) {
   return points;
 }
 
-function sortPointsClockwise_Modern(points) {
+function sortPointsClockwise(points) {
   //Modern
   // Get the center (mean value) using reduce
   var center = points.reduce(function (acc, _ref) {
