@@ -1914,7 +1914,9 @@ class InkBallGame {
 		for (const pt of this.m_Points.values()) {
 			if (pt !== undefined && pt.$GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.$GetStatus()) {
 				const { x: view_x, y: view_y } = pt.$GetPosition();
-				//const x = view_x / this.m_iGridSizeX, y = view_y / this.m_iGridSizeY;
+				const x = view_x / this.m_iGridSizeX, y = view_y / this.m_iGridSizeY;
+				if (false === this.IsPointOutsideAllPaths(x, y))
+					continue;
 
 
 				//const east = this.m_Points.get(y * this.m_iGridWidth + x + 1);
@@ -1942,8 +1944,6 @@ class InkBallGame {
 				//}
 			}
 		}
-
-
 	}
 
 	/**
@@ -2183,38 +2183,41 @@ class InkBallGame {
 			return false;
 		};
 
-		const addPointsAndEdgestoGraph = function (point, next, view_x, view_y, x, y) {
-			if (next && isPointOKForPath([freePointStatus], next) === true) {
-				const next_pos = next.$GetPosition();
+		const addPointsAndEdgestoGraph = function (point, to_x, to_y, view_x, view_y, x, y) {
+			if (to_x >= 0 && to_x < this.m_iGridWidth && to_y >= 0 && to_y < this.m_iGridHeight) {
+				const next = this.m_Points.get(to_y * this.m_iGridWidth + to_x);
+				if (next && isPointOKForPath([freePointStatus], next) === true) {
+					const next_pos = next.$GetPosition();
 
-				const to_x = next_pos.x / this.m_iGridSizeX, to_y = next_pos.y / this.m_iGridSizeY;
-				if (graph_edges.has(`${x},${y}_${to_x},${to_y}`) === false && graph_edges.has(`${to_x},${to_y}_${x},${y}`) === false) {
+					//const to_x = next_pos.x / this.m_iGridSizeX, to_y = next_pos.y / this.m_iGridSizeY;
+					if (graph_edges.has(`${x},${y}_${to_x},${to_y}`) === false && graph_edges.has(`${to_x},${to_y}_${x},${y}`) === false) {
 
-					const edge = {
-						from: point,
-						to: next
-					};
-					if (presentVisually === true) {
-						const line = $createLine(3, 'green');
-						line.$move(view_x, view_y, next_pos.x, next_pos.y);
-						edge.line = line;
-					}
-					graph_edges.set(`${x},${y}_${to_x},${to_y}`, edge);
+						const edge = {
+							from: point,
+							to: next
+						};
+						if (presentVisually === true) {
+							const line = $createLine(3, 'green');
+							line.$move(view_x, view_y, next_pos.x, next_pos.y);
+							edge.line = line;
+						}
+						graph_edges.set(`${x},${y}_${to_x},${to_y}`, edge);
 
 
-					if (graph_points.includes(point) === false) {
-						point.adjacents = [next];
-						graph_points.push(point);
-					} else {
-						const pt = graph_points.find(x => x === point);
-						pt.adjacents.push(next);
-					}
-					if (graph_points.includes(next) === false) {
-						next.adjacents = [point];
-						graph_points.push(next);
-					} else {
-						const pt = graph_points.find(x => x === next);
-						pt.adjacents.push(point);
+						if (graph_points.includes(point) === false) {
+							point.adjacents = [next];
+							graph_points.push(point);
+						} else {
+							const pt = graph_points.find(x => x === point);
+							pt.adjacents.push(next);
+						}
+						if (graph_points.includes(next) === false) {
+							next.adjacents = [point];
+							graph_points.push(next);
+						} else {
+							const pt = graph_points.find(x => x === next);
+							pt.adjacents.push(point);
+						}
 					}
 				}
 			}
@@ -2224,32 +2227,23 @@ class InkBallGame {
 			if (point && isPointOKForPath([freePointStatus, StatusEnum.POINT_STARTING, StatusEnum.POINT_IN_PATH], point) === true) {
 				const { x: view_x, y: view_y } = point.$GetPosition();
 				const x = view_x / this.m_iGridSizeX, y = view_y / this.m_iGridSizeY;
-				let next;
 
 				//east
-				next = this.m_Points.get(y * this.m_iGridWidth + x + 1);
-				addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y);
+				addPointsAndEdgestoGraph(point, x + 1, y, view_x, view_y, x, y);
 				//west
-				next = this.m_Points.get(y * this.m_iGridWidth + x - 1);
-				addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y);
+				addPointsAndEdgestoGraph(point, x - 1, y, view_x, view_y, x, y);
 				//north
-				next = this.m_Points.get((y - 1) * this.m_iGridWidth + x);
-				addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y);
+				addPointsAndEdgestoGraph(point, x, (y - 1), view_x, view_y, x, y);
 				//south
-				next = this.m_Points.get((y + 1) * this.m_iGridWidth + x);
-				addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y);
+				addPointsAndEdgestoGraph(point, x, (y + 1), view_x, view_y, x, y);
 				//north_west
-				next = this.m_Points.get((y - 1) * this.m_iGridWidth + x - 1);
-				addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y);
+				addPointsAndEdgestoGraph(point, x - 1, (y - 1), view_x, view_y, x, y);
 				//north_east
-				next = this.m_Points.get((y - 1) * this.m_iGridWidth + x + 1);
-				addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y);
+				addPointsAndEdgestoGraph(point, x + 1, (y - 1), view_x, view_y, x, y);
 				//south_west
-				next = this.m_Points.get((y + 1) * this.m_iGridWidth + x - 1);
-				addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y);
+				addPointsAndEdgestoGraph(point, x - 1, (y + 1), view_x, view_y, x, y);
 				//south_east
-				next = this.m_Points.get((y + 1) * this.m_iGridWidth + x + 1);
-				addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y);
+				addPointsAndEdgestoGraph(point, x + 1, (y + 1), view_x, view_y, x, y);
 			}
 		}
 		//return graph
@@ -2314,7 +2308,7 @@ class InkBallGame {
 	async MarkAllCycles(graph) {
 		const vertices = graph.vertices;
 		const N = vertices.length;
-		const cycles = new Array(N);
+		let cycles = new Array(N);
 		// mark with unique numbers
 		const mark = new Array(N);
 		// arrays required to color the 
@@ -2322,8 +2316,7 @@ class InkBallGame {
 		const color = new Array(N), par = new Array(N);
 
 		for (let i = 0; i < N; i++) {
-			mark[i] = [];
-			cycles[i] = [];
+			mark[i] = []; cycles[i] = [];
 		}
 
 		const dfs_cycle = function (u, p) {
@@ -2374,15 +2367,15 @@ class InkBallGame {
 				const mark_e = mark[e];
 				if (mark_e !== undefined && mark_e.length > 0) {
 					for (let m = 0; m < mark_e.length; m++) {
-						const found = cycles[mark_e[m]];
-						if (found !== undefined)
-							found.push(e);
+						const found_c = cycles[mark_e[m]];
+						if (found_c !== undefined)
+							found_c.push(e);
 					}
 				}
 			}
 
-			//sort by point length: first longest cycles, most points
-			cycles.sort((b, a) => a.length - b.length);
+			//sort by point length(only cycles >= 4): first longest cycles, most points
+			cycles = cycles.filter(c => c.length >= 4).sort((b, a) => a.length - b.length);
 
 			//gather free human player points that could be intercepted.
 			const free_human_player_points = [];
@@ -2391,6 +2384,9 @@ class InkBallGame {
 				if (pt !== undefined && pt.$GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.$GetStatus()) {
 					const { x: view_x, y: view_y } = pt.$GetPosition();
 					const x = view_x / this.m_iGridSizeX, y = view_y / this.m_iGridSizeY;
+					if (false === this.IsPointOutsideAllPaths(x, y))
+						continue;
+
 					//check if really exists
 					const pt1 = document.querySelector(`svg > circle[cx="${view_x}"][cy="${view_y}"]`);
 					if (pt1)
@@ -2416,7 +2412,7 @@ class InkBallGame {
 					//sort clockwise (https://stackoverflow.com/questions/45660743/sort-points-in-counter-clockwise-in-javascript)
 					const cw_sorted_verts = sortPointsClockwise(mapped_verts);
 
-					//disaaply for user for whcihc cycle wea are dealing with
+					//display which cycle wea are dealing with
 					for (const vert of cw_sorted_verts) {
 						const { x, y } = vert;
 						const pt = document.querySelector(`svg > circle[cx="${x * this.m_iGridSizeX}"][cy="${y * this.m_iGridSizeY}"]`);
@@ -2436,6 +2432,13 @@ class InkBallGame {
 					for (const possible_intercept of free_human_player_points) {
 						if (false !== this.pnpoly2(cw_sorted_verts, possible_intercept.x, possible_intercept.y)) {
 							tmp += `${comma}(${possible_intercept.x},${possible_intercept.y})`;
+
+							const pt1 = document.querySelector(`svg > circle[cx="${possible_intercept.x * this.m_iGridSizeX}"][cy="${possible_intercept.y * this.m_iGridSizeY}"]`);
+							if (pt1) {
+								pt1.$SetStrokeColor('var(--yellow)');
+								pt1.$SetFillColor('var(--yellow)');
+								pt1.setAttribute("r", "6");
+							}
 							comma = ',';
 						}
 					}
@@ -2461,7 +2464,9 @@ class InkBallGame {
 		let cyclenumber = 0, edges = N;
 
 		// call DFS to mark the cycles 
-		dfs_cycle(1, 0, color, mark, par);
+		for (let vind = 0; vind < N; vind++) {
+			dfs_cycle(vind + 1, vind/*, color, mark, par*/);
+		}
 
 		// function to print the cycles 
 		return await printCycles(edges, mark);

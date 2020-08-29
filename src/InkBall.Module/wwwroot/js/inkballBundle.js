@@ -2632,7 +2632,7 @@ var InkBallGame = /*#__PURE__*/function () {
     key: "OnTestFindFullSurroundedPoints",
     value: function () {
       var _OnTestFindFullSurroundedPoints = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(event) {
-        var sHumanColor, rand_color, _iterator8, _step8, pt, _pt$$GetPosition2, view_x, view_y, pt1;
+        var sHumanColor, rand_color, _iterator8, _step8, pt, _pt$$GetPosition2, view_x, view_y, x, y, pt1;
 
         return regeneratorRuntime.wrap(function _callee9$(_context9) {
           while (1) {
@@ -2642,51 +2642,85 @@ var InkBallGame = /*#__PURE__*/function () {
                 sHumanColor = this.COLOR_RED;
                 rand_color = RandomColor();
                 _iterator8 = _createForOfIteratorHelper(this.m_Points.values());
+                _context9.prev = 4;
 
-                try {
-                  for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
-                    pt = _step8.value;
+                _iterator8.s();
 
-                    if (pt !== undefined && pt.$GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.$GetStatus()) {
-                      _pt$$GetPosition2 = pt.$GetPosition(), view_x = _pt$$GetPosition2.x, view_y = _pt$$GetPosition2.y; //const x = view_x / this.m_iGridSizeX, y = view_y / this.m_iGridSizeY;
-                      //const east = this.m_Points.get(y * this.m_iGridWidth + x + 1);
-                      //const west = this.m_Points.get(y * this.m_iGridWidth + x - 1);
-                      //const north = this.m_Points.get((y - 1) * this.m_iGridWidth + x);
-                      //const south = this.m_Points.get((y + 1) * this.m_iGridWidth + x);
-                      //const north_west = this.m_Points.get((y - 1) * this.m_iGridWidth + x - 1);
-                      //const north_east = this.m_Points.get((y - 1) * this.m_iGridWidth + x + 1);
-                      //const south_west = this.m_Points.get((y + 1) * this.m_iGridWidth + x - 1);
-                      //const south_east = this.m_Points.get((y + 1) * this.m_iGridWidth + x + 1);
-                      //if (east !== undefined && west !== undefined && north !== undefined && south !== undefined
-                      //	//&& east.$GetFillColor() === sCPUColor &&
-                      //	//west.$GetFillColor() === sCPUColor &&
-                      //	//north.$GetFillColor() === sCPUColor &&
-                      //	//south.$GetFillColor() === sCPUColor
-                      //) {
-                      //visualise
-
-                      pt1 = document.querySelector("svg > circle[cx=\"".concat(view_x, "\"][cy=\"").concat(view_y, "\"]"));
-
-                      if (pt1) {
-                        pt1.$SetStrokeColor(rand_color);
-                        pt1.$SetFillColor(rand_color);
-                        pt1.setAttribute("r", "6");
-                      } //}
-
-                    }
-                  }
-                } catch (err) {
-                  _iterator8.e(err);
-                } finally {
-                  _iterator8.f();
+              case 6:
+                if ((_step8 = _iterator8.n()).done) {
+                  _context9.next = 17;
+                  break;
                 }
 
-              case 5:
+                pt = _step8.value;
+
+                if (!(pt !== undefined && pt.$GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.$GetStatus())) {
+                  _context9.next = 15;
+                  break;
+                }
+
+                _pt$$GetPosition2 = pt.$GetPosition(), view_x = _pt$$GetPosition2.x, view_y = _pt$$GetPosition2.y;
+                x = view_x / this.m_iGridSizeX, y = view_y / this.m_iGridSizeY;
+
+                if (!(false === this.IsPointOutsideAllPaths(x, y))) {
+                  _context9.next = 13;
+                  break;
+                }
+
+                return _context9.abrupt("continue", 15);
+
+              case 13:
+                //const east = this.m_Points.get(y * this.m_iGridWidth + x + 1);
+                //const west = this.m_Points.get(y * this.m_iGridWidth + x - 1);
+                //const north = this.m_Points.get((y - 1) * this.m_iGridWidth + x);
+                //const south = this.m_Points.get((y + 1) * this.m_iGridWidth + x);
+                //const north_west = this.m_Points.get((y - 1) * this.m_iGridWidth + x - 1);
+                //const north_east = this.m_Points.get((y - 1) * this.m_iGridWidth + x + 1);
+                //const south_west = this.m_Points.get((y + 1) * this.m_iGridWidth + x - 1);
+                //const south_east = this.m_Points.get((y + 1) * this.m_iGridWidth + x + 1);
+                //if (east !== undefined && west !== undefined && north !== undefined && south !== undefined
+                //	//&& east.$GetFillColor() === sCPUColor &&
+                //	//west.$GetFillColor() === sCPUColor &&
+                //	//north.$GetFillColor() === sCPUColor &&
+                //	//south.$GetFillColor() === sCPUColor
+                //) {
+                //visualise
+                pt1 = document.querySelector("svg > circle[cx=\"".concat(view_x, "\"][cy=\"").concat(view_y, "\"]"));
+
+                if (pt1) {
+                  pt1.$SetStrokeColor(rand_color);
+                  pt1.$SetFillColor(rand_color);
+                  pt1.setAttribute("r", "6");
+                } //}
+
+
+              case 15:
+                _context9.next = 6;
+                break;
+
+              case 17:
+                _context9.next = 22;
+                break;
+
+              case 19:
+                _context9.prev = 19;
+                _context9.t0 = _context9["catch"](4);
+
+                _iterator8.e(_context9.t0);
+
+              case 22:
+                _context9.prev = 22;
+
+                _iterator8.f();
+
+                return _context9.finish(22);
+
+              case 25:
               case "end":
                 return _context9.stop();
             }
           }
-        }, _callee9, this);
+        }, _callee9, this, [[4, 19, 22, 25]]);
       }));
 
       function OnTestFindFullSurroundedPoints(_x10) {
@@ -2956,45 +2990,47 @@ var InkBallGame = /*#__PURE__*/function () {
         return false;
       };
 
-      var addPointsAndEdgestoGraph = function (point, next, view_x, view_y, x, y) {
-        if (next && isPointOKForPath([freePointStatus], next) === true) {
-          var next_pos = next.$GetPosition();
-          var to_x = next_pos.x / this.m_iGridSizeX,
-              to_y = next_pos.y / this.m_iGridSizeY;
+      var addPointsAndEdgestoGraph = function (point, to_x, to_y, view_x, view_y, x, y) {
+        if (to_x >= 0 && to_x < this.m_iGridWidth && to_y >= 0 && to_y < this.m_iGridHeight) {
+          var next = this.m_Points.get(to_y * this.m_iGridWidth + to_x);
 
-          if (graph_edges.has("".concat(x, ",").concat(y, "_").concat(to_x, ",").concat(to_y)) === false && graph_edges.has("".concat(to_x, ",").concat(to_y, "_").concat(x, ",").concat(y)) === false) {
-            var edge = {
-              from: point,
-              to: next
-            };
+          if (next && isPointOKForPath([freePointStatus], next) === true) {
+            var next_pos = next.$GetPosition(); //const to_x = next_pos.x / this.m_iGridSizeX, to_y = next_pos.y / this.m_iGridSizeY;
 
-            if (presentVisually === true) {
-              var line = $createLine(3, 'green');
-              line.$move(view_x, view_y, next_pos.x, next_pos.y);
-              edge.line = line;
-            }
+            if (graph_edges.has("".concat(x, ",").concat(y, "_").concat(to_x, ",").concat(to_y)) === false && graph_edges.has("".concat(to_x, ",").concat(to_y, "_").concat(x, ",").concat(y)) === false) {
+              var edge = {
+                from: point,
+                to: next
+              };
 
-            graph_edges.set("".concat(x, ",").concat(y, "_").concat(to_x, ",").concat(to_y), edge);
+              if (presentVisually === true) {
+                var line = $createLine(3, 'green');
+                line.$move(view_x, view_y, next_pos.x, next_pos.y);
+                edge.line = line;
+              }
 
-            if (graph_points.includes(point) === false) {
-              point.adjacents = [next];
-              graph_points.push(point);
-            } else {
-              var pt = graph_points.find(function (x) {
-                return x === point;
-              });
-              pt.adjacents.push(next);
-            }
+              graph_edges.set("".concat(x, ",").concat(y, "_").concat(to_x, ",").concat(to_y), edge);
 
-            if (graph_points.includes(next) === false) {
-              next.adjacents = [point];
-              graph_points.push(next);
-            } else {
-              var _pt2 = graph_points.find(function (x) {
-                return x === next;
-              });
+              if (graph_points.includes(point) === false) {
+                point.adjacents = [next];
+                graph_points.push(point);
+              } else {
+                var pt = graph_points.find(function (x) {
+                  return x === point;
+                });
+                pt.adjacents.push(next);
+              }
 
-              _pt2.adjacents.push(point);
+              if (graph_points.includes(next) === false) {
+                next.adjacents = [point];
+                graph_points.push(next);
+              } else {
+                var _pt2 = graph_points.find(function (x) {
+                  return x === next;
+                });
+
+                _pt2.adjacents.push(point);
+              }
             }
           }
         }
@@ -3013,32 +3049,23 @@ var InkBallGame = /*#__PURE__*/function () {
                 view_y = _point$$GetPosition.y;
 
             var x = view_x / this.m_iGridSizeX,
-                y = view_y / this.m_iGridSizeY;
-            var next = void 0; //east
+                y = view_y / this.m_iGridSizeY; //east
 
-            next = this.m_Points.get(y * this.m_iGridWidth + x + 1);
-            addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y); //west
+            addPointsAndEdgestoGraph(point, x + 1, y, view_x, view_y, x, y); //west
 
-            next = this.m_Points.get(y * this.m_iGridWidth + x - 1);
-            addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y); //north
+            addPointsAndEdgestoGraph(point, x - 1, y, view_x, view_y, x, y); //north
 
-            next = this.m_Points.get((y - 1) * this.m_iGridWidth + x);
-            addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y); //south
+            addPointsAndEdgestoGraph(point, x, y - 1, view_x, view_y, x, y); //south
 
-            next = this.m_Points.get((y + 1) * this.m_iGridWidth + x);
-            addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y); //north_west
+            addPointsAndEdgestoGraph(point, x, y + 1, view_x, view_y, x, y); //north_west
 
-            next = this.m_Points.get((y - 1) * this.m_iGridWidth + x - 1);
-            addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y); //north_east
+            addPointsAndEdgestoGraph(point, x - 1, y - 1, view_x, view_y, x, y); //north_east
 
-            next = this.m_Points.get((y - 1) * this.m_iGridWidth + x + 1);
-            addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y); //south_west
+            addPointsAndEdgestoGraph(point, x + 1, y - 1, view_x, view_y, x, y); //south_west
 
-            next = this.m_Points.get((y + 1) * this.m_iGridWidth + x - 1);
-            addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y); //south_east
+            addPointsAndEdgestoGraph(point, x - 1, y + 1, view_x, view_y, x, y); //south_east
 
-            next = this.m_Points.get((y + 1) * this.m_iGridWidth + x + 1);
-            addPointsAndEdgestoGraph(point, next, view_x, view_y, x, y);
+            addPointsAndEdgestoGraph(point, x + 1, y + 1, view_x, view_y, x, y);
           }
         } //return graph
 
@@ -3123,7 +3150,7 @@ var InkBallGame = /*#__PURE__*/function () {
     key: "MarkAllCycles",
     value: function () {
       var _MarkAllCycles = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11(graph) {
-        var vertices, N, cycles, mark, color, par, i, dfs_cycle, printCycles, cyclenumber, edges;
+        var vertices, N, cycles, mark, color, par, i, dfs_cycle, printCycles, cyclenumber, edges, vind;
         return regeneratorRuntime.wrap(function _callee11$(_context11) {
           while (1) {
             switch (_context11.prev = _context11.next) {
@@ -3194,7 +3221,7 @@ var InkBallGame = /*#__PURE__*/function () {
                   var _ref5 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10(edges, mark) {
                     var _this15 = this;
 
-                    var e, mark_e, m, found, free_human_player_points, sHumanColor, _iterator13, _step13, _pt3, _pt3$$GetPosition, view_x, view_y, _x14, _y2, pt1, tab, _i, cycl, str, trailing_points, rand_color, mapped_verts, cw_sorted_verts, _iterator14, _step14, vert, x, y, pt, tmp, comma, _iterator15, _step15, possible_intercept, pts2reset;
+                    var e, mark_e, m, found_c, free_human_player_points, sHumanColor, _iterator13, _step13, _pt3, _pt3$$GetPosition, view_x, view_y, _x14, _y2, _pt4, tab, _i, cycl, str, trailing_points, rand_color, mapped_verts, cw_sorted_verts, _iterator14, _step14, vert, x, y, pt, tmp, comma, _iterator15, _step15, possible_intercept, pt1, pts2reset;
 
                     return regeneratorRuntime.wrap(function _callee10$(_context10) {
                       while (1) {
@@ -3207,56 +3234,93 @@ var InkBallGame = /*#__PURE__*/function () {
 
                               if (mark_e !== undefined && mark_e.length > 0) {
                                 for (m = 0; m < mark_e.length; m++) {
-                                  found = cycles[mark_e[m]];
-                                  if (found !== undefined) found.push(e);
+                                  found_c = cycles[mark_e[m]];
+                                  if (found_c !== undefined) found_c.push(e);
                                 }
                               }
-                            } //sort by point length: first longest cycles, most points
+                            } //sort by point length(only cycles >= 4): first longest cycles, most points
 
 
-                            cycles.sort(function (b, a) {
+                            cycles = cycles.filter(function (c) {
+                              return c.length >= 4;
+                            }).sort(function (b, a) {
                               return a.length - b.length;
                             }); //gather free human player points that could be intercepted.
 
                             free_human_player_points = [];
                             sHumanColor = this.COLOR_RED;
                             _iterator13 = _createForOfIteratorHelper(this.m_Points.values());
+                            _context10.prev = 5;
 
-                            try {
-                              for (_iterator13.s(); !(_step13 = _iterator13.n()).done;) {
-                                _pt3 = _step13.value;
+                            _iterator13.s();
 
-                                if (_pt3 !== undefined && _pt3.$GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === _pt3.$GetStatus()) {
-                                  _pt3$$GetPosition = _pt3.$GetPosition(), view_x = _pt3$$GetPosition.x, view_y = _pt3$$GetPosition.y;
-                                  _x14 = view_x / this.m_iGridSizeX, _y2 = view_y / this.m_iGridSizeY; //check if really exists
-
-                                  pt1 = document.querySelector("svg > circle[cx=\"".concat(view_x, "\"][cy=\"").concat(view_y, "\"]"));
-                                  if (pt1) free_human_player_points.push({
-                                    x: _x14,
-                                    y: _y2
-                                  });
-                                }
-                              }
-                            } catch (err) {
-                              _iterator13.e(err);
-                            } finally {
-                              _iterator13.f();
+                          case 7:
+                            if ((_step13 = _iterator13.n()).done) {
+                              _context10.next = 18;
+                              break;
                             }
 
+                            _pt3 = _step13.value;
+
+                            if (!(_pt3 !== undefined && _pt3.$GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === _pt3.$GetStatus())) {
+                              _context10.next = 16;
+                              break;
+                            }
+
+                            _pt3$$GetPosition = _pt3.$GetPosition(), view_x = _pt3$$GetPosition.x, view_y = _pt3$$GetPosition.y;
+                            _x14 = view_x / this.m_iGridSizeX, _y2 = view_y / this.m_iGridSizeY;
+
+                            if (!(false === this.IsPointOutsideAllPaths(_x14, _y2))) {
+                              _context10.next = 14;
+                              break;
+                            }
+
+                            return _context10.abrupt("continue", 16);
+
+                          case 14:
+                            //check if really exists
+                            _pt4 = document.querySelector("svg > circle[cx=\"".concat(view_x, "\"][cy=\"").concat(view_y, "\"]"));
+                            if (_pt4) free_human_player_points.push({
+                              x: _x14,
+                              y: _y2
+                            });
+
+                          case 16:
+                            _context10.next = 7;
+                            break;
+
+                          case 18:
+                            _context10.next = 23;
+                            break;
+
+                          case 20:
+                            _context10.prev = 20;
+                            _context10.t0 = _context10["catch"](5);
+
+                            _iterator13.e(_context10.t0);
+
+                          case 23:
+                            _context10.prev = 23;
+
+                            _iterator13.f();
+
+                            return _context10.finish(23);
+
+                          case 26:
                             tab = []; // traverse through all the vertices with same cycle
 
                             _i = 0;
 
-                          case 8:
+                          case 28:
                             if (!(_i <= cyclenumber)) {
-                              _context10.next = 46;
+                              _context10.next = 66;
                               break;
                             }
 
                             cycl = cycles[_i]; //get cycle
 
                             if (!(cycl && cycl.length > 0)) {
-                              _context10.next = 43;
+                              _context10.next = 63;
                               break;
                             }
 
@@ -3273,16 +3337,16 @@ var InkBallGame = /*#__PURE__*/function () {
                               };
                             }.bind(this)); //sort clockwise (https://stackoverflow.com/questions/45660743/sort-points-in-counter-clockwise-in-javascript)
 
-                            cw_sorted_verts = sortPointsClockwise(mapped_verts); //disaaply for user for whcihc cycle wea are dealing with
+                            cw_sorted_verts = sortPointsClockwise(mapped_verts); //display which cycle wea are dealing with
 
                             _iterator14 = _createForOfIteratorHelper(cw_sorted_verts);
-                            _context10.prev = 16;
+                            _context10.prev = 36;
 
                             _iterator14.s();
 
-                          case 18:
+                          case 38:
                             if ((_step14 = _iterator14.n()).done) {
-                              _context10.next = 27;
+                              _context10.next = 47;
                               break;
                             }
 
@@ -3298,31 +3362,31 @@ var InkBallGame = /*#__PURE__*/function () {
                               pt.setAttribute("r", "6");
                             }
 
-                            _context10.next = 25;
+                            _context10.next = 45;
                             return Sleep(50);
 
-                          case 25:
-                            _context10.next = 18;
+                          case 45:
+                            _context10.next = 38;
                             break;
 
-                          case 27:
-                            _context10.next = 32;
+                          case 47:
+                            _context10.next = 52;
                             break;
 
-                          case 29:
-                            _context10.prev = 29;
-                            _context10.t0 = _context10["catch"](16);
+                          case 49:
+                            _context10.prev = 49;
+                            _context10.t1 = _context10["catch"](36);
 
-                            _iterator14.e(_context10.t0);
+                            _iterator14.e(_context10.t1);
 
-                          case 32:
-                            _context10.prev = 32;
+                          case 52:
+                            _context10.prev = 52;
 
                             _iterator14.f();
 
-                            return _context10.finish(32);
+                            return _context10.finish(52);
 
-                          case 35:
+                          case 55:
                             //find for all free_human_player_points which cycle might interepct it (surrounds)
                             //only convex, NOT concave :-(
                             tmp = '', comma = '';
@@ -3334,6 +3398,14 @@ var InkBallGame = /*#__PURE__*/function () {
 
                                 if (false !== this.pnpoly2(cw_sorted_verts, possible_intercept.x, possible_intercept.y)) {
                                   tmp += "".concat(comma, "(").concat(possible_intercept.x, ",").concat(possible_intercept.y, ")");
+                                  pt1 = document.querySelector("svg > circle[cx=\"".concat(possible_intercept.x * this.m_iGridSizeX, "\"][cy=\"").concat(possible_intercept.y * this.m_iGridSizeY, "\"]"));
+
+                                  if (pt1) {
+                                    pt1.$SetStrokeColor('var(--yellow)');
+                                    pt1.$SetFillColor('var(--yellow)');
+                                    pt1.setAttribute("r", "6");
+                                  }
+
                                   comma = ',';
                                 }
                               } //gaterhing of some data and console printing
@@ -3356,20 +3428,20 @@ var InkBallGame = /*#__PURE__*/function () {
                               pt.setAttribute("r", "4");
                             });
 
-                          case 43:
+                          case 63:
                             _i++;
-                            _context10.next = 8;
+                            _context10.next = 28;
                             break;
 
-                          case 46:
+                          case 66:
                             return _context10.abrupt("return", tab);
 
-                          case 47:
+                          case 67:
                           case "end":
                             return _context10.stop();
                         }
                       }
-                    }, _callee10, this, [[16, 29, 32, 35]]);
+                    }, _callee10, this, [[5, 20, 23, 26], [36, 49, 52, 55]]);
                   }));
 
                   return function (_x12, _x13) {
@@ -3380,7 +3452,12 @@ var InkBallGame = /*#__PURE__*/function () {
 
                 cyclenumber = 0, edges = N; // call DFS to mark the cycles 
 
-                dfs_cycle(1, 0, color, mark, par); // function to print the cycles 
+                for (vind = 0; vind < N; vind++) {
+                  dfs_cycle(vind + 1, vind
+                  /*, color, mark, par*/
+                  );
+                } // function to print the cycles 
+
 
                 _context11.next = 12;
                 return printCycles(edges, mark);
