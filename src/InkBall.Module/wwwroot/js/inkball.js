@@ -1893,7 +1893,7 @@ class InkBallGame {
 	async OnTestMarkAllCycles(event) {
 		event.preventDefault();
 		//LocalLog('OnTestMarkAllCycles');
-		LocalLog(await this.MarkAllCycles(this.BuildGraph()));
+		LocalLog(await this.MarkAllCycles(this.BuildGraph({ visuals: true })));
 	}
 
 	async OnTestGroupPoints(event) {
@@ -2197,7 +2197,7 @@ class InkBallGame {
 							to: next
 						};
 						if (presentVisually === true) {
-							const line = $createLine(3, 'green');
+							const line = $createLine(3, 'rgba(0, 255, 0, 0.3)');
 							line.$move(view_x, view_y, next_pos.x, next_pos.y);
 							edge.line = line;
 						}
@@ -2319,7 +2319,7 @@ class InkBallGame {
 			mark[i] = []; cycles[i] = [];
 		}
 
-		const dfs_cycle = function (u, p) {
+		const dfs_cycle = async function (u, p) {
 			// already (completely) visited vertex. 
 			if (color[u] === 2)
 				return;
@@ -2345,6 +2345,14 @@ class InkBallGame {
 			color[u] = 1;
 			const vertex = vertices[u];
 			if (vertex) {
+
+
+				vertex.$SetStrokeColor('black');
+				vertex.$SetFillColor('black');
+				//vertex.setAttribute("r", "6");
+				await Sleep(10);
+
+
 				// simple dfs on graph
 				for (const adj of vertex.adjacents) {
 					const v = vertices.indexOf(adj);
@@ -2352,7 +2360,7 @@ class InkBallGame {
 					if (v === par[u])
 						continue;
 
-					dfs_cycle(v, u);
+					await dfs_cycle(v, u);
 				}
 			}
 
@@ -2465,7 +2473,7 @@ class InkBallGame {
 
 		// call DFS to mark the cycles 
 		for (let vind = 0; vind < N; vind++) {
-			dfs_cycle(vind + 1, vind/*, color, mark, par*/);
+			await dfs_cycle(vind + 1, vind/*, color, mark, par*/);
 		}
 
 		// function to print the cycles 
