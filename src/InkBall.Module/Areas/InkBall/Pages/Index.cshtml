@@ -19,6 +19,7 @@
     string surrender_win_cancel_name;
     bool isThisPlayerActive = Model.Game.IsThisPlayerActive();
     bool useMessagePackBinaryTransport = commonUIConfigureOptions.Value.UseMessagePackBinaryTransport;
+    string lastTimeStampUTC = @Model.Game.TimeStamp.ToUniversalTime().ToString("O");
     if (Model.Game.Player2 != null)
     {
         if (Model.Game.GetOtherPlayer().IsLastMoveOverdue() && isThisPlayerActive)
@@ -129,7 +130,8 @@
 	    protocol: JSON.parse('@useMessagePackBinaryTransport'.toLowerCase()) ? new signalR.protocols.msgpack.MessagePackHubProtocol() : new signalR.JsonHubProtocol(),
 	    servTimeoutMillis: @Model.ClientTimeoutInterval.TotalMilliseconds,
 	    isReadonly: JSON.parse('@Model.IsReadonly'.toLowerCase()),
-	    pathAfterPointDrawAllowanceSecAmount: @Constants.PathAfterPointDrawAllowanceSecAmount,
+        pathAfterPointDrawAllowanceSecAmount: @Constants.PathAfterPointDrawAllowanceSecAmount,
+        sLastMoveGameTimeStamp: '@lastTimeStampUTC',
 
 	    @if(Model.PlayerPointsAndPaths.Points != null)
 	    {

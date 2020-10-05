@@ -15,7 +15,7 @@
 let SVG = false;
 const svgNS = "http://www.w3.org/2000/svg";
 let svgAntialias = false, cont = null;
-let $createOval, $createPolyline, $RemovePolyline, $createSVGVML, $createLine;
+let $createOval, $createPolyline, $RemovePolyline, $RemoveOval, $createSVGVML, $createLine, PointStore, PathStore;
 
 if (document.createElementNS) {
 	let svg = document.createElementNS(svgNS, "svg");
@@ -29,134 +29,6 @@ if (document.createElementNS) {
 function hasDuplicates(array) {
 	return (new Set(array)).size !== array.length;
 }
-
-///////////sortPointsClockwise tests start////////////
-/**
- * Sorting point clockwise/anticlockwise
- * @param {array} points array of points to sort
- * @returns {array} of points
- */
-function sortPointsClockwise_Old(points) {
-	//Old
-
-	// Find min max to get center
-	// Sort from top to bottom
-	points.sort((a, b) => a.y - b.y);
-
-	// Get center y
-	const cy = (points[0].y + points[points.length - 1].y) / 2;
-
-	// Sort from right to left
-	points.sort((a, b) => b.x - a.x);
-
-	// Get center x
-	const cx = (points[0].x + points[points.length - 1].x) / 2;
-
-	// Center point
-	const center = {
-		x: cx,
-		y: cy
-	};
-	// Pre calculate the angles as it will be slow in the sort
-	// As the points are sorted from right to left the first point
-	// is the rightmost
-
-	// Starting angle used to reference other angles
-	let startAng = undefined;
-	points.forEach(point => {
-		let ang = Math.atan2(point.y - center.y, point.x - center.x);
-		if (startAng === undefined) {
-			startAng = ang;
-		} else {
-			if (ang < startAng) { // ensure that all points are clockwise of the start point
-				ang += Math.PI * 2;
-			}
-		}
-		point.angle = ang; // add the angle to the point
-	});
-
-	// first sort clockwise
-	points.sort((a, b) => a.angle - b.angle);
-
-	//// then reverse the order
-	//const ccwPoints = points.reverse();
-	//// move the last point back to the start
-	//ccwPoints.unshift(ccwPoints.pop());
-	////drawPoints();
-	//return ccwPoints;
-	return points;
-}
-
-function sortPointsClockwise_Quadrant(points) {
-	//Quadrant
-
-	const get_clockwise_angle = function (p) {
-		/* get quadrant from 12 o'clock*/
-		/*const get_quadrant = function (p) {
-			let result = 4; //origin
-
-			if (p.x > 0 && p.y > 0)
-				return 1;
-			else if (p.x < 0 && p.y > 0)
-				return 2;
-			else if (p.x < 0 && p.y < 0)
-				return 3;
-			//else 4th quadrant
-			return result;
-		};*/
-
-		/*let angle = 0.0;
-		const quadrant = get_quadrant(p);
-
-		//add the appropriate pi/2 value based on the quadrant. (one of 0, pi/2, pi, 3pi/2)
-		switch (quadrant) {
-			case 1:
-				angle = Math.atan2(p.x, p.y) * 180 / Math.PI;
-				break;
-			case 2:
-				angle = Math.atan2(p.y, p.x) * 180 / Math.PI;
-				angle += Math.PI / 2;
-				break;
-			case 3:
-				angle = Math.atan2(p.x, p.y) * 180 / Math.PI;
-				angle += Math.PI;
-				break;
-			case 4:
-				angle = Math.atan2(p.y, p.x) * 180 / Math.PI;
-				angle += 3 * Math.PI / 2;
-				break;
-		}
-		return angle;*/
-		const angle = -Math.atan2(p.x, -p.y);
-		return angle;
-	};
-
-	points.sort((a, b) => get_clockwise_angle(a) < get_clockwise_angle(b));
-	return points;
-}
-
-function sortPointsClockwise(points) {
-	//Modern
-
-	// Get the center (mean value) using reduce
-	const center = points.reduce((acc, { x, y }) => {
-		acc.x += x;
-		acc.y += y;
-		return acc;
-	}, { x: 0, y: 0 });
-	center.x /= points.length;
-	center.y /= points.length;
-
-	// Add an angle property to each point using tan(angle) = y/x
-	const angles = points.map(({ x, y }) => {
-		return { x, y, angle: Math.atan2(y - center.y, x - center.x) * 180 / Math.PI };
-	});
-
-	// Sort your points by angle
-	const pointsSorted = angles.sort((a, b) => a.angle - b.angle);
-	return pointsSorted;
-}
-///////////sortPointsClockwise tests end////////////
 
 if (SVG) {
 	/* ============= SVG ============== */
@@ -173,7 +45,7 @@ if (SVG) {
 		return cont;
 	};
 	$createLine = function (w, col, linecap) {
-		var o = document.createElementNS(svgNS, "line");
+		const o = document.createElementNS(svgNS, "line");
 		o.setAttribute("shape-rendering", svgAntialias ? "auto" : "optimizeSpeed");
 		o.setAttribute("stroke-width", Math.round(w) + "px");
 		if (col) o.setAttribute("stroke", col);
@@ -191,7 +63,7 @@ if (SVG) {
 		return o;
 	};
 	$createPolyline = function (w, points, col) {
-		var o = document.createElementNS(svgNS, "polyline");
+		const o = document.createElementNS(svgNS, "polyline");
 		o.setAttribute("shape-rendering", svgAntialias ? "auto" : "optimizeSpeed");
 		o.setAttribute("stroke-width", Math.round(w));
 		if (col) o.setAttribute("stroke", col);
@@ -265,14 +137,15 @@ if (SVG) {
 		};
 		o.$GetID = function () { return parseInt(this.getAttribute("data-id")); };
 		o.$SetID = function (iID) { this.setAttribute("data-id", iID); };
+		o.$GetFillColor = function () { return this.getAttribute("fill"); };
 		//ch_added end
 		return o;
 	};
 	$createOval = function (diam) {
-		var o = document.createElementNS(svgNS, "circle");
+		const o = document.createElementNS(svgNS, "circle");
 		o.setAttribute("shape-rendering", svgAntialias ? "auto" : "optimizeSpeed");
 		o.setAttribute("stroke-width", 0);
-		o.setAttribute("r", Math.round(diam > 1));
+		o.setAttribute("r", Math.round(diam >> 1));
 		//ch_commented o.style.cursor = "pointer";
 		//ch_added
 		o.setAttribute("data-status", -1);
@@ -321,7 +194,7 @@ if (SVG) {
 		return o;
 	};
 	//ch_added start
-	var $RemoveOval = function (Oval) {
+	$RemoveOval = function (Oval) {
 		cont.removeChild(Oval);
 	};
 	$RemovePolyline = function (Polyline) {
@@ -333,14 +206,14 @@ if (SVG) {
 	/* ============= VML ============== */
 	$createSVGVML = function (o, iWidth, iHeight, antialias) {
 		document.namespaces.add("v", "urn:schemas-microsoft-com:vml");
-		var style = document.createStyleSheet();
+		const style = document.createStyleSheet();
 		style.addRule('v\\:*', "behavior: url(#default#VML);");
 		style.addRule('v\\:*', "antialias: " + antialias + ";");
 		cont = o;
 		return o;
 	};
 	$createLine = function (w, col, linecap) {
-		var o = document.createElement("v:line");
+		const o = document.createElement("v:line");
 		o.strokeweight = Math.round(w) + "px";
 		if (col) o.strokecolor = col;
 		o.$move = function (x1, y1, x2, y2) {
@@ -359,7 +232,7 @@ if (SVG) {
 		return o;
 	};
 	$createPolyline = function (w, points, col) {
-		var o = document.createElement("v:polyline");
+		const o = document.createElement("v:polyline");
 		o.strokeweight = Math.round(w) + "px";
 		if (col) o.strokecolor = col;
 		o.points = points;
@@ -432,11 +305,12 @@ if (SVG) {
 		};
 		o.$GetID = function () { return parseInt(this.getAttribute("data-id")); };
 		o.$SetID = function (iID) { this.setAttribute("data-id", iID); };
+		o.$GetFillColor = function () { return this.fill.color; };
 		//ch_added end
 		return o;
 	};
 	$createOval = function (diam, filled) {
-		var o = document.createElement("v:oval");
+		const o = document.createElement("v:oval");
 		o.style.position = "absolute";
 		//ch_commented o.style.cursor = "pointer";
 		//ch_added
@@ -509,4 +383,502 @@ if (SVG) {
 	};
 }
 
-export { $createOval, $createPolyline, $RemovePolyline, $createSVGVML, $createLine, hasDuplicates, sortPointsClockwise };
+/**
+ * Sorting point clockwise/anticlockwise
+ * @param {array} points array of points to sort
+ * @returns {array} of points
+ */
+function sortPointsClockwise(points) {
+	//Modern
+
+	// Get the center (mean value) using reduce
+	const center = points.reduce((acc, { x, y }) => {
+		acc.x += x;
+		acc.y += y;
+		return acc;
+	}, { x: 0, y: 0 });
+	center.x /= points.length;
+	center.y /= points.length;
+
+	// Add an angle property to each point using tan(angle) = y/x
+	const angles = points.map(({ x, y }) => {
+		return { x, y, angle: Math.atan2(y - center.y, x - center.x) * 180 / Math.PI };
+	});
+
+	// Sort your points by angle
+	const pointsSorted = angles.sort((a, b) => a.angle - b.angle);
+	return pointsSorted;
+}
+
+//////////IndexedDB points and path stores start//////////
+const DB_NAME = 'InkballGame', DB_POINT_STORE = 'points', DB_PATH_STORE = 'paths', DB_STATE_STORE = 'state';
+const DB_VERSION = 1; // Use a long long for this value (don't use a float)
+
+//main DB object
+let g_DB;
+
+async function OpenDb() {
+	console.log("OpenDb ...");
+	return new Promise((resolve, reject) => {
+		let req = indexedDB.open(DB_NAME, DB_VERSION);
+		req.onsuccess = function () {
+			// Equal to: db = req.result;
+			g_DB = this.result;
+
+			//TODO: stop clearing all the time store(s)
+			//ClearObjectStore();
+
+			console.log("OpenDb DONE");
+			resolve(this.result);
+		};
+		req.onerror = function (evt) {
+			console.error("OpenDb:", evt.target.errorCode);
+			reject();
+		};
+		req.onupgradeneeded = function (evt) {
+			console.log("OpenDb.onupgradeneeded");
+
+			const store_list = Array.from(evt.currentTarget.result.objectStoreNames);
+			if (store_list.includes(DB_POINT_STORE))
+				evt.currentTarget.result.deleteObjectStore(DB_POINT_STORE);
+			if (store_list.includes(DB_PATH_STORE))
+				evt.currentTarget.result.deleteObjectStore(DB_PATH_STORE);
+			if (store_list.includes(DB_STATE_STORE))
+				evt.currentTarget.result.deleteObjectStore(DB_STATE_STORE);
+
+			const point_store = evt.currentTarget.result.createObjectStore(
+				DB_POINT_STORE, { /*keyPath: 'pos',*/ autoIncrement: false });
+			point_store.createIndex('Status', 'Status', { unique: false });
+			point_store.createIndex('Color', 'Color', { unique: false });
+
+
+			const path_store = evt.currentTarget.result.createObjectStore(
+				DB_PATH_STORE, { /*keyPath: 'iId',*/ autoIncrement: false });
+			path_store.createIndex('iPlayerId', 'iPlayerId', { unique: false });
+
+			const state_store = evt.currentTarget.result.createObjectStore(
+				DB_STATE_STORE, { /*keyPath: 'gameId',*/ autoIncrement: false });
+		};
+	});
+}
+
+/**
+  * @param {string} storeName is a store name
+  * @param {string} mode either "readonly" or "readwrite"
+  * @returns {object} store
+  */
+function GetObjectStore(storeName, mode) {
+	const tx = g_DB.transaction(storeName, mode);
+	return tx.objectStore(storeName);
+}
+
+async function ClearObjectStore(storeName) {
+	return new Promise((resolve, reject) => {
+		let store = GetObjectStore(storeName, 'readwrite');
+		let req = store.clear();
+		req.onsuccess = function () {
+			//console.log("clearObjectStore: DONE");
+			resolve();
+		};
+		req.onerror = function (evt) {
+			console.error("clearObjectStore:", evt.target.errorCode);
+			reject();
+		};
+	});
+}
+
+/**
+  * @param {number} key is calculated inxed of point y * width + x, probably not usefull
+  */
+async function GetPoint(key) {
+	return new Promise((resolve, reject) => {
+		const store = GetObjectStore(DB_POINT_STORE, 'readonly');
+		const req = store.get(key);
+		req.onerror = function (event) {
+			reject(new Error('GetPoint => ' + event));
+		};
+		req.onsuccess = function (event) {
+			resolve(event.target.result);
+		};
+	});
+}
+
+async function GetAllPoints() {
+	return new Promise((resolve, reject) => {
+		const store = GetObjectStore(DB_POINT_STORE, 'readonly');
+		const req = store.getAll();
+		req.onsuccess = function (evt) {
+			//console.log("Got all customers: " + event.target.result);
+			resolve(evt.target.result);
+		};
+		req.onerror = function (event) {
+			reject(new Error('GetAllPoints => ' + event));
+		};
+	});
+}
+
+async function GetState(key) {
+	return new Promise((resolve, reject) => {
+		const store = GetObjectStore(DB_STATE_STORE, 'readonly');
+		const req = store.get(key);
+		req.onerror = function (event) {
+			reject(new Error('GetState => ' + event));
+		};
+		req.onsuccess = function (event) {
+			resolve(event.target.result);
+		};
+	});
+}
+
+/**
+  * @param {number} key is path Id
+  */
+async function GetPath(key) {
+	return new Promise((resolve, reject) => {
+		const store = GetObjectStore(DB_PATH_STORE, 'readonly');
+		const req = store.get(key);
+		req.onerror = function (event) {
+			reject(new Error('GetPath => ' + event));
+		};
+		req.onsuccess = function (event) {
+			resolve(event.target.result);
+		};
+	});
+}
+
+async function GetAllPaths() {
+	return new Promise((resolve, reject) => {
+		const store = GetObjectStore(DB_PATH_STORE, 'readonly');
+		const req = store.getAll();
+		req.onsuccess = function (evt) {
+			//console.log("Got all customers: " + event.target.result);
+			resolve(evt.target.result);
+		};
+		req.onerror = function (event) {
+			reject(new Error('GetAllPaths => ' + event));
+		};
+	});
+}
+
+/**
+  * @param {number} key is calculated inxed of point y * width + x, probably not usefull
+  * @param {object} oval is svg circle
+  */
+async function StorePoint(key, oval) {
+	return new Promise((resolve, reject) => {
+		//console.log("addPublication arguments:", arguments);
+		const pos = oval.$GetPosition();
+		const color = oval.$GetFillColor();
+		const obj = {
+			x: pos.x / 16,
+			y: pos.y / 16,
+			Status: oval.$GetStatus(),
+			Color: color
+			//, pos: key, //`${pos.x}_${pos.y}`
+		};
+
+		const store = GetObjectStore(DB_POINT_STORE, 'readwrite');
+		let req;
+		try {
+			req = store.add(obj, key);
+		} catch (e) {
+			if (e.name == 'DataCloneError')
+				console.error("This engine doesn't know how to clone a Blob, use Firefox");
+			throw e;
+		}
+		req.onsuccess = function () {
+			//console.log("Insertion in DB successful");
+			resolve();
+		};
+		req.onerror = function () {
+			console.error("StorePoint error", this.error);
+			reject();
+		};
+	});
+}
+
+/**
+  * @param {number} key is GameID
+  * @param {object} game is InkBallGame object as state
+  */
+async function StoreState(key, game) {
+	return new Promise((resolve, reject) => {
+		const state = {
+			iGameID: game.g_iGameID,
+			iPlayerID: game.g_iPlayerID,
+			iOtherPlayerId: game.m_iOtherPlayerId,
+			sLastMoveGameTimeStamp: game.m_sLastMoveGameTimeStamp
+		};
+
+		const store = GetObjectStore(DB_STATE_STORE, 'readwrite');
+		let req;
+		try {
+			req = store.add(state, key);
+		} catch (e) {
+			if (e.name == 'DataCloneError')
+				console.error("This engine doesn't know how to clone a Blob, use Firefox");
+			throw e;
+		}
+		req.onsuccess = function () {
+			//console.log("Insertion in DB successful");
+			resolve();
+		};
+		req.onerror = function () {
+			console.error("StoreState error", this.error);
+			reject();
+		};
+	});
+}
+
+/**
+  * @param {number} key is path Id
+  * @param {object} path is svg polyline
+  */
+async function StorePath(key, path) {
+	return new Promise((resolve, reject) => {
+		//console.log("addPublication arguments:", arguments);
+		const iId = key;
+		const Color = path.$GetFillColor();
+		const PointsAsString = path.$GetPointsString();
+		const obj = {
+			//iId: iId,
+			Color: Color,
+			PointsAsString: PointsAsString
+		};
+
+		const store = GetObjectStore(DB_PATH_STORE, 'readwrite');
+		let req;
+		try {
+			req = store.add(obj, key);
+		} catch (e) {
+			if (e.name == 'DataCloneError')
+				console.error("This engine doesn't know how to clone a Blob, use Firefox");
+			throw e;
+		}
+		req.onsuccess = function () {
+			resolve();
+		};
+		req.onerror = function () {
+			console.error("StorePath error", this.error);
+			reject();
+		};
+	});
+}
+
+/**
+ * @param {string} pos is position X_Y of circle/oval
+ */
+function DeletePublicationFromBib(pos) {
+	console.log("deletePublicationFromBib:", arguments);
+	let store = GetObjectStore(DB_POINT_STORE, 'readwrite');
+	let req = store.index('pos');
+	req.get(pos).onsuccess = function (evt) {
+		if (typeof evt.target.result == 'undefined') {
+			console.error("No matching record found");
+			return;
+		}
+		DeletePublication(evt.target.result.id, store);
+	};
+	req.onerror = function (evt) {
+		console.error("deletePublicationFromBib:", evt.target.errorCode);
+	};
+}
+
+/**
+ * @param {number} key is calculated inxed of point y * width + x, probably not usefull
+ * @param {IDBObjectStore=} store from indexeddb
+ */
+function DeletePublication(key, store) {
+	console.log("deletePublication:", arguments);
+
+	if (typeof store == 'undefined')
+		store = GetObjectStore(DB_POINT_STORE, 'readwrite');
+
+	// As per spec http://www.w3.org/TR/IndexedDB/#object-store-deletion-operation
+	// the result of the Object Store Deletion Operation algorithm is
+	// undefined, so it's not possible to know if some records were actually
+	// deleted by looking at the request result.
+	let req = store.get(key);
+	req.onsuccess = function (evt) {
+		let record = evt.target.result;
+		console.log("record:", record);
+		if (typeof record == 'undefined') {
+			console.error("No matching record found");
+			return;
+		}
+		// Warning: The exact same key used for creation needs to be passed for
+		// the deletion. If the key was a Number for creation, then it needs to
+		// be a Number for deletion.
+		req = store.delete(key);
+		req.onsuccess = function (evt) {
+			console.log("evt:", evt);
+			console.log("evt.target:", evt.target);
+			console.log("evt.target.result:", evt.target.result);
+			console.log("delete successful");
+			console.log("Deletion successful");
+			//displayPubList(store);
+		};
+		req.onerror = function (evt) {
+			console.error("deletePublication:", evt.target.errorCode);
+		};
+	};
+	req.onerror = function (evt) {
+		console.error("deletePublication:", evt.target.errorCode);
+	};
+}
+
+
+
+
+class SimplePointStore {
+	constructor() {
+	}
+
+	async PrepareStore(/*game*/) {
+		this.store = new Map();
+	}
+
+	async has(key) {
+		return this.store.has(key);
+	}
+
+	async set(key, val) {
+		return this.store.set(key, val);
+	}
+
+	async get(key) {
+		return this.store.get(key);
+	}
+
+	async values() {
+		return this.store.values();
+	}
+}
+
+class IDBPointStore extends SimplePointStore {
+	constructor() {
+		super();
+	}
+
+	async PrepareStore(game) {
+		if (!g_DB)
+			await OpenDb();
+
+		if (game.CreateScreenPointFromIndexedDb)
+			this.PointCreationCallback = game.CreateScreenPointFromIndexedDb.bind(game);
+
+		const state = await GetState(game.g_iGameID);
+		if (!state) {
+			await ClearObjectStore(DB_POINT_STORE);
+			await ClearObjectStore(DB_PATH_STORE);
+			await ClearObjectStore(DB_STATE_STORE);
+
+			await StoreState(game.g_iGameID, game);
+		}
+		else {
+			//TODO: verify date of last move and decide whether to need pull points from signalR
+			if (state.sLastMoveGameTimeStamp !== game.m_sLastMoveGameTimeStamp) {
+				await ClearObjectStore(DB_POINT_STORE);
+				await ClearObjectStore(DB_PATH_STORE);
+				await ClearObjectStore(DB_STATE_STORE);
+			}
+			else {
+				game.m_bPointsAndPathsLoaded = true;
+				if (this.PointCreationCallback) {
+					const points = await this.values();
+					//loading points from indexeddb
+					for (const idb_pt of points) {
+						const pt = this.PointCreationCallback(idb_pt.x, idb_pt.y, idb_pt.Status, idb_pt.Color);
+						//return pt;
+					}
+				}
+			}
+		}
+
+	}
+
+	async has(key) {
+		const pt = await GetPoint(key);
+		return pt !== undefined && pt !== null;
+		//return this.store.has(key);
+	}
+
+	async set(key, val) {
+		await StorePoint(key, val);
+		//return this.store.set(key, val);
+	}
+
+	async get(key) {
+		const idb_pt = await GetPoint(key);
+		if (idb_pt && this.PointCreationCallback) {
+			const pt = this.PointCreationCallback(idb_pt.x, idb_pt.y, idb_pt.Status, idb_pt.Color);
+			return pt;
+		}
+		else
+			return null;
+		//return this.store.get(key);
+	}
+
+	async values() {
+		//return this.store.values();
+		const values = await GetAllPoints();
+		return values;
+	}
+}
+
+class SimplePathStore {
+	constructor() {
+		this.store = [];
+	}
+
+	push(obj) {
+		return this.store.push(obj);
+	}
+
+	all() {
+		return this.store;
+	}
+}
+
+class IDBPathStore extends SimplePathStore {
+	constructor() {
+		super();
+	}
+
+	async PrepareStore(game) {
+		//if (!g_DB)
+		//	await OpenDb();
+
+		if (game.CreateScreenPathFromIndexedDb)
+			this.PathCreationCallback = game.CreateScreenPathFromIndexedDb.bind(game);
+	}
+
+	async push(val) {
+		await StorePath(val.$GetID(), val);
+		//return this.store.push(obj);
+	}
+
+	async all() {
+		const values = await GetAllPaths();
+		return values;
+		//return this.store;
+	}
+}
+
+//TODO: check compat and create plain store abstraction when indexeddb not supported
+if (!('indexedDB' in window)) {
+	console.log("This browser doesn't support IndexedDB");
+
+	PointStore = SimplePointStore;
+	PathStore = SimplePathStore;
+}
+else {
+	PointStore = IDBPointStore;
+	PathStore = IDBPathStore;
+}
+//////////IndexedDB points and path stores end//////////
+
+export {
+	$createOval, $createPolyline, $RemovePolyline, $RemoveOval, $createSVGVML, $createLine, hasDuplicates, sortPointsClockwise,
+	PointStore, PathStore
+};

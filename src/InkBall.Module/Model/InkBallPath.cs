@@ -226,7 +226,7 @@ namespace InkBall.Module.Model
 	}
 
 	[MessagePackObject(true)]
-	public class InkBallPathViewModel : CommonPath<InkBallPointViewModel>
+	public class InkBallPathViewModel : CommonPath<InkBallPointViewModel>, ILastMoveTimestamp
 	{
 		delegate void ActionRef<T1, T2, T3, T4>(ref T1 arg1, ref T2 arg2, ref T3 arg3, ref T4 arg4);
 
@@ -241,6 +241,7 @@ namespace InkBall.Module.Model
 
 		//legacy
 		public string OwnedPointsAsString { get; set; }
+		public string LastMoveGameTimeStamp { get; set; }
 
 		///Points creating the path; path points
 		[JsonIgnore]

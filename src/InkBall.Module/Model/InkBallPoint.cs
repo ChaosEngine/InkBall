@@ -12,6 +12,14 @@ namespace InkBall.Module.Model
 		bool BelongsToCPU { get; }
 	}
 
+	public interface ILastMoveTimestamp
+	{
+		/// <summary>
+		/// Last game move timestamp as UTC ISO-8601 format
+		/// </summary>
+		string LastMoveGameTimeStamp { get; }
+	}
+
 	public interface IPoint : IBelongingToCPU
 	{
 		int iId { get; set; }
@@ -222,8 +230,10 @@ namespace InkBall.Module.Model
 
 	//[Serializable]
 	[MessagePackObject(true)]
-	public class InkBallPointViewModel : CommonPoint, IPoint
+	public class InkBallPointViewModel : CommonPoint, IPoint, ILastMoveTimestamp
 	{
+		public string LastMoveGameTimeStamp { get; set; }
+
 		public InkBallPointViewModel()
 		{ }
 
