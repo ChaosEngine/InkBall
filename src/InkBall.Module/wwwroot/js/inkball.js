@@ -2,7 +2,7 @@
 /*global signalR, gameOptions*/
 "use strict";
 
-let $createOval, $createPolyline, $RemovePolyline, $createSVGVML, $createLine, hasDuplicates, sortPointsClockwise, PointStore, PathStore,
+let $createOval, $createPolyline, $RemovePolyline, $createSVGVML, $createLine, hasDuplicates, sortPointsClockwise, GameStateStore,
 	concavemanBundle;
 
 /******** funcs-n-classes ********/
@@ -341,7 +341,7 @@ async function importAllModulesAsync(gameOptions) {
 	$createOval = module.$createOval, $createPolyline = module.$createPolyline, $RemovePolyline = module.$RemovePolyline,
 		$createSVGVML = module.$createSVGVML, $createLine = module.$createLine, hasDuplicates = module.hasDuplicates,
 		sortPointsClockwise = module.sortPointsClockwise;
-	PointStore = module.PointStore, PathStore = module.PathStore;
+	GameStateStore = module.GameStateStore;
 	//////SVGVML end/////
 
 	if (gameOptions.iOtherPlayerID === -1) {
@@ -445,8 +445,8 @@ class InkBallGame {
 		this.m_sDotColor = this.m_bIsPlayingWithRed ? this.COLOR_RED : this.COLOR_BLUE;
 		this.m_PointRadius = 4;
 		this.m_Line = null;
-		this.m_Lines = new PathStore();
-		this.m_Points = new PointStore();
+		this.m_Lines = null;
+		this.m_Points = null;
 		this.m_bViewOnly = bViewOnly;
 		this.m_MouseCursorOval = null;
 		this.m_ApplicationUserSettings = null;
@@ -481,7 +481,7 @@ class InkBallGame {
 	}
 
 	async GetPlayerPointsAndPaths() {
-		if (!this.m_bPointsAndPathsLoaded) {
+		if (this.m_bPointsAndPathsLoaded === false) {
 			const ppDTO = await this.g_SignalRConnection.invoke("GetPlayerPointsAndPaths", this.m_bViewOnly, this.g_iGameID);
 			//LocalLog(ppDTO);
 
@@ -526,7 +526,7 @@ class InkBallGame {
 					this.m_ApplicationUserSettings = new ApplicationUserSettings(settings.DesktopNotifications);
 				}
 			}
-			if (!this.m_bPointsAndPathsLoaded) {
+			if (this.m_bPointsAndPathsLoaded === false) {
 				await this.GetPlayerPointsAndPaths();
 			}
 			if (this.m_ApplicationUserSettings !== null && this.m_ApplicationUserSettings.DesktopNotifications === true) {
@@ -960,12 +960,25 @@ class InkBallGame {
 		await this.m_Points.set(iY * this.m_iGridWidth + iX, oval);
 	}
 
+	GetGameStateForIndexedDb() {
+		return {
+			iGameID: this.g_iGameID,
+			iPlayerID: this.g_iPlayerID,
+			iOtherPlayerId: this.m_iOtherPlayerId,
+			sLastMoveGameTimeStamp: this.m_sLastMoveGameTimeStamp,
+			bPointsAndPathsLoaded: this.m_bPointsAndPathsLoaded,
+			iGridWidth: this.m_iGridWidth,
+			iGridSizeX: this.m_iGridSizeX,
+			iGridSizeY: this.m_iGridSizeY
+		};
+	}
+
 	/**
-	 * Callback method invoked by IndexeDb abstraction store
-	 * @param {any} iX point x taken from IndexeDb
-	 * @param {any} iY point y taken from IndexeDb
-	 * @param {any} iStatus status taken from IndexeDb
-	 * @param {any} sColor color taken from IndexeDb
+	 * Callback method invoked by IndexedDb abstraction store
+	 * @param {any} iX point x taken from IndexedDb
+	 * @param {any} iY point y taken from IndexedDb
+	 * @param {any} iStatus status taken from IndexedDb
+	 * @param {any} sColor color taken from IndexedDb
 	 * @returns {object} created oval/cirle
 	 */
 	CreateScreenPointFromIndexedDb(iX, iY, iStatus, sColor) {
@@ -1078,9 +1091,9 @@ class InkBallGame {
 		await this.m_Lines.push(line);
 	}
 
-	async CreateScreenPathFromIndexedDb(packed, iPlayerId, iPathId) {
-		const bIsRed = this.m_bIsPlayingWithRed;
-		const bBelong2ThisPlayer = iPlayerId === this.g_iPlayerID;
+	async CreateScreenPathFromIndexedDb(packed, sColor, iPathId) {
+		//const bIsRed = this.m_bIsPlayingWithRed;
+		//const bBelong2ThisPlayer = iPlayerId === this.g_iPlayerID;
 
 		const sPoints = packed.split(" ");
 		let sDelimiter = "", sPathPoints = "", p = null, x, y,
@@ -1098,7 +1111,7 @@ class InkBallGame {
 				//debugger;
 			}
 
-			x *= this.m_iGridSizeX; y *= this.m_iGridSizeY;
+			//x *= this.m_iGridSizeX; y *= this.m_iGridSizeY;
 			sPathPoints += `${sDelimiter}${x},${y}`;
 			sDelimiter = " ";
 		}
@@ -1113,11 +1126,13 @@ class InkBallGame {
 			//debugger;
 		}
 
-		x *= this.m_iGridSizeX; y *= this.m_iGridSizeY;
+		//x *= this.m_iGridSizeX; y *= this.m_iGridSizeY;
 		sPathPoints += `${sDelimiter}${x},${y}`;
 
 		const line = $createPolyline(3, sPathPoints,
-			(bBelong2ThisPlayer ? this.m_sDotColor : (bIsRed ? this.COLOR_BLUE : this.COLOR_RED)));
+			//(bBelong2ThisPlayer ? this.m_sDotColor : (bIsRed ? this.COLOR_BLUE : this.COLOR_RED))
+			sColor
+		);
 		line.$SetID(iPathId);
 		//this.m_Lines.push(line);
 
@@ -1388,6 +1403,8 @@ class InkBallGame {
 	async ReceivedPointProcessing(point) {
 		const x = point.iX, y = point.iY, iStatus = point.Status !== undefined ? point.Status : point.status;
 
+		this.m_sLastMoveGameTimeStamp = (point.TimeStamp !== undefined ? point.TimeStamp : point.timeStamp).toISOString();
+
 		await this.SetPoint(x, y, iStatus, point.iPlayerId);
 
 		if (this.g_iPlayerID !== point.iPlayerId) {
@@ -1428,6 +1445,9 @@ class InkBallGame {
 	}
 
 	async ReceivedPathProcessing(path) {
+
+		this.m_sLastMoveGameTimeStamp = (path.TimeStamp !== undefined ? path.TimeStamp : path.timeStamp).toISOString();
+
 		if (this.g_iPlayerID !== path.iPlayerId) {
 
 			const str_path = path.PointsAsString || path.pointsAsString, owned = path.OwnedPointsAsString || path.ownedPointsAsString;
@@ -1665,13 +1685,13 @@ class InkBallGame {
 							p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
 							const line_contains_point = this.m_Line.$ContainsPoint(tox, toy);
 							if (line_contains_point < 1 && p1.$GetStatus() !== StatusEnum.POINT_STARTING &&
-								true === this.m_Line.$AppendPoints(tox, toy, this.m_iGridSizeX)) {
+								true === this.m_Line.$AppendPoints(tox, toy, this.m_iGridSizeX, this.m_iGridSizeY)) {
 								p1.$SetStatus(StatusEnum.POINT_IN_PATH, true);
 								this.m_iLastX = x;
 								this.m_iLastY = y;
 							}
 							else if (line_contains_point === 1 && p1.$GetStatus() === StatusEnum.POINT_STARTING &&
-								true === this.m_Line.$AppendPoints(tox, toy, this.m_iGridSizeX)) {
+								true === this.m_Line.$AppendPoints(tox, toy, this.m_iGridSizeX, this.m_iGridSizeY)) {
 								const val = await this.SurroundOponentPoints();
 								if (val.owned.length > 0) {
 									this.Debug('Closing path', 0);
@@ -1786,13 +1806,13 @@ class InkBallGame {
 						const toy = y * this.m_iGridSizeY;
 						const line_contains_point = this.m_Line.$ContainsPoint(tox, toy);
 						if (line_contains_point < 1 && p1.$GetStatus() !== StatusEnum.POINT_STARTING &&
-							true === this.m_Line.$AppendPoints(tox, toy, this.m_iGridSizeX)) {
+							true === this.m_Line.$AppendPoints(tox, toy, this.m_iGridSizeX, this.m_iGridSizeY)) {
 							p1.$SetStatus(StatusEnum.POINT_IN_PATH, true);
 							this.m_iLastX = x;
 							this.m_iLastY = y;
 						}
 						else if (line_contains_point === 1 && p1.$GetStatus() === StatusEnum.POINT_STARTING &&
-							true === this.m_Line.$AppendPoints(tox, toy, this.m_iGridSizeX)) {
+							true === this.m_Line.$AppendPoints(tox, toy, this.m_iGridSizeX, this.m_iGridSizeY)) {
 							const val = await this.SurroundOponentPoints();
 							if (val.owned.length > 0) {
 								this.Debug('Closing path', 0);
@@ -1975,7 +1995,7 @@ class InkBallGame {
 		event.preventDefault();
 		//LocalLog('OnTestConcaveman');
 
-		const vertices = await this.BuildGraph().vertices.map(function (pt) {
+		const vertices = (await this.BuildGraph()).vertices.map(function (pt) {
 			const pos = pt.$GetPosition(); return [pos.x / this.m_iGridSizeX, pos.y / this.m_iGridSizeX];
 		}.bind(this));
 
@@ -2027,7 +2047,7 @@ class InkBallGame {
 	async OnTestGroupPoints(event) {
 		event.preventDefault();
 		//LocalLog('OnTestGroupPoints');
-		$createPolyline(6, this.GroupPointsRecurse([], await this.m_Points.get(9 * this.m_iGridWidth + 26)).map(function (fnd) {
+		$createPolyline(6, (await this.GroupPointsRecurse([], await this.m_Points.get(9 * this.m_iGridWidth + 26))).map(function (fnd) {
 			const pt = fnd.$GetPosition();
 			return pt.x + ',' + pt.y;
 		}).join(' '), 'green');
@@ -2148,8 +2168,11 @@ class InkBallGame {
 
 		this.DisableSelection(this.m_Screen);
 
-		await this.m_Lines.PrepareStore(this);
-		await this.m_Points.PrepareStore(this);
+		const stateStore = new GameStateStore(this.CreateScreenPointFromIndexedDb.bind(this), this.CreateScreenPathFromIndexedDb.bind(this),
+			this.GetGameStateForIndexedDb.bind(this));
+		this.m_Lines = stateStore.GetPathStore();
+		this.m_Points = stateStore.GetPointStore();
+		this.m_bPointsAndPathsLoaded = await stateStore.PrepareStore(this);
 
 		if (this.m_bViewOnly === false) {
 
@@ -2767,6 +2790,7 @@ window.addEventListener('load', async function () {
 	const servTimeoutMillis = gameOptions.servTimeoutMillis;
 	const isReadonly = gameOptions.isReadonly;
 	const pathAfterPointDrawAllowanceSecAmount = gameOptions.pathAfterPointDrawAllowanceSecAmount;
+	const sLastMoveTimeStampUtcIso = new Date(gameOptions.sLastMoveGameTimeStamp).toISOString();
 
 	await importAllModulesAsync(gameOptions);
 
@@ -2775,12 +2799,12 @@ window.addEventListener('load', async function () {
 		gameType, bPlayingWithRed, bPlayerActive, isReadonly, pathAfterPointDrawAllowanceSecAmount
 	);
 	await game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw',
-		'#messageInput', '#messagesList', '#sendButton', gameOptions.sLastMoveGameTimeStamp,
+		'#messageInput', '#messagesList', '#sendButton', sLastMoveTimeStampUtcIso,
 		['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints', '#TestFindFullSurroundedPoints']);
 
 	if (gameOptions.PointsAsJavaScriptArray !== null) {
 		await game.StartSignalRConnection(false);
-		if (!this.m_bPointsAndPathsLoaded) {
+		if (game.m_bPointsAndPathsLoaded === false) {
 			await game.SetAllPoints(gameOptions.PointsAsJavaScriptArray);
 			await game.SetAllPaths(gameOptions.PathsAsJavaScriptArray);
 		}

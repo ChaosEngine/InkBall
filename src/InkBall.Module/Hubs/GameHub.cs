@@ -448,7 +448,7 @@ namespace InkBall.Module.Hubs
 						throw;
 					}
 				}
-				new_point.LastMoveGameTimeStamp = ThisGame.TimeStamp.ToString("O");
+				new_point.TimeStamp = ThisGame.TimeStamp;
 
 				if (!ThisGame.CpuOponent)
 					await Clients.User(OtherUserIdentifier).ServerToClientPoint(new_point);
@@ -595,7 +595,7 @@ namespace InkBall.Module.Hubs
 						else
 						{
 							path = new InkBallPathViewModel(db_path, path.PointsAsString, path.OwnedPointsAsString);
-							path.LastMoveGameTimeStamp = ThisGame.TimeStamp.ToString("O");
+							path.TimeStamp = ThisGame.TimeStamp;
 							dto = path;
 							if (!ThisGame.CpuOponent)
 								await Clients.User(OtherUserIdentifier).ServerToClientPath(path);

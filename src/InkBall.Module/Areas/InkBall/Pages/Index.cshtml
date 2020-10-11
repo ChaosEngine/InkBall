@@ -19,7 +19,7 @@
     string surrender_win_cancel_name;
     bool isThisPlayerActive = Model.Game.IsThisPlayerActive();
     bool useMessagePackBinaryTransport = commonUIConfigureOptions.Value.UseMessagePackBinaryTransport;
-    string lastTimeStampUTC = @Model.Game.TimeStamp.ToUniversalTime().ToString("O");
+    string lastTimeStampISO = @Model.Game.TimeStamp.ToString("O");
     if (Model.Game.Player2 != null)
     {
         if (Model.Game.GetOtherPlayer().IsLastMoveOverdue() && isThisPlayerActive)
@@ -131,7 +131,7 @@
 	    servTimeoutMillis: @Model.ClientTimeoutInterval.TotalMilliseconds,
 	    isReadonly: JSON.parse('@Model.IsReadonly'.toLowerCase()),
         pathAfterPointDrawAllowanceSecAmount: @Constants.PathAfterPointDrawAllowanceSecAmount,
-        sLastMoveGameTimeStamp: '@lastTimeStampUTC',
+        sLastMoveGameTimeStamp: '@lastTimeStampISO',
 
 	    @if(Model.PlayerPointsAndPaths.Points != null)
 	    {

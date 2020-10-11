@@ -241,7 +241,7 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-var $createOval, $createPolyline, $RemovePolyline, $createSVGVML, $createLine, hasDuplicates, sortPointsClockwise, PointStore, PathStore, concavemanBundle;
+var $createOval, $createPolyline, $RemovePolyline, $createSVGVML, $createLine, hasDuplicates, sortPointsClockwise, GameStateStore, concavemanBundle;
 /******** funcs-n-classes ********/
 
 var StatusEnum = Object.freeze({
@@ -802,7 +802,7 @@ function _importAllModulesAsync() {
 
           case 11:
             $createOval = module.$createOval, $createPolyline = module.$createPolyline, $RemovePolyline = module.$RemovePolyline, $createSVGVML = module.$createSVGVML, $createLine = module.$createLine, hasDuplicates = module.hasDuplicates, sortPointsClockwise = module.sortPointsClockwise;
-            PointStore = module.PointStore, PathStore = module.PathStore; //////SVGVML end/////
+            GameStateStore = module.GameStateStore; //////SVGVML end/////
 
             if (!(gameOptions.iOtherPlayerID === -1)) {
               _context36.next = 18;
@@ -950,8 +950,8 @@ var InkBallGame = /*#__PURE__*/function () {
     this.m_sDotColor = this.m_bIsPlayingWithRed ? this.COLOR_RED : this.COLOR_BLUE;
     this.m_PointRadius = 4;
     this.m_Line = null;
-    this.m_Lines = new PathStore();
-    this.m_Points = new PointStore();
+    this.m_Lines = null;
+    this.m_Points = null;
     this.m_bViewOnly = bViewOnly;
     this.m_MouseCursorOval = null;
     this.m_ApplicationUserSettings = null;
@@ -1003,7 +1003,7 @@ var InkBallGame = /*#__PURE__*/function () {
           while (1) {
             switch (_context2.prev = _context2.next) {
               case 0:
-                if (this.m_bPointsAndPathsLoaded) {
+                if (!(this.m_bPointsAndPathsLoaded === false)) {
                   _context2.next = 15;
                   break;
                 }
@@ -1111,7 +1111,7 @@ var InkBallGame = /*#__PURE__*/function () {
                 this.m_ApplicationUserSettings = new ApplicationUserSettings(_settings.DesktopNotifications);
 
               case 19:
-                if (this.m_bPointsAndPathsLoaded) {
+                if (!(this.m_bPointsAndPathsLoaded === false)) {
                   _context3.next = 22;
                   break;
                 }
@@ -1604,12 +1604,26 @@ var InkBallGame = /*#__PURE__*/function () {
 
       return SetPoint;
     }()
+  }, {
+    key: "GetGameStateForIndexedDb",
+    value: function GetGameStateForIndexedDb() {
+      return {
+        iGameID: this.g_iGameID,
+        iPlayerID: this.g_iPlayerID,
+        iOtherPlayerId: this.m_iOtherPlayerId,
+        sLastMoveGameTimeStamp: this.m_sLastMoveGameTimeStamp,
+        bPointsAndPathsLoaded: this.m_bPointsAndPathsLoaded,
+        iGridWidth: this.m_iGridWidth,
+        iGridSizeX: this.m_iGridSizeX,
+        iGridSizeY: this.m_iGridSizeY
+      };
+    }
     /**
-     * Callback method invoked by IndexeDb abstraction store
-     * @param {any} iX point x taken from IndexeDb
-     * @param {any} iY point y taken from IndexeDb
-     * @param {any} iStatus status taken from IndexeDb
-     * @param {any} sColor color taken from IndexeDb
+     * Callback method invoked by IndexedDb abstraction store
+     * @param {any} iX point x taken from IndexedDb
+     * @param {any} iY point y taken from IndexedDb
+     * @param {any} iStatus status taken from IndexedDb
+     * @param {any} sColor color taken from IndexedDb
      * @returns {object} created oval/cirle
      */
 
@@ -1871,25 +1885,25 @@ var InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "CreateScreenPathFromIndexedDb",
     value: function () {
-      var _CreateScreenPathFromIndexedDb = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(packed, iPlayerId, iPathId) {
-        var bIsRed, bBelong2ThisPlayer, sPoints, sDelimiter, sPathPoints, p, x, y, status, _iterator3, _step3, _packed2, line;
+      var _CreateScreenPathFromIndexedDb = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(packed, sColor, iPathId) {
+        var sPoints, sDelimiter, sPathPoints, p, x, y, status, _iterator3, _step3, _packed2, line;
 
         return regeneratorRuntime.wrap(function _callee9$(_context9) {
           while (1) {
             switch (_context9.prev = _context9.next) {
               case 0:
-                bIsRed = this.m_bIsPlayingWithRed;
-                bBelong2ThisPlayer = iPlayerId === this.g_iPlayerID;
+                //const bIsRed = this.m_bIsPlayingWithRed;
+                //const bBelong2ThisPlayer = iPlayerId === this.g_iPlayerID;
                 sPoints = packed.split(" ");
                 sDelimiter = "", sPathPoints = "", p = null, status = StatusEnum.POINT_STARTING;
                 _iterator3 = _createForOfIteratorHelper(sPoints);
-                _context9.prev = 5;
+                _context9.prev = 3;
 
                 _iterator3.s();
 
-              case 7:
+              case 5:
                 if ((_step3 = _iterator3.n()).done) {
-                  _context9.next = 22;
+                  _context9.next = 18;
                   break;
                 }
 
@@ -1897,73 +1911,72 @@ var InkBallGame = /*#__PURE__*/function () {
                 p = _packed2.split(",");
                 x = parseInt(p[0]);
                 y = parseInt(p[1]);
-                _context9.next = 14;
+                _context9.next = 12;
                 return this.m_Points.get(y * this.m_iGridWidth + x);
 
-              case 14:
+              case 12:
                 p = _context9.sent;
 
                 if (p !== null && p !== undefined) {
                   p.$SetStatus(status);
                   status = StatusEnum.POINT_IN_PATH;
                 } else {//debugger;
-                }
+                } //x *= this.m_iGridSizeX; y *= this.m_iGridSizeY;
 
-                x *= this.m_iGridSizeX;
-                y *= this.m_iGridSizeY;
+
                 sPathPoints += "".concat(sDelimiter).concat(x, ",").concat(y);
                 sDelimiter = " ";
 
+              case 16:
+                _context9.next = 5;
+                break;
+
+              case 18:
+                _context9.next = 23;
+                break;
+
               case 20:
-                _context9.next = 7;
-                break;
-
-              case 22:
-                _context9.next = 27;
-                break;
-
-              case 24:
-                _context9.prev = 24;
-                _context9.t0 = _context9["catch"](5);
+                _context9.prev = 20;
+                _context9.t0 = _context9["catch"](3);
 
                 _iterator3.e(_context9.t0);
 
-              case 27:
-                _context9.prev = 27;
+              case 23:
+                _context9.prev = 23;
 
                 _iterator3.f();
 
-                return _context9.finish(27);
+                return _context9.finish(23);
 
-              case 30:
+              case 26:
                 p = sPoints[0].split(",");
                 x = parseInt(p[0]);
                 y = parseInt(p[1]);
-                _context9.next = 35;
+                _context9.next = 31;
                 return this.m_Points.get(y * this.m_iGridWidth + x);
 
-              case 35:
+              case 31:
                 p = _context9.sent;
 
                 if (p !== null && p !== undefined) {
                   p.$SetStatus(status);
                 } else {//debugger;
-                }
+                } //x *= this.m_iGridSizeX; y *= this.m_iGridSizeY;
 
-                x *= this.m_iGridSizeX;
-                y *= this.m_iGridSizeY;
+
                 sPathPoints += "".concat(sDelimiter).concat(x, ",").concat(y);
-                line = $createPolyline(3, sPathPoints, bBelong2ThisPlayer ? this.m_sDotColor : bIsRed ? this.COLOR_BLUE : this.COLOR_RED);
+                line = $createPolyline(3, sPathPoints, //(bBelong2ThisPlayer ? this.m_sDotColor : (bIsRed ? this.COLOR_BLUE : this.COLOR_RED))
+                sColor);
                 line.$SetID(iPathId); //this.m_Lines.push(line);
 
                 return _context9.abrupt("return", line);
 
-              case 43:
+              case 37:
               case "end":
                 return _context9.stop();
             }
           }
-        }, _callee9, this, [[5, 24, 27, 30]]);
+        }, _callee9, this, [[3, 20, 23, 26]]);
       }));
 
       function CreateScreenPathFromIndexedDb(_x14, _x15, _x16) {
@@ -2434,10 +2447,11 @@ var InkBallGame = /*#__PURE__*/function () {
             switch (_context14.prev = _context14.next) {
               case 0:
                 x = point.iX, y = point.iY, iStatus = point.Status !== undefined ? point.Status : point.status;
-                _context14.next = 3;
+                this.m_sLastMoveGameTimeStamp = (point.TimeStamp !== undefined ? point.TimeStamp : point.timeStamp).toISOString();
+                _context14.next = 4;
                 return this.SetPoint(x, y, iStatus, point.iPlayerId);
 
-              case 3:
+              case 4:
                 if (this.g_iPlayerID !== point.iPlayerId) {
                   this.m_bIsPlayerActive = true;
                   this.ShowMobileStatus('Oponent has moved, your turn');
@@ -2463,7 +2477,7 @@ var InkBallGame = /*#__PURE__*/function () {
 
                 this.m_bHandlingEvent = false;
 
-              case 5:
+              case 6:
               case "end":
                 return _context14.stop();
             }
@@ -2487,39 +2501,41 @@ var InkBallGame = /*#__PURE__*/function () {
           while (1) {
             switch (_context15.prev = _context15.next) {
               case 0:
+                this.m_sLastMoveGameTimeStamp = (path.TimeStamp !== undefined ? path.TimeStamp : path.timeStamp).toISOString();
+
                 if (!(this.g_iPlayerID !== path.iPlayerId)) {
-                  _context15.next = 35;
+                  _context15.next = 36;
                   break;
                 }
 
                 str_path = path.PointsAsString || path.pointsAsString, owned = path.OwnedPointsAsString || path.ownedPointsAsString;
-                _context15.next = 4;
+                _context15.next = 5;
                 return this.SetPath(str_path, this.m_sDotColor === this.COLOR_RED ? true : false, false, path.iId
                 /*real DB id*/
                 );
 
-              case 4:
+              case 5:
                 points = owned.split(" ");
                 point_status = this.m_sDotColor === this.COLOR_RED ? StatusEnum.POINT_OWNED_BY_RED : StatusEnum.POINT_OWNED_BY_BLUE;
                 sOwnedCol = this.m_sDotColor === this.COLOR_RED ? this.COLOR_OWNED_RED : this.COLOR_OWNED_BLUE;
                 _iterator8 = _createForOfIteratorHelper(points);
-                _context15.prev = 8;
+                _context15.prev = 9;
 
                 _iterator8.s();
 
-              case 10:
+              case 11:
                 if ((_step8 = _iterator8.n()).done) {
-                  _context15.next = 20;
+                  _context15.next = 21;
                   break;
                 }
 
                 packed = _step8.value;
                 p = packed.split(",");
                 x = parseInt(p[0]), y = parseInt(p[1]);
-                _context15.next = 16;
+                _context15.next = 17;
                 return this.m_Points.get(y * this.m_iGridWidth + x);
 
-              case 16:
+              case 17:
                 p = _context15.sent;
 
                 if (p !== undefined) {
@@ -2529,55 +2545,55 @@ var InkBallGame = /*#__PURE__*/function () {
                 } else {//debugger;
                 }
 
-              case 18:
-                _context15.next = 10;
+              case 19:
+                _context15.next = 11;
                 break;
 
-              case 20:
-                _context15.next = 25;
+              case 21:
+                _context15.next = 26;
                 break;
 
-              case 22:
-                _context15.prev = 22;
-                _context15.t0 = _context15["catch"](8);
+              case 23:
+                _context15.prev = 23;
+                _context15.t0 = _context15["catch"](9);
 
                 _iterator8.e(_context15.t0);
 
-              case 25:
-                _context15.prev = 25;
+              case 26:
+                _context15.prev = 26;
 
                 _iterator8.f();
 
-                return _context15.finish(25);
+                return _context15.finish(26);
 
-              case 28:
+              case 29:
                 this.m_bIsPlayerActive = true;
                 this.ShowMobileStatus('Oponent has moved, your turn');
                 this.m_Screen.style.cursor = "crosshair";
                 if (this.m_Line !== null) this.OnCancelClick();
                 this.m_StopAndDraw.disabled = '';
-                _context15.next = 54;
+                _context15.next = 55;
                 break;
 
-              case 35:
+              case 36:
                 //set starting point to POINT_IN_PATH to block further path closing with it
                 _points = this.m_Line.$GetPointsArray();
                 _x23 = _points[0].x, _y = _points[0].y;
                 _x23 /= this.m_iGridSizeX;
                 _y /= this.m_iGridSizeY;
-                _context15.next = 41;
+                _context15.next = 42;
                 return this.m_Points.get(_y * this.m_iGridWidth + _x23);
 
-              case 41:
+              case 42:
                 p0 = _context15.sent;
                 if (p0 !== undefined) p0.$SetStatus(StatusEnum.POINT_IN_PATH);else {//debugger;
                 }
                 this.m_Line.$SetWidthAndColor(3, this.m_sDotColor);
                 this.m_Line.$SetID(path.iId);
-                _context15.next = 47;
+                _context15.next = 48;
                 return this.m_Lines.push(this.m_Line);
 
-              case 47:
+              case 48:
                 this.m_iLastX = this.m_iLastY = -1;
                 this.m_Line = null;
                 this.m_bIsPlayerActive = false;
@@ -2586,7 +2602,7 @@ var InkBallGame = /*#__PURE__*/function () {
                 this.m_StopAndDraw.disabled = this.m_CancelPath.disabled = 'disabled';
                 if (true === this.m_bIsCPUGame && !this.m_bIsPlayerActive) this.StartCPUCalculation();
 
-              case 54:
+              case 55:
                 if (!this.m_bDrawLines) this.m_StopAndDraw.value = 'Draw line';else this.m_StopAndDraw.value = 'Draw dot';
                 this.m_bHandlingEvent = false;
 
@@ -2595,12 +2611,12 @@ var InkBallGame = /*#__PURE__*/function () {
                   this.m_Timer = null;
                 }
 
-              case 57:
+              case 58:
               case "end":
                 return _context15.stop();
             }
           }
-        }, _callee15, this, [[8, 22, 25, 28]]);
+        }, _callee15, this, [[9, 23, 26, 29]]);
       }));
 
       function ReceivedPathProcessing(_x22) {
@@ -2782,7 +2798,7 @@ var InkBallGame = /*#__PURE__*/function () {
 
                 line_contains_point = this.m_Line.$ContainsPoint(tox, toy);
 
-                if (!(line_contains_point < 1 && p1.$GetStatus() !== StatusEnum.POINT_STARTING && true === this.m_Line.$AppendPoints(tox, toy, this.m_iGridSizeX))) {
+                if (!(line_contains_point < 1 && p1.$GetStatus() !== StatusEnum.POINT_STARTING && true === this.m_Line.$AppendPoints(tox, toy, this.m_iGridSizeX, this.m_iGridSizeY))) {
                   _context16.next = 32;
                   break;
                 }
@@ -2794,7 +2810,7 @@ var InkBallGame = /*#__PURE__*/function () {
                 break;
 
               case 32:
-                if (!(line_contains_point === 1 && p1.$GetStatus() === StatusEnum.POINT_STARTING && true === this.m_Line.$AppendPoints(tox, toy, this.m_iGridSizeX))) {
+                if (!(line_contains_point === 1 && p1.$GetStatus() === StatusEnum.POINT_STARTING && true === this.m_Line.$AppendPoints(tox, toy, this.m_iGridSizeX, this.m_iGridSizeY))) {
                   _context16.next = 41;
                   break;
                 }
@@ -2998,7 +3014,7 @@ var InkBallGame = /*#__PURE__*/function () {
                 toy = y * this.m_iGridSizeY;
                 line_contains_point = this.m_Line.$ContainsPoint(tox, toy);
 
-                if (!(line_contains_point < 1 && p1.$GetStatus() !== StatusEnum.POINT_STARTING && true === this.m_Line.$AppendPoints(tox, toy, this.m_iGridSizeX))) {
+                if (!(line_contains_point < 1 && p1.$GetStatus() !== StatusEnum.POINT_STARTING && true === this.m_Line.$AppendPoints(tox, toy, this.m_iGridSizeX, this.m_iGridSizeY))) {
                   _context17.next = 49;
                   break;
                 }
@@ -3010,7 +3026,7 @@ var InkBallGame = /*#__PURE__*/function () {
                 break;
 
               case 49:
-                if (!(line_contains_point === 1 && p1.$GetStatus() === StatusEnum.POINT_STARTING && true === this.m_Line.$AppendPoints(tox, toy, this.m_iGridSizeX))) {
+                if (!(line_contains_point === 1 && p1.$GetStatus() === StatusEnum.POINT_STARTING && true === this.m_Line.$AppendPoints(tox, toy, this.m_iGridSizeX, this.m_iGridSizeY))) {
                   _context17.next = 58;
                   break;
                 }
@@ -3338,13 +3354,13 @@ var InkBallGame = /*#__PURE__*/function () {
                 event.preventDefault(); //LocalLog('OnTestConcaveman');
 
                 _context20.next = 3;
-                return this.BuildGraph().vertices.map(function (pt) {
+                return this.BuildGraph();
+
+              case 3:
+                vertices = _context20.sent.vertices.map(function (pt) {
                   var pos = pt.$GetPosition();
                   return [pos.x / this.m_iGridSizeX, pos.y / this.m_iGridSizeX];
                 }.bind(this));
-
-              case 3:
-                vertices = _context20.sent;
 
                 if (!(vertices && vertices.length > 0)) {
                   _context20.next = 32;
@@ -3489,14 +3505,18 @@ var InkBallGame = /*#__PURE__*/function () {
 
               case 6:
                 _context22.t3 = _context22.sent;
-                _context22.t4 = _context22.t1.GroupPointsRecurse.call(_context22.t1, _context22.t2, _context22.t3).map(function (fnd) {
+                _context22.next = 9;
+                return _context22.t1.GroupPointsRecurse.call(_context22.t1, _context22.t2, _context22.t3);
+
+              case 9:
+                _context22.t4 = _context22.sent.map(function (fnd) {
                   var pt = fnd.$GetPosition();
                   return pt.x + ',' + pt.y;
                 }).join(' ');
                 (0, _context22.t0)(6, _context22.t4, 'green');
                 LocalLog("game.lastCycle = ".concat(this.lastCycle));
 
-              case 10:
+              case 12:
               case "end":
                 return _context22.stop();
             }
@@ -3645,6 +3665,7 @@ var InkBallGame = /*#__PURE__*/function () {
         var iTooLong2Duration,
             iClientWidth,
             iClientHeight,
+            stateStore,
             i,
             chatSection,
             _args24 = arguments;
@@ -3713,14 +3734,15 @@ var InkBallGame = /*#__PURE__*/function () {
 
                 $createSVGVML(this.m_Screen, this.m_Screen.style.width, this.m_Screen.style.height, true);
                 this.DisableSelection(this.m_Screen);
-                _context24.next = 49;
-                return this.m_Lines.PrepareStore(this);
+                stateStore = new GameStateStore(this.CreateScreenPointFromIndexedDb.bind(this), this.CreateScreenPathFromIndexedDb.bind(this), this.GetGameStateForIndexedDb.bind(this));
+                this.m_Lines = stateStore.GetPathStore();
+                this.m_Points = stateStore.GetPointStore();
+                _context24.next = 52;
+                return stateStore.PrepareStore(this);
 
-              case 49:
-                _context24.next = 51;
-                return this.m_Points.PrepareStore(this);
+              case 52:
+                this.m_bPointsAndPathsLoaded = _context24.sent;
 
-              case 51:
                 if (this.m_bViewOnly === false) {
                   if (this.m_MouseCursorOval === null) {
                     this.m_MouseCursorOval = $createOval(this.m_PointRadius, 'true');
@@ -3780,7 +3802,7 @@ var InkBallGame = /*#__PURE__*/function () {
                   document.querySelector(sPause).innerHTML = 'back to Game List';
                 }
 
-              case 52:
+              case 54:
               case "end":
                 return _context24.stop();
             }
@@ -5086,7 +5108,7 @@ var InkBallGame = /*#__PURE__*/function () {
 
 
 window.addEventListener('load', /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee35() {
-  var inkBallHubName, iGameID, iPlayerID, iOtherPlayerID, bPlayingWithRed, bPlayerActive, gameType, protocol, servTimeoutMillis, isReadonly, pathAfterPointDrawAllowanceSecAmount, game;
+  var inkBallHubName, iGameID, iPlayerID, iOtherPlayerID, bPlayingWithRed, bPlayerActive, gameType, protocol, servTimeoutMillis, isReadonly, pathAfterPointDrawAllowanceSecAmount, sLastMoveTimeStampUtcIso, game;
   return regeneratorRuntime.wrap(function _callee35$(_context35) {
     while (1) {
       switch (_context35.prev = _context35.next) {
@@ -5106,57 +5128,58 @@ window.addEventListener('load', /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/reg
           servTimeoutMillis = gameOptions.servTimeoutMillis;
           isReadonly = gameOptions.isReadonly;
           pathAfterPointDrawAllowanceSecAmount = gameOptions.pathAfterPointDrawAllowanceSecAmount;
-          _context35.next = 16;
+          sLastMoveTimeStampUtcIso = new Date(gameOptions.sLastMoveGameTimeStamp).toISOString();
+          _context35.next = 17;
           return importAllModulesAsync(gameOptions);
 
-        case 16:
+        case 17:
           game = new InkBallGame(iGameID, iPlayerID, iOtherPlayerID, inkBallHubName, signalR.LogLevel.Warning, protocol, signalR.HttpTransportType.None, servTimeoutMillis, gameType, bPlayingWithRed, bPlayerActive, isReadonly, pathAfterPointDrawAllowanceSecAmount);
-          _context35.next = 19;
-          return game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw', '#messageInput', '#messagesList', '#sendButton', gameOptions.sLastMoveGameTimeStamp, ['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints', '#TestFindFullSurroundedPoints']);
+          _context35.next = 20;
+          return game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw', '#messageInput', '#messagesList', '#sendButton', sLastMoveTimeStampUtcIso, ['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints', '#TestFindFullSurroundedPoints']);
 
-        case 19:
+        case 20:
           if (!(gameOptions.PointsAsJavaScriptArray !== null)) {
-            _context35.next = 29;
+            _context35.next = 30;
             break;
           }
 
-          _context35.next = 22;
+          _context35.next = 23;
           return game.StartSignalRConnection(false);
 
-        case 22:
-          if (this.m_bPointsAndPathsLoaded) {
-            _context35.next = 27;
+        case 23:
+          if (!(game.m_bPointsAndPathsLoaded === false)) {
+            _context35.next = 28;
             break;
           }
 
-          _context35.next = 25;
+          _context35.next = 26;
           return game.SetAllPoints(gameOptions.PointsAsJavaScriptArray);
 
-        case 25:
-          _context35.next = 27;
+        case 26:
+          _context35.next = 28;
           return game.SetAllPaths(gameOptions.PathsAsJavaScriptArray);
 
-        case 27:
-          _context35.next = 31;
+        case 28:
+          _context35.next = 32;
           break;
 
-        case 29:
-          _context35.next = 31;
+        case 30:
+          _context35.next = 32;
           return game.StartSignalRConnection(true);
 
-        case 31:
+        case 32:
           //alert('a QQ');
           document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
           game.CountPointsDebug("#debug2"); //delete window.gameOptions;
 
           window.game = game;
 
-        case 34:
+        case 35:
         case "end":
           return _context35.stop();
       }
     }
-  }, _callee35, this);
+  }, _callee35);
 })));
 window.addEventListener('beforeunload', function () {
   if (window.game) window.game.StopSignalRConnection();

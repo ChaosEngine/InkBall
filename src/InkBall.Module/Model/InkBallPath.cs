@@ -241,7 +241,7 @@ namespace InkBall.Module.Model
 
 		//legacy
 		public string OwnedPointsAsString { get; set; }
-		public string LastMoveGameTimeStamp { get; set; }
+		public DateTime TimeStamp { get; set; }
 
 		///Points creating the path; path points
 		[JsonIgnore]
