@@ -203,7 +203,7 @@ if (SVG) {
 		cont.appendChild(o);
 		//ch_added start
 		o.setAttribute("data-id", 0);
-		o.$AppendPoints = function (x, y, diff = 16) {
+		o.$AppendPoints = function (x, y, diffX, diffY) {
 			const pts_str = this.getAttribute("points");
 			const pts = pts_str.split(" ");
 
@@ -220,7 +220,7 @@ if (SVG) {
 
 			const last_x = parseInt(arr[0]), last_y = parseInt(arr[1]);
 			const x_diff = parseInt(x), y_diff = parseInt(y);
-			if (!(Math.abs(last_x - x_diff) <= diff && Math.abs(last_y - y_diff) <= diff)) {
+			if (!(Math.abs(last_x - x_diff) <= diffX && Math.abs(last_y - y_diff) <= diffY)) {
 				// debugger;
 				return false;
 			}
@@ -370,7 +370,7 @@ if (SVG) {
 		cont.appendChild(o);
 		//ch_added start
 		o.setAttribute("data-id", 0);
-		o.$AppendPoints = function (x, y, diff = 16) {
+		o.$AppendPoints = function (x, y, diffX, diffY) {
 			const pts_str = this.points.value;
 			const pts = pts_str.split(" ");
 
@@ -387,7 +387,7 @@ if (SVG) {
 
 			const last_x = parseInt(arr[0]), last_y = parseInt(arr[1]);
 			const x_diff = parseInt(x), y_diff = parseInt(y);
-			if (!(Math.abs(last_x - x_diff) <= diff && Math.abs(last_y - y_diff) <= diff)) {
+			if (!(Math.abs(last_x - x_diff) <= diffX && Math.abs(last_y - y_diff) <= diffY)) {
 				//debugger;
 				return false;
 			}

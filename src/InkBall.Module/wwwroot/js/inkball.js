@@ -1537,13 +1537,13 @@ class InkBallGame {
 							p0.$GetFillColor() === this.m_sDotColor && p1.$GetFillColor() === this.m_sDotColor) {
 							const line_contains_point = this.m_Line.$ContainsPoint(tox, toy);
 							if (line_contains_point < 1 && p1.$GetStatus() !== StatusEnum.POINT_STARTING &&
-								true === this.m_Line.$AppendPoints(tox, toy, this.m_iGridSizeX)) {
+								true === this.m_Line.$AppendPoints(tox, toy, this.m_iGridSizeX, this.m_iGridSizeY)) {
 								p1.$SetStatus(StatusEnum.POINT_IN_PATH, true);
 								this.m_iLastX = x;
 								this.m_iLastY = y;
 							}
 							else if (line_contains_point === 1 && p1.$GetStatus() === StatusEnum.POINT_STARTING &&
-								true === this.m_Line.$AppendPoints(tox, toy, this.m_iGridSizeX)) {
+								true === this.m_Line.$AppendPoints(tox, toy, this.m_iGridSizeX, this.m_iGridSizeY)) {
 								const val = this.SurroundOponentPoints();
 								if (val.owned.length > 0) {
 									this.Debug('Closing path', 0);
@@ -1658,13 +1658,13 @@ class InkBallGame {
 						const toy = y * this.m_iGridSizeY;
 						const line_contains_point = this.m_Line.$ContainsPoint(tox, toy);
 						if (line_contains_point < 1 && p1.$GetStatus() !== StatusEnum.POINT_STARTING &&
-							true === this.m_Line.$AppendPoints(tox, toy, this.m_iGridSizeX)) {
+							true === this.m_Line.$AppendPoints(tox, toy, this.m_iGridSizeX, this.m_iGridSizeY)) {
 							p1.$SetStatus(StatusEnum.POINT_IN_PATH, true);
 							this.m_iLastX = x;
 							this.m_iLastY = y;
 						}
 						else if (line_contains_point === 1 && p1.$GetStatus() === StatusEnum.POINT_STARTING &&
-							true === this.m_Line.$AppendPoints(tox, toy, this.m_iGridSizeX)) {
+							true === this.m_Line.$AppendPoints(tox, toy, this.m_iGridSizeX, this.m_iGridSizeY)) {
 							const val = this.SurroundOponentPoints();
 							if (val.owned.length > 0) {
 								this.Debug('Closing path', 0);
