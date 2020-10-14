@@ -219,10 +219,10 @@ namespace InkBall.Tests
 					Times.Once);
 
 				mockGameClient.Verify(
-					client => client.ServerToClientPoint(It.Is<InkBallPointViewModel>(p => p.iX == 7 && p.iY == 7)),
+					client => client.ServerToClientPoint(It.Is<InkBallPointViewModel>(p => p.iX == 7 && p.iY == 7 && p.TimeStamp != null)),
 					Times.Once);
 				mockGameClient.Verify(
-					client => client.ServerToClientPoint(It.Is<InkBallPointViewModel>(p => p.iX == 8 && p.iY == 8)),
+					client => client.ServerToClientPoint(It.Is<InkBallPointViewModel>(p => p.iX == 8 && p.iY == 8 && p.TimeStamp != null)),
 					Times.Once);
 
 				var points_and_paths = await db.LoadPointsAndPathsAsync(1, token);
@@ -365,10 +365,10 @@ namespace InkBall.Tests
 					Times.AtLeastOnce);
 
 				mockGameClient.Verify(
-					client => client.ServerToClientPoint(It.Is<InkBallPointViewModel>(p => p.iX == 7 && p.iY == 7)),
+					client => client.ServerToClientPoint(It.Is<InkBallPointViewModel>(p => p.iX == 7 && p.iY == 7 && p.TimeStamp != null)),
 					Times.Once);
 				mockGameClient.Verify(
-					client => client.ServerToClientPoint(It.Is<InkBallPointViewModel>(p => p.iX == 8 && p.iY == 8)),
+					client => client.ServerToClientPoint(It.Is<InkBallPointViewModel>(p => p.iX == 8 && p.iY == 8 && p.TimeStamp != null)),
 					Times.Once);
 
 				var points_and_paths = await db.LoadPointsAndPathsAsync(1, token);
@@ -521,7 +521,7 @@ namespace InkBall.Tests
 						iPlayerId = 1
 					});
 				});
-				Assert.Equal("point already placed", exception.Message);
+				Assert.Equal("point already placed (1,1)", exception.Message);
 
 
 				mockHubCallerContext_P1.Verify(clients => clients.Features, Times.AtLeastOnce);

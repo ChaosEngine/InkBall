@@ -785,7 +785,7 @@ class InkBallGame {
 		}.bind(this));
 
 		if (false === this.m_bIsCPUGame) {
-			document.querySelector(this.m_sMsgSendButtonSel).addEventListener("click", function (event) {
+			document.querySelector(this.m_sMsgSendButtonSel).addEventListener("click", async function (event) {
 				event.preventDefault();
 
 				let encodedMsg = document.querySelector(this.m_sMsgInputSel).value.trim();
@@ -793,7 +793,7 @@ class InkBallGame {
 
 				let ping = new PingCommand(encodedMsg);
 
-				this.SendAsyncData(ping);
+				await this.SendAsyncData(ping);
 
 			}.bind(this), false);
 
@@ -1322,28 +1322,29 @@ class InkBallGame {
 	 * @param {object} payload transferrableObject (DTO)
 	 * @param {function} revertFunction on-error revert/rollback function
 	 */
-	SendAsyncData(payload, revertFunction = undefined) {
+	async SendAsyncData(payload, revertFunction = undefined) {
 
 		switch (payload.GetKind()) {
-
 			case CommandKindEnum.POINT:
 				LocalLog(InkBallPointViewModel.Format('some player', payload));
 				this.m_bHandlingEvent = true;
 
-				this.g_SignalRConnection.invoke("ClientToServerPoint", payload).then(async function (point) {
+				try {
+					const point = await this.g_SignalRConnection.invoke("ClientToServerPoint", payload);
 					await this.ReceivedPointProcessing(point);
-				}.bind(this)).catch(function (err) {
+				} catch (err) {
 					LocalError(err.toString());
 					if (revertFunction !== undefined)
 						revertFunction();
-				}.bind(this));
+				}
 				break;
 
 			case CommandKindEnum.PATH:
 				LocalLog(InkBallPathViewModel.Format('some player', payload));
 				this.m_bHandlingEvent = true;
 
-				this.g_SignalRConnection.invoke("ClientToServerPath", payload).then(function (dto) {
+				try {
+					const dto = await this.g_SignalRConnection.invoke("ClientToServerPath", payload);
 
 					if (Object.prototype.hasOwnProperty.call(dto, 'WinningPlayerId') || Object.prototype.hasOwnProperty.call(dto, 'winningPlayerId')) {
 						let win = dto;
@@ -1351,38 +1352,39 @@ class InkBallGame {
 					}
 					else if (Object.prototype.hasOwnProperty.call(dto, 'PointsAsString') || Object.prototype.hasOwnProperty.call(dto, 'pointsAsString')) {
 						let path = dto;
-						this.ReceivedPathProcessing(path);
+						await this.ReceivedPathProcessing(path);
 					}
 					else
 						throw new Error("ClientToServerPath bad GetKind!");
-
-				}.bind(this)).catch(function (err) {
+				} catch (err) {
 					LocalError(err.toString());
 					if (revertFunction !== undefined)
 						revertFunction();
-				}.bind(this));
+				}
 				break;
 
 			case CommandKindEnum.PING:
-				this.g_SignalRConnection.invoke("ClientToServerPing", payload).then(function () {
+				try {
+					await this.g_SignalRConnection.invoke("ClientToServerPing", payload);
 					document.querySelector(this.m_sMsgInputSel).value = '';
 					document.querySelector(this.m_sMsgSendButtonSel).disabled = 'disabled';
-				}.bind(this)).catch(function (err) {
+				} catch (err) {
 					LocalError(err.toString());
-				});
+				}
 				break;
 
 			case CommandKindEnum.STOP_AND_DRAW:
-				this.g_SignalRConnection.invoke("ClientToServerStopAndDraw", payload).then(function () {
+				try {
+					await this.g_SignalRConnection.invoke("ClientToServerStopAndDraw", payload);
 					this.m_bDrawLines = true;
 					this.m_iLastX = this.m_iLastY = -1;
 					this.m_Line = null;
 					this.m_bIsPlayerActive = true;
 					this.m_StopAndDraw.disabled = 'disabled';
 
-				}.bind(this)).catch(function (err) {
+				} catch (err) {
 					LocalError(err.toString());
-				});
+				}
 				break;
 
 			default:
@@ -1413,7 +1415,7 @@ class InkBallGame {
 			this.m_Screen.style.cursor = "crosshair";
 
 			if (this.m_Line !== null)
-				this.OnCancelClick();
+				await this.OnCancelClick();
 			this.m_StopAndDraw.disabled = '';
 			if (!this.m_bDrawLines)
 				this.m_StopAndDraw.value = 'Draw line';
@@ -1478,7 +1480,7 @@ class InkBallGame {
 			this.m_Screen.style.cursor = "crosshair";
 
 			if (this.m_Line !== null)
-				this.OnCancelClick();
+				await this.OnCancelClick();
 			this.m_StopAndDraw.disabled = '';
 		}
 		else {
@@ -1696,8 +1698,8 @@ class InkBallGame {
 								if (val.owned.length > 0) {
 									this.Debug('Closing path', 0);
 									this.rAF_FrameID = null;
-									this.SendAsyncData(this.CreateXMLPutPathRequest(val), () => {
-										this.OnCancelClick();
+									await this.SendAsyncData(this.CreateXMLPutPathRequest(val), async () => {
+										await this.OnCancelClick();
 										val.OwnedPoints.forEach(revData => {
 											const p = revData.point;
 											const revertFillColor = revData.revertFillColor;
@@ -1724,7 +1726,7 @@ class InkBallGame {
 									this.m_iLastY = y;
 								}
 								else
-									this.OnCancelClick();
+									await this.OnCancelClick();
 							}
 						}
 					}
@@ -1784,7 +1786,7 @@ class InkBallGame {
 			}
 
 			this.rAF_FrameID = null;
-			this.SendAsyncData(this.CreateXMLPutPointRequest(loc_x, loc_y), () => {
+			await this.SendAsyncData(this.CreateXMLPutPointRequest(loc_x, loc_y), () => {
 				this.m_bMouseDown = false;
 				this.m_bHandlingEvent = false;
 			});
@@ -1817,8 +1819,8 @@ class InkBallGame {
 							if (val.owned.length > 0) {
 								this.Debug('Closing path', 0);
 								this.rAF_FrameID = null;
-								this.SendAsyncData(this.CreateXMLPutPathRequest(val), () => {
-									this.OnCancelClick();
+								await this.SendAsyncData(this.CreateXMLPutPathRequest(val), async () => {
+									await this.OnCancelClick();
 									val.OwnedPoints.forEach(revData => {
 										const p = revData.point;
 										const revertFillColor = revData.revertFillColor;
@@ -1846,7 +1848,7 @@ class InkBallGame {
 								this.m_iLastY = y;
 							}
 							else
-								this.OnCancelClick();
+								await this.OnCancelClick();
 						}
 					}
 				}
@@ -1887,10 +1889,10 @@ class InkBallGame {
 		this.m_MouseCursorOval.$Hide();
 	}
 
-	OnStopAndDraw(event) {
+	async OnStopAndDraw(event) {
 		if (!this.m_Timer) {
 			if (this.m_Line !== null)
-				this.OnCancelClick();
+				await this.OnCancelClick();
 			this.m_bDrawLines = !this.m_bDrawLines;
 			const btn = event.target;
 			if (!this.m_bDrawLines)
@@ -1901,7 +1903,7 @@ class InkBallGame {
 			this.m_Line = null;
 		} else if (this.m_Line === null) {
 			//send On-Stop-And-Draw notification
-			this.SendAsyncData(new StopAndDrawCommand());
+			await this.SendAsyncData(new StopAndDrawCommand());
 		}
 	}
 
@@ -2147,10 +2149,10 @@ class InkBallGame {
 		}
 		this.m_iPosX = this.m_Screen.offsetLeft;
 		this.m_iPosY = this.m_Screen.offsetTop;
-		this.m_BoardSize = {
-			width: parseInt(this.m_Screen.style.width),
-			height: parseInt(this.m_Screen.style.height)
-		};
+
+		const boardsize = Array.from(this.m_Screen.classList).find(x => x.startsWith('boardsize')).split('-')[1].split('x');
+		this.m_BoardSize = { width: parseInt(boardsize[0]), height: parseInt(boardsize[1]) };
+
 		let iClientWidth = this.m_Screen.clientWidth;
 		let iClientHeight = this.m_Screen.clientHeight;
 		this.m_iGridSizeX = parseInt(Math.ceil(iClientWidth / this.m_BoardSize.width));
@@ -2269,7 +2271,7 @@ class InkBallGame {
 			x = this.GetRandomInt(0, this.m_iGridWidth);
 			y = this.GetRandomInt(0, this.m_iGridHeight);
 
-			if (!this.m_Points.has(y * this.m_iGridWidth + x) && await this.IsPointOutsideAllPaths(x, y)) {
+			if (!(await this.m_Points.has(y * this.m_iGridWidth + x)) && await this.IsPointOutsideAllPaths(x, y)) {
 				break;
 			}
 		}
@@ -2754,7 +2756,7 @@ class InkBallGame {
 			//this.rAF_FrameID = null;
 			//}
 
-			this.SendAsyncData(point, () => {
+			await this.SendAsyncData(point, () => {
 				this.m_bMouseDown = false;
 				this.m_bHandlingEvent = false;
 			});

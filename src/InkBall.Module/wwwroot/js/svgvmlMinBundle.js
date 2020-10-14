@@ -201,7 +201,7 @@ var GameStateStore = /*#__PURE__*/function () {
   function GameStateStore(t, e, r) {
     _classCallCheck(this, GameStateStore);
 
-    this.DB_NAME = "InkballGame", this.DB_POINT_STORE = "points", this.DB_PATH_STORE = "paths", this.DB_STATE_STORE = "state", this.DB_VERSION = 1, this.g_DB, "indexedDB" in window ? (this.PointStore = new IDBPointStore(this.GetPoint.bind(this), this.StorePoint.bind(this), this.GetAllPoints.bind(this), this.UpdateState.bind(this), t, r), this.PathStore = new IDBPathStore(this.GetAllPaths.bind(this), this.StorePath.bind(this), this.UpdateState.bind(this), e, r)) : (console.log("This browser doesn't support IndexedDB"), this.PointStore = new SimplePointStore(), this.PathStore = new SimplePathStore());
+    this.DB_NAME = "InkballGame", this.DB_POINT_STORE = "points", this.DB_PATH_STORE = "paths", this.DB_STATE_STORE = "state", this.DB_VERSION = 2, this.g_DB, "indexedDB" in window ? (this.PointStore = new IDBPointStore(this.GetPoint.bind(this), this.StorePoint.bind(this), this.GetAllPoints.bind(this), this.UpdateState.bind(this), t, r), this.PathStore = new IDBPathStore(this.GetAllPaths.bind(this), this.StorePath.bind(this), this.UpdateState.bind(this), e, r)) : (console.log("This browser doesn't support IndexedDB"), this.PointStore = new SimplePointStore(), this.PathStore = new SimplePathStore());
   }
 
   _createClass(GameStateStore, [{
@@ -234,20 +234,11 @@ var GameStateStore = /*#__PURE__*/function () {
                     console.log("OpenDb.onupgradeneeded");
                     var e = Array.from(t.currentTarget.result.objectStoreNames);
                     e.includes(this.DB_POINT_STORE) && t.currentTarget.result.deleteObjectStore(this.DB_POINT_STORE), e.includes(this.DB_PATH_STORE) && t.currentTarget.result.deleteObjectStore(this.DB_PATH_STORE), e.includes(this.DB_STATE_STORE) && t.currentTarget.result.deleteObjectStore(this.DB_STATE_STORE);
-                    var r = t.currentTarget.result.createObjectStore(this.DB_POINT_STORE, {
+                    t.currentTarget.result.createObjectStore(this.DB_POINT_STORE, {
                       autoIncrement: !1
-                    });
-                    r.createIndex("Status", "Status", {
-                      unique: !1
-                    }), r.createIndex("Color", "Color", {
-                      unique: !1
-                    });
-                    t.currentTarget.result.createObjectStore(this.DB_PATH_STORE, {
+                    }), t.currentTarget.result.createObjectStore(this.DB_PATH_STORE, {
                       autoIncrement: !1
-                    }).createIndex("iPlayerId", "iPlayerId", {
-                      unique: !1
-                    });
-                    t.currentTarget.result.createObjectStore(this.DB_STATE_STORE, {
+                    }), t.currentTarget.result.createObjectStore(this.DB_STATE_STORE, {
                       autoIncrement: !1
                     });
                   }.bind(_this);

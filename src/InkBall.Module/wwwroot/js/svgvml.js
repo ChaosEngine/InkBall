@@ -245,7 +245,7 @@ class GameStateStore {
 		this.DB_POINT_STORE = 'points';
 		this.DB_PATH_STORE = 'paths';
 		this.DB_STATE_STORE = 'state';
-		this.DB_VERSION = 1; // Use a long long for this value (don't use a float)
+		this.DB_VERSION = 2; // Use a long long for this value (don't use a float)
 		this.g_DB;//main DB object
 
 		//TODO: check compat and create plain store abstraction when indexeddb not supported
@@ -276,7 +276,7 @@ class GameStateStore {
 	async OpenDb() {
 		console.log("OpenDb ...");
 		return new Promise((resolve, reject) => {
-			let req = indexedDB.open(this.DB_NAME, this.DB_VERSION);
+			const req = indexedDB.open(this.DB_NAME, this.DB_VERSION);
 			req.onsuccess = function (evt) {
 				// Equal to: db = req.result;
 				this.g_DB = evt.currentTarget.result;
@@ -301,13 +301,13 @@ class GameStateStore {
 
 				const point_store = evt.currentTarget.result.createObjectStore(
 					this.DB_POINT_STORE, { /*keyPath: 'pos',*/ autoIncrement: false });
-				point_store.createIndex('Status', 'Status', { unique: false });
-				point_store.createIndex('Color', 'Color', { unique: false });
+				//point_store.createIndex('Status', 'Status', { unique: false });
+				//point_store.createIndex('Color', 'Color', { unique: false });
 
 
 				const path_store = evt.currentTarget.result.createObjectStore(
 					this.DB_PATH_STORE, { /*keyPath: 'iId',*/ autoIncrement: false });
-				path_store.createIndex('iPlayerId', 'iPlayerId', { unique: false });
+				//path_store.createIndex('Color', 'Color', { unique: false });
 
 				const state_store = evt.currentTarget.result.createObjectStore(
 					this.DB_STATE_STORE, { /*keyPath: 'gameId',*/ autoIncrement: false });
@@ -327,8 +327,8 @@ class GameStateStore {
 
 	async ClearObjectStore(storeName) {
 		return new Promise((resolve, reject) => {
-			let store = this.GetObjectStore(storeName, 'readwrite');
-			let req = store.clear();
+			const store = this.GetObjectStore(storeName, 'readwrite');
+			const req = store.clear();
 			req.onsuccess = function () {
 				resolve();
 			};

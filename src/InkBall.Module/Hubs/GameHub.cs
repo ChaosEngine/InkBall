@@ -407,7 +407,7 @@ namespace InkBall.Module.Hubs
 									, token);
 				var db_point_player = ThisPlayer.iId == point.iPlayerId ? ThisPlayer : OtherPlayer;
 				if (already_placed)
-					throw new ArgumentException("point already placed");
+					throw new ArgumentException($"point already placed ({point})");
 
 				var game_paths = await _dbContext.GetPathsFromDatabaseAsync(point.iGameId, true, token);
 				if (game_paths.Any(pa => pa.IsPointInsidePath(point)))

@@ -388,7 +388,7 @@ var GameStateStore = /*#__PURE__*/function () {
     this.DB_POINT_STORE = 'points';
     this.DB_PATH_STORE = 'paths';
     this.DB_STATE_STORE = 'state';
-    this.DB_VERSION = 1; // Use a long long for this value (don't use a float)
+    this.DB_VERSION = 2; // Use a long long for this value (don't use a float)
 
     this.g_DB; //main DB object
     //TODO: check compat and create plain store abstraction when indexeddb not supported
@@ -449,20 +449,14 @@ var GameStateStore = /*#__PURE__*/function () {
                     var point_store = evt.currentTarget.result.createObjectStore(this.DB_POINT_STORE, {
                       /*keyPath: 'pos',*/
                       autoIncrement: false
-                    });
-                    point_store.createIndex('Status', 'Status', {
-                      unique: false
-                    });
-                    point_store.createIndex('Color', 'Color', {
-                      unique: false
-                    });
+                    }); //point_store.createIndex('Status', 'Status', { unique: false });
+                    //point_store.createIndex('Color', 'Color', { unique: false });
+
                     var path_store = evt.currentTarget.result.createObjectStore(this.DB_PATH_STORE, {
                       /*keyPath: 'iId',*/
                       autoIncrement: false
-                    });
-                    path_store.createIndex('iPlayerId', 'iPlayerId', {
-                      unique: false
-                    });
+                    }); //path_store.createIndex('Color', 'Color', { unique: false });
+
                     var state_store = evt.currentTarget.result.createObjectStore(this.DB_STATE_STORE, {
                       /*keyPath: 'gameId',*/
                       autoIncrement: false
