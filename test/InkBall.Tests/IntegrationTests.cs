@@ -1,7 +1,10 @@
-﻿using System;
+﻿using InkBall.Module.Model;
+using System;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -83,8 +86,10 @@ namespace InkBall.Tests
 			using (var response = await _client.GetAsync($"{_client.BaseAddress}{page}"))
 			{
 				// Assert
-				Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-				//Assert.Equal($"{_client.BaseAddress}Account/Login?ReturnUrl=%2FInkball%2FGames", response.Headers.Location.ToString());
+				//Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+				Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+				Assert.Equal($"{_client.BaseAddress}Account/Login?ReturnUrl=%2F{UrlEncoder.Default.Encode(page)}",
+					response.Headers.Location.ToString());
 			}
 		}
 
@@ -95,6 +100,7 @@ namespace InkBall.Tests
 		[Theory]
 		[InlineData("InkBall/Games", "<div class='container inkgames'>")]
 		[InlineData("InkBall/Highscores", "<div class=\"container inkstats\">")]
+		[InlineData("InkBall/Home", "const userName = 'Test user1';")]
 		public async Task Index_Pages_Authenticated(string page, string contentToCheck)
 		{
 			if (_fixture.DOTNET_RUNNING_IN_CONTAINER) return;//pass on fake DB with no data
@@ -103,7 +109,9 @@ namespace InkBall.Tests
 			// Arrange
 			using (var request = new HttpRequestMessage(HttpMethod.Get, $"{_client.BaseAddress}{page}"))
 			{
-				request.Headers.Authorization = new AuthenticationHeaderValue("Test");
+				request.Headers.Authorization = new AuthenticationHeaderValue("Test",
+					JsonSerializer.Serialize(new InkBallUser { iId = 1, UserName = "Test user1", sExternalId = "1" })
+				);
 
 				//Act
 				using (var response = await _client.SendAsync(request))

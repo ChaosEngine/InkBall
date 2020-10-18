@@ -20,7 +20,9 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Reflection;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
@@ -110,16 +112,29 @@ namespace InkBall.Tests
 
 		protected override Task<AuthenticateResult> HandleAuthenticateAsync()
 		{
-			if (Request.Headers.TryGetValue("Authorization", out StringValues auth) && auth == "Test")
+			if (Request.Headers.TryGetValue(nameof(HttpRequestHeader.Authorization), out StringValues auth) &&
+				auth.ToString().StartsWith(Scheme.Name, StringComparison.InvariantCultureIgnoreCase))
 			{
+				string serialized = auth.ToString();
+				InkBallUser user;
+				if (serialized.Contains('{'))
+				{
+					serialized = serialized.Substring($"{Scheme.Name} ".Length);
+					user = JsonSerializer.Deserialize<InkBallUser>(serialized);
+				}
+				else
+					user = new InkBallUser { iId = 1, UserName = "Test user1", sExternalId = "1" };
+
+
+
 				var claims = new[] {
-					new Claim(ClaimTypes.Name, "Test user") ,
-					new Claim(nameof(InkBall.Module.Pages.HomeModel.InkBallUserId), 1.ToString()),
-					new Claim(ClaimTypes.DateOfBirth, DateTime.Now.Date.AddYears(-18).ToString("O"))
+					new Claim(ClaimTypes.Name, user.UserName) ,
+					new Claim(nameof(InkBall.Module.Pages.HomeModel.InkBallUserId), user.sExternalId),
+					new Claim(ClaimTypes.DateOfBirth, DateTime.UtcNow.AddYears(-18).ToString("O"))
 				};
-				var identity = new ClaimsIdentity(claims, "Test");
+				var identity = new ClaimsIdentity(claims, Scheme.Name);
 				var principal = new ClaimsPrincipal(identity);
-				var ticket = new AuthenticationTicket(principal, "Test");
+				var ticket = new AuthenticationTicket(principal, Scheme.Name);
 
 				var result = AuthenticateResult.Success(ticket);
 
@@ -137,14 +152,17 @@ namespace InkBall.Tests
 	/// <summary>
 	/// Test fixture startup
 	/// </summary>
-	public class TestingStartup : IDisposable
+	public class TestingStartup
 	{
 		public IConfiguration Configuration { get; }
+
 		internal static SqliteConnection Connection { get; set; }
 
 		public TestingStartup(IConfiguration configuration)
 		{
 			Configuration = configuration;
+
+			Connection = GetSqliteInMemoryBuildOptions();
 		}
 
 		/// <summary>
@@ -172,7 +190,6 @@ namespace InkBall.Tests
 		{
 			var env = services.FirstOrDefault(x => x.ServiceType == typeof(IWebHostEnvironment)).ImplementationInstance as IWebHostEnvironment;
 
-			Connection = GetSqliteInMemoryBuildOptions();
 			services.AddDbContextPool<TestingContext>(options =>
 			{
 				options.UseSqlite(Connection);
@@ -189,8 +206,11 @@ namespace InkBall.Tests
 				;
 			services
 				//.AddAuthentication();
-				.AddAuthentication("Test")
-				.AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test", options => { });
+				.AddAuthentication(options =>
+				{
+					options.AddScheme<TestAuthHandler>(env.EnvironmentName, env.EnvironmentName);
+					options.DefaultAuthenticateScheme = env.EnvironmentName;
+				});
 			services
 				//.AddAuthorization()
 				.AddInkBallCommonUI<GamesContext, TestingApplicationUser>(env.WebRootFileProvider, options =>
@@ -199,16 +219,16 @@ namespace InkBall.Tests
 					// options.ScriptsSectionName = "Script";
 					options.AppRootPath = "/";
 					options.UseMessagePackBinaryTransport = false;
-					options.CustomMainAuthorizationPolicyBuilder = (policy) =>
-					{
-						policy.AddAuthenticationSchemes("Test")
-							.RequireAuthenticatedUser();
-					};
-					options.CustomViewOtherGamesAuthorizationPolicyBuilder = (policy) =>
-					{
-						policy.RequireAuthenticatedUser()
-							.RequireClaim("role", "InkBallViewOtherPlayerGames");
-					};
+					//options.CustomMainAuthorizationPolicyBuilder = (policy) =>
+					//{
+					//	policy//.AddAuthenticationSchemes("Test")
+					//		.RequireAuthenticatedUser();
+					//};
+					//options.CustomViewOtherGamesAuthorizationPolicyBuilder = (policy) =>
+					//{
+					//	policy.RequireAuthenticatedUser()
+					//		.RequireClaim("role", "InkBallViewOtherPlayerGames");
+					//};
 					options.LoginPath = "/Identity/Account/Login";
 					options.LogoutPath = "/Identity/Account/Logout";
 					options.RegisterPath = "/Identity/Account/Register";
@@ -271,46 +291,6 @@ namespace InkBall.Tests
 				endpoints.MapRazorPages();
 			});
 		}
-
-		#region IDisposable
-
-		private bool disposedValue;
-
-		protected virtual void Dispose(bool disposing)
-		{
-			if (!disposedValue)
-			{
-				if (disposing)
-				{
-					// TODO: dispose managed state (managed objects)
-					if(Connection != null && Connection.State == System.Data.ConnectionState.Open)
-					{
-						Connection.Close();
-						Connection.Dispose();
-					}
-				}
-
-				// TODO: free unmanaged resources (unmanaged objects) and override finalizer
-				// TODO: set large fields to null
-				disposedValue = true;
-			}
-		}
-
-		// // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
-		// ~TestingStartup()
-		// {
-		//     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-		//     Dispose(disposing: false);
-		// }
-
-		public void Dispose()
-		{
-			// Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-			Dispose(disposing: true);
-			GC.SuppressFinalize(this);
-		}
-
-		#endregion IDisposable
 	}
 
 	/// <summary>
@@ -389,35 +369,65 @@ namespace InkBall.Tests
 
 		private async Task InitializeuserDbsForTests(TestingContext usersDb, GamesContext gameDb)
 		{
-			usersDb.Users.Add(new TestingApplicationUser
+			usersDb.Users.AddRange(new TestingApplicationUser
 			{
-				Id = "43608c81-6e36-4fe3-9d6b-951f359ac959",
+				Id = "1",
 				Age = 18,
-				Email = "andrzej.pauli@gmail.com",
-				NormalizedEmail = "ANDRZEJ.PAULI@GMAIL.COM",
-				NormalizedUserName = "ANDRZEJ.PAULI@GMAIL.COM",
+				Email = "test.user1@gmail.com",
+				NormalizedEmail = "TEST.USER1@GMAIL.COM",
+				NormalizedUserName = "TEST.USER1@GMAIL.COM",
 				EmailConfirmed = false,
-				PasswordHash = "AQAAAAEAACcQAAAAEKhW+0fZSBDqBjyGRUAwYl7jwdMmeUg9QoXJJIFPrVNOuZtzX7j6M7Yf6g+1Gq6BHA==",
-				SecurityStamp = "CI7TLP3QEA35SG2URXODD7WOUSWFFJEY",
-				ConcurrencyStamp = "49ccc5ac-639d-4445-a0a0-70e50eef353d",
-				Name = "Andrzej Pauli",
-				UserName = "andrzej.pauli@gmail.com",
+				PasswordHash = "AAAAAAAAAAAAAAAAAAAAAAABBSDSADFAFSDFSDFET",
+				SecurityStamp = "GDFGDFGDFSGFDGFDGERTRETRETERTERTETRERTD",
+				ConcurrencyStamp = "12324346457455435345",
+				Name = "Test user1",
+				UserName = "test.user1@gmail.com",
+				UserSettingsJSON = "{}",
+				PhoneNumber = "1234435345345",
+			},
+			new TestingApplicationUser
+			{
+				Id = "2",
+				Age = 20,
+				Email = "test.user2@gmail.com",
+				NormalizedEmail = "TEST.USER2@GMAIL.COM",
+				NormalizedUserName = "TEST.USER2@GMAIL.COM",
+				EmailConfirmed = false,
+				PasswordHash = "AAAAAAAAAAAAAAAAAAAAAAABBSDSADFAFSDFSDFET",
+				SecurityStamp = "GDFGDFGDFSGFDGFDGERTRETRETERTERTETRERTD",
+				ConcurrencyStamp = "12324346457455435345",
+				Name = "Test user2",
+				UserName = "test.user2@gmail.com",
 				UserSettingsJSON = "{}",
 				PhoneNumber = "1234435345345",
 			});
 			await usersDb.SaveChangesAsync();
 
-			gameDb.InkBallUsers.Add(new InkBallUser
+			gameDb.InkBallUsers.AddRange(new InkBallUser
 			{
 				iId = 1,
 				iPrivileges = 0,
-				sExternalId = "43608c81-6e36-4fe3-9d6b-951f359ac959",
-				UserName = "Andrzej Pauli",
+				sExternalId = "1",
+				UserName = "Test user1",
 				InkBallPlayer = new[] {
 					new InkBallPlayer
 					{
 						iId = 1,
 						iUserId = 1,
+					}
+				}
+			},
+			new InkBallUser
+			{
+				iId = 2,
+				iPrivileges = 0,
+				sExternalId = "2",
+				UserName = "Test user2",
+				InkBallPlayer = new[] {
+					new InkBallPlayer
+					{
+						iId = 2,
+						iUserId = 2,
 					}
 				}
 			});
@@ -432,7 +442,7 @@ namespace InkBall.Tests
 			//Directory.SetCurrentDirectory(contentRoot);
 
 			builder.UseContentRoot(contentRoot)
-				.UseEnvironment("Development");
+				.UseEnvironment("Test");
 
 			builder.ConfigureServices(async services =>
 			{
@@ -476,6 +486,7 @@ namespace InkBall.Tests
 					{
 						TestingStartup.Connection.Close();
 						TestingStartup.Connection.Dispose();
+						TestingStartup.Connection = null;
 					}
 				}
 
