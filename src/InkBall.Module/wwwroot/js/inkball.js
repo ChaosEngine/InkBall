@@ -2155,6 +2155,12 @@ class InkBallGame {
 
 		let iClientWidth = this.m_Screen.clientWidth;
 		let iClientHeight = this.m_Screen.clientHeight;
+		let svg_width_x_height = null;
+		if (iClientHeight <= 0) { //no styles loaded case, emulating calculation with 16px font size
+			iClientHeight = 16 * this.m_BoardSize.height;
+			this.m_Screen.style.height = iClientHeight + 'px';
+			svg_width_x_height = "100%";
+		}
 		this.m_iGridSizeX = parseInt(Math.ceil(iClientWidth / this.m_BoardSize.width));
 		this.m_iGridSizeY = parseInt(Math.ceil(iClientHeight / this.m_BoardSize.height));
 		this.m_iGridWidth = parseInt(Math.ceil(iClientWidth / this.m_iGridSizeX));
@@ -2166,7 +2172,7 @@ class InkBallGame {
 		this.lastCycle = [];
 		///////CpuGame variables end//////
 
-		$createSVGVML(this.m_Screen, this.m_Screen.style.width, this.m_Screen.style.height, true);
+		$createSVGVML(this.m_Screen, svg_width_x_height, svg_width_x_height, true);
 
 		this.DisableSelection(this.m_Screen);
 
@@ -2781,7 +2787,7 @@ window.addEventListener('load', async function () {
 	const inkBallHubName = gameOptions.inkBallHubName;
 	const iGameID = gameOptions.iGameID;
 	document.getElementById('gameID').innerHTML = iGameID;
-	document.querySelector(".container .inkgame form > input[type='hidden'][name='GameID']").value = iGameID;
+	document.querySelector(".container.inkgame form > input[type='hidden'][name='GameID']").value = iGameID;
 	const iPlayerID = gameOptions.iPlayerID;
 	const iOtherPlayerID = gameOptions.iOtherPlayerID;
 	document.getElementById('playerID').innerHTML = iPlayerID;

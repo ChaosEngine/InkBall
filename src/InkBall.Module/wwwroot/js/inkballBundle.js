@@ -3910,6 +3910,7 @@ var InkBallGame = /*#__PURE__*/function () {
             boardsize,
             iClientWidth,
             iClientHeight,
+            svg_width_x_height,
             stateStore,
             i,
             chatSection,
@@ -3970,6 +3971,15 @@ var InkBallGame = /*#__PURE__*/function () {
                 };
                 iClientWidth = this.m_Screen.clientWidth;
                 iClientHeight = this.m_Screen.clientHeight;
+                svg_width_x_height = null;
+
+                if (iClientHeight <= 0) {
+                  //no styles loaded case, emulating calculation with 16px font size
+                  iClientHeight = 16 * this.m_BoardSize.height;
+                  this.m_Screen.style.height = iClientHeight + 'px';
+                  svg_width_x_height = "100%";
+                }
+
                 this.m_iGridSizeX = parseInt(Math.ceil(iClientWidth / this.m_BoardSize.width));
                 this.m_iGridSizeY = parseInt(Math.ceil(iClientHeight / this.m_BoardSize.height));
                 this.m_iGridWidth = parseInt(Math.ceil(iClientWidth / this.m_iGridSizeX));
@@ -3980,15 +3990,15 @@ var InkBallGame = /*#__PURE__*/function () {
                 this.rAF_FrameID = null;
                 this.lastCycle = []; ///////CpuGame variables end//////
 
-                $createSVGVML(this.m_Screen, this.m_Screen.style.width, this.m_Screen.style.height, true);
+                $createSVGVML(this.m_Screen, svg_width_x_height, svg_width_x_height, true);
                 this.DisableSelection(this.m_Screen);
                 stateStore = new GameStateStore(this.CreateScreenPointFromIndexedDb.bind(this), this.CreateScreenPathFromIndexedDb.bind(this), this.GetGameStateForIndexedDb.bind(this));
                 this.m_Lines = stateStore.GetPathStore();
                 this.m_Points = stateStore.GetPointStore();
-                _context28.next = 53;
+                _context28.next = 55;
                 return stateStore.PrepareStore(this);
 
-              case 53:
+              case 55:
                 this.m_bPointsAndPathsLoaded = _context28.sent;
 
                 if (this.m_bViewOnly === false) {
@@ -4050,7 +4060,7 @@ var InkBallGame = /*#__PURE__*/function () {
                   document.querySelector(sPause).innerHTML = 'back to Game List';
                 }
 
-              case 55:
+              case 57:
               case "end":
                 return _context28.stop();
             }
@@ -5372,7 +5382,7 @@ window.addEventListener('load', /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/reg
           inkBallHubName = gameOptions.inkBallHubName;
           iGameID = gameOptions.iGameID;
           document.getElementById('gameID').innerHTML = iGameID;
-          document.querySelector(".container .inkgame form > input[type='hidden'][name='GameID']").value = iGameID;
+          document.querySelector(".container.inkgame form > input[type='hidden'][name='GameID']").value = iGameID;
           iPlayerID = gameOptions.iPlayerID;
           iOtherPlayerID = gameOptions.iOtherPlayerID;
           document.getElementById('playerID').innerHTML = iPlayerID;

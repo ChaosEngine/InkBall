@@ -91,7 +91,7 @@ function sortPointsClockwise(t) {
 }
 
 SVG ? ($createSVGVML = function $createSVGVML(t, e, r, s) {
-  return cont = document.createElementNS(svgNS, "svg"), t.appendChild(cont), svgAntialias = s, cont;
+  return cont = document.createElementNS(svgNS, "svg"), e && cont.setAttributeNS(null, "width", e), r && cont.setAttributeNS(null, "height", r), t.appendChild(cont), svgAntialias = s, cont;
 }, $createLine = function $createLine(t, e, r) {
   var s = document.createElementNS(svgNS, "line");
   return s.setAttribute("shape-rendering", svgAntialias ? "auto" : "optimizeSpeed"), s.setAttribute("stroke-width", Math.round(t) + "px"), e && s.setAttribute("stroke", e), r && s.setAttribute("stroke-linecap", r), s.$move = function (t, e, r, s) {
