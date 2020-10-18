@@ -1,15 +1,13 @@
-﻿using System;
-using InkBall.Module.Model;
+﻿using InkBall.Module.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
+using System;
 
 namespace InkBall.Module
 {
@@ -55,7 +53,9 @@ namespace InkBall.Module
 
 		public string AppRootPath { get; set; } = "/";
 
-		public Action<AuthorizationPolicyBuilder> CustomAuthorizationPolicyBuilder { get; set; }
+		public Action<AuthorizationPolicyBuilder> CustomMainAuthorizationPolicyBuilder { get; set; }
+
+		public Action<AuthorizationPolicyBuilder> CustomViewOtherGamesAuthorizationPolicyBuilder { get; set; }
 
 		public Type ApplicationUserType { get; set; }
 
@@ -102,29 +102,33 @@ namespace InkBall.Module
 
 			configureOptions?.Invoke(options);
 
-			if (options.CustomAuthorizationPolicyBuilder != null)
+			services.AddAuthorizationCore(auth_options =>
 			{
-				services.AddAuthorizationCore(auth_options =>
+				if (options.CustomMainAuthorizationPolicyBuilder != null)
 				{
-					auth_options.AddPolicy(Constants.InkBallPolicyName, options.CustomAuthorizationPolicyBuilder);
-				});
-			}
-			else
-			{
-				services.AddAuthorizationCore(auth_options =>
+					auth_options.AddPolicy(Constants.InkBallPolicyName, options.CustomMainAuthorizationPolicyBuilder);
+				}
+				else
 				{
 					auth_options.AddPolicy(Constants.InkBallPolicyName, policy =>
 					{
 						policy.RequireAuthenticatedUser()
-							.AddRequirements(new InkBall.Module.MinimumAgeRequirement(18));
+							.AddRequirements(new MinimumAgeRequirement(18));
 					});
+				}
+				if (options.CustomViewOtherGamesAuthorizationPolicyBuilder != null)
+				{
+					auth_options.AddPolicy(Constants.InkBallViewOtherGamesPolicyName, options.CustomViewOtherGamesAuthorizationPolicyBuilder);
+				}
+				else
+				{
 					auth_options.AddPolicy(Constants.InkBallViewOtherGamesPolicyName, policy =>
 					{
 						policy.RequireAuthenticatedUser()
 							.RequireClaim("role", "InkBallViewOtherPlayerGames");
 					});
-				});
-			}
+				}
+			});
 
 			services.ConfigureOptions(options);
 			services.AddSingleton<IOptions<InkBallOptions>>(Options.Create(options));
