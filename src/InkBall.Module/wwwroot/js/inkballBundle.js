@@ -1328,7 +1328,7 @@ var InkBallGame = /*#__PURE__*/function () {
                   encodedMsg = encodedMsg === '' ? 'Game interrupted!' : encodedMsg;
                   this.NotifyBrowser('Game interruption', encodedMsg);
                   alert(encodedMsg);
-                  window.location.href = "Games";
+                  window.location.href = "GamesList";
                 }.bind(this));
                 this.g_SignalRConnection.on("ServerToClientPlayerWin", function (win) {
                   var encodedMsg = WinCommand.Format(win);
@@ -2764,7 +2764,7 @@ var InkBallGame = /*#__PURE__*/function () {
 
       if ((status === WinStatusEnum.RED_WINS || status === WinStatusEnum.GREEN_WINS) && winningPlayerId > 0 || status === WinStatusEnum.DRAW_WIN) {
         alert(encodedMsg === '' ? 'Game won!' : encodedMsg);
-        window.location.href = "Games";
+        window.location.href = "GamesList";
       }
     }
   }, {

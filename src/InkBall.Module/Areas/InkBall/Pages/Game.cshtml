@@ -2,7 +2,7 @@
 @using Microsoft.Extensions.Hosting
 @inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment env
 @inject Microsoft.Extensions.Options.IOptions<InkBallOptions> commonUIConfigureOptions
-@model IndexModel
+@model GameModel
 @{
     ViewData["Title"] = "Game";
 
@@ -50,10 +50,10 @@
     @Model.Game.Player1?.User?.UserName vs <span id='Player2Name'>@P2Name</span>
 </p>
 <div class="container inkgame">
-    <form action="Games" method="post" asp-antiforgery="true" class="row">
+    <form action="GamesList" method="post" asp-antiforgery="true" class="row">
         <input type='hidden' name='GameID' />
         <div class="col-xs-6 col-sm-auto pl-0">
-            <a id='Pause' href='Games' class="btn btn-outline-primary">pause</a>
+            <a id='Pause' href='GamesList' class="btn btn-outline-primary">pause</a>
             <input id='SurrenderButton' type='submit' name='action' value="@surrender_win_cancel_name" class='btn btn-outline-primary' disabled />
         </div>
         <div class="col-xs-6 col-sm-auto pl-0">

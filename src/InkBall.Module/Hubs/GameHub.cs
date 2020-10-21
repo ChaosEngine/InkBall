@@ -120,7 +120,7 @@ namespace InkBall.Module.Hubs
 
 		private void ValidateOriginHeaderAndAccessToken(HttpContext ctx)
 		{
-			//Index page populates WebSocketAllowedOrigins
+			//Game page populates WebSocketAllowedOrigins
 			if (WebSocketAllowedOrigins.Any() && ctx.Request.Headers.TryGetValue(HeaderNames.Origin, out var origin)
 				&& ctx.Request.Headers.TryGetValue(HeaderNames.Upgrade, out var upgrade))
 			{

@@ -51,7 +51,7 @@ namespace InkBall.Module.Pages
 					case "Continue":
 						if (Game != null)
 						{
-							return Redirect("Index");
+							return RedirectToPage("Game");
 						}
 						else
 						{
@@ -124,7 +124,7 @@ namespace InkBall.Module.Pages
 									selectedGameType, grid_size, width, height, bCpuOponent, token);
 
 								trans.Commit();
-								return Redirect("Index");
+								return RedirectToPage("Game");
 							}
 							catch (Exception ex)
 							{
@@ -138,7 +138,7 @@ namespace InkBall.Module.Pages
 					case "Game list":
 						if (bIsLoggedIn)
 						{
-							return Redirect("Games");
+							return RedirectToPage("GamesList");
 						}
 						else
 							msg = "You have to be logged in";
@@ -147,14 +147,14 @@ namespace InkBall.Module.Pages
 					case "Best":
 						if (bIsLoggedIn)
 						{
-							return Redirect("Highscores");
+							return RedirectToPage("Highscores");
 						}
 						else
 							msg = "You have to be logged in";
 						break;
 
 					case "Game rules":
-						return Redirect("Rules");
+						return RedirectToPage("Rules");
 
 					case "Login":
 						return Redirect(_commonUIConfigureOptions.Value.LoginPath);

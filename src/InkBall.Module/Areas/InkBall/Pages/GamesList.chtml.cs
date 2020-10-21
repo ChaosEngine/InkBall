@@ -15,7 +15,7 @@ using Microsoft.Extensions.Options;
 namespace InkBall.Module.Pages
 {
 	[Authorize(Policy = Constants.InkBallPolicyName)]
-	public class GamesModel : BasePageModel
+	public class GamesListModel : BasePageModel
 	{
 		private readonly IOptions<InkBallOptions> _commonUIConfigureOptions;
 		private readonly IHubContext<GameHub, IGameClient> _inkballHubContext;
@@ -24,7 +24,7 @@ namespace InkBall.Module.Pages
 		public IEnumerable<InkBallGame> GamesList { get; private set; }
 
 
-		public GamesModel(GamesContext dbContext, ILogger<RulesModel> logger, IOptions<InkBallOptions> commonUIConfigureOptions,
+		public GamesListModel(GamesContext dbContext, ILogger<RulesModel> logger, IOptions<InkBallOptions> commonUIConfigureOptions,
 			IHubContext<Hubs.GameHub, Hubs.IGameClient> inkballHubContext) : base(dbContext, logger)
 		{
 			_commonUIConfigureOptions = commonUIConfigureOptions;
@@ -120,7 +120,7 @@ namespace InkBall.Module.Pages
 									}
 
 									trans.Commit();
-									return Redirect("Index");
+									return RedirectToPage("Game");
 								}
 								catch (Exception ex)
 								{
@@ -136,7 +136,7 @@ namespace InkBall.Module.Pages
 					case "Continue":
 						if (Game != null)
 						{
-							return Redirect("Index");
+							return RedirectToPage("Game");
 						}
 						else
 						{
@@ -207,7 +207,7 @@ namespace InkBall.Module.Pages
 									selectedGameType, grid_size, width, height, bCpuOponent, token);
 
 								trans.Commit();
-								return Redirect("Index");
+								return RedirectToPage("Game");
 							}
 							catch (Exception ex)
 							{
@@ -220,7 +220,7 @@ namespace InkBall.Module.Pages
 
 					case "pause":
 					case "Pause":
-						return Redirect("Games");
+						return RedirectToPage("GamesList");
 
 					case "surrender":
 					case "cancel":
@@ -262,7 +262,7 @@ namespace InkBall.Module.Pages
 								}
 
 								trans.Commit();
-								return Redirect("Games");
+								return RedirectToPage("GamesList");
 							}
 							catch (Exception ex)
 							{
@@ -273,7 +273,7 @@ namespace InkBall.Module.Pages
 						break;
 
 					case "Home":
-						return Redirect("Home");
+						return RedirectToPage("Home");
 
 					default:
 						break;

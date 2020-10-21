@@ -22,7 +22,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Reflection;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
@@ -30,7 +29,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace InkBall.Tests
+namespace IntegrationTests
 {
 	public class TestingApplicationUser : IdentityUser, INamedAgedUser
 	{
@@ -69,8 +68,7 @@ namespace InkBall.Tests
 			base.OnModelCreating(modelBuilder);
 		}
 	}
-
-	/*public class TestingSignInManager : SignInManager<TestingApplicationUser>
+	public class TestingSignInManager : SignInManager<TestingApplicationUser>
 	{
 		public TestingSignInManager(
 			UserManager<TestingApplicationUser> userManager,
@@ -100,7 +98,7 @@ namespace InkBall.Tests
 
 			await base.SignOutAsync();
 		}
-	}*/
+	}
 
 	public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
 	{
@@ -112,7 +110,11 @@ namespace InkBall.Tests
 
 		protected override Task<AuthenticateResult> HandleAuthenticateAsync()
 		{
-			if (Request.Headers.TryGetValue(nameof(HttpRequestHeader.Authorization), out StringValues auth) &&
+			StringValues auth;
+			if ((
+				Request.Headers.TryGetValue(nameof(HttpRequestHeader.Authorization), out auth)
+				|| (Request.HasFormContentType && Request.Form.TryGetValue(nameof(HttpRequestHeader.Authorization), out auth))
+				) &&
 				auth.ToString().StartsWith(Scheme.Name, StringComparison.InvariantCultureIgnoreCase))
 			{
 				string serialized = auth.ToString();
@@ -128,7 +130,7 @@ namespace InkBall.Tests
 
 
 				var claims = new[] {
-					new Claim(ClaimTypes.Name, user.UserName) ,
+					new Claim(ClaimTypes.Name, user.UserName),
 					new Claim(nameof(InkBall.Module.Pages.HomeModel.InkBallUserId), user.sExternalId),
 					new Claim(ClaimTypes.DateOfBirth, DateTime.UtcNow.AddYears(-18).ToString("O"))
 				};
@@ -165,10 +167,6 @@ namespace InkBall.Tests
 			Connection = GetSqliteInMemoryBuildOptions();
 		}
 
-		/// <summary>
-		/// TODO: dispose properly this connection when not needed anymore
-		/// </summary>
-		/// <returns></returns>
 		SqliteConnection GetSqliteInMemoryBuildOptions()
 		{
 			var connection = new SqliteConnection("DataSource=:memory:");
@@ -190,29 +188,24 @@ namespace InkBall.Tests
 		{
 			var env = services.FirstOrDefault(x => x.ServiceType == typeof(IWebHostEnvironment)).ImplementationInstance as IWebHostEnvironment;
 
-			services.AddDbContextPool<TestingContext>(options =>
-			{
-				options.UseSqlite(Connection);
-			});
-			services.AddDbContextPool<GamesContext>(options =>
-			{
-				options.UseSqlite(Connection);
-			});
+			services.AddDbContextPool<TestingContext>(options => options.UseSqlite(Connection));
+			services.AddDbContextPool<GamesContext>(options => options.UseSqlite(Connection));
 
-			services.AddIdentity<TestingApplicationUser, IdentityRole>()
+			services.AddDefaultIdentity<TestingApplicationUser>()
 				.AddEntityFrameworkStores<TestingContext>()
-				.AddDefaultTokenProviders()
-				//.AddSignInManager<TestingSignInManager>()*/
+				.AddDefaultTokenProviders().AddSignInManager<TestingSignInManager>();
+			;
+			services
+				.AddAuthentication()
+				//.AddAuthentication(options =>
+				//{
+				//	options.AddScheme<TestAuthHandler>(env.EnvironmentName, env.EnvironmentName);
+				//	options.DefaultAuthenticateScheme = env.EnvironmentName;
+				//})
 				;
+
 			services
-				//.AddAuthentication();
-				.AddAuthentication(options =>
-				{
-					options.AddScheme<TestAuthHandler>(env.EnvironmentName, env.EnvironmentName);
-					options.DefaultAuthenticateScheme = env.EnvironmentName;
-				});
-			services
-				//.AddAuthorization()
+				.AddAuthorization()
 				.AddInkBallCommonUI<GamesContext, TestingApplicationUser>(env.WebRootFileProvider, options =>
 				{
 					// options.WwwRoot = "wrongwrongwrong";
@@ -238,8 +231,8 @@ namespace InkBall.Tests
 
 			// Add framework services.
 			services.AddSession();
-			services.AddRazorPages();
-
+			services.AddRazorPages()
+				.AddSessionStateTempDataProvider();
 
 			services.AddSignalR(options =>
 			{
@@ -283,7 +276,7 @@ namespace InkBall.Tests
 			{
 				endpoints.MapGet("/", async context =>
 				{
-					await context.Response.WriteAsync("Hello world");
+					await context.Response.WriteAsync($"Hello World: User {context.User?.Identity?.Name}");
 				});
 
 				endpoints.PrepareSignalRForInkBall("/");
@@ -313,6 +306,31 @@ namespace InkBall.Tests
 			}
 		}
 
+		public async Task<HttpClient> CreateAuthenticatedClientAsync(string userName = "alice.testing@example.org",
+			string password = "#SecurePassword123")
+		{
+			var client = this.CreateClient();
+
+			using var get_response = await client.GetAsync($"{client.BaseAddress}Identity/Account/Login");
+			var antiforgery_token = await PostRequestHelper.ExtractAntiForgeryToken(get_response);
+			var form_data = new Dictionary<string, string> {
+				{ "Input.Email", userName },
+				{ "Input.Password", password },
+				{ "Input.RememberMe", "false" },
+				{ "__RequestVerificationToken", antiforgery_token }
+			};
+
+			using var postRequest = new HttpRequestMessage(HttpMethod.Post, $"{client.BaseAddress}Identity/Account/Login");
+
+			using var formPostBodyData = new FormUrlEncodedContent(form_data);
+			postRequest.Content = formPostBodyData;
+
+			using var response = await client.SendAsync(postRequest);
+			response.EnsureSuccessStatusCode();
+
+			return client;
+		}
+
 		internal string AppRootPath { get; private set; }
 
 		internal bool DOTNET_RUNNING_IN_CONTAINER { get; private set; }
@@ -321,9 +339,7 @@ namespace InkBall.Tests
 			Host.CreateDefaultBuilder().ConfigureWebHostDefaults(webBuilder =>
 			{
 				webBuilder
-					.UseKestrel()
-					.UseSockets()
-					.UseContentRoot(Directory.GetCurrentDirectory())
+					.UseEnvironment("Test")
 					.UseStartup<TestingStartup>();
 			});
 
@@ -434,15 +450,42 @@ namespace InkBall.Tests
 			await gameDb.SaveChangesAsync();
 		}
 
+		private async Task SeedUsers(IServiceProvider scopedServices)
+		{
+			try
+			{
+				var userManager = scopedServices.GetRequiredService<UserManager<TestingApplicationUser>>();
+
+				// Seed the database with test data.
+				var alice = new TestingApplicationUser
+				{
+					UserName = "alice.testing@example.org",
+					Email = "alice.testing@example.org",
+					Age = 20,
+					UserSettingsJSON = "{}",
+					Name = "Alice Testing"
+				};
+				var result = await userManager.CreateAsync(alice, "#SecurePassword123");
+				if (!result.Succeeded)
+				{
+					throw new Exception("Unable to create alice:\r\n" + string.Join("\r\n", result.Errors.Select(error => $"{error.Code}: {error.Description}")));
+				}
+
+				//var emailConfirmationToken = userManager.GenerateEmailConfirmationTokenAsync(alice).Result;
+				//result = userManager.ConfirmEmailAsync("alice", emailConfirmationToken).Result;
+				//if (!result.Succeeded)
+				//{
+				//	throw new Exception("Unable to verify alices email address:\r\n" + string.Join("\r\n", result.Errors.Select(error => $"{error.Code}: {error.Description}")));
+				//}
+			}
+			catch (Exception ex)
+			{
+			}
+		}
+
 		protected override void ConfigureWebHost(IWebHostBuilder builder)
 		{
-			var startupAssembly = typeof(TStartup).GetTypeInfo().Assembly;
-			var contentRoot = Directory.GetCurrentDirectory();//GetProjectPath(null, startupAssembly);
-
-			//Directory.SetCurrentDirectory(contentRoot);
-
-			builder.UseContentRoot(contentRoot)
-				.UseEnvironment("Test");
+			builder.UseContentRoot(Directory.GetCurrentDirectory());
 
 			builder.ConfigureServices(async services =>
 			{
@@ -466,7 +509,9 @@ namespace InkBall.Tests
 					await auth_user_db.Database.EnsureCreatedAsync();
 					await inkball_db.Database.MigrateAsync();
 
-					await InitializeuserDbsForTests(auth_user_db, inkball_db);
+					//await InitializeuserDbsForTests(auth_user_db, inkball_db);
+
+					await SeedUsers(scopedServices);
 				}
 			});
 		}
