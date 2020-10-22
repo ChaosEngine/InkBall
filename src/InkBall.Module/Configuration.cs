@@ -1,6 +1,7 @@
 ﻿using InkBall.Module.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.StaticFiles;
@@ -8,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using System;
+using System.Linq;
 
 namespace InkBall.Module
 {
@@ -91,6 +93,17 @@ namespace InkBall.Module
 
 	public static class CommonUIServiceCollectionExtensions
 	{
+		public static IServiceCollection AddInkBallCommonUI<TGamesDBContext, TIdentUser>(this IServiceCollection services, Action<InkBallOptions> configureOptions)
+			where TGamesDBContext : IGamesContext
+			where TIdentUser : IdentityUser, INamedAgedUser
+		{
+			var env = services.FirstOrDefault(x => x.ServiceType == typeof(IWebHostEnvironment)).ImplementationInstance as IWebHostEnvironment;
+			if(env == null)
+				throw new InvalidOperationException("Missing FileProvider.");
+
+			return services.AddInkBallCommonUI<TGamesDBContext, TIdentUser>(env.WebRootFileProvider, configureOptions);
+		}
+
 		public static IServiceCollection AddInkBallCommonUI<TGamesDBContext, TIdentUser>(this IServiceCollection services, IFileProvider webRootFileProvider,
 			Action<InkBallOptions> configureOptions)
 			where TGamesDBContext : IGamesContext

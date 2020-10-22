@@ -14,17 +14,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Primitives;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Security.Claims;
-using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Xunit;
@@ -57,9 +54,9 @@ namespace IntegrationTests
 		public string UserSettingsJSON { get; set; }
 	}
 
-	public partial class TestingContext : IdentityDbContext<TestingApplicationUser>
+	public partial class ApplicationDbContext : IdentityDbContext<TestingApplicationUser>
 	{
-		public TestingContext(DbContextOptions<TestingContext> options) : base(options)
+		public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
 		{
 		}
 
@@ -101,57 +98,6 @@ namespace IntegrationTests
 		}
 	}
 
-	public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
-	{
-		public TestAuthHandler(IOptionsMonitor<AuthenticationSchemeOptions> options,
-			ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock)
-			: base(options, logger, encoder, clock)
-		{
-		}
-
-		protected override Task<AuthenticateResult> HandleAuthenticateAsync()
-		{
-			StringValues auth;
-			if ((
-				Request.Headers.TryGetValue(nameof(HttpRequestHeader.Authorization), out auth)
-				|| (Request.HasFormContentType && Request.Form.TryGetValue(nameof(HttpRequestHeader.Authorization), out auth))
-				) &&
-				auth.ToString().StartsWith(Scheme.Name, StringComparison.InvariantCultureIgnoreCase))
-			{
-				string serialized = auth.ToString();
-				InkBallUser user;
-				if (serialized.Contains('{'))
-				{
-					serialized = serialized.Substring($"{Scheme.Name} ".Length);
-					user = JsonSerializer.Deserialize<InkBallUser>(serialized);
-				}
-				else
-					user = new InkBallUser { iId = 1, UserName = "Test user1", sExternalId = "1" };
-
-
-
-				var claims = new[] {
-					new Claim(ClaimTypes.Name, user.UserName),
-					new Claim(nameof(InkBall.Module.Pages.HomeModel.InkBallUserId), user.sExternalId),
-					new Claim(ClaimTypes.DateOfBirth, DateTime.UtcNow.AddYears(-18).ToString("O"))
-				};
-				var identity = new ClaimsIdentity(claims, Scheme.Name);
-				var principal = new ClaimsPrincipal(identity);
-				var ticket = new AuthenticationTicket(principal, Scheme.Name);
-
-				var result = AuthenticateResult.Success(ticket);
-
-				return Task.FromResult(result);
-			}
-			else
-			{
-				var result = AuthenticateResult.NoResult();
-
-				return Task.FromResult(result);
-			}
-		}
-	}
-
 	/// <summary>
 	/// Test fixture startup
 	/// </summary>
@@ -187,27 +133,19 @@ namespace IntegrationTests
 		// For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
 		public void ConfigureServices(IServiceCollection services)
 		{
-			var env = services.FirstOrDefault(x => x.ServiceType == typeof(IWebHostEnvironment)).ImplementationInstance as IWebHostEnvironment;
-
-			services.AddDbContextPool<TestingContext>(options => options.UseSqlite(Connection));
+			services.AddDbContextPool<ApplicationDbContext>(options => options.UseSqlite(Connection));
 			services.AddDbContextPool<GamesContext>(options => options.UseSqlite(Connection));
 
 			services.AddDefaultIdentity<TestingApplicationUser>()
-				.AddEntityFrameworkStores<TestingContext>()
+				.AddEntityFrameworkStores<ApplicationDbContext>()
 				.AddDefaultTokenProviders().AddSignInManager<TestingSignInManager>();
 			;
 			services
-				.AddAuthentication()
-				//.AddAuthentication(options =>
-				//{
-				//	options.AddScheme<TestAuthHandler>(env.EnvironmentName, env.EnvironmentName);
-				//	options.DefaultAuthenticateScheme = env.EnvironmentName;
-				//})
-				;
+				.AddAuthentication();
 
 			services
 				.AddAuthorization()
-				.AddInkBallCommonUI<GamesContext, TestingApplicationUser>(env.WebRootFileProvider, options =>
+				.AddInkBallCommonUI<GamesContext, TestingApplicationUser>(options =>
 				{
 					options.AppRootPath = "/";
 					options.UseMessagePackBinaryTransport = false;
@@ -388,7 +326,7 @@ namespace IntegrationTests
 			throw new Exception($"Project root could not be located using the application root {applicationBasePath}.");
 		}
 
-		private async Task InitializeuserDbsForTests(TestingContext usersDb, GamesContext gameDb)
+		private async Task InitializeuserDbsForTests(ApplicationDbContext usersDb, GamesContext gameDb)
 		{
 			usersDb.Users.AddRange(new TestingApplicationUser
 			{
@@ -524,7 +462,7 @@ namespace IntegrationTests
 					string temp = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER");
 					DOTNET_RUNNING_IN_CONTAINER = !string.IsNullOrEmpty(temp) && temp.Equals(true.ToString(), StringComparison.InvariantCultureIgnoreCase);
 
-					var auth_user_db = scopedServices.GetRequiredService<TestingContext>();
+					var auth_user_db = scopedServices.GetRequiredService<ApplicationDbContext>();
 					var inkball_db = scopedServices.GetRequiredService<GamesContext>();
 
 					await auth_user_db.Database.EnsureCreatedAsync();
