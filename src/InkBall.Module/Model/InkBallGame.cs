@@ -312,7 +312,6 @@ namespace InkBall.Module.Model
 			SIZE_20x26 = 20,
 			SIZE_40x52 = 40,
 			SIZE_64x64 = 64,
-			// SIZE_80x80 = 80
 		}
 
 		public override InkBallPlayer Player1 { get; set; }

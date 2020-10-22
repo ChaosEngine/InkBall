@@ -68,6 +68,7 @@ namespace IntegrationTests
 			base.OnModelCreating(modelBuilder);
 		}
 	}
+
 	public class TestingSignInManager : SignInManager<TestingApplicationUser>
 	{
 		public TestingSignInManager(
@@ -208,8 +209,6 @@ namespace IntegrationTests
 				.AddAuthorization()
 				.AddInkBallCommonUI<GamesContext, TestingApplicationUser>(env.WebRootFileProvider, options =>
 				{
-					// options.WwwRoot = "wrongwrongwrong";
-					// options.ScriptsSectionName = "Script";
 					options.AppRootPath = "/";
 					options.UseMessagePackBinaryTransport = false;
 					//options.CustomMainAuthorizationPolicyBuilder = (policy) =>
@@ -293,16 +292,34 @@ namespace IntegrationTests
 	public class TestServerFixture<TStartup> : WebApplicationFactory<TStartup>
 		where TStartup : class
 	{
-		public HttpClient Client
+		private HttpClient _client;
+
+		internal string AppRootPath { get; private set; }
+
+		internal bool DOTNET_RUNNING_IN_CONTAINER { get; private set; }
+
+		protected override IHostBuilder CreateHostBuilder() =>
+			Host.CreateDefaultBuilder().ConfigureWebHostDefaults(webBuilder =>
+			{
+				webBuilder
+					.UseEnvironment("Test")
+					.UseStartup<TestingStartup>();
+			});
+
+		public HttpClient AnonymousClient
 		{
 			get
 			{
-				var client = this.CreateClient(new WebApplicationFactoryClientOptions
+				if (_client == null)
 				{
-					AllowAutoRedirect = false
-				});
-				//cl.BaseAddress = new Uri("http://localhost");
-				return client;
+					var client = this.CreateClient(new WebApplicationFactoryClientOptions
+					{
+						AllowAutoRedirect = false
+					});
+					_client = client;
+				}
+
+				return _client;
 			}
 		}
 
@@ -330,18 +347,6 @@ namespace IntegrationTests
 
 			return client;
 		}
-
-		internal string AppRootPath { get; private set; }
-
-		internal bool DOTNET_RUNNING_IN_CONTAINER { get; private set; }
-
-		protected override IHostBuilder CreateHostBuilder() =>
-			Host.CreateDefaultBuilder().ConfigureWebHostDefaults(webBuilder =>
-			{
-				webBuilder
-					.UseEnvironment("Test")
-					.UseStartup<TestingStartup>();
-			});
 
 		/// <summary>
 		/// Gets the full path to the target project that we wish to test
@@ -457,26 +462,42 @@ namespace IntegrationTests
 				var userManager = scopedServices.GetRequiredService<UserManager<TestingApplicationUser>>();
 
 				// Seed the database with test data.
-				var alice = new TestingApplicationUser
+				var user_pass_pairs = new (TestingApplicationUser user, string pass)[]
 				{
-					UserName = "alice.testing@example.org",
-					Email = "alice.testing@example.org",
-					Age = 20,
-					UserSettingsJSON = "{}",
-					Name = "Alice Testing"
+					(   new TestingApplicationUser
+						{
+							UserName = "alice.testing@example.org",
+							Email = "alice.testing@example.org",
+							Age = 20,
+							UserSettingsJSON = "{}",
+							Name = "Alice Testing"
+						},
+						"#SecurePassword123"
+					),
+					(   new TestingApplicationUser
+						{
+							UserName = "bob.testing@example.org",
+							Email = "bob.testing@example.org",
+							Age = 18,
+							UserSettingsJSON = "{}",
+							Name = "Bob Testing"
+						},
+						"P@ssw0rd123!"
+					)
 				};
-				var result = await userManager.CreateAsync(alice, "#SecurePassword123");
-				if (!result.Succeeded)
+
+				foreach (var pair in user_pass_pairs)
 				{
-					throw new Exception("Unable to create alice:\r\n" + string.Join("\r\n", result.Errors.Select(error => $"{error.Code}: {error.Description}")));
+					var result = await userManager.CreateAsync(pair.user, pair.pass);
+					if (!result.Succeeded)
+						throw new Exception($"Unable to create {pair.user.Name}:\r\n" + string.Join("\r\n", result.Errors.Select(error => $"{error.Code}: {error.Description}")));
+
+					//var emailConfirmationToken = userManager.GenerateEmailConfirmationTokenAsync(alice).Result;
+					//result = userManager.ConfirmEmailAsync("alice", emailConfirmationToken).Result;
+					//if (!result.Succeeded)
+					//	throw new Exception("Unable to verify alices email address:\r\n" + string.Join("\r\n", result.Errors.Select(error => $"{error.Code}: {error.Description}")));
 				}
 
-				//var emailConfirmationToken = userManager.GenerateEmailConfirmationTokenAsync(alice).Result;
-				//result = userManager.ConfirmEmailAsync("alice", emailConfirmationToken).Result;
-				//if (!result.Succeeded)
-				//{
-				//	throw new Exception("Unable to verify alices email address:\r\n" + string.Join("\r\n", result.Errors.Select(error => $"{error.Code}: {error.Description}")));
-				//}
 			}
 			catch (Exception ex)
 			{
@@ -533,6 +554,8 @@ namespace IntegrationTests
 						TestingStartup.Connection.Dispose();
 						TestingStartup.Connection = null;
 					}
+					if (_client != null)
+						_client.Dispose();
 				}
 
 				// TODO: free unmanaged resources (unmanaged objects) and override finalizer

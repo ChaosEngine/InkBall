@@ -100,12 +100,12 @@ namespace IntegrationTests
 	public class UnAuthenticated
 	{
 		private readonly TestServerFixture<TestingStartup> _fixture;
-		private readonly HttpClient _client;
+		private readonly HttpClient _anonclient;
 
 		public UnAuthenticated(TestServerFixture<TestingStartup> fixture)
 		{
 			_fixture = fixture;
-			_client = fixture.Client;
+			_anonclient = _fixture.AnonymousClient;
 		}
 
 		[Theory]
@@ -124,7 +124,7 @@ namespace IntegrationTests
 
 			// Arrange
 			// Act
-			using (HttpResponseMessage response = await _client.GetAsync($"{_client.BaseAddress}{asset}"))
+			using (HttpResponseMessage response = await _anonclient.GetAsync($"{_anonclient.BaseAddress}{asset}"))
 			{
 				// Assert
 				response.EnsureSuccessStatusCode();
@@ -144,7 +144,7 @@ namespace IntegrationTests
 
 			// Arrange
 			// Act
-			using (HttpResponseMessage response = await _client.GetAsync($"/{page}"))
+			using (HttpResponseMessage response = await _anonclient.GetAsync($"/{page}"))
 			{
 				// Assert
 				response.EnsureSuccessStatusCode();
@@ -167,12 +167,12 @@ namespace IntegrationTests
 
 			// Arrange
 			//Act
-			using (var response = await _client.GetAsync($"{_client.BaseAddress}{page}"))
+			using (var response = await _anonclient.GetAsync($"{_anonclient.BaseAddress}{page}"))
 			{
 				// Assert
 				//Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
 				Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
-				Assert.Equal($"{_client.BaseAddress}Identity/Account/Login?ReturnUrl=%2F{UrlEncoder.Default.Encode(page)}",
+				Assert.Equal($"{_anonclient.BaseAddress}Identity/Account/Login?ReturnUrl=%2F{UrlEncoder.Default.Encode(page)}",
 					response.Headers.Location.ToString());
 			}
 		}
@@ -182,12 +182,12 @@ namespace IntegrationTests
 	public class Authenticated
 	{
 		private readonly TestServerFixture<TestingStartup> _fixture;
-		private readonly HttpClient _client;
+		private readonly HttpClient _anonclient;
 
 		public Authenticated(TestServerFixture<TestingStartup> fixture)
 		{
 			_fixture = fixture;
-			_client = fixture.Client;
+			_anonclient = _fixture.AnonymousClient;
 		}
 
 		[Theory]
@@ -200,15 +200,11 @@ namespace IntegrationTests
 
 
 			// Arrange
-			var client = await _fixture.CreateAuthenticatedClientAsync();
+			using var client = await _fixture.CreateAuthenticatedClientAsync();
 
 			using (var request = new HttpRequestMessage(HttpMethod.Get, $"{client.BaseAddress}{page}"))
 			{
-				//request.Headers.Authorization = new AuthenticationHeaderValue("Test",
-				//	JsonSerializer.Serialize(new InkBallUser { iId = 1, UserName = "Test user1", sExternalId = "1" })
-				//);
-
-				//Act
+				// Act
 				using (var response = await client.SendAsync(request))
 				{
 					// Assert
@@ -226,15 +222,12 @@ namespace IntegrationTests
 
 
 			// Arrange
-			var client = await _fixture.CreateAuthenticatedClientAsync();
-
+			using var client = await _fixture.CreateAuthenticatedClientAsync();
 
 			string hub_name = InkBall.Module.Hubs.GameHub.HubName;
-			using (var request = new HttpRequestMessage(HttpMethod.Get, $"{_client.BaseAddress}{hub_name}"))
+			using (var request = new HttpRequestMessage(HttpMethod.Get, $"{client.BaseAddress}{hub_name}"))
 			{
-				//request.Headers.Authorization = new AuthenticationHeaderValue("Test");
-
-				//Act
+				// Act
 				using (var response = await client.SendAsync(request))
 				{
 					// Assert
@@ -245,27 +238,43 @@ namespace IntegrationTests
 			}
 		}
 
-		[Fact]
-		public async Task Index_Authenticated_NoGame()
+		[Theory]
+		[InlineData("alice.testing@example.org", "#SecurePassword123")]
+		public async Task NewAuth(string email, string password)
 		{
 			if (_fixture.DOTNET_RUNNING_IN_CONTAINER) return;//pass on fake DB with no data
 
 
 			// Arrange
-			var client = await _fixture.CreateAuthenticatedClientAsync();
+			using var client = await _fixture.CreateAuthenticatedClientAsync(email, password);
 
-			using (var request = new HttpRequestMessage(HttpMethod.Get, $"{_client.BaseAddress}InkBall/Game"))
+			// Act
+			HttpResponseMessage response = await client.GetAsync($"{client.BaseAddress}InkBall/Home");
+
+			// Assert
+			Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+			var responseString = await response.Content.ReadAsStringAsync();
+			Assert.Contains("Alice Testing", responseString);
+		}
+
+		[Theory]
+		[InlineData("bob.testing@example.org", "P@ssw0rd123!")]
+		public async Task Game_Authenticated_NoGame(string email, string password)
+		{
+			if (_fixture.DOTNET_RUNNING_IN_CONTAINER) return;//pass on fake DB with no data
+
+
+			// Arrange
+			using var client = await _fixture.CreateAuthenticatedClientAsync(email, password);
+
+			using (var request = new HttpRequestMessage(HttpMethod.Get, $"{client.BaseAddress}InkBall/Game"))
 			{
-				//request.Headers.Authorization = new AuthenticationHeaderValue("Test",
-				//	JsonSerializer.Serialize(new InkBallUser { iId = 1, UserName = "Test user1", sExternalId = "1" })
-				//);
-
-				//Act
+				// Act
 				using (var response = await client.SendAsync(request))
 				{
 					// Assert
 					Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-					Assert.Equal($"{_client.BaseAddress}InkBall/Home", response.RequestMessage.RequestUri.ToString());
+					Assert.Equal($"{client.BaseAddress}InkBall/Home", response.RequestMessage.RequestUri.ToString());
 					var responseString = await response.Content.ReadAsStringAsync();
 					Assert.Contains("No active game for you", responseString);
 				}
@@ -281,7 +290,7 @@ namespace IntegrationTests
 
 			//not logged in
 			// Arrange
-			using (var get_response = await _client.GetAsync($"{_fixture.AppRootPath}InkBall/Home", HttpCompletionOption.ResponseContentRead))
+			using (var get_response = await _anonclient.GetAsync($"{_anonclient.BaseAddress}InkBall/Home", HttpCompletionOption.ResponseContentRead))
 			{
 				// Assert
 				get_response.EnsureSuccessStatusCode();
@@ -291,18 +300,18 @@ namespace IntegrationTests
 				var data = new Dictionary<string, string> {
 					{ "action", "New game" }, { "gameType", "FIRST_CAPTURE"}, { "boardSize", "20" }, { "cpuOponent", "off" },
 					{ "__RequestVerificationToken", antiforgery_token }
-				}.ToList();
+				};
 
 				using (var formPostBodyData = new FormUrlEncodedContent(data))
 				{
 					PostRequestHelper.CreateFormUrlEncodedContentWithCookiesFromResponse(formPostBodyData.Headers, get_response);
-					using (var response = await _client.PostAsync($"{_fixture.AppRootPath}InkBall/Home", formPostBodyData))
+					using (var response = await _anonclient.PostAsync($"{_anonclient.BaseAddress}InkBall/Home", formPostBodyData))
 					{
 						Assert.NotNull(response);
 						response.EnsureSuccessStatusCode();
 
 						var responseString = await response.Content.ReadAsStringAsync();
-						Assert.Contains("You are not logged in", responseString);
+						Assert.Contains("const msg = \"You are not logged in\";", responseString);
 					}
 				}
 			}//end using get_response
@@ -310,18 +319,14 @@ namespace IntegrationTests
 
 			//logged in
 			// Arrange
-			var client = await _fixture.CreateAuthenticatedClientAsync();
+			using var client = await _fixture.CreateAuthenticatedClientAsync();
 
 			using (var request = new HttpRequestMessage(HttpMethod.Get, $"{client.BaseAddress}InkBall/Home"))
 			{
-				//request.Headers.Authorization = new AuthenticationHeaderValue("Test",
-				//	JsonSerializer.Serialize(new InkBallUser { iId = 1, UserName = "Test user1", sExternalId = "1" })
-				//);
-
 				// Act
 				using (var get_response = await client.SendAsync(request, HttpCompletionOption.ResponseContentRead))
 				{
-					//Assert
+					// Assert
 					get_response.EnsureSuccessStatusCode();
 					var antiforgery_token = await PostRequestHelper.ExtractAntiForgeryToken(get_response);
 
@@ -329,10 +334,8 @@ namespace IntegrationTests
 					var data = new Dictionary<string, string> {
 						{ "__RequestVerificationToken", antiforgery_token },
 						{ "action", "New game" }, { "gameType", "FIRST_CAPTURE"}, { "boardSize", "20" }, { "cpuOponent", "off" },
-					}.ToList();
+					};
 
-					//data.Add(new KeyValuePair<string, string>(nameof(HttpRequestHeader.Authorization),
-					//	request.Headers.Authorization.ToString()));
 					using (var formPostBodyData = new FormUrlEncodedContent(data))
 					{
 						PostRequestHelper.CreateFormUrlEncodedContentWithCookiesFromResponse(formPostBodyData.Headers, get_response);
@@ -344,31 +347,89 @@ namespace IntegrationTests
 							response.EnsureSuccessStatusCode();
 
 							var responseString = await response.Content.ReadAsStringAsync();
-							Assert.DoesNotContain("You are not logged in", responseString);
 							Assert.Contains("This is Inball Game page", responseString);
+							Assert.Contains("Alice Testing vs <span id='Player2Name'>???</span>", responseString);
 						}
 					}
 				}//end using (var get_response
 			}//end using request
 		}
 
-		[Theory]
-		[InlineData("alice.testing@example.org", "#SecurePassword123")]
-		public async Task NewAuth(string email, string password)
+		[Fact]
+		public async Task CreateAndCancelGame()
 		{
 			if (_fixture.DOTNET_RUNNING_IN_CONTAINER) return;//pass on fake DB with no data
 
 
+
 			// Arrange
-			var client = await _fixture.CreateAuthenticatedClientAsync(email, password);
+			string antiforgery_token, responseString;
+			using var client = await _fixture.CreateAuthenticatedClientAsync();
 
-			// Act
-			HttpResponseMessage response = await client.GetAsync($"{client.BaseAddress}InkBall/Home");
+			using (var request = new HttpRequestMessage(HttpMethod.Get, $"{client.BaseAddress}InkBall/Home"))
+			{
+				// Act
+				using (var get_response = await client.SendAsync(request, HttpCompletionOption.ResponseContentRead))
+				{
+					// Assert
+					get_response.EnsureSuccessStatusCode();
+					antiforgery_token = await PostRequestHelper.ExtractAntiForgeryToken(get_response);
 
-			// Assert
-			Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-			var responseString = await response.Content.ReadAsStringAsync();
-			Assert.Contains("Alice Testing", responseString);
+					// Arrange
+					var data = new Dictionary<string, string> {
+						{ "__RequestVerificationToken", antiforgery_token },
+						{ "action", "New game" }, { "gameType", "FIRST_CAPTURE"}, { "boardSize", "20" }, { "cpuOponent", "off" },
+					};
+
+					//Create game POST request
+					using (var formPostBodyData_create = new FormUrlEncodedContent(data))
+					{
+						PostRequestHelper.CreateFormUrlEncodedContentWithCookiesFromResponse(formPostBodyData_create.Headers, get_response);
+						// Act
+						using (var create_game_response = await client.PostAsync($"{client.BaseAddress}InkBall/Home", formPostBodyData_create))
+						{
+							// Assert
+							Assert.NotNull(create_game_response);
+							create_game_response.EnsureSuccessStatusCode();
+
+							responseString = await create_game_response.Content.ReadAsStringAsync();
+							Assert.DoesNotContain("const msg = \"You are not logged in\";", responseString);
+							Assert.Contains("This is Inball Game page", responseString);
+							//parse GameID from Game page
+							Match match = Regex.Match(responseString, @"iGameID\: ([0-9].*),");
+							Assert.True(match.Success);
+							Assert.True(int.TryParse(match.Groups[1].Captures[0].Value, out var GameID));
+							antiforgery_token = await PostRequestHelper.ExtractAntiForgeryToken(create_game_response);
+
+
+
+							//cancel waiting game POST request to GameList page
+							data = new Dictionary<string, string> {
+								{ "__RequestVerificationToken", antiforgery_token },
+								{ "action", "cancel" }, { "GameID", GameID.ToString() }
+							};
+
+							//Create game POST request
+							using (var formPostBodyData_cancel = new FormUrlEncodedContent(data))
+							{
+								PostRequestHelper.CreateFormUrlEncodedContentWithCookiesFromResponse(formPostBodyData_cancel.Headers, create_game_response);
+								// Act
+								using (var response = await client.PostAsync($"{client.BaseAddress}InkBall/GamesList", formPostBodyData_cancel))
+								{
+									// Assert
+									Assert.NotNull(response);
+									response.EnsureSuccessStatusCode();
+
+									responseString = await response.Content.ReadAsStringAsync();
+									Assert.DoesNotContain("const msg = \"You are not logged in\";", responseString);
+									Assert.Contains("<div class='container inkgames'>", responseString);
+								}
+							}
+						}
+					}
+
+				}//end using (var get_response
+			}//end using request
 		}
 	}
 }

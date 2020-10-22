@@ -70,7 +70,7 @@ namespace InkBall.Module.Pages
 					case "Join":
 						if (Game != null)
 						{
-							msg = "You've got another game";
+							msg = "You have another game";
 							break;
 						}
 						if (gameID < 0)
@@ -140,7 +140,7 @@ namespace InkBall.Module.Pages
 						}
 						else
 						{
-							msg = "You've got no game to continue";
+							msg = "You have no game to continue";
 						}
 						break;
 
@@ -149,7 +149,7 @@ namespace InkBall.Module.Pages
 					case "New game":
 						if (Game != null)
 						{
-							msg = "You've got another game";
+							msg = "You have another game";
 							break;
 						}
 
@@ -172,9 +172,6 @@ namespace InkBall.Module.Pages
 							case InkBallGame.BoardSizeEnum.SIZE_64x64:
 								width = 64; height = 64;
 								break;
-							// case InkBallGame.BoardSizeEnum.SIZE_80x80:
-							// 	width = 80; height = 80;
-							// 	break;
 							default:
 								break;
 						}
@@ -228,7 +225,7 @@ namespace InkBall.Module.Pages
 					case "win":
 						if (Game == null)
 						{
-							msg = "You've got no game";
+							msg = "You have no game";
 							break;
 						}
 						using (var trans = await _dbContext.Database.BeginTransactionAsync(token))
@@ -281,6 +278,7 @@ namespace InkBall.Module.Pages
 			}
 			catch (Exception ex)
 			{
+				_logger.LogError(ex, "GamesList error");
 				msg += $"Exception: {ex.Message}";
 			}
 

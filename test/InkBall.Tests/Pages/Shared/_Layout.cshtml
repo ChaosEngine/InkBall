@@ -1,4 +1,7 @@
-﻿<!DOCTYPE html>
+﻿@*
+	Layout file used only to initiate integration tests; not used in the module.
+*@
+<!DOCTYPE html>
 <html lang="en">
 <head>
 	<meta charset="utf-8" />
@@ -18,25 +21,25 @@
 						aria-expanded="false" aria-label="Toggle navigation">
 					<span class="navbar-toggler-icon"></span>
 				</button>
-                <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">Index</a>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">InkBall</a>
-                            <div class="dropdown-menu">
-                                <a class="dropdown-item" href="~/InkBall/Home">Home</a>
-                                <a class="dropdown-item" href="~/InkBall/GamesList">Games list</a>
-                                <a class="dropdown-item" href="~/InkBall/Game">Game</a>
-                                <a class="dropdown-item" href="~/InkBall/Highscores">Highscores</a>
-                                <a class="dropdown-item" href="~/Identity/Account/Register">Register</a>
-                                <a class="dropdown-item" href="~/InkBall/Rules">Rules</a>
-                            </div>
-                        </li>
-                    </ul>
-                    <partial name="_LoginPartial" />
-                </div>
+				<div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
+					<ul class="navbar-nav flex-grow-1">
+						<li class="nav-item">
+							<a class="nav-link text-dark" asp-area="" asp-page="/Index">Index</a>
+						</li>
+						<li class="nav-item dropdown">
+							<a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">InkBall</a>
+							<div class="dropdown-menu">
+								<a class="dropdown-item" href="~/InkBall/Home">Home</a>
+								<a class="dropdown-item" href="~/InkBall/GamesList">Games list</a>
+								<a class="dropdown-item" href="~/InkBall/Game">Game</a>
+								<a class="dropdown-item" href="~/InkBall/Highscores">Highscores</a>
+								<a class="dropdown-item" href="~/Identity/Account/Register">Register</a>
+								<a class="dropdown-item" href="~/InkBall/Rules">Rules</a>
+							</div>
+						</li>
+					</ul>
+					<partial name="_LoginPartial" />
+				</div>
 			</div>
 		</nav>
 	</header>
