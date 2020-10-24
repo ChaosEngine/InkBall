@@ -1732,23 +1732,28 @@ var InkBallGame = /*#__PURE__*/function () {
           while (1) {
             switch (_context8.prev = _context8.next) {
               case 0:
+                _context8.prev = 0;
+                _context8.next = 3;
+                return this.m_Points.BeginBulkStorage();
+
+              case 3:
                 //points.forEach(async function(p) {
                 //	await this.SetPoint(p[0]/*x*/, p[1]/*y*/, p[2]/*Status*/, p[3]/*iPlayerId*/);
                 //}.bind(this));
                 //TODO: implement indexeddb cursor if possible
                 _iterator = _createForOfIteratorHelper(points);
-                _context8.prev = 1;
+                _context8.prev = 4;
 
                 _iterator.s();
 
-              case 3:
+              case 6:
                 if ((_step = _iterator.n()).done) {
-                  _context8.next = 9;
+                  _context8.next = 12;
                   break;
                 }
 
                 p = _step.value;
-                _context8.next = 7;
+                _context8.next = 10;
                 return this.SetPoint(p[0]
                 /*x*/
                 , p[1]
@@ -1759,33 +1764,41 @@ var InkBallGame = /*#__PURE__*/function () {
                 /*iPlayerId*/
                 );
 
-              case 7:
-                _context8.next = 3;
+              case 10:
+                _context8.next = 6;
                 break;
 
-              case 9:
-                _context8.next = 14;
+              case 12:
+                _context8.next = 17;
                 break;
-
-              case 11:
-                _context8.prev = 11;
-                _context8.t0 = _context8["catch"](1);
-
-                _iterator.e(_context8.t0);
 
               case 14:
                 _context8.prev = 14;
+                _context8.t0 = _context8["catch"](4);
+
+                _iterator.e(_context8.t0);
+
+              case 17:
+                _context8.prev = 17;
 
                 _iterator.f();
 
-                return _context8.finish(14);
+                return _context8.finish(17);
 
-              case 17:
+              case 20:
+                _context8.prev = 20;
+                _context8.next = 23;
+                return this.m_Points.EndBulkStorage();
+
+              case 23:
+                return _context8.finish(20);
+
+              case 24:
               case "end":
                 return _context8.stop();
             }
           }
-        }, _callee8, this, [[1, 11, 14, 17]]);
+        }, _callee8, this, [[0,, 20, 24], [4, 14, 17, 20]]);
       }));
 
       function SetAllPoints(_x11) {
@@ -2022,35 +2035,41 @@ var InkBallGame = /*#__PURE__*/function () {
           while (1) {
             switch (_context11.prev = _context11.next) {
               case 0:
+                _context11.prev = 0;
+                _context11.next = 3;
+                return this.m_Lines.BeginBulkStorage();
+
+              case 3:
                 //packedPaths.forEach(unpacked => {
                 //	//const unpacked = JSON.parse(packed.Serialized);
                 //	if (unpacked.iGameId !== this.g_iGameID)
                 //		throw new Error("Bad game from path!");
+                //
                 //	this.SetPath(unpacked.PointsAsString/*points*/, this.m_bIsPlayingWithRed,
                 //		unpacked.iPlayerId === this.g_iPlayerID/*isMainPlayerPoints*/, unpacked.iId/*real DB id*/);
                 //});
                 _iterator4 = _createForOfIteratorHelper(packedPaths);
-                _context11.prev = 1;
+                _context11.prev = 4;
 
                 _iterator4.s();
 
-              case 3:
+              case 6:
                 if ((_step4 = _iterator4.n()).done) {
-                  _context11.next = 11;
+                  _context11.next = 14;
                   break;
                 }
 
                 unpacked = _step4.value;
 
                 if (!(unpacked.iGameId !== this.g_iGameID)) {
-                  _context11.next = 7;
+                  _context11.next = 10;
                   break;
                 }
 
                 throw new Error("Bad game from path!");
 
-              case 7:
-                _context11.next = 9;
+              case 10:
+                _context11.next = 12;
                 return this.SetPath(unpacked.PointsAsString
                 /*points*/
                 , this.m_bIsPlayingWithRed, unpacked.iPlayerId === this.g_iPlayerID
@@ -2059,33 +2078,41 @@ var InkBallGame = /*#__PURE__*/function () {
                 /*real DB id*/
                 );
 
-              case 9:
-                _context11.next = 3;
+              case 12:
+                _context11.next = 6;
                 break;
 
-              case 11:
-                _context11.next = 16;
+              case 14:
+                _context11.next = 19;
                 break;
-
-              case 13:
-                _context11.prev = 13;
-                _context11.t0 = _context11["catch"](1);
-
-                _iterator4.e(_context11.t0);
 
               case 16:
                 _context11.prev = 16;
+                _context11.t0 = _context11["catch"](4);
+
+                _iterator4.e(_context11.t0);
+
+              case 19:
+                _context11.prev = 19;
 
                 _iterator4.f();
 
-                return _context11.finish(16);
+                return _context11.finish(19);
 
-              case 19:
+              case 22:
+                _context11.prev = 22;
+                _context11.next = 25;
+                return this.m_Lines.EndBulkStorage();
+
+              case 25:
+                return _context11.finish(22);
+
+              case 26:
               case "end":
                 return _context11.stop();
             }
           }
-        }, _callee11, this, [[1, 13, 16, 19]]);
+        }, _callee11, this, [[0,, 22, 26], [4, 16, 19, 22]]);
       }));
 
       function SetAllPaths(_x18) {

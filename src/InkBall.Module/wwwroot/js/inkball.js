@@ -1040,13 +1040,20 @@ class InkBallGame {
 	}
 
 	async SetAllPoints(points) {
-		//points.forEach(async function(p) {
-		//	await this.SetPoint(p[0]/*x*/, p[1]/*y*/, p[2]/*Status*/, p[3]/*iPlayerId*/);
-		//}.bind(this));
+		try {
+			await this.m_Points.BeginBulkStorage();
 
-		//TODO: implement indexeddb cursor if possible
-		for (const p of points) {
-			await this.SetPoint(p[0]/*x*/, p[1]/*y*/, p[2]/*Status*/, p[3]/*iPlayerId*/);
+			//points.forEach(async function(p) {
+			//	await this.SetPoint(p[0]/*x*/, p[1]/*y*/, p[2]/*Status*/, p[3]/*iPlayerId*/);
+			//}.bind(this));
+
+			//TODO: implement indexeddb cursor if possible
+			for (const p of points) {
+				await this.SetPoint(p[0]/*x*/, p[1]/*y*/, p[2]/*Status*/, p[3]/*iPlayerId*/);
+			}
+		}
+		finally {
+			await this.m_Points.EndBulkStorage();
 		}
 	}
 
@@ -1140,22 +1147,29 @@ class InkBallGame {
 	}
 
 	async SetAllPaths(packedPaths) {
-		//packedPaths.forEach(unpacked => {
-		//	//const unpacked = JSON.parse(packed.Serialized);
-		//	if (unpacked.iGameId !== this.g_iGameID)
-		//		throw new Error("Bad game from path!");
+		try {
+			await this.m_Lines.BeginBulkStorage();
 
-		//	this.SetPath(unpacked.PointsAsString/*points*/, this.m_bIsPlayingWithRed,
-		//		unpacked.iPlayerId === this.g_iPlayerID/*isMainPlayerPoints*/, unpacked.iId/*real DB id*/);
-		//});
+			//packedPaths.forEach(unpacked => {
+			//	//const unpacked = JSON.parse(packed.Serialized);
+			//	if (unpacked.iGameId !== this.g_iGameID)
+			//		throw new Error("Bad game from path!");
+			//
+			//	this.SetPath(unpacked.PointsAsString/*points*/, this.m_bIsPlayingWithRed,
+			//		unpacked.iPlayerId === this.g_iPlayerID/*isMainPlayerPoints*/, unpacked.iId/*real DB id*/);
+			//});
 
-		for (const unpacked of packedPaths) {
-			//const unpacked = JSON.parse(packed.Serialized);
-			if (unpacked.iGameId !== this.g_iGameID)
-				throw new Error("Bad game from path!");
+			for (const unpacked of packedPaths) {
+				//const unpacked = JSON.parse(packed.Serialized);
+				if (unpacked.iGameId !== this.g_iGameID)
+					throw new Error("Bad game from path!");
 
-			await this.SetPath(unpacked.PointsAsString/*points*/, this.m_bIsPlayingWithRed,
-				unpacked.iPlayerId === this.g_iPlayerID/*isMainPlayerPoints*/, unpacked.iId/*real DB id*/);
+				await this.SetPath(unpacked.PointsAsString/*points*/, this.m_bIsPlayingWithRed,
+					unpacked.iPlayerId === this.g_iPlayerID/*isMainPlayerPoints*/, unpacked.iId/*real DB id*/);
+			}
+		}
+		finally {
+			await this.m_Lines.EndBulkStorage();
 		}
 	}
 

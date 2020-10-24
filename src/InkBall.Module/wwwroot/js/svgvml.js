@@ -257,9 +257,9 @@ class GameStateStore {
 		}
 		else {
 			this.PointStore = new IDBPointStore(this.GetPoint.bind(this), this.StorePoint.bind(this), this.GetAllPoints.bind(this),
-				this.UpdateState.bind(this), pointCreationCallbackFn, getGameStateFn);
+				this.UpdateState.bind(this), pointCreationCallbackFn, getGameStateFn, this);
 			this.PathStore = new IDBPathStore(this.GetAllPaths.bind(this), this.StorePath.bind(this), this.UpdateState.bind(this),
-				pathCreationCallbackFn, getGameStateFn);
+				pathCreationCallbackFn, getGameStateFn, this);
 			//this.PointStore = new SimplePointStore();
 			//this.PathStore = new SimplePathStore();
 		}
@@ -321,6 +321,9 @@ class GameStateStore {
 	  * @returns {object} store
 	  */
 	GetObjectStore(storeName, mode) {
+		if (this.bulkStores && this.bulkStores.has(storeName))
+			return this.bulkStores.get(storeName);
+
 		const tx = this.g_DB.transaction(storeName, mode);
 		return tx.objectStore(storeName);
 	}
@@ -429,6 +432,13 @@ class GameStateStore {
 	  * @param {object} val is serialized, thin circle
 	  */
 	async StorePoint(key, val) {
+		if (this.bulkStores && this.bulkStores.has(this.DB_POINT_STORE)) {
+			if (!this.bulkBuffer)
+				this.bulkBuffer = new Map();
+			this.bulkBuffer.set(key, val);
+			return Promise.resolve();
+		}
+
 		return new Promise((resolve, reject) => {
 			const store = this.GetObjectStore(this.DB_POINT_STORE, 'readwrite');
 			let req;
@@ -446,6 +456,29 @@ class GameStateStore {
 				console.error("StorePoint error", this.error);
 				reject();
 			};
+		});
+	}
+
+	async StoreAllPoints(values) {
+		if (!values)
+			values = this.bulkBuffer;
+
+		if (!values || !this.bulkStores)
+			return Promise.reject();
+
+		return new Promise((resolve, reject) => {
+			const store = this.GetObjectStore(this.DB_POINT_STORE, 'readwrite');
+			try {
+				values.forEach(function (v, key) {
+					store.add(v, key);
+				});
+
+				this.bulkBuffer = null;
+				resolve();
+			} catch (e) {
+				console.error("This engine doesn't know how to clone a Blob, use Firefox");
+				reject(e);
+			}
 		});
 	}
 
@@ -489,7 +522,7 @@ class GameStateStore {
 				resolve();
 			};
 			req.onerror = function () {
-				console.error("StoreState error", this.error);
+				console.error("UpdateState error", this.error);
 				reject();
 			};
 		});
@@ -532,9 +565,9 @@ class GameStateStore {
 		const idb_state = await this.GetState(game_state.iGameID);
 		if (!idb_state) {
 			//no state entry in db
-			await this.ClearObjectStore(this.DB_POINT_STORE);
-			await this.ClearObjectStore(this.DB_PATH_STORE);
-			await this.ClearObjectStore(this.DB_STATE_STORE);
+			await Promise.all([this.ClearObjectStore(this.DB_POINT_STORE),
+			this.ClearObjectStore(this.DB_PATH_STORE),
+			this.ClearObjectStore(this.DB_STATE_STORE)]);
 
 			await this.StoreState(game_state.iGameID, game_state);
 
@@ -543,19 +576,62 @@ class GameStateStore {
 		else {
 			//Verify date of last move and decide whether to need pull points from signalR
 			if (idb_state.sLastMoveGameTimeStamp !== game_state.sLastMoveGameTimeStamp) {
-				await this.ClearObjectStore(this.DB_POINT_STORE);
-				await this.ClearObjectStore(this.DB_PATH_STORE);
-				await this.ClearObjectStore(this.DB_STATE_STORE);
+
+				await Promise.all([this.ClearObjectStore(this.DB_POINT_STORE),
+				this.ClearObjectStore(this.DB_PATH_STORE),
+				this.ClearObjectStore(this.DB_STATE_STORE)]);
 
 				return false;
 			}
 			else if (game_state.bPointsAndPathsLoaded === false) {
 				//db entry ok and ready for read
-				await this.PointStore.PrepareStore();
-				await this.PathStore.PrepareStore();
+				try {
+					await this.BeginBulkStorage([this.DB_POINT_STORE, this.DB_PATH_STORE], 'readonly');
 
-				return true;
+					if ((await this.PointStore.PrepareStore()) !== true || (await this.PathStore.PrepareStore()) !== true) {
+
+						await Promise.all([this.ClearObjectStore(this.DB_POINT_STORE),
+						this.ClearObjectStore(this.DB_PATH_STORE),
+						this.ClearObjectStore(this.DB_STATE_STORE)]);
+
+						return false;
+					}
+
+					return true;
+				} finally {
+					await this.EndBulkStorage([this.DB_POINT_STORE, this.DB_PATH_STORE]);
+				}
 			}
+		}
+	}
+
+	async BeginBulkStorage(storeName, mode) {
+		if (!this.bulkStores)
+			this.bulkStores = new Map();
+
+		const key = storeName;
+		if (!this.bulkStores.has(key)) {
+			const tx = this.g_DB.transaction(storeName, mode);
+			if (Array.isArray(storeName)) {
+				this.bulkStores.set(key[0], tx.objectStore(storeName[0]));
+				this.bulkStores.set(key[1], tx.objectStore(storeName[1]));
+			}
+			else
+				this.bulkStores.set(key, tx.objectStore(storeName));
+		}
+	}
+
+	async EndBulkStorage(storeName) {
+		if (this.bulkStores) {
+			if (Array.isArray(storeName)) {
+				this.bulkStores.delete(storeName[0]);
+				this.bulkStores.delete(storeName[1]);
+			}
+			else
+				this.bulkStores.delete(storeName);
+
+			if (this.bulkStores.size <= 0)
+				this.bulkStores = null;
 		}
 	}
 }
@@ -566,6 +642,13 @@ class SimplePointStore {
 	}
 
 	async PrepareStore() {
+		return true;
+	}
+
+	async BeginBulkStorage() {
+	}
+
+	async EndBulkStorage() {
 	}
 
 	async has(key) {
@@ -586,7 +669,7 @@ class SimplePointStore {
 }
 
 class IDBPointStore extends SimplePointStore {
-	constructor(getPointFn, storePointFn, getAllPointsFn, updateStateFn, pointCreationCallbackFn, getGameStateFn) {
+	constructor(getPointFn, storePointFn, getAllPointsFn, updateStateFn, pointCreationCallbackFn, getGameStateFn, mainGameStateStore) {
 		super();
 		this.GetPoint = getPointFn;
 		this.StorePoint = storePointFn;
@@ -594,6 +677,7 @@ class IDBPointStore extends SimplePointStore {
 		this.UpdateState = updateStateFn;
 		this.PointCreationCallback = pointCreationCallbackFn;
 		this.GetGameStateCallback = getGameStateFn;
+		this.MainGameStateStore = mainGameStateStore;
 	}
 
 	async PrepareStore() {
@@ -607,7 +691,19 @@ class IDBPointStore extends SimplePointStore {
 				const index = idb_pt.y * game_state.iGridWidth + idb_pt.x;
 				this.store.set(index, pt);
 			}
+
+			return true;
 		}
+	}
+
+	async BeginBulkStorage() {
+		await this.MainGameStateStore.BeginBulkStorage(this.MainGameStateStore.DB_POINT_STORE, 'readwrite');
+	}
+
+	async EndBulkStorage() {
+		await this.MainGameStateStore.StoreAllPoints();
+
+		await this.MainGameStateStore.EndBulkStorage(this.MainGameStateStore.DB_POINT_STORE);
 	}
 
 	async has(key) {
@@ -632,7 +728,7 @@ class IDBPointStore extends SimplePointStore {
 		await this.StorePoint(key, idb_pt);//TODO: possible delay
 
 		if (this.UpdateState) {
-			if (game_state.bPointsAndPathsLoaded)
+			if (game_state.bPointsAndPathsLoaded === true)
 				await this.UpdateState(game_state.iGameID, game_state);
 		}
 
@@ -670,6 +766,13 @@ class SimplePathStore {
 	}
 
 	async PrepareStore() {
+		return true;
+	}
+
+	async BeginBulkStorage() {
+	}
+
+	async EndBulkStorage() {
 	}
 
 	async push(obj) {
@@ -682,13 +785,14 @@ class SimplePathStore {
 }
 
 class IDBPathStore extends SimplePathStore {
-	constructor(getAllPaths, storePath, updateStateFn, pathCreationCallbackFn, getGameStateFn) {
+	constructor(getAllPaths, storePath, updateStateFn, pathCreationCallbackFn, getGameStateFn, mainGameStateStore) {
 		super();
 		this.GetAllPaths = getAllPaths;
 		this.StorePath = storePath;
 		this.UpdateState = updateStateFn;
 		this.PathCreationCallback = pathCreationCallbackFn;
 		this.GetGameStateCallback = getGameStateFn;
+		this.MainGameStateStore = mainGameStateStore;
 	}
 
 	async PrepareStore() {
@@ -700,6 +804,15 @@ class IDBPathStore extends SimplePathStore {
 				this.store.push(pa);
 			}
 		}
+		return true;
+	}
+
+	async BeginBulkStorage() {
+		await this.MainGameStateStore.BeginBulkStorage([this.MainGameStateStore.DB_POINT_STORE, this.MainGameStateStore.DB_PATH_STORE], 'readwrite');
+	}
+
+	async EndBulkStorage() {
+		await this.MainGameStateStore.EndBulkStorage([this.MainGameStateStore.DB_POINT_STORE, this.MainGameStateStore.DB_PATH_STORE]);
 	}
 
 	async push(val) {
@@ -714,7 +827,7 @@ class IDBPathStore extends SimplePathStore {
 
 		if (this.UpdateState) {
 			const game_state = this.GetGameStateCallback();
-			if (game_state.bPointsAndPathsLoaded)
+			if (game_state.bPointsAndPathsLoaded === true)
 				await this.UpdateState(game_state.iGameID, game_state);
 		}
 

@@ -107,15 +107,15 @@ SVG ? ($createSVGVML = function $createSVGVML(t, e, r, s) {
   var s = document.createElementNS(svgNS, "polyline");
   return s.setAttribute("shape-rendering", svgAntialias ? "auto" : "optimizeSpeed"), s.setAttribute("stroke-width", Math.round(t)), r && s.setAttribute("stroke", r), s.setAttribute("fill", r), s.setAttribute("fill-opacity", "0.1"), e && s.setAttribute("points", e), s.setAttribute("stroke-linecap", "round"), s.setAttribute("stroke-linejoin", "round"), cont.appendChild(s), s.setAttribute("data-id", 0), s.$AppendPoints = function (t, e, r, s) {
     var i = this.getAttribute("points"),
-        n = i.split(" ");
-    if (!0 === hasDuplicates(n)) return !1;
-    var o;
-    if (n.length <= 1 || 2 !== (o = n[n.length - 1].split(",")).length) return !1;
-    var a = parseInt(o[0]),
-        c = parseInt(o[1]),
-        u = parseInt(t),
-        h = parseInt(e);
-    return Math.abs(a - u) <= r && Math.abs(c - h) <= s && (this.setAttribute("points", i + " ".concat(t, ",").concat(e)), !0);
+        o = i.split(" ");
+    if (!0 === hasDuplicates(o)) return !1;
+    var n;
+    if (o.length <= 1 || 2 !== (n = o[o.length - 1].split(",")).length) return !1;
+    var a = parseInt(n[0]),
+        u = parseInt(n[1]),
+        h = parseInt(t),
+        c = parseInt(e);
+    return Math.abs(a - h) <= r && Math.abs(u - c) <= s && (this.setAttribute("points", i + " ".concat(t, ",").concat(e)), !0);
   }, s.$RemoveLastPoint = function () {
     var t = this.getAttribute("points").replace(/(\s\d+,\d+)$/, "");
     return this.setAttribute("points", t), t;
@@ -201,7 +201,7 @@ var GameStateStore = /*#__PURE__*/function () {
   function GameStateStore(t, e, r) {
     _classCallCheck(this, GameStateStore);
 
-    this.DB_NAME = "InkballGame", this.DB_POINT_STORE = "points", this.DB_PATH_STORE = "paths", this.DB_STATE_STORE = "state", this.DB_VERSION = 2, this.g_DB, "indexedDB" in window ? (this.PointStore = new IDBPointStore(this.GetPoint.bind(this), this.StorePoint.bind(this), this.GetAllPoints.bind(this), this.UpdateState.bind(this), t, r), this.PathStore = new IDBPathStore(this.GetAllPaths.bind(this), this.StorePath.bind(this), this.UpdateState.bind(this), e, r)) : (console.log("This browser doesn't support IndexedDB"), this.PointStore = new SimplePointStore(), this.PathStore = new SimplePathStore());
+    this.DB_NAME = "InkballGame", this.DB_POINT_STORE = "points", this.DB_PATH_STORE = "paths", this.DB_STATE_STORE = "state", this.DB_VERSION = 2, this.g_DB, "indexedDB" in window ? (this.PointStore = new IDBPointStore(this.GetPoint.bind(this), this.StorePoint.bind(this), this.GetAllPoints.bind(this), this.UpdateState.bind(this), t, r, this), this.PathStore = new IDBPathStore(this.GetAllPaths.bind(this), this.StorePath.bind(this), this.UpdateState.bind(this), e, r, this)) : (console.log("This browser doesn't support IndexedDB"), this.PointStore = new SimplePointStore(), this.PathStore = new SimplePathStore());
   }
 
   _createClass(GameStateStore, [{
@@ -261,6 +261,7 @@ var GameStateStore = /*#__PURE__*/function () {
   }, {
     key: "GetObjectStore",
     value: function GetObjectStore(t, e) {
+      if (this.bulkStores && this.bulkStores.has(t)) return this.bulkStores.get(t);
       return this.g_DB.transaction(t, e).objectStore(t);
     }
   }, {
@@ -483,20 +484,20 @@ var GameStateStore = /*#__PURE__*/function () {
           while (1) {
             switch (_context8.prev = _context8.next) {
               case 0:
-                return _context8.abrupt("return", new Promise(function (r, s) {
+                return _context8.abrupt("return", this.bulkStores && this.bulkStores.has(this.DB_POINT_STORE) ? (this.bulkBuffer || (this.bulkBuffer = new Map()), this.bulkBuffer.set(t, e), Promise.resolve()) : new Promise(function (r, s) {
                   var i = _this8.GetObjectStore(_this8.DB_POINT_STORE, "readwrite");
 
-                  var n;
+                  var o;
 
                   try {
-                    n = i.add(e, t);
+                    o = i.add(e, t);
                   } catch (t) {
                     throw "DataCloneError" === t.name && console.error("This engine doesn't know how to clone a Blob, use Firefox"), t;
                   }
 
-                  n.onsuccess = function () {
+                  o.onsuccess = function () {
                     r();
-                  }, n.onerror = function () {
+                  }, o.onerror = function () {
                     console.error("StorePoint error", this.error), s();
                   };
                 }));
@@ -506,7 +507,7 @@ var GameStateStore = /*#__PURE__*/function () {
                 return _context8.stop();
             }
           }
-        }, _callee8);
+        }, _callee8, this);
       }));
 
       function StorePoint(_x5, _x6) {
@@ -516,51 +517,45 @@ var GameStateStore = /*#__PURE__*/function () {
       return StorePoint;
     }()
   }, {
-    key: "StoreState",
+    key: "StoreAllPoints",
     value: function () {
-      var _StoreState = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(t, e) {
+      var _StoreAllPoints = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(t) {
         var _this9 = this;
 
         return regeneratorRuntime.wrap(function _callee9$(_context9) {
           while (1) {
             switch (_context9.prev = _context9.next) {
               case 0:
-                return _context9.abrupt("return", new Promise(function (r, s) {
-                  var i = _this9.GetObjectStore(_this9.DB_STATE_STORE, "readwrite");
-
-                  var n;
+                return _context9.abrupt("return", (t || (t = this.bulkBuffer), t && this.bulkStores ? new Promise(function (e, r) {
+                  var s = _this9.GetObjectStore(_this9.DB_POINT_STORE, "readwrite");
 
                   try {
-                    n = i.add(e, t);
+                    t.forEach(function (t, e) {
+                      s.add(t, e);
+                    }), _this9.bulkBuffer = null, e();
                   } catch (t) {
-                    throw "DataCloneError" === t.name && console.error("This engine doesn't know how to clone a Blob, use Firefox"), t;
+                    console.error("This engine doesn't know how to clone a Blob, use Firefox"), r(t);
                   }
-
-                  n.onsuccess = function () {
-                    r();
-                  }, n.onerror = function () {
-                    console.error("StoreState error", this.error), s();
-                  };
-                }));
+                }) : Promise.reject()));
 
               case 1:
               case "end":
                 return _context9.stop();
             }
           }
-        }, _callee9);
+        }, _callee9, this);
       }));
 
-      function StoreState(_x7, _x8) {
-        return _StoreState.apply(this, arguments);
+      function StoreAllPoints(_x7) {
+        return _StoreAllPoints.apply(this, arguments);
       }
 
-      return StoreState;
+      return StoreAllPoints;
     }()
   }, {
-    key: "UpdateState",
+    key: "StoreState",
     value: function () {
-      var _UpdateState = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10(t, e) {
+      var _StoreState = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10(t, e) {
         var _this10 = this;
 
         return regeneratorRuntime.wrap(function _callee10$(_context10) {
@@ -570,17 +565,17 @@ var GameStateStore = /*#__PURE__*/function () {
                 return _context10.abrupt("return", new Promise(function (r, s) {
                   var i = _this10.GetObjectStore(_this10.DB_STATE_STORE, "readwrite");
 
-                  var n;
+                  var o;
 
                   try {
-                    n = i.put(e, t);
+                    o = i.add(e, t);
                   } catch (t) {
                     throw "DataCloneError" === t.name && console.error("This engine doesn't know how to clone a Blob, use Firefox"), t;
                   }
 
-                  n.onsuccess = function () {
+                  o.onsuccess = function () {
                     r();
-                  }, n.onerror = function () {
+                  }, o.onerror = function () {
                     console.error("StoreState error", this.error), s();
                   };
                 }));
@@ -593,16 +588,16 @@ var GameStateStore = /*#__PURE__*/function () {
         }, _callee10);
       }));
 
-      function UpdateState(_x9, _x10) {
-        return _UpdateState.apply(this, arguments);
+      function StoreState(_x8, _x9) {
+        return _StoreState.apply(this, arguments);
       }
 
-      return UpdateState;
+      return StoreState;
     }()
   }, {
-    key: "StorePath",
+    key: "UpdateState",
     value: function () {
-      var _StorePath = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11(t, e) {
+      var _UpdateState = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11(t, e) {
         var _this11 = this;
 
         return regeneratorRuntime.wrap(function _callee11$(_context11) {
@@ -610,20 +605,20 @@ var GameStateStore = /*#__PURE__*/function () {
             switch (_context11.prev = _context11.next) {
               case 0:
                 return _context11.abrupt("return", new Promise(function (r, s) {
-                  var i = _this11.GetObjectStore(_this11.DB_PATH_STORE, "readwrite");
+                  var i = _this11.GetObjectStore(_this11.DB_STATE_STORE, "readwrite");
 
-                  var n;
+                  var o;
 
                   try {
-                    n = i.add(e, t);
+                    o = i.put(e, t);
                   } catch (t) {
                     throw "DataCloneError" === t.name && console.error("This engine doesn't know how to clone a Blob, use Firefox"), t;
                   }
 
-                  n.onsuccess = function () {
+                  o.onsuccess = function () {
                     r();
-                  }, n.onerror = function () {
-                    console.error("StorePath error", this.error), s();
+                  }, o.onerror = function () {
+                    console.error("UpdateState error", this.error), s();
                   };
                 }));
 
@@ -635,7 +630,49 @@ var GameStateStore = /*#__PURE__*/function () {
         }, _callee11);
       }));
 
-      function StorePath(_x11, _x12) {
+      function UpdateState(_x10, _x11) {
+        return _UpdateState.apply(this, arguments);
+      }
+
+      return UpdateState;
+    }()
+  }, {
+    key: "StorePath",
+    value: function () {
+      var _StorePath = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee12(t, e) {
+        var _this12 = this;
+
+        return regeneratorRuntime.wrap(function _callee12$(_context12) {
+          while (1) {
+            switch (_context12.prev = _context12.next) {
+              case 0:
+                return _context12.abrupt("return", new Promise(function (r, s) {
+                  var i = _this12.GetObjectStore(_this12.DB_PATH_STORE, "readwrite");
+
+                  var o;
+
+                  try {
+                    o = i.add(e, t);
+                  } catch (t) {
+                    throw "DataCloneError" === t.name && console.error("This engine doesn't know how to clone a Blob, use Firefox"), t;
+                  }
+
+                  o.onsuccess = function () {
+                    r();
+                  }, o.onerror = function () {
+                    console.error("StorePath error", this.error), s();
+                  };
+                }));
+
+              case 1:
+              case "end":
+                return _context12.stop();
+            }
+          }
+        }, _callee12);
+      }));
+
+      function StorePath(_x12, _x13) {
         return _StorePath.apply(this, arguments);
       }
 
@@ -644,122 +681,129 @@ var GameStateStore = /*#__PURE__*/function () {
   }, {
     key: "PrepareStore",
     value: function () {
-      var _PrepareStore = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee12() {
+      var _PrepareStore = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee13() {
         var t, e;
-        return regeneratorRuntime.wrap(function _callee12$(_context12) {
+        return regeneratorRuntime.wrap(function _callee13$(_context13) {
           while (1) {
-            switch (_context12.prev = _context12.next) {
+            switch (_context13.prev = _context13.next) {
               case 0:
                 if (this.PointStore.GetAllPoints) {
-                  _context12.next = 2;
+                  _context13.next = 2;
                   break;
                 }
 
-                return _context12.abrupt("return", !1);
+                return _context13.abrupt("return", !1);
 
               case 2:
                 if (!this.g_DB) {
-                  _context12.next = 4;
+                  _context13.next = 4;
                   break;
                 }
 
-                return _context12.abrupt("return", !1);
+                return _context13.abrupt("return", !1);
 
               case 4:
-                _context12.next = 6;
+                _context13.next = 6;
                 return this.OpenDb();
 
               case 6:
                 t = this.PointStore.GetGameStateCallback();
-                _context12.next = 9;
+                _context13.next = 9;
                 return this.GetState(t.iGameID);
 
               case 9:
-                e = _context12.sent;
+                e = _context13.sent;
 
-                if (!e) {
-                  _context12.next = 34;
+                if (e) {
+                  _context13.next = 16;
                   break;
                 }
 
-                if (!(e.sLastMoveGameTimeStamp !== t.sLastMoveGameTimeStamp)) {
-                  _context12.next = 21;
-                  break;
-                }
+                _context13.next = 13;
+                return Promise.all([this.ClearObjectStore(this.DB_POINT_STORE), this.ClearObjectStore(this.DB_PATH_STORE), this.ClearObjectStore(this.DB_STATE_STORE)]);
 
-                _context12.next = 14;
-                return this.ClearObjectStore(this.DB_POINT_STORE);
-
-              case 14:
-                _context12.next = 16;
-                return this.ClearObjectStore(this.DB_PATH_STORE);
-
-              case 16:
-                _context12.next = 18;
-                return this.ClearObjectStore(this.DB_STATE_STORE);
-
-              case 18:
-                _context12.t1 = !1;
-                _context12.next = 31;
-                break;
-
-              case 21:
-                if (!(!1 === t.bPointsAndPathsLoaded)) {
-                  _context12.next = 29;
-                  break;
-                }
-
-                _context12.next = 24;
-                return this.PointStore.PrepareStore();
-
-              case 24:
-                _context12.next = 26;
-                return this.PathStore.PrepareStore();
-
-              case 26:
-                _context12.t2 = !0;
-                _context12.next = 30;
-                break;
-
-              case 29:
-                _context12.t2 = void 0;
-
-              case 30:
-                _context12.t1 = _context12.t2;
-
-              case 31:
-                _context12.t0 = _context12.t1;
-                _context12.next = 43;
-                break;
-
-              case 34:
-                _context12.next = 36;
-                return this.ClearObjectStore(this.DB_POINT_STORE);
-
-              case 36:
-                _context12.next = 38;
-                return this.ClearObjectStore(this.DB_PATH_STORE);
-
-              case 38:
-                _context12.next = 40;
-                return this.ClearObjectStore(this.DB_STATE_STORE);
-
-              case 40:
-                _context12.next = 42;
+              case 13:
+                _context13.next = 15;
                 return this.StoreState(t.iGameID, t);
 
-              case 42:
-                _context12.t0 = !1;
+              case 15:
+                return _context13.abrupt("return", !1);
 
-              case 43:
-                return _context12.abrupt("return", _context12.t0);
+              case 16:
+                if (!(e.sLastMoveGameTimeStamp !== t.sLastMoveGameTimeStamp)) {
+                  _context13.next = 20;
+                  break;
+                }
+
+                _context13.next = 19;
+                return Promise.all([this.ClearObjectStore(this.DB_POINT_STORE), this.ClearObjectStore(this.DB_PATH_STORE), this.ClearObjectStore(this.DB_STATE_STORE)]);
+
+              case 19:
+                return _context13.abrupt("return", !1);
+
+              case 20:
+                if (!(!1 === t.bPointsAndPathsLoaded)) {
+                  _context13.next = 45;
+                  break;
+                }
+
+                _context13.prev = 21;
+                _context13.next = 24;
+                return this.BeginBulkStorage([this.DB_POINT_STORE, this.DB_PATH_STORE], "readonly");
+
+              case 24:
+                _context13.t2 = !0;
+                _context13.next = 27;
+                return this.PointStore.PrepareStore();
+
+              case 27:
+                _context13.t3 = _context13.sent;
+                _context13.t1 = _context13.t2 === _context13.t3;
+
+                if (!_context13.t1) {
+                  _context13.next = 35;
+                  break;
+                }
+
+                _context13.t4 = !0;
+                _context13.next = 33;
+                return this.PathStore.PrepareStore();
+
+              case 33:
+                _context13.t5 = _context13.sent;
+                _context13.t1 = _context13.t4 === _context13.t5;
+
+              case 35:
+                _context13.t0 = _context13.t1;
+
+                if (_context13.t0) {
+                  _context13.next = 40;
+                  break;
+                }
+
+                _context13.next = 39;
+                return Promise.all([this.ClearObjectStore(this.DB_POINT_STORE), this.ClearObjectStore(this.DB_PATH_STORE), this.ClearObjectStore(this.DB_STATE_STORE)]);
+
+              case 39:
+                _context13.t0 = !1;
+
+              case 40:
+                return _context13.abrupt("return", _context13.t0);
+
+              case 41:
+                _context13.prev = 41;
+                _context13.next = 44;
+                return this.EndBulkStorage([this.DB_POINT_STORE, this.DB_PATH_STORE]);
 
               case 44:
+                return _context13.finish(41);
+
+              case 45:
               case "end":
-                return _context12.stop();
+                return _context13.stop();
             }
           }
-        }, _callee12, this);
+        }, _callee13, this, [[21,, 41, 45]]);
       }));
 
       function PrepareStore() {
@@ -767,6 +811,61 @@ var GameStateStore = /*#__PURE__*/function () {
       }
 
       return PrepareStore;
+    }()
+  }, {
+    key: "BeginBulkStorage",
+    value: function () {
+      var _BeginBulkStorage = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee14(t, e) {
+        var r, s;
+        return regeneratorRuntime.wrap(function _callee14$(_context14) {
+          while (1) {
+            switch (_context14.prev = _context14.next) {
+              case 0:
+                this.bulkStores || (this.bulkStores = new Map());
+                r = t;
+
+                if (!this.bulkStores.has(r)) {
+                  s = this.g_DB.transaction(t, e);
+                  Array.isArray(t) ? (this.bulkStores.set(r[0], s.objectStore(t[0])), this.bulkStores.set(r[1], s.objectStore(t[1]))) : this.bulkStores.set(r, s.objectStore(t));
+                }
+
+              case 3:
+              case "end":
+                return _context14.stop();
+            }
+          }
+        }, _callee14, this);
+      }));
+
+      function BeginBulkStorage(_x14, _x15) {
+        return _BeginBulkStorage.apply(this, arguments);
+      }
+
+      return BeginBulkStorage;
+    }()
+  }, {
+    key: "EndBulkStorage",
+    value: function () {
+      var _EndBulkStorage = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee15(t) {
+        return regeneratorRuntime.wrap(function _callee15$(_context15) {
+          while (1) {
+            switch (_context15.prev = _context15.next) {
+              case 0:
+                this.bulkStores && (Array.isArray(t) ? (this.bulkStores["delete"](t[0]), this.bulkStores["delete"](t[1])) : this.bulkStores["delete"](t), this.bulkStores.size <= 0 && (this.bulkStores = null));
+
+              case 1:
+              case "end":
+                return _context15.stop();
+            }
+          }
+        }, _callee15, this);
+      }));
+
+      function EndBulkStorage(_x16) {
+        return _EndBulkStorage.apply(this, arguments);
+      }
+
+      return EndBulkStorage;
     }()
   }]);
 
@@ -783,16 +882,19 @@ var SimplePointStore = /*#__PURE__*/function () {
   _createClass(SimplePointStore, [{
     key: "PrepareStore",
     value: function () {
-      var _PrepareStore2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee13() {
-        return regeneratorRuntime.wrap(function _callee13$(_context13) {
+      var _PrepareStore2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee16() {
+        return regeneratorRuntime.wrap(function _callee16$(_context16) {
           while (1) {
-            switch (_context13.prev = _context13.next) {
+            switch (_context16.prev = _context16.next) {
               case 0:
+                return _context16.abrupt("return", !0);
+
+              case 1:
               case "end":
-                return _context13.stop();
+                return _context16.stop();
             }
           }
-        }, _callee13);
+        }, _callee16);
       }));
 
       function PrepareStore() {
@@ -802,24 +904,66 @@ var SimplePointStore = /*#__PURE__*/function () {
       return PrepareStore;
     }()
   }, {
+    key: "BeginBulkStorage",
+    value: function () {
+      var _BeginBulkStorage2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee17() {
+        return regeneratorRuntime.wrap(function _callee17$(_context17) {
+          while (1) {
+            switch (_context17.prev = _context17.next) {
+              case 0:
+              case "end":
+                return _context17.stop();
+            }
+          }
+        }, _callee17);
+      }));
+
+      function BeginBulkStorage() {
+        return _BeginBulkStorage2.apply(this, arguments);
+      }
+
+      return BeginBulkStorage;
+    }()
+  }, {
+    key: "EndBulkStorage",
+    value: function () {
+      var _EndBulkStorage2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee18() {
+        return regeneratorRuntime.wrap(function _callee18$(_context18) {
+          while (1) {
+            switch (_context18.prev = _context18.next) {
+              case 0:
+              case "end":
+                return _context18.stop();
+            }
+          }
+        }, _callee18);
+      }));
+
+      function EndBulkStorage() {
+        return _EndBulkStorage2.apply(this, arguments);
+      }
+
+      return EndBulkStorage;
+    }()
+  }, {
     key: "has",
     value: function () {
-      var _has = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee14(t) {
-        return regeneratorRuntime.wrap(function _callee14$(_context14) {
+      var _has = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee19(t) {
+        return regeneratorRuntime.wrap(function _callee19$(_context19) {
           while (1) {
-            switch (_context14.prev = _context14.next) {
+            switch (_context19.prev = _context19.next) {
               case 0:
-                return _context14.abrupt("return", this.store.has(t));
+                return _context19.abrupt("return", this.store.has(t));
 
               case 1:
               case "end":
-                return _context14.stop();
+                return _context19.stop();
             }
           }
-        }, _callee14, this);
+        }, _callee19, this);
       }));
 
-      function has(_x13) {
+      function has(_x17) {
         return _has.apply(this, arguments);
       }
 
@@ -828,22 +972,22 @@ var SimplePointStore = /*#__PURE__*/function () {
   }, {
     key: "set",
     value: function () {
-      var _set = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee15(t, e) {
-        return regeneratorRuntime.wrap(function _callee15$(_context15) {
+      var _set = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee20(t, e) {
+        return regeneratorRuntime.wrap(function _callee20$(_context20) {
           while (1) {
-            switch (_context15.prev = _context15.next) {
+            switch (_context20.prev = _context20.next) {
               case 0:
-                return _context15.abrupt("return", this.store.set(t, e));
+                return _context20.abrupt("return", this.store.set(t, e));
 
               case 1:
               case "end":
-                return _context15.stop();
+                return _context20.stop();
             }
           }
-        }, _callee15, this);
+        }, _callee20, this);
       }));
 
-      function set(_x14, _x15) {
+      function set(_x18, _x19) {
         return _set.apply(this, arguments);
       }
 
@@ -852,22 +996,22 @@ var SimplePointStore = /*#__PURE__*/function () {
   }, {
     key: "get",
     value: function () {
-      var _get = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee16(t) {
-        return regeneratorRuntime.wrap(function _callee16$(_context16) {
+      var _get = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee21(t) {
+        return regeneratorRuntime.wrap(function _callee21$(_context21) {
           while (1) {
-            switch (_context16.prev = _context16.next) {
+            switch (_context21.prev = _context21.next) {
               case 0:
-                return _context16.abrupt("return", this.store.get(t));
+                return _context21.abrupt("return", this.store.get(t));
 
               case 1:
               case "end":
-                return _context16.stop();
+                return _context21.stop();
             }
           }
-        }, _callee16, this);
+        }, _callee21, this);
       }));
 
-      function get(_x16) {
+      function get(_x20) {
         return _get.apply(this, arguments);
       }
 
@@ -876,19 +1020,19 @@ var SimplePointStore = /*#__PURE__*/function () {
   }, {
     key: "values",
     value: function () {
-      var _values = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee17() {
-        return regeneratorRuntime.wrap(function _callee17$(_context17) {
+      var _values = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee22() {
+        return regeneratorRuntime.wrap(function _callee22$(_context22) {
           while (1) {
-            switch (_context17.prev = _context17.next) {
+            switch (_context22.prev = _context22.next) {
               case 0:
-                return _context17.abrupt("return", this.store.values());
+                return _context22.abrupt("return", this.store.values());
 
               case 1:
               case "end":
-                return _context17.stop();
+                return _context22.stop();
             }
           }
-        }, _callee17, this);
+        }, _callee22, this);
       }));
 
       function values() {
@@ -907,83 +1051,86 @@ var IDBPointStore = /*#__PURE__*/function (_SimplePointStore) {
 
   var _super = _createSuper(IDBPointStore);
 
-  function IDBPointStore(t, e, r, s, i, n) {
-    var _this12;
+  function IDBPointStore(t, e, r, s, i, o, n) {
+    var _this13;
 
     _classCallCheck(this, IDBPointStore);
 
-    _this12 = _super.call(this), _this12.GetPoint = t, _this12.StorePoint = e, _this12.GetAllPoints = r, _this12.UpdateState = s, _this12.PointCreationCallback = i, _this12.GetGameStateCallback = n;
-    return _this12;
+    _this13 = _super.call(this), _this13.GetPoint = t, _this13.StorePoint = e, _this13.GetAllPoints = r, _this13.UpdateState = s, _this13.PointCreationCallback = i, _this13.GetGameStateCallback = o, _this13.MainGameStateStore = n;
+    return _this13;
   }
 
   _createClass(IDBPointStore, [{
     key: "PrepareStore",
     value: function () {
-      var _PrepareStore3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee18() {
+      var _PrepareStore3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee23() {
         var t, e, _iterator, _step, r, _t, s;
 
-        return regeneratorRuntime.wrap(function _callee18$(_context18) {
+        return regeneratorRuntime.wrap(function _callee23$(_context23) {
           while (1) {
-            switch (_context18.prev = _context18.next) {
+            switch (_context23.prev = _context23.next) {
               case 0:
                 if (!(this.PointCreationCallback && this.GetGameStateCallback)) {
-                  _context18.next = 25;
+                  _context23.next = 26;
                   break;
                 }
 
-                _context18.next = 3;
+                _context23.next = 3;
                 return this.GetAllPoints();
 
               case 3:
-                t = _context18.sent;
+                t = _context23.sent;
                 e = this.GetGameStateCallback();
                 _iterator = _createForOfIteratorHelper(t);
-                _context18.prev = 6;
+                _context23.prev = 6;
 
                 _iterator.s();
 
               case 8:
                 if ((_step = _iterator.n()).done) {
-                  _context18.next = 17;
+                  _context23.next = 17;
                   break;
                 }
 
                 r = _step.value;
-                _context18.next = 12;
+                _context23.next = 12;
                 return this.PointCreationCallback(r.x, r.y, r.Status, r.Color);
 
               case 12:
-                _t = _context18.sent;
+                _t = _context23.sent;
                 s = r.y * e.iGridWidth + r.x;
                 this.store.set(s, _t);
 
               case 15:
-                _context18.next = 8;
+                _context23.next = 8;
                 break;
 
               case 17:
-                _context18.next = 22;
+                _context23.next = 22;
                 break;
 
               case 19:
-                _context18.prev = 19;
-                _context18.t0 = _context18["catch"](6);
+                _context23.prev = 19;
+                _context23.t0 = _context23["catch"](6);
 
-                _iterator.e(_context18.t0);
+                _iterator.e(_context23.t0);
 
               case 22:
-                _context18.prev = 22;
+                _context23.prev = 22;
 
                 _iterator.f();
 
-                return _context18.finish(22);
+                return _context23.finish(22);
 
               case 25:
+                return _context23.abrupt("return", !0);
+
+              case 26:
               case "end":
-                return _context18.stop();
+                return _context23.stop();
             }
           }
-        }, _callee18, this, [[6, 19, 22, 25]]);
+        }, _callee23, this, [[6, 19, 22, 25]]);
       }));
 
       function PrepareStore() {
@@ -993,24 +1140,78 @@ var IDBPointStore = /*#__PURE__*/function (_SimplePointStore) {
       return PrepareStore;
     }()
   }, {
+    key: "BeginBulkStorage",
+    value: function () {
+      var _BeginBulkStorage3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee24() {
+        return regeneratorRuntime.wrap(function _callee24$(_context24) {
+          while (1) {
+            switch (_context24.prev = _context24.next) {
+              case 0:
+                _context24.next = 2;
+                return this.MainGameStateStore.BeginBulkStorage(this.MainGameStateStore.DB_POINT_STORE, "readwrite");
+
+              case 2:
+              case "end":
+                return _context24.stop();
+            }
+          }
+        }, _callee24, this);
+      }));
+
+      function BeginBulkStorage() {
+        return _BeginBulkStorage3.apply(this, arguments);
+      }
+
+      return BeginBulkStorage;
+    }()
+  }, {
+    key: "EndBulkStorage",
+    value: function () {
+      var _EndBulkStorage3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee25() {
+        return regeneratorRuntime.wrap(function _callee25$(_context25) {
+          while (1) {
+            switch (_context25.prev = _context25.next) {
+              case 0:
+                _context25.next = 2;
+                return this.MainGameStateStore.StoreAllPoints();
+
+              case 2:
+                _context25.next = 4;
+                return this.MainGameStateStore.EndBulkStorage(this.MainGameStateStore.DB_POINT_STORE);
+
+              case 4:
+              case "end":
+                return _context25.stop();
+            }
+          }
+        }, _callee25, this);
+      }));
+
+      function EndBulkStorage() {
+        return _EndBulkStorage3.apply(this, arguments);
+      }
+
+      return EndBulkStorage;
+    }()
+  }, {
     key: "has",
     value: function () {
-      var _has2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee19(t) {
-        return regeneratorRuntime.wrap(function _callee19$(_context19) {
+      var _has2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee26(t) {
+        return regeneratorRuntime.wrap(function _callee26$(_context26) {
           while (1) {
-            switch (_context19.prev = _context19.next) {
+            switch (_context26.prev = _context26.next) {
               case 0:
-                return _context19.abrupt("return", this.store.has(t));
+                return _context26.abrupt("return", this.store.has(t));
 
               case 1:
               case "end":
-                return _context19.stop();
+                return _context26.stop();
             }
           }
-        }, _callee19, this);
+        }, _callee26, this);
       }));
 
-      function has(_x17) {
+      function has(_x21) {
         return _has2.apply(this, arguments);
       }
 
@@ -1019,44 +1220,44 @@ var IDBPointStore = /*#__PURE__*/function (_SimplePointStore) {
   }, {
     key: "set",
     value: function () {
-      var _set2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee20(t, e) {
-        var r, s, i, n;
-        return regeneratorRuntime.wrap(function _callee20$(_context20) {
+      var _set2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee27(t, e) {
+        var r, s, i, o;
+        return regeneratorRuntime.wrap(function _callee27$(_context27) {
           while (1) {
-            switch (_context20.prev = _context20.next) {
+            switch (_context27.prev = _context27.next) {
               case 0:
-                r = this.GetGameStateCallback(), s = e.$GetPosition(), i = e.$GetFillColor(), n = {
+                r = this.GetGameStateCallback(), s = e.$GetPosition(), i = e.$GetFillColor(), o = {
                   x: parseInt(s.x) / r.iGridSizeX,
                   y: parseInt(s.y) / r.iGridSizeY,
                   Status: e.$GetStatus(),
                   Color: i
                 };
-                _context20.next = 3;
-                return this.StorePoint(t, n);
+                _context27.next = 3;
+                return this.StorePoint(t, o);
 
               case 3:
-                _context20.t0 = this.UpdateState && r.bPointsAndPathsLoaded;
+                _context27.t0 = this.UpdateState && !0 === r.bPointsAndPathsLoaded;
 
-                if (!_context20.t0) {
-                  _context20.next = 7;
+                if (!_context27.t0) {
+                  _context27.next = 7;
                   break;
                 }
 
-                _context20.next = 7;
+                _context27.next = 7;
                 return this.UpdateState(r.iGameID, r);
 
               case 7:
-                return _context20.abrupt("return", this.store.set(t, e));
+                return _context27.abrupt("return", this.store.set(t, e));
 
               case 8:
               case "end":
-                return _context20.stop();
+                return _context27.stop();
             }
           }
-        }, _callee20, this);
+        }, _callee27, this);
       }));
 
-      function set(_x18, _x19) {
+      function set(_x22, _x23) {
         return _set2.apply(this, arguments);
       }
 
@@ -1065,38 +1266,38 @@ var IDBPointStore = /*#__PURE__*/function (_SimplePointStore) {
   }, {
     key: "get",
     value: function () {
-      var _get2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee21(t) {
+      var _get2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee28(t) {
         var e, r;
-        return regeneratorRuntime.wrap(function _callee21$(_context21) {
+        return regeneratorRuntime.wrap(function _callee28$(_context28) {
           while (1) {
-            switch (_context21.prev = _context21.next) {
+            switch (_context28.prev = _context28.next) {
               case 0:
                 e = this.store.get(t);
 
                 if (e) {
-                  _context21.next = 6;
+                  _context28.next = 6;
                   break;
                 }
 
-                _context21.next = 4;
+                _context28.next = 4;
                 return this.GetPoint(t);
 
               case 4:
-                r = _context21.sent;
-                return _context21.abrupt("return", r && this.PointCreationCallback ? (e = this.PointCreationCallback(r.x, r.y, r.Status, r.Color), this.store.set(t, e), e) : void 0);
+                r = _context28.sent;
+                return _context28.abrupt("return", r && this.PointCreationCallback ? (e = this.PointCreationCallback(r.x, r.y, r.Status, r.Color), this.store.set(t, e), e) : void 0);
 
               case 6:
-                return _context21.abrupt("return", e);
+                return _context28.abrupt("return", e);
 
               case 7:
               case "end":
-                return _context21.stop();
+                return _context28.stop();
             }
           }
-        }, _callee21, this);
+        }, _callee28, this);
       }));
 
-      function get(_x20) {
+      function get(_x24) {
         return _get2.apply(this, arguments);
       }
 
@@ -1105,36 +1306,36 @@ var IDBPointStore = /*#__PURE__*/function (_SimplePointStore) {
   }, {
     key: "values",
     value: function () {
-      var _values2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee22() {
+      var _values2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee29() {
         var t;
-        return regeneratorRuntime.wrap(function _callee22$(_context22) {
+        return regeneratorRuntime.wrap(function _callee29$(_context29) {
           while (1) {
-            switch (_context22.prev = _context22.next) {
+            switch (_context29.prev = _context29.next) {
               case 0:
                 t = this.store.values();
-                _context22.t0 = t;
+                _context29.t0 = t;
 
-                if (_context22.t0) {
-                  _context22.next = 7;
+                if (_context29.t0) {
+                  _context29.next = 7;
                   break;
                 }
 
-                _context22.next = 5;
+                _context29.next = 5;
                 return this.GetAllPoints();
 
               case 5:
-                t = _context22.sent;
-                _context22.t0 = t;
+                t = _context29.sent;
+                _context29.t0 = t;
 
               case 7:
-                return _context22.abrupt("return", _context22.t0);
+                return _context29.abrupt("return", _context29.t0);
 
               case 8:
               case "end":
-                return _context22.stop();
+                return _context29.stop();
             }
           }
-        }, _callee22, this);
+        }, _callee29, this);
       }));
 
       function values() {
@@ -1158,16 +1359,19 @@ var SimplePathStore = /*#__PURE__*/function () {
   _createClass(SimplePathStore, [{
     key: "PrepareStore",
     value: function () {
-      var _PrepareStore4 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee23() {
-        return regeneratorRuntime.wrap(function _callee23$(_context23) {
+      var _PrepareStore4 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee30() {
+        return regeneratorRuntime.wrap(function _callee30$(_context30) {
           while (1) {
-            switch (_context23.prev = _context23.next) {
+            switch (_context30.prev = _context30.next) {
               case 0:
+                return _context30.abrupt("return", !0);
+
+              case 1:
               case "end":
-                return _context23.stop();
+                return _context30.stop();
             }
           }
-        }, _callee23);
+        }, _callee30);
       }));
 
       function PrepareStore() {
@@ -1177,24 +1381,66 @@ var SimplePathStore = /*#__PURE__*/function () {
       return PrepareStore;
     }()
   }, {
+    key: "BeginBulkStorage",
+    value: function () {
+      var _BeginBulkStorage4 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee31() {
+        return regeneratorRuntime.wrap(function _callee31$(_context31) {
+          while (1) {
+            switch (_context31.prev = _context31.next) {
+              case 0:
+              case "end":
+                return _context31.stop();
+            }
+          }
+        }, _callee31);
+      }));
+
+      function BeginBulkStorage() {
+        return _BeginBulkStorage4.apply(this, arguments);
+      }
+
+      return BeginBulkStorage;
+    }()
+  }, {
+    key: "EndBulkStorage",
+    value: function () {
+      var _EndBulkStorage4 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee32() {
+        return regeneratorRuntime.wrap(function _callee32$(_context32) {
+          while (1) {
+            switch (_context32.prev = _context32.next) {
+              case 0:
+              case "end":
+                return _context32.stop();
+            }
+          }
+        }, _callee32);
+      }));
+
+      function EndBulkStorage() {
+        return _EndBulkStorage4.apply(this, arguments);
+      }
+
+      return EndBulkStorage;
+    }()
+  }, {
     key: "push",
     value: function () {
-      var _push = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee24(t) {
-        return regeneratorRuntime.wrap(function _callee24$(_context24) {
+      var _push = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee33(t) {
+        return regeneratorRuntime.wrap(function _callee33$(_context33) {
           while (1) {
-            switch (_context24.prev = _context24.next) {
+            switch (_context33.prev = _context33.next) {
               case 0:
-                return _context24.abrupt("return", this.store.push(t));
+                return _context33.abrupt("return", this.store.push(t));
 
               case 1:
               case "end":
-                return _context24.stop();
+                return _context33.stop();
             }
           }
-        }, _callee24, this);
+        }, _callee33, this);
       }));
 
-      function push(_x21) {
+      function push(_x25) {
         return _push.apply(this, arguments);
       }
 
@@ -1203,19 +1449,19 @@ var SimplePathStore = /*#__PURE__*/function () {
   }, {
     key: "all",
     value: function () {
-      var _all = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee25() {
-        return regeneratorRuntime.wrap(function _callee25$(_context25) {
+      var _all = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee34() {
+        return regeneratorRuntime.wrap(function _callee34$(_context34) {
           while (1) {
-            switch (_context25.prev = _context25.next) {
+            switch (_context34.prev = _context34.next) {
               case 0:
-                return _context25.abrupt("return", this.store);
+                return _context34.abrupt("return", this.store);
 
               case 1:
               case "end":
-                return _context25.stop();
+                return _context34.stop();
             }
           }
-        }, _callee25, this);
+        }, _callee34, this);
       }));
 
       function all() {
@@ -1234,81 +1480,84 @@ var IDBPathStore = /*#__PURE__*/function (_SimplePathStore) {
 
   var _super2 = _createSuper(IDBPathStore);
 
-  function IDBPathStore(t, e, r, s, i) {
-    var _this13;
+  function IDBPathStore(t, e, r, s, i, o) {
+    var _this14;
 
     _classCallCheck(this, IDBPathStore);
 
-    _this13 = _super2.call(this), _this13.GetAllPaths = t, _this13.StorePath = e, _this13.UpdateState = r, _this13.PathCreationCallback = s, _this13.GetGameStateCallback = i;
-    return _this13;
+    _this14 = _super2.call(this), _this14.GetAllPaths = t, _this14.StorePath = e, _this14.UpdateState = r, _this14.PathCreationCallback = s, _this14.GetGameStateCallback = i, _this14.MainGameStateStore = o;
+    return _this14;
   }
 
   _createClass(IDBPathStore, [{
     key: "PrepareStore",
     value: function () {
-      var _PrepareStore5 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee26() {
+      var _PrepareStore5 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee35() {
         var t, _iterator2, _step2, e, _t2;
 
-        return regeneratorRuntime.wrap(function _callee26$(_context26) {
+        return regeneratorRuntime.wrap(function _callee35$(_context35) {
           while (1) {
-            switch (_context26.prev = _context26.next) {
+            switch (_context35.prev = _context35.next) {
               case 0:
                 if (!this.PathCreationCallback) {
-                  _context26.next = 23;
+                  _context35.next = 23;
                   break;
                 }
 
-                _context26.next = 3;
+                _context35.next = 3;
                 return this.GetAllPaths();
 
               case 3:
-                t = _context26.sent;
+                t = _context35.sent;
                 _iterator2 = _createForOfIteratorHelper(t);
-                _context26.prev = 5;
+                _context35.prev = 5;
 
                 _iterator2.s();
 
               case 7:
                 if ((_step2 = _iterator2.n()).done) {
-                  _context26.next = 15;
+                  _context35.next = 15;
                   break;
                 }
 
                 e = _step2.value;
-                _context26.next = 11;
+                _context35.next = 11;
                 return this.PathCreationCallback(e.PointsAsString, e.Color, e.iId);
 
               case 11:
-                _t2 = _context26.sent;
+                _t2 = _context35.sent;
                 this.store.push(_t2);
 
               case 13:
-                _context26.next = 7;
+                _context35.next = 7;
                 break;
 
               case 15:
-                _context26.next = 20;
+                _context35.next = 20;
                 break;
 
               case 17:
-                _context26.prev = 17;
-                _context26.t0 = _context26["catch"](5);
+                _context35.prev = 17;
+                _context35.t0 = _context35["catch"](5);
 
-                _iterator2.e(_context26.t0);
+                _iterator2.e(_context35.t0);
 
               case 20:
-                _context26.prev = 20;
+                _context35.prev = 20;
 
                 _iterator2.f();
 
-                return _context26.finish(20);
+                return _context35.finish(20);
 
               case 23:
+                return _context35.abrupt("return", !0);
+
+              case 24:
               case "end":
-                return _context26.stop();
+                return _context35.stop();
             }
           }
-        }, _callee26, this, [[5, 17, 20, 23]]);
+        }, _callee35, this, [[5, 17, 20, 23]]);
       }));
 
       function PrepareStore() {
@@ -1318,52 +1567,102 @@ var IDBPathStore = /*#__PURE__*/function (_SimplePathStore) {
       return PrepareStore;
     }()
   }, {
+    key: "BeginBulkStorage",
+    value: function () {
+      var _BeginBulkStorage5 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee36() {
+        return regeneratorRuntime.wrap(function _callee36$(_context36) {
+          while (1) {
+            switch (_context36.prev = _context36.next) {
+              case 0:
+                _context36.next = 2;
+                return this.MainGameStateStore.BeginBulkStorage([this.MainGameStateStore.DB_POINT_STORE, this.MainGameStateStore.DB_PATH_STORE], "readwrite");
+
+              case 2:
+              case "end":
+                return _context36.stop();
+            }
+          }
+        }, _callee36, this);
+      }));
+
+      function BeginBulkStorage() {
+        return _BeginBulkStorage5.apply(this, arguments);
+      }
+
+      return BeginBulkStorage;
+    }()
+  }, {
+    key: "EndBulkStorage",
+    value: function () {
+      var _EndBulkStorage5 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee37() {
+        return regeneratorRuntime.wrap(function _callee37$(_context37) {
+          while (1) {
+            switch (_context37.prev = _context37.next) {
+              case 0:
+                _context37.next = 2;
+                return this.MainGameStateStore.EndBulkStorage([this.MainGameStateStore.DB_POINT_STORE, this.MainGameStateStore.DB_PATH_STORE]);
+
+              case 2:
+              case "end":
+                return _context37.stop();
+            }
+          }
+        }, _callee37, this);
+      }));
+
+      function EndBulkStorage() {
+        return _EndBulkStorage5.apply(this, arguments);
+      }
+
+      return EndBulkStorage;
+    }()
+  }, {
     key: "push",
     value: function () {
-      var _push2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee27(t) {
+      var _push2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee38(t) {
         var e, r, _t3;
 
-        return regeneratorRuntime.wrap(function _callee27$(_context27) {
+        return regeneratorRuntime.wrap(function _callee38$(_context38) {
           while (1) {
-            switch (_context27.prev = _context27.next) {
+            switch (_context38.prev = _context38.next) {
               case 0:
                 e = t.$GetID(), r = {
                   iId: e,
                   Color: t.$GetFillColor(),
                   PointsAsString: t.$GetPointsString()
                 };
-                _context27.next = 3;
+                _context38.next = 3;
                 return this.StorePath(e, r);
 
               case 3:
                 if (!this.UpdateState) {
-                  _context27.next = 9;
+                  _context38.next = 9;
                   break;
                 }
 
                 _t3 = this.GetGameStateCallback();
-                _context27.t0 = _t3.bPointsAndPathsLoaded;
+                _context38.t0 = !0 === _t3.bPointsAndPathsLoaded;
 
-                if (!_context27.t0) {
-                  _context27.next = 9;
+                if (!_context38.t0) {
+                  _context38.next = 9;
                   break;
                 }
 
-                _context27.next = 9;
+                _context38.next = 9;
                 return this.UpdateState(_t3.iGameID, _t3);
 
               case 9:
-                return _context27.abrupt("return", this.store.push(t));
+                return _context38.abrupt("return", this.store.push(t));
 
               case 10:
               case "end":
-                return _context27.stop();
+                return _context38.stop();
             }
           }
-        }, _callee27, this);
+        }, _callee38, this);
       }));
 
-      function push(_x22) {
+      function push(_x26) {
         return _push2.apply(this, arguments);
       }
 
@@ -1372,36 +1671,36 @@ var IDBPathStore = /*#__PURE__*/function (_SimplePathStore) {
   }, {
     key: "all",
     value: function () {
-      var _all2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee28() {
+      var _all2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee39() {
         var t;
-        return regeneratorRuntime.wrap(function _callee28$(_context28) {
+        return regeneratorRuntime.wrap(function _callee39$(_context39) {
           while (1) {
-            switch (_context28.prev = _context28.next) {
+            switch (_context39.prev = _context39.next) {
               case 0:
                 t = this.store;
-                _context28.t0 = t;
+                _context39.t0 = t;
 
-                if (_context28.t0) {
-                  _context28.next = 7;
+                if (_context39.t0) {
+                  _context39.next = 7;
                   break;
                 }
 
-                _context28.next = 5;
+                _context39.next = 5;
                 return this.GetAllPaths();
 
               case 5:
-                t = _context28.sent;
-                _context28.t0 = t;
+                t = _context39.sent;
+                _context39.t0 = t;
 
               case 7:
-                return _context28.abrupt("return", _context28.t0);
+                return _context39.abrupt("return", _context39.t0);
 
               case 8:
               case "end":
-                return _context28.stop();
+                return _context39.stop();
             }
           }
-        }, _callee28, this);
+        }, _callee39, this);
       }));
 
       function all() {
