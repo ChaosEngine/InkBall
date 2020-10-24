@@ -42,6 +42,10 @@ namespace InkBall.Module.Model
 		public int iWinCount { get; set; }
 		public int iLossCount { get; set; }
 		public int iDrawCount { get; set; }
+
+		/// <summary>
+		/// Last player move time(stamp)
+		/// </summary>
 		public DateTime TimeStamp { get; set; }
 
 		#region Old code

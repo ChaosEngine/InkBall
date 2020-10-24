@@ -123,7 +123,7 @@ namespace InkBall.Module.Model
 			// InkBallPointsInPath = new HashSet<InkBallPointsInPath>();
 		}
 
-		public static string GetPathsAsJavaScriptArrayForPage(IEnumerable<InkBallPath> paths)
+		public static string GetPathsAsJavaScriptArrayForPageOld(IEnumerable<InkBallPath> paths)
 		{
 			StringBuilder builder = new StringBuilder("[", 300);
 			string comma = "";
@@ -185,7 +185,7 @@ namespace InkBall.Module.Model
 			return builder.ToString();
 		}
 
-		public static string GetPathsAsJavaScriptArrayForSignalR(IEnumerable<InkBallPath> paths)
+		public static string GetPathsAsJavaScriptArrayForSignalROld(IEnumerable<InkBallPath> paths)
 		{
 			StringBuilder builder = new StringBuilder("[", 300);
 			string comma = "";
@@ -209,7 +209,7 @@ namespace InkBall.Module.Model
 			return builder.ToString();
 		}
 
-		public static string GetPathsAsJavaScriptArrayForSignalR2(IEnumerable<InkBallPath> paths)
+		public static string GetPathsAsJavaScriptArrayForSignalR(IEnumerable<InkBallPath> paths)
 		{
 			StringBuilder builder = new StringBuilder("[", 300);
 			string comma = "";
@@ -241,7 +241,7 @@ namespace InkBall.Module.Model
 
 		//legacy
 		public string OwnedPointsAsString { get; set; }
-		public DateTime TimeStamp { get; set; }
+		public DateTime? TimeStamp { get; set; }
 
 		///Points creating the path; path points
 		[JsonIgnore]

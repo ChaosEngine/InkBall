@@ -185,7 +185,7 @@ namespace InkBall.Tests
 				await hub_P1.ClientToServerPing(new PingCommand("I like motorcycles"));
 				await hub_P1.ClientToServerPing(new PingCommand("Me too"));
 
-				await hub_P1.ClientToServerPoint(new InkBallPointViewModel
+				var responded_point_P1 = await hub_P1.ClientToServerPoint(new InkBallPointViewModel
 				{
 					iX = 7,
 					iY = 7,
@@ -193,7 +193,7 @@ namespace InkBall.Tests
 					iGameId = 1,
 					iPlayerId = 1
 				});
-				await hub_P2.ClientToServerPoint(new InkBallPointViewModel
+				var responded_point_P2 = await hub_P2.ClientToServerPoint(new InkBallPointViewModel
 				{
 					iX = 8,
 					iY = 8,
@@ -204,6 +204,8 @@ namespace InkBall.Tests
 
 
 				//Assert
+				Assert.NotNull(responded_point_P1.TimeStamp);
+				Assert.NotNull(responded_point_P2.TimeStamp);
 				mockHubCallerContext_P1.Verify(clients => clients.Features, Times.Once);
 				mockHubCallerContext_P2.Verify(clients => clients.Features, Times.Once);
 
@@ -258,7 +260,7 @@ namespace InkBall.Tests
 						Status = InkBallPoint.StatusEnum.POINT_FREE_BLUE,
 					});
 				}
-				await hub_P1.ClientToServerPoint(new InkBallPointViewModel
+				var pt = await hub_P1.ClientToServerPoint(new InkBallPointViewModel
 				{
 					iGameId = 1,
 					iPlayerId = 1,
@@ -266,7 +268,8 @@ namespace InkBall.Tests
 					iY = p2_owned[0, 1],
 					Status = InkBallPoint.StatusEnum.POINT_FREE_RED,
 				});
-				await hub_P2.ClientToServerPoint(new InkBallPointViewModel
+				Assert.NotNull(pt.TimeStamp);
+				pt = await hub_P2.ClientToServerPoint(new InkBallPointViewModel
 				{
 					iGameId = 1,
 					iPlayerId = 2,
@@ -274,22 +277,27 @@ namespace InkBall.Tests
 					iY = p1_owned[0, 1],
 					Status = InkBallPoint.StatusEnum.POINT_FREE_BLUE,
 				});
+				Assert.NotNull(pt.TimeStamp);
 
 				//Assert
-				await hub_P1.ClientToServerPath(new InkBallPathViewModel
+				var dto = await hub_P1.ClientToServerPath(new InkBallPathViewModel
 				{
 					iGameId = 1,
 					iPlayerId = 1,
 					PointsAsString = "8,24 9,25 8,26 7,25 8,24",
 					OwnedPointsAsString = "8,25"
 				});
-				await hub_P2.ClientToServerPath(new InkBallPathViewModel
+				Assert.IsType<InkBallPathViewModel>(dto);
+				Assert.NotNull(((InkBallPathViewModel)dto).TimeStamp);
+				dto = await hub_P2.ClientToServerPath(new InkBallPathViewModel
 				{
 					iGameId = 1,
 					iPlayerId = 2,
 					PointsAsString = "12,24 13,25 12,26 11,25 12,24",
 					OwnedPointsAsString = "12,25"
 				});
+				Assert.IsType<InkBallPathViewModel>(dto);
+				Assert.NotNull(((InkBallPathViewModel)dto).TimeStamp);
 			}
 		}
 
@@ -334,7 +342,7 @@ namespace InkBall.Tests
 				await hub_P2.OnConnectedAsync();
 
 				int count0 = await db.InkBallPoint.CountAsync(p => p.iGameId == 1, token);
-				await hub_P1.ClientToServerPoint(new InkBallPointViewModel
+				var responded_point_P1 = await hub_P1.ClientToServerPoint(new InkBallPointViewModel
 				{
 					iX = 7,
 					iY = 7,
@@ -344,7 +352,7 @@ namespace InkBall.Tests
 				});
 				int count1 = await db.InkBallPoint.CountAsync(p => p.iGameId == 1, token);
 				Assert.Equal(count0 + 1, count1);
-				await hub_P2.ClientToServerPoint(new InkBallPointViewModel
+				var responded_point_P2 = await hub_P2.ClientToServerPoint(new InkBallPointViewModel
 				{
 					iX = 8,
 					iY = 8,
@@ -357,6 +365,8 @@ namespace InkBall.Tests
 
 
 				//Assert
+				Assert.NotNull(responded_point_P1.TimeStamp);
+				Assert.NotNull(responded_point_P2.TimeStamp);
 				mockHubCallerContext_P1.Verify(clients => clients.Features, Times.Once);
 				mockHubCallerContext_P2.Verify(clients => clients.Features, Times.Once);
 
@@ -970,11 +980,13 @@ namespace InkBall.Tests
 
 				var json_points1 = JsonSerializer.Serialize(JsonSerializer.Deserialize<TempPoint[]>(
 					CommonPoint.GetPointsAsJavaScriptArrayForPage(points_n_paths.Points),
-					new JsonSerializerOptions { ReadCommentHandling = JsonCommentHandling.Skip, AllowTrailingCommas = true }));
+					new JsonSerializerOptions { ReadCommentHandling = JsonCommentHandling.Skip, IgnoreNullValues = true, AllowTrailingCommas = true }),
+					new JsonSerializerOptions { ReadCommentHandling = JsonCommentHandling.Skip, IgnoreNullValues = true, AllowTrailingCommas = true });
 
 				var json_paths1 = JsonSerializer.Serialize(JsonSerializer.Deserialize<InkBallPathViewModel[]>(
 					InkBallPath.GetPathsAsJavaScriptArrayForPage2(points_n_paths.Paths),
-					new JsonSerializerOptions { ReadCommentHandling = JsonCommentHandling.Skip, AllowTrailingCommas = true }));
+					new JsonSerializerOptions { ReadCommentHandling = JsonCommentHandling.Skip, IgnoreNullValues = true, AllowTrailingCommas = true }),
+					new JsonSerializerOptions { ReadCommentHandling = JsonCommentHandling.Skip, IgnoreNullValues = true, AllowTrailingCommas = true });
 
 				//Assert
 				Assert.Equal(dto.Points, json_points1);

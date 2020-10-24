@@ -1,8 +1,9 @@
+using InkBall.Module.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
-using InkBall.Module.Model;
 using Xunit;
 
 namespace InkBall.Tests
@@ -85,6 +86,119 @@ namespace InkBall.Tests
 			Assert.Equal($"{pointsTab[0]},{pointsTab[1]}", expectedCoords);
 		}
 
+		[Theory]
+		[InlineData(typeof(InkBallPoint), new[] { 1, 1 }, "1,1")]
+		[InlineData(typeof(InkBallPoint), new[] { 2, 2 }, "2,2")]
+		[InlineData(typeof(InkBallPoint), new[] { 123, 456 }, "123,456")]
+		[InlineData(typeof(InkBallPath), new[] { 123, 456 }, "123,456")]
+		void NoEmptyNullDummyFieldSerialization(Type type, int[] pointsTab, string expectedCoords)
+		{
+			if (type.IsAssignableFrom(typeof(InkBallPoint)))
+			{
+				//Arrange
+				var db = new InkBallPoint
+				{
+					iId = 1,
+					iX = pointsTab[0],
+					iY = pointsTab[1],
+					iGameId = -1,
+					Status = InkBallPoint.StatusEnum.POINT_FREE_BLUE,
+					iEnclosingPathId = null,
+					iPlayerId = 1
+				};
+
+				//Act
+				var str = db.ToString();
+
+				//Assert
+				Assert.Equal($"{pointsTab[0]},{pointsTab[1]}", expectedCoords);
+
+				string serialized = System.Text.Json.JsonSerializer.Serialize(db, new JsonSerializerOptions { IgnoreNullValues = true });
+				Assert.DoesNotContain(nameof(InkBallPathViewModel.TimeStamp), serialized);
+				Assert.DoesNotContain(nameof(InkBallPathViewModel.InkBallPoint), serialized);
+				Assert.DoesNotContain(nameof(InkBallPathViewModel.BelongsToCPU), serialized);
+
+
+				//Arrange
+				var view = new InkBallPointViewModel
+				{
+					iId = 1,
+					iX = pointsTab[0],
+					iY = pointsTab[1],
+					iGameId = -1,
+					Status = InkBallPoint.StatusEnum.POINT_FREE_BLUE,
+					iEnclosingPathId = null,
+					iPlayerId = 1
+				};
+
+				//Assert
+				serialized = System.Text.Json.JsonSerializer.Serialize(db, new JsonSerializerOptions { IgnoreNullValues = true });
+				Assert.DoesNotContain(nameof(InkBallPathViewModel.TimeStamp), serialized);
+				Assert.DoesNotContain(nameof(InkBallPathViewModel.InkBallPoint), serialized);
+				Assert.DoesNotContain(nameof(InkBallPathViewModel.BelongsToCPU), serialized);
+			}
+			else if (type.IsAssignableFrom(typeof(InkBallPath)))
+			{
+				//Arrange
+				var db = new InkBallPath
+				{
+					iId = 1,
+					iGameId = -1,
+					iPlayerId = 1,
+					InkBallPoint = new[] { new InkBallPoint { iX = pointsTab[0], iY = pointsTab[1], iGameId = 1, iPlayerId = 1,
+						Status = InkBallPoint.StatusEnum.POINT_FREE_BLUE } },
+					PointsAsString = expectedCoords
+				};
+
+				//Act
+				var str = db.ToString();
+				string serialized = System.Text.Json.JsonSerializer.Serialize(db, new JsonSerializerOptions { IgnoreNullValues = true });
+				//Assert
+				Assert.NotNull(str);
+				Assert.DoesNotContain(nameof(InkBallPathViewModel.TimeStamp), serialized);
+				Assert.Contains(nameof(InkBallPathViewModel.InkBallPoint), serialized);
+				Assert.DoesNotContain(nameof(InkBallPathViewModel.BelongsToCPU), serialized);
+
+
+
+				//Arrange
+				var view = new InkBallPathViewModel
+				{
+					iId = 1,
+					iGameId = -1,
+					iPlayerId = 1,
+					InkBallPoint = new[] { new InkBallPointViewModel { iX = pointsTab[0], iY = pointsTab[1], iGameId = 1, iPlayerId = 1,
+						Status = InkBallPoint.StatusEnum.POINT_FREE_BLUE , iEnclosingPathId = null, TimeStamp = null, iId = 1 } },
+					PointsAsString = expectedCoords,
+				};
+				//Act
+				serialized = System.Text.Json.JsonSerializer.Serialize(view, new JsonSerializerOptions { IgnoreNullValues = true });
+				//Assert
+				Assert.DoesNotContain(nameof(InkBallPathViewModel.BelongsToCPU), serialized);
+				Assert.DoesNotContain(nameof(InkBallPathViewModel.TimeStamp), serialized);
+				Assert.DoesNotContain(nameof(InkBallPathViewModel.InkBallPoint), serialized);
+
+				view = new InkBallPathViewModel
+				{
+					iId = 1,
+					iGameId = -1,
+					iPlayerId = 1,
+					InkBallPoint = new[] { new InkBallPointViewModel { iX = pointsTab[0], iY = pointsTab[1], iGameId = 1, iPlayerId = 1,
+						Status = InkBallPoint.StatusEnum.POINT_FREE_BLUE , iEnclosingPathId = null,
+					} },
+					PointsAsString = expectedCoords,
+					TimeStamp = DateTime.Now////////NOT NULL!!
+				};
+				//Act
+				serialized = System.Text.Json.JsonSerializer.Serialize(view, new JsonSerializerOptions { IgnoreNullValues = true });
+				//Assert
+				Assert.DoesNotContain(nameof(InkBallPathViewModel.BelongsToCPU), serialized);
+				Assert.Contains(nameof(InkBallPathViewModel.TimeStamp), serialized);
+				Assert.DoesNotContain(nameof(InkBallPathViewModel.InkBallPoint), serialized);
+			}
+			else
+				Assert.True(false, "unknown type");
+		}
 
 		/**
 		* //path A

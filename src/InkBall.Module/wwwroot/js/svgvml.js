@@ -248,7 +248,6 @@ class GameStateStore {
 		this.DB_VERSION = 2; // Use a long long for this value (don't use a float)
 		this.g_DB;//main DB object
 
-		//TODO: check compat and create plain store abstraction when indexeddb not supported
 		if (!('indexedDB' in window)) {
 			console.log("This browser doesn't support IndexedDB");
 
@@ -256,10 +255,8 @@ class GameStateStore {
 			this.PathStore = new SimplePathStore();
 		}
 		else {
-			this.PointStore = new IDBPointStore(this.GetPoint.bind(this), this.StorePoint.bind(this), this.GetAllPoints.bind(this),
-				this.UpdateState.bind(this), pointCreationCallbackFn, getGameStateFn, this);
-			this.PathStore = new IDBPathStore(this.GetAllPaths.bind(this), this.StorePath.bind(this), this.UpdateState.bind(this),
-				pathCreationCallbackFn, getGameStateFn, this);
+			this.PointStore = new IDBPointStore(this,pointCreationCallbackFn, getGameStateFn);
+			this.PathStore = new IDBPathStore(this, pathCreationCallbackFn, getGameStateFn);
 			//this.PointStore = new SimplePointStore();
 			//this.PathStore = new SimplePathStore();
 		}
@@ -669,15 +666,15 @@ class SimplePointStore {
 }
 
 class IDBPointStore extends SimplePointStore {
-	constructor(getPointFn, storePointFn, getAllPointsFn, updateStateFn, pointCreationCallbackFn, getGameStateFn, mainGameStateStore) {
+	constructor(mainGameStateStore, pointCreationCallbackFn, getGameStateFn) {
 		super();
-		this.GetPoint = getPointFn;
-		this.StorePoint = storePointFn;
-		this.GetAllPoints = getAllPointsFn;
-		this.UpdateState = updateStateFn;
+		this.MainGameStateStore = mainGameStateStore;
+		this.GetPoint = mainGameStateStore.GetPoint.bind(this.MainGameStateStore);
+		this.StorePoint = mainGameStateStore.StorePoint.bind(this.MainGameStateStore);
+		this.GetAllPoints = mainGameStateStore.GetAllPoints.bind(this.MainGameStateStore);
+		this.UpdateState = mainGameStateStore.UpdateState.bind(this.MainGameStateStore);
 		this.PointCreationCallback = pointCreationCallbackFn;
 		this.GetGameStateCallback = getGameStateFn;
-		this.MainGameStateStore = mainGameStateStore;
 	}
 
 	async PrepareStore() {
@@ -725,7 +722,7 @@ class IDBPointStore extends SimplePointStore {
 			//, pos: key, //`${pos.x}_${pos.y}`
 		};
 
-		await this.StorePoint(key, idb_pt);//TODO: possible delay
+		await this.StorePoint(key, idb_pt);
 
 		if (this.UpdateState) {
 			if (game_state.bPointsAndPathsLoaded === true)
@@ -785,14 +782,14 @@ class SimplePathStore {
 }
 
 class IDBPathStore extends SimplePathStore {
-	constructor(getAllPaths, storePath, updateStateFn, pathCreationCallbackFn, getGameStateFn, mainGameStateStore) {
+	constructor(mainGameStateStore, pathCreationCallbackFn, getGameStateFn) {
 		super();
-		this.GetAllPaths = getAllPaths;
-		this.StorePath = storePath;
-		this.UpdateState = updateStateFn;
+		this.MainGameStateStore = mainGameStateStore;
+		this.GetAllPaths = mainGameStateStore.GetAllPaths.bind(this.MainGameStateStore);
+		this.StorePath = mainGameStateStore.StorePath.bind(this.MainGameStateStore);
+		this.UpdateState = mainGameStateStore.UpdateState.bind(this.MainGameStateStore);
 		this.PathCreationCallback = pathCreationCallbackFn;
 		this.GetGameStateCallback = getGameStateFn;
-		this.MainGameStateStore = mainGameStateStore;
 	}
 
 	async PrepareStore() {
@@ -823,7 +820,7 @@ class IDBPathStore extends SimplePathStore {
 			PointsAsString: val.$GetPointsString()
 		};
 
-		await this.StorePath(id_key, idb_path);//TODO: possible delay
+		await this.StorePath(id_key, idb_path);
 
 		if (this.UpdateState) {
 			const game_state = this.GetGameStateCallback();

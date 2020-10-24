@@ -1737,10 +1737,6 @@ var InkBallGame = /*#__PURE__*/function () {
                 return this.m_Points.BeginBulkStorage();
 
               case 3:
-                //points.forEach(async function(p) {
-                //	await this.SetPoint(p[0]/*x*/, p[1]/*y*/, p[2]/*Status*/, p[3]/*iPlayerId*/);
-                //}.bind(this));
-                //TODO: implement indexeddb cursor if possible
                 _iterator = _createForOfIteratorHelper(points);
                 _context8.prev = 4;
 
@@ -2040,14 +2036,6 @@ var InkBallGame = /*#__PURE__*/function () {
                 return this.m_Lines.BeginBulkStorage();
 
               case 3:
-                //packedPaths.forEach(unpacked => {
-                //	//const unpacked = JSON.parse(packed.Serialized);
-                //	if (unpacked.iGameId !== this.g_iGameID)
-                //		throw new Error("Bad game from path!");
-                //
-                //	this.SetPath(unpacked.PointsAsString/*points*/, this.m_bIsPlayingWithRed,
-                //		unpacked.iPlayerId === this.g_iPlayerID/*isMainPlayerPoints*/, unpacked.iId/*real DB id*/);
-                //});
                 _iterator4 = _createForOfIteratorHelper(packedPaths);
                 _context11.prev = 4;
 
@@ -2231,6 +2219,7 @@ var InkBallGame = /*#__PURE__*/function () {
 
               case 8:
                 values = _context12.sent;
+                //TODO: async for
                 _iterator6 = _createForOfIteratorHelper(values);
 
                 try {
@@ -2312,6 +2301,7 @@ var InkBallGame = /*#__PURE__*/function () {
 
               case 3:
                 lines = _context13.sent;
+                //TODO: async for
                 _iterator7 = _createForOfIteratorHelper(lines);
                 _context13.prev = 5;
 
@@ -3563,7 +3553,7 @@ var InkBallGame = /*#__PURE__*/function () {
         aggregated += tag.display.replace('%s', cnt.length);
       });
       document.querySelector(sSelector2Set).innerHTML = 'SVGs by tags: ' + aggregated;
-      /*//TODO: test code; to be disabled
+      /*//TODO: test code; to be removed
       const screen = document.querySelector('#screen');
       screen.innerHTML += "<div id='divTooltip' " +
       	"style='position:absolute; top:0; right:0; z-index:33; background-color:#8886; display:none' " +
@@ -3819,6 +3809,7 @@ var InkBallGame = /*#__PURE__*/function () {
 
               case 5:
                 values = _context27.sent;
+                //TODO: async for
                 _iterator11 = _createForOfIteratorHelper(values);
                 _context27.prev = 7;
 
@@ -4201,6 +4192,7 @@ var InkBallGame = /*#__PURE__*/function () {
 
               case 4:
                 values = _context30.sent;
+                //TODO: async for
                 _iterator12 = _createForOfIteratorHelper(values);
 
                 try {
@@ -4426,6 +4418,7 @@ var InkBallGame = /*#__PURE__*/function () {
 
               case 6:
                 values = _context32.sent;
+                //TODO: async for
                 _iterator13 = _createForOfIteratorHelper(values);
                 _context32.prev = 8;
 
@@ -4761,6 +4754,7 @@ var InkBallGame = /*#__PURE__*/function () {
 
                           case 6:
                             values = _context34.sent;
+                            //TODO: async for
                             _iterator16 = _createForOfIteratorHelper(values);
                             _context34.prev = 8;
 

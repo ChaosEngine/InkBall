@@ -389,15 +389,14 @@ var GameStateStore = /*#__PURE__*/function () {
     this.DB_VERSION = 2; // Use a long long for this value (don't use a float)
 
     this.g_DB; //main DB object
-    //TODO: check compat and create plain store abstraction when indexeddb not supported
 
     if (!('indexedDB' in window)) {
       console.log("This browser doesn't support IndexedDB");
       this.PointStore = new SimplePointStore();
       this.PathStore = new SimplePathStore();
     } else {
-      this.PointStore = new IDBPointStore(this.GetPoint.bind(this), this.StorePoint.bind(this), this.GetAllPoints.bind(this), this.UpdateState.bind(this), pointCreationCallbackFn, getGameStateFn, this);
-      this.PathStore = new IDBPathStore(this.GetAllPaths.bind(this), this.StorePath.bind(this), this.UpdateState.bind(this), pathCreationCallbackFn, getGameStateFn, this); //this.PointStore = new SimplePointStore();
+      this.PointStore = new IDBPointStore(this, pointCreationCallbackFn, getGameStateFn);
+      this.PathStore = new IDBPathStore(this, pathCreationCallbackFn, getGameStateFn); //this.PointStore = new SimplePointStore();
       //this.PathStore = new SimplePathStore();
     }
   }
@@ -1381,19 +1380,19 @@ var IDBPointStore = /*#__PURE__*/function (_SimplePointStore) {
 
   var _super = _createSuper(IDBPointStore);
 
-  function IDBPointStore(getPointFn, storePointFn, getAllPointsFn, updateStateFn, pointCreationCallbackFn, getGameStateFn, mainGameStateStore) {
+  function IDBPointStore(mainGameStateStore, pointCreationCallbackFn, getGameStateFn) {
     var _this13;
 
     _classCallCheck(this, IDBPointStore);
 
     _this13 = _super.call(this);
-    _this13.GetPoint = getPointFn;
-    _this13.StorePoint = storePointFn;
-    _this13.GetAllPoints = getAllPointsFn;
-    _this13.UpdateState = updateStateFn;
+    _this13.MainGameStateStore = mainGameStateStore;
+    _this13.GetPoint = mainGameStateStore.GetPoint.bind(_this13.MainGameStateStore);
+    _this13.StorePoint = mainGameStateStore.StorePoint.bind(_this13.MainGameStateStore);
+    _this13.GetAllPoints = mainGameStateStore.GetAllPoints.bind(_this13.MainGameStateStore);
+    _this13.UpdateState = mainGameStateStore.UpdateState.bind(_this13.MainGameStateStore);
     _this13.PointCreationCallback = pointCreationCallbackFn;
     _this13.GetGameStateCallback = getGameStateFn;
-    _this13.MainGameStateStore = mainGameStateStore;
     return _this13;
   }
 
@@ -1835,18 +1834,18 @@ var IDBPathStore = /*#__PURE__*/function (_SimplePathStore) {
 
   var _super2 = _createSuper(IDBPathStore);
 
-  function IDBPathStore(getAllPaths, storePath, updateStateFn, pathCreationCallbackFn, getGameStateFn, mainGameStateStore) {
+  function IDBPathStore(mainGameStateStore, pathCreationCallbackFn, getGameStateFn) {
     var _this14;
 
     _classCallCheck(this, IDBPathStore);
 
     _this14 = _super2.call(this);
-    _this14.GetAllPaths = getAllPaths;
-    _this14.StorePath = storePath;
-    _this14.UpdateState = updateStateFn;
+    _this14.MainGameStateStore = mainGameStateStore;
+    _this14.GetAllPaths = mainGameStateStore.GetAllPaths.bind(_this14.MainGameStateStore);
+    _this14.StorePath = mainGameStateStore.StorePath.bind(_this14.MainGameStateStore);
+    _this14.UpdateState = mainGameStateStore.UpdateState.bind(_this14.MainGameStateStore);
     _this14.PathCreationCallback = pathCreationCallbackFn;
     _this14.GetGameStateCallback = getGameStateFn;
-    _this14.MainGameStateStore = mainGameStateStore;
     return _this14;
   }
 

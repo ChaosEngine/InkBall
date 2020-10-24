@@ -17,7 +17,7 @@ namespace InkBall.Module.Model
 		/// <summary>
 		/// Last game move timestamp as UTC ISO-8601 format
 		/// </summary>
-		DateTime TimeStamp { get; }
+		DateTime? TimeStamp { get; }
 	}
 
 	public interface IPoint : IBelongingToCPU
@@ -232,7 +232,7 @@ namespace InkBall.Module.Model
 	[MessagePackObject(true)]
 	public class InkBallPointViewModel : CommonPoint, IPoint, ILastMoveTimestamp
 	{
-		public DateTime TimeStamp { get; set; }
+		public DateTime? TimeStamp { get; set; }
 
 		public InkBallPointViewModel()
 		{ }

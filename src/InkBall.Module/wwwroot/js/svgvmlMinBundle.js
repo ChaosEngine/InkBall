@@ -201,7 +201,7 @@ var GameStateStore = /*#__PURE__*/function () {
   function GameStateStore(t, e, r) {
     _classCallCheck(this, GameStateStore);
 
-    this.DB_NAME = "InkballGame", this.DB_POINT_STORE = "points", this.DB_PATH_STORE = "paths", this.DB_STATE_STORE = "state", this.DB_VERSION = 2, this.g_DB, "indexedDB" in window ? (this.PointStore = new IDBPointStore(this.GetPoint.bind(this), this.StorePoint.bind(this), this.GetAllPoints.bind(this), this.UpdateState.bind(this), t, r, this), this.PathStore = new IDBPathStore(this.GetAllPaths.bind(this), this.StorePath.bind(this), this.UpdateState.bind(this), e, r, this)) : (console.log("This browser doesn't support IndexedDB"), this.PointStore = new SimplePointStore(), this.PathStore = new SimplePathStore());
+    this.DB_NAME = "InkballGame", this.DB_POINT_STORE = "points", this.DB_PATH_STORE = "paths", this.DB_STATE_STORE = "state", this.DB_VERSION = 2, this.g_DB, "indexedDB" in window ? (this.PointStore = new IDBPointStore(this, t, r), this.PathStore = new IDBPathStore(this, e, r)) : (console.log("This browser doesn't support IndexedDB"), this.PointStore = new SimplePointStore(), this.PathStore = new SimplePathStore());
   }
 
   _createClass(GameStateStore, [{
@@ -1051,12 +1051,12 @@ var IDBPointStore = /*#__PURE__*/function (_SimplePointStore) {
 
   var _super = _createSuper(IDBPointStore);
 
-  function IDBPointStore(t, e, r, s, i, o, n) {
+  function IDBPointStore(t, e, r) {
     var _this13;
 
     _classCallCheck(this, IDBPointStore);
 
-    _this13 = _super.call(this), _this13.GetPoint = t, _this13.StorePoint = e, _this13.GetAllPoints = r, _this13.UpdateState = s, _this13.PointCreationCallback = i, _this13.GetGameStateCallback = o, _this13.MainGameStateStore = n;
+    _this13 = _super.call(this), _this13.MainGameStateStore = t, _this13.GetPoint = t.GetPoint.bind(_this13.MainGameStateStore), _this13.StorePoint = t.StorePoint.bind(_this13.MainGameStateStore), _this13.GetAllPoints = t.GetAllPoints.bind(_this13.MainGameStateStore), _this13.UpdateState = t.UpdateState.bind(_this13.MainGameStateStore), _this13.PointCreationCallback = e, _this13.GetGameStateCallback = r;
     return _this13;
   }
 
@@ -1480,12 +1480,12 @@ var IDBPathStore = /*#__PURE__*/function (_SimplePathStore) {
 
   var _super2 = _createSuper(IDBPathStore);
 
-  function IDBPathStore(t, e, r, s, i, o) {
+  function IDBPathStore(t, e, r) {
     var _this14;
 
     _classCallCheck(this, IDBPathStore);
 
-    _this14 = _super2.call(this), _this14.GetAllPaths = t, _this14.StorePath = e, _this14.UpdateState = r, _this14.PathCreationCallback = s, _this14.GetGameStateCallback = i, _this14.MainGameStateStore = o;
+    _this14 = _super2.call(this), _this14.MainGameStateStore = t, _this14.GetAllPaths = t.GetAllPaths.bind(_this14.MainGameStateStore), _this14.StorePath = t.StorePath.bind(_this14.MainGameStateStore), _this14.UpdateState = t.UpdateState.bind(_this14.MainGameStateStore), _this14.PathCreationCallback = e, _this14.GetGameStateCallback = r;
     return _this14;
   }
 

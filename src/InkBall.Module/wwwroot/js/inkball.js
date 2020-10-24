@@ -1043,11 +1043,6 @@ class InkBallGame {
 		try {
 			await this.m_Points.BeginBulkStorage();
 
-			//points.forEach(async function(p) {
-			//	await this.SetPoint(p[0]/*x*/, p[1]/*y*/, p[2]/*Status*/, p[3]/*iPlayerId*/);
-			//}.bind(this));
-
-			//TODO: implement indexeddb cursor if possible
 			for (const p of points) {
 				await this.SetPoint(p[0]/*x*/, p[1]/*y*/, p[2]/*Status*/, p[3]/*iPlayerId*/);
 			}
@@ -1150,15 +1145,6 @@ class InkBallGame {
 		try {
 			await this.m_Lines.BeginBulkStorage();
 
-			//packedPaths.forEach(unpacked => {
-			//	//const unpacked = JSON.parse(packed.Serialized);
-			//	if (unpacked.iGameId !== this.g_iGameID)
-			//		throw new Error("Bad game from path!");
-			//
-			//	this.SetPath(unpacked.PointsAsString/*points*/, this.m_bIsPlayingWithRed,
-			//		unpacked.iPlayerId === this.g_iPlayerID/*isMainPlayerPoints*/, unpacked.iId/*real DB id*/);
-			//});
-
 			for (const unpacked of packedPaths) {
 				//const unpacked = JSON.parse(packed.Serialized);
 				if (unpacked.iGameId !== this.g_iGameID)
@@ -1252,7 +1238,7 @@ class InkBallGame {
 		let sPathPoints = "", sOwnedPoints = "", sDelimiter = "", ownedPoints = [];
 
 		//make the test!
-		const values = await this.m_Points.values();
+		const values = await this.m_Points.values();//TODO: async for
 		for (const pt of values) {
 			if (pt !== undefined && pt.$GetFillColor() === sColor &&
 				([StatusEnum.POINT_FREE_BLUE, StatusEnum.POINT_FREE_RED].includes(pt.$GetStatus()))) {
@@ -1297,7 +1283,7 @@ class InkBallGame {
 	async IsPointOutsideAllPaths(x, y) {
 		const xmul = x * this.m_iGridSizeX, ymul = y * this.m_iGridSizeY;
 
-		const lines = await this.m_Lines.all();
+		const lines = await this.m_Lines.all();//TODO: async for
 		for (const line of lines) {
 			const points = line.$GetPointsArray();
 
@@ -1982,7 +1968,7 @@ class InkBallGame {
 		document.querySelector(sSelector2Set).innerHTML = 'SVGs by tags: ' + aggregated;
 
 
-		/*//TODO: test code; to be disabled
+		/*//TODO: test code; to be removed
 		const screen = document.querySelector('#screen');
 		screen.innerHTML += "<div id='divTooltip' " +
 			"style='position:absolute; top:0; right:0; z-index:33; background-color:#8886; display:none' " +
@@ -2075,7 +2061,7 @@ class InkBallGame {
 
 		const sHumanColor = this.COLOR_RED/*, sCPUColor = this.COLOR_BLUE*/;
 		const rand_color = RandomColor();
-		const values = await this.m_Points.values();
+		const values = await this.m_Points.values();//TODO: async for
 		for (const pt of values) {
 			if (pt !== undefined && pt.$GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.$GetStatus()) {
 				const { x: view_x, y: view_y } = pt.$GetPosition();
@@ -2304,7 +2290,7 @@ class InkBallGame {
 		let centroidX = 0, centroidY = 0, count = 0, x, y;
 		const sHumanColor = this.COLOR_RED;
 
-		const values = await this.m_Points.values();
+		const values = await this.m_Points.values();//TODO: async for
 		for (const pt of values) {
 			if (pt !== undefined && pt.$GetFillColor() === sHumanColor && pt.$GetStatus() === StatusEnum.POINT_FREE_RED) {
 				const pos = pt.$GetPosition();
@@ -2401,7 +2387,7 @@ class InkBallGame {
 			}
 		}.bind(this);
 
-		const values = await this.m_Points.values();
+		const values = await this.m_Points.values();//TODO: async for
 		for (const point of values) {
 			if (point && isPointOKForPath([freePointStatus, StatusEnum.POINT_STARTING, StatusEnum.POINT_IN_PATH], point) === true) {
 				const { x: view_x, y: view_y } = point.$GetPosition();
@@ -2568,7 +2554,7 @@ class InkBallGame {
 			//gather free human player points that could be intercepted.
 			const free_human_player_points = [];
 			const sHumanColor = this.COLOR_RED;
-			const values = await this.m_Points.values();
+			const values = await this.m_Points.values();//TODO: async for
 			for (const pt of values) {
 				if (pt !== undefined && pt.$GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.$GetStatus()) {
 					const { x: view_x, y: view_y } = pt.$GetPosition();
