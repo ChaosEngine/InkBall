@@ -26,15 +26,16 @@ namespace InkBall.Tests
 		private sealed class TempPoint : List<int>
 		{
 			[JsonIgnore]
-			public int iX { get { return base[0]; } }
+			public int iX => base[0];
 
 			[JsonIgnore]
-			public int iY { get { return base[1]; } }
+			public int iY => base[1];
 
 			[JsonIgnore]
-			public InkBallPoint.StatusEnum Status { get { return (InkBallPoint.StatusEnum)base[2]; } }
+			public int Status => base[2];
 
-			[JsonIgnore] public int iPlayerId { get { return base[3]; } }
+			[JsonIgnore]
+			public int iPlayerId => base[3];
 
 			public TempPoint() : base() { }
 
@@ -943,15 +944,25 @@ namespace InkBall.Tests
 				InkBallPathViewModel[] json_paths = JsonSerializer.Deserialize<InkBallPathViewModel[]>(dto.Paths);
 				Assert.NotNull(json_points);
 				Assert.NotNull(json_paths);
-				Assert.True(json_points.All(pt => pt.iPlayerId == 1 || pt.iPlayerId == 2));
+				Assert.True(json_points.All(pt =>
+					CommonPoint.UnDataMinimizerPlayerId(pt.iPlayerId) == 1 || CommonPoint.UnDataMinimizerPlayerId(pt.iPlayerId) == 2));
 				Assert.True(json_paths.All(pa => pa.iGameId == 1 && (pa.iPlayerId == 1 || pa.iPlayerId == 2)));
 
 				//Assert
 				Assert.All(Enumerable.Range(0, p1_pts.GetLength(0)), (rank) =>
 				{
-					Assert.Single(json_points, q => q.iPlayerId == 1 && q.iX == p1_pts[rank, 0] && q.iY == p1_pts[rank, 1]);
-					Assert.Single(json_points, q => q.iPlayerId == 2 && q.iX == p2_pts[rank, 0] && q.iY == p2_pts[rank, 1]);
+					Assert.Single(json_points, q => CommonPoint.UnDataMinimizerPlayerId(q.iPlayerId) == 1 &&
+						q.iX == p1_pts[rank, 0] && q.iY == p1_pts[rank, 1]);
+					Assert.Single(json_points, q => CommonPoint.UnDataMinimizerPlayerId(q.iPlayerId) == 2 &&
+						q.iX == p2_pts[rank, 0] && q.iY == p2_pts[rank, 1]);
 				});
+				Assert.NotEmpty(json_points.Where(pt => Enum.IsDefined(typeof(InkBallPoint.StatusEnum), pt.Status) == false));
+				Assert.All(json_points, pt =>
+				{
+					Assert.True(Enum.IsDefined(typeof(InkBallPoint.StatusEnum), CommonPoint.UnDataMinimizerStatus(pt.Status)));
+				});
+				Assert.NotEmpty(json_points.Where(pt =>
+					CommonPoint.UnDataMinimizerStatus(pt.Status) == 2 || CommonPoint.UnDataMinimizerStatus(pt.Status) == 3));
 
 				//Assert
 				Assert.Single(json_paths, q => q.iPlayerId == 1 && q.iGameId == 1 &&
@@ -984,7 +995,7 @@ namespace InkBall.Tests
 					new JsonSerializerOptions { ReadCommentHandling = JsonCommentHandling.Skip, IgnoreNullValues = true, AllowTrailingCommas = true });
 
 				var json_paths1 = JsonSerializer.Serialize(JsonSerializer.Deserialize<InkBallPathViewModel[]>(
-					InkBallPath.GetPathsAsJavaScriptArrayForPage2(points_n_paths.Paths),
+					InkBallPath.GetPathsAsJavaScriptArrayForPage(points_n_paths.Paths),
 					new JsonSerializerOptions { ReadCommentHandling = JsonCommentHandling.Skip, IgnoreNullValues = true, AllowTrailingCommas = true }),
 					new JsonSerializerOptions { ReadCommentHandling = JsonCommentHandling.Skip, IgnoreNullValues = true, AllowTrailingCommas = true });
 

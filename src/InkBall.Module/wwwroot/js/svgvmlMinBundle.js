@@ -114,8 +114,8 @@ SVG ? ($createSVGVML = function $createSVGVML(t, e, r, s) {
     var a = parseInt(n[0]),
         u = parseInt(n[1]),
         h = parseInt(t),
-        c = parseInt(e);
-    return Math.abs(a - h) <= r && Math.abs(u - c) <= s && (this.setAttribute("points", i + " ".concat(t, ",").concat(e)), !0);
+        l = parseInt(e);
+    return Math.abs(a - h) <= r && Math.abs(u - l) <= s && (this.setAttribute("points", i + " ".concat(t, ",").concat(e)), !0);
   }, s.$RemoveLastPoint = function () {
     var t = this.getAttribute("points").replace(/(\s\d+,\d+)$/, "");
     return this.setAttribute("points", t), t;
@@ -198,10 +198,15 @@ SVG ? ($createSVGVML = function $createSVGVML(t, e, r, s) {
 };
 
 var GameStateStore = /*#__PURE__*/function () {
-  function GameStateStore(t, e, r) {
+  function GameStateStore() {
+    var t = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : !0;
+    var e = arguments.length > 1 ? arguments[1] : undefined;
+    var r = arguments.length > 2 ? arguments[2] : undefined;
+    var s = arguments.length > 3 ? arguments[3] : undefined;
+
     _classCallCheck(this, GameStateStore);
 
-    this.DB_NAME = "InkballGame", this.DB_POINT_STORE = "points", this.DB_PATH_STORE = "paths", this.DB_STATE_STORE = "state", this.DB_VERSION = 2, this.g_DB, "indexedDB" in window ? (this.PointStore = new IDBPointStore(this, t, r), this.PathStore = new IDBPathStore(this, e, r)) : (console.log("This browser doesn't support IndexedDB"), this.PointStore = new SimplePointStore(), this.PathStore = new SimplePathStore());
+    this.DB_NAME = "InkballGame", this.DB_POINT_STORE = "points", this.DB_PATH_STORE = "paths", this.DB_STATE_STORE = "state", this.DB_VERSION = 2, this.g_DB, t ? "indexedDB" in window ? (this.PointStore = new IDBPointStore(this, e, s), this.PathStore = new IDBPathStore(this, r, s)) : (console.log("This browser doesn't support IndexedDB"), this.PointStore = new SimplePointStore(), this.PathStore = new SimplePathStore()) : (this.PointStore = new SimplePointStore(), this.PathStore = new SimplePathStore());
   }
 
   _createClass(GameStateStore, [{

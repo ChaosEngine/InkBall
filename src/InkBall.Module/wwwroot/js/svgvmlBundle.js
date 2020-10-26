@@ -376,10 +376,16 @@ function sortPointsClockwise(points) {
   });
   return pointsSorted;
 } //////////IndexedDB points and path stores start//////////
+//TODO: migrate to other file (inkball.js?)
 
 
 var GameStateStore = /*#__PURE__*/function () {
-  function GameStateStore(pointCreationCallbackFn, pathCreationCallbackFn, getGameStateFn) {
+  function GameStateStore() {
+    var useIndexedDb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+    var pointCreationCallbackFn = arguments.length > 1 ? arguments[1] : undefined;
+    var pathCreationCallbackFn = arguments.length > 2 ? arguments[2] : undefined;
+    var getGameStateFn = arguments.length > 3 ? arguments[3] : undefined;
+
     _classCallCheck(this, GameStateStore);
 
     this.DB_NAME = 'InkballGame';
@@ -390,14 +396,18 @@ var GameStateStore = /*#__PURE__*/function () {
 
     this.g_DB; //main DB object
 
-    if (!('indexedDB' in window)) {
-      console.log("This browser doesn't support IndexedDB");
+    if (useIndexedDb) {
+      if (!('indexedDB' in window)) {
+        console.log("This browser doesn't support IndexedDB");
+        this.PointStore = new SimplePointStore();
+        this.PathStore = new SimplePathStore();
+      } else {
+        this.PointStore = new IDBPointStore(this, pointCreationCallbackFn, getGameStateFn);
+        this.PathStore = new IDBPathStore(this, pathCreationCallbackFn, getGameStateFn);
+      }
+    } else {
       this.PointStore = new SimplePointStore();
       this.PathStore = new SimplePathStore();
-    } else {
-      this.PointStore = new IDBPointStore(this, pointCreationCallbackFn, getGameStateFn);
-      this.PathStore = new IDBPathStore(this, pathCreationCallbackFn, getGameStateFn); //this.PointStore = new SimplePointStore();
-      //this.PathStore = new SimplePathStore();
     }
   }
 

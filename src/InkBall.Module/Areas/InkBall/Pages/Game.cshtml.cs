@@ -29,7 +29,7 @@ namespace InkBall.Module.Pages
 
 		public HtmlString PathsAsJavaScriptArray
 		{
-			get { return new HtmlString(InkBallPath.GetPathsAsJavaScriptArrayForPage2(PlayerPointsAndPaths.Paths)); }
+			get { return new HtmlString(InkBallPath.GetPathsAsJavaScriptArrayForPage(PlayerPointsAndPaths.Paths)); }
 		}
 
 		public bool IsReadonly { get; private set; }

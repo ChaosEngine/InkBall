@@ -163,7 +163,7 @@ namespace InkBall.Module.Model
 			return builder.ToString();
 		}
 
-		public static string GetPathsAsJavaScriptArrayForPage2(IEnumerable<InkBallPath> paths)
+		public static string GetPathsAsJavaScriptArrayForPage(IEnumerable<InkBallPath> paths)
 		{
 			StringBuilder builder = new StringBuilder("[", 300);
 			string comma = "";
@@ -217,7 +217,7 @@ namespace InkBall.Module.Model
 			{
 				builder.Append(comma).Append(path.PointsAsString);
 
-				comma = ",\r";
+				comma = ",";
 			}
 			builder.Append(']');
 

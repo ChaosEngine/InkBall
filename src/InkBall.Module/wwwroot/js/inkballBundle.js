@@ -1726,75 +1726,83 @@ var InkBallGame = /*#__PURE__*/function () {
     key: "SetAllPoints",
     value: function () {
       var _SetAllPoints = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8(points) {
-        var _iterator, _step, p;
+        var DataUnMinimizerStatus, DataUnMinimizerPlayerId, _iterator, _step, p;
 
         return regeneratorRuntime.wrap(function _callee8$(_context8) {
           while (1) {
             switch (_context8.prev = _context8.next) {
               case 0:
-                _context8.prev = 0;
-                _context8.next = 3;
+                DataUnMinimizerPlayerId = function _DataUnMinimizerPlaye(playerId) {
+                  return playerId - 1;
+                };
+
+                DataUnMinimizerStatus = function _DataUnMinimizerStatu(status) {
+                  return status - 3;
+                };
+
+                _context8.prev = 2;
+                _context8.next = 5;
                 return this.m_Points.BeginBulkStorage();
 
-              case 3:
+              case 5:
                 _iterator = _createForOfIteratorHelper(points);
-                _context8.prev = 4;
+                _context8.prev = 6;
 
                 _iterator.s();
 
-              case 6:
+              case 8:
                 if ((_step = _iterator.n()).done) {
-                  _context8.next = 12;
+                  _context8.next = 14;
                   break;
                 }
 
                 p = _step.value;
-                _context8.next = 10;
+                _context8.next = 12;
                 return this.SetPoint(p[0]
                 /*x*/
                 , p[1]
                 /*y*/
-                , p[2]
+                , DataUnMinimizerStatus(p[2]
                 /*Status*/
-                , p[3]
+                ), DataUnMinimizerPlayerId(p[3]
                 /*iPlayerId*/
-                );
-
-              case 10:
-                _context8.next = 6;
-                break;
+                ));
 
               case 12:
-                _context8.next = 17;
+                _context8.next = 8;
                 break;
 
               case 14:
-                _context8.prev = 14;
-                _context8.t0 = _context8["catch"](4);
+                _context8.next = 19;
+                break;
+
+              case 16:
+                _context8.prev = 16;
+                _context8.t0 = _context8["catch"](6);
 
                 _iterator.e(_context8.t0);
 
-              case 17:
-                _context8.prev = 17;
+              case 19:
+                _context8.prev = 19;
 
                 _iterator.f();
 
-                return _context8.finish(17);
+                return _context8.finish(19);
 
-              case 20:
-                _context8.prev = 20;
-                _context8.next = 23;
+              case 22:
+                _context8.prev = 22;
+                _context8.next = 25;
                 return this.m_Points.EndBulkStorage();
 
-              case 23:
-                return _context8.finish(20);
+              case 25:
+                return _context8.finish(22);
 
-              case 24:
+              case 26:
               case "end":
                 return _context8.stop();
             }
           }
-        }, _callee8, this, [[0,, 20, 24], [4, 14, 17, 20]]);
+        }, _callee8, this, [[2,, 22, 26], [6, 16, 19, 22]]);
       }));
 
       function SetAllPoints(_x11) {
@@ -2566,7 +2574,7 @@ var InkBallGame = /*#__PURE__*/function () {
             switch (_context15.prev = _context15.next) {
               case 0:
                 x = point.iX, y = point.iY, iStatus = point.Status !== undefined ? point.Status : point.status;
-                this.m_sLastMoveGameTimeStamp = (point.TimeStamp !== undefined ? point.TimeStamp : point.timeStamp).toISOString();
+                this.m_sLastMoveGameTimeStamp = (point.TimeStamp !== undefined ? point.TimeStamp : new Date(point.timeStamp)).toISOString();
                 _context15.next = 4;
                 return this.SetPoint(x, y, iStatus, point.iPlayerId);
 
@@ -2637,7 +2645,7 @@ var InkBallGame = /*#__PURE__*/function () {
           while (1) {
             switch (_context16.prev = _context16.next) {
               case 0:
-                this.m_sLastMoveGameTimeStamp = (path.TimeStamp !== undefined ? path.TimeStamp : path.timeStamp).toISOString();
+                this.m_sLastMoveGameTimeStamp = (path.TimeStamp !== undefined ? path.TimeStamp : new Date(path.timeStamp)).toISOString();
 
                 if (!(this.g_iPlayerID !== path.iPlayerId)) {
                   _context16.next = 38;
@@ -3561,7 +3569,8 @@ var InkBallGame = /*#__PURE__*/function () {
       const tooltip = $('#divTooltip').tooltip('hide');
       $('polyline').hover(function (event) {
       	const t = event.offsetY, l = event.offsetX;
-      			tooltip.text(this.getAttribute("points").split(" ").map(function (pt) {
+      
+      	tooltip.text(this.getAttribute("points").split(" ").map(function (pt) {
       		const tab = pt.split(',');
       		return (parseInt(tab[0]) >> 4) + "," + (parseInt(tab[1]) >> 4);
       	}).join(' 	'));
@@ -3916,6 +3925,7 @@ var InkBallGame = /*#__PURE__*/function () {
      * @param {string} sMsgListSel ul html element selector
      * @param {string} sMsgSendButtonSel input button html element selector
      * @param {string} sLastMoveGameTimeStamp is last game move timestamp date (in UTC and ISO-8601 format)
+     * @param {boolean} useIndexedDbStore indicates whether to use IndexedDb point and path Store
      * @param {Array} ddlTestActions array of test actions button ids
      * @param {number} iTooLong2Duration how long waiting is too long
      */
@@ -3923,7 +3933,7 @@ var InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "PrepareDrawing",
     value: function () {
-      var _PrepareDrawing = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee28(sScreen, sPlayer2Name, sGameStatus, sSurrenderButton, sCancelPath, sPause, sStopAndDraw, sMsgInputSel, sMsgListSel, sMsgSendButtonSel, sLastMoveGameTimeStamp, ddlTestActions) {
+      var _PrepareDrawing = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee28(sScreen, sPlayer2Name, sGameStatus, sSurrenderButton, sCancelPath, sPause, sStopAndDraw, sMsgInputSel, sMsgListSel, sMsgSendButtonSel, sLastMoveGameTimeStamp, useIndexedDbStore, ddlTestActions) {
         var iTooLong2Duration,
             boardsize,
             iClientWidth,
@@ -3937,7 +3947,7 @@ var InkBallGame = /*#__PURE__*/function () {
           while (1) {
             switch (_context28.prev = _context28.next) {
               case 0:
-                iTooLong2Duration = _args28.length > 12 && _args28[12] !== undefined ? _args28[12] : 125;
+                iTooLong2Duration = _args28.length > 13 && _args28[13] !== undefined ? _args28[13] : 125;
                 this.m_bIsWon = false;
                 this.m_iDelayBetweenMultiCaptures = 4000;
                 this.m_iTooLong2Duration = iTooLong2Duration
@@ -4010,7 +4020,7 @@ var InkBallGame = /*#__PURE__*/function () {
 
                 $createSVGVML(this.m_Screen, svg_width_x_height, svg_width_x_height, true);
                 this.DisableSelection(this.m_Screen);
-                stateStore = new GameStateStore(this.CreateScreenPointFromIndexedDb.bind(this), this.CreateScreenPathFromIndexedDb.bind(this), this.GetGameStateForIndexedDb.bind(this));
+                stateStore = new GameStateStore(useIndexedDbStore, this.CreateScreenPointFromIndexedDb.bind(this), this.CreateScreenPathFromIndexedDb.bind(this), this.GetGameStateForIndexedDb.bind(this));
                 this.m_Lines = stateStore.GetPathStore();
                 this.m_Points = stateStore.GetPointStore();
                 _context28.next = 55;
@@ -4086,7 +4096,7 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee28, this);
       }));
 
-      function PrepareDrawing(_x33, _x34, _x35, _x36, _x37, _x38, _x39, _x40, _x41, _x42, _x43, _x44) {
+      function PrepareDrawing(_x33, _x34, _x35, _x36, _x37, _x38, _x39, _x40, _x41, _x42, _x43, _x44, _x45) {
         return _PrepareDrawing.apply(this, arguments);
       }
 
@@ -4408,7 +4418,7 @@ var InkBallGame = /*#__PURE__*/function () {
                     }, _callee31, this);
                   }));
 
-                  return function (_x45, _x46, _x47, _x48, _x49, _x50, _x51) {
+                  return function (_x46, _x47, _x48, _x49, _x50, _x51, _x52) {
                     return _ref9.apply(this, arguments);
                   };
                 }().bind(this);
@@ -4712,7 +4722,7 @@ var InkBallGame = /*#__PURE__*/function () {
                     }, _callee33, null, [[17, 30, 33, 36]]);
                   }));
 
-                  return function dfs_cycle(_x53, _x54) {
+                  return function dfs_cycle(_x54, _x55) {
                     return _ref10.apply(this, arguments);
                   };
                 }();
@@ -4721,7 +4731,7 @@ var InkBallGame = /*#__PURE__*/function () {
                   var _ref11 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee34(edges, mark) {
                     var _this13 = this;
 
-                    var e, mark_e, m, found_c, free_human_player_points, sHumanColor, values, _iterator16, _step16, _pt3, _pt3$$GetPosition, view_x, view_y, _x57, _y2, _pt4, tab, _i, cycl, str, trailing_points, rand_color, mapped_verts, cw_sorted_verts, _iterator17, _step17, vert, x, y, pt, tmp, comma, _iterator18, _step18, possible_intercept, pt1, pts2reset;
+                    var e, mark_e, m, found_c, free_human_player_points, sHumanColor, values, _iterator16, _step16, _pt3, _pt3$$GetPosition, view_x, view_y, _x58, _y2, _pt4, tab, _i, cycl, str, trailing_points, rand_color, mapped_verts, cw_sorted_verts, _iterator17, _step17, vert, x, y, pt, tmp, comma, _iterator18, _step18, possible_intercept, pt1, pts2reset;
 
                     return regeneratorRuntime.wrap(function _callee34$(_context34) {
                       while (1) {
@@ -4774,9 +4784,9 @@ var InkBallGame = /*#__PURE__*/function () {
                             }
 
                             _pt3$$GetPosition = _pt3.$GetPosition(), view_x = _pt3$$GetPosition.x, view_y = _pt3$$GetPosition.y;
-                            _x57 = view_x / this.m_iGridSizeX, _y2 = view_y / this.m_iGridSizeY;
+                            _x58 = view_x / this.m_iGridSizeX, _y2 = view_y / this.m_iGridSizeY;
                             _context34.next = 17;
-                            return this.IsPointOutsideAllPaths(_x57, _y2);
+                            return this.IsPointOutsideAllPaths(_x58, _y2);
 
                           case 17:
                             _context34.t0 = _context34.sent;
@@ -4792,7 +4802,7 @@ var InkBallGame = /*#__PURE__*/function () {
                             //check if really exists
                             _pt4 = document.querySelector("svg > circle[cx=\"".concat(view_x, "\"][cy=\"").concat(view_y, "\"]"));
                             if (_pt4) free_human_player_points.push({
-                              x: _x57,
+                              x: _x58,
                               y: _y2
                             });
 
@@ -4955,7 +4965,7 @@ var InkBallGame = /*#__PURE__*/function () {
                     }, _callee34, this, [[8, 26, 29, 32], [42, 55, 58, 61]]);
                   }));
 
-                  return function (_x55, _x56) {
+                  return function (_x56, _x57) {
                     return _ref11.apply(this, arguments);
                   };
                 }().bind(this); // store the numbers of cycle 
@@ -4996,7 +5006,7 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee35, this);
       }));
 
-      function MarkAllCycles(_x52) {
+      function MarkAllCycles(_x53) {
         return _MarkAllCycles.apply(this, arguments);
       }
 
@@ -5210,7 +5220,7 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee36, this);
       }));
 
-      function GroupPointsRecurse(_x58, _x59) {
+      function GroupPointsRecurse(_x59, _x60) {
         return _GroupPointsRecurse.apply(this, arguments);
       }
 
@@ -5372,7 +5382,7 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee38, this);
       }));
 
-      function rAFCallBack(_x60) {
+      function rAFCallBack(_x61) {
         return _rAFCallBack.apply(this, arguments);
       }
 
@@ -5421,11 +5431,11 @@ window.addEventListener('load', /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/reg
         case 17:
           game = new InkBallGame(iGameID, iPlayerID, iOtherPlayerID, inkBallHubName, signalR.LogLevel.Warning, protocol, signalR.HttpTransportType.None, servTimeoutMillis, gameType, bPlayingWithRed, bPlayerActive, isReadonly, pathAfterPointDrawAllowanceSecAmount);
           _context39.next = 20;
-          return game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw', '#messageInput', '#messagesList', '#sendButton', sLastMoveTimeStampUtcIso, ['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints', '#TestFindFullSurroundedPoints']);
+          return game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw', '#messageInput', '#messagesList', '#sendButton', sLastMoveTimeStampUtcIso, gameOptions.PointsAsJavaScriptArray === null, ['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints', '#TestFindFullSurroundedPoints']);
 
         case 20:
           if (!(gameOptions.PointsAsJavaScriptArray !== null)) {
-            _context39.next = 30;
+            _context39.next = 29;
             break;
           }
 
@@ -5433,34 +5443,29 @@ window.addEventListener('load', /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/reg
           return game.StartSignalRConnection(false);
 
         case 23:
-          if (!(game.m_bPointsAndPathsLoaded === false)) {
-            _context39.next = 28;
-            break;
-          }
-
-          _context39.next = 26;
+          _context39.next = 25;
           return game.SetAllPoints(gameOptions.PointsAsJavaScriptArray);
 
-        case 26:
-          _context39.next = 28;
+        case 25:
+          _context39.next = 27;
           return game.SetAllPaths(gameOptions.PathsAsJavaScriptArray);
 
-        case 28:
-          _context39.next = 32;
+        case 27:
+          _context39.next = 31;
           break;
 
-        case 30:
-          _context39.next = 32;
+        case 29:
+          _context39.next = 31;
           return game.StartSignalRConnection(true);
 
-        case 32:
+        case 31:
           //alert('a QQ');
           document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
           game.CountPointsDebug("#debug2"); //delete window.gameOptions;
 
           window.game = game;
 
-        case 35:
+        case 34:
         case "end":
           return _context39.stop();
       }

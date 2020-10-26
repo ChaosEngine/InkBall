@@ -1040,11 +1040,17 @@ class InkBallGame {
 	}
 
 	async SetAllPoints(points) {
+		//Un-Minimize amount of data transported on the wire through SignalR or on the page: status field
+		function DataUnMinimizerStatus(status) { return status - 3; }
+
+		//Un-Minimize amount of data transported on the wire through SignalR or on the page: player id field
+		function DataUnMinimizerPlayerId(playerId) { return playerId - 1; }
+
 		try {
 			await this.m_Points.BeginBulkStorage();
 
 			for (const p of points) {
-				await this.SetPoint(p[0]/*x*/, p[1]/*y*/, p[2]/*Status*/, p[3]/*iPlayerId*/);
+				await this.SetPoint(p[0]/*x*/, p[1]/*y*/, DataUnMinimizerStatus(p[2]/*Status*/), DataUnMinimizerPlayerId(p[3]/*iPlayerId*/));
 			}
 		}
 		finally {
@@ -1405,7 +1411,9 @@ class InkBallGame {
 	async ReceivedPointProcessing(point) {
 		const x = point.iX, y = point.iY, iStatus = point.Status !== undefined ? point.Status : point.status;
 
-		this.m_sLastMoveGameTimeStamp = (point.TimeStamp !== undefined ? point.TimeStamp : point.timeStamp).toISOString();
+		this.m_sLastMoveGameTimeStamp = (point.TimeStamp !== undefined ?
+			point.TimeStamp : new Date(point.timeStamp)
+		).toISOString();
 
 		await this.SetPoint(x, y, iStatus, point.iPlayerId);
 
@@ -1448,7 +1456,9 @@ class InkBallGame {
 
 	async ReceivedPathProcessing(path) {
 
-		this.m_sLastMoveGameTimeStamp = (path.TimeStamp !== undefined ? path.TimeStamp : path.timeStamp).toISOString();
+		this.m_sLastMoveGameTimeStamp = (path.TimeStamp !== undefined ?
+			path.TimeStamp : new Date(path.timeStamp)
+		).toISOString();
 
 		if (this.g_iPlayerID !== path.iPlayerId) {
 
@@ -1976,7 +1986,7 @@ class InkBallGame {
 		const tooltip = $('#divTooltip').tooltip('hide');
 		$('polyline').hover(function (event) {
 			const t = event.offsetY, l = event.offsetX;
-	
+		
 			tooltip.text(this.getAttribute("points").split(" ").map(function (pt) {
 				const tab = pt.split(',');
 				return (parseInt(tab[0]) >> 4) + "," + (parseInt(tab[1]) >> 4);
@@ -2110,11 +2120,12 @@ class InkBallGame {
 	 * @param {string} sMsgListSel ul html element selector
 	 * @param {string} sMsgSendButtonSel input button html element selector
 	 * @param {string} sLastMoveGameTimeStamp is last game move timestamp date (in UTC and ISO-8601 format)
+	 * @param {boolean} useIndexedDbStore indicates whether to use IndexedDb point and path Store
 	 * @param {Array} ddlTestActions array of test actions button ids
 	 * @param {number} iTooLong2Duration how long waiting is too long
 	 */
 	async PrepareDrawing(sScreen, sPlayer2Name, sGameStatus, sSurrenderButton, sCancelPath, sPause, sStopAndDraw, sMsgInputSel,
-		sMsgListSel, sMsgSendButtonSel, sLastMoveGameTimeStamp, ddlTestActions, iTooLong2Duration = 125) {
+		sMsgListSel, sMsgSendButtonSel, sLastMoveGameTimeStamp, useIndexedDbStore, ddlTestActions, iTooLong2Duration = 125) {
 		this.m_bIsWon = false;
 		this.m_iDelayBetweenMultiCaptures = 4000;
 		this.m_iTooLong2Duration = iTooLong2Duration/*125*/;
@@ -2176,7 +2187,7 @@ class InkBallGame {
 
 		this.DisableSelection(this.m_Screen);
 
-		const stateStore = new GameStateStore(this.CreateScreenPointFromIndexedDb.bind(this), this.CreateScreenPathFromIndexedDb.bind(this),
+		const stateStore = new GameStateStore(useIndexedDbStore, this.CreateScreenPointFromIndexedDb.bind(this), this.CreateScreenPathFromIndexedDb.bind(this),
 			this.GetGameStateForIndexedDb.bind(this));
 		this.m_Lines = stateStore.GetPathStore();
 		this.m_Points = stateStore.GetPointStore();
@@ -2807,15 +2818,13 @@ window.addEventListener('load', async function () {
 		gameType, bPlayingWithRed, bPlayerActive, isReadonly, pathAfterPointDrawAllowanceSecAmount
 	);
 	await game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw',
-		'#messageInput', '#messagesList', '#sendButton', sLastMoveTimeStampUtcIso,
+		'#messageInput', '#messagesList', '#sendButton', sLastMoveTimeStampUtcIso, gameOptions.PointsAsJavaScriptArray === null,
 		['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints', '#TestFindFullSurroundedPoints']);
 
 	if (gameOptions.PointsAsJavaScriptArray !== null) {
 		await game.StartSignalRConnection(false);
-		if (game.m_bPointsAndPathsLoaded === false) {
-			await game.SetAllPoints(gameOptions.PointsAsJavaScriptArray);
-			await game.SetAllPaths(gameOptions.PathsAsJavaScriptArray);
-		}
+		await game.SetAllPoints(gameOptions.PointsAsJavaScriptArray);
+		await game.SetAllPaths(gameOptions.PathsAsJavaScriptArray);
 	}
 	else {
 		await game.StartSignalRConnection(true);

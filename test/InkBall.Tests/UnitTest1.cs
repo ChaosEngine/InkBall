@@ -109,11 +109,11 @@ namespace InkBall.Tests
 
 				//Act
 				var str = db.ToString();
-
 				//Assert
 				Assert.Equal($"{pointsTab[0]},{pointsTab[1]}", expectedCoords);
-
+				//Act
 				string serialized = System.Text.Json.JsonSerializer.Serialize(db, new JsonSerializerOptions { IgnoreNullValues = true });
+				//Assert
 				Assert.DoesNotContain(nameof(InkBallPathViewModel.TimeStamp), serialized);
 				Assert.DoesNotContain(nameof(InkBallPathViewModel.InkBallPoint), serialized);
 				Assert.DoesNotContain(nameof(InkBallPathViewModel.BelongsToCPU), serialized);
@@ -130,9 +130,9 @@ namespace InkBall.Tests
 					iEnclosingPathId = null,
 					iPlayerId = 1
 				};
-
-				//Assert
+				//Act
 				serialized = System.Text.Json.JsonSerializer.Serialize(db, new JsonSerializerOptions { IgnoreNullValues = true });
+				//Assert
 				Assert.DoesNotContain(nameof(InkBallPathViewModel.TimeStamp), serialized);
 				Assert.DoesNotContain(nameof(InkBallPathViewModel.InkBallPoint), serialized);
 				Assert.DoesNotContain(nameof(InkBallPathViewModel.BelongsToCPU), serialized);

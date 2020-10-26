@@ -239,8 +239,9 @@ function sortPointsClockwise(points) {
 }
 
 //////////IndexedDB points and path stores start//////////
+//TODO: migrate to other file (inkball.js?)
 class GameStateStore {
-	constructor(pointCreationCallbackFn, pathCreationCallbackFn, getGameStateFn) {
+	constructor(useIndexedDb = true, pointCreationCallbackFn, pathCreationCallbackFn, getGameStateFn) {
 		this.DB_NAME = 'InkballGame';
 		this.DB_POINT_STORE = 'points';
 		this.DB_PATH_STORE = 'paths';
@@ -248,17 +249,21 @@ class GameStateStore {
 		this.DB_VERSION = 2; // Use a long long for this value (don't use a float)
 		this.g_DB;//main DB object
 
-		if (!('indexedDB' in window)) {
-			console.log("This browser doesn't support IndexedDB");
+		if (useIndexedDb) {
+			if (!('indexedDB' in window)) {
+				console.log("This browser doesn't support IndexedDB");
 
-			this.PointStore = new SimplePointStore();
-			this.PathStore = new SimplePathStore();
+				this.PointStore = new SimplePointStore();
+				this.PathStore = new SimplePathStore();
+			}
+			else {
+				this.PointStore = new IDBPointStore(this, pointCreationCallbackFn, getGameStateFn);
+				this.PathStore = new IDBPathStore(this, pathCreationCallbackFn, getGameStateFn);
+			}
 		}
 		else {
-			this.PointStore = new IDBPointStore(this,pointCreationCallbackFn, getGameStateFn);
-			this.PathStore = new IDBPathStore(this, pathCreationCallbackFn, getGameStateFn);
-			//this.PointStore = new SimplePointStore();
-			//this.PathStore = new SimplePathStore();
+			this.PointStore = new SimplePointStore();
+			this.PathStore = new SimplePathStore();
 		}
 	}
 
