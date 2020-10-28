@@ -246,24 +246,237 @@ class GameStateStore {
 		this.DB_POINT_STORE = 'points';
 		this.DB_PATH_STORE = 'paths';
 		this.DB_STATE_STORE = 'state';
-		this.DB_VERSION = 2; // Use a long long for this value (don't use a float)
+		this.DB_VERSION = 3; // Use a long long for this value (don't use a float)
 		this.g_DB;//main DB object
 
 		if (useIndexedDb) {
 			if (!('indexedDB' in window)) {
 				console.log("This browser doesn't support IndexedDB");
+				useIndexedDb = false;
+			}
+			else
+				useIndexedDb = true;
+		}
+		else
+			useIndexedDb = false;
 
-				this.PointStore = new SimplePointStore();
-				this.PathStore = new SimplePathStore();
+		/////////inner class definitions start/////////
+		/////////https://stackoverflow.com/questions/28784375/nested-es6-classes/////////
+		const SimplePointStoreDefinition = class SimplePointStore {
+			constructor() {
+				this.store = new Map();
 			}
-			else {
-				this.PointStore = new IDBPointStore(this, pointCreationCallbackFn, getGameStateFn);
-				this.PathStore = new IDBPathStore(this, pathCreationCallbackFn, getGameStateFn);
+
+			async PrepareStore() {
+				return true;
 			}
+
+			async BeginBulkStorage() {
+			}
+
+			async EndBulkStorage() {
+			}
+
+			async has(key) {
+				return this.store.has(key);
+			}
+
+			async set(key, val) {
+				return this.store.set(key, val);
+			}
+
+			async get(key) {
+				return this.store.get(key);
+			}
+
+			async values() {
+				return this.store.values();
+			}
+		};
+
+		const SimplePathStoreDefinition = class SimplePathStore {
+			constructor() {
+				this.store = [];
+			}
+
+			async PrepareStore() {
+				return true;
+			}
+
+			async BeginBulkStorage() {
+			}
+
+			async EndBulkStorage() {
+			}
+
+			async push(obj) {
+				return this.store.push(obj);
+			}
+
+			async all() {
+				return this.store;
+			}
+		};
+
+		const IDBPointStoreDefinition = class IDBPointStore extends SimplePointStoreDefinition {
+			constructor(mainGameStateStore, pointCreationCallbackFn, getGameStateFn) {
+				super();
+				this.MainGameStateStore = mainGameStateStore;
+				this.GetPoint = mainGameStateStore.GetPoint.bind(this.MainGameStateStore);
+				this.StorePoint = mainGameStateStore.StorePoint.bind(this.MainGameStateStore);
+				this.GetAllPoints = mainGameStateStore.GetAllPoints.bind(this.MainGameStateStore);
+				this.UpdateState = mainGameStateStore.UpdateState.bind(this.MainGameStateStore);
+				this.PointCreationCallback = pointCreationCallbackFn;
+				this.GetGameStateCallback = getGameStateFn;
+			}
+
+			async PrepareStore() {
+				if (this.PointCreationCallback && this.GetGameStateCallback) {
+					const points = await this.GetAllPoints();
+					const game_state = this.GetGameStateCallback();
+
+					//loading points from indexeddb
+					for (const idb_pt of points) {
+						const pt = await this.PointCreationCallback(idb_pt.x, idb_pt.y, idb_pt.Status, idb_pt.Color);
+						const index = idb_pt.y * game_state.iGridWidth + idb_pt.x;
+						this.store.set(index, pt);
+					}
+
+					return true;
+				}
+			}
+
+			async BeginBulkStorage() {
+				await this.MainGameStateStore.BeginBulkStorage(this.MainGameStateStore.DB_POINT_STORE, 'readwrite');
+			}
+
+			async EndBulkStorage() {
+				await this.MainGameStateStore.StoreAllPoints();
+
+				await this.MainGameStateStore.EndBulkStorage(this.MainGameStateStore.DB_POINT_STORE);
+			}
+
+			async has(key) {
+				//const pt = await GetPoint(key);
+				//return pt !== undefined && pt !== null;
+				return this.store.has(key);
+			}
+
+			async set(key, oval) {
+				const game_state = this.GetGameStateCallback();
+
+				const pos = oval.$GetPosition();
+				const color = oval.$GetFillColor();
+				const idb_pt = {
+					x: parseInt(pos.x) / game_state.iGridSizeX,
+					y: parseInt(pos.y) / game_state.iGridSizeY,
+					Status: oval.$GetStatus(),
+					Color: color
+					//, pos: key, //`${pos.x}_${pos.y}`
+				};
+
+				await this.StorePoint(key, idb_pt);
+
+				if (this.UpdateState) {
+					if (game_state.bPointsAndPathsLoaded === true)
+						await this.UpdateState(game_state.iGameID, game_state);
+				}
+
+				return this.store.set(key, oval);
+			}
+
+			async get(key) {
+				let val = this.store.get(key);
+				if (!val) {
+					const idb_pt = await this.GetPoint(key);
+					if (idb_pt && this.PointCreationCallback) {
+						val = this.PointCreationCallback(idb_pt.x, idb_pt.y, idb_pt.Status, idb_pt.Color);
+						this.store.set(key, val);
+						return val;
+					}
+					else
+						return undefined;
+				}
+				return val;
+				//return this.store.get(key);
+			}
+
+			async values() {
+				let values = this.store.values();
+				if (values)
+					return values;
+				values = await this.GetAllPoints();
+				return values;
+			}
+		};
+
+		const IDBPathStoreDefinition = class IDBPathStore extends SimplePathStoreDefinition {
+			constructor(mainGameStateStore, pathCreationCallbackFn, getGameStateFn) {
+				super();
+				this.MainGameStateStore = mainGameStateStore;
+				this.GetAllPaths = mainGameStateStore.GetAllPaths.bind(this.MainGameStateStore);
+				this.StorePath = mainGameStateStore.StorePath.bind(this.MainGameStateStore);
+				this.UpdateState = mainGameStateStore.UpdateState.bind(this.MainGameStateStore);
+				this.PathCreationCallback = pathCreationCallbackFn;
+				this.GetGameStateCallback = getGameStateFn;
+			}
+
+			async PrepareStore() {
+				if (this.PathCreationCallback) {
+					const paths = await this.GetAllPaths();
+					//loading paths from indexeddb
+					for (const idb_pa of paths) {
+						const pa = await this.PathCreationCallback(idb_pa.PointsAsString, idb_pa.Color, idb_pa.iId);
+						this.store.push(pa);
+					}
+				}
+				return true;
+			}
+
+			async BeginBulkStorage() {
+				await this.MainGameStateStore.BeginBulkStorage([this.MainGameStateStore.DB_POINT_STORE, this.MainGameStateStore.DB_PATH_STORE], 'readwrite');
+			}
+
+			async EndBulkStorage() {
+				await this.MainGameStateStore.EndBulkStorage([this.MainGameStateStore.DB_POINT_STORE, this.MainGameStateStore.DB_PATH_STORE]);
+			}
+
+			async push(val) {
+				const id_key = val.$GetID();
+				const idb_path = {
+					iId: id_key,
+					Color: val.$GetFillColor(),
+					PointsAsString: val.$GetPointsString()
+				};
+
+				await this.StorePath(id_key, idb_path);
+
+				if (this.UpdateState) {
+					const game_state = this.GetGameStateCallback();
+					if (game_state.bPointsAndPathsLoaded === true)
+						await this.UpdateState(game_state.iGameID, game_state);
+				}
+
+				return this.store.push(val);
+			}
+
+			async all() {
+				let values = this.store;
+				if (values)
+					return values;
+				values = await this.GetAllPaths();
+				return values;
+			}
+		};
+		/////////inner class definitions end/////////
+
+		if (useIndexedDb === true) {
+			this.PointStore = new IDBPointStoreDefinition(this, pointCreationCallbackFn, getGameStateFn);
+			this.PathStore = new IDBPathStoreDefinition(this, pathCreationCallbackFn, getGameStateFn);
 		}
 		else {
-			this.PointStore = new SimplePointStore();
-			this.PathStore = new SimplePathStore();
+			this.PointStore = new SimplePointStoreDefinition();
+			this.PathStore = new SimplePathStoreDefinition();
 		}
 	}
 
@@ -301,17 +514,17 @@ class GameStateStore {
 				if (store_list.includes(this.DB_STATE_STORE))
 					evt.currentTarget.result.deleteObjectStore(this.DB_STATE_STORE);
 
-				const point_store = evt.currentTarget.result.createObjectStore(
+				evt.currentTarget.result.createObjectStore(
 					this.DB_POINT_STORE, { /*keyPath: 'pos',*/ autoIncrement: false });
 				//point_store.createIndex('Status', 'Status', { unique: false });
 				//point_store.createIndex('Color', 'Color', { unique: false });
 
 
-				const path_store = evt.currentTarget.result.createObjectStore(
+				evt.currentTarget.result.createObjectStore(
 					this.DB_PATH_STORE, { /*keyPath: 'iId',*/ autoIncrement: false });
 				//path_store.createIndex('Color', 'Color', { unique: false });
 
-				const state_store = evt.currentTarget.result.createObjectStore(
+				evt.currentTarget.result.createObjectStore(
 					this.DB_STATE_STORE, { /*keyPath: 'gameId',*/ autoIncrement: false });
 			}.bind(this);
 		});
@@ -556,6 +769,7 @@ class GameStateStore {
 	}
 
 	async PrepareStore() {
+		//detecting if we have IndexedDb advanced store (only checking point-store); otherwise, there is no point in going further
 		if (!this.PointStore.GetAllPoints) return false;
 
 		if (!this.g_DB)
@@ -635,213 +849,6 @@ class GameStateStore {
 			if (this.bulkStores.size <= 0)
 				this.bulkStores = null;
 		}
-	}
-}
-
-class SimplePointStore {
-	constructor() {
-		this.store = new Map();
-	}
-
-	async PrepareStore() {
-		return true;
-	}
-
-	async BeginBulkStorage() {
-	}
-
-	async EndBulkStorage() {
-	}
-
-	async has(key) {
-		return this.store.has(key);
-	}
-
-	async set(key, val) {
-		return this.store.set(key, val);
-	}
-
-	async get(key) {
-		return this.store.get(key);
-	}
-
-	async values() {
-		return this.store.values();
-	}
-}
-
-class IDBPointStore extends SimplePointStore {
-	constructor(mainGameStateStore, pointCreationCallbackFn, getGameStateFn) {
-		super();
-		this.MainGameStateStore = mainGameStateStore;
-		this.GetPoint = mainGameStateStore.GetPoint.bind(this.MainGameStateStore);
-		this.StorePoint = mainGameStateStore.StorePoint.bind(this.MainGameStateStore);
-		this.GetAllPoints = mainGameStateStore.GetAllPoints.bind(this.MainGameStateStore);
-		this.UpdateState = mainGameStateStore.UpdateState.bind(this.MainGameStateStore);
-		this.PointCreationCallback = pointCreationCallbackFn;
-		this.GetGameStateCallback = getGameStateFn;
-	}
-
-	async PrepareStore() {
-		if (this.PointCreationCallback && this.GetGameStateCallback) {
-			const points = await this.GetAllPoints();
-			const game_state = this.GetGameStateCallback();
-
-			//loading points from indexeddb
-			for (const idb_pt of points) {
-				const pt = await this.PointCreationCallback(idb_pt.x, idb_pt.y, idb_pt.Status, idb_pt.Color);
-				const index = idb_pt.y * game_state.iGridWidth + idb_pt.x;
-				this.store.set(index, pt);
-			}
-
-			return true;
-		}
-	}
-
-	async BeginBulkStorage() {
-		await this.MainGameStateStore.BeginBulkStorage(this.MainGameStateStore.DB_POINT_STORE, 'readwrite');
-	}
-
-	async EndBulkStorage() {
-		await this.MainGameStateStore.StoreAllPoints();
-
-		await this.MainGameStateStore.EndBulkStorage(this.MainGameStateStore.DB_POINT_STORE);
-	}
-
-	async has(key) {
-		//const pt = await GetPoint(key);
-		//return pt !== undefined && pt !== null;
-		return this.store.has(key);
-	}
-
-	async set(key, oval) {
-		const game_state = this.GetGameStateCallback();
-
-		const pos = oval.$GetPosition();
-		const color = oval.$GetFillColor();
-		const idb_pt = {
-			x: parseInt(pos.x) / game_state.iGridSizeX,
-			y: parseInt(pos.y) / game_state.iGridSizeY,
-			Status: oval.$GetStatus(),
-			Color: color
-			//, pos: key, //`${pos.x}_${pos.y}`
-		};
-
-		await this.StorePoint(key, idb_pt);
-
-		if (this.UpdateState) {
-			if (game_state.bPointsAndPathsLoaded === true)
-				await this.UpdateState(game_state.iGameID, game_state);
-		}
-
-		return this.store.set(key, oval);
-	}
-
-	async get(key) {
-		let val = this.store.get(key);
-		if (!val) {
-			const idb_pt = await this.GetPoint(key);
-			if (idb_pt && this.PointCreationCallback) {
-				val = this.PointCreationCallback(idb_pt.x, idb_pt.y, idb_pt.Status, idb_pt.Color);
-				this.store.set(key, val);
-				return val;
-			}
-			else
-				return undefined;
-		}
-		return val;
-		//return this.store.get(key);
-	}
-
-	async values() {
-		let values = this.store.values();
-		if (values)
-			return values;
-		values = await this.GetAllPoints();
-		return values;
-	}
-}
-
-class SimplePathStore {
-	constructor() {
-		this.store = [];
-	}
-
-	async PrepareStore() {
-		return true;
-	}
-
-	async BeginBulkStorage() {
-	}
-
-	async EndBulkStorage() {
-	}
-
-	async push(obj) {
-		return this.store.push(obj);
-	}
-
-	async all() {
-		return this.store;
-	}
-}
-
-class IDBPathStore extends SimplePathStore {
-	constructor(mainGameStateStore, pathCreationCallbackFn, getGameStateFn) {
-		super();
-		this.MainGameStateStore = mainGameStateStore;
-		this.GetAllPaths = mainGameStateStore.GetAllPaths.bind(this.MainGameStateStore);
-		this.StorePath = mainGameStateStore.StorePath.bind(this.MainGameStateStore);
-		this.UpdateState = mainGameStateStore.UpdateState.bind(this.MainGameStateStore);
-		this.PathCreationCallback = pathCreationCallbackFn;
-		this.GetGameStateCallback = getGameStateFn;
-	}
-
-	async PrepareStore() {
-		if (this.PathCreationCallback) {
-			const paths = await this.GetAllPaths();
-			//loading paths from indexeddb
-			for (const idb_pa of paths) {
-				const pa = await this.PathCreationCallback(idb_pa.PointsAsString, idb_pa.Color, idb_pa.iId);
-				this.store.push(pa);
-			}
-		}
-		return true;
-	}
-
-	async BeginBulkStorage() {
-		await this.MainGameStateStore.BeginBulkStorage([this.MainGameStateStore.DB_POINT_STORE, this.MainGameStateStore.DB_PATH_STORE], 'readwrite');
-	}
-
-	async EndBulkStorage() {
-		await this.MainGameStateStore.EndBulkStorage([this.MainGameStateStore.DB_POINT_STORE, this.MainGameStateStore.DB_PATH_STORE]);
-	}
-
-	async push(val) {
-		const id_key = val.$GetID();
-		const idb_path = {
-			iId: id_key,
-			Color: val.$GetFillColor(),
-			PointsAsString: val.$GetPointsString()
-		};
-
-		await this.StorePath(id_key, idb_path);
-
-		if (this.UpdateState) {
-			const game_state = this.GetGameStateCallback();
-			if (game_state.bPointsAndPathsLoaded === true)
-				await this.UpdateState(game_state.iGameID, game_state);
-		}
-
-		return this.store.push(val);
-	}
-
-	async all() {
-		let values = this.store;
-		if (values)
-			return values;
-		values = await this.GetAllPaths();
-		return values;
 	}
 }
 //////////IndexedDB points and path stores end//////////

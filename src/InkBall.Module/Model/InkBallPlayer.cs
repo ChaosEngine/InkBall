@@ -106,6 +106,8 @@ namespace InkBall.Module.Model
 			bool last_move_was_point = sLastMoveCode.Contains(nameof(IPoint.iX), StringComparison.InvariantCultureIgnoreCase);
 			return last_move_was_point && TimeStamp.AddSeconds(Constants.PathAfterPointDrawAllowanceSecAmount) > DateTime.Now;
 		}
+
+		public bool IsCpuPlayer => this.iId == -1;
 	}
 
 	public partial class InkBallPlayer : CommonPlayer<InkBallPoint, InkBallPath>

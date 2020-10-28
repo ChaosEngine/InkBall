@@ -433,8 +433,12 @@ namespace InkBall.Module.Hubs
 						ThisGame.bIsPlayer1Active = !ThisGame.bIsPlayer1Active;
 
 						new_point = new InkBallPointViewModel(db_point);
-						db_point_player.sLastMoveCode = JsonSerializer.Serialize(new_point,
-							new JsonSerializerOptions { IgnoreNullValues = true });
+						if (!db_point_player.IsCpuPlayer)
+						{
+							db_point_player.sLastMoveCode = JsonSerializer.Serialize(new_point,
+								new JsonSerializerOptions { IgnoreNullValues = true });
+						}
+
 						//#if DEBUG
 						//						throw new Exception($"FAKE EXCEPTION {new_point}");
 						//#endif
@@ -566,10 +570,12 @@ namespace InkBall.Module.Hubs
 							found.Status = owning_color;
 							found.EnclosingPath = db_path;
 						}
-
 						path.iId = db_path.iId;//get real DB id saved previously
-						db_path_player.sLastMoveCode = db_path.PointsAsString = JsonSerializer.Serialize(path,
-							new JsonSerializerOptions { IgnoreNullValues = true });
+
+						string last_move = JsonSerializer.Serialize(path, new JsonSerializerOptions { IgnoreNullValues = true });
+						db_path.PointsAsString = last_move;
+						if (!db_path_player.IsCpuPlayer)
+							db_path_player.sLastMoveCode = last_move;
 
 						await _dbContext.SaveChangesAsync(token);
 						//#if DEBUG
