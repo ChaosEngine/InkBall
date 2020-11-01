@@ -16,7 +16,7 @@
 let SVG = false;
 const svgNS = "http://www.w3.org/2000/svg";
 let svgAntialias = false, cont = null;
-let $createOval, $createPolyline, $RemovePolyline, $RemoveOval, $createSVGVML, $createLine;
+let CreateOval, CreatePolyline, RemovePolyline, RemoveOval, CreateSVGVML, CreateLine;
 
 if (document.createElementNS) {
 	let svg = document.createElementNS(svgNS, "svg");
@@ -33,7 +33,7 @@ function hasDuplicates(array) {
 
 if (SVG) {
 	/* ============= SVG ============== */
-	$createSVGVML = function (o, iWidth, iHeight, antialias) {
+	CreateSVGVML = function (o, iWidth, iHeight, antialias) {
 		cont = document.createElementNS(svgNS, "svg");
 		//ch_added start
 		if (iWidth)
@@ -45,25 +45,25 @@ if (SVG) {
 		svgAntialias = antialias;
 		return cont;
 	};
-	$createLine = function (w, col, linecap) {
+	CreateLine = function (w, col, linecap) {
 		const o = document.createElementNS(svgNS, "line");
 		o.setAttribute("shape-rendering", svgAntialias ? "auto" : "optimizeSpeed");
 		o.setAttribute("stroke-width", Math.round(w) + "px");
 		if (col) o.setAttribute("stroke", col);
 		if (linecap) o.setAttribute("stroke-linecap", linecap);
-		o.$move = function (x1, y1, x2, y2) {
+		o.move = function (x1, y1, x2, y2) {
 			this.setAttribute("x1", x1);
 			this.setAttribute("y1", y1);
 			this.setAttribute("x2", x2);
 			this.setAttribute("y2", y2);
 		};
-		o.$RGBcolor = function (R, G, B) { this.setAttribute("stroke", "rgb(" + Math.round(R) + "," + Math.round(G) + "," + Math.round(B) + ")"); };
-		o.$SetColor = function (color) { this.setAttribute("stroke", color); };
-		o.$strokeWidth = function (s) { this.setAttribute("stroke-width", Math.round(s) + "px"); };
+		o.RGBcolor = function (R, G, B) { this.setAttribute("stroke", "rgb(" + Math.round(R) + "," + Math.round(G) + "," + Math.round(B) + ")"); };
+		o.SetColor = function (color) { this.setAttribute("stroke", color); };
+		o.strokeWidth = function (s) { this.setAttribute("stroke-width", Math.round(s) + "px"); };
 		cont.appendChild(o);
 		return o;
 	};
-	$createPolyline = function (w, points, col) {
+	CreatePolyline = function (w, points, col) {
 		const o = document.createElementNS(svgNS, "polyline");
 		o.setAttribute("shape-rendering", svgAntialias ? "auto" : "optimizeSpeed");
 		o.setAttribute("stroke-width", Math.round(w));
@@ -76,7 +76,7 @@ if (SVG) {
 		cont.appendChild(o);
 		//ch_added start
 		o.setAttribute("data-id", 0);
-		o.$AppendPoints = function (x, y, diffX, diffY) {
+		o.AppendPoints = function (x, y, diffX, diffY) {
 			const pts_str = this.getAttribute("points");
 			const pts = pts_str.split(" ");
 
@@ -101,48 +101,48 @@ if (SVG) {
 			this.setAttribute("points", pts_str + ` ${x},${y}`);
 			return true;
 		};
-		o.$RemoveLastPoint = function () {
+		o.RemoveLastPoint = function () {
 			const newpts = this.getAttribute("points").replace(/(\s\d+,\d+)$/, "");
 			this.setAttribute("points", newpts);
 			return newpts;
 		};
-		o.$ContainsPoint = function (x, y) {
+		o.ContainsPoint = function (x, y) {
 			const regexstr = new RegExp(`${x},${y}`, 'g');
 			const cnt = (this.getAttribute("points").match(regexstr) || []).length;
 			return cnt;
 		};
-		o.$GetPointsString = function () {
+		o.GetPointsString = function () {
 			return this.getAttribute("points");
 		};
-		o.$GetPointsArray = function () {
+		o.GetPointsArray = function () {
 			//x0,y0 x1,y1 x2,y2
 			return this.getAttribute("points").split(" ").map(function (pt) {
 				const tab = pt.split(',');
 				return { x: parseInt(tab[0]), y: parseInt(tab[1]) };
 			});
 		};
-		o.$SetPoints = function (sPoints) {
+		o.SetPoints = function (sPoints) {
 			this.setAttribute("points", sPoints);
 		};
-		o.$GetIsClosed = function () {
+		o.GetIsClosed = function () {
 			const pts = this.getAttribute("points").split(" ");
 			return pts[0] === pts[pts.length - 1];
 		};
-		o.$GetLength = function () {
+		o.GetLength = function () {
 			return this.getAttribute("points").split(" ").length;
 		};
-		o.$SetWidthAndColor = function (w, col) {
+		o.SetWidthAndColor = function (w, col) {
 			this.setAttribute("stroke", col);
 			this.setAttribute("fill", col);
 			this.setAttribute("stroke-width", Math.round(w));
 		};
-		o.$GetID = function () { return parseInt(this.getAttribute("data-id")); };
-		o.$SetID = function (iID) { this.setAttribute("data-id", iID); };
-		o.$GetFillColor = function () { return this.getAttribute("fill"); };
+		o.GetID = function () { return parseInt(this.getAttribute("data-id")); };
+		o.SetID = function (iID) { this.setAttribute("data-id", iID); };
+		o.GetFillColor = function () { return this.getAttribute("fill"); };
 		//ch_added end
 		return o;
 	};
-	$createOval = function (diam) {
+	CreateOval = function (diam) {
 		const o = document.createElementNS(svgNS, "circle");
 		o.setAttribute("shape-rendering", svgAntialias ? "auto" : "optimizeSpeed");
 		o.setAttribute("stroke-width", 0);
@@ -151,21 +151,21 @@ if (SVG) {
 		//ch_added
 		o.setAttribute("data-status", -1);
 		//o.setAttribute("data-old-status", -1);
-		o.$move = function (x1, y1, radius) {
+		o.move = function (x1, y1, radius) {
 			this.setAttribute("cx", x1);
 			this.setAttribute("cy", y1);
 			this.setAttribute("r", Math.round(radius));
 		};
-		o.$GetStrokeColor = function () { return this.getAttribute("stroke"); };
-		o.$SetStrokeColor = function (col) { this.setAttribute("stroke", col); };
+		o.GetStrokeColor = function () { return this.getAttribute("stroke"); };
+		o.SetStrokeColor = function (col) { this.setAttribute("stroke", col); };
 		//ch_added/changed start
-		o.$GetPosition = function () {
+		o.GetPosition = function () {
 			return { x: this.getAttribute("cx"), y: this.getAttribute("cy") };
 		};
-		o.$GetFillColor = function () { return this.getAttribute("fill"); };
-		o.$SetFillColor = function (col) { this.setAttribute("fill", col); };
-		o.$GetStatus = function () { return parseInt(this.getAttribute("data-status")); };
-		o.$SetStatus = function (iStatus, saveOldPoint = false) {
+		o.GetFillColor = function () { return this.getAttribute("fill"); };
+		o.SetFillColor = function (col) { this.setAttribute("fill", col); };
+		o.GetStatus = function () { return parseInt(this.getAttribute("data-status")); };
+		o.SetStatus = function (iStatus, saveOldPoint = false) {
 			if (saveOldPoint) {
 				const old_status = parseInt(this.getAttribute("data-status"));
 				this.setAttribute("data-status", iStatus);
@@ -176,7 +176,7 @@ if (SVG) {
 				this.setAttribute("data-status", iStatus);
 			}
 		};
-		o.$RevertOldStatus = function () {
+		o.RevertOldStatus = function () {
 			const old_status = this.getAttribute("data-old-status");
 			if (old_status) {
 				this.removeAttribute("data-old-status");
@@ -185,27 +185,27 @@ if (SVG) {
 			}
 			return -1;
 		};
-		o.$GetZIndex = function () { return this.getAttribute("z-index"); };
-		o.$SetZIndex = function (val) { this.setAttribute("z-index", val); };
-		o.$Hide = function () { this.setAttribute("visibility", 'hidden'); };
-		o.$Show = function () { this.setAttribute("visibility", 'visible'); };
+		o.GetZIndex = function () { return this.getAttribute("z-index"); };
+		o.SetZIndex = function (val) { this.setAttribute("z-index", val); };
+		o.Hide = function () { this.setAttribute("visibility", 'hidden'); };
+		o.Show = function () { this.setAttribute("visibility", 'visible'); };
 		//ch_added/changed end
-		o.$strokeWeight = function (sw) { this.setAttribute("stroke-width", sw); };
+		o.strokeWeight = function (sw) { this.setAttribute("stroke-width", sw); };
 		cont.appendChild(o);
 		return o;
 	};
 	//ch_added start
-	$RemoveOval = function (Oval) {
+	RemoveOval = function (Oval) {
 		cont.removeChild(Oval);
 	};
-	$RemovePolyline = function (Polyline) {
+	RemovePolyline = function (Polyline) {
 		cont.removeChild(Polyline);
 	};
 	//ch_added end
 
 } else {
 	/* ==== no script ==== */
-	$createSVGVML = function () {
+	CreateSVGVML = function () {
 		alert('SVG is not supported!');
 		return false;
 	};
@@ -216,7 +216,7 @@ if (SVG) {
  * @param {array} points array of points to sort
  * @returns {array} of points
  */
-function sortPointsClockwise(points) {
+function SortPointsClockwise(points) {
 	//Modern
 
 	// Get the center (mean value) using reduce
@@ -240,5 +240,5 @@ function sortPointsClockwise(points) {
 
 
 export {
-	$createOval, $createPolyline, $RemovePolyline, $RemoveOval, $createSVGVML, $createLine, hasDuplicates, sortPointsClockwise
+	CreateOval, CreatePolyline, RemovePolyline, RemoveOval, CreateSVGVML, CreateLine, hasDuplicates, SortPointsClockwise
 };
