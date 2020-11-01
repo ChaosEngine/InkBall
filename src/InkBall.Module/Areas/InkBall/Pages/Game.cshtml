@@ -119,7 +119,7 @@
     }
 }
 <script type='text/javascript'>
-    var gameOptions = {
+    gameOptions = {
 	    inkBallHubName: '@(commonUIConfigureOptions.Value.AppRootPath + InkBall.Module.Hubs.GameHub.HubName)',
 	    iGameID: @Model.Game.iId,
 	    iPlayerID: @Model.Player.iId,
@@ -132,6 +132,7 @@
 	    isReadonly: JSON.parse('@Model.IsReadonly'.toLowerCase()),
         pathAfterPointDrawAllowanceSecAmount: @Constants.PathAfterPointDrawAllowanceSecAmount,
         sLastMoveGameTimeStamp: '@lastTimeStampISO',
+        version: '@this.GetType().Assembly.GetName().Version.ToString(4)',
 
 	    @if(Model.PlayerPointsAndPaths.Points != null)
 	    {
@@ -144,7 +145,6 @@
             @:PathsAsJavaScriptArray: null
         }
     };
-    //window.gameOptions = gameOptions;
 </script>
 <script type='module' src='@Url.Content(Constants.WwwIncludeInkballJS)'></script>
 <script nomodule type='text/javascript' src='@Url.Content(Constants.WwwIncludeInkballJSBundle)'></script>

@@ -316,14 +316,7 @@ class CountdownTimer {
 
 //////////IndexedDB points and path stores start//////////
 class GameStateStore {
-	constructor(useIndexedDb = true, pointCreationCallbackFn, pathCreationCallbackFn, getGameStateFn) {
-		this.DB_NAME = 'InkballGame';
-		this.DB_POINT_STORE = 'points';
-		this.DB_PATH_STORE = 'paths';
-		this.DB_STATE_STORE = 'state';
-		this.DB_VERSION = 3; // Use a long long for this value (don't use a float)
-		this.g_DB;//main DB object
-
+	constructor(useIndexedDb, pointCreationCallbackFn, pathCreationCallbackFn, getGameStateFn, version = "") {
 		if (useIndexedDb) {
 			if (!('indexedDB' in window)) {
 				LocalLog("This browser doesn't support IndexedDB");
@@ -550,6 +543,19 @@ class GameStateStore {
 		/////////inner class definitions end/////////
 
 		if (useIndexedDb === true) {
+			this.DB_NAME = 'InkballGame';
+			this.DB_POINT_STORE = 'points';
+			this.DB_PATH_STORE = 'paths';
+			this.DB_STATE_STORE = 'state';
+
+			// Use a long long for this value (don't use a float)
+			this.DB_VERSION = parseInt(version.split('.').reduce((acc, val) => {
+				val = parseInt(val);
+				return acc * 10 + (isNaN(val) ? 0 : val);
+			}, 0)) - 1010/*initial module versioning start number*/ + 4/*initial indexDB start number*/;
+
+			this.g_DB;//main DB object
+
 			this.PointStore = new IDBPointStoreDefinition(this, pointCreationCallbackFn, getGameStateFn);
 			this.PathStore = new IDBPathStoreDefinition(this, pathCreationCallbackFn, getGameStateFn);
 		}
@@ -579,11 +585,11 @@ class GameStateStore {
 				resolve(evt.currentTarget.result);
 			}.bind(this);
 			req.onerror = function (evt) {
-				LocalError("OpenDb:", evt.target.errorCode);
+				LocalError("OpenDb:", evt.target.errorCode || evt.target.error);
 				reject();
 			};
 			req.onupgradeneeded = function (evt) {
-				LocalLog("OpenDb.onupgradeneeded");
+				LocalLog(`OpenDb.onupgradeneeded(version: ${this.DB_VERSION})`);
 
 				const store_list = Array.from(evt.currentTarget.result.objectStoreNames);
 				if (store_list.includes(this.DB_POINT_STORE))
@@ -2743,11 +2749,12 @@ class InkBallGame {
 	 * @param {string} sMsgSendButtonSel input button html element selector
 	 * @param {string} sLastMoveGameTimeStamp is last game move timestamp date (in UTC and ISO-8601 format)
 	 * @param {boolean} useIndexedDbStore indicates whether to use IndexedDb point and path Store
+	 * @param {string} version is semVer string of main module (for IndexedDb DB version)
 	 * @param {Array} ddlTestActions array of test actions button ids
 	 * @param {number} iTooLong2Duration how long waiting is too long
 	 */
 	async PrepareDrawing(sScreen, sPlayer2Name, sGameStatus, sSurrenderButton, sCancelPath, sPause, sStopAndDraw, sMsgInputSel,
-		sMsgListSel, sMsgSendButtonSel, sLastMoveGameTimeStamp, useIndexedDbStore, ddlTestActions, iTooLong2Duration = 125) {
+		sMsgListSel, sMsgSendButtonSel, sLastMoveGameTimeStamp, useIndexedDbStore, version, ddlTestActions, iTooLong2Duration = 125) {
 		this.m_bIsWon = false;
 		this.m_iDelayBetweenMultiCaptures = 4000;
 		this.m_iTooLong2Duration = iTooLong2Duration/*125*/;
@@ -2809,8 +2816,11 @@ class InkBallGame {
 
 		this.DisableSelection(this.m_Screen);
 
-		const stateStore = new GameStateStore(useIndexedDbStore, this.CreateScreenPointFromIndexedDb.bind(this), this.CreateScreenPathFromIndexedDb.bind(this),
-			this.GetGameStateForIndexedDb.bind(this));
+		const stateStore = new GameStateStore(useIndexedDbStore,
+			this.CreateScreenPointFromIndexedDb.bind(this),
+			this.CreateScreenPathFromIndexedDb.bind(this),
+			this.GetGameStateForIndexedDb.bind(this),
+			version);
 		this.m_Lines = stateStore.GetPathStore();
 		this.m_Points = stateStore.GetPointStore();
 		this.m_bPointsAndPathsLoaded = await stateStore.PrepareStore(this);
@@ -3432,6 +3442,7 @@ window.addEventListener('load', async function () {
 	const isReadonly = gameOptions.isReadonly;
 	const pathAfterPointDrawAllowanceSecAmount = gameOptions.pathAfterPointDrawAllowanceSecAmount;
 	const sLastMoveTimeStampUtcIso = new Date(gameOptions.sLastMoveGameTimeStamp).toISOString();
+	const version = gameOptions.version;
 
 	await importAllModulesAsync(gameOptions);
 
@@ -3440,7 +3451,7 @@ window.addEventListener('load', async function () {
 		gameType, bPlayingWithRed, bPlayerActive, isReadonly, pathAfterPointDrawAllowanceSecAmount
 	);
 	await game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw',
-		'#messageInput', '#messagesList', '#sendButton', sLastMoveTimeStampUtcIso, gameOptions.PointsAsJavaScriptArray === null,
+		'#messageInput', '#messagesList', '#sendButton', sLastMoveTimeStampUtcIso, gameOptions.PointsAsJavaScriptArray === null, version,
 		['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints', '#TestFindFullSurroundedPoints']);
 
 	if (gameOptions.PointsAsJavaScriptArray !== null) {
@@ -3455,7 +3466,7 @@ window.addEventListener('load', async function () {
 	document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
 	game.CountPointsDebug("#debug2");
 
-	//delete window.gameOptions;
+	delete window.gameOptions;
 	window.game = game;
 });
 
