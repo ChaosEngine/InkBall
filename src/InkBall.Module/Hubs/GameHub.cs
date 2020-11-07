@@ -120,7 +120,7 @@ namespace InkBall.Module.Hubs
 
 		private void ValidateOriginHeaderAndAccessToken(HttpContext ctx)
 		{
-			//Index page populates WebSocketAllowedOrigins
+			//Game page populates WebSocketAllowedOrigins
 			if (WebSocketAllowedOrigins.Any() && ctx.Request.Headers.TryGetValue(HeaderNames.Origin, out var origin)
 				&& ctx.Request.Headers.TryGetValue(HeaderNames.Upgrade, out var upgrade))
 			{
@@ -407,7 +407,7 @@ namespace InkBall.Module.Hubs
 									, token);
 				var db_point_player = ThisPlayer.iId == point.iPlayerId ? ThisPlayer : OtherPlayer;
 				if (already_placed)
-					throw new ArgumentException("point already placed");
+					throw new ArgumentException($"point already placed ({point})");
 
 				var game_paths = await _dbContext.GetPathsFromDatabaseAsync(point.iGameId, true, token);
 				if (game_paths.Any(pa => pa.IsPointInsidePath(point)))
@@ -433,10 +433,15 @@ namespace InkBall.Module.Hubs
 						ThisGame.bIsPlayer1Active = !ThisGame.bIsPlayer1Active;
 
 						new_point = new InkBallPointViewModel(db_point);
-						db_point_player.sLastMoveCode = JsonSerializer.Serialize(new_point);
-						// #if DEBUG
-						// 						throw new Exception($"FAKE EXCEPTION {new_point}");
-						// #endif
+						if (!db_point_player.IsCpuPlayer)
+						{
+							db_point_player.sLastMoveCode = JsonSerializer.Serialize(new_point,
+								new JsonSerializerOptions { IgnoreNullValues = true });
+						}
+
+						//#if DEBUG
+						//						throw new Exception($"FAKE EXCEPTION {new_point}");
+						//#endif
 						await _dbContext.SaveChangesAsync(token);
 
 						trans.Commit();
@@ -448,6 +453,7 @@ namespace InkBall.Module.Hubs
 						throw;
 					}
 				}
+				new_point.TimeStamp = ThisGame.TimeStamp;
 
 				if (!ThisGame.CpuOponent)
 					await Clients.User(OtherUserIdentifier).ServerToClientPoint(new_point);
@@ -564,17 +570,20 @@ namespace InkBall.Module.Hubs
 							found.Status = owning_color;
 							found.EnclosingPath = db_path;
 						}
-
 						path.iId = db_path.iId;//get real DB id saved previously
-						db_path_player.sLastMoveCode = db_path.PointsAsString = JsonSerializer.Serialize(path);
+
+						string last_move = JsonSerializer.Serialize(path, new JsonSerializerOptions { IgnoreNullValues = true });
+						db_path.PointsAsString = last_move;
+						if (!db_path_player.IsCpuPlayer)
+							db_path_player.sLastMoveCode = last_move;
 
 						await _dbContext.SaveChangesAsync(token);
-						// #if DEBUG
-						// 						var saved_pts = await _dbContext.LoadPointsAndPathsAsync(ThisGameID.Value, token);
-						// 						var restored_from_db = saved_pts.Paths.LastOrDefault()?.InkBallPoint.Select(z => $"{z.iX},{z.iY}");
-						// 						var str = InkBallPath.GetPathsAsJavaScriptArrayForPage2(saved_pts.Paths);
-						// 						throw new Exception($"FAKE EXCEPTION org pts:[{path.PointsAsString}], restored pts:[{str}], owned:[{path.OwnedPointsAsString}]");
-						// #endif
+						//#if DEBUG
+						//						var saved_pts = await _dbContext.LoadPointsAndPathsAsync(ThisGameID.Value, token);
+						//						var restored_from_db = saved_pts.Paths.LastOrDefault()?.InkBallPoint.Select(z => $"{z.iX},{z.iY}");
+						//						var str = InkBallPath.GetPathsAsJavaScriptArrayForPage2(saved_pts.Paths);
+						//						throw new Exception($"FAKE EXCEPTION org pts:[{path.PointsAsString}], restored pts:[{str}], owned:[{path.OwnedPointsAsString}]");
+						//#endif
 
 						var statisticalPointAndPathCounter = new StatisticalPointAndPathCounter(_dbContext, ThisGame.iId,
 							ThisPlayer.iId, OtherPlayer.iId, ref owning_color, ref other_owning_color, ref token);
@@ -594,6 +603,7 @@ namespace InkBall.Module.Hubs
 						else
 						{
 							path = new InkBallPathViewModel(db_path, path.PointsAsString, path.OwnedPointsAsString);
+							path.TimeStamp = ThisGame.TimeStamp;
 							dto = path;
 							if (!ThisGame.CpuOponent)
 								await Clients.User(OtherUserIdentifier).ServerToClientPath(path);
@@ -740,7 +750,7 @@ namespace InkBall.Module.Hubs
 			{
 				var packed = await _dbContext.LoadPointsAndPathsAsync(gameID, token, false);
 				var points = CommonPoint.GetPointsAsJavaScriptArrayForSignalR(packed.Points);
-				var paths = InkBallPath.GetPathsAsJavaScriptArrayForSignalR2(packed.Paths);
+				var paths = InkBallPath.GetPathsAsJavaScriptArrayForSignalR(packed.Paths);
 				var dto = new PlayerPointsAndPathsDTO(points, paths);
 
 				return dto;

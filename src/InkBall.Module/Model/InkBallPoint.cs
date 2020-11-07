@@ -12,6 +12,14 @@ namespace InkBall.Module.Model
 		bool BelongsToCPU { get; }
 	}
 
+	public interface ILastMoveTimestamp
+	{
+		/// <summary>
+		/// Last game move timestamp as UTC ISO-8601 format
+		/// </summary>
+		DateTime? TimeStamp { get; }
+	}
+
 	public interface IPoint : IBelongingToCPU
 	{
 		int iId { get; set; }
@@ -139,6 +147,12 @@ namespace InkBall.Module.Model
 
 		#endregion Overrides
 
+		public bool ShouldSerializeiId()
+		{
+			// don't serialize the iId property if <= 0
+			return (iId > 0);
+		}
+
 		public static bool operator ==(CommonPoint left, CommonPoint right)
 		{
 			if (((object)left) == null || ((object)right) == null)
@@ -161,9 +175,11 @@ namespace InkBall.Module.Model
 			foreach (var p in points)
 			{
 #if DEBUG
-				builder.AppendFormat("{4}[/*id={5}*/{0}/*x*/,{1}/*y*/,{2}/*val*/,{3}/*playerID*/]", p.iX, p.iY, (int)p.Status, p.iPlayerId, comma, p.iId);
+				builder.AppendFormat("{4}[/*id={5}*/{0}/*x*/,{1}/*y*/,{2}/*val*/,{3}/*playerID*/]",
+					p.iX, p.iY, DataMinimizerStatus((int)p.Status), DataMinimizerPlayerId(p.iPlayerId), comma, p.iId);
 #else
-				builder.AppendFormat("{4}[{0},{1},{2},{3}]", p.iX, p.iY, (int)p.Status, p.iPlayerId, comma);
+				builder.AppendFormat("{4}[{0},{1},{2},{3}]",
+					p.iX, p.iY, DataMinimizerStatus((int)p.Status), DataMinimizerPlayerId(p.iPlayerId), comma);
 #endif
 				comma = ",\r";
 			}
@@ -178,7 +194,8 @@ namespace InkBall.Module.Model
 			string comma = string.Empty;
 			foreach (var p in points)
 			{
-				builder.AppendFormat("{4}[{0},{1},{2},{3}]", p.iX, p.iY, (int)p.Status, p.iPlayerId, comma);
+				builder.AppendFormat("{4}[{0},{1},{2},{3}]", p.iX, p.iY, DataMinimizerStatus((int)p.Status), DataMinimizerPlayerId(p.iPlayerId),
+					comma);
 				comma = ",";
 			}
 			builder.Append(']');
@@ -186,11 +203,33 @@ namespace InkBall.Module.Model
 			return builder.ToString();
 		}
 
-		public bool ShouldSerializeiId()
-		{
-			// don't serialize the iId property if <= 0
-			return (iId > 0);
-		}
+		/// <summary>
+		/// Minimize amount of data transported on the wire through SignalR or on the page: status field
+		/// </summary>
+		/// <param name="status">int value of status</param>
+		/// <returns>minimized integer</returns>
+		public static int DataMinimizerStatus(int status) => status + 3;
+
+		/// <summary>
+		/// Un-Minimize amount of data transported on the wire through SignalR or on the page: status field
+		/// </summary>
+		/// <param name="status">int value of status expanded</param>
+		/// <returns>expanded integer</returns>
+		public static int UnDataMinimizerStatus(int status) => status - 3;
+
+		/// <summary>
+		/// Minimize amount of data transported on the wire through SignalR or on the page: player id field
+		/// </summary>
+		/// <param name="playerId"></param>
+		/// <returns>minimized int status</returns>
+		public static int DataMinimizerPlayerId(int playerId) => playerId + 1;
+
+		/// <summary>
+		/// Un-Minimize amount of data transported on the wire through SignalR or on the page: player id field
+		/// </summary>
+		/// <param name="playerId">expanded player id</param>
+		/// <returns>expanded int status</returns>
+		public static int UnDataMinimizerPlayerId(int playerId) => playerId - 1;
 	}
 
 	public partial class InkBallPoint : CommonPoint, IPoint
@@ -222,8 +261,10 @@ namespace InkBall.Module.Model
 
 	//[Serializable]
 	[MessagePackObject(true)]
-	public class InkBallPointViewModel : CommonPoint, IPoint
+	public class InkBallPointViewModel : CommonPoint, IPoint, ILastMoveTimestamp
 	{
+		public DateTime? TimeStamp { get; set; }
+
 		public InkBallPointViewModel()
 		{ }
 

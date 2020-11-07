@@ -42,6 +42,10 @@ namespace InkBall.Module.Model
 		public int iWinCount { get; set; }
 		public int iLossCount { get; set; }
 		public int iDrawCount { get; set; }
+
+		/// <summary>
+		/// Last player move time(stamp)
+		/// </summary>
 		public DateTime TimeStamp { get; set; }
 
 		#region Old code
@@ -102,6 +106,8 @@ namespace InkBall.Module.Model
 			bool last_move_was_point = sLastMoveCode.Contains(nameof(IPoint.iX), StringComparison.InvariantCultureIgnoreCase);
 			return last_move_was_point && TimeStamp.AddSeconds(Constants.PathAfterPointDrawAllowanceSecAmount) > DateTime.Now;
 		}
+
+		public bool IsCpuPlayer => this.iId == -1;
 	}
 
 	public partial class InkBallPlayer : CommonPlayer<InkBallPoint, InkBallPath>

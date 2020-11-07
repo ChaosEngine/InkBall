@@ -227,7 +227,7 @@ namespace InkBall.Tests
 					});
 				}
 				path_vm.OwnedPointsAsString = parameters.ownedPoints.Select(o => $"{o.x},{o.y}").Aggregate((me, me1) => me + " " + me1);
-				db_path.PointsAsString = JsonSerializer.Serialize(path_vm);
+				db_path.PointsAsString = JsonSerializer.Serialize(path_vm, new JsonSerializerOptions { IgnoreNullValues = true });
 
 				is_player_turn = !is_player_turn;
 			}

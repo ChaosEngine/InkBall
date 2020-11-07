@@ -2,7 +2,7 @@
 @using Microsoft.Extensions.Hosting
 @inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment env
 @inject Microsoft.Extensions.Options.IOptions<InkBallOptions> commonUIConfigureOptions
-@model IndexModel
+@model GameModel
 @{
     ViewData["Title"] = "Game";
 
@@ -19,6 +19,7 @@
     string surrender_win_cancel_name;
     bool isThisPlayerActive = Model.Game.IsThisPlayerActive();
     bool useMessagePackBinaryTransport = commonUIConfigureOptions.Value.UseMessagePackBinaryTransport;
+    string lastTimeStampISO = @Model.Game.TimeStamp.ToString("O");
     if (Model.Game.Player2 != null)
     {
         if (Model.Game.GetOtherPlayer().IsLastMoveOverdue() && isThisPlayerActive)
@@ -49,10 +50,10 @@
     @Model.Game.Player1?.User?.UserName vs <span id='Player2Name'>@P2Name</span>
 </p>
 <div class="container inkgame">
-    <form action="Games" method="post" asp-antiforgery="true" class="row">
+    <form action="GamesList" method="post" asp-antiforgery="true" class="row">
         <input type='hidden' name='GameID' />
         <div class="col-xs-6 col-sm-auto pl-0">
-            <a id='Pause' href='Games' class="btn btn-outline-primary">pause</a>
+            <a id='Pause' href='GamesList' class="btn btn-outline-primary">pause</a>
             <input id='SurrenderButton' type='submit' name='action' value="@surrender_win_cancel_name" class='btn btn-outline-primary' disabled />
         </div>
         <div class="col-xs-6 col-sm-auto pl-0">
@@ -69,6 +70,7 @@
                 <a class="dropdown-item" href="#" id="TestMarkAllCycles">Mark all cycles</a>
                 <a class="dropdown-item" href="#" id="TestGroupPoints">Group points recurse</a>
                 <a class="dropdown-item" href="#" id="TestFindFullSurroundedPoints">Find full surrounded points</a>
+                <a class="dropdown-item" href="#" id="TestWorkerify">Workerify</a>
             </div>
         </div>
     </form>
@@ -81,7 +83,7 @@
         </div>
     </div>
     <div class="row mx-auto">
-        <div id="screen" class="col-auto p-0 mb-3 mx-auto" style="width: @(Model.Game.iBoardWidth)em; height: @(Model.Game.iBoardHeight)em">
+        <div id="screen" class="col-auto p-0 mb-3 mx-auto boardsize-@(Model.Game.iBoardWidth)x@(Model.Game.iBoardHeight)">
         </div>
         <div id="chatSection" class="col">
             <div class="input-group">
@@ -118,7 +120,7 @@
     }
 }
 <script type='text/javascript'>
-    var gameOptions = {
+    gameOptions = {
 	    inkBallHubName: '@(commonUIConfigureOptions.Value.AppRootPath + InkBall.Module.Hubs.GameHub.HubName)',
 	    iGameID: @Model.Game.iId,
 	    iPlayerID: @Model.Player.iId,
@@ -129,7 +131,9 @@
 	    protocol: JSON.parse('@useMessagePackBinaryTransport'.toLowerCase()) ? new signalR.protocols.msgpack.MessagePackHubProtocol() : new signalR.JsonHubProtocol(),
 	    servTimeoutMillis: @Model.ClientTimeoutInterval.TotalMilliseconds,
 	    isReadonly: JSON.parse('@Model.IsReadonly'.toLowerCase()),
-	    pathAfterPointDrawAllowanceSecAmount: @Constants.PathAfterPointDrawAllowanceSecAmount,
+        pathAfterPointDrawAllowanceSecAmount: @Constants.PathAfterPointDrawAllowanceSecAmount,
+        sLastMoveGameTimeStamp: '@lastTimeStampISO',
+        version: '@this.GetType().Assembly.GetName().Version.ToString(4)',
 
 	    @if(Model.PlayerPointsAndPaths.Points != null)
 	    {
@@ -142,7 +146,6 @@
             @:PathsAsJavaScriptArray: null
         }
     };
-    //window.gameOptions = gameOptions;
 </script>
 <script type='module' src='@Url.Content(Constants.WwwIncludeInkballJS)'></script>
 <script nomodule type='text/javascript' src='@Url.Content(Constants.WwwIncludeInkballJSBundle)'></script>

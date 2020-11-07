@@ -123,7 +123,7 @@ namespace InkBall.Module.Model
 			// InkBallPointsInPath = new HashSet<InkBallPointsInPath>();
 		}
 
-		public static string GetPathsAsJavaScriptArrayForPage(IEnumerable<InkBallPath> paths)
+		public static string GetPathsAsJavaScriptArrayForPageOld(IEnumerable<InkBallPath> paths)
 		{
 			StringBuilder builder = new StringBuilder("[", 300);
 			string comma = "";
@@ -163,7 +163,7 @@ namespace InkBall.Module.Model
 			return builder.ToString();
 		}
 
-		public static string GetPathsAsJavaScriptArrayForPage2(IEnumerable<InkBallPath> paths)
+		public static string GetPathsAsJavaScriptArrayForPage(IEnumerable<InkBallPath> paths)
 		{
 			StringBuilder builder = new StringBuilder("[", 300);
 			string comma = "";
@@ -185,7 +185,7 @@ namespace InkBall.Module.Model
 			return builder.ToString();
 		}
 
-		public static string GetPathsAsJavaScriptArrayForSignalR(IEnumerable<InkBallPath> paths)
+		public static string GetPathsAsJavaScriptArrayForSignalROld(IEnumerable<InkBallPath> paths)
 		{
 			StringBuilder builder = new StringBuilder("[", 300);
 			string comma = "";
@@ -209,7 +209,7 @@ namespace InkBall.Module.Model
 			return builder.ToString();
 		}
 
-		public static string GetPathsAsJavaScriptArrayForSignalR2(IEnumerable<InkBallPath> paths)
+		public static string GetPathsAsJavaScriptArrayForSignalR(IEnumerable<InkBallPath> paths)
 		{
 			StringBuilder builder = new StringBuilder("[", 300);
 			string comma = "";
@@ -217,7 +217,7 @@ namespace InkBall.Module.Model
 			{
 				builder.Append(comma).Append(path.PointsAsString);
 
-				comma = ",\r";
+				comma = ",";
 			}
 			builder.Append(']');
 
@@ -226,7 +226,7 @@ namespace InkBall.Module.Model
 	}
 
 	[MessagePackObject(true)]
-	public class InkBallPathViewModel : CommonPath<InkBallPointViewModel>
+	public class InkBallPathViewModel : CommonPath<InkBallPointViewModel>, ILastMoveTimestamp
 	{
 		delegate void ActionRef<T1, T2, T3, T4>(ref T1 arg1, ref T2 arg2, ref T3 arg3, ref T4 arg4);
 
@@ -241,6 +241,7 @@ namespace InkBall.Module.Model
 
 		//legacy
 		public string OwnedPointsAsString { get; set; }
+		public DateTime? TimeStamp { get; set; }
 
 		///Points creating the path; path points
 		[JsonIgnore]

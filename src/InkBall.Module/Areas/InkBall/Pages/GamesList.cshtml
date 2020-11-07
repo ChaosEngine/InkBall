@@ -2,7 +2,7 @@
 @using InkBall.Module.Model
 @inject Microsoft.Extensions.Options.IOptions<InkBallOptions> commonUIConfigureOptions
 @inject Microsoft.AspNetCore.Authorization.IAuthorizationService authorization
-@model GamesModel
+@model GamesListModel
 @{
     ViewData["Title"] = "Game list";
 
@@ -65,7 +65,7 @@
 									<td class='gtd'>
 										@if (bIsMyOwnGame)
 										{
-											<a href='Index' class='btn btn-outline-primary'>Continue</a>
+											<a href='Game' class='btn btn-outline-primary'>Continue</a>
 										}
 										else
 										{
@@ -85,13 +85,13 @@
 									<td class='gtd'>
 										@if (bIsMyOwnGame)
 										{
-											<a href='Index' class="btn btn-outline-primary">Continue</a>
+											<a href='Game' class="btn btn-outline-primary">Continue</a>
 										}
 										else
 										{
 											if (!bIsCurrentGameOk && bCanViewOtherPlayerGames)
 											{
-												<a href='Index?handler=View&GameID=@game.iId'>View only</a>
+												<a href='Game?handler=View&GameID=@game.iId'>View only</a>
 											}
 										}
 									</td>
@@ -184,7 +184,6 @@
 	const msg = "@Model.Message";
 	if (msg !== "") {
 		let addendum;
-		//debugger;
 		if (msg.toLowerCase().indexOf('exception') !== -1)
 			addendum = 'danger';
 		else if (msg.toLowerCase().indexOf('error') !== -1)

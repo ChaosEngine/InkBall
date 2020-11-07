@@ -130,5 +130,39 @@ namespace InkBall.Tests
 			}
 		}
 
+
+		[Fact]
+		public async Task NoDummyEmptyOrNullFieldsSerializedToString()
+		{
+			//Arrange
+			var token = CancellationToken;
+
+			await CreateComplexGameHierarchy(token);
+
+			//Act
+			using (var context = new GamesContext(Setup.DbOpts))
+			{
+				var games = await context.GetGamesForRegistrationAsSelectTableRowsAsync(/*null, null, null, true, */token);
+
+				//Assert
+				Assert.NotEmpty(games);
+
+				var points_n_paths = await context.LoadPointsAndPathsAsync(games.First().iId, token);
+
+				//Assert
+				Assert.Empty(points_n_paths.Paths.Where(pa =>
+					pa.PointsAsString.Contains(nameof(InkBallPathViewModel.TimeStamp)) ||
+					pa.PointsAsString.Contains(nameof(InkBallPath.InkBallPoint)) ||
+					pa.PointsAsString.Contains(nameof(InkBallPath.BelongsToCPU))
+					));
+
+				//Assert
+				Assert.Empty(context.InkBallPlayer.Where(pl =>
+					pl.sLastMoveCode.Contains(nameof(InkBallPathViewModel.TimeStamp)) ||
+					pl.sLastMoveCode.Contains(nameof(InkBallPath.InkBallPoint)) ||
+					pl.sLastMoveCode.Contains(nameof(InkBallPath.BelongsToCPU))
+					));
+			}
+		}
 	}
 }

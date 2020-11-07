@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 namespace InkBall.Module.Pages
 {
 	[Authorize(Policy = Constants.InkBallPolicyName)]
-	public class IndexModel : BasePageModel
+	public class GameModel : BasePageModel
 	{
 		private readonly IOptions<HubOptions> _signalRHubOptions;
 
@@ -29,7 +29,7 @@ namespace InkBall.Module.Pages
 
 		public HtmlString PathsAsJavaScriptArray
 		{
-			get { return new HtmlString(InkBallPath.GetPathsAsJavaScriptArrayForPage2(PlayerPointsAndPaths.Paths)); }
+			get { return new HtmlString(InkBallPath.GetPathsAsJavaScriptArrayForPage(PlayerPointsAndPaths.Paths)); }
 		}
 
 		public bool IsReadonly { get; private set; }
@@ -42,7 +42,7 @@ namespace InkBall.Module.Pages
 			}
 		}
 
-		public IndexModel(GamesContext dbContext, ILogger<BasePageModel> logger, IOptions<HubOptions> signalRHubOptions)
+		public GameModel(GamesContext dbContext, ILogger<BasePageModel> logger, IOptions<HubOptions> signalRHubOptions)
 			: base(dbContext, logger)
 		{
 			_signalRHubOptions = signalRHubOptions;
@@ -63,7 +63,7 @@ namespace InkBall.Module.Pages
 			{
 				Message = "No active game for you";
 
-				return Redirect("Home");
+				return RedirectToPage("Home");
 			}
 
 			this.IsReadonly = false;
@@ -90,7 +90,7 @@ namespace InkBall.Module.Pages
 			{
 				Message = "View only: Bad GameID";
 
-				return Redirect("Home");
+				return RedirectToPage("Home");
 			}
 
 			var token = HttpContext.RequestAborted;
@@ -103,7 +103,7 @@ namespace InkBall.Module.Pages
 			{
 				Message = "View only: It is your game, or bad GameID";
 
-				return Redirect("Home");
+				return RedirectToPage("Home");
 			}
 			if (Player == null)
 				Player = Game.Player1;

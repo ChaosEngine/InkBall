@@ -58,7 +58,7 @@ namespace InkBall.Module
 				if (!identity.HasClaim(x => x.Type == ClaimTypes.DateOfBirth))
 				{
 					var date_of_birth = new Claim(ClaimTypes.DateOfBirth,
-						DateTime.UtcNow.AddYears(-user.Age).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+						DateTime.UtcNow.AddYears(-user.Age).ToString("O"));
 					identity.AddClaim(date_of_birth);
 				}
 
@@ -193,7 +193,7 @@ namespace InkBall.Module
 			if (string.IsNullOrEmpty(birth_str))
 				return Task.CompletedTask;
 
-			if (DateTime.TryParseExact(birth_str, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var birth))
+			if (DateTime.TryParse(birth_str, out var birth))
 			{
 				if ((DateTime.UtcNow.Year - birth.Year) < MinimumAge.Value)
 				{

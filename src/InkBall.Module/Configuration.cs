@@ -1,15 +1,15 @@
-﻿using System;
-using InkBall.Module.Model;
+﻿using InkBall.Module.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
+using System;
+using System.Linq;
 
 namespace InkBall.Module
 {
@@ -30,13 +30,13 @@ namespace InkBall.Module
 		public const string WwwIncludeInkballJS = "~/js/inkball.js";
 		public const string WwwIncludeInkballJSBundle = "~/js/inkballBundle.js";
 		public const string WwwIncludeSvgVmlJS = "~/js/svgvml.js";
-		public const string WwwIncludeConcavemanBundleJS = "~/js/concavemanBundle.js";
+		public const string WwwIncludeAIBundleJS = "~/js/AIBundle.js";
 		public const string WwwIncludeCSS = "~/css/inkball.css";
 #else
 		public const string WwwIncludeInkballJS = "~/js/inkball.min.js";
 		public const string WwwIncludeInkballJSBundle = "~/js/inkballBundle.min.js";
 		public const string WwwIncludeSvgVmlJS = "~/js/svgvml.min.js";
-		public const string WwwIncludeConcavemanBundleJS = "~/js/concavemanBundle.min.js";
+		public const string WwwIncludeAIBundleJS = "~/js/AIBundle.min.js";
 		public const string WwwIncludeCSS = "~/css/inkball.min.css";
 #endif
 
@@ -55,7 +55,11 @@ namespace InkBall.Module
 
 		public string AppRootPath { get; set; } = "/";
 
-		public Action<AuthorizationPolicyBuilder> CustomAuthorizationPolicyBuilder { get; set; }
+		public Action<AuthorizationPolicyBuilder> CustomMainAuthorizationPolicyBuilder { get; set; }
+
+		public Action<AuthorizationPolicyBuilder> CustomViewOtherGamesAuthorizationPolicyBuilder { get; set; }
+
+		public Action<StaticFileResponseContext> OnStaticFilePrepareResponse { get; set; }
 
 		public Type ApplicationUserType { get; set; }
 
@@ -83,6 +87,19 @@ namespace InkBall.Module
 
 			options.FileProvider = options.FileProvider ?? WebRootFileProvider;
 
+			if (OnStaticFilePrepareResponse != null)
+				options.OnPrepareResponse = OnStaticFilePrepareResponse;
+			else
+			{
+				options.OnPrepareResponse = (ctx) =>
+				{
+					//https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Embedder-Policy
+					//https://web.dev/coop-coep/
+					ctx.Context.Response.Headers.Add("Cross-Origin-Embedder-Policy", "require-corp");
+					ctx.Context.Response.Headers.Add("Cross-Origin-Opener-Policy", "same-origin");
+				};
+			}
+
 			// Add our provider
 			var filesProvider = new ManifestEmbeddedFileProvider(GetType().Assembly, WwwRoot);
 			options.FileProvider = new CompositeFileProvider(options.FileProvider, filesProvider);
@@ -91,6 +108,17 @@ namespace InkBall.Module
 
 	public static class CommonUIServiceCollectionExtensions
 	{
+		public static IServiceCollection AddInkBallCommonUI<TGamesDBContext, TIdentUser>(this IServiceCollection services, Action<InkBallOptions> configureOptions)
+			where TGamesDBContext : IGamesContext
+			where TIdentUser : IdentityUser, INamedAgedUser
+		{
+			var env = services.FirstOrDefault(x => x.ServiceType == typeof(IWebHostEnvironment)).ImplementationInstance as IWebHostEnvironment;
+			if (env == null)
+				throw new InvalidOperationException("Missing FileProvider.");
+
+			return services.AddInkBallCommonUI<TGamesDBContext, TIdentUser>(env.WebRootFileProvider, configureOptions);
+		}
+
 		public static IServiceCollection AddInkBallCommonUI<TGamesDBContext, TIdentUser>(this IServiceCollection services, IFileProvider webRootFileProvider,
 			Action<InkBallOptions> configureOptions)
 			where TGamesDBContext : IGamesContext
@@ -102,40 +130,39 @@ namespace InkBall.Module
 
 			configureOptions?.Invoke(options);
 
-			if (options.CustomAuthorizationPolicyBuilder != null)
+			services.AddAuthorizationCore(auth_options =>
 			{
-				services.AddAuthorizationCore(auth_options =>
+				if (options.CustomMainAuthorizationPolicyBuilder != null)
 				{
-					auth_options.AddPolicy(Constants.InkBallPolicyName, options.CustomAuthorizationPolicyBuilder);
-				});
-			}
-			else
-			{
-				services.AddAuthorizationCore(auth_options =>
+					auth_options.AddPolicy(Constants.InkBallPolicyName, options.CustomMainAuthorizationPolicyBuilder);
+				}
+				else
 				{
 					auth_options.AddPolicy(Constants.InkBallPolicyName, policy =>
 					{
 						policy.RequireAuthenticatedUser()
-							.AddRequirements(new InkBall.Module.MinimumAgeRequirement(18));
+							.AddRequirements(new MinimumAgeRequirement(18));
 					});
+				}
+				if (options.CustomViewOtherGamesAuthorizationPolicyBuilder != null)
+				{
+					auth_options.AddPolicy(Constants.InkBallViewOtherGamesPolicyName, options.CustomViewOtherGamesAuthorizationPolicyBuilder);
+				}
+				else
+				{
 					auth_options.AddPolicy(Constants.InkBallViewOtherGamesPolicyName, policy =>
 					{
 						policy.RequireAuthenticatedUser()
 							.RequireClaim("role", "InkBallViewOtherPlayerGames");
 					});
-				});
-			}
+				}
+			});
 
 			services.ConfigureOptions(options);
 			services.AddSingleton<IOptions<InkBallOptions>>(Options.Create(options));
 
 			return services;
 		}
-
-		/*public static void PrepareSignalRForInkBall(this HubRouteBuilder routes, string path = "")
-		{
-			routes.MapHub<InkBall.Module.Hubs.GameHub>(path + InkBall.Module.Hubs.GameHub.HubName);
-		}*/
 
 		public static void PrepareSignalRForInkBall(this IEndpointRouteBuilder endpoints, string path = "")
 		{

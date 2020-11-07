@@ -15,7 +15,7 @@ using Microsoft.Extensions.Options;
 namespace InkBall.Module.Pages
 {
 	[Authorize(Policy = Constants.InkBallPolicyName)]
-	public class GamesModel : BasePageModel
+	public class GamesListModel : BasePageModel
 	{
 		private readonly IOptions<InkBallOptions> _commonUIConfigureOptions;
 		private readonly IHubContext<GameHub, IGameClient> _inkballHubContext;
@@ -24,7 +24,7 @@ namespace InkBall.Module.Pages
 		public IEnumerable<InkBallGame> GamesList { get; private set; }
 
 
-		public GamesModel(GamesContext dbContext, ILogger<RulesModel> logger, IOptions<InkBallOptions> commonUIConfigureOptions,
+		public GamesListModel(GamesContext dbContext, ILogger<RulesModel> logger, IOptions<InkBallOptions> commonUIConfigureOptions,
 			IHubContext<Hubs.GameHub, Hubs.IGameClient> inkballHubContext) : base(dbContext, logger)
 		{
 			_commonUIConfigureOptions = commonUIConfigureOptions;
@@ -70,7 +70,7 @@ namespace InkBall.Module.Pages
 					case "Join":
 						if (Game != null)
 						{
-							msg = "You've got another game";
+							msg = "You have another game";
 							break;
 						}
 						if (gameID < 0)
@@ -120,7 +120,7 @@ namespace InkBall.Module.Pages
 									}
 
 									trans.Commit();
-									return Redirect("Index");
+									return RedirectToPage("Game");
 								}
 								catch (Exception ex)
 								{
@@ -136,11 +136,11 @@ namespace InkBall.Module.Pages
 					case "Continue":
 						if (Game != null)
 						{
-							return Redirect("Index");
+							return RedirectToPage("Game");
 						}
 						else
 						{
-							msg = "You've got no game to continue";
+							msg = "You have no game to continue";
 						}
 						break;
 
@@ -149,7 +149,7 @@ namespace InkBall.Module.Pages
 					case "New game":
 						if (Game != null)
 						{
-							msg = "You've got another game";
+							msg = "You have another game";
 							break;
 						}
 
@@ -172,9 +172,6 @@ namespace InkBall.Module.Pages
 							case InkBallGame.BoardSizeEnum.SIZE_64x64:
 								width = 64; height = 64;
 								break;
-							// case InkBallGame.BoardSizeEnum.SIZE_80x80:
-							// 	width = 80; height = 80;
-							// 	break;
 							default:
 								break;
 						}
@@ -207,7 +204,7 @@ namespace InkBall.Module.Pages
 									selectedGameType, grid_size, width, height, bCpuOponent, token);
 
 								trans.Commit();
-								return Redirect("Index");
+								return RedirectToPage("Game");
 							}
 							catch (Exception ex)
 							{
@@ -220,7 +217,7 @@ namespace InkBall.Module.Pages
 
 					case "pause":
 					case "Pause":
-						return Redirect("Games");
+						return RedirectToPage("GamesList");
 
 					case "surrender":
 					case "cancel":
@@ -228,7 +225,7 @@ namespace InkBall.Module.Pages
 					case "win":
 						if (Game == null)
 						{
-							msg = "You've got no game";
+							msg = "You have no game";
 							break;
 						}
 						using (var trans = await _dbContext.Database.BeginTransactionAsync(token))
@@ -262,7 +259,7 @@ namespace InkBall.Module.Pages
 								}
 
 								trans.Commit();
-								return Redirect("Games");
+								return RedirectToPage("GamesList");
 							}
 							catch (Exception ex)
 							{
@@ -273,7 +270,7 @@ namespace InkBall.Module.Pages
 						break;
 
 					case "Home":
-						return Redirect("Home");
+						return RedirectToPage("Home");
 
 					default:
 						break;
@@ -281,6 +278,7 @@ namespace InkBall.Module.Pages
 			}
 			catch (Exception ex)
 			{
+				_logger.LogError(ex, "GamesList error");
 				msg += $"Exception: {ex.Message}";
 			}
 
