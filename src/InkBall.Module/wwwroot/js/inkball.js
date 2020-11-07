@@ -2,7 +2,7 @@
 /*global signalR, gameOptions*/
 "use strict";
 
-let SVG, concavemanBundle;
+let SVG, AIBundle;
 
 /******** funcs-n-classes ********/
 const StatusEnum = Object.freeze({
@@ -314,630 +314,6 @@ class CountdownTimer {
 	}
 }
 
-//////////IndexedDB points and path stores start//////////
-class GameStateStore {
-	constructor(useIndexedDb, pointCreationCallbackFn, pathCreationCallbackFn, getGameStateFn, version = "") {
-		if (useIndexedDb) {
-			if (!('indexedDB' in window)) {
-				LocalLog("This browser doesn't support IndexedDB");
-				useIndexedDb = false;
-			}
-			else
-				useIndexedDb = true;
-		}
-		else
-			useIndexedDb = false;
-
-		/////////inner class definitions start/////////
-		/////////https://stackoverflow.com/questions/28784375/nested-es6-classes/////////
-		const SimplePointStoreDefinition = class SimplePointStore {
-			constructor() {
-				this.store = new Map();
-			}
-
-			async PrepareStore() {
-				return true;//dummy
-			}
-
-			async BeginBulkStorage() {
-				//dummy
-			}
-
-			async EndBulkStorage() {
-				//dummy
-			}
-
-			async has(key) {
-				return this.store.has(key);
-			}
-
-			async set(key, val) {
-				return this.store.set(key, val);
-			}
-
-			async get(key) {
-				return this.store.get(key);
-			}
-
-			async values() {
-				return this.store.values();
-			}
-		};
-
-		const SimplePathStoreDefinition = class SimplePathStore {
-			constructor() {
-				this.store = [];
-			}
-
-			async PrepareStore() {
-				return true;//dummy
-			}
-
-			async BeginBulkStorage() {
-				//dummy
-			}
-
-			async EndBulkStorage() {
-				//dummy
-			}
-
-			async push(obj) {
-				return this.store.push(obj);
-			}
-
-			async all() {
-				return this.store;
-			}
-		};
-
-		const IDBPointStoreDefinition = class IDBPointStore extends SimplePointStoreDefinition {
-			constructor(mainGameStateStore, pointCreationCallbackFn, getGameStateFn) {
-				super();
-				this.MainGameStateStore = mainGameStateStore;
-				this.GetPoint = mainGameStateStore.GetPoint.bind(this.MainGameStateStore);
-				this.StorePoint = mainGameStateStore.StorePoint.bind(this.MainGameStateStore);
-				this.GetAllPoints = mainGameStateStore.GetAllPoints.bind(this.MainGameStateStore);
-				this.UpdateState = mainGameStateStore.UpdateState.bind(this.MainGameStateStore);
-				this.PointCreationCallback = pointCreationCallbackFn;
-				this.GetGameStateCallback = getGameStateFn;
-			}
-
-			async PrepareStore() {
-				if (this.PointCreationCallback && this.GetGameStateCallback) {
-					const points = await this.GetAllPoints();
-					const game_state = this.GetGameStateCallback();
-
-					//loading points from indexeddb
-					for (const idb_pt of points) {
-						const pt = await this.PointCreationCallback(idb_pt.x, idb_pt.y, idb_pt.Status, idb_pt.Color);
-						const index = idb_pt.y * game_state.iGridWidth + idb_pt.x;
-						this.store.set(index, pt);
-					}
-
-					return true;
-				}
-			}
-
-			async BeginBulkStorage() {
-				await this.MainGameStateStore.BeginBulkStorage(this.MainGameStateStore.DB_POINT_STORE, 'readwrite');
-			}
-
-			async EndBulkStorage() {
-				await this.MainGameStateStore.StoreAllPoints();
-
-				await this.MainGameStateStore.EndBulkStorage(this.MainGameStateStore.DB_POINT_STORE);
-			}
-
-			async has(key) {
-				//const pt = await GetPoint(key);
-				//return pt !== undefined && pt !== null;
-				return this.store.has(key);
-			}
-
-			async set(key, oval) {
-				const game_state = this.GetGameStateCallback();
-
-				const pos = oval.GetPosition();
-				const color = oval.GetFillColor();
-				const idb_pt = {
-					x: parseInt(pos.x) / game_state.iGridSizeX,
-					y: parseInt(pos.y) / game_state.iGridSizeY,
-					Status: oval.GetStatus(),
-					Color: color
-					//, pos: key, //`${pos.x}_${pos.y}`
-				};
-
-				await this.StorePoint(key, idb_pt);
-
-				if (this.UpdateState) {
-					if (game_state.bPointsAndPathsLoaded === true)
-						await this.UpdateState(game_state.iGameID, game_state);
-				}
-
-				return this.store.set(key, oval);
-			}
-
-			async get(key) {
-				let val = this.store.get(key);
-				if (!val) {
-					const idb_pt = await this.GetPoint(key);
-					if (idb_pt && this.PointCreationCallback) {
-						val = this.PointCreationCallback(idb_pt.x, idb_pt.y, idb_pt.Status, idb_pt.Color);
-						this.store.set(key, val);
-						return val;
-					}
-					else
-						return undefined;
-				}
-				return val;
-				//return this.store.get(key);
-			}
-
-			async values() {
-				let values = this.store.values();
-				if (values)
-					return values;
-				values = await this.GetAllPoints();
-				return values;
-			}
-		};
-
-		const IDBPathStoreDefinition = class IDBPathStore extends SimplePathStoreDefinition {
-			constructor(mainGameStateStore, pathCreationCallbackFn, getGameStateFn) {
-				super();
-				this.MainGameStateStore = mainGameStateStore;
-				this.GetAllPaths = mainGameStateStore.GetAllPaths.bind(this.MainGameStateStore);
-				this.StorePath = mainGameStateStore.StorePath.bind(this.MainGameStateStore);
-				this.UpdateState = mainGameStateStore.UpdateState.bind(this.MainGameStateStore);
-				this.PathCreationCallback = pathCreationCallbackFn;
-				this.GetGameStateCallback = getGameStateFn;
-			}
-
-			async PrepareStore() {
-				if (this.PathCreationCallback) {
-					const paths = await this.GetAllPaths();
-					//loading paths from indexeddb
-					for (const idb_pa of paths) {
-						const pa = await this.PathCreationCallback(idb_pa.PointsAsString, idb_pa.Color, idb_pa.iId);
-						this.store.push(pa);
-					}
-				}
-				return true;
-			}
-
-			async BeginBulkStorage() {
-				await this.MainGameStateStore.BeginBulkStorage([this.MainGameStateStore.DB_POINT_STORE, this.MainGameStateStore.DB_PATH_STORE], 'readwrite');
-			}
-
-			async EndBulkStorage() {
-				await this.MainGameStateStore.EndBulkStorage([this.MainGameStateStore.DB_POINT_STORE, this.MainGameStateStore.DB_PATH_STORE]);
-			}
-
-			async push(val) {
-				const id_key = val.GetID();
-				const idb_path = {
-					iId: id_key,
-					Color: val.GetFillColor(),
-					PointsAsString: val.GetPointsString()
-				};
-
-				await this.StorePath(id_key, idb_path);
-
-				if (this.UpdateState) {
-					const game_state = this.GetGameStateCallback();
-					if (game_state.bPointsAndPathsLoaded === true)
-						await this.UpdateState(game_state.iGameID, game_state);
-				}
-
-				return this.store.push(val);
-			}
-
-			async all() {
-				let values = this.store;
-				if (values)
-					return values;
-				values = await this.GetAllPaths();
-				return values;
-			}
-		};
-		/////////inner class definitions end/////////
-
-		if (useIndexedDb === true) {
-			this.DB_NAME = 'InkballGame';
-			this.DB_POINT_STORE = 'points';
-			this.DB_PATH_STORE = 'paths';
-			this.DB_STATE_STORE = 'state';
-
-			// Use a long long for this value (don't use a float)
-			this.DB_VERSION = parseInt(version.split('.').reduce((acc, val) => {
-				val = parseInt(val);
-				return acc * 10 + (isNaN(val) ? 0 : val);
-			}, 0)) - 1010/*initial module versioning start number*/ + 4/*initial indexDB start number*/;
-
-			this.g_DB;//main DB object
-
-			this.PointStore = new IDBPointStoreDefinition(this, pointCreationCallbackFn, getGameStateFn);
-			this.PathStore = new IDBPathStoreDefinition(this, pathCreationCallbackFn, getGameStateFn);
-		}
-		else {
-			this.PointStore = new SimplePointStoreDefinition();
-			this.PathStore = new SimplePathStoreDefinition();
-		}
-	}
-
-	GetPointStore() {
-		return this.PointStore;
-	}
-
-	GetPathStore() {
-		return this.PathStore;
-	}
-
-	async OpenDb() {
-		LocalLog("OpenDb ...");
-		return new Promise((resolve, reject) => {
-			const req = indexedDB.open(this.DB_NAME, this.DB_VERSION);
-			req.onsuccess = function (evt) {
-				// Equal to: db = req.result;
-				this.g_DB = evt.currentTarget.result;
-
-				LocalLog("OpenDb DONE");
-				resolve(evt.currentTarget.result);
-			}.bind(this);
-			req.onerror = function (evt) {
-				LocalError("OpenDb:", evt.target.errorCode || evt.target.error);
-				reject();
-			};
-			req.onupgradeneeded = function (evt) {
-				LocalLog(`OpenDb.onupgradeneeded(version: ${this.DB_VERSION})`);
-
-				const store_list = Array.from(evt.currentTarget.result.objectStoreNames);
-				if (store_list.includes(this.DB_POINT_STORE))
-					evt.currentTarget.result.deleteObjectStore(this.DB_POINT_STORE);
-				if (store_list.includes(this.DB_PATH_STORE))
-					evt.currentTarget.result.deleteObjectStore(this.DB_PATH_STORE);
-				if (store_list.includes(this.DB_STATE_STORE))
-					evt.currentTarget.result.deleteObjectStore(this.DB_STATE_STORE);
-
-				evt.currentTarget.result.createObjectStore(
-					this.DB_POINT_STORE, { /*keyPath: 'pos',*/ autoIncrement: false });
-				//point_store.createIndex('Status', 'Status', { unique: false });
-				//point_store.createIndex('Color', 'Color', { unique: false });
-
-
-				evt.currentTarget.result.createObjectStore(
-					this.DB_PATH_STORE, { /*keyPath: 'iId',*/ autoIncrement: false });
-				//path_store.createIndex('Color', 'Color', { unique: false });
-
-				evt.currentTarget.result.createObjectStore(
-					this.DB_STATE_STORE, { /*keyPath: 'gameId',*/ autoIncrement: false });
-			}.bind(this);
-		});
-	}
-
-	/**
-	  * @param {string} storeName is a store name
-	  * @param {string} mode either "readonly" or "readwrite"
-	  * @returns {object} store
-	  */
-	GetObjectStore(storeName, mode) {
-		if (this.bulkStores && this.bulkStores.has(storeName))
-			return this.bulkStores.get(storeName);
-
-		const tx = this.g_DB.transaction(storeName, mode);
-		return tx.objectStore(storeName);
-	}
-
-	async ClearObjectStore(storeName) {
-		return new Promise((resolve, reject) => {
-			const store = this.GetObjectStore(storeName, 'readwrite');
-			const req = store.clear();
-			req.onsuccess = function () {
-				resolve();
-			};
-			req.onerror = function (evt) {
-				LocalError("clearObjectStore:", evt.target.errorCode);
-				reject();
-			};
-		});
-	}
-
-	/**
-	  * @param {number} key is calculated inxed of point y * width + x, probably not usefull
-	  */
-	async GetPoint(key) {
-		return new Promise((resolve, reject) => {
-			const store = this.GetObjectStore(this.DB_POINT_STORE, 'readonly');
-			const req = store.get(key);
-			req.onerror = function (event) {
-				reject(new Error('GetPoint => ' + event));
-			};
-			req.onsuccess = function (event) {
-				resolve(event.target.result);
-			};
-		});
-	}
-
-	async GetAllPoints() {
-		return new Promise((resolve, reject) => {
-			const store = this.GetObjectStore(this.DB_POINT_STORE, 'readonly');
-			const bucket = [];
-			const req = store.openCursor();
-			req.onsuccess = function (event) {
-				const cursor = event.target.result;
-				if (cursor) {
-					bucket.push(cursor.value);
-					cursor.continue();
-				}
-				else
-					resolve(bucket);
-			};
-			req.onerror = function (event) {
-				reject(new Error('GetAllPoints => ' + event));
-			};
-		});
-	}
-
-	async GetState(key) {
-		return new Promise((resolve, reject) => {
-			const store = this.GetObjectStore(this.DB_STATE_STORE, 'readonly');
-			const req = store.get(key);
-			req.onerror = function (event) {
-				reject(new Error('GetState => ' + event));
-			};
-			req.onsuccess = function (event) {
-				resolve(event.target.result);
-			};
-		});
-	}
-
-	/**
-	  * @param {number} key is path Id
-	  */
-	async GetPath(key) {
-		return new Promise((resolve, reject) => {
-			const store = this.GetObjectStore(this.DB_PATH_STORE, 'readonly');
-			const req = store.get(key);
-			req.onerror = function (event) {
-				reject(new Error('GetPath => ' + event));
-			};
-			req.onsuccess = function (event) {
-				resolve(event.target.result);
-			};
-		});
-	}
-
-	async GetAllPaths() {
-		return new Promise((resolve, reject) => {
-			const store = this.GetObjectStore(this.DB_PATH_STORE, 'readonly');
-			const bucket = [];
-			const req = store.openCursor();
-			req.onsuccess = function (event) {
-				const cursor = event.target.result;
-				if (cursor) {
-					bucket.push(cursor.value);
-					cursor.continue();
-				}
-				else
-					resolve(bucket);
-			};
-			req.onerror = function (event) {
-				reject(new Error('GetAllPaths => ' + event));
-			};
-		});
-	}
-
-	/**
-	  * @param {number} key is calculated inxed of point y * width + x, probably not usefull
-	  * @param {object} val is serialized, thin circle
-	  */
-	async StorePoint(key, val) {
-		if (this.bulkStores && this.bulkStores.has(this.DB_POINT_STORE)) {
-			if (!this.bulkBuffer)
-				this.bulkBuffer = new Map();
-			this.bulkBuffer.set(key, val);
-			return Promise.resolve();
-		}
-
-		return new Promise((resolve, reject) => {
-			const store = this.GetObjectStore(this.DB_POINT_STORE, 'readwrite');
-			let req;
-			try {
-				req = store.add(val, key);
-			} catch (e) {
-				if (e.name === 'DataCloneError')
-					LocalError("This engine doesn't know how to clone a Blob, use Firefox");
-				throw e;
-			}
-			req.onsuccess = function () {
-				resolve();
-			};
-			req.onerror = function () {
-				LocalError("StorePoint error", this.error);
-				reject();
-			};
-		});
-	}
-
-	async StoreAllPoints(values) {
-		if (!values)
-			values = this.bulkBuffer;
-
-		if (!values || !this.bulkStores)
-			return Promise.reject();
-
-		return new Promise((resolve, reject) => {
-			const store = this.GetObjectStore(this.DB_POINT_STORE, 'readwrite');
-			try {
-				values.forEach(function (v, key) {
-					store.add(v, key);
-				});
-
-				this.bulkBuffer = null;
-				resolve();
-			} catch (e) {
-				LocalError("This engine doesn't know how to clone a Blob, use Firefox");
-				reject(e);
-			}
-		});
-	}
-
-	/**
-	  * @param {number} key is GameID
-	  * @param {object} gameState is InkBallGame state object
-	  */
-	async StoreState(key, gameState) {
-		return new Promise((resolve, reject) => {
-			const store = this.GetObjectStore(this.DB_STATE_STORE, 'readwrite');
-			let req;
-			try {
-				req = store.add(gameState, key);
-			} catch (e) {
-				if (e.name === 'DataCloneError')
-					LocalError("This engine doesn't know how to clone a Blob, use Firefox");
-				throw e;
-			}
-			req.onsuccess = function () {
-				resolve();
-			};
-			req.onerror = function () {
-				LocalError("StoreState error", this.error);
-				reject();
-			};
-		});
-	}
-
-	async UpdateState(key, gameState) {
-		return new Promise((resolve, reject) => {
-			const store = this.GetObjectStore(this.DB_STATE_STORE, 'readwrite');
-			let req;
-			try {
-				req = store.put(gameState, key);
-			} catch (e) {
-				if (e.name === 'DataCloneError')
-					LocalError("This engine doesn't know how to clone a Blob, use Firefox");
-				throw e;
-			}
-			req.onsuccess = function () {
-				resolve();
-			};
-			req.onerror = function () {
-				LocalError("UpdateState error", this.error);
-				reject();
-			};
-		});
-	}
-
-	/**
-	  * @param {number} key is path Id
-	  * @param {object} val is serialized thin path
-	  */
-	async StorePath(key, val) {
-		return new Promise((resolve, reject) => {
-			const store = this.GetObjectStore(this.DB_PATH_STORE, 'readwrite');
-			let req;
-			try {
-				req = store.add(val, key);
-			} catch (e) {
-				if (e.name === 'DataCloneError')
-					LocalError("This engine doesn't know how to clone a Blob, use Firefox");
-				throw e;
-			}
-			req.onsuccess = function () {
-				resolve();
-			};
-			req.onerror = function () {
-				LocalError("StorePath error", this.error);
-				reject();
-			};
-		});
-	}
-
-	async PrepareStore() {
-		//detecting if we have IndexedDb advanced store (only checking point-store); otherwise, there is no point in going further
-		if (!this.PointStore.GetAllPoints) return false;
-
-		if (!this.g_DB)
-			await this.OpenDb();
-		else
-			return false;//all initiated, just exit
-
-		const game_state = this.PointStore.GetGameStateCallback();
-		const idb_state = await this.GetState(game_state.iGameID);
-		if (!idb_state) {
-			//no state entry in db
-			await Promise.all([this.ClearObjectStore(this.DB_POINT_STORE),
-			this.ClearObjectStore(this.DB_PATH_STORE),
-			this.ClearObjectStore(this.DB_STATE_STORE)]);
-
-			await this.StoreState(game_state.iGameID, game_state);
-
-			return false;
-		}
-		else {
-			//Verify date of last move and decide whether to need pull points from signalR
-			if (idb_state.sLastMoveGameTimeStamp !== game_state.sLastMoveGameTimeStamp) {
-
-				await Promise.all([this.ClearObjectStore(this.DB_POINT_STORE),
-				this.ClearObjectStore(this.DB_PATH_STORE),
-				this.ClearObjectStore(this.DB_STATE_STORE)]);
-
-				return false;
-			}
-			else if (game_state.bPointsAndPathsLoaded === false) {
-				//db entry ok and ready for read
-				try {
-					await this.BeginBulkStorage([this.DB_POINT_STORE, this.DB_PATH_STORE], 'readonly');
-
-					if ((await this.PointStore.PrepareStore()) !== true || (await this.PathStore.PrepareStore()) !== true) {
-
-						await Promise.all([this.ClearObjectStore(this.DB_POINT_STORE),
-						this.ClearObjectStore(this.DB_PATH_STORE),
-						this.ClearObjectStore(this.DB_STATE_STORE)]);
-
-						return false;
-					}
-
-					return true;
-				} finally {
-					await this.EndBulkStorage([this.DB_POINT_STORE, this.DB_PATH_STORE]);
-				}
-			}
-		}
-	}
-
-	async BeginBulkStorage(storeName, mode) {
-		if (!this.bulkStores)
-			this.bulkStores = new Map();
-
-		const key = storeName;
-		if (!this.bulkStores.has(key)) {
-			const tx = this.g_DB.transaction(storeName, mode);
-			if (Array.isArray(storeName)) {
-				this.bulkStores.set(key[0], tx.objectStore(storeName[0]));
-				this.bulkStores.set(key[1], tx.objectStore(storeName[1]));
-			}
-			else
-				this.bulkStores.set(key, tx.objectStore(storeName));
-		}
-	}
-
-	async EndBulkStorage(storeName) {
-		if (this.bulkStores) {
-			if (Array.isArray(storeName)) {
-				this.bulkStores.delete(storeName[0]);
-				this.bulkStores.delete(storeName[1]);
-			}
-			else
-				this.bulkStores.delete(storeName);
-
-			if (this.bulkStores.size <= 0)
-				this.bulkStores = null;
-		}
-	}
-}
-//////////IndexedDB points and path stores end//////////
-
 /**
  * Loads modules dynamically
  * don't break webpack logic here! https://webpack.js.org/guides/code-splitting/
@@ -961,7 +337,7 @@ async function importAllModulesAsync(gameOptions) {
 		SVG = await import(/* webpackChunkName: "svgvml" */'./svgvml.js');
 
 	if (gameOptions.iOtherPlayerID === -1) {
-		concavemanBundle = await import(/* webpackChunkName: "concavemanDeps" */'./concavemanBundle.js');
+		AIBundle = await import(/* webpackChunkName: "AIDeps" */'./AIBundle.js');
 	}
 }
 
@@ -989,6 +365,24 @@ function RandomColor() {
 async function Sleep(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms));
 }
+
+Function.prototype.callAsWorker = function (context, args) {
+	return new Promise((resolve, reject) => {
+		const code = `
+${context ? [...context].reduce((acc, cur) => acc + cur.toString() + '\n') : ''}
+
+self.onmessage = async function (e) { 
+	const result = await ( ${this.toString()}.call(null, e.data) );
+
+	self.postMessage( result ); 
+}`,
+			blob = new Blob([code], { type: "text/javascript" }),
+			worker = new Worker(window.URL.createObjectURL(blob));
+		worker.onmessage = e => (resolve(e.data), worker.terminate(), window.URL.revokeObjectURL(blob));
+		worker.onerror = e => (reject(e.message), worker.terminate(), window.URL.revokeObjectURL(blob));
+		worker.postMessage(args);
+	});
+};
 
 class InkBallGame {
 
@@ -1065,6 +459,7 @@ class InkBallGame {
 		this.m_bIsPlayerActive = bIsPlayerActive;
 		this.m_sDotColor = this.m_bIsPlayingWithRed ? this.COLOR_RED : this.COLOR_BLUE;
 		this.m_PointRadius = 4;
+		this.SvgVml = null;
 		this.m_Line = null;
 		this.m_Lines = null;
 		this.m_Points = null;
@@ -1533,7 +928,7 @@ class InkBallGame {
 		const x = iX * this.m_iGridSizeX;
 		const y = iY * this.m_iGridSizeY;
 
-		const oval = SVG.CreateOval(this.m_PointRadius, 'true');
+		const oval = this.SvgVml.CreateOval(this.m_PointRadius);
 		oval.move(x, y, this.m_PointRadius);
 
 		let color;
@@ -1589,6 +984,7 @@ class InkBallGame {
 			sLastMoveGameTimeStamp: this.m_sLastMoveGameTimeStamp,
 			bPointsAndPathsLoaded: this.m_bPointsAndPathsLoaded,
 			iGridWidth: this.m_iGridWidth,
+			iGridHeight: this.m_iGridHeight,
 			iGridSizeX: this.m_iGridSizeX,
 			iGridSizeY: this.m_iGridSizeY
 		};
@@ -1603,13 +999,10 @@ class InkBallGame {
 	 * @returns {object} created oval/cirle
 	 */
 	CreateScreenPointFromIndexedDb(iX, iY, iStatus, sColor) {
-		//if (await this.m_Points.has(iY * this.m_iGridWidth + iX))
-		//	return;
-
 		const x = iX * this.m_iGridSizeX;
 		const y = iY * this.m_iGridSizeY;
 
-		const oval = SVG.CreateOval(this.m_PointRadius, 'true');
+		const oval = this.SvgVml.CreateOval(this.m_PointRadius);
 		oval.move(x, y, this.m_PointRadius);
 
 		let color;
@@ -1654,8 +1047,6 @@ class InkBallGame {
 
 		oval.SetFillColor(color);
 		oval.SetStrokeColor(color);
-
-		//await this.m_Points.set(iY * this.m_iGridWidth + iX, oval);
 
 		return oval;
 	}
@@ -1714,16 +1105,13 @@ class InkBallGame {
 		x *= this.m_iGridSizeX; y *= this.m_iGridSizeY;
 		sPathPoints += `${sDelimiter}${x},${y}`;
 
-		const line = SVG.CreatePolyline(3, sPathPoints,
+		const line = this.SvgVml.CreatePolyline(3, sPathPoints,
 			(bBelong2ThisPlayer ? this.m_sDotColor : (bIsRed ? this.COLOR_BLUE : this.COLOR_RED)));
 		line.SetID(iPathId);
 		await this.m_Lines.push(line);
 	}
 
 	async CreateScreenPathFromIndexedDb(packed, sColor, iPathId) {
-		//const bIsRed = this.m_bIsPlayingWithRed;
-		//const bBelong2ThisPlayer = iPlayerId === this.g_iPlayerID;
-
 		const sPoints = packed.split(" ");
 		let sDelimiter = "", sPathPoints = "", p = null, x, y,
 			status = StatusEnum.POINT_STARTING;
@@ -1736,11 +1124,7 @@ class InkBallGame {
 				p.SetStatus(status);
 				status = StatusEnum.POINT_IN_PATH;
 			}
-			else {
-				//debugger;
-			}
 
-			//x *= this.m_iGridSizeX; y *= this.m_iGridSizeY;
 			sPathPoints += `${sDelimiter}${x},${y}`;
 			sDelimiter = " ";
 		}
@@ -1751,19 +1135,11 @@ class InkBallGame {
 		if (p !== null && p !== undefined) {
 			p.SetStatus(status);
 		}
-		else {
-			//debugger;
-		}
 
-		//x *= this.m_iGridSizeX; y *= this.m_iGridSizeY;
 		sPathPoints += `${sDelimiter}${x},${y}`;
 
-		const line = SVG.CreatePolyline(3, sPathPoints,
-			//(bBelong2ThisPlayer ? this.m_sDotColor : (bIsRed ? this.COLOR_BLUE : this.COLOR_RED))
-			sColor
-		);
+		const line = this.SvgVml.CreatePolyline(3, sPathPoints, sColor);
 		line.SetID(iPathId);
-		//this.m_Lines.push(line);
 
 		return line;
 	}
@@ -1865,8 +1241,7 @@ class InkBallGame {
 		let sPathPoints = "", sOwnedPoints = "", sDelimiter = "", ownedPoints = [];
 
 		//make the test!
-		const values = await this.m_Points.values();//TODO: async for
-		for (const pt of values) {
+		for (const pt of await this.m_Points.values()) {
 			if (pt !== undefined && pt.GetFillColor() === sColor &&
 				([StatusEnum.POINT_FREE_BLUE, StatusEnum.POINT_FREE_RED].includes(pt.GetStatus()))) {
 				let { x, y } = pt.GetPosition();
@@ -2369,7 +1744,7 @@ class InkBallGame {
 							p0.GetFillColor() === this.m_sDotColor && p1.GetFillColor() === this.m_sDotColor) {
 							const fromx = this.m_iLastX * this.m_iGridSizeX;
 							const fromy = this.m_iLastY * this.m_iGridSizeY;
-							this.m_Line = SVG.CreatePolyline(6, fromx + "," + fromy + " " + tox + "," + toy, this.DRAWING_PATH_COLOR);
+							this.m_Line = this.SvgVml.CreatePolyline(6, fromx + "," + fromy + " " + tox + "," + toy, this.DRAWING_PATH_COLOR);
 							this.m_CancelPath.disabled = '';
 							p0.SetStatus(StatusEnum.POINT_STARTING, true);
 							p1.SetStatus(StatusEnum.POINT_IN_PATH, true);
@@ -2493,7 +1868,7 @@ class InkBallGame {
 						const fromy = this.m_iLastY * this.m_iGridSizeY;
 						const tox = x * this.m_iGridSizeX;
 						const toy = y * this.m_iGridSizeY;
-						this.m_Line = SVG.CreatePolyline(6, fromx + "," + fromy + " " + tox + "," + toy, this.DRAWING_PATH_COLOR);
+						this.m_Line = this.SvgVml.CreatePolyline(6, fromx + "," + fromy + " " + tox + "," + toy, this.DRAWING_PATH_COLOR);
 						this.m_CancelPath.disabled = '';
 						p0.SetStatus(StatusEnum.POINT_STARTING, true);
 						p1.SetStatus(StatusEnum.POINT_IN_PATH, true);
@@ -2555,7 +1930,7 @@ class InkBallGame {
 						//debugger;
 					}
 				}
-				SVG.RemovePolyline(this.m_Line);
+				this.SvgVml.RemovePolyline(this.m_Line);
 				this.m_Line = null;
 			}
 			this.m_iLastX = this.m_iLastY = -1;
@@ -2613,8 +1988,8 @@ class InkBallGame {
 		}.bind(this));
 
 		if (vertices && vertices.length > 0) {
-			const convex_hull = concavemanBundle.concaveman(vertices, 2.0, 0.0);
-			SVG.CreatePolyline(6, convex_hull.map(function (fnd) {
+			const convex_hull = AIBundle.concaveman(vertices, 2.0, 0.0);
+			this.SvgVml.CreatePolyline(6, convex_hull.map(function (fnd) {
 				return parseInt(fnd[0]) * this.m_iGridSizeX + ',' + parseInt(fnd[1]) * this.m_iGridSizeY;
 			}.bind(this)).join(' '), 'green');
 			LocalLog(`convex_hull = ${convex_hull}`);
@@ -2623,7 +1998,7 @@ class InkBallGame {
 			const mapped_verts = convex_hull.map(function (pt) {
 				return { x: pt[0], y: pt[1] };
 			}.bind(this));
-			const cw_sorted_verts = SVG.SortPointsClockwise(mapped_verts);
+			const cw_sorted_verts = SVG.sortPointsClockwise(mapped_verts);
 
 			const rand_color = RandomColor();
 			for (const vert of cw_sorted_verts) {
@@ -2660,7 +2035,7 @@ class InkBallGame {
 	async OnTestGroupPoints(event) {
 		event.preventDefault();
 		//LocalLog('OnTestGroupPoints');
-		SVG.CreatePolyline(6, (await this.GroupPointsRecurse([], await this.m_Points.get(9 * this.m_iGridWidth + 26))).map(function (fnd) {
+		this.SvgVml.CreatePolyline(6, (await this.GroupPointsRecurse([], await this.m_Points.get(9 * this.m_iGridWidth + 26))).map(function (fnd) {
 			const pt = fnd.GetPosition();
 			return pt.x + ',' + pt.y;
 		}).join(' '), 'green');
@@ -2672,8 +2047,7 @@ class InkBallGame {
 
 		const sHumanColor = this.COLOR_RED/*, sCPUColor = this.COLOR_BLUE*/;
 		const rand_color = RandomColor();
-		const values = await this.m_Points.values();//TODO: async for
-		for (const pt of values) {
+		for (const pt of await this.m_Points.values()) {
 			if (pt !== undefined && pt.GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.GetStatus()) {
 				const { x: view_x, y: view_y } = pt.GetPosition();
 				const x = view_x / this.m_iGridSizeX, y = view_y / this.m_iGridSizeY;
@@ -2706,6 +2080,145 @@ class InkBallGame {
 				//}
 			}
 		}
+	}
+
+	async OnTestWorkerify(event) {
+		event.preventDefault();
+
+		const addNums = async function (params) {
+			params.state.bPointsAndPathsLoaded = false;
+
+			// eslint-disable-next-line no-undef
+			const svgVml = new SvgVml();
+			svgVml.CreateSVGVML(null, null, null, true);
+
+			let lines, points;
+			// eslint-disable-next-line no-undef
+			const stateStore = new GameStateStore(true,
+				function CreateScreenPointFromIndexedDb(iX, iY, iStatus, sColor) {
+					const x = iX * params.state.iGridSizeX;
+					const y = iY * params.state.iGridSizeY;
+
+					const oval = svgVml.CreateOval(3);
+					oval.move(x, y, 3);
+
+					let color;
+					switch (iStatus) {
+						case StatusEnum.POINT_FREE_RED:
+							color = 'red';
+							oval.SetStatus(iStatus/*StatusEnum.POINT_FREE*/);
+							break;
+						case StatusEnum.POINT_FREE_BLUE:
+							color = 'blue';
+							oval.SetStatus(iStatus/*StatusEnum.POINT_FREE*/);
+							break;
+						case StatusEnum.POINT_FREE:
+							color = 'red';
+							oval.SetStatus(iStatus/*StatusEnum.POINT_FREE*/);
+							//console.warn('TODO: generic FREE point, really? change it!');
+							break;
+						case StatusEnum.POINT_STARTING:
+							color = 'red';
+							oval.SetStatus(iStatus);
+							break;
+						case StatusEnum.POINT_IN_PATH:
+							//if (this.g_iPlayerID === iPlayerId)//bPlayingWithRed
+							//	color = this.m_bIsPlayingWithRed === true ? this.COLOR_RED : this.COLOR_BLUE;
+							//else
+							//	color = this.m_bIsPlayingWithRed === true ? this.COLOR_BLUE : this.COLOR_RED;
+							color = sColor;
+							oval.SetStatus(iStatus);
+							break;
+						case StatusEnum.POINT_OWNED_BY_RED:
+							color = '#DC143C';
+							oval.SetStatus(iStatus);
+							break;
+						case StatusEnum.POINT_OWNED_BY_BLUE:
+							color = '#8A2BE2';
+							oval.SetStatus(iStatus);
+							break;
+						default:
+							alert('bad point');
+							break;
+					}
+
+					oval.SetFillColor(color);
+					oval.SetStrokeColor(color);
+
+					return oval;
+				},
+				async function CreateScreenPathFromIndexedDb(packed, sColor, iPathId) {
+					const sPoints = packed.split(" ");
+					let sDelimiter = "", sPathPoints = "", p = null, x, y,
+						status = StatusEnum.POINT_STARTING;
+					for (const packed of sPoints) {
+						p = packed.split(",");
+						x = parseInt(p[0]); y = parseInt(p[1]);
+
+						p = await points.get(y * params.state.iGridWidth + x);
+						if (p !== null && p !== undefined) {
+							p.SetStatus(status);
+							status = StatusEnum.POINT_IN_PATH;
+						}
+
+						sPathPoints += `${sDelimiter}${x},${y}`;
+						sDelimiter = " ";
+					}
+					p = sPoints[0].split(",");
+					x = parseInt(p[0]); y = parseInt(p[1]);
+
+					p = await points.get(y * params.state.iGridWidth + x);
+					if (p !== null && p !== undefined) {
+						p.SetStatus(status);
+					}
+
+					sPathPoints += `${sDelimiter}${x},${y}`;
+
+					const line = svgVml.CreatePolyline(3, sPathPoints, sColor);
+					line.SetID(iPathId);
+
+					return line;
+				},
+				function GetGameStateForIndexedDb() {
+					return params.state;
+				},
+				LocalLog, LocalError
+			);
+			lines = stateStore.GetPathStore();
+			points = stateStore.GetPointStore();
+			await stateStore.PrepareStore();
+			LocalLog(`lines.count = ${await lines.count()}, points.count = ${await points.count()}`);
+
+			// eslint-disable-next-line no-undef
+			const ai = new h(params.state.iGridWidth, params.state.iGridHeight, params.state.iGridSizeX, params.state.iGridSizeY,
+				points, StatusEnum.POINT_STARTING, StatusEnum.POINT_IN_PATH);
+			const graph = await ai.BuildGraph({ freePointStatus: StatusEnum.POINT_FREE_BLUE, fillCol: 'blue', visuals: false });
+			LocalLog(graph);
+
+			return "blah";
+		};
+		// Let the worker execute the above function, with the specified arguments and context
+		const result = await addNums.callAsWorker(
+			//context
+			[LocalLog, LocalError, `const StatusEnum = Object.freeze({
+	POINT_FREE_RED: -3,
+	POINT_FREE_BLUE: -2,
+	POINT_FREE: -1,
+	POINT_STARTING: 0,
+	POINT_IN_PATH: 1,
+	POINT_OWNED_BY_RED: 2,
+	POINT_OWNED_BY_BLUE: 3
+});`,
+				//SVG.CreateOval, SVG.CreatePolyline, SVG.RemovePolyline, SVG.CreateSVGVML, SVG.CreateLine, SVG.hasDuplicates, SVG.sortPointsClockwise,
+				SVG.SvgVml, SVG.GameStateStore,
+				AIBundle.GraphAI
+			],
+			//parameters
+			{
+				state: this.GetGameStateForIndexedDb()
+			}
+		);
+		LocalLog('result: ' + result);
 	}
 
 	/**
@@ -2785,23 +2298,26 @@ class InkBallGame {
 		this.lastCycle = [];
 		///////CpuGame variables end//////
 
-		SVG.CreateSVGVML(this.m_Screen, svg_width_x_height, svg_width_x_height, true);
+		this.SvgVml = new SVG.SvgVml();
+		if (this.SvgVml.CreateSVGVML(this.m_Screen, svg_width_x_height, svg_width_x_height, true) === null)
+			alert('SVG is not supported!');
 
 		this.DisableSelection(this.m_Screen);
 
-		const stateStore = new GameStateStore(useIndexedDbStore,
+		const stateStore = new SVG.GameStateStore(useIndexedDbStore,
 			this.CreateScreenPointFromIndexedDb.bind(this),
 			this.CreateScreenPathFromIndexedDb.bind(this),
 			this.GetGameStateForIndexedDb.bind(this),
+			LocalLog, LocalError,
 			version);
 		this.m_Lines = stateStore.GetPathStore();
 		this.m_Points = stateStore.GetPointStore();
-		this.m_bPointsAndPathsLoaded = await stateStore.PrepareStore(this);
+		this.m_bPointsAndPathsLoaded = await stateStore.PrepareStore();
 
 		if (this.m_bViewOnly === false) {
 
 			if (this.m_MouseCursorOval === null) {
-				this.m_MouseCursorOval = SVG.CreateOval(this.m_PointRadius, 'true');
+				this.m_MouseCursorOval = this.SvgVml.CreateOval(this.m_PointRadius);
 				this.m_MouseCursorOval.SetFillColor(this.m_sDotColor);
 				this.m_MouseCursorOval.SetStrokeColor(this.m_sDotColor);
 				this.m_MouseCursorOval.SetZIndex(-1);
@@ -2831,6 +2347,8 @@ class InkBallGame {
 					document.querySelector(ddlTestActions[i++]).onclick = this.OnTestGroupPoints.bind(this);
 				if (ddlTestActions.length > i)
 					document.querySelector(ddlTestActions[i++]).onclick = this.OnTestFindFullSurroundedPoints.bind(this);
+				if (ddlTestActions.length > i)
+					document.querySelector(ddlTestActions[i++]).onclick = this.OnTestWorkerify.bind(this);
 
 				//disable or even delete chat functionality, coz we're not going to chat with CPU bot
 				const chatSection = document.getElementById('chatSection');
@@ -2906,8 +2424,7 @@ class InkBallGame {
 		let centroidX = 0, centroidY = 0, count = 0, x, y;
 		const sHumanColor = this.COLOR_RED;
 
-		const values = await this.m_Points.values();//TODO: async for
-		for (const pt of values) {
+		for (const pt of await this.m_Points.values()) {
 			if (pt !== undefined && pt.GetFillColor() === sHumanColor && pt.GetStatus() === StatusEnum.POINT_FREE_RED) {
 				const pos = pt.GetPosition();
 				x = pos.x; y = pos.y;
@@ -2954,12 +2471,8 @@ class InkBallGame {
 		const isPointOKForPath = function (freePointStatusArr, pt) {
 			const status = pt.GetStatus();
 
-			if (freePointStatusArr.includes(status) &&
-				(/*(status === StatusEnum.POINT_STARTING || status === StatusEnum.POINT_IN_PATH) && */pt.GetFillColor() === fillColor)
-				//&& graph_points.includes(pt) === false
-			) {
+			if (freePointStatusArr.includes(status) && pt.GetFillColor() === fillColor)
 				return true;
-			}
 			return false;
 		};
 
@@ -2977,7 +2490,7 @@ class InkBallGame {
 							to: next
 						};
 						if (presentVisually === true) {
-							const line = SVG.CreateLine(3, 'rgba(0, 255, 0, 0.3)');
+							const line = this.SvgVml.CreateLine(3, 'rgba(0, 255, 0, 0.3)');
 							line.move(view_x, view_y, next_pos.x, next_pos.y);
 							edge.line = line;
 						}
@@ -3003,8 +2516,7 @@ class InkBallGame {
 			}
 		}.bind(this);
 
-		const values = await this.m_Points.values();//TODO: async for
-		for (const point of values) {
+		for (const point of await this.m_Points.values()) {
 			if (point && isPointOKForPath([freePointStatus, StatusEnum.POINT_STARTING, StatusEnum.POINT_IN_PATH], point) === true) {
 				const { x: view_x, y: view_y } = point.GetPosition();
 				const x = view_x / this.m_iGridSizeX, y = view_y / this.m_iGridSizeY;
@@ -3170,8 +2682,7 @@ class InkBallGame {
 			//gather free human player points that could be intercepted.
 			const free_human_player_points = [];
 			const sHumanColor = this.COLOR_RED;
-			const values = await this.m_Points.values();//TODO: async for
-			for (const pt of values) {
+			for (const pt of await this.m_Points.values()) {
 				if (pt !== undefined && pt.GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.GetStatus()) {
 					const { x: view_x, y: view_y } = pt.GetPosition();
 					const x = view_x / this.m_iGridSizeX, y = view_y / this.m_iGridSizeY;
@@ -3201,9 +2712,9 @@ class InkBallGame {
 						return { x: pt.x / this.m_iGridSizeX, y: pt.y / this.m_iGridSizeY };
 					}.bind(this));
 					//sort clockwise (https://stackoverflow.com/questions/45660743/sort-points-in-counter-clockwise-in-javascript)
-					const cw_sorted_verts = SVG.SortPointsClockwise(mapped_verts);
+					const cw_sorted_verts = SVG.sortPointsClockwise(mapped_verts);
 
-					//display which cycle wea are dealing with
+					//display which cycle we are dealing with
 					for (const vert of cw_sorted_verts) {
 						const { x, y } = vert;
 						const pt = document.querySelector(`svg > circle[cx="${x * this.m_iGridSizeX}"][cy="${y * this.m_iGridSizeY}"]`);
@@ -3425,7 +2936,7 @@ window.addEventListener('load', async function () {
 	);
 	await game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw',
 		'#messageInput', '#messagesList', '#sendButton', sLastMoveTimeStampUtcIso, gameOptions.PointsAsJavaScriptArray === null, version,
-		['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints', '#TestFindFullSurroundedPoints']);
+		['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints', '#TestFindFullSurroundedPoints', '#TestWorkerify']);
 
 	if (gameOptions.PointsAsJavaScriptArray !== null) {
 		await game.StartSignalRConnection(false);

@@ -113,7 +113,7 @@ namespace IntegrationTests
 		[InlineData("js/inkballBundle.js")]
 		[InlineData("js/svgvml.js")]
 		[InlineData("js/svgvmlBundle.js")]
-		[InlineData("js/concavemanBundle.js")]
+		[InlineData("js/AIBundle.js")]
 		[InlineData("css/inkball.css")]
 		[InlineData("img/homescreen.webp")]
 		[InlineData("img/homescreen.jpg")]

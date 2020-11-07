@@ -43,7 +43,7 @@
 /******/
 /******/ 	// script path function
 /******/ 	function jsonpScriptSrc(chunkId) {
-/******/ 		return __webpack_require__.p + "" + ({"0":"concavemanDeps","2":"svgvml","3":"svgvmlMin"}[chunkId]||chunkId) + "Bundle.js"
+/******/ 		return __webpack_require__.p + "" + ({"0":"AIDeps","2":"svgvml","3":"svgvmlMin"}[chunkId]||chunkId) + "Bundle.js"
 /******/ 	}
 /******/
 /******/ 	// The require function
@@ -209,9 +209,17 @@
 /*global signalR, gameOptions*/
 
 
-function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function (_e) { function e(_x27) { return _e.apply(this, arguments); } e.toString = function () { return _e.toString(); }; return e; }(function (e) { throw e; }), f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function (_e2) { function e(_x28) { return _e2.apply(this, arguments); } e.toString = function () { return _e2.toString(); }; return e; }(function (e) { didErr = true; err = e; }), f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
+function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
+
+function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
+
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 
 function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && Symbol.iterator in Object(iter)) return Array.from(iter); }
+
+function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
 
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
 
@@ -241,7 +249,7 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-var SVG, concavemanBundle;
+var SVG, AIBundle;
 /******** funcs-n-classes ********/
 
 var StatusEnum = Object.freeze({
@@ -748,1721 +756,7 @@ var CountdownTimer = /*#__PURE__*/function () {
   }]);
 
   return CountdownTimer;
-}(); //////////IndexedDB points and path stores start//////////
-
-
-var GameStateStore = /*#__PURE__*/function () {
-  function GameStateStore(useIndexedDb, pointCreationCallbackFn, pathCreationCallbackFn, getGameStateFn) {
-    var version = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : "";
-
-    _classCallCheck(this, GameStateStore);
-
-    if (useIndexedDb) {
-      if (!('indexedDB' in window)) {
-        LocalLog("This browser doesn't support IndexedDB");
-        useIndexedDb = false;
-      } else useIndexedDb = true;
-    } else useIndexedDb = false; /////////inner class definitions start/////////
-    /////////https://stackoverflow.com/questions/28784375/nested-es6-classes/////////
-
-
-    var SimplePointStoreDefinition = /*#__PURE__*/function () {
-      function SimplePointStore() {
-        _classCallCheck(this, SimplePointStore);
-
-        this.store = new Map();
-      }
-
-      _createClass(SimplePointStore, [{
-        key: "PrepareStore",
-        value: function () {
-          var _PrepareStore = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
-            return regeneratorRuntime.wrap(function _callee$(_context) {
-              while (1) {
-                switch (_context.prev = _context.next) {
-                  case 0:
-                    return _context.abrupt("return", true);
-
-                  case 1:
-                  case "end":
-                    return _context.stop();
-                }
-              }
-            }, _callee);
-          }));
-
-          function PrepareStore() {
-            return _PrepareStore.apply(this, arguments);
-          }
-
-          return PrepareStore;
-        }()
-      }, {
-        key: "BeginBulkStorage",
-        value: function () {
-          var _BeginBulkStorage = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2() {
-            return regeneratorRuntime.wrap(function _callee2$(_context2) {
-              while (1) {
-                switch (_context2.prev = _context2.next) {
-                  case 0:
-                  case "end":
-                    return _context2.stop();
-                }
-              }
-            }, _callee2);
-          }));
-
-          function BeginBulkStorage() {
-            return _BeginBulkStorage.apply(this, arguments);
-          }
-
-          return BeginBulkStorage;
-        }()
-      }, {
-        key: "EndBulkStorage",
-        value: function () {
-          var _EndBulkStorage = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3() {
-            return regeneratorRuntime.wrap(function _callee3$(_context3) {
-              while (1) {
-                switch (_context3.prev = _context3.next) {
-                  case 0:
-                  case "end":
-                    return _context3.stop();
-                }
-              }
-            }, _callee3);
-          }));
-
-          function EndBulkStorage() {
-            return _EndBulkStorage.apply(this, arguments);
-          }
-
-          return EndBulkStorage;
-        }()
-      }, {
-        key: "has",
-        value: function () {
-          var _has = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(key) {
-            return regeneratorRuntime.wrap(function _callee4$(_context4) {
-              while (1) {
-                switch (_context4.prev = _context4.next) {
-                  case 0:
-                    return _context4.abrupt("return", this.store.has(key));
-
-                  case 1:
-                  case "end":
-                    return _context4.stop();
-                }
-              }
-            }, _callee4, this);
-          }));
-
-          function has(_x) {
-            return _has.apply(this, arguments);
-          }
-
-          return has;
-        }()
-      }, {
-        key: "set",
-        value: function () {
-          var _set = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(key, val) {
-            return regeneratorRuntime.wrap(function _callee5$(_context5) {
-              while (1) {
-                switch (_context5.prev = _context5.next) {
-                  case 0:
-                    return _context5.abrupt("return", this.store.set(key, val));
-
-                  case 1:
-                  case "end":
-                    return _context5.stop();
-                }
-              }
-            }, _callee5, this);
-          }));
-
-          function set(_x2, _x3) {
-            return _set.apply(this, arguments);
-          }
-
-          return set;
-        }()
-      }, {
-        key: "get",
-        value: function () {
-          var _get = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(key) {
-            return regeneratorRuntime.wrap(function _callee6$(_context6) {
-              while (1) {
-                switch (_context6.prev = _context6.next) {
-                  case 0:
-                    return _context6.abrupt("return", this.store.get(key));
-
-                  case 1:
-                  case "end":
-                    return _context6.stop();
-                }
-              }
-            }, _callee6, this);
-          }));
-
-          function get(_x4) {
-            return _get.apply(this, arguments);
-          }
-
-          return get;
-        }()
-      }, {
-        key: "values",
-        value: function () {
-          var _values = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7() {
-            return regeneratorRuntime.wrap(function _callee7$(_context7) {
-              while (1) {
-                switch (_context7.prev = _context7.next) {
-                  case 0:
-                    return _context7.abrupt("return", this.store.values());
-
-                  case 1:
-                  case "end":
-                    return _context7.stop();
-                }
-              }
-            }, _callee7, this);
-          }));
-
-          function values() {
-            return _values.apply(this, arguments);
-          }
-
-          return values;
-        }()
-      }]);
-
-      return SimplePointStore;
-    }();
-
-    var SimplePathStoreDefinition = /*#__PURE__*/function () {
-      function SimplePathStore() {
-        _classCallCheck(this, SimplePathStore);
-
-        this.store = [];
-      }
-
-      _createClass(SimplePathStore, [{
-        key: "PrepareStore",
-        value: function () {
-          var _PrepareStore2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8() {
-            return regeneratorRuntime.wrap(function _callee8$(_context8) {
-              while (1) {
-                switch (_context8.prev = _context8.next) {
-                  case 0:
-                    return _context8.abrupt("return", true);
-
-                  case 1:
-                  case "end":
-                    return _context8.stop();
-                }
-              }
-            }, _callee8);
-          }));
-
-          function PrepareStore() {
-            return _PrepareStore2.apply(this, arguments);
-          }
-
-          return PrepareStore;
-        }()
-      }, {
-        key: "BeginBulkStorage",
-        value: function () {
-          var _BeginBulkStorage2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9() {
-            return regeneratorRuntime.wrap(function _callee9$(_context9) {
-              while (1) {
-                switch (_context9.prev = _context9.next) {
-                  case 0:
-                  case "end":
-                    return _context9.stop();
-                }
-              }
-            }, _callee9);
-          }));
-
-          function BeginBulkStorage() {
-            return _BeginBulkStorage2.apply(this, arguments);
-          }
-
-          return BeginBulkStorage;
-        }()
-      }, {
-        key: "EndBulkStorage",
-        value: function () {
-          var _EndBulkStorage2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10() {
-            return regeneratorRuntime.wrap(function _callee10$(_context10) {
-              while (1) {
-                switch (_context10.prev = _context10.next) {
-                  case 0:
-                  case "end":
-                    return _context10.stop();
-                }
-              }
-            }, _callee10);
-          }));
-
-          function EndBulkStorage() {
-            return _EndBulkStorage2.apply(this, arguments);
-          }
-
-          return EndBulkStorage;
-        }()
-      }, {
-        key: "push",
-        value: function () {
-          var _push = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11(obj) {
-            return regeneratorRuntime.wrap(function _callee11$(_context11) {
-              while (1) {
-                switch (_context11.prev = _context11.next) {
-                  case 0:
-                    return _context11.abrupt("return", this.store.push(obj));
-
-                  case 1:
-                  case "end":
-                    return _context11.stop();
-                }
-              }
-            }, _callee11, this);
-          }));
-
-          function push(_x5) {
-            return _push.apply(this, arguments);
-          }
-
-          return push;
-        }()
-      }, {
-        key: "all",
-        value: function () {
-          var _all = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee12() {
-            return regeneratorRuntime.wrap(function _callee12$(_context12) {
-              while (1) {
-                switch (_context12.prev = _context12.next) {
-                  case 0:
-                    return _context12.abrupt("return", this.store);
-
-                  case 1:
-                  case "end":
-                    return _context12.stop();
-                }
-              }
-            }, _callee12, this);
-          }));
-
-          function all() {
-            return _all.apply(this, arguments);
-          }
-
-          return all;
-        }()
-      }]);
-
-      return SimplePathStore;
-    }();
-
-    var IDBPointStoreDefinition = /*#__PURE__*/function (_SimplePointStoreDefi) {
-      _inherits(IDBPointStore, _SimplePointStoreDefi);
-
-      var _super10 = _createSuper(IDBPointStore);
-
-      function IDBPointStore(mainGameStateStore, pointCreationCallbackFn, getGameStateFn) {
-        var _this9;
-
-        _classCallCheck(this, IDBPointStore);
-
-        _this9 = _super10.call(this);
-        _this9.MainGameStateStore = mainGameStateStore;
-        _this9.GetPoint = mainGameStateStore.GetPoint.bind(_this9.MainGameStateStore);
-        _this9.StorePoint = mainGameStateStore.StorePoint.bind(_this9.MainGameStateStore);
-        _this9.GetAllPoints = mainGameStateStore.GetAllPoints.bind(_this9.MainGameStateStore);
-        _this9.UpdateState = mainGameStateStore.UpdateState.bind(_this9.MainGameStateStore);
-        _this9.PointCreationCallback = pointCreationCallbackFn;
-        _this9.GetGameStateCallback = getGameStateFn;
-        return _this9;
-      }
-
-      _createClass(IDBPointStore, [{
-        key: "PrepareStore",
-        value: function () {
-          var _PrepareStore3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee13() {
-            var points, game_state, _iterator, _step, idb_pt, pt, index;
-
-            return regeneratorRuntime.wrap(function _callee13$(_context13) {
-              while (1) {
-                switch (_context13.prev = _context13.next) {
-                  case 0:
-                    if (!(this.PointCreationCallback && this.GetGameStateCallback)) {
-                      _context13.next = 26;
-                      break;
-                    }
-
-                    _context13.next = 3;
-                    return this.GetAllPoints();
-
-                  case 3:
-                    points = _context13.sent;
-                    game_state = this.GetGameStateCallback(); //loading points from indexeddb
-
-                    _iterator = _createForOfIteratorHelper(points);
-                    _context13.prev = 6;
-
-                    _iterator.s();
-
-                  case 8:
-                    if ((_step = _iterator.n()).done) {
-                      _context13.next = 17;
-                      break;
-                    }
-
-                    idb_pt = _step.value;
-                    _context13.next = 12;
-                    return this.PointCreationCallback(idb_pt.x, idb_pt.y, idb_pt.Status, idb_pt.Color);
-
-                  case 12:
-                    pt = _context13.sent;
-                    index = idb_pt.y * game_state.iGridWidth + idb_pt.x;
-                    this.store.set(index, pt);
-
-                  case 15:
-                    _context13.next = 8;
-                    break;
-
-                  case 17:
-                    _context13.next = 22;
-                    break;
-
-                  case 19:
-                    _context13.prev = 19;
-                    _context13.t0 = _context13["catch"](6);
-
-                    _iterator.e(_context13.t0);
-
-                  case 22:
-                    _context13.prev = 22;
-
-                    _iterator.f();
-
-                    return _context13.finish(22);
-
-                  case 25:
-                    return _context13.abrupt("return", true);
-
-                  case 26:
-                  case "end":
-                    return _context13.stop();
-                }
-              }
-            }, _callee13, this, [[6, 19, 22, 25]]);
-          }));
-
-          function PrepareStore() {
-            return _PrepareStore3.apply(this, arguments);
-          }
-
-          return PrepareStore;
-        }()
-      }, {
-        key: "BeginBulkStorage",
-        value: function () {
-          var _BeginBulkStorage3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee14() {
-            return regeneratorRuntime.wrap(function _callee14$(_context14) {
-              while (1) {
-                switch (_context14.prev = _context14.next) {
-                  case 0:
-                    _context14.next = 2;
-                    return this.MainGameStateStore.BeginBulkStorage(this.MainGameStateStore.DB_POINT_STORE, 'readwrite');
-
-                  case 2:
-                  case "end":
-                    return _context14.stop();
-                }
-              }
-            }, _callee14, this);
-          }));
-
-          function BeginBulkStorage() {
-            return _BeginBulkStorage3.apply(this, arguments);
-          }
-
-          return BeginBulkStorage;
-        }()
-      }, {
-        key: "EndBulkStorage",
-        value: function () {
-          var _EndBulkStorage3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee15() {
-            return regeneratorRuntime.wrap(function _callee15$(_context15) {
-              while (1) {
-                switch (_context15.prev = _context15.next) {
-                  case 0:
-                    _context15.next = 2;
-                    return this.MainGameStateStore.StoreAllPoints();
-
-                  case 2:
-                    _context15.next = 4;
-                    return this.MainGameStateStore.EndBulkStorage(this.MainGameStateStore.DB_POINT_STORE);
-
-                  case 4:
-                  case "end":
-                    return _context15.stop();
-                }
-              }
-            }, _callee15, this);
-          }));
-
-          function EndBulkStorage() {
-            return _EndBulkStorage3.apply(this, arguments);
-          }
-
-          return EndBulkStorage;
-        }()
-      }, {
-        key: "has",
-        value: function () {
-          var _has2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee16(key) {
-            return regeneratorRuntime.wrap(function _callee16$(_context16) {
-              while (1) {
-                switch (_context16.prev = _context16.next) {
-                  case 0:
-                    return _context16.abrupt("return", this.store.has(key));
-
-                  case 1:
-                  case "end":
-                    return _context16.stop();
-                }
-              }
-            }, _callee16, this);
-          }));
-
-          function has(_x6) {
-            return _has2.apply(this, arguments);
-          }
-
-          return has;
-        }()
-      }, {
-        key: "set",
-        value: function () {
-          var _set2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee17(key, oval) {
-            var game_state, pos, color, idb_pt;
-            return regeneratorRuntime.wrap(function _callee17$(_context17) {
-              while (1) {
-                switch (_context17.prev = _context17.next) {
-                  case 0:
-                    game_state = this.GetGameStateCallback();
-                    pos = oval.GetPosition();
-                    color = oval.GetFillColor();
-                    idb_pt = {
-                      x: parseInt(pos.x) / game_state.iGridSizeX,
-                      y: parseInt(pos.y) / game_state.iGridSizeY,
-                      Status: oval.GetStatus(),
-                      Color: color //, pos: key, //`${pos.x}_${pos.y}`
-
-                    };
-                    _context17.next = 6;
-                    return this.StorePoint(key, idb_pt);
-
-                  case 6:
-                    if (!this.UpdateState) {
-                      _context17.next = 10;
-                      break;
-                    }
-
-                    if (!(game_state.bPointsAndPathsLoaded === true)) {
-                      _context17.next = 10;
-                      break;
-                    }
-
-                    _context17.next = 10;
-                    return this.UpdateState(game_state.iGameID, game_state);
-
-                  case 10:
-                    return _context17.abrupt("return", this.store.set(key, oval));
-
-                  case 11:
-                  case "end":
-                    return _context17.stop();
-                }
-              }
-            }, _callee17, this);
-          }));
-
-          function set(_x7, _x8) {
-            return _set2.apply(this, arguments);
-          }
-
-          return set;
-        }()
-      }, {
-        key: "get",
-        value: function () {
-          var _get2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee18(key) {
-            var val, idb_pt;
-            return regeneratorRuntime.wrap(function _callee18$(_context18) {
-              while (1) {
-                switch (_context18.prev = _context18.next) {
-                  case 0:
-                    val = this.store.get(key);
-
-                    if (val) {
-                      _context18.next = 12;
-                      break;
-                    }
-
-                    _context18.next = 4;
-                    return this.GetPoint(key);
-
-                  case 4:
-                    idb_pt = _context18.sent;
-
-                    if (!(idb_pt && this.PointCreationCallback)) {
-                      _context18.next = 11;
-                      break;
-                    }
-
-                    val = this.PointCreationCallback(idb_pt.x, idb_pt.y, idb_pt.Status, idb_pt.Color);
-                    this.store.set(key, val);
-                    return _context18.abrupt("return", val);
-
-                  case 11:
-                    return _context18.abrupt("return", undefined);
-
-                  case 12:
-                    return _context18.abrupt("return", val);
-
-                  case 13:
-                  case "end":
-                    return _context18.stop();
-                }
-              }
-            }, _callee18, this);
-          }));
-
-          function get(_x9) {
-            return _get2.apply(this, arguments);
-          }
-
-          return get;
-        }()
-      }, {
-        key: "values",
-        value: function () {
-          var _values2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee19() {
-            var values;
-            return regeneratorRuntime.wrap(function _callee19$(_context19) {
-              while (1) {
-                switch (_context19.prev = _context19.next) {
-                  case 0:
-                    values = this.store.values();
-
-                    if (!values) {
-                      _context19.next = 3;
-                      break;
-                    }
-
-                    return _context19.abrupt("return", values);
-
-                  case 3:
-                    _context19.next = 5;
-                    return this.GetAllPoints();
-
-                  case 5:
-                    values = _context19.sent;
-                    return _context19.abrupt("return", values);
-
-                  case 7:
-                  case "end":
-                    return _context19.stop();
-                }
-              }
-            }, _callee19, this);
-          }));
-
-          function values() {
-            return _values2.apply(this, arguments);
-          }
-
-          return values;
-        }()
-      }]);
-
-      return IDBPointStore;
-    }(SimplePointStoreDefinition);
-
-    var IDBPathStoreDefinition = /*#__PURE__*/function (_SimplePathStoreDefin) {
-      _inherits(IDBPathStore, _SimplePathStoreDefin);
-
-      var _super11 = _createSuper(IDBPathStore);
-
-      function IDBPathStore(mainGameStateStore, pathCreationCallbackFn, getGameStateFn) {
-        var _this10;
-
-        _classCallCheck(this, IDBPathStore);
-
-        _this10 = _super11.call(this);
-        _this10.MainGameStateStore = mainGameStateStore;
-        _this10.GetAllPaths = mainGameStateStore.GetAllPaths.bind(_this10.MainGameStateStore);
-        _this10.StorePath = mainGameStateStore.StorePath.bind(_this10.MainGameStateStore);
-        _this10.UpdateState = mainGameStateStore.UpdateState.bind(_this10.MainGameStateStore);
-        _this10.PathCreationCallback = pathCreationCallbackFn;
-        _this10.GetGameStateCallback = getGameStateFn;
-        return _this10;
-      }
-
-      _createClass(IDBPathStore, [{
-        key: "PrepareStore",
-        value: function () {
-          var _PrepareStore4 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee20() {
-            var paths, _iterator2, _step2, idb_pa, pa;
-
-            return regeneratorRuntime.wrap(function _callee20$(_context20) {
-              while (1) {
-                switch (_context20.prev = _context20.next) {
-                  case 0:
-                    if (!this.PathCreationCallback) {
-                      _context20.next = 23;
-                      break;
-                    }
-
-                    _context20.next = 3;
-                    return this.GetAllPaths();
-
-                  case 3:
-                    paths = _context20.sent;
-                    //loading paths from indexeddb
-                    _iterator2 = _createForOfIteratorHelper(paths);
-                    _context20.prev = 5;
-
-                    _iterator2.s();
-
-                  case 7:
-                    if ((_step2 = _iterator2.n()).done) {
-                      _context20.next = 15;
-                      break;
-                    }
-
-                    idb_pa = _step2.value;
-                    _context20.next = 11;
-                    return this.PathCreationCallback(idb_pa.PointsAsString, idb_pa.Color, idb_pa.iId);
-
-                  case 11:
-                    pa = _context20.sent;
-                    this.store.push(pa);
-
-                  case 13:
-                    _context20.next = 7;
-                    break;
-
-                  case 15:
-                    _context20.next = 20;
-                    break;
-
-                  case 17:
-                    _context20.prev = 17;
-                    _context20.t0 = _context20["catch"](5);
-
-                    _iterator2.e(_context20.t0);
-
-                  case 20:
-                    _context20.prev = 20;
-
-                    _iterator2.f();
-
-                    return _context20.finish(20);
-
-                  case 23:
-                    return _context20.abrupt("return", true);
-
-                  case 24:
-                  case "end":
-                    return _context20.stop();
-                }
-              }
-            }, _callee20, this, [[5, 17, 20, 23]]);
-          }));
-
-          function PrepareStore() {
-            return _PrepareStore4.apply(this, arguments);
-          }
-
-          return PrepareStore;
-        }()
-      }, {
-        key: "BeginBulkStorage",
-        value: function () {
-          var _BeginBulkStorage4 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee21() {
-            return regeneratorRuntime.wrap(function _callee21$(_context21) {
-              while (1) {
-                switch (_context21.prev = _context21.next) {
-                  case 0:
-                    _context21.next = 2;
-                    return this.MainGameStateStore.BeginBulkStorage([this.MainGameStateStore.DB_POINT_STORE, this.MainGameStateStore.DB_PATH_STORE], 'readwrite');
-
-                  case 2:
-                  case "end":
-                    return _context21.stop();
-                }
-              }
-            }, _callee21, this);
-          }));
-
-          function BeginBulkStorage() {
-            return _BeginBulkStorage4.apply(this, arguments);
-          }
-
-          return BeginBulkStorage;
-        }()
-      }, {
-        key: "EndBulkStorage",
-        value: function () {
-          var _EndBulkStorage4 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee22() {
-            return regeneratorRuntime.wrap(function _callee22$(_context22) {
-              while (1) {
-                switch (_context22.prev = _context22.next) {
-                  case 0:
-                    _context22.next = 2;
-                    return this.MainGameStateStore.EndBulkStorage([this.MainGameStateStore.DB_POINT_STORE, this.MainGameStateStore.DB_PATH_STORE]);
-
-                  case 2:
-                  case "end":
-                    return _context22.stop();
-                }
-              }
-            }, _callee22, this);
-          }));
-
-          function EndBulkStorage() {
-            return _EndBulkStorage4.apply(this, arguments);
-          }
-
-          return EndBulkStorage;
-        }()
-      }, {
-        key: "push",
-        value: function () {
-          var _push2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee23(val) {
-            var id_key, idb_path, game_state;
-            return regeneratorRuntime.wrap(function _callee23$(_context23) {
-              while (1) {
-                switch (_context23.prev = _context23.next) {
-                  case 0:
-                    id_key = val.GetID();
-                    idb_path = {
-                      iId: id_key,
-                      Color: val.GetFillColor(),
-                      PointsAsString: val.GetPointsString()
-                    };
-                    _context23.next = 4;
-                    return this.StorePath(id_key, idb_path);
-
-                  case 4:
-                    if (!this.UpdateState) {
-                      _context23.next = 9;
-                      break;
-                    }
-
-                    game_state = this.GetGameStateCallback();
-
-                    if (!(game_state.bPointsAndPathsLoaded === true)) {
-                      _context23.next = 9;
-                      break;
-                    }
-
-                    _context23.next = 9;
-                    return this.UpdateState(game_state.iGameID, game_state);
-
-                  case 9:
-                    return _context23.abrupt("return", this.store.push(val));
-
-                  case 10:
-                  case "end":
-                    return _context23.stop();
-                }
-              }
-            }, _callee23, this);
-          }));
-
-          function push(_x10) {
-            return _push2.apply(this, arguments);
-          }
-
-          return push;
-        }()
-      }, {
-        key: "all",
-        value: function () {
-          var _all2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee24() {
-            var values;
-            return regeneratorRuntime.wrap(function _callee24$(_context24) {
-              while (1) {
-                switch (_context24.prev = _context24.next) {
-                  case 0:
-                    values = this.store;
-
-                    if (!values) {
-                      _context24.next = 3;
-                      break;
-                    }
-
-                    return _context24.abrupt("return", values);
-
-                  case 3:
-                    _context24.next = 5;
-                    return this.GetAllPaths();
-
-                  case 5:
-                    values = _context24.sent;
-                    return _context24.abrupt("return", values);
-
-                  case 7:
-                  case "end":
-                    return _context24.stop();
-                }
-              }
-            }, _callee24, this);
-          }));
-
-          function all() {
-            return _all2.apply(this, arguments);
-          }
-
-          return all;
-        }()
-      }]);
-
-      return IDBPathStore;
-    }(SimplePathStoreDefinition); /////////inner class definitions end/////////
-
-
-    if (useIndexedDb === true) {
-      this.DB_NAME = 'InkballGame';
-      this.DB_POINT_STORE = 'points';
-      this.DB_PATH_STORE = 'paths';
-      this.DB_STATE_STORE = 'state'; // Use a long long for this value (don't use a float)
-
-      this.DB_VERSION = parseInt(version.split('.').reduce(function (acc, val) {
-        val = parseInt(val);
-        return acc * 10 + (isNaN(val) ? 0 : val);
-      }, 0)) - 1010
-      /*initial module versioning start number*/
-      + 4
-      /*initial indexDB start number*/
-      ;
-      this.g_DB; //main DB object
-
-      this.PointStore = new IDBPointStoreDefinition(this, pointCreationCallbackFn, getGameStateFn);
-      this.PathStore = new IDBPathStoreDefinition(this, pathCreationCallbackFn, getGameStateFn);
-    } else {
-      this.PointStore = new SimplePointStoreDefinition();
-      this.PathStore = new SimplePathStoreDefinition();
-    }
-  }
-
-  _createClass(GameStateStore, [{
-    key: "GetPointStore",
-    value: function GetPointStore() {
-      return this.PointStore;
-    }
-  }, {
-    key: "GetPathStore",
-    value: function GetPathStore() {
-      return this.PathStore;
-    }
-  }, {
-    key: "OpenDb",
-    value: function () {
-      var _OpenDb = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee25() {
-        var _this11 = this;
-
-        return regeneratorRuntime.wrap(function _callee25$(_context25) {
-          while (1) {
-            switch (_context25.prev = _context25.next) {
-              case 0:
-                LocalLog("OpenDb ...");
-                return _context25.abrupt("return", new Promise(function (resolve, reject) {
-                  var req = indexedDB.open(_this11.DB_NAME, _this11.DB_VERSION);
-
-                  req.onsuccess = function (evt) {
-                    // Equal to: db = req.result;
-                    this.g_DB = evt.currentTarget.result;
-                    LocalLog("OpenDb DONE");
-                    resolve(evt.currentTarget.result);
-                  }.bind(_this11);
-
-                  req.onerror = function (evt) {
-                    LocalError("OpenDb:", evt.target.errorCode || evt.target.error);
-                    reject();
-                  };
-
-                  req.onupgradeneeded = function (evt) {
-                    LocalLog("OpenDb.onupgradeneeded(version: ".concat(this.DB_VERSION, ")"));
-                    var store_list = Array.from(evt.currentTarget.result.objectStoreNames);
-                    if (store_list.includes(this.DB_POINT_STORE)) evt.currentTarget.result.deleteObjectStore(this.DB_POINT_STORE);
-                    if (store_list.includes(this.DB_PATH_STORE)) evt.currentTarget.result.deleteObjectStore(this.DB_PATH_STORE);
-                    if (store_list.includes(this.DB_STATE_STORE)) evt.currentTarget.result.deleteObjectStore(this.DB_STATE_STORE);
-                    evt.currentTarget.result.createObjectStore(this.DB_POINT_STORE, {
-                      /*keyPath: 'pos',*/
-                      autoIncrement: false
-                    }); //point_store.createIndex('Status', 'Status', { unique: false });
-                    //point_store.createIndex('Color', 'Color', { unique: false });
-
-                    evt.currentTarget.result.createObjectStore(this.DB_PATH_STORE, {
-                      /*keyPath: 'iId',*/
-                      autoIncrement: false
-                    }); //path_store.createIndex('Color', 'Color', { unique: false });
-
-                    evt.currentTarget.result.createObjectStore(this.DB_STATE_STORE, {
-                      /*keyPath: 'gameId',*/
-                      autoIncrement: false
-                    });
-                  }.bind(_this11);
-                }));
-
-              case 2:
-              case "end":
-                return _context25.stop();
-            }
-          }
-        }, _callee25);
-      }));
-
-      function OpenDb() {
-        return _OpenDb.apply(this, arguments);
-      }
-
-      return OpenDb;
-    }()
-    /**
-      * @param {string} storeName is a store name
-      * @param {string} mode either "readonly" or "readwrite"
-      * @returns {object} store
-      */
-
-  }, {
-    key: "GetObjectStore",
-    value: function GetObjectStore(storeName, mode) {
-      if (this.bulkStores && this.bulkStores.has(storeName)) return this.bulkStores.get(storeName);
-      var tx = this.g_DB.transaction(storeName, mode);
-      return tx.objectStore(storeName);
-    }
-  }, {
-    key: "ClearObjectStore",
-    value: function () {
-      var _ClearObjectStore = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee26(storeName) {
-        var _this12 = this;
-
-        return regeneratorRuntime.wrap(function _callee26$(_context26) {
-          while (1) {
-            switch (_context26.prev = _context26.next) {
-              case 0:
-                return _context26.abrupt("return", new Promise(function (resolve, reject) {
-                  var store = _this12.GetObjectStore(storeName, 'readwrite');
-
-                  var req = store.clear();
-
-                  req.onsuccess = function () {
-                    resolve();
-                  };
-
-                  req.onerror = function (evt) {
-                    LocalError("clearObjectStore:", evt.target.errorCode);
-                    reject();
-                  };
-                }));
-
-              case 1:
-              case "end":
-                return _context26.stop();
-            }
-          }
-        }, _callee26);
-      }));
-
-      function ClearObjectStore(_x11) {
-        return _ClearObjectStore.apply(this, arguments);
-      }
-
-      return ClearObjectStore;
-    }()
-    /**
-      * @param {number} key is calculated inxed of point y * width + x, probably not usefull
-      */
-
-  }, {
-    key: "GetPoint",
-    value: function () {
-      var _GetPoint = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee27(key) {
-        var _this13 = this;
-
-        return regeneratorRuntime.wrap(function _callee27$(_context27) {
-          while (1) {
-            switch (_context27.prev = _context27.next) {
-              case 0:
-                return _context27.abrupt("return", new Promise(function (resolve, reject) {
-                  var store = _this13.GetObjectStore(_this13.DB_POINT_STORE, 'readonly');
-
-                  var req = store.get(key);
-
-                  req.onerror = function (event) {
-                    reject(new Error('GetPoint => ' + event));
-                  };
-
-                  req.onsuccess = function (event) {
-                    resolve(event.target.result);
-                  };
-                }));
-
-              case 1:
-              case "end":
-                return _context27.stop();
-            }
-          }
-        }, _callee27);
-      }));
-
-      function GetPoint(_x12) {
-        return _GetPoint.apply(this, arguments);
-      }
-
-      return GetPoint;
-    }()
-  }, {
-    key: "GetAllPoints",
-    value: function () {
-      var _GetAllPoints = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee28() {
-        var _this14 = this;
-
-        return regeneratorRuntime.wrap(function _callee28$(_context28) {
-          while (1) {
-            switch (_context28.prev = _context28.next) {
-              case 0:
-                return _context28.abrupt("return", new Promise(function (resolve, reject) {
-                  var store = _this14.GetObjectStore(_this14.DB_POINT_STORE, 'readonly');
-
-                  var bucket = [];
-                  var req = store.openCursor();
-
-                  req.onsuccess = function (event) {
-                    var cursor = event.target.result;
-
-                    if (cursor) {
-                      bucket.push(cursor.value);
-                      cursor["continue"]();
-                    } else resolve(bucket);
-                  };
-
-                  req.onerror = function (event) {
-                    reject(new Error('GetAllPoints => ' + event));
-                  };
-                }));
-
-              case 1:
-              case "end":
-                return _context28.stop();
-            }
-          }
-        }, _callee28);
-      }));
-
-      function GetAllPoints() {
-        return _GetAllPoints.apply(this, arguments);
-      }
-
-      return GetAllPoints;
-    }()
-  }, {
-    key: "GetState",
-    value: function () {
-      var _GetState = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee29(key) {
-        var _this15 = this;
-
-        return regeneratorRuntime.wrap(function _callee29$(_context29) {
-          while (1) {
-            switch (_context29.prev = _context29.next) {
-              case 0:
-                return _context29.abrupt("return", new Promise(function (resolve, reject) {
-                  var store = _this15.GetObjectStore(_this15.DB_STATE_STORE, 'readonly');
-
-                  var req = store.get(key);
-
-                  req.onerror = function (event) {
-                    reject(new Error('GetState => ' + event));
-                  };
-
-                  req.onsuccess = function (event) {
-                    resolve(event.target.result);
-                  };
-                }));
-
-              case 1:
-              case "end":
-                return _context29.stop();
-            }
-          }
-        }, _callee29);
-      }));
-
-      function GetState(_x13) {
-        return _GetState.apply(this, arguments);
-      }
-
-      return GetState;
-    }()
-    /**
-      * @param {number} key is path Id
-      */
-
-  }, {
-    key: "GetPath",
-    value: function () {
-      var _GetPath = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee30(key) {
-        var _this16 = this;
-
-        return regeneratorRuntime.wrap(function _callee30$(_context30) {
-          while (1) {
-            switch (_context30.prev = _context30.next) {
-              case 0:
-                return _context30.abrupt("return", new Promise(function (resolve, reject) {
-                  var store = _this16.GetObjectStore(_this16.DB_PATH_STORE, 'readonly');
-
-                  var req = store.get(key);
-
-                  req.onerror = function (event) {
-                    reject(new Error('GetPath => ' + event));
-                  };
-
-                  req.onsuccess = function (event) {
-                    resolve(event.target.result);
-                  };
-                }));
-
-              case 1:
-              case "end":
-                return _context30.stop();
-            }
-          }
-        }, _callee30);
-      }));
-
-      function GetPath(_x14) {
-        return _GetPath.apply(this, arguments);
-      }
-
-      return GetPath;
-    }()
-  }, {
-    key: "GetAllPaths",
-    value: function () {
-      var _GetAllPaths = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee31() {
-        var _this17 = this;
-
-        return regeneratorRuntime.wrap(function _callee31$(_context31) {
-          while (1) {
-            switch (_context31.prev = _context31.next) {
-              case 0:
-                return _context31.abrupt("return", new Promise(function (resolve, reject) {
-                  var store = _this17.GetObjectStore(_this17.DB_PATH_STORE, 'readonly');
-
-                  var bucket = [];
-                  var req = store.openCursor();
-
-                  req.onsuccess = function (event) {
-                    var cursor = event.target.result;
-
-                    if (cursor) {
-                      bucket.push(cursor.value);
-                      cursor["continue"]();
-                    } else resolve(bucket);
-                  };
-
-                  req.onerror = function (event) {
-                    reject(new Error('GetAllPaths => ' + event));
-                  };
-                }));
-
-              case 1:
-              case "end":
-                return _context31.stop();
-            }
-          }
-        }, _callee31);
-      }));
-
-      function GetAllPaths() {
-        return _GetAllPaths.apply(this, arguments);
-      }
-
-      return GetAllPaths;
-    }()
-    /**
-      * @param {number} key is calculated inxed of point y * width + x, probably not usefull
-      * @param {object} val is serialized, thin circle
-      */
-
-  }, {
-    key: "StorePoint",
-    value: function () {
-      var _StorePoint = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee32(key, val) {
-        var _this18 = this;
-
-        return regeneratorRuntime.wrap(function _callee32$(_context32) {
-          while (1) {
-            switch (_context32.prev = _context32.next) {
-              case 0:
-                if (!(this.bulkStores && this.bulkStores.has(this.DB_POINT_STORE))) {
-                  _context32.next = 4;
-                  break;
-                }
-
-                if (!this.bulkBuffer) this.bulkBuffer = new Map();
-                this.bulkBuffer.set(key, val);
-                return _context32.abrupt("return", Promise.resolve());
-
-              case 4:
-                return _context32.abrupt("return", new Promise(function (resolve, reject) {
-                  var store = _this18.GetObjectStore(_this18.DB_POINT_STORE, 'readwrite');
-
-                  var req;
-
-                  try {
-                    req = store.add(val, key);
-                  } catch (e) {
-                    if (e.name === 'DataCloneError') LocalError("This engine doesn't know how to clone a Blob, use Firefox");
-                    throw e;
-                  }
-
-                  req.onsuccess = function () {
-                    resolve();
-                  };
-
-                  req.onerror = function () {
-                    LocalError("StorePoint error", this.error);
-                    reject();
-                  };
-                }));
-
-              case 5:
-              case "end":
-                return _context32.stop();
-            }
-          }
-        }, _callee32, this);
-      }));
-
-      function StorePoint(_x15, _x16) {
-        return _StorePoint.apply(this, arguments);
-      }
-
-      return StorePoint;
-    }()
-  }, {
-    key: "StoreAllPoints",
-    value: function () {
-      var _StoreAllPoints = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee33(values) {
-        var _this19 = this;
-
-        return regeneratorRuntime.wrap(function _callee33$(_context33) {
-          while (1) {
-            switch (_context33.prev = _context33.next) {
-              case 0:
-                if (!values) values = this.bulkBuffer;
-
-                if (!(!values || !this.bulkStores)) {
-                  _context33.next = 3;
-                  break;
-                }
-
-                return _context33.abrupt("return", Promise.reject());
-
-              case 3:
-                return _context33.abrupt("return", new Promise(function (resolve, reject) {
-                  var store = _this19.GetObjectStore(_this19.DB_POINT_STORE, 'readwrite');
-
-                  try {
-                    values.forEach(function (v, key) {
-                      store.add(v, key);
-                    });
-                    _this19.bulkBuffer = null;
-                    resolve();
-                  } catch (e) {
-                    LocalError("This engine doesn't know how to clone a Blob, use Firefox");
-                    reject(e);
-                  }
-                }));
-
-              case 4:
-              case "end":
-                return _context33.stop();
-            }
-          }
-        }, _callee33, this);
-      }));
-
-      function StoreAllPoints(_x17) {
-        return _StoreAllPoints.apply(this, arguments);
-      }
-
-      return StoreAllPoints;
-    }()
-    /**
-      * @param {number} key is GameID
-      * @param {object} gameState is InkBallGame state object
-      */
-
-  }, {
-    key: "StoreState",
-    value: function () {
-      var _StoreState = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee34(key, gameState) {
-        var _this20 = this;
-
-        return regeneratorRuntime.wrap(function _callee34$(_context34) {
-          while (1) {
-            switch (_context34.prev = _context34.next) {
-              case 0:
-                return _context34.abrupt("return", new Promise(function (resolve, reject) {
-                  var store = _this20.GetObjectStore(_this20.DB_STATE_STORE, 'readwrite');
-
-                  var req;
-
-                  try {
-                    req = store.add(gameState, key);
-                  } catch (e) {
-                    if (e.name === 'DataCloneError') LocalError("This engine doesn't know how to clone a Blob, use Firefox");
-                    throw e;
-                  }
-
-                  req.onsuccess = function () {
-                    resolve();
-                  };
-
-                  req.onerror = function () {
-                    LocalError("StoreState error", this.error);
-                    reject();
-                  };
-                }));
-
-              case 1:
-              case "end":
-                return _context34.stop();
-            }
-          }
-        }, _callee34);
-      }));
-
-      function StoreState(_x18, _x19) {
-        return _StoreState.apply(this, arguments);
-      }
-
-      return StoreState;
-    }()
-  }, {
-    key: "UpdateState",
-    value: function () {
-      var _UpdateState = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee35(key, gameState) {
-        var _this21 = this;
-
-        return regeneratorRuntime.wrap(function _callee35$(_context35) {
-          while (1) {
-            switch (_context35.prev = _context35.next) {
-              case 0:
-                return _context35.abrupt("return", new Promise(function (resolve, reject) {
-                  var store = _this21.GetObjectStore(_this21.DB_STATE_STORE, 'readwrite');
-
-                  var req;
-
-                  try {
-                    req = store.put(gameState, key);
-                  } catch (e) {
-                    if (e.name === 'DataCloneError') LocalError("This engine doesn't know how to clone a Blob, use Firefox");
-                    throw e;
-                  }
-
-                  req.onsuccess = function () {
-                    resolve();
-                  };
-
-                  req.onerror = function () {
-                    LocalError("UpdateState error", this.error);
-                    reject();
-                  };
-                }));
-
-              case 1:
-              case "end":
-                return _context35.stop();
-            }
-          }
-        }, _callee35);
-      }));
-
-      function UpdateState(_x20, _x21) {
-        return _UpdateState.apply(this, arguments);
-      }
-
-      return UpdateState;
-    }()
-    /**
-      * @param {number} key is path Id
-      * @param {object} val is serialized thin path
-      */
-
-  }, {
-    key: "StorePath",
-    value: function () {
-      var _StorePath = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee36(key, val) {
-        var _this22 = this;
-
-        return regeneratorRuntime.wrap(function _callee36$(_context36) {
-          while (1) {
-            switch (_context36.prev = _context36.next) {
-              case 0:
-                return _context36.abrupt("return", new Promise(function (resolve, reject) {
-                  var store = _this22.GetObjectStore(_this22.DB_PATH_STORE, 'readwrite');
-
-                  var req;
-
-                  try {
-                    req = store.add(val, key);
-                  } catch (e) {
-                    if (e.name === 'DataCloneError') LocalError("This engine doesn't know how to clone a Blob, use Firefox");
-                    throw e;
-                  }
-
-                  req.onsuccess = function () {
-                    resolve();
-                  };
-
-                  req.onerror = function () {
-                    LocalError("StorePath error", this.error);
-                    reject();
-                  };
-                }));
-
-              case 1:
-              case "end":
-                return _context36.stop();
-            }
-          }
-        }, _callee36);
-      }));
-
-      function StorePath(_x22, _x23) {
-        return _StorePath.apply(this, arguments);
-      }
-
-      return StorePath;
-    }()
-  }, {
-    key: "PrepareStore",
-    value: function () {
-      var _PrepareStore5 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee37() {
-        var game_state, idb_state;
-        return regeneratorRuntime.wrap(function _callee37$(_context37) {
-          while (1) {
-            switch (_context37.prev = _context37.next) {
-              case 0:
-                if (this.PointStore.GetAllPoints) {
-                  _context37.next = 2;
-                  break;
-                }
-
-                return _context37.abrupt("return", false);
-
-              case 2:
-                if (this.g_DB) {
-                  _context37.next = 7;
-                  break;
-                }
-
-                _context37.next = 5;
-                return this.OpenDb();
-
-              case 5:
-                _context37.next = 8;
-                break;
-
-              case 7:
-                return _context37.abrupt("return", false);
-
-              case 8:
-                //all initiated, just exit
-                game_state = this.PointStore.GetGameStateCallback();
-                _context37.next = 11;
-                return this.GetState(game_state.iGameID);
-
-              case 11:
-                idb_state = _context37.sent;
-
-                if (idb_state) {
-                  _context37.next = 20;
-                  break;
-                }
-
-                _context37.next = 15;
-                return Promise.all([this.ClearObjectStore(this.DB_POINT_STORE), this.ClearObjectStore(this.DB_PATH_STORE), this.ClearObjectStore(this.DB_STATE_STORE)]);
-
-              case 15:
-                _context37.next = 17;
-                return this.StoreState(game_state.iGameID, game_state);
-
-              case 17:
-                return _context37.abrupt("return", false);
-
-              case 20:
-                if (!(idb_state.sLastMoveGameTimeStamp !== game_state.sLastMoveGameTimeStamp)) {
-                  _context37.next = 26;
-                  break;
-                }
-
-                _context37.next = 23;
-                return Promise.all([this.ClearObjectStore(this.DB_POINT_STORE), this.ClearObjectStore(this.DB_PATH_STORE), this.ClearObjectStore(this.DB_STATE_STORE)]);
-
-              case 23:
-                return _context37.abrupt("return", false);
-
-              case 26:
-                if (!(game_state.bPointsAndPathsLoaded === false)) {
-                  _context37.next = 48;
-                  break;
-                }
-
-                _context37.prev = 27;
-                _context37.next = 30;
-                return this.BeginBulkStorage([this.DB_POINT_STORE, this.DB_PATH_STORE], 'readonly');
-
-              case 30:
-                _context37.next = 32;
-                return this.PointStore.PrepareStore();
-
-              case 32:
-                _context37.t1 = _context37.sent;
-                _context37.t0 = _context37.t1 !== true;
-
-                if (_context37.t0) {
-                  _context37.next = 39;
-                  break;
-                }
-
-                _context37.next = 37;
-                return this.PathStore.PrepareStore();
-
-              case 37:
-                _context37.t2 = _context37.sent;
-                _context37.t0 = _context37.t2 !== true;
-
-              case 39:
-                if (!_context37.t0) {
-                  _context37.next = 43;
-                  break;
-                }
-
-                _context37.next = 42;
-                return Promise.all([this.ClearObjectStore(this.DB_POINT_STORE), this.ClearObjectStore(this.DB_PATH_STORE), this.ClearObjectStore(this.DB_STATE_STORE)]);
-
-              case 42:
-                return _context37.abrupt("return", false);
-
-              case 43:
-                return _context37.abrupt("return", true);
-
-              case 44:
-                _context37.prev = 44;
-                _context37.next = 47;
-                return this.EndBulkStorage([this.DB_POINT_STORE, this.DB_PATH_STORE]);
-
-              case 47:
-                return _context37.finish(44);
-
-              case 48:
-              case "end":
-                return _context37.stop();
-            }
-          }
-        }, _callee37, this, [[27,, 44, 48]]);
-      }));
-
-      function PrepareStore() {
-        return _PrepareStore5.apply(this, arguments);
-      }
-
-      return PrepareStore;
-    }()
-  }, {
-    key: "BeginBulkStorage",
-    value: function () {
-      var _BeginBulkStorage5 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee38(storeName, mode) {
-        var key, tx;
-        return regeneratorRuntime.wrap(function _callee38$(_context38) {
-          while (1) {
-            switch (_context38.prev = _context38.next) {
-              case 0:
-                if (!this.bulkStores) this.bulkStores = new Map();
-                key = storeName;
-
-                if (!this.bulkStores.has(key)) {
-                  tx = this.g_DB.transaction(storeName, mode);
-
-                  if (Array.isArray(storeName)) {
-                    this.bulkStores.set(key[0], tx.objectStore(storeName[0]));
-                    this.bulkStores.set(key[1], tx.objectStore(storeName[1]));
-                  } else this.bulkStores.set(key, tx.objectStore(storeName));
-                }
-
-              case 3:
-              case "end":
-                return _context38.stop();
-            }
-          }
-        }, _callee38, this);
-      }));
-
-      function BeginBulkStorage(_x24, _x25) {
-        return _BeginBulkStorage5.apply(this, arguments);
-      }
-
-      return BeginBulkStorage;
-    }()
-  }, {
-    key: "EndBulkStorage",
-    value: function () {
-      var _EndBulkStorage5 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee39(storeName) {
-        return regeneratorRuntime.wrap(function _callee39$(_context39) {
-          while (1) {
-            switch (_context39.prev = _context39.next) {
-              case 0:
-                if (this.bulkStores) {
-                  if (Array.isArray(storeName)) {
-                    this.bulkStores["delete"](storeName[0]);
-                    this.bulkStores["delete"](storeName[1]);
-                  } else this.bulkStores["delete"](storeName);
-
-                  if (this.bulkStores.size <= 0) this.bulkStores = null;
-                }
-
-              case 1:
-              case "end":
-                return _context39.stop();
-            }
-          }
-        }, _callee39, this);
-      }));
-
-      function EndBulkStorage(_x26) {
-        return _EndBulkStorage5.apply(this, arguments);
-      }
-
-      return EndBulkStorage;
-    }()
-  }]);
-
-  return GameStateStore;
-}(); //////////IndexedDB points and path stores end//////////
-
+}();
 /**
  * Loads modules dynamically
  * don't break webpack logic here! https://webpack.js.org/guides/code-splitting/
@@ -2470,16 +764,16 @@ var GameStateStore = /*#__PURE__*/function () {
  */
 
 
-function importAllModulesAsync(_x29) {
+function importAllModulesAsync(_x) {
   return _importAllModulesAsync.apply(this, arguments);
 }
 
 function _importAllModulesAsync() {
-  _importAllModulesAsync = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee79(gameOptions) {
-    var selfFileName, isMinified, module;
-    return regeneratorRuntime.wrap(function _callee79$(_context79) {
+  _importAllModulesAsync = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee43(gameOptions) {
+    var selfFileName, isMinified;
+    return regeneratorRuntime.wrap(function _callee43$(_context43) {
       while (1) {
-        switch (_context79.prev = _context79.next) {
+        switch (_context43.prev = _context43.next) {
           case 0:
             /*const IE11 = navigator.userAgent.indexOf('Trident') >= 0;
             if (IE11) {
@@ -2495,44 +789,43 @@ function _importAllModulesAsync() {
             isMinified = selfFileName.indexOf("min") !== -1;
 
             if (!isMinified) {
-              _context79.next = 8;
+              _context43.next = 8;
               break;
             }
 
-            _context79.next = 5;
+            _context43.next = 5;
             return __webpack_require__.e(/* import() | svgvmlMin */ 3).then(__webpack_require__.bind(null, 1));
 
           case 5:
-            SVG = _context79.sent;
-            _context79.next = 11;
+            SVG = _context43.sent;
+            _context43.next = 11;
             break;
 
           case 8:
-            _context79.next = 10;
+            _context43.next = 10;
             return __webpack_require__.e(/* import() | svgvml */ 2).then(__webpack_require__.bind(null, 2));
 
           case 10:
-            SVG = _context79.sent;
+            SVG = _context43.sent;
 
           case 11:
             if (!(gameOptions.iOtherPlayerID === -1)) {
-              _context79.next = 16;
+              _context43.next = 15;
               break;
             }
 
-            _context79.next = 14;
-            return __webpack_require__.e(/* import() | concavemanDeps */ 0).then(__webpack_require__.bind(null, 3));
+            _context43.next = 14;
+            return __webpack_require__.e(/* import() | AIDeps */ 0).then(__webpack_require__.bind(null, 3));
 
           case 14:
-            module = _context79.sent;
-            concavemanBundle = module;
+            AIBundle = _context43.sent;
 
-          case 16:
+          case 15:
           case "end":
-            return _context79.stop();
+            return _context43.stop();
         }
       }
-    }, _callee79);
+    }, _callee43);
   }));
   return _importAllModulesAsync.apply(this, arguments);
 }
@@ -2558,29 +851,53 @@ function RandomColor() {
   return 'var(--orange)'; //return '#' + Math.floor(Math.random() * 16777215).toString(16);
 }
 
-function Sleep(_x30) {
+function Sleep(_x2) {
   return _Sleep.apply(this, arguments);
 }
 
 function _Sleep() {
-  _Sleep = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee80(ms) {
-    return regeneratorRuntime.wrap(function _callee80$(_context80) {
+  _Sleep = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee44(ms) {
+    return regeneratorRuntime.wrap(function _callee44$(_context44) {
       while (1) {
-        switch (_context80.prev = _context80.next) {
+        switch (_context44.prev = _context44.next) {
           case 0:
-            return _context80.abrupt("return", new Promise(function (resolve) {
+            return _context44.abrupt("return", new Promise(function (resolve) {
               return setTimeout(resolve, ms);
             }));
 
           case 1:
           case "end":
-            return _context80.stop();
+            return _context44.stop();
         }
       }
-    }, _callee80);
+    }, _callee44);
   }));
   return _Sleep.apply(this, arguments);
 }
+
+Function.prototype.callAsWorker = function (context, args) {
+  var _this9 = this;
+
+  return new Promise(function (resolve, reject) {
+    var code = "\n".concat(context ? _toConsumableArray(context).reduce(function (acc, cur) {
+      return acc + cur.toString() + '\n';
+    }) : '', "\n\nself.onmessage = async function (e) { \n\tconst result = await ( ").concat(_this9.toString(), ".call(null, e.data) );\n\n\tself.postMessage( result ); \n}"),
+        blob = new Blob([code], {
+      type: "text/javascript"
+    }),
+        worker = new Worker(window.URL.createObjectURL(blob));
+
+    worker.onmessage = function (e) {
+      return resolve(e.data), worker.terminate(), window.URL.revokeObjectURL(blob);
+    };
+
+    worker.onerror = function (e) {
+      return reject(e.message), worker.terminate(), window.URL.revokeObjectURL(blob);
+    };
+
+    worker.postMessage(args);
+  });
+};
 
 var InkBallGame = /*#__PURE__*/function () {
   /**
@@ -2601,7 +918,7 @@ var InkBallGame = /*#__PURE__*/function () {
    * @param {number} iTooLong2Duration too long wait duration
    */
   function InkBallGame(iGameID, iPlayerID, iOtherPlayerID, sHubName, loggingLevel, hubProtocol, transportType, serverTimeoutInMilliseconds, gameType) {
-    var _this23 = this;
+    var _this10 = this;
 
     var bIsPlayingWithRed = arguments.length > 9 && arguments[9] !== undefined ? arguments[9] : true;
     var bIsPlayerActive = arguments.length > 10 && arguments[10] !== undefined ? arguments[10] : true;
@@ -2667,6 +984,7 @@ var InkBallGame = /*#__PURE__*/function () {
     this.m_bIsPlayerActive = bIsPlayerActive;
     this.m_sDotColor = this.m_bIsPlayingWithRed ? this.COLOR_RED : this.COLOR_BLUE;
     this.m_PointRadius = 4;
+    this.SvgVml = null;
     this.m_Line = null;
     this.m_Lines = null;
     this.m_Points = null;
@@ -2683,30 +1001,30 @@ var InkBallGame = /*#__PURE__*/function () {
     }).withHubProtocol(hubProtocol).configureLogging(loggingLevel).build();
     this.g_SignalRConnection.serverTimeoutInMilliseconds = serverTimeoutInMilliseconds;
     this.g_SignalRConnection.onclose( /*#__PURE__*/function () {
-      var _ref3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee40(err) {
-        return regeneratorRuntime.wrap(function _callee40$(_context40) {
+      var _ref3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(err) {
+        return regeneratorRuntime.wrap(function _callee$(_context) {
           while (1) {
-            switch (_context40.prev = _context40.next) {
+            switch (_context.prev = _context.next) {
               case 0:
                 if (err !== null && err !== undefined) {
                   LocalError(err);
-                  _this23.m_Screen.style.cursor = "not-allowed";
-                  _this23.iConnErrCount++;
+                  _this10.m_Screen.style.cursor = "not-allowed";
+                  _this10.iConnErrCount++;
                   setTimeout(function () {
-                    return _this23.Connect();
-                  }, 4000 + _this23.iExponentialBackOffMillis * Math.max(_this23.iConnErrCount, 5) //exponential back-off
+                    return _this10.Connect();
+                  }, 4000 + _this10.iExponentialBackOffMillis * Math.max(_this10.iConnErrCount, 5) //exponential back-off
                   );
                 }
 
               case 1:
               case "end":
-                return _context40.stop();
+                return _context.stop();
             }
           }
-        }, _callee40);
+        }, _callee);
       }));
 
-      return function (_x31) {
+      return function (_x3) {
         return _ref3.apply(this, arguments);
       };
     }());
@@ -2715,55 +1033,55 @@ var InkBallGame = /*#__PURE__*/function () {
   _createClass(InkBallGame, [{
     key: "GetPlayerPointsAndPaths",
     value: function () {
-      var _GetPlayerPointsAndPaths = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee41() {
+      var _GetPlayerPointsAndPaths = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2() {
         var ppDTO, path_and_point;
-        return regeneratorRuntime.wrap(function _callee41$(_context41) {
+        return regeneratorRuntime.wrap(function _callee2$(_context2) {
           while (1) {
-            switch (_context41.prev = _context41.next) {
+            switch (_context2.prev = _context2.next) {
               case 0:
                 if (!(this.m_bPointsAndPathsLoaded === false)) {
-                  _context41.next = 15;
+                  _context2.next = 15;
                   break;
                 }
 
-                _context41.next = 3;
+                _context2.next = 3;
                 return this.g_SignalRConnection.invoke("GetPlayerPointsAndPaths", this.m_bViewOnly, this.g_iGameID);
 
               case 3:
-                ppDTO = _context41.sent;
+                ppDTO = _context2.sent;
                 //LocalLog(ppDTO);
                 path_and_point = PlayerPointsAndPathsDTO.Deserialize(ppDTO);
 
                 if (!(path_and_point.Points !== undefined)) {
-                  _context41.next = 8;
+                  _context2.next = 8;
                   break;
                 }
 
-                _context41.next = 8;
+                _context2.next = 8;
                 return this.SetAllPoints(path_and_point.Points);
 
               case 8:
                 if (!(path_and_point.Paths !== undefined)) {
-                  _context41.next = 11;
+                  _context2.next = 11;
                   break;
                 }
 
-                _context41.next = 11;
+                _context2.next = 11;
                 return this.SetAllPaths(path_and_point.Paths);
 
               case 11:
                 this.m_bPointsAndPathsLoaded = true;
-                return _context41.abrupt("return", true);
+                return _context2.abrupt("return", true);
 
               case 15:
-                return _context41.abrupt("return", false);
+                return _context2.abrupt("return", false);
 
               case 16:
               case "end":
-                return _context41.stop();
+                return _context2.stop();
             }
           }
-        }, _callee41, this);
+        }, _callee2, this);
       }));
 
       function GetPlayerPointsAndPaths() {
@@ -2775,17 +1093,17 @@ var InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "Connect",
     value: function () {
-      var _Connect = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee42() {
-        var _this24 = this;
+      var _Connect = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3() {
+        var _this11 = this;
 
         var settings, to_store, json, _settings;
 
-        return regeneratorRuntime.wrap(function _callee42$(_context42) {
+        return regeneratorRuntime.wrap(function _callee3$(_context3) {
           while (1) {
-            switch (_context42.prev = _context42.next) {
+            switch (_context3.prev = _context3.next) {
               case 0:
-                _context42.prev = 0;
-                _context42.next = 3;
+                _context3.prev = 0;
+                _context3.next = 3;
                 return this.g_SignalRConnection.start();
 
               case 3:
@@ -2793,20 +1111,20 @@ var InkBallGame = /*#__PURE__*/function () {
                 LocalLog('connected; iConnErrCount = ' + this.iConnErrCount);
 
                 if (!(this.m_bViewOnly === false)) {
-                  _context42.next = 19;
+                  _context3.next = 19;
                   break;
                 }
 
                 if (!(sessionStorage.getItem("ApplicationUserSettings") === null)) {
-                  _context42.next = 16;
+                  _context3.next = 16;
                   break;
                 }
 
-                _context42.next = 9;
+                _context3.next = 9;
                 return this.g_SignalRConnection.invoke("GetUserSettings");
 
               case 9:
-                settings = _context42.sent;
+                settings = _context3.sent;
 
                 if (settings) {
                   LocalLog(settings);
@@ -2816,11 +1134,11 @@ var InkBallGame = /*#__PURE__*/function () {
                 }
 
                 this.m_ApplicationUserSettings = new ApplicationUserSettings(settings.DesktopNotifications);
-                _context42.next = 14;
+                _context3.next = 14;
                 return this.GetPlayerPointsAndPaths();
 
               case 14:
-                _context42.next = 19;
+                _context3.next = 19;
                 break;
 
               case 16:
@@ -2830,11 +1148,11 @@ var InkBallGame = /*#__PURE__*/function () {
 
               case 19:
                 if (!(this.m_bPointsAndPathsLoaded === false)) {
-                  _context42.next = 22;
+                  _context3.next = 22;
                   break;
                 }
 
-                _context42.next = 22;
+                _context3.next = 22;
                 return this.GetPlayerPointsAndPaths();
 
               case 22:
@@ -2843,26 +1161,26 @@ var InkBallGame = /*#__PURE__*/function () {
                 }
 
                 if (true === this.m_bIsCPUGame && !this.m_bIsPlayerActive) this.StartCPUCalculation();
-                _context42.next = 32;
+                _context3.next = 32;
                 break;
 
               case 26:
-                _context42.prev = 26;
-                _context42.t0 = _context42["catch"](0);
-                LocalError(_context42.t0 + '; iConnErrCount = ' + this.iConnErrCount);
+                _context3.prev = 26;
+                _context3.t0 = _context3["catch"](0);
+                LocalError(_context3.t0 + '; iConnErrCount = ' + this.iConnErrCount);
                 this.m_Screen.style.cursor = "not-allowed";
                 this.iConnErrCount++;
                 setTimeout(function () {
-                  return _this24.Connect();
+                  return _this11.Connect();
                 }, 4000 + this.iExponentialBackOffMillis * Math.max(this.iConnErrCount, 5) //exponential back-off
                 );
 
               case 32:
               case "end":
-                return _context42.stop();
+                return _context3.stop();
             }
           }
-        }, _callee42, this, [[0, 26]]);
+        }, _callee3, this, [[0, 26]]);
       }));
 
       function Connect() {
@@ -2945,27 +1263,27 @@ var InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "StartSignalRConnection",
     value: function () {
-      var _StartSignalRConnection = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee45(loadPointsAndPathsFromSignalR) {
-        return regeneratorRuntime.wrap(function _callee45$(_context45) {
+      var _StartSignalRConnection = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6(loadPointsAndPathsFromSignalR) {
+        return regeneratorRuntime.wrap(function _callee6$(_context6) {
           while (1) {
-            switch (_context45.prev = _context45.next) {
+            switch (_context6.prev = _context6.next) {
               case 0:
                 if (!(this.g_SignalRConnection === null)) {
-                  _context45.next = 2;
+                  _context6.next = 2;
                   break;
                 }
 
-                return _context45.abrupt("return", Promise.reject(new Error("signalr conn is null")));
+                return _context6.abrupt("return", Promise.reject(new Error("signalr conn is null")));
 
               case 2:
                 //this.m_bIsCPUGame = this.m_iOtherPlayerId === -1;
                 if (false === this.m_bPointsAndPathsLoaded) this.m_bPointsAndPathsLoaded = !loadPointsAndPathsFromSignalR;
                 this.g_SignalRConnection.on("ServerToClientPoint", /*#__PURE__*/function () {
-                  var _ref4 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee43(point) {
+                  var _ref4 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(point) {
                     var user, encodedMsg, li;
-                    return regeneratorRuntime.wrap(function _callee43$(_context43) {
+                    return regeneratorRuntime.wrap(function _callee4$(_context4) {
                       while (1) {
-                        switch (_context43.prev = _context43.next) {
+                        switch (_context4.prev = _context4.next) {
                           case 0:
                             if (this.g_iPlayerID !== point.iPlayerId) {
                               user = this.m_Player2Name.innerHTML;
@@ -2976,18 +1294,18 @@ var InkBallGame = /*#__PURE__*/function () {
                               this.NotifyBrowser('New Point', encodedMsg);
                             }
 
-                            _context43.next = 3;
+                            _context4.next = 3;
                             return this.ReceivedPointProcessing(point);
 
                           case 3:
                           case "end":
-                            return _context43.stop();
+                            return _context4.stop();
                         }
                       }
-                    }, _callee43, this);
+                    }, _callee4, this);
                   }));
 
-                  return function (_x33) {
+                  return function (_x5) {
                     return _ref4.apply(this, arguments);
                   };
                 }().bind(this));
@@ -3105,36 +1423,36 @@ var InkBallGame = /*#__PURE__*/function () {
 
                 if (false === this.m_bIsCPUGame) {
                   document.querySelector(this.m_sMsgSendButtonSel).addEventListener("click", /*#__PURE__*/function () {
-                    var _ref5 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee44(event) {
+                    var _ref5 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(event) {
                       var encodedMsg, ping;
-                      return regeneratorRuntime.wrap(function _callee44$(_context44) {
+                      return regeneratorRuntime.wrap(function _callee5$(_context5) {
                         while (1) {
-                          switch (_context44.prev = _context44.next) {
+                          switch (_context5.prev = _context5.next) {
                             case 0:
                               event.preventDefault();
                               encodedMsg = document.querySelector(this.m_sMsgInputSel).value.trim();
 
                               if (!(encodedMsg === '')) {
-                                _context44.next = 4;
+                                _context5.next = 4;
                                 break;
                               }
 
-                              return _context44.abrupt("return");
+                              return _context5.abrupt("return");
 
                             case 4:
                               ping = new PingCommand(encodedMsg);
-                              _context44.next = 7;
+                              _context5.next = 7;
                               return this.SendAsyncData(ping);
 
                             case 7:
                             case "end":
-                              return _context44.stop();
+                              return _context5.stop();
                           }
                         }
-                      }, _callee44, this);
+                      }, _callee5, this);
                     }));
 
-                    return function (_x34) {
+                    return function (_x6) {
                       return _ref5.apply(this, arguments);
                     };
                   }().bind(this), false); // Execute a function when the user releases a key on the keyboard
@@ -3150,17 +1468,17 @@ var InkBallGame = /*#__PURE__*/function () {
                   }.bind(this), false);
                 }
 
-                return _context45.abrupt("return", this.Connect());
+                return _context6.abrupt("return", this.Connect());
 
               case 14:
               case "end":
-                return _context45.stop();
+                return _context6.stop();
             }
           }
-        }, _callee45, this);
+        }, _callee6, this);
       }));
 
-      function StartSignalRConnection(_x32) {
+      function StartSignalRConnection(_x4) {
         return _StartSignalRConnection.apply(this, arguments);
       }
 
@@ -3256,30 +1574,30 @@ var InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "SetPoint",
     value: function () {
-      var _SetPoint = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee46(iX, iY, iStatus, iPlayerId) {
+      var _SetPoint = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7(iX, iY, iStatus, iPlayerId) {
         var x, y, oval, color;
-        return regeneratorRuntime.wrap(function _callee46$(_context46) {
+        return regeneratorRuntime.wrap(function _callee7$(_context7) {
           while (1) {
-            switch (_context46.prev = _context46.next) {
+            switch (_context7.prev = _context7.next) {
               case 0:
-                _context46.next = 2;
+                _context7.next = 2;
                 return this.m_Points.has(iY * this.m_iGridWidth + iX);
 
               case 2:
-                if (!_context46.sent) {
-                  _context46.next = 4;
+                if (!_context7.sent) {
+                  _context7.next = 4;
                   break;
                 }
 
-                return _context46.abrupt("return");
+                return _context7.abrupt("return");
 
               case 4:
                 x = iX * this.m_iGridSizeX;
                 y = iY * this.m_iGridSizeY;
-                oval = SVG.CreateOval(this.m_PointRadius, 'true');
+                oval = this.SvgVml.CreateOval(this.m_PointRadius);
                 oval.move(x, y, this.m_PointRadius);
-                _context46.t0 = iStatus;
-                _context46.next = _context46.t0 === StatusEnum.POINT_FREE_RED ? 11 : _context46.t0 === StatusEnum.POINT_FREE_BLUE ? 14 : _context46.t0 === StatusEnum.POINT_FREE ? 17 : _context46.t0 === StatusEnum.POINT_STARTING ? 20 : _context46.t0 === StatusEnum.POINT_IN_PATH ? 23 : _context46.t0 === StatusEnum.POINT_OWNED_BY_RED ? 26 : _context46.t0 === StatusEnum.POINT_OWNED_BY_BLUE ? 29 : 32;
+                _context7.t0 = iStatus;
+                _context7.next = _context7.t0 === StatusEnum.POINT_FREE_RED ? 11 : _context7.t0 === StatusEnum.POINT_FREE_BLUE ? 14 : _context7.t0 === StatusEnum.POINT_FREE ? 17 : _context7.t0 === StatusEnum.POINT_STARTING ? 20 : _context7.t0 === StatusEnum.POINT_IN_PATH ? 23 : _context7.t0 === StatusEnum.POINT_OWNED_BY_RED ? 26 : _context7.t0 === StatusEnum.POINT_OWNED_BY_BLUE ? 29 : 32;
                 break;
 
               case 11:
@@ -3287,14 +1605,14 @@ var InkBallGame = /*#__PURE__*/function () {
                 oval.SetStatus(iStatus
                 /*StatusEnum.POINT_FREE*/
                 );
-                return _context46.abrupt("break", 34);
+                return _context7.abrupt("break", 34);
 
               case 14:
                 color = this.COLOR_BLUE;
                 oval.SetStatus(iStatus
                 /*StatusEnum.POINT_FREE*/
                 );
-                return _context46.abrupt("break", 34);
+                return _context7.abrupt("break", 34);
 
               case 17:
                 color = this.m_sDotColor;
@@ -3302,48 +1620,48 @@ var InkBallGame = /*#__PURE__*/function () {
                 /*StatusEnum.POINT_FREE*/
                 ); //console.warn('TODO: generic FREE point, really? change it!');
 
-                return _context46.abrupt("break", 34);
+                return _context7.abrupt("break", 34);
 
               case 20:
                 color = this.m_sDotColor;
                 oval.SetStatus(iStatus);
-                return _context46.abrupt("break", 34);
+                return _context7.abrupt("break", 34);
 
               case 23:
                 if (this.g_iPlayerID === iPlayerId) //bPlayingWithRed
                   color = this.m_bIsPlayingWithRed === true ? this.COLOR_RED : this.COLOR_BLUE;else color = this.m_bIsPlayingWithRed === true ? this.COLOR_BLUE : this.COLOR_RED;
                 oval.SetStatus(iStatus);
-                return _context46.abrupt("break", 34);
+                return _context7.abrupt("break", 34);
 
               case 26:
                 color = this.COLOR_OWNED_RED;
                 oval.SetStatus(iStatus);
-                return _context46.abrupt("break", 34);
+                return _context7.abrupt("break", 34);
 
               case 29:
                 color = this.COLOR_OWNED_BLUE;
                 oval.SetStatus(iStatus);
-                return _context46.abrupt("break", 34);
+                return _context7.abrupt("break", 34);
 
               case 32:
                 alert('bad point');
-                return _context46.abrupt("break", 34);
+                return _context7.abrupt("break", 34);
 
               case 34:
                 oval.SetFillColor(color);
                 oval.SetStrokeColor(color);
-                _context46.next = 38;
+                _context7.next = 38;
                 return this.m_Points.set(iY * this.m_iGridWidth + iX, oval);
 
               case 38:
               case "end":
-                return _context46.stop();
+                return _context7.stop();
             }
           }
-        }, _callee46, this);
+        }, _callee7, this);
       }));
 
-      function SetPoint(_x35, _x36, _x37, _x38) {
+      function SetPoint(_x7, _x8, _x9, _x10) {
         return _SetPoint.apply(this, arguments);
       }
 
@@ -3359,6 +1677,7 @@ var InkBallGame = /*#__PURE__*/function () {
         sLastMoveGameTimeStamp: this.m_sLastMoveGameTimeStamp,
         bPointsAndPathsLoaded: this.m_bPointsAndPathsLoaded,
         iGridWidth: this.m_iGridWidth,
+        iGridHeight: this.m_iGridHeight,
         iGridSizeX: this.m_iGridSizeX,
         iGridSizeY: this.m_iGridSizeY
       };
@@ -3375,11 +1694,9 @@ var InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "CreateScreenPointFromIndexedDb",
     value: function CreateScreenPointFromIndexedDb(iX, iY, iStatus, sColor) {
-      //if (await this.m_Points.has(iY * this.m_iGridWidth + iX))
-      //	return;
       var x = iX * this.m_iGridSizeX;
       var y = iY * this.m_iGridSizeY;
-      var oval = SVG.CreateOval(this.m_PointRadius, 'true');
+      var oval = this.SvgVml.CreateOval(this.m_PointRadius);
       oval.move(x, y, this.m_PointRadius);
       var color;
 
@@ -3436,19 +1753,18 @@ var InkBallGame = /*#__PURE__*/function () {
       }
 
       oval.SetFillColor(color);
-      oval.SetStrokeColor(color); //await this.m_Points.set(iY * this.m_iGridWidth + iX, oval);
-
+      oval.SetStrokeColor(color);
       return oval;
     }
   }, {
     key: "SetAllPoints",
     value: function () {
-      var _SetAllPoints = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee47(points) {
-        var DataUnMinimizerStatus, DataUnMinimizerPlayerId, _iterator3, _step3, p;
+      var _SetAllPoints = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8(points) {
+        var DataUnMinimizerStatus, DataUnMinimizerPlayerId, _iterator, _step, p;
 
-        return regeneratorRuntime.wrap(function _callee47$(_context47) {
+        return regeneratorRuntime.wrap(function _callee8$(_context8) {
           while (1) {
-            switch (_context47.prev = _context47.next) {
+            switch (_context8.prev = _context8.next) {
               case 0:
                 DataUnMinimizerPlayerId = function _DataUnMinimizerPlaye(playerId) {
                   return playerId - 1;
@@ -3458,24 +1774,24 @@ var InkBallGame = /*#__PURE__*/function () {
                   return status - 3;
                 };
 
-                _context47.prev = 2;
-                _context47.next = 5;
+                _context8.prev = 2;
+                _context8.next = 5;
                 return this.m_Points.BeginBulkStorage();
 
               case 5:
-                _iterator3 = _createForOfIteratorHelper(points);
-                _context47.prev = 6;
+                _iterator = _createForOfIteratorHelper(points);
+                _context8.prev = 6;
 
-                _iterator3.s();
+                _iterator.s();
 
               case 8:
-                if ((_step3 = _iterator3.n()).done) {
-                  _context47.next = 14;
+                if ((_step = _iterator.n()).done) {
+                  _context8.next = 14;
                   break;
                 }
 
-                p = _step3.value;
-                _context47.next = 12;
+                p = _step.value;
+                _context8.next = 12;
                 return this.SetPoint(p[0]
                 /*x*/
                 , p[1]
@@ -3487,43 +1803,43 @@ var InkBallGame = /*#__PURE__*/function () {
                 ));
 
               case 12:
-                _context47.next = 8;
+                _context8.next = 8;
                 break;
 
               case 14:
-                _context47.next = 19;
+                _context8.next = 19;
                 break;
 
               case 16:
-                _context47.prev = 16;
-                _context47.t0 = _context47["catch"](6);
+                _context8.prev = 16;
+                _context8.t0 = _context8["catch"](6);
 
-                _iterator3.e(_context47.t0);
+                _iterator.e(_context8.t0);
 
               case 19:
-                _context47.prev = 19;
+                _context8.prev = 19;
 
-                _iterator3.f();
+                _iterator.f();
 
-                return _context47.finish(19);
+                return _context8.finish(19);
 
               case 22:
-                _context47.prev = 22;
-                _context47.next = 25;
+                _context8.prev = 22;
+                _context8.next = 25;
                 return this.m_Points.EndBulkStorage();
 
               case 25:
-                return _context47.finish(22);
+                return _context8.finish(22);
 
               case 26:
               case "end":
-                return _context47.stop();
+                return _context8.stop();
             }
           }
-        }, _callee47, this, [[2,, 22, 26], [6, 16, 19, 22]]);
+        }, _callee8, this, [[2,, 22, 26], [6, 16, 19, 22]]);
       }));
 
-      function SetAllPoints(_x39) {
+      function SetAllPoints(_x11) {
         return _SetAllPoints.apply(this, arguments);
       }
 
@@ -3532,7 +1848,7 @@ var InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "SetPath",
     value: function () {
-      var _SetPath = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee48(packed, bIsRed, bBelong2ThisPlayer) {
+      var _SetPath = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(packed, bIsRed, bBelong2ThisPlayer) {
         var iPathId,
             sPoints,
             sDelimiter,
@@ -3541,39 +1857,39 @@ var InkBallGame = /*#__PURE__*/function () {
             x,
             y,
             status,
-            _iterator4,
-            _step4,
+            _iterator2,
+            _step2,
             _packed,
             line,
-            _args48 = arguments;
+            _args9 = arguments;
 
-        return regeneratorRuntime.wrap(function _callee48$(_context48) {
+        return regeneratorRuntime.wrap(function _callee9$(_context9) {
           while (1) {
-            switch (_context48.prev = _context48.next) {
+            switch (_context9.prev = _context9.next) {
               case 0:
-                iPathId = _args48.length > 3 && _args48[3] !== undefined ? _args48[3] : 0;
+                iPathId = _args9.length > 3 && _args9[3] !== undefined ? _args9[3] : 0;
                 sPoints = packed.split(" ");
                 sDelimiter = "", sPathPoints = "", p = null, status = StatusEnum.POINT_STARTING;
-                _iterator4 = _createForOfIteratorHelper(sPoints);
-                _context48.prev = 4;
+                _iterator2 = _createForOfIteratorHelper(sPoints);
+                _context9.prev = 4;
 
-                _iterator4.s();
+                _iterator2.s();
 
               case 6:
-                if ((_step4 = _iterator4.n()).done) {
-                  _context48.next = 21;
+                if ((_step2 = _iterator2.n()).done) {
+                  _context9.next = 21;
                   break;
                 }
 
-                _packed = _step4.value;
+                _packed = _step2.value;
                 p = _packed.split(",");
                 x = parseInt(p[0]);
                 y = parseInt(p[1]);
-                _context48.next = 13;
+                _context9.next = 13;
                 return this.m_Points.get(y * this.m_iGridWidth + x);
 
               case 13:
-                p = _context48.sent;
+                p = _context9.sent;
 
                 if (p !== null && p !== undefined) {
                   p.SetStatus(status);
@@ -3587,35 +1903,35 @@ var InkBallGame = /*#__PURE__*/function () {
                 sDelimiter = " ";
 
               case 19:
-                _context48.next = 6;
+                _context9.next = 6;
                 break;
 
               case 21:
-                _context48.next = 26;
+                _context9.next = 26;
                 break;
 
               case 23:
-                _context48.prev = 23;
-                _context48.t0 = _context48["catch"](4);
+                _context9.prev = 23;
+                _context9.t0 = _context9["catch"](4);
 
-                _iterator4.e(_context48.t0);
+                _iterator2.e(_context9.t0);
 
               case 26:
-                _context48.prev = 26;
+                _context9.prev = 26;
 
-                _iterator4.f();
+                _iterator2.f();
 
-                return _context48.finish(26);
+                return _context9.finish(26);
 
               case 29:
                 p = sPoints[0].split(",");
                 x = parseInt(p[0]);
                 y = parseInt(p[1]);
-                _context48.next = 34;
+                _context9.next = 34;
                 return this.m_Points.get(y * this.m_iGridWidth + x);
 
               case 34:
-                p = _context48.sent;
+                p = _context9.sent;
 
                 if (p !== null && p !== undefined) {
                   p.SetStatus(status);
@@ -3625,20 +1941,20 @@ var InkBallGame = /*#__PURE__*/function () {
                 x *= this.m_iGridSizeX;
                 y *= this.m_iGridSizeY;
                 sPathPoints += "".concat(sDelimiter).concat(x, ",").concat(y);
-                line = SVG.CreatePolyline(3, sPathPoints, bBelong2ThisPlayer ? this.m_sDotColor : bIsRed ? this.COLOR_BLUE : this.COLOR_RED);
+                line = this.SvgVml.CreatePolyline(3, sPathPoints, bBelong2ThisPlayer ? this.m_sDotColor : bIsRed ? this.COLOR_BLUE : this.COLOR_RED);
                 line.SetID(iPathId);
-                _context48.next = 43;
+                _context9.next = 43;
                 return this.m_Lines.push(line);
 
               case 43:
               case "end":
-                return _context48.stop();
+                return _context9.stop();
             }
           }
-        }, _callee48, this, [[4, 23, 26, 29]]);
+        }, _callee9, this, [[4, 23, 26, 29]]);
       }));
 
-      function SetPath(_x40, _x41, _x42) {
+      function SetPath(_x12, _x13, _x14) {
         return _SetPath.apply(this, arguments);
       }
 
@@ -3647,101 +1963,93 @@ var InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "CreateScreenPathFromIndexedDb",
     value: function () {
-      var _CreateScreenPathFromIndexedDb = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee49(packed, sColor, iPathId) {
-        var sPoints, sDelimiter, sPathPoints, p, x, y, status, _iterator5, _step5, _packed2, line;
+      var _CreateScreenPathFromIndexedDb = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10(packed, sColor, iPathId) {
+        var sPoints, sDelimiter, sPathPoints, p, x, y, status, _iterator3, _step3, _packed2, line;
 
-        return regeneratorRuntime.wrap(function _callee49$(_context49) {
+        return regeneratorRuntime.wrap(function _callee10$(_context10) {
           while (1) {
-            switch (_context49.prev = _context49.next) {
+            switch (_context10.prev = _context10.next) {
               case 0:
-                //const bIsRed = this.m_bIsPlayingWithRed;
-                //const bBelong2ThisPlayer = iPlayerId === this.g_iPlayerID;
                 sPoints = packed.split(" ");
                 sDelimiter = "", sPathPoints = "", p = null, status = StatusEnum.POINT_STARTING;
-                _iterator5 = _createForOfIteratorHelper(sPoints);
-                _context49.prev = 3;
+                _iterator3 = _createForOfIteratorHelper(sPoints);
+                _context10.prev = 3;
 
-                _iterator5.s();
+                _iterator3.s();
 
               case 5:
-                if ((_step5 = _iterator5.n()).done) {
-                  _context49.next = 18;
+                if ((_step3 = _iterator3.n()).done) {
+                  _context10.next = 18;
                   break;
                 }
 
-                _packed2 = _step5.value;
+                _packed2 = _step3.value;
                 p = _packed2.split(",");
                 x = parseInt(p[0]);
                 y = parseInt(p[1]);
-                _context49.next = 12;
+                _context10.next = 12;
                 return this.m_Points.get(y * this.m_iGridWidth + x);
 
               case 12:
-                p = _context49.sent;
+                p = _context10.sent;
 
                 if (p !== null && p !== undefined) {
                   p.SetStatus(status);
                   status = StatusEnum.POINT_IN_PATH;
-                } else {//debugger;
-                } //x *= this.m_iGridSizeX; y *= this.m_iGridSizeY;
-
+                }
 
                 sPathPoints += "".concat(sDelimiter).concat(x, ",").concat(y);
                 sDelimiter = " ";
 
               case 16:
-                _context49.next = 5;
+                _context10.next = 5;
                 break;
 
               case 18:
-                _context49.next = 23;
+                _context10.next = 23;
                 break;
 
               case 20:
-                _context49.prev = 20;
-                _context49.t0 = _context49["catch"](3);
+                _context10.prev = 20;
+                _context10.t0 = _context10["catch"](3);
 
-                _iterator5.e(_context49.t0);
+                _iterator3.e(_context10.t0);
 
               case 23:
-                _context49.prev = 23;
+                _context10.prev = 23;
 
-                _iterator5.f();
+                _iterator3.f();
 
-                return _context49.finish(23);
+                return _context10.finish(23);
 
               case 26:
                 p = sPoints[0].split(",");
                 x = parseInt(p[0]);
                 y = parseInt(p[1]);
-                _context49.next = 31;
+                _context10.next = 31;
                 return this.m_Points.get(y * this.m_iGridWidth + x);
 
               case 31:
-                p = _context49.sent;
+                p = _context10.sent;
 
                 if (p !== null && p !== undefined) {
                   p.SetStatus(status);
-                } else {//debugger;
-                } //x *= this.m_iGridSizeX; y *= this.m_iGridSizeY;
-
+                }
 
                 sPathPoints += "".concat(sDelimiter).concat(x, ",").concat(y);
-                line = SVG.CreatePolyline(3, sPathPoints, //(bBelong2ThisPlayer ? this.m_sDotColor : (bIsRed ? this.COLOR_BLUE : this.COLOR_RED))
-                sColor);
-                line.SetID(iPathId); //this.m_Lines.push(line);
-
-                return _context49.abrupt("return", line);
+                line = this.SvgVml.CreatePolyline(3, sPathPoints, sColor);
+                line.SetID(iPathId);
+                return _context10.abrupt("return", line);
 
               case 37:
               case "end":
-                return _context49.stop();
+                return _context10.stop();
             }
           }
-        }, _callee49, this, [[3, 20, 23, 26]]);
+        }, _callee10, this, [[3, 20, 23, 26]]);
       }));
 
-      function CreateScreenPathFromIndexedDb(_x43, _x44, _x45) {
+      function CreateScreenPathFromIndexedDb(_x15, _x16, _x17) {
         return _CreateScreenPathFromIndexedDb.apply(this, arguments);
       }
 
@@ -3750,40 +2058,40 @@ var InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "SetAllPaths",
     value: function () {
-      var _SetAllPaths = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee50(packedPaths) {
-        var _iterator6, _step6, unpacked;
+      var _SetAllPaths = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11(packedPaths) {
+        var _iterator4, _step4, unpacked;
 
-        return regeneratorRuntime.wrap(function _callee50$(_context50) {
+        return regeneratorRuntime.wrap(function _callee11$(_context11) {
           while (1) {
-            switch (_context50.prev = _context50.next) {
+            switch (_context11.prev = _context11.next) {
               case 0:
-                _context50.prev = 0;
-                _context50.next = 3;
+                _context11.prev = 0;
+                _context11.next = 3;
                 return this.m_Lines.BeginBulkStorage();
 
               case 3:
-                _iterator6 = _createForOfIteratorHelper(packedPaths);
-                _context50.prev = 4;
+                _iterator4 = _createForOfIteratorHelper(packedPaths);
+                _context11.prev = 4;
 
-                _iterator6.s();
+                _iterator4.s();
 
               case 6:
-                if ((_step6 = _iterator6.n()).done) {
-                  _context50.next = 14;
+                if ((_step4 = _iterator4.n()).done) {
+                  _context11.next = 14;
                   break;
                 }
 
-                unpacked = _step6.value;
+                unpacked = _step4.value;
 
                 if (!(unpacked.iGameId !== this.g_iGameID)) {
-                  _context50.next = 10;
+                  _context11.next = 10;
                   break;
                 }
 
                 throw new Error("Bad game from path!");
 
               case 10:
-                _context50.next = 12;
+                _context11.next = 12;
                 return this.SetPath(unpacked.PointsAsString
                 /*points*/
                 , this.m_bIsPlayingWithRed, unpacked.iPlayerId === this.g_iPlayerID
@@ -3793,43 +2101,43 @@ var InkBallGame = /*#__PURE__*/function () {
                 );
 
               case 12:
-                _context50.next = 6;
+                _context11.next = 6;
                 break;
 
               case 14:
-                _context50.next = 19;
+                _context11.next = 19;
                 break;
 
               case 16:
-                _context50.prev = 16;
-                _context50.t0 = _context50["catch"](4);
+                _context11.prev = 16;
+                _context11.t0 = _context11["catch"](4);
 
-                _iterator6.e(_context50.t0);
+                _iterator4.e(_context11.t0);
 
               case 19:
-                _context50.prev = 19;
+                _context11.prev = 19;
 
-                _iterator6.f();
+                _iterator4.f();
 
-                return _context50.finish(19);
+                return _context11.finish(19);
 
               case 22:
-                _context50.prev = 22;
-                _context50.next = 25;
+                _context11.prev = 22;
+                _context11.next = 25;
                 return this.m_Lines.EndBulkStorage();
 
               case 25:
-                return _context50.finish(22);
+                return _context11.finish(22);
 
               case 26:
               case "end":
-                return _context50.stop();
+                return _context11.stop();
             }
           }
-        }, _callee50, this, [[0,, 22, 26], [4, 16, 19, 22]]);
+        }, _callee11, this, [[0,, 22, 26], [4, 16, 19, 22]]);
       }));
 
-      function SetAllPaths(_x46) {
+      function SetAllPaths(_x18) {
         return _SetAllPaths.apply(this, arguments);
       }
 
@@ -3838,21 +2146,21 @@ var InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "IsPointBelongingToLine",
     value: function IsPointBelongingToLine(sPoints, iX, iY) {
-      var _iterator7 = _createForOfIteratorHelper(sPoints),
-          _step7;
+      var _iterator5 = _createForOfIteratorHelper(sPoints),
+          _step5;
 
       try {
-        for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
-          var packed = _step7.value;
+        for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
+          var packed = _step5.value;
           var pnt = packed.split(",");
           var x = pnt[0],
               y = pnt[1];
           if (x === iX && y === iY) return true;
         }
       } catch (err) {
-        _iterator7.e(err);
+        _iterator5.e(err);
       } finally {
-        _iterator7.f();
+        _iterator5.f();
       }
 
       return false;
@@ -3901,12 +2209,12 @@ var InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "SurroundOponentPoints",
     value: function () {
-      var _SurroundOponentPoints = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee51() {
-        var points, pts_not_unique, sColor, owned_by, sOwnedCol, sPathPoints, sOwnedPoints, sDelimiter, ownedPoints, values, _iterator8, _step8, pt, _pt$GetPosition, x, y;
+      var _SurroundOponentPoints = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee12() {
+        var points, pts_not_unique, sColor, owned_by, sOwnedCol, sPathPoints, sOwnedPoints, sDelimiter, ownedPoints, _iterator6, _step6, pt, _pt$GetPosition, x, y;
 
-        return regeneratorRuntime.wrap(function _callee51$(_context51) {
+        return regeneratorRuntime.wrap(function _callee12$(_context12) {
           while (1) {
-            switch (_context51.prev = _context51.next) {
+            switch (_context12.prev = _context12.next) {
               case 0:
                 points = this.m_Line.GetPointsArray(); //uniqe point path test (no duplicates except starting-ending point)
 
@@ -3915,11 +2223,11 @@ var InkBallGame = /*#__PURE__*/function () {
                 }));
 
                 if (!(pts_not_unique || !(points[0].x === points[points.length - 1].x && points[0].y === points[points.length - 1].y))) {
-                  _context51.next = 4;
+                  _context12.next = 4;
                   break;
                 }
 
-                return _context51.abrupt("return", {
+                return _context12.abrupt("return", {
                   OwnedPoints: undefined,
                   owned: "",
                   path: "",
@@ -3940,17 +2248,17 @@ var InkBallGame = /*#__PURE__*/function () {
 
                 sPathPoints = "", sOwnedPoints = "", sDelimiter = "", ownedPoints = []; //make the test!
 
-                _context51.next = 8;
+                _context12.t0 = _createForOfIteratorHelper;
+                _context12.next = 9;
                 return this.m_Points.values();
 
-              case 8:
-                values = _context51.sent;
-                //TODO: async for
-                _iterator8 = _createForOfIteratorHelper(values);
+              case 9:
+                _context12.t1 = _context12.sent;
+                _iterator6 = (0, _context12.t0)(_context12.t1);
 
                 try {
-                  for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
-                    pt = _step8.value;
+                  for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
+                    pt = _step6.value;
 
                     if (pt !== undefined && pt.GetFillColor() === sColor && [StatusEnum.POINT_FREE_BLUE, StatusEnum.POINT_FREE_RED].includes(pt.GetStatus())) {
                       _pt$GetPosition = pt.GetPosition(), x = _pt$GetPosition.x, y = _pt$GetPosition.y;
@@ -3973,9 +2281,9 @@ var InkBallGame = /*#__PURE__*/function () {
                     }
                   }
                 } catch (err) {
-                  _iterator8.e(err);
+                  _iterator6.e(err);
                 } finally {
-                  _iterator8.f();
+                  _iterator6.f();
                 }
 
                 if (sOwnedPoints !== "") {
@@ -3989,7 +2297,7 @@ var InkBallGame = /*#__PURE__*/function () {
                   }.bind(this)).join(' ');
                 }
 
-                return _context51.abrupt("return", {
+                return _context12.abrupt("return", {
                   OwnedPoints: ownedPoints,
                   owned: sOwnedPoints,
                   PathPoints: [],
@@ -3997,12 +2305,12 @@ var InkBallGame = /*#__PURE__*/function () {
                   errorDesc: "No surrounded points"
                 });
 
-              case 13:
+              case 14:
               case "end":
-                return _context51.stop();
+                return _context12.stop();
             }
           }
-        }, _callee51, this);
+        }, _callee12, this);
       }));
 
       function SurroundOponentPoints() {
@@ -4014,74 +2322,74 @@ var InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "IsPointOutsideAllPaths",
     value: function () {
-      var _IsPointOutsideAllPaths = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee52(x, y) {
-        var xmul, ymul, lines, _iterator9, _step9, line, points;
+      var _IsPointOutsideAllPaths = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee13(x, y) {
+        var xmul, ymul, lines, _iterator7, _step7, line, points;
 
-        return regeneratorRuntime.wrap(function _callee52$(_context52) {
+        return regeneratorRuntime.wrap(function _callee13$(_context13) {
           while (1) {
-            switch (_context52.prev = _context52.next) {
+            switch (_context13.prev = _context13.next) {
               case 0:
                 xmul = x * this.m_iGridSizeX, ymul = y * this.m_iGridSizeY;
-                _context52.next = 3;
+                _context13.next = 3;
                 return this.m_Lines.all();
 
               case 3:
-                lines = _context52.sent;
+                lines = _context13.sent;
                 //TODO: async for
-                _iterator9 = _createForOfIteratorHelper(lines);
-                _context52.prev = 5;
+                _iterator7 = _createForOfIteratorHelper(lines);
+                _context13.prev = 5;
 
-                _iterator9.s();
+                _iterator7.s();
 
               case 7:
-                if ((_step9 = _iterator9.n()).done) {
-                  _context52.next = 14;
+                if ((_step7 = _iterator7.n()).done) {
+                  _context13.next = 14;
                   break;
                 }
 
-                line = _step9.value;
+                line = _step7.value;
                 points = line.GetPointsArray();
 
                 if (!(false !== this.pnpoly2(points, xmul, ymul))) {
-                  _context52.next = 12;
+                  _context13.next = 12;
                   break;
                 }
 
-                return _context52.abrupt("return", false);
+                return _context13.abrupt("return", false);
 
               case 12:
-                _context52.next = 7;
+                _context13.next = 7;
                 break;
 
               case 14:
-                _context52.next = 19;
+                _context13.next = 19;
                 break;
 
               case 16:
-                _context52.prev = 16;
-                _context52.t0 = _context52["catch"](5);
+                _context13.prev = 16;
+                _context13.t0 = _context13["catch"](5);
 
-                _iterator9.e(_context52.t0);
+                _iterator7.e(_context13.t0);
 
               case 19:
-                _context52.prev = 19;
+                _context13.prev = 19;
 
-                _iterator9.f();
+                _iterator7.f();
 
-                return _context52.finish(19);
+                return _context13.finish(19);
 
               case 22:
-                return _context52.abrupt("return", true);
+                return _context13.abrupt("return", true);
 
               case 23:
               case "end":
-                return _context52.stop();
+                return _context13.stop();
             }
           }
-        }, _callee52, this, [[5, 16, 19, 22]]);
+        }, _callee13, this, [[5, 16, 19, 22]]);
       }));
 
-      function IsPointOutsideAllPaths(_x47, _x48) {
+      function IsPointOutsideAllPaths(_x19, _x20) {
         return _IsPointOutsideAllPaths.apply(this, arguments);
       }
 
@@ -4123,119 +2431,119 @@ var InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "SendAsyncData",
     value: function () {
-      var _SendAsyncData = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee53(payload) {
+      var _SendAsyncData = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee14(payload) {
         var revertFunction,
             point,
             dto,
             win,
             path,
-            _args53 = arguments;
-        return regeneratorRuntime.wrap(function _callee53$(_context53) {
+            _args14 = arguments;
+        return regeneratorRuntime.wrap(function _callee14$(_context14) {
           while (1) {
-            switch (_context53.prev = _context53.next) {
+            switch (_context14.prev = _context14.next) {
               case 0:
-                revertFunction = _args53.length > 1 && _args53[1] !== undefined ? _args53[1] : undefined;
-                _context53.t0 = payload.GetKind();
-                _context53.next = _context53.t0 === CommandKindEnum.POINT ? 4 : _context53.t0 === CommandKindEnum.PATH ? 19 : _context53.t0 === CommandKindEnum.PING ? 44 : _context53.t0 === CommandKindEnum.STOP_AND_DRAW ? 55 : 69;
+                revertFunction = _args14.length > 1 && _args14[1] !== undefined ? _args14[1] : undefined;
+                _context14.t0 = payload.GetKind();
+                _context14.next = _context14.t0 === CommandKindEnum.POINT ? 4 : _context14.t0 === CommandKindEnum.PATH ? 19 : _context14.t0 === CommandKindEnum.PING ? 44 : _context14.t0 === CommandKindEnum.STOP_AND_DRAW ? 55 : 69;
                 break;
 
               case 4:
                 LocalLog(InkBallPointViewModel.Format('some player', payload));
                 this.m_bHandlingEvent = true;
-                _context53.prev = 6;
-                _context53.next = 9;
+                _context14.prev = 6;
+                _context14.next = 9;
                 return this.g_SignalRConnection.invoke("ClientToServerPoint", payload);
 
               case 9:
-                point = _context53.sent;
-                _context53.next = 12;
+                point = _context14.sent;
+                _context14.next = 12;
                 return this.ReceivedPointProcessing(point);
 
               case 12:
-                _context53.next = 18;
+                _context14.next = 18;
                 break;
 
               case 14:
-                _context53.prev = 14;
-                _context53.t1 = _context53["catch"](6);
-                LocalError(_context53.t1.toString());
+                _context14.prev = 14;
+                _context14.t1 = _context14["catch"](6);
+                LocalError(_context14.t1.toString());
                 if (revertFunction !== undefined) revertFunction();
 
               case 18:
-                return _context53.abrupt("break", 71);
+                return _context14.abrupt("break", 71);
 
               case 19:
                 LocalLog(InkBallPathViewModel.Format('some player', payload));
                 this.m_bHandlingEvent = true;
-                _context53.prev = 21;
-                _context53.next = 24;
+                _context14.prev = 21;
+                _context14.next = 24;
                 return this.g_SignalRConnection.invoke("ClientToServerPath", payload);
 
               case 24:
-                dto = _context53.sent;
+                dto = _context14.sent;
 
                 if (!(Object.prototype.hasOwnProperty.call(dto, 'WinningPlayerId') || Object.prototype.hasOwnProperty.call(dto, 'winningPlayerId'))) {
-                  _context53.next = 30;
+                  _context14.next = 30;
                   break;
                 }
 
                 win = dto;
                 this.ReceivedWinProcessing(win);
-                _context53.next = 37;
+                _context14.next = 37;
                 break;
 
               case 30:
                 if (!(Object.prototype.hasOwnProperty.call(dto, 'PointsAsString') || Object.prototype.hasOwnProperty.call(dto, 'pointsAsString'))) {
-                  _context53.next = 36;
+                  _context14.next = 36;
                   break;
                 }
 
                 path = dto;
-                _context53.next = 34;
+                _context14.next = 34;
                 return this.ReceivedPathProcessing(path);
 
               case 34:
-                _context53.next = 37;
+                _context14.next = 37;
                 break;
 
               case 36:
                 throw new Error("ClientToServerPath bad GetKind!");
 
               case 37:
-                _context53.next = 43;
+                _context14.next = 43;
                 break;
 
               case 39:
-                _context53.prev = 39;
-                _context53.t2 = _context53["catch"](21);
-                LocalError(_context53.t2.toString());
+                _context14.prev = 39;
+                _context14.t2 = _context14["catch"](21);
+                LocalError(_context14.t2.toString());
                 if (revertFunction !== undefined) revertFunction();
 
               case 43:
-                return _context53.abrupt("break", 71);
+                return _context14.abrupt("break", 71);
 
               case 44:
-                _context53.prev = 44;
-                _context53.next = 47;
+                _context14.prev = 44;
+                _context14.next = 47;
                 return this.g_SignalRConnection.invoke("ClientToServerPing", payload);
 
               case 47:
                 document.querySelector(this.m_sMsgInputSel).value = '';
                 document.querySelector(this.m_sMsgSendButtonSel).disabled = 'disabled';
-                _context53.next = 54;
+                _context14.next = 54;
                 break;
 
               case 51:
-                _context53.prev = 51;
-                _context53.t3 = _context53["catch"](44);
-                LocalError(_context53.t3.toString());
+                _context14.prev = 51;
+                _context14.t3 = _context14["catch"](44);
+                LocalError(_context14.t3.toString());
 
               case 54:
-                return _context53.abrupt("break", 71);
+                return _context14.abrupt("break", 71);
 
               case 55:
-                _context53.prev = 55;
-                _context53.next = 58;
+                _context14.prev = 55;
+                _context14.next = 58;
                 return this.g_SignalRConnection.invoke("ClientToServerStopAndDraw", payload);
 
               case 58:
@@ -4244,30 +2552,30 @@ var InkBallGame = /*#__PURE__*/function () {
                 this.m_Line = null;
                 this.m_bIsPlayerActive = true;
                 this.m_StopAndDraw.disabled = 'disabled';
-                _context53.next = 68;
+                _context14.next = 68;
                 break;
 
               case 65:
-                _context53.prev = 65;
-                _context53.t4 = _context53["catch"](55);
-                LocalError(_context53.t4.toString());
+                _context14.prev = 65;
+                _context14.t4 = _context14["catch"](55);
+                LocalError(_context14.t4.toString());
 
               case 68:
-                return _context53.abrupt("break", 71);
+                return _context14.abrupt("break", 71);
 
               case 69:
                 LocalError('unknown object');
-                return _context53.abrupt("break", 71);
+                return _context14.abrupt("break", 71);
 
               case 71:
               case "end":
-                return _context53.stop();
+                return _context14.stop();
             }
           }
-        }, _callee53, this, [[6, 14], [21, 39], [44, 51], [55, 65]]);
+        }, _callee14, this, [[6, 14], [21, 39], [44, 51], [55, 65]]);
       }));
 
-      function SendAsyncData(_x49) {
+      function SendAsyncData(_x21) {
         return _SendAsyncData.apply(this, arguments);
       }
 
@@ -4285,20 +2593,20 @@ var InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "ReceivedPointProcessing",
     value: function () {
-      var _ReceivedPointProcessing = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee54(point) {
+      var _ReceivedPointProcessing = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee15(point) {
         var x, y, iStatus;
-        return regeneratorRuntime.wrap(function _callee54$(_context54) {
+        return regeneratorRuntime.wrap(function _callee15$(_context15) {
           while (1) {
-            switch (_context54.prev = _context54.next) {
+            switch (_context15.prev = _context15.next) {
               case 0:
                 x = point.iX, y = point.iY, iStatus = point.Status !== undefined ? point.Status : point.status;
                 this.m_sLastMoveGameTimeStamp = (point.TimeStamp !== undefined ? point.TimeStamp : new Date(point.timeStamp)).toISOString();
-                _context54.next = 4;
+                _context15.next = 4;
                 return this.SetPoint(x, y, iStatus, point.iPlayerId);
 
               case 4:
                 if (!(this.g_iPlayerID !== point.iPlayerId)) {
-                  _context54.next = 16;
+                  _context15.next = 16;
                   break;
                 }
 
@@ -4307,11 +2615,11 @@ var InkBallGame = /*#__PURE__*/function () {
                 this.m_Screen.style.cursor = "crosshair";
 
                 if (!(this.m_Line !== null)) {
-                  _context54.next = 11;
+                  _context15.next = 11;
                   break;
                 }
 
-                _context54.next = 11;
+                _context15.next = 11;
                 return this.OnCancelClick();
 
               case 11:
@@ -4323,7 +2631,7 @@ var InkBallGame = /*#__PURE__*/function () {
                   this.m_Timer = null;
                 }
 
-                _context54.next = 24;
+                _context15.next = 24;
                 break;
 
               case 16:
@@ -4341,13 +2649,13 @@ var InkBallGame = /*#__PURE__*/function () {
 
               case 25:
               case "end":
-                return _context54.stop();
+                return _context15.stop();
             }
           }
-        }, _callee54, this);
+        }, _callee15, this);
       }));
 
-      function ReceivedPointProcessing(_x50) {
+      function ReceivedPointProcessing(_x22) {
         return _ReceivedPointProcessing.apply(this, arguments);
       }
 
@@ -4356,22 +2664,22 @@ var InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "ReceivedPathProcessing",
     value: function () {
-      var _ReceivedPathProcessing = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee55(path) {
-        var str_path, owned, points, point_status, sOwnedCol, _iterator10, _step10, packed, p, x, y, _points, _x52, _y, p0;
+      var _ReceivedPathProcessing = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee16(path) {
+        var str_path, owned, points, point_status, sOwnedCol, _iterator8, _step8, packed, p, x, y, _points, _x24, _y, p0;
 
-        return regeneratorRuntime.wrap(function _callee55$(_context55) {
+        return regeneratorRuntime.wrap(function _callee16$(_context16) {
           while (1) {
-            switch (_context55.prev = _context55.next) {
+            switch (_context16.prev = _context16.next) {
               case 0:
                 this.m_sLastMoveGameTimeStamp = (path.TimeStamp !== undefined ? path.TimeStamp : new Date(path.timeStamp)).toISOString();
 
                 if (!(this.g_iPlayerID !== path.iPlayerId)) {
-                  _context55.next = 38;
+                  _context16.next = 38;
                   break;
                 }
 
                 str_path = path.PointsAsString || path.pointsAsString, owned = path.OwnedPointsAsString || path.ownedPointsAsString;
-                _context55.next = 5;
+                _context16.next = 5;
                 return this.SetPath(str_path, this.m_sDotColor === this.COLOR_RED ? true : false, false, path.iId
                 /*real DB id*/
                 );
@@ -4380,25 +2688,25 @@ var InkBallGame = /*#__PURE__*/function () {
                 points = owned.split(" ");
                 point_status = this.m_sDotColor === this.COLOR_RED ? StatusEnum.POINT_OWNED_BY_RED : StatusEnum.POINT_OWNED_BY_BLUE;
                 sOwnedCol = this.m_sDotColor === this.COLOR_RED ? this.COLOR_OWNED_RED : this.COLOR_OWNED_BLUE;
-                _iterator10 = _createForOfIteratorHelper(points);
-                _context55.prev = 9;
+                _iterator8 = _createForOfIteratorHelper(points);
+                _context16.prev = 9;
 
-                _iterator10.s();
+                _iterator8.s();
 
               case 11:
-                if ((_step10 = _iterator10.n()).done) {
-                  _context55.next = 21;
+                if ((_step8 = _iterator8.n()).done) {
+                  _context16.next = 21;
                   break;
                 }
 
-                packed = _step10.value;
+                packed = _step8.value;
                 p = packed.split(",");
                 x = parseInt(p[0]), y = parseInt(p[1]);
-                _context55.next = 17;
+                _context16.next = 17;
                 return this.m_Points.get(y * this.m_iGridWidth + x);
 
               case 17:
-                p = _context55.sent;
+                p = _context16.sent;
 
                 if (p !== undefined) {
                   p.SetStatus(point_status);
@@ -4408,25 +2716,25 @@ var InkBallGame = /*#__PURE__*/function () {
                 }
 
               case 19:
-                _context55.next = 11;
+                _context16.next = 11;
                 break;
 
               case 21:
-                _context55.next = 26;
+                _context16.next = 26;
                 break;
 
               case 23:
-                _context55.prev = 23;
-                _context55.t0 = _context55["catch"](9);
+                _context16.prev = 23;
+                _context16.t0 = _context16["catch"](9);
 
-                _iterator10.e(_context55.t0);
+                _iterator8.e(_context16.t0);
 
               case 26:
-                _context55.prev = 26;
+                _context16.prev = 26;
 
-                _iterator10.f();
+                _iterator8.f();
 
-                return _context55.finish(26);
+                return _context16.finish(26);
 
               case 29:
                 this.m_bIsPlayerActive = true;
@@ -4434,34 +2742,34 @@ var InkBallGame = /*#__PURE__*/function () {
                 this.m_Screen.style.cursor = "crosshair";
 
                 if (!(this.m_Line !== null)) {
-                  _context55.next = 35;
+                  _context16.next = 35;
                   break;
                 }
 
-                _context55.next = 35;
+                _context16.next = 35;
                 return this.OnCancelClick();
 
               case 35:
                 this.m_StopAndDraw.disabled = '';
-                _context55.next = 57;
+                _context16.next = 57;
                 break;
 
               case 38:
                 //set starting point to POINT_IN_PATH to block further path closing with it
                 _points = this.m_Line.GetPointsArray();
-                _x52 = _points[0].x, _y = _points[0].y;
-                _x52 /= this.m_iGridSizeX;
+                _x24 = _points[0].x, _y = _points[0].y;
+                _x24 /= this.m_iGridSizeX;
                 _y /= this.m_iGridSizeY;
-                _context55.next = 44;
-                return this.m_Points.get(_y * this.m_iGridWidth + _x52);
+                _context16.next = 44;
+                return this.m_Points.get(_y * this.m_iGridWidth + _x24);
 
               case 44:
-                p0 = _context55.sent;
+                p0 = _context16.sent;
                 if (p0 !== undefined) p0.SetStatus(StatusEnum.POINT_IN_PATH);else {//debugger;
                 }
                 this.m_Line.SetWidthAndColor(3, this.m_sDotColor);
                 this.m_Line.SetID(path.iId);
-                _context55.next = 50;
+                _context16.next = 50;
                 return this.m_Lines.push(this.m_Line);
 
               case 50:
@@ -4484,13 +2792,13 @@ var InkBallGame = /*#__PURE__*/function () {
 
               case 60:
               case "end":
-                return _context55.stop();
+                return _context16.stop();
             }
           }
-        }, _callee55, this, [[9, 23, 26, 29]]);
+        }, _callee16, this, [[9, 23, 26, 29]]);
       }));
 
-      function ReceivedPathProcessing(_x51) {
+      function ReceivedPathProcessing(_x23) {
         return _ReceivedPathProcessing.apply(this, arguments);
       }
 
@@ -4597,17 +2905,17 @@ var InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "OnMouseMove",
     value: function () {
-      var _OnMouseMove = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee57(event) {
-        var _this25 = this;
+      var _OnMouseMove = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee18(event) {
+        var _this12 = this;
 
         var x, y, tox, toy, p0, p1, line_contains_point, val, _p, _p2, fromx, fromy;
 
-        return regeneratorRuntime.wrap(function _callee57$(_context57) {
+        return regeneratorRuntime.wrap(function _callee18$(_context18) {
           while (1) {
-            switch (_context57.prev = _context57.next) {
+            switch (_context18.prev = _context18.next) {
               case 0:
                 if (!(!this.m_bIsPlayerActive || this.m_Player2Name.innerHTML === '???' || this.m_bHandlingEvent === true || this.iConnErrCount > 0)) {
-                  _context57.next = 3;
+                  _context18.next = 3;
                   break;
                 }
 
@@ -4615,7 +2923,7 @@ var InkBallGame = /*#__PURE__*/function () {
                   this.m_Screen.style.cursor = "wait";
                 }
 
-                return _context57.abrupt("return");
+                return _context18.abrupt("return");
 
               case 3:
                 x = (event ? event.clientX : window.event.clientX) - this.m_Screen.offsetLeft + this.f_scrollLeft() + 0.5 * this.m_iGridSizeX;
@@ -4629,84 +2937,84 @@ var InkBallGame = /*#__PURE__*/function () {
                 this.Debug("[".concat(x, ",").concat(y, "]"), 1);
 
                 if (!this.m_bDrawLines) {
-                  _context57.next = 69;
+                  _context18.next = 69;
                   break;
                 }
 
                 if (this.m_Line !== null) this.m_Screen.style.cursor = "move";else this.m_Screen.style.cursor = "crosshair";
 
                 if (!(this.m_bMouseDown === true)) {
-                  _context57.next = 67;
+                  _context18.next = 67;
                   break;
                 }
 
                 if (!((this.m_iLastX !== x || this.m_iLastY !== y) && Math.abs(parseInt(this.m_iLastX - x)) <= 1 && Math.abs(parseInt(this.m_iLastY - y)) <= 1 && this.m_iLastX >= 0 && this.m_iLastY >= 0)) {
-                  _context57.next = 67;
+                  _context18.next = 67;
                   break;
                 }
 
                 if (!(this.m_Line !== null)) {
-                  _context57.next = 60;
+                  _context18.next = 60;
                   break;
                 }
 
-                _context57.next = 19;
+                _context18.next = 19;
                 return this.m_Points.get(this.m_iLastY * this.m_iGridWidth + this.m_iLastX);
 
               case 19:
-                p0 = _context57.sent;
-                _context57.next = 22;
+                p0 = _context18.sent;
+                _context18.next = 22;
                 return this.m_Points.get(y * this.m_iGridWidth + x);
 
               case 22:
-                p1 = _context57.sent;
+                p1 = _context18.sent;
                 this.m_CancelPath.disabled = this.m_Line.GetLength() >= 2 ? '' : 'disabled';
 
                 if (!(p0 !== undefined && p1 !== undefined && p0.GetFillColor() === this.m_sDotColor && p1.GetFillColor() === this.m_sDotColor)) {
-                  _context57.next = 58;
+                  _context18.next = 58;
                   break;
                 }
 
                 line_contains_point = this.m_Line.ContainsPoint(tox, toy);
 
                 if (!(line_contains_point < 1 && p1.GetStatus() !== StatusEnum.POINT_STARTING && true === this.m_Line.AppendPoints(tox, toy, this.m_iGridSizeX, this.m_iGridSizeY))) {
-                  _context57.next = 32;
+                  _context18.next = 32;
                   break;
                 }
 
                 p1.SetStatus(StatusEnum.POINT_IN_PATH, true);
                 this.m_iLastX = x;
                 this.m_iLastY = y;
-                _context57.next = 58;
+                _context18.next = 58;
                 break;
 
               case 32:
                 if (!(line_contains_point === 1 && p1.GetStatus() === StatusEnum.POINT_STARTING && true === this.m_Line.AppendPoints(tox, toy, this.m_iGridSizeX, this.m_iGridSizeY))) {
-                  _context57.next = 48;
+                  _context18.next = 48;
                   break;
                 }
 
-                _context57.next = 35;
+                _context18.next = 35;
                 return this.SurroundOponentPoints();
 
               case 35:
-                val = _context57.sent;
+                val = _context18.sent;
 
                 if (!(val.owned.length > 0)) {
-                  _context57.next = 43;
+                  _context18.next = 43;
                   break;
                 }
 
                 this.Debug('Closing path', 0);
                 this.rAF_FrameID = null;
-                _context57.next = 41;
-                return this.SendAsyncData(this.CreateXMLPutPathRequest(val), /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee56() {
-                  return regeneratorRuntime.wrap(function _callee56$(_context56) {
+                _context18.next = 41;
+                return this.SendAsyncData(this.CreateXMLPutPathRequest(val), /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee17() {
+                  return regeneratorRuntime.wrap(function _callee17$(_context17) {
                     while (1) {
-                      switch (_context56.prev = _context56.next) {
+                      switch (_context17.prev = _context17.next) {
                         case 0:
-                          _context56.next = 2;
-                          return _this25.OnCancelClick();
+                          _context17.next = 2;
+                          return _this12.OnCancelClick();
 
                         case 2:
                           val.OwnedPoints.forEach(function (revData) {
@@ -4717,18 +3025,18 @@ var InkBallGame = /*#__PURE__*/function () {
                             p.SetFillColor(revertFillColor);
                             p.SetStrokeColor(revertStrokeColor);
                           });
-                          _this25.m_bHandlingEvent = false;
+                          _this12.m_bHandlingEvent = false;
 
                         case 4:
                         case "end":
-                          return _context56.stop();
+                          return _context17.stop();
                       }
                     }
-                  }, _callee56);
+                  }, _callee17);
                 })));
 
               case 41:
-                _context57.next = 44;
+                _context18.next = 44;
                 break;
 
               case 43:
@@ -4737,17 +3045,17 @@ var InkBallGame = /*#__PURE__*/function () {
               case 44:
                 this.m_iLastX = x;
                 this.m_iLastY = y;
-                _context57.next = 58;
+                _context18.next = 58;
                 break;
 
               case 48:
                 if (!(line_contains_point >= 1 && p0.GetStatus() === StatusEnum.POINT_IN_PATH && this.m_Line.GetPointsString().endsWith("".concat(this.m_iLastX * this.m_iGridSizeX, ",").concat(this.m_iLastY * this.m_iGridSizeY)))) {
-                  _context57.next = 58;
+                  _context18.next = 58;
                   break;
                 }
 
                 if (!(this.m_Line.GetLength() > 2)) {
-                  _context57.next = 56;
+                  _context18.next = 56;
                   break;
                 }
 
@@ -4755,33 +3063,33 @@ var InkBallGame = /*#__PURE__*/function () {
                 this.m_Line.RemoveLastPoint();
                 this.m_iLastX = x;
                 this.m_iLastY = y;
-                _context57.next = 58;
+                _context18.next = 58;
                 break;
 
               case 56:
-                _context57.next = 58;
+                _context18.next = 58;
                 return this.OnCancelClick();
 
               case 58:
-                _context57.next = 67;
+                _context18.next = 67;
                 break;
 
               case 60:
-                _context57.next = 62;
+                _context18.next = 62;
                 return this.m_Points.get(this.m_iLastY * this.m_iGridWidth + this.m_iLastX);
 
               case 62:
-                _p = _context57.sent;
-                _context57.next = 65;
+                _p = _context18.sent;
+                _context18.next = 65;
                 return this.m_Points.get(y * this.m_iGridWidth + x);
 
               case 65:
-                _p2 = _context57.sent;
+                _p2 = _context18.sent;
 
                 if (_p !== undefined && _p2 !== undefined && _p.GetFillColor() === this.m_sDotColor && _p2.GetFillColor() === this.m_sDotColor) {
                   fromx = this.m_iLastX * this.m_iGridSizeX;
                   fromy = this.m_iLastY * this.m_iGridSizeY;
-                  this.m_Line = SVG.CreatePolyline(6, fromx + "," + fromy + " " + tox + "," + toy, this.DRAWING_PATH_COLOR);
+                  this.m_Line = this.SvgVml.CreatePolyline(6, fromx + "," + fromy + " " + tox + "," + toy, this.DRAWING_PATH_COLOR);
                   this.m_CancelPath.disabled = '';
 
                   _p.SetStatus(StatusEnum.POINT_STARTING, true);
@@ -4793,7 +3101,7 @@ var InkBallGame = /*#__PURE__*/function () {
                 }
 
               case 67:
-                _context57.next = 70;
+                _context18.next = 70;
                 break;
 
               case 69:
@@ -4801,13 +3109,13 @@ var InkBallGame = /*#__PURE__*/function () {
 
               case 70:
               case "end":
-                return _context57.stop();
+                return _context18.stop();
             }
           }
-        }, _callee57, this);
+        }, _callee18, this);
       }));
 
-      function OnMouseMove(_x53) {
+      function OnMouseMove(_x25) {
         return _OnMouseMove.apply(this, arguments);
       }
 
@@ -4816,21 +3124,21 @@ var InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "OnMouseDown",
     value: function () {
-      var _OnMouseDown = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee59(event) {
-        var _this26 = this;
+      var _OnMouseDown = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee20(event) {
+        var _this13 = this;
 
         var x, y, loc_x, loc_y, p0, p1, tox, toy, line_contains_point, val, _p3, _p4, fromx, fromy, _tox, _toy, _p5;
 
-        return regeneratorRuntime.wrap(function _callee59$(_context59) {
+        return regeneratorRuntime.wrap(function _callee20$(_context20) {
           while (1) {
-            switch (_context59.prev = _context59.next) {
+            switch (_context20.prev = _context20.next) {
               case 0:
                 if (!(!this.m_bIsPlayerActive || this.m_Player2Name.innerHTML === '???' || this.m_bHandlingEvent === true || this.iConnErrCount > 0)) {
-                  _context59.next = 2;
+                  _context20.next = 2;
                   break;
                 }
 
-                return _context59.abrupt("return");
+                return _context20.abrupt("return");
 
               case 2:
                 x = (event ? event.clientX : window.event.clientX) - this.m_Screen.offsetLeft + this.f_scrollLeft() + 0.5 * this.m_iGridSizeX;
@@ -4840,7 +3148,7 @@ var InkBallGame = /*#__PURE__*/function () {
                 this.m_bMouseDown = true;
 
                 if (this.m_bDrawLines) {
-                  _context59.next = 31;
+                  _context20.next = 31;
                   break;
                 }
 
@@ -4851,73 +3159,73 @@ var InkBallGame = /*#__PURE__*/function () {
                 loc_y = y;
                 x = loc_x * this.m_iGridSizeX;
                 y = loc_y * this.m_iGridSizeY;
-                _context59.next = 16;
+                _context20.next = 16;
                 return this.m_Points.get(loc_y * this.m_iGridWidth + loc_x);
 
               case 16:
-                _context59.t0 = _context59.sent;
-                _context59.t1 = undefined;
+                _context20.t0 = _context20.sent;
+                _context20.t1 = undefined;
 
-                if (!(_context59.t0 !== _context59.t1)) {
-                  _context59.next = 21;
+                if (!(_context20.t0 !== _context20.t1)) {
+                  _context20.next = 21;
                   break;
                 }
 
                 this.Debug('Wrong point - already existing', 0);
-                return _context59.abrupt("return");
+                return _context20.abrupt("return");
 
               case 21:
-                _context59.next = 23;
+                _context20.next = 23;
                 return this.IsPointOutsideAllPaths(loc_x, loc_y);
 
               case 23:
-                if (_context59.sent) {
-                  _context59.next = 26;
+                if (_context20.sent) {
+                  _context20.next = 26;
                   break;
                 }
 
                 this.Debug('Wrong point, Point is not outside all paths', 0);
-                return _context59.abrupt("return");
+                return _context20.abrupt("return");
 
               case 26:
                 this.rAF_FrameID = null;
-                _context59.next = 29;
+                _context20.next = 29;
                 return this.SendAsyncData(this.CreateXMLPutPointRequest(loc_x, loc_y), function () {
-                  _this26.m_bMouseDown = false;
-                  _this26.m_bHandlingEvent = false;
+                  _this13.m_bMouseDown = false;
+                  _this13.m_bHandlingEvent = false;
                 });
 
               case 29:
-                _context59.next = 94;
+                _context20.next = 94;
                 break;
 
               case 31:
                 if (!(
                 /*this.m_bMouseDown === true && */
                 (this.m_iLastX !== x || this.m_iLastY !== y) && Math.abs(parseInt(this.m_iLastX - x)) <= 1 && Math.abs(parseInt(this.m_iLastY - y)) <= 1 && this.m_iLastX >= 0 && this.m_iLastY >= 0)) {
-                  _context59.next = 89;
+                  _context20.next = 89;
                   break;
                 }
 
                 if (!(this.m_Line !== null)) {
-                  _context59.next = 78;
+                  _context20.next = 78;
                   break;
                 }
 
-                _context59.next = 35;
+                _context20.next = 35;
                 return this.m_Points.get(this.m_iLastY * this.m_iGridWidth + this.m_iLastX);
 
               case 35:
-                p0 = _context59.sent;
-                _context59.next = 38;
+                p0 = _context20.sent;
+                _context20.next = 38;
                 return this.m_Points.get(y * this.m_iGridWidth + x);
 
               case 38:
-                p1 = _context59.sent;
+                p1 = _context20.sent;
                 this.m_CancelPath.disabled = this.m_Line.GetLength() >= 2 ? '' : 'disabled';
 
                 if (!(p0 !== undefined && p1 !== undefined && p0.GetFillColor() === this.m_sDotColor && p1.GetFillColor() === this.m_sDotColor)) {
-                  _context59.next = 76;
+                  _context20.next = 76;
                   break;
                 }
 
@@ -4926,43 +3234,43 @@ var InkBallGame = /*#__PURE__*/function () {
                 line_contains_point = this.m_Line.ContainsPoint(tox, toy);
 
                 if (!(line_contains_point < 1 && p1.GetStatus() !== StatusEnum.POINT_STARTING && true === this.m_Line.AppendPoints(tox, toy, this.m_iGridSizeX, this.m_iGridSizeY))) {
-                  _context59.next = 50;
+                  _context20.next = 50;
                   break;
                 }
 
                 p1.SetStatus(StatusEnum.POINT_IN_PATH, true);
                 this.m_iLastX = x;
                 this.m_iLastY = y;
-                _context59.next = 76;
+                _context20.next = 76;
                 break;
 
               case 50:
                 if (!(line_contains_point === 1 && p1.GetStatus() === StatusEnum.POINT_STARTING && true === this.m_Line.AppendPoints(tox, toy, this.m_iGridSizeX, this.m_iGridSizeY))) {
-                  _context59.next = 66;
+                  _context20.next = 66;
                   break;
                 }
 
-                _context59.next = 53;
+                _context20.next = 53;
                 return this.SurroundOponentPoints();
 
               case 53:
-                val = _context59.sent;
+                val = _context20.sent;
 
                 if (!(val.owned.length > 0)) {
-                  _context59.next = 61;
+                  _context20.next = 61;
                   break;
                 }
 
                 this.Debug('Closing path', 0);
                 this.rAF_FrameID = null;
-                _context59.next = 59;
-                return this.SendAsyncData(this.CreateXMLPutPathRequest(val), /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee58() {
-                  return regeneratorRuntime.wrap(function _callee58$(_context58) {
+                _context20.next = 59;
+                return this.SendAsyncData(this.CreateXMLPutPathRequest(val), /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee19() {
+                  return regeneratorRuntime.wrap(function _callee19$(_context19) {
                     while (1) {
-                      switch (_context58.prev = _context58.next) {
+                      switch (_context19.prev = _context19.next) {
                         case 0:
-                          _context58.next = 2;
-                          return _this26.OnCancelClick();
+                          _context19.next = 2;
+                          return _this13.OnCancelClick();
 
                         case 2:
                           val.OwnedPoints.forEach(function (revData) {
@@ -4973,19 +3281,19 @@ var InkBallGame = /*#__PURE__*/function () {
                             p.SetFillColor(revertFillColor);
                             p.SetStrokeColor(revertStrokeColor);
                           });
-                          _this26.m_bMouseDown = false;
-                          _this26.m_bHandlingEvent = false;
+                          _this13.m_bMouseDown = false;
+                          _this13.m_bHandlingEvent = false;
 
                         case 5:
                         case "end":
-                          return _context58.stop();
+                          return _context19.stop();
                       }
                     }
-                  }, _callee58);
+                  }, _callee19);
                 })));
 
               case 59:
-                _context59.next = 62;
+                _context20.next = 62;
                 break;
 
               case 61:
@@ -4994,17 +3302,17 @@ var InkBallGame = /*#__PURE__*/function () {
               case 62:
                 this.m_iLastX = x;
                 this.m_iLastY = y;
-                _context59.next = 76;
+                _context20.next = 76;
                 break;
 
               case 66:
                 if (!(line_contains_point >= 1 && p0.GetStatus() === StatusEnum.POINT_IN_PATH && this.m_Line.GetPointsString().endsWith("".concat(this.m_iLastX * this.m_iGridSizeX, ",").concat(this.m_iLastY * this.m_iGridSizeY)))) {
-                  _context59.next = 76;
+                  _context20.next = 76;
                   break;
                 }
 
                 if (!(this.m_Line.GetLength() > 2)) {
-                  _context59.next = 74;
+                  _context20.next = 74;
                   break;
                 }
 
@@ -5012,35 +3320,35 @@ var InkBallGame = /*#__PURE__*/function () {
                 this.m_Line.RemoveLastPoint();
                 this.m_iLastX = x;
                 this.m_iLastY = y;
-                _context59.next = 76;
+                _context20.next = 76;
                 break;
 
               case 74:
-                _context59.next = 76;
+                _context20.next = 76;
                 return this.OnCancelClick();
 
               case 76:
-                _context59.next = 87;
+                _context20.next = 87;
                 break;
 
               case 78:
-                _context59.next = 80;
+                _context20.next = 80;
                 return this.m_Points.get(this.m_iLastY * this.m_iGridWidth + this.m_iLastX);
 
               case 80:
-                _p3 = _context59.sent;
-                _context59.next = 83;
+                _p3 = _context20.sent;
+                _context20.next = 83;
                 return this.m_Points.get(y * this.m_iGridWidth + x);
 
               case 83:
-                _p4 = _context59.sent;
+                _p4 = _context20.sent;
 
                 if (_p3 !== undefined && _p4 !== undefined && _p3.GetFillColor() === this.m_sDotColor && _p4.GetFillColor() === this.m_sDotColor) {
                   fromx = this.m_iLastX * this.m_iGridSizeX;
                   fromy = this.m_iLastY * this.m_iGridSizeY;
                   _tox = x * this.m_iGridSizeX;
                   _toy = y * this.m_iGridSizeY;
-                  this.m_Line = SVG.CreatePolyline(6, fromx + "," + fromy + " " + _tox + "," + _toy, this.DRAWING_PATH_COLOR);
+                  this.m_Line = this.SvgVml.CreatePolyline(6, fromx + "," + fromy + " " + _tox + "," + _toy, this.DRAWING_PATH_COLOR);
                   this.m_CancelPath.disabled = '';
 
                   _p3.SetStatus(StatusEnum.POINT_STARTING, true);
@@ -5052,20 +3360,20 @@ var InkBallGame = /*#__PURE__*/function () {
                 this.m_iLastY = y;
 
               case 87:
-                _context59.next = 94;
+                _context20.next = 94;
                 break;
 
               case 89:
                 if (!(this.m_iLastX < 0 || this.m_iLastY < 0)) {
-                  _context59.next = 94;
+                  _context20.next = 94;
                   break;
                 }
 
-                _context59.next = 92;
+                _context20.next = 92;
                 return this.m_Points.get(y * this.m_iGridWidth + x);
 
               case 92:
-                _p5 = _context59.sent;
+                _p5 = _context20.sent;
 
                 if (_p5 !== undefined && _p5.GetFillColor() === this.m_sDotColor) {
                   this.m_iLastX = x;
@@ -5074,13 +3382,13 @@ var InkBallGame = /*#__PURE__*/function () {
 
               case 94:
               case "end":
-                return _context59.stop();
+                return _context20.stop();
             }
           }
-        }, _callee59, this);
+        }, _callee20, this);
       }));
 
-      function OnMouseDown(_x54) {
+      function OnMouseDown(_x26) {
         return _OnMouseDown.apply(this, arguments);
       }
 
@@ -5099,23 +3407,23 @@ var InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "OnStopAndDraw",
     value: function () {
-      var _OnStopAndDraw = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee60(event) {
+      var _OnStopAndDraw = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee21(event) {
         var btn;
-        return regeneratorRuntime.wrap(function _callee60$(_context60) {
+        return regeneratorRuntime.wrap(function _callee21$(_context21) {
           while (1) {
-            switch (_context60.prev = _context60.next) {
+            switch (_context21.prev = _context21.next) {
               case 0:
                 if (this.m_Timer) {
-                  _context60.next = 11;
+                  _context21.next = 11;
                   break;
                 }
 
                 if (!(this.m_Line !== null)) {
-                  _context60.next = 4;
+                  _context21.next = 4;
                   break;
                 }
 
-                _context60.next = 4;
+                _context21.next = 4;
                 return this.OnCancelClick();
 
               case 4:
@@ -5124,27 +3432,27 @@ var InkBallGame = /*#__PURE__*/function () {
                 if (!this.m_bDrawLines) btn.value = 'Draw line';else btn.value = 'Draw dot';
                 this.m_iLastX = this.m_iLastY = -1;
                 this.m_Line = null;
-                _context60.next = 14;
+                _context21.next = 14;
                 break;
 
               case 11:
                 if (!(this.m_Line === null)) {
-                  _context60.next = 14;
+                  _context21.next = 14;
                   break;
                 }
 
-                _context60.next = 14;
+                _context21.next = 14;
                 return this.SendAsyncData(new StopAndDrawCommand());
 
               case 14:
               case "end":
-                return _context60.stop();
+                return _context21.stop();
             }
           }
-        }, _callee60, this);
+        }, _callee21, this);
       }));
 
-      function OnStopAndDraw(_x55) {
+      function OnStopAndDraw(_x27) {
         return _OnStopAndDraw.apply(this, arguments);
       }
 
@@ -5153,54 +3461,54 @@ var InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "OnCancelClick",
     value: function () {
-      var _OnCancelClick = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee61() {
-        var points, _iterator11, _step11, point, x, y, p0;
+      var _OnCancelClick = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee22() {
+        var points, _iterator9, _step9, point, x, y, p0;
 
-        return regeneratorRuntime.wrap(function _callee61$(_context61) {
+        return regeneratorRuntime.wrap(function _callee22$(_context22) {
           while (1) {
-            switch (_context61.prev = _context61.next) {
+            switch (_context22.prev = _context22.next) {
               case 0:
                 if (!this.m_bDrawLines) {
-                  _context61.next = 33;
+                  _context22.next = 33;
                   break;
                 }
 
                 if (!(this.m_Line !== null)) {
-                  _context61.next = 30;
+                  _context22.next = 30;
                   break;
                 }
 
                 points = this.m_Line.GetPointsArray();
                 this.m_CancelPath.disabled = 'disabled';
-                _iterator11 = _createForOfIteratorHelper(points);
-                _context61.prev = 5;
+                _iterator9 = _createForOfIteratorHelper(points);
+                _context22.prev = 5;
 
-                _iterator11.s();
+                _iterator9.s();
 
               case 7:
-                if ((_step11 = _iterator11.n()).done) {
-                  _context61.next = 20;
+                if ((_step9 = _iterator9.n()).done) {
+                  _context22.next = 20;
                   break;
                 }
 
-                point = _step11.value;
+                point = _step9.value;
                 x = point.x, y = point.y;
 
                 if (!(x === null || y === null)) {
-                  _context61.next = 12;
+                  _context22.next = 12;
                   break;
                 }
 
-                return _context61.abrupt("continue", 18);
+                return _context22.abrupt("continue", 18);
 
               case 12:
                 x /= this.m_iGridSizeX;
                 y /= this.m_iGridSizeY;
-                _context61.next = 16;
+                _context22.next = 16;
                 return this.m_Points.get(y * this.m_iGridWidth + x);
 
               case 16:
-                p0 = _context61.sent;
+                p0 = _context22.sent;
 
                 if (p0 !== undefined) {
                   p0.RevertOldStatus();
@@ -5208,28 +3516,28 @@ var InkBallGame = /*#__PURE__*/function () {
                 }
 
               case 18:
-                _context61.next = 7;
+                _context22.next = 7;
                 break;
 
               case 20:
-                _context61.next = 25;
+                _context22.next = 25;
                 break;
 
               case 22:
-                _context61.prev = 22;
-                _context61.t0 = _context61["catch"](5);
+                _context22.prev = 22;
+                _context22.t0 = _context22["catch"](5);
 
-                _iterator11.e(_context61.t0);
+                _iterator9.e(_context22.t0);
 
               case 25:
-                _context61.prev = 25;
+                _context22.prev = 25;
 
-                _iterator11.f();
+                _iterator9.f();
 
-                return _context61.finish(25);
+                return _context22.finish(25);
 
               case 28:
-                SVG.RemovePolyline(this.m_Line);
+                this.SvgVml.RemovePolyline(this.m_Line);
                 this.m_Line = null;
 
               case 30:
@@ -5239,10 +3547,10 @@ var InkBallGame = /*#__PURE__*/function () {
 
               case 33:
               case "end":
-                return _context61.stop();
+                return _context22.stop();
             }
           }
-        }, _callee61, this, [[5, 22, 25, 28]]);
+        }, _callee22, this, [[5, 22, 25, 28]]);
       }));
 
       function OnCancelClick() {
@@ -5283,29 +3591,29 @@ var InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "OnTestBuildCurrentGraph",
     value: function () {
-      var _OnTestBuildCurrentGraph = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee62(event) {
-        return regeneratorRuntime.wrap(function _callee62$(_context62) {
+      var _OnTestBuildCurrentGraph = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee23(event) {
+        return regeneratorRuntime.wrap(function _callee23$(_context23) {
           while (1) {
-            switch (_context62.prev = _context62.next) {
+            switch (_context23.prev = _context23.next) {
               case 0:
                 event.preventDefault();
-                _context62.t0 = LocalLog;
-                _context62.next = 4;
+                _context23.t0 = LocalLog;
+                _context23.next = 4;
                 return this.BuildGraph();
 
               case 4:
-                _context62.t1 = _context62.sent;
-                (0, _context62.t0)(_context62.t1);
+                _context23.t1 = _context23.sent;
+                (0, _context23.t0)(_context23.t1);
 
               case 6:
               case "end":
-                return _context62.stop();
+                return _context23.stop();
             }
           }
-        }, _callee62, this);
+        }, _callee23, this);
       }));
 
-      function OnTestBuildCurrentGraph(_x56) {
+      function OnTestBuildCurrentGraph(_x28) {
         return _OnTestBuildCurrentGraph.apply(this, arguments);
       }
 
@@ -5314,31 +3622,31 @@ var InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "OnTestConcaveman",
     value: function () {
-      var _OnTestConcaveman = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee63(event) {
-        var vertices, convex_hull, mapped_verts, cw_sorted_verts, rand_color, _iterator12, _step12, vert, x, y, view_x, view_y, pt;
+      var _OnTestConcaveman = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee24(event) {
+        var vertices, convex_hull, mapped_verts, cw_sorted_verts, rand_color, _iterator10, _step10, vert, x, y, view_x, view_y, pt;
 
-        return regeneratorRuntime.wrap(function _callee63$(_context63) {
+        return regeneratorRuntime.wrap(function _callee24$(_context24) {
           while (1) {
-            switch (_context63.prev = _context63.next) {
+            switch (_context24.prev = _context24.next) {
               case 0:
                 event.preventDefault(); //LocalLog('OnTestConcaveman');
 
-                _context63.next = 3;
+                _context24.next = 3;
                 return this.BuildGraph();
 
               case 3:
-                vertices = _context63.sent.vertices.map(function (pt) {
+                vertices = _context24.sent.vertices.map(function (pt) {
                   var pos = pt.GetPosition();
                   return [pos.x / this.m_iGridSizeX, pos.y / this.m_iGridSizeX];
                 }.bind(this));
 
                 if (!(vertices && vertices.length > 0)) {
-                  _context63.next = 32;
+                  _context24.next = 32;
                   break;
                 }
 
-                convex_hull = concavemanBundle.concaveman(vertices, 2.0, 0.0);
-                SVG.CreatePolyline(6, convex_hull.map(function (fnd) {
+                convex_hull = AIBundle.concaveman(vertices, 2.0, 0.0);
+                this.SvgVml.CreatePolyline(6, convex_hull.map(function (fnd) {
                   return parseInt(fnd[0]) * this.m_iGridSizeX + ',' + parseInt(fnd[1]) * this.m_iGridSizeY;
                 }.bind(this)).join(' '), 'green');
                 LocalLog("convex_hull = ".concat(convex_hull));
@@ -5348,20 +3656,20 @@ var InkBallGame = /*#__PURE__*/function () {
                     y: pt[1]
                   };
                 }.bind(this));
-                cw_sorted_verts = SVG.SortPointsClockwise(mapped_verts);
+                cw_sorted_verts = SVG.sortPointsClockwise(mapped_verts);
                 rand_color = RandomColor();
-                _iterator12 = _createForOfIteratorHelper(cw_sorted_verts);
-                _context63.prev = 12;
+                _iterator10 = _createForOfIteratorHelper(cw_sorted_verts);
+                _context24.prev = 12;
 
-                _iterator12.s();
+                _iterator10.s();
 
               case 14:
-                if ((_step12 = _iterator12.n()).done) {
-                  _context63.next = 24;
+                if ((_step10 = _iterator10.n()).done) {
+                  _context24.next = 24;
                   break;
                 }
 
-                vert = _step12.value;
+                vert = _step10.value;
                 //const { x: view_x, y: view_y } = vertices[vert].GetPosition();
                 x = vert.x, y = vert.y;
                 view_x = x * this.m_iGridSizeX, view_y = y * this.m_iGridSizeY; //const line_pts = Array.from(document.querySelectorAll(`svg > line[x1="${view_x}"][y1="${view_y}"]`))
@@ -5379,39 +3687,39 @@ var InkBallGame = /*#__PURE__*/function () {
                   pt.setAttribute('r', "6");
                 }
 
-                _context63.next = 22;
+                _context24.next = 22;
                 return Sleep(50);
 
               case 22:
-                _context63.next = 14;
+                _context24.next = 14;
                 break;
 
               case 24:
-                _context63.next = 29;
+                _context24.next = 29;
                 break;
 
               case 26:
-                _context63.prev = 26;
-                _context63.t0 = _context63["catch"](12);
+                _context24.prev = 26;
+                _context24.t0 = _context24["catch"](12);
 
-                _iterator12.e(_context63.t0);
+                _iterator10.e(_context24.t0);
 
               case 29:
-                _context63.prev = 29;
+                _context24.prev = 29;
 
-                _iterator12.f();
+                _iterator10.f();
 
-                return _context63.finish(29);
+                return _context24.finish(29);
 
               case 32:
               case "end":
-                return _context63.stop();
+                return _context24.stop();
             }
           }
-        }, _callee63, this, [[12, 26, 29, 32]]);
+        }, _callee24, this, [[12, 26, 29, 32]]);
       }));
 
-      function OnTestConcaveman(_x57) {
+      function OnTestConcaveman(_x29) {
         return _OnTestConcaveman.apply(this, arguments);
       }
 
@@ -5420,38 +3728,38 @@ var InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "OnTestMarkAllCycles",
     value: function () {
-      var _OnTestMarkAllCycles = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee64(event) {
-        return regeneratorRuntime.wrap(function _callee64$(_context64) {
+      var _OnTestMarkAllCycles = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee25(event) {
+        return regeneratorRuntime.wrap(function _callee25$(_context25) {
           while (1) {
-            switch (_context64.prev = _context64.next) {
+            switch (_context25.prev = _context25.next) {
               case 0:
                 event.preventDefault(); //LocalLog('OnTestMarkAllCycles');
 
-                _context64.t0 = LocalLog;
-                _context64.t1 = this;
-                _context64.next = 5;
+                _context25.t0 = LocalLog;
+                _context25.t1 = this;
+                _context25.next = 5;
                 return this.BuildGraph({
                   visuals: true
                 });
 
               case 5:
-                _context64.t2 = _context64.sent;
-                _context64.next = 8;
-                return _context64.t1.MarkAllCycles.call(_context64.t1, _context64.t2);
+                _context25.t2 = _context25.sent;
+                _context25.next = 8;
+                return _context25.t1.MarkAllCycles.call(_context25.t1, _context25.t2);
 
               case 8:
-                _context64.t3 = _context64.sent;
-                (0, _context64.t0)(_context64.t3);
+                _context25.t3 = _context25.sent;
+                (0, _context25.t0)(_context25.t3);
 
               case 10:
               case "end":
-                return _context64.stop();
+                return _context25.stop();
             }
           }
-        }, _callee64, this);
+        }, _callee25, this);
       }));
 
-      function OnTestMarkAllCycles(_x58) {
+      function OnTestMarkAllCycles(_x30) {
         return _OnTestMarkAllCycles.apply(this, arguments);
       }
 
@@ -5460,43 +3768,43 @@ var InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "OnTestGroupPoints",
     value: function () {
-      var _OnTestGroupPoints = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee65(event) {
-        return regeneratorRuntime.wrap(function _callee65$(_context65) {
+      var _OnTestGroupPoints = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee26(event) {
+        return regeneratorRuntime.wrap(function _callee26$(_context26) {
           while (1) {
-            switch (_context65.prev = _context65.next) {
+            switch (_context26.prev = _context26.next) {
               case 0:
                 event.preventDefault(); //LocalLog('OnTestGroupPoints');
 
-                _context65.t0 = SVG;
-                _context65.t1 = this;
-                _context65.t2 = [];
-                _context65.next = 6;
+                _context26.t0 = this.SvgVml;
+                _context26.t1 = this;
+                _context26.t2 = [];
+                _context26.next = 6;
                 return this.m_Points.get(9 * this.m_iGridWidth + 26);
 
               case 6:
-                _context65.t3 = _context65.sent;
-                _context65.next = 9;
-                return _context65.t1.GroupPointsRecurse.call(_context65.t1, _context65.t2, _context65.t3);
+                _context26.t3 = _context26.sent;
+                _context26.next = 9;
+                return _context26.t1.GroupPointsRecurse.call(_context26.t1, _context26.t2, _context26.t3);
 
               case 9:
-                _context65.t4 = _context65.sent.map(function (fnd) {
+                _context26.t4 = _context26.sent.map(function (fnd) {
                   var pt = fnd.GetPosition();
                   return pt.x + ',' + pt.y;
                 }).join(' ');
 
-                _context65.t0.CreatePolyline.call(_context65.t0, 6, _context65.t4, 'green');
+                _context26.t0.CreatePolyline.call(_context26.t0, 6, _context26.t4, 'green');
 
                 LocalLog("game.lastCycle = ".concat(this.lastCycle));
 
               case 12:
               case "end":
-                return _context65.stop();
+                return _context26.stop();
             }
           }
-        }, _callee65, this);
+        }, _callee26, this);
       }));
 
-      function OnTestGroupPoints(_x59) {
+      function OnTestGroupPoints(_x31) {
         return _OnTestGroupPoints.apply(this, arguments);
       }
 
@@ -5505,56 +3813,56 @@ var InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "OnTestFindFullSurroundedPoints",
     value: function () {
-      var _OnTestFindFullSurroundedPoints = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee66(event) {
-        var sHumanColor, rand_color, values, _iterator13, _step13, pt, _pt$GetPosition2, view_x, view_y, x, y, pt1;
+      var _OnTestFindFullSurroundedPoints = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee27(event) {
+        var sHumanColor, rand_color, _iterator11, _step11, pt, _pt$GetPosition2, view_x, view_y, x, y, pt1;
 
-        return regeneratorRuntime.wrap(function _callee66$(_context66) {
+        return regeneratorRuntime.wrap(function _callee27$(_context27) {
           while (1) {
-            switch (_context66.prev = _context66.next) {
+            switch (_context27.prev = _context27.next) {
               case 0:
                 event.preventDefault();
                 sHumanColor = this.COLOR_RED;
                 rand_color = RandomColor();
-                _context66.next = 5;
+                _context27.t0 = _createForOfIteratorHelper;
+                _context27.next = 6;
                 return this.m_Points.values();
 
-              case 5:
-                values = _context66.sent;
-                //TODO: async for
-                _iterator13 = _createForOfIteratorHelper(values);
-                _context66.prev = 7;
+              case 6:
+                _context27.t1 = _context27.sent;
+                _iterator11 = (0, _context27.t0)(_context27.t1);
+                _context27.prev = 8;
 
-                _iterator13.s();
+                _iterator11.s();
 
-              case 9:
-                if ((_step13 = _iterator13.n()).done) {
-                  _context66.next = 23;
+              case 10:
+                if ((_step11 = _iterator11.n()).done) {
+                  _context27.next = 24;
                   break;
                 }
 
-                pt = _step13.value;
+                pt = _step11.value;
 
                 if (!(pt !== undefined && pt.GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.GetStatus())) {
-                  _context66.next = 21;
+                  _context27.next = 22;
                   break;
                 }
 
                 _pt$GetPosition2 = pt.GetPosition(), view_x = _pt$GetPosition2.x, view_y = _pt$GetPosition2.y;
                 x = view_x / this.m_iGridSizeX, y = view_y / this.m_iGridSizeY;
-                _context66.next = 16;
+                _context27.next = 17;
                 return this.IsPointOutsideAllPaths(x, y);
 
-              case 16:
-                _context66.t0 = _context66.sent;
+              case 17:
+                _context27.t2 = _context27.sent;
 
-                if (!(false === _context66.t0)) {
-                  _context66.next = 19;
+                if (!(false === _context27.t2)) {
+                  _context27.next = 20;
                   break;
                 }
 
-                return _context66.abrupt("continue", 21);
+                return _context27.abrupt("continue", 22);
 
-              case 19:
+              case 20:
                 //const east = this.m_Points.get(y * this.m_iGridWidth + x + 1);
                 //const west = this.m_Points.get(y * this.m_iGridWidth + x - 1);
                 //const north = this.m_Points.get((y - 1) * this.m_iGridWidth + x);
@@ -5579,40 +3887,295 @@ var InkBallGame = /*#__PURE__*/function () {
                 } //}
 
 
-              case 21:
-                _context66.next = 9;
+              case 22:
+                _context27.next = 10;
                 break;
 
-              case 23:
-                _context66.next = 28;
+              case 24:
+                _context27.next = 29;
                 break;
 
-              case 25:
-                _context66.prev = 25;
-                _context66.t1 = _context66["catch"](7);
+              case 26:
+                _context27.prev = 26;
+                _context27.t3 = _context27["catch"](8);
 
-                _iterator13.e(_context66.t1);
+                _iterator11.e(_context27.t3);
 
-              case 28:
-                _context66.prev = 28;
+              case 29:
+                _context27.prev = 29;
 
-                _iterator13.f();
+                _iterator11.f();
 
-                return _context66.finish(28);
+                return _context27.finish(29);
 
-              case 31:
+              case 32:
               case "end":
-                return _context66.stop();
+                return _context27.stop();
             }
           }
-        }, _callee66, this, [[7, 25, 28, 31]]);
+        }, _callee27, this, [[8, 26, 29, 32]]);
       }));
 
-      function OnTestFindFullSurroundedPoints(_x60) {
+      function OnTestFindFullSurroundedPoints(_x32) {
         return _OnTestFindFullSurroundedPoints.apply(this, arguments);
       }
 
       return OnTestFindFullSurroundedPoints;
+    }()
+  }, {
+    key: "OnTestWorkerify",
+    value: function () {
+      var _OnTestWorkerify = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee30(event) {
+        var addNums, result;
+        return regeneratorRuntime.wrap(function _callee30$(_context30) {
+          while (1) {
+            switch (_context30.prev = _context30.next) {
+              case 0:
+                event.preventDefault();
+
+                addNums = /*#__PURE__*/function () {
+                  var _ref8 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee29(params) {
+                    var svgVml, lines, points, stateStore, ai, graph;
+                    return regeneratorRuntime.wrap(function _callee29$(_context29) {
+                      while (1) {
+                        switch (_context29.prev = _context29.next) {
+                          case 0:
+                            params.state.bPointsAndPathsLoaded = false; // eslint-disable-next-line no-undef
+
+                            svgVml = new SvgVml();
+                            svgVml.CreateSVGVML(null, null, null, true);
+                            // eslint-disable-next-line no-undef
+                            stateStore = new GameStateStore(true, function CreateScreenPointFromIndexedDb(iX, iY, iStatus, sColor) {
+                              var x = iX * params.state.iGridSizeX;
+                              var y = iY * params.state.iGridSizeY;
+                              var oval = svgVml.CreateOval(3);
+                              oval.move(x, y, 3);
+                              var color;
+
+                              switch (iStatus) {
+                                case StatusEnum.POINT_FREE_RED:
+                                  color = 'red';
+                                  oval.SetStatus(iStatus
+                                  /*StatusEnum.POINT_FREE*/
+                                  );
+                                  break;
+
+                                case StatusEnum.POINT_FREE_BLUE:
+                                  color = 'blue';
+                                  oval.SetStatus(iStatus
+                                  /*StatusEnum.POINT_FREE*/
+                                  );
+                                  break;
+
+                                case StatusEnum.POINT_FREE:
+                                  color = 'red';
+                                  oval.SetStatus(iStatus
+                                  /*StatusEnum.POINT_FREE*/
+                                  ); //console.warn('TODO: generic FREE point, really? change it!');
+
+                                  break;
+
+                                case StatusEnum.POINT_STARTING:
+                                  color = 'red';
+                                  oval.SetStatus(iStatus);
+                                  break;
+
+                                case StatusEnum.POINT_IN_PATH:
+                                  //if (this.g_iPlayerID === iPlayerId)//bPlayingWithRed
+                                  //	color = this.m_bIsPlayingWithRed === true ? this.COLOR_RED : this.COLOR_BLUE;
+                                  //else
+                                  //	color = this.m_bIsPlayingWithRed === true ? this.COLOR_BLUE : this.COLOR_RED;
+                                  color = sColor;
+                                  oval.SetStatus(iStatus);
+                                  break;
+
+                                case StatusEnum.POINT_OWNED_BY_RED:
+                                  color = '#DC143C';
+                                  oval.SetStatus(iStatus);
+                                  break;
+
+                                case StatusEnum.POINT_OWNED_BY_BLUE:
+                                  color = '#8A2BE2';
+                                  oval.SetStatus(iStatus);
+                                  break;
+
+                                default:
+                                  alert('bad point');
+                                  break;
+                              }
+
+                              oval.SetFillColor(color);
+                              oval.SetStrokeColor(color);
+                              return oval;
+                            }, /*#__PURE__*/function () {
+                              var _CreateScreenPathFromIndexedDb2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee28(packed, sColor, iPathId) {
+                                var sPoints, sDelimiter, sPathPoints, p, x, y, status, _iterator12, _step12, _packed3, line;
+
+                                return regeneratorRuntime.wrap(function _callee28$(_context28) {
+                                  while (1) {
+                                    switch (_context28.prev = _context28.next) {
+                                      case 0:
+                                        sPoints = packed.split(" ");
+                                        sDelimiter = "", sPathPoints = "", p = null, status = StatusEnum.POINT_STARTING;
+                                        _iterator12 = _createForOfIteratorHelper(sPoints);
+                                        _context28.prev = 3;
+
+                                        _iterator12.s();
+
+                                      case 5:
+                                        if ((_step12 = _iterator12.n()).done) {
+                                          _context28.next = 18;
+                                          break;
+                                        }
+
+                                        _packed3 = _step12.value;
+                                        p = _packed3.split(",");
+                                        x = parseInt(p[0]);
+                                        y = parseInt(p[1]);
+                                        _context28.next = 12;
+                                        return points.get(y * params.state.iGridWidth + x);
+
+                                      case 12:
+                                        p = _context28.sent;
+
+                                        if (p !== null && p !== undefined) {
+                                          p.SetStatus(status);
+                                          status = StatusEnum.POINT_IN_PATH;
+                                        }
+
+                                        sPathPoints += "".concat(sDelimiter).concat(x, ",").concat(y);
+                                        sDelimiter = " ";
+
+                                      case 16:
+                                        _context28.next = 5;
+                                        break;
+
+                                      case 18:
+                                        _context28.next = 23;
+                                        break;
+
+                                      case 20:
+                                        _context28.prev = 20;
+                                        _context28.t0 = _context28["catch"](3);
+
+                                        _iterator12.e(_context28.t0);
+
+                                      case 23:
+                                        _context28.prev = 23;
+
+                                        _iterator12.f();
+
+                                        return _context28.finish(23);
+
+                                      case 26:
+                                        p = sPoints[0].split(",");
+                                        x = parseInt(p[0]);
+                                        y = parseInt(p[1]);
+                                        _context28.next = 31;
+                                        return points.get(y * params.state.iGridWidth + x);
+
+                                      case 31:
+                                        p = _context28.sent;
+
+                                        if (p !== null && p !== undefined) {
+                                          p.SetStatus(status);
+                                        }
+
+                                        sPathPoints += "".concat(sDelimiter).concat(x, ",").concat(y);
+                                        line = svgVml.CreatePolyline(3, sPathPoints, sColor);
+                                        line.SetID(iPathId);
+                                        return _context28.abrupt("return", line);
+
+                                      case 37:
+                                      case "end":
+                                        return _context28.stop();
+                                    }
+                                  }
+                                }, _callee28, null, [[3, 20, 23, 26]]);
+                              }));
+
+                              function CreateScreenPathFromIndexedDb(_x35, _x36, _x37) {
+                                return _CreateScreenPathFromIndexedDb2.apply(this, arguments);
+                              }
+
+                              return CreateScreenPathFromIndexedDb;
+                            }(), function GetGameStateForIndexedDb() {
+                              return params.state;
+                            }, LocalLog, LocalError);
+                            lines = stateStore.GetPathStore();
+                            points = stateStore.GetPointStore();
+                            _context29.next = 8;
+                            return stateStore.PrepareStore();
+
+                          case 8:
+                            _context29.t0 = LocalLog;
+                            _context29.t2 = "lines.count = ";
+                            _context29.next = 12;
+                            return lines.count();
+
+                          case 12:
+                            _context29.t3 = _context29.sent;
+                            _context29.t1 = _context29.t2.concat.call(_context29.t2, _context29.t3, ", points.count = ");
+                            _context29.next = 16;
+                            return points.count();
+
+                          case 16:
+                            _context29.t4 = _context29.sent;
+                            _context29.t5 = _context29.t1.concat.call(_context29.t1, _context29.t4);
+                            (0, _context29.t0)(_context29.t5);
+                            // eslint-disable-next-line no-undef
+                            ai = new h(params.state.iGridWidth, params.state.iGridHeight, params.state.iGridSizeX, params.state.iGridSizeY, points, StatusEnum.POINT_STARTING, StatusEnum.POINT_IN_PATH);
+                            _context29.next = 22;
+                            return ai.BuildGraph({
+                              freePointStatus: StatusEnum.POINT_FREE_BLUE,
+                              fillCol: 'blue',
+                              visuals: false
+                            });
+
+                          case 22:
+                            graph = _context29.sent;
+                            LocalLog(graph);
+                            return _context29.abrupt("return", "blah");
+
+                          case 25:
+                          case "end":
+                            return _context29.stop();
+                        }
+                      }
+                    }, _callee29);
+                  }));
+
+                  return function addNums(_x34) {
+                    return _ref8.apply(this, arguments);
+                  };
+                }(); // Let the worker execute the above function, with the specified arguments and context
+
+
+                _context30.next = 4;
+                return addNums.callAsWorker( //context
+                [LocalLog, LocalError, "const StatusEnum = Object.freeze({\n\tPOINT_FREE_RED: -3,\n\tPOINT_FREE_BLUE: -2,\n\tPOINT_FREE: -1,\n\tPOINT_STARTING: 0,\n\tPOINT_IN_PATH: 1,\n\tPOINT_OWNED_BY_RED: 2,\n\tPOINT_OWNED_BY_BLUE: 3\n});", //SVG.CreateOval, SVG.CreatePolyline, SVG.RemovePolyline, SVG.CreateSVGVML, SVG.CreateLine, SVG.hasDuplicates, SVG.sortPointsClockwise,
+                SVG.SvgVml, SVG.GameStateStore, AIBundle.GraphAI], //parameters
+                {
+                  state: this.GetGameStateForIndexedDb()
+                });
+
+              case 4:
+                result = _context30.sent;
+                LocalLog('result: ' + result);
+
+              case 6:
+              case "end":
+                return _context30.stop();
+            }
+          }
+        }, _callee30, this);
+      }));
+
+      function OnTestWorkerify(_x33) {
+        return _OnTestWorkerify.apply(this, arguments);
+      }
+
+      return OnTestWorkerify;
     }()
     /**
      * Start drawing routines
@@ -5636,7 +4199,7 @@ var InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "PrepareDrawing",
     value: function () {
-      var _PrepareDrawing = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee67(sScreen, sPlayer2Name, sGameStatus, sSurrenderButton, sCancelPath, sPause, sStopAndDraw, sMsgInputSel, sMsgListSel, sMsgSendButtonSel, sLastMoveGameTimeStamp, useIndexedDbStore, version, ddlTestActions) {
+      var _PrepareDrawing = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee31(sScreen, sPlayer2Name, sGameStatus, sSurrenderButton, sCancelPath, sPause, sStopAndDraw, sMsgInputSel, sMsgListSel, sMsgSendButtonSel, sLastMoveGameTimeStamp, useIndexedDbStore, version, ddlTestActions) {
         var iTooLong2Duration,
             boardsize,
             iClientWidth,
@@ -5645,12 +4208,12 @@ var InkBallGame = /*#__PURE__*/function () {
             stateStore,
             i,
             chatSection,
-            _args67 = arguments;
-        return regeneratorRuntime.wrap(function _callee67$(_context67) {
+            _args31 = arguments;
+        return regeneratorRuntime.wrap(function _callee31$(_context31) {
           while (1) {
-            switch (_context67.prev = _context67.next) {
+            switch (_context31.prev = _context31.next) {
               case 0:
-                iTooLong2Duration = _args67.length > 14 && _args67[14] !== undefined ? _args67[14] : 125;
+                iTooLong2Duration = _args31.length > 14 && _args31[14] !== undefined ? _args31[14] : 125;
                 this.m_bIsWon = false;
                 this.m_iDelayBetweenMultiCaptures = 4000;
                 this.m_iTooLong2Duration = iTooLong2Duration
@@ -5683,12 +4246,12 @@ var InkBallGame = /*#__PURE__*/function () {
                 this.m_Screen = document.querySelector(sScreen);
 
                 if (this.m_Screen) {
-                  _context67.next = 32;
+                  _context31.next = 32;
                   break;
                 }
 
                 alert("no board");
-                return _context67.abrupt("return");
+                return _context31.abrupt("return");
 
               case 32:
                 this.m_iPosX = this.m_Screen.offsetLeft;
@@ -5721,20 +4284,21 @@ var InkBallGame = /*#__PURE__*/function () {
                 this.rAF_FrameID = null;
                 this.lastCycle = []; ///////CpuGame variables end//////
 
-                SVG.CreateSVGVML(this.m_Screen, svg_width_x_height, svg_width_x_height, true);
+                this.SvgVml = new SVG.SvgVml();
+                if (this.SvgVml.CreateSVGVML(this.m_Screen, svg_width_x_height, svg_width_x_height, true) === null) alert('SVG is not supported!');
                 this.DisableSelection(this.m_Screen);
-                stateStore = new GameStateStore(useIndexedDbStore, this.CreateScreenPointFromIndexedDb.bind(this), this.CreateScreenPathFromIndexedDb.bind(this), this.GetGameStateForIndexedDb.bind(this), version);
+                stateStore = new SVG.GameStateStore(useIndexedDbStore, this.CreateScreenPointFromIndexedDb.bind(this), this.CreateScreenPathFromIndexedDb.bind(this), this.GetGameStateForIndexedDb.bind(this), LocalLog, LocalError, version);
                 this.m_Lines = stateStore.GetPathStore();
                 this.m_Points = stateStore.GetPointStore();
-                _context67.next = 55;
-                return stateStore.PrepareStore(this);
+                _context31.next = 56;
+                return stateStore.PrepareStore();
 
-              case 55:
-                this.m_bPointsAndPathsLoaded = _context67.sent;
+              case 56:
+                this.m_bPointsAndPathsLoaded = _context31.sent;
 
                 if (this.m_bViewOnly === false) {
                   if (this.m_MouseCursorOval === null) {
-                    this.m_MouseCursorOval = SVG.CreateOval(this.m_PointRadius, 'true');
+                    this.m_MouseCursorOval = this.SvgVml.CreateOval(this.m_PointRadius);
                     this.m_MouseCursorOval.SetFillColor(this.m_sDotColor);
                     this.m_MouseCursorOval.SetStrokeColor(this.m_sDotColor);
                     this.m_MouseCursorOval.SetZIndex(-1);
@@ -5757,7 +4321,8 @@ var InkBallGame = /*#__PURE__*/function () {
                     if (ddlTestActions.length > i) document.querySelector(ddlTestActions[i++]).onclick = this.OnTestConcaveman.bind(this);
                     if (ddlTestActions.length > i) document.querySelector(ddlTestActions[i++]).onclick = this.OnTestMarkAllCycles.bind(this);
                     if (ddlTestActions.length > i) document.querySelector(ddlTestActions[i++]).onclick = this.OnTestGroupPoints.bind(this);
-                    if (ddlTestActions.length > i) document.querySelector(ddlTestActions[i++]).onclick = this.OnTestFindFullSurroundedPoints.bind(this); //disable or even delete chat functionality, coz we're not going to chat with CPU bot
+                    if (ddlTestActions.length > i) document.querySelector(ddlTestActions[i++]).onclick = this.OnTestFindFullSurroundedPoints.bind(this);
+                    if (ddlTestActions.length > i) document.querySelector(ddlTestActions[i++]).onclick = this.OnTestWorkerify.bind(this); //disable or even delete chat functionality, coz we're not going to chat with CPU bot
 
                     chatSection = document.getElementById('chatSection');
 
@@ -5791,15 +4356,15 @@ var InkBallGame = /*#__PURE__*/function () {
                   document.querySelector(sPause).innerHTML = 'back to Game List';
                 }
 
-              case 57:
+              case 58:
               case "end":
-                return _context67.stop();
+                return _context31.stop();
             }
           }
-        }, _callee67, this);
+        }, _callee31, this);
       }));
 
-      function PrepareDrawing(_x61, _x62, _x63, _x64, _x65, _x66, _x67, _x68, _x69, _x70, _x71, _x72, _x73, _x74) {
+      function PrepareDrawing(_x38, _x39, _x40, _x41, _x42, _x43, _x44, _x45, _x46, _x47, _x48, _x49, _x50, _x51) {
         return _PrepareDrawing.apply(this, arguments);
       }
 
@@ -5823,63 +4388,63 @@ var InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "FindRandomCPUPoint",
     value: function () {
-      var _FindRandomCPUPoint = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee68() {
+      var _FindRandomCPUPoint = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee32() {
         var max_random_pick_amount, x, y, cmd;
-        return regeneratorRuntime.wrap(function _callee68$(_context68) {
+        return regeneratorRuntime.wrap(function _callee32$(_context32) {
           while (1) {
-            switch (_context68.prev = _context68.next) {
+            switch (_context32.prev = _context32.next) {
               case 0:
                 max_random_pick_amount = 100;
 
               case 1:
                 if (!(--max_random_pick_amount > 0)) {
-                  _context68.next = 15;
+                  _context32.next = 15;
                   break;
                 }
 
                 x = this.GetRandomInt(0, this.m_iGridWidth);
                 y = this.GetRandomInt(0, this.m_iGridHeight);
-                _context68.next = 6;
+                _context32.next = 6;
                 return this.m_Points.has(y * this.m_iGridWidth + x);
 
               case 6:
-                _context68.t0 = !_context68.sent;
+                _context32.t0 = !_context32.sent;
 
-                if (!_context68.t0) {
-                  _context68.next = 11;
+                if (!_context32.t0) {
+                  _context32.next = 11;
                   break;
                 }
 
-                _context68.next = 10;
+                _context32.next = 10;
                 return this.IsPointOutsideAllPaths(x, y);
 
               case 10:
-                _context68.t0 = _context68.sent;
+                _context32.t0 = _context32.sent;
 
               case 11:
-                if (!_context68.t0) {
-                  _context68.next = 13;
+                if (!_context32.t0) {
+                  _context32.next = 13;
                   break;
                 }
 
-                return _context68.abrupt("break", 15);
+                return _context32.abrupt("break", 15);
 
               case 13:
-                _context68.next = 1;
+                _context32.next = 1;
                 break;
 
               case 15:
                 cmd = new InkBallPointViewModel(0, this.g_iGameID, -1
                 /*player*/
                 , x, y, StatusEnum.POINT_FREE_BLUE, 0);
-                return _context68.abrupt("return", cmd);
+                return _context32.abrupt("return", cmd);
 
               case 17:
               case "end":
-                return _context68.stop();
+                return _context32.stop();
             }
           }
-        }, _callee68, this);
+        }, _callee32, this);
       }));
 
       function FindRandomCPUPoint() {
@@ -5891,26 +4456,26 @@ var InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "CalculateCPUCentroid",
     value: function () {
-      var _CalculateCPUCentroid = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee69() {
-        var centroidX, centroidY, count, x, y, sHumanColor, values, _iterator14, _step14, _pt, pos, tox, toy, max_random_pick_amount, pt;
+      var _CalculateCPUCentroid = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee33() {
+        var centroidX, centroidY, count, x, y, sHumanColor, _iterator13, _step13, _pt, pos, tox, toy, max_random_pick_amount, pt;
 
-        return regeneratorRuntime.wrap(function _callee69$(_context69) {
+        return regeneratorRuntime.wrap(function _callee33$(_context33) {
           while (1) {
-            switch (_context69.prev = _context69.next) {
+            switch (_context33.prev = _context33.next) {
               case 0:
                 centroidX = 0, centroidY = 0, count = 0;
                 sHumanColor = this.COLOR_RED;
-                _context69.next = 4;
+                _context33.t0 = _createForOfIteratorHelper;
+                _context33.next = 5;
                 return this.m_Points.values();
 
-              case 4:
-                values = _context69.sent;
-                //TODO: async for
-                _iterator14 = _createForOfIteratorHelper(values);
+              case 5:
+                _context33.t1 = _context33.sent;
+                _iterator13 = (0, _context33.t0)(_context33.t1);
 
                 try {
-                  for (_iterator14.s(); !(_step14 = _iterator14.n()).done;) {
-                    _pt = _step14.value;
+                  for (_iterator13.s(); !(_step13 = _iterator13.n()).done;) {
+                    _pt = _step13.value;
 
                     if (_pt !== undefined && _pt.GetFillColor() === sHumanColor && _pt.GetStatus() === StatusEnum.POINT_FREE_RED) {
                       pos = _pt.GetPosition();
@@ -5924,19 +4489,19 @@ var InkBallGame = /*#__PURE__*/function () {
                     }
                   }
                 } catch (err) {
-                  _iterator14.e(err);
+                  _iterator13.e(err);
                 } finally {
-                  _iterator14.f();
+                  _iterator13.f();
                 }
 
                 if (!(count <= 0)) {
-                  _context69.next = 9;
+                  _context33.next = 10;
                   break;
                 }
 
-                return _context69.abrupt("return", null);
+                return _context33.abrupt("return", null);
 
-              case 9:
+              case 10:
                 x = centroidX / count;
                 y = centroidY / count;
                 x = x * this.m_iGridSizeX;
@@ -5947,59 +4512,59 @@ var InkBallGame = /*#__PURE__*/function () {
                 y = toy;
                 max_random_pick_amount = 20;
 
-              case 18:
+              case 19:
                 if (!(--max_random_pick_amount > 0)) {
-                  _context69.next = 30;
+                  _context33.next = 31;
                   break;
                 }
 
-                _context69.t0 = !this.m_Points.has(y * this.m_iGridWidth + x);
+                _context33.t2 = !this.m_Points.has(y * this.m_iGridWidth + x);
 
-                if (!_context69.t0) {
-                  _context69.next = 24;
+                if (!_context33.t2) {
+                  _context33.next = 25;
                   break;
                 }
 
-                _context69.next = 23;
+                _context33.next = 24;
                 return this.IsPointOutsideAllPaths(x, y);
 
-              case 23:
-                _context69.t0 = _context69.sent;
-
               case 24:
-                if (!_context69.t0) {
-                  _context69.next = 26;
+                _context33.t2 = _context33.sent;
+
+              case 25:
+                if (!_context33.t2) {
+                  _context33.next = 27;
                   break;
                 }
 
-                return _context69.abrupt("break", 30);
+                return _context33.abrupt("break", 31);
 
-              case 26:
+              case 27:
                 x = this.GetRandomInt(tox - 2, tox + 3);
                 y = this.GetRandomInt(toy - 2, toy + 3);
-                _context69.next = 18;
+                _context33.next = 19;
                 break;
 
-              case 30:
+              case 31:
                 if (!(max_random_pick_amount <= 0)) {
-                  _context69.next = 32;
+                  _context33.next = 33;
                   break;
                 }
 
-                return _context69.abrupt("return", null);
+                return _context33.abrupt("return", null);
 
-              case 32:
+              case 33:
                 pt = new InkBallPointViewModel(0, this.g_iGameID, -1
                 /*player*/
                 , x, y, StatusEnum.POINT_FREE_BLUE, 0);
-                return _context69.abrupt("return", pt);
+                return _context33.abrupt("return", pt);
 
-              case 34:
+              case 35:
               case "end":
-                return _context69.stop();
+                return _context33.stop();
             }
           }
-        }, _callee69, this);
+        }, _callee33, this);
       }));
 
       function CalculateCPUCentroid() {
@@ -6011,67 +4576,59 @@ var InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "BuildGraph",
     value: function () {
-      var _BuildGraph = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee71() {
-        var _ref8,
-            _ref8$freeStat,
+      var _BuildGraph = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee35() {
+        var _ref9,
+            _ref9$freeStat,
             freePointStatus,
-            _ref8$fillCol,
+            _ref9$fillCol,
             fillColor,
-            _ref8$visuals,
+            _ref9$visuals,
             presentVisually,
             graph_points,
             graph_edges,
             isPointOKForPath,
             addPointsAndEdgestoGraph,
-            values,
-            _iterator15,
-            _step15,
+            _iterator14,
+            _step14,
             point,
             _point$GetPosition,
             view_x,
             view_y,
             x,
             y,
-            _args71 = arguments;
+            _args35 = arguments;
 
-        return regeneratorRuntime.wrap(function _callee71$(_context71) {
+        return regeneratorRuntime.wrap(function _callee35$(_context35) {
           while (1) {
-            switch (_context71.prev = _context71.next) {
+            switch (_context35.prev = _context35.next) {
               case 0:
-                _ref8 = _args71.length > 0 && _args71[0] !== undefined ? _args71[0] : {}, _ref8$freeStat = _ref8.freeStat, freePointStatus = _ref8$freeStat === void 0 ? StatusEnum.POINT_FREE_BLUE : _ref8$freeStat, _ref8$fillCol = _ref8.fillCol, fillColor = _ref8$fillCol === void 0 ? this.COLOR_BLUE : _ref8$fillCol, _ref8$visuals = _ref8.visuals, presentVisually = _ref8$visuals === void 0 ? true : _ref8$visuals;
+                _ref9 = _args35.length > 0 && _args35[0] !== undefined ? _args35[0] : {}, _ref9$freeStat = _ref9.freeStat, freePointStatus = _ref9$freeStat === void 0 ? StatusEnum.POINT_FREE_BLUE : _ref9$freeStat, _ref9$fillCol = _ref9.fillCol, fillColor = _ref9$fillCol === void 0 ? this.COLOR_BLUE : _ref9$fillCol, _ref9$visuals = _ref9.visuals, presentVisually = _ref9$visuals === void 0 ? true : _ref9$visuals;
                 graph_points = [], graph_edges = new Map();
 
                 isPointOKForPath = function isPointOKForPath(freePointStatusArr, pt) {
                   var status = pt.GetStatus();
-
-                  if (freePointStatusArr.includes(status) &&
-                  /*(status === StatusEnum.POINT_STARTING || status === StatusEnum.POINT_IN_PATH) && */
-                  pt.GetFillColor() === fillColor //&& graph_points.includes(pt) === false
-                  ) {
-                      return true;
-                    }
-
+                  if (freePointStatusArr.includes(status) && pt.GetFillColor() === fillColor) return true;
                   return false;
                 };
 
                 addPointsAndEdgestoGraph = /*#__PURE__*/function () {
-                  var _ref9 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee70(point, to_x, to_y, view_x, view_y, x, y) {
+                  var _ref10 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee34(point, to_x, to_y, view_x, view_y, x, y) {
                     var next, next_pos, edge, line, pt, _pt2;
 
-                    return regeneratorRuntime.wrap(function _callee70$(_context70) {
+                    return regeneratorRuntime.wrap(function _callee34$(_context34) {
                       while (1) {
-                        switch (_context70.prev = _context70.next) {
+                        switch (_context34.prev = _context34.next) {
                           case 0:
                             if (!(to_x >= 0 && to_x < this.m_iGridWidth && to_y >= 0 && to_y < this.m_iGridHeight)) {
-                              _context70.next = 5;
+                              _context34.next = 5;
                               break;
                             }
 
-                            _context70.next = 3;
+                            _context34.next = 3;
                             return this.m_Points.get(to_y * this.m_iGridWidth + to_x);
 
                           case 3:
-                            next = _context70.sent;
+                            next = _context34.sent;
 
                             if (next && isPointOKForPath([freePointStatus], next) === true) {
                               next_pos = next.GetPosition(); //const to_x = next_pos.x / this.m_iGridSizeX, to_y = next_pos.y / this.m_iGridSizeY;
@@ -6083,7 +4640,7 @@ var InkBallGame = /*#__PURE__*/function () {
                                 };
 
                                 if (presentVisually === true) {
-                                  line = SVG.CreateLine(3, 'rgba(0, 255, 0, 0.3)');
+                                  line = this.SvgVml.CreateLine(3, 'rgba(0, 255, 0, 0.3)');
                                   line.move(view_x, view_y, next_pos.x, next_pos.y);
                                   edge.line = line;
                                 }
@@ -6115,38 +4672,38 @@ var InkBallGame = /*#__PURE__*/function () {
 
                           case 5:
                           case "end":
-                            return _context70.stop();
+                            return _context34.stop();
                         }
                       }
-                    }, _callee70, this);
+                    }, _callee34, this);
                   }));
 
-                  return function (_x75, _x76, _x77, _x78, _x79, _x80, _x81) {
-                    return _ref9.apply(this, arguments);
+                  return function (_x52, _x53, _x54, _x55, _x56, _x57, _x58) {
+                    return _ref10.apply(this, arguments);
                   };
                 }().bind(this);
 
-                _context71.next = 6;
+                _context35.t0 = _createForOfIteratorHelper;
+                _context35.next = 7;
                 return this.m_Points.values();
 
-              case 6:
-                values = _context71.sent;
-                //TODO: async for
-                _iterator15 = _createForOfIteratorHelper(values);
-                _context71.prev = 8;
+              case 7:
+                _context35.t1 = _context35.sent;
+                _iterator14 = (0, _context35.t0)(_context35.t1);
+                _context35.prev = 9;
 
-                _iterator15.s();
+                _iterator14.s();
 
-              case 10:
-                if ((_step15 = _iterator15.n()).done) {
-                  _context71.next = 33;
+              case 11:
+                if ((_step14 = _iterator14.n()).done) {
+                  _context35.next = 34;
                   break;
                 }
 
-                point = _step15.value;
+                point = _step14.value;
 
                 if (!(point && isPointOKForPath([freePointStatus, StatusEnum.POINT_STARTING, StatusEnum.POINT_IN_PATH], point) === true)) {
-                  _context71.next = 31;
+                  _context35.next = 32;
                   break;
                 }
 
@@ -6154,70 +4711,70 @@ var InkBallGame = /*#__PURE__*/function () {
                 x = view_x / this.m_iGridSizeX, y = view_y / this.m_iGridSizeY; //TODO: await all below promises
                 //east
 
-                _context71.next = 17;
+                _context35.next = 18;
                 return addPointsAndEdgestoGraph(point, x + 1, y, view_x, view_y, x, y);
 
-              case 17:
-                _context71.next = 19;
+              case 18:
+                _context35.next = 20;
                 return addPointsAndEdgestoGraph(point, x - 1, y, view_x, view_y, x, y);
 
-              case 19:
-                _context71.next = 21;
+              case 20:
+                _context35.next = 22;
                 return addPointsAndEdgestoGraph(point, x, y - 1, view_x, view_y, x, y);
 
-              case 21:
-                _context71.next = 23;
+              case 22:
+                _context35.next = 24;
                 return addPointsAndEdgestoGraph(point, x, y + 1, view_x, view_y, x, y);
 
-              case 23:
-                _context71.next = 25;
+              case 24:
+                _context35.next = 26;
                 return addPointsAndEdgestoGraph(point, x - 1, y - 1, view_x, view_y, x, y);
 
-              case 25:
-                _context71.next = 27;
+              case 26:
+                _context35.next = 28;
                 return addPointsAndEdgestoGraph(point, x + 1, y - 1, view_x, view_y, x, y);
 
-              case 27:
-                _context71.next = 29;
+              case 28:
+                _context35.next = 30;
                 return addPointsAndEdgestoGraph(point, x - 1, y + 1, view_x, view_y, x, y);
 
-              case 29:
-                _context71.next = 31;
+              case 30:
+                _context35.next = 32;
                 return addPointsAndEdgestoGraph(point, x + 1, y + 1, view_x, view_y, x, y);
 
-              case 31:
-                _context71.next = 10;
+              case 32:
+                _context35.next = 11;
                 break;
 
-              case 33:
-                _context71.next = 38;
+              case 34:
+                _context35.next = 39;
                 break;
 
-              case 35:
-                _context71.prev = 35;
-                _context71.t0 = _context71["catch"](8);
+              case 36:
+                _context35.prev = 36;
+                _context35.t2 = _context35["catch"](9);
 
-                _iterator15.e(_context71.t0);
+                _iterator14.e(_context35.t2);
 
-              case 38:
-                _context71.prev = 38;
+              case 39:
+                _context35.prev = 39;
 
-                _iterator15.f();
+                _iterator14.f();
 
-                return _context71.finish(38);
+                return _context35.finish(39);
 
-              case 41:
-                return _context71.abrupt("return", {
+              case 42:
+                return _context35.abrupt("return", {
                   vertices: graph_points,
                   edges: Array.from(graph_edges.values())
                 });
 
-              case 42:
+              case 43:
               case "end":
-                return _context71.stop();
+                return _context35.stop();
             }
           }
-        }, _callee71, this, [[8, 35, 38, 41]]);
+        }, _callee35, this, [[9, 36, 39, 42]]);
       }));
 
       function BuildGraph() {
@@ -6237,12 +4794,12 @@ var InkBallGame = /*#__PURE__*/function () {
         v.visited = true; // Recur for all the vertices  
         // adjacent to this vertex
 
-        var _iterator16 = _createForOfIteratorHelper(v.adjacents),
-            _step16;
+        var _iterator15 = _createForOfIteratorHelper(v.adjacents),
+            _step15;
 
         try {
-          for (_iterator16.s(); !(_step16 = _iterator16.n()).done;) {
-            var i = _step16.value;
+          for (_iterator15.s(); !(_step15 = _iterator15.n()).done;) {
+            var i = _step15.value;
 
             // If an adjacent is not visited,  
             // then recur for that adjacent 
@@ -6263,9 +4820,9 @@ var InkBallGame = /*#__PURE__*/function () {
               }
           }
         } catch (err) {
-          _iterator16.e(err);
+          _iterator15.e(err);
         } finally {
-          _iterator16.f();
+          _iterator15.f();
         }
 
         return false;
@@ -6295,11 +4852,11 @@ var InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "MarkAllCycles",
     value: function () {
-      var _MarkAllCycles = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee74(graph) {
+      var _MarkAllCycles = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee38(graph) {
         var vertices, N, cycles, mark, color, par, i, dfs_cycle, printCycles, cyclenumber, edges, vind;
-        return regeneratorRuntime.wrap(function _callee74$(_context74) {
+        return regeneratorRuntime.wrap(function _callee38$(_context38) {
           while (1) {
-            switch (_context74.prev = _context74.next) {
+            switch (_context38.prev = _context38.next) {
               case 0:
                 vertices = graph.vertices;
                 N = vertices.length;
@@ -6316,23 +4873,23 @@ var InkBallGame = /*#__PURE__*/function () {
                 }
 
                 dfs_cycle = /*#__PURE__*/function () {
-                  var _ref10 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee72(u, p) {
-                    var cur, vertex, _iterator17, _step17, adj, v;
+                  var _ref11 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee36(u, p) {
+                    var cur, vertex, _iterator16, _step16, adj, v;
 
-                    return regeneratorRuntime.wrap(function _callee72$(_context72) {
+                    return regeneratorRuntime.wrap(function _callee36$(_context36) {
                       while (1) {
-                        switch (_context72.prev = _context72.next) {
+                        switch (_context36.prev = _context36.next) {
                           case 0:
                             if (!(color[u] === 2)) {
-                              _context72.next = 2;
+                              _context36.next = 2;
                               break;
                             }
 
-                            return _context72.abrupt("return");
+                            return _context36.abrupt("return");
 
                           case 2:
                             if (!(color[u] === 1)) {
-                              _context72.next = 8;
+                              _context36.next = 8;
                               break;
                             }
 
@@ -6346,7 +4903,7 @@ var InkBallGame = /*#__PURE__*/function () {
                               mark[cur].push(cyclenumber);
                             }
 
-                            return _context72.abrupt("return");
+                            return _context36.abrupt("return");
 
                           case 8:
                             par[u] = p; // partially visited.
@@ -6355,63 +4912,63 @@ var InkBallGame = /*#__PURE__*/function () {
                             vertex = vertices[u];
 
                             if (!vertex) {
-                              _context72.next = 36;
+                              _context36.next = 36;
                               break;
                             }
 
                             vertex.SetStrokeColor('black');
                             vertex.SetFillColor('black'); //vertex.setAttribute("r", "6");
 
-                            _context72.next = 16;
+                            _context36.next = 16;
                             return Sleep(10);
 
                           case 16:
                             // simple dfs on graph
-                            _iterator17 = _createForOfIteratorHelper(vertex.adjacents);
-                            _context72.prev = 17;
+                            _iterator16 = _createForOfIteratorHelper(vertex.adjacents);
+                            _context36.prev = 17;
 
-                            _iterator17.s();
+                            _iterator16.s();
 
                           case 19:
-                            if ((_step17 = _iterator17.n()).done) {
-                              _context72.next = 28;
+                            if ((_step16 = _iterator16.n()).done) {
+                              _context36.next = 28;
                               break;
                             }
 
-                            adj = _step17.value;
+                            adj = _step16.value;
                             v = vertices.indexOf(adj); // if it has not been visited previously
 
                             if (!(v === par[u])) {
-                              _context72.next = 24;
+                              _context36.next = 24;
                               break;
                             }
 
-                            return _context72.abrupt("continue", 26);
+                            return _context36.abrupt("continue", 26);
 
                           case 24:
-                            _context72.next = 26;
+                            _context36.next = 26;
                             return dfs_cycle(v, u);
 
                           case 26:
-                            _context72.next = 19;
+                            _context36.next = 19;
                             break;
 
                           case 28:
-                            _context72.next = 33;
+                            _context36.next = 33;
                             break;
 
                           case 30:
-                            _context72.prev = 30;
-                            _context72.t0 = _context72["catch"](17);
+                            _context36.prev = 30;
+                            _context36.t0 = _context36["catch"](17);
 
-                            _iterator17.e(_context72.t0);
+                            _iterator16.e(_context36.t0);
 
                           case 33:
-                            _context72.prev = 33;
+                            _context36.prev = 33;
 
-                            _iterator17.f();
+                            _iterator16.f();
 
-                            return _context72.finish(33);
+                            return _context36.finish(33);
 
                           case 36:
                             // completely visited. 
@@ -6419,36 +4976,36 @@ var InkBallGame = /*#__PURE__*/function () {
 
                           case 37:
                           case "end":
-                            return _context72.stop();
+                            return _context36.stop();
                         }
                       }
-                    }, _callee72, null, [[17, 30, 33, 36]]);
+                    }, _callee36, null, [[17, 30, 33, 36]]);
                   }));
 
-                  return function dfs_cycle(_x83, _x84) {
-                    return _ref10.apply(this, arguments);
+                  return function dfs_cycle(_x60, _x61) {
+                    return _ref11.apply(this, arguments);
                   };
                 }();
 
                 printCycles = /*#__PURE__*/function () {
-                  var _ref11 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee73(edges, mark) {
-                    var _this27 = this;
+                  var _ref12 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee37(edges, mark) {
+                    var _this14 = this;
 
-                    var _e3, mark_e, m, found_c, free_human_player_points, sHumanColor, values, _iterator18, _step18, _pt3, _pt3$GetPosition, view_x, view_y, _x87, _y2, _pt4, tab, _i, cycl, str, trailing_points, rand_color, mapped_verts, cw_sorted_verts, _iterator19, _step19, vert, x, y, pt, tmp, comma, _iterator20, _step20, possible_intercept, pt1, pts2reset;
+                    var e, mark_e, m, found_c, free_human_player_points, sHumanColor, _iterator17, _step17, _pt3, _pt3$GetPosition, view_x, view_y, _x64, _y2, _pt4, tab, _i, cycl, str, trailing_points, rand_color, mapped_verts, cw_sorted_verts, _iterator18, _step18, vert, x, y, pt, tmp, comma, _iterator19, _step19, possible_intercept, pt1, pts2reset;
 
-                    return regeneratorRuntime.wrap(function _callee73$(_context73) {
+                    return regeneratorRuntime.wrap(function _callee37$(_context37) {
                       while (1) {
-                        switch (_context73.prev = _context73.next) {
+                        switch (_context37.prev = _context37.next) {
                           case 0:
                             // push the edges that into the 
                             // cycle adjacency list 
-                            for (_e3 = 0; _e3 < edges; _e3++) {
-                              mark_e = mark[_e3];
+                            for (e = 0; e < edges; e++) {
+                              mark_e = mark[e];
 
                               if (mark_e !== undefined && mark_e.length > 0) {
                                 for (m = 0; m < mark_e.length; m++) {
                                   found_c = cycles[mark_e[m]];
-                                  if (found_c !== undefined) found_c.push(_e3);
+                                  if (found_c !== undefined) found_c.push(e);
                                 }
                               }
                             } //sort by point length(only cycles >= 4): first longest cycles, most points
@@ -6462,89 +5019,89 @@ var InkBallGame = /*#__PURE__*/function () {
 
                             free_human_player_points = [];
                             sHumanColor = this.COLOR_RED;
-                            _context73.next = 6;
+                            _context37.t0 = _createForOfIteratorHelper;
+                            _context37.next = 7;
                             return this.m_Points.values();
 
-                          case 6:
-                            values = _context73.sent;
-                            //TODO: async for
-                            _iterator18 = _createForOfIteratorHelper(values);
-                            _context73.prev = 8;
+                          case 7:
+                            _context37.t1 = _context37.sent;
+                            _iterator17 = (0, _context37.t0)(_context37.t1);
+                            _context37.prev = 9;
 
-                            _iterator18.s();
+                            _iterator17.s();
 
-                          case 10:
-                            if ((_step18 = _iterator18.n()).done) {
-                              _context73.next = 24;
+                          case 11:
+                            if ((_step17 = _iterator17.n()).done) {
+                              _context37.next = 25;
                               break;
                             }
 
-                            _pt3 = _step18.value;
+                            _pt3 = _step17.value;
 
                             if (!(_pt3 !== undefined && _pt3.GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === _pt3.GetStatus())) {
-                              _context73.next = 22;
+                              _context37.next = 23;
                               break;
                             }
 
                             _pt3$GetPosition = _pt3.GetPosition(), view_x = _pt3$GetPosition.x, view_y = _pt3$GetPosition.y;
-                            _x87 = view_x / this.m_iGridSizeX, _y2 = view_y / this.m_iGridSizeY;
-                            _context73.next = 17;
-                            return this.IsPointOutsideAllPaths(_x87, _y2);
+                            _x64 = view_x / this.m_iGridSizeX, _y2 = view_y / this.m_iGridSizeY;
+                            _context37.next = 18;
+                            return this.IsPointOutsideAllPaths(_x64, _y2);
 
-                          case 17:
-                            _context73.t0 = _context73.sent;
+                          case 18:
+                            _context37.t2 = _context37.sent;
 
-                            if (!(false === _context73.t0)) {
-                              _context73.next = 20;
+                            if (!(false === _context37.t2)) {
+                              _context37.next = 21;
                               break;
                             }
 
-                            return _context73.abrupt("continue", 22);
+                            return _context37.abrupt("continue", 23);
 
-                          case 20:
+                          case 21:
                             //check if really exists
                             _pt4 = document.querySelector("svg > circle[cx=\"".concat(view_x, "\"][cy=\"").concat(view_y, "\"]"));
                             if (_pt4) free_human_player_points.push({
-                              x: _x87,
+                              x: _x64,
                               y: _y2
                             });
 
-                          case 22:
-                            _context73.next = 10;
+                          case 23:
+                            _context37.next = 11;
                             break;
 
-                          case 24:
-                            _context73.next = 29;
+                          case 25:
+                            _context37.next = 30;
                             break;
 
-                          case 26:
-                            _context73.prev = 26;
-                            _context73.t1 = _context73["catch"](8);
+                          case 27:
+                            _context37.prev = 27;
+                            _context37.t3 = _context37["catch"](9);
 
-                            _iterator18.e(_context73.t1);
+                            _iterator17.e(_context37.t3);
 
-                          case 29:
-                            _context73.prev = 29;
+                          case 30:
+                            _context37.prev = 30;
 
-                            _iterator18.f();
+                            _iterator17.f();
 
-                            return _context73.finish(29);
+                            return _context37.finish(30);
 
-                          case 32:
+                          case 33:
                             tab = []; // traverse through all the vertices with same cycle
 
                             _i = 0;
 
-                          case 34:
+                          case 35:
                             if (!(_i <= cyclenumber)) {
-                              _context73.next = 72;
+                              _context37.next = 73;
                               break;
                             }
 
                             cycl = cycles[_i]; //get cycle
 
                             if (!(cycl && cycl.length > 0)) {
-                              _context73.next = 69;
+                              _context37.next = 70;
                               break;
                             }
 
@@ -6561,20 +5118,20 @@ var InkBallGame = /*#__PURE__*/function () {
                               };
                             }.bind(this)); //sort clockwise (https://stackoverflow.com/questions/45660743/sort-points-in-counter-clockwise-in-javascript)
 
-                            cw_sorted_verts = SVG.SortPointsClockwise(mapped_verts); //display which cycle wea are dealing with
+                            cw_sorted_verts = SVG.sortPointsClockwise(mapped_verts); //display which cycle we are dealing with
 
-                            _iterator19 = _createForOfIteratorHelper(cw_sorted_verts);
-                            _context73.prev = 42;
+                            _iterator18 = _createForOfIteratorHelper(cw_sorted_verts);
+                            _context37.prev = 43;
 
-                            _iterator19.s();
+                            _iterator18.s();
 
-                          case 44:
-                            if ((_step19 = _iterator19.n()).done) {
-                              _context73.next = 53;
+                          case 45:
+                            if ((_step18 = _iterator18.n()).done) {
+                              _context37.next = 54;
                               break;
                             }
 
-                            vert = _step19.value;
+                            vert = _step18.value;
                             x = vert.x, y = vert.y;
                             pt = document.querySelector("svg > circle[cx=\"".concat(x * this.m_iGridSizeX, "\"][cy=\"").concat(y * this.m_iGridSizeY, "\"]"));
 
@@ -6586,39 +5143,39 @@ var InkBallGame = /*#__PURE__*/function () {
                               pt.setAttribute("r", "6");
                             }
 
-                            _context73.next = 51;
+                            _context37.next = 52;
                             return Sleep(50);
 
-                          case 51:
-                            _context73.next = 44;
+                          case 52:
+                            _context37.next = 45;
                             break;
 
-                          case 53:
-                            _context73.next = 58;
+                          case 54:
+                            _context37.next = 59;
                             break;
 
-                          case 55:
-                            _context73.prev = 55;
-                            _context73.t2 = _context73["catch"](42);
+                          case 56:
+                            _context37.prev = 56;
+                            _context37.t4 = _context37["catch"](43);
 
-                            _iterator19.e(_context73.t2);
+                            _iterator18.e(_context37.t4);
 
-                          case 58:
-                            _context73.prev = 58;
+                          case 59:
+                            _context37.prev = 59;
 
-                            _iterator19.f();
+                            _iterator18.f();
 
-                            return _context73.finish(58);
+                            return _context37.finish(59);
 
-                          case 61:
+                          case 62:
                             //find for all free_human_player_points which cycle might interepct it (surrounds)
                             //only convex, NOT concave :-(
                             tmp = '', comma = '';
-                            _iterator20 = _createForOfIteratorHelper(free_human_player_points);
+                            _iterator19 = _createForOfIteratorHelper(free_human_player_points);
 
                             try {
-                              for (_iterator20.s(); !(_step20 = _iterator20.n()).done;) {
-                                possible_intercept = _step20.value;
+                              for (_iterator19.s(); !(_step19 = _iterator19.n()).done;) {
+                                possible_intercept = _step19.value;
 
                                 if (false !== this.pnpoly2(cw_sorted_verts, possible_intercept.x, possible_intercept.y)) {
                                   tmp += "".concat(comma, "(").concat(possible_intercept.x, ",").concat(possible_intercept.y, ")");
@@ -6635,9 +5192,9 @@ var InkBallGame = /*#__PURE__*/function () {
                               } //gaterhing of some data and console printing
 
                             } catch (err) {
-                              _iterator20.e(err);
+                              _iterator19.e(err);
                             } finally {
-                              _iterator20.f();
+                              _iterator19.f();
                             }
 
                             trailing_points.unshift(str);
@@ -6647,29 +5204,29 @@ var InkBallGame = /*#__PURE__*/function () {
 
                             pts2reset = Array.from(document.querySelectorAll("svg > circle[fill=\"".concat(rand_color, "\"][r=\"6\"]")));
                             pts2reset.forEach(function (pt) {
-                              pt.SetStrokeColor(_this27.COLOR_BLUE);
-                              pt.SetFillColor(_this27.COLOR_BLUE);
+                              pt.SetStrokeColor(_this14.COLOR_BLUE);
+                              pt.SetFillColor(_this14.COLOR_BLUE);
                               pt.setAttribute("r", "4");
                             });
 
-                          case 69:
+                          case 70:
                             _i++;
-                            _context73.next = 34;
+                            _context37.next = 35;
                             break;
 
-                          case 72:
-                            return _context73.abrupt("return", tab);
-
                           case 73:
+                            return _context37.abrupt("return", tab);
+
+                          case 74:
                           case "end":
-                            return _context73.stop();
+                            return _context37.stop();
                         }
                       }
-                    }, _callee73, this, [[8, 26, 29, 32], [42, 55, 58, 61]]);
+                    }, _callee37, this, [[9, 27, 30, 33], [43, 56, 59, 62]]);
                   }));
 
-                  return function (_x85, _x86) {
-                    return _ref11.apply(this, arguments);
+                  return function (_x62, _x63) {
+                    return _ref12.apply(this, arguments);
                   };
                 }().bind(this); // store the numbers of cycle 
 
@@ -6680,36 +5237,36 @@ var InkBallGame = /*#__PURE__*/function () {
 
               case 10:
                 if (!(vind < N)) {
-                  _context74.next = 16;
+                  _context38.next = 16;
                   break;
                 }
 
-                _context74.next = 13;
+                _context38.next = 13;
                 return dfs_cycle(vind + 1, vind
                 /*, color, mark, par*/
                 );
 
               case 13:
                 vind++;
-                _context74.next = 10;
+                _context38.next = 10;
                 break;
 
               case 16:
-                _context74.next = 18;
+                _context38.next = 18;
                 return printCycles(edges, mark);
 
               case 18:
-                return _context74.abrupt("return", _context74.sent);
+                return _context38.abrupt("return", _context38.sent);
 
               case 19:
               case "end":
-                return _context74.stop();
+                return _context38.stop();
             }
           }
-        }, _callee74, this);
+        }, _callee38, this);
       }));
 
-      function MarkAllCycles(_x82) {
+      function MarkAllCycles(_x59) {
         return _MarkAllCycles.apply(this, arguments);
       }
 
@@ -6718,27 +5275,27 @@ var InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "GroupPointsRecurse",
     value: function () {
-      var _GroupPointsRecurse = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee75(currPointsArr, point) {
+      var _GroupPointsRecurse = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee39(currPointsArr, point) {
         var _point$GetPosition2, x, y, last, last_x, last_y, last_pos, first, first_pos, _last_pos, tmp, east, west, north, south, north_west, north_east, south_west, south_east;
 
-        return regeneratorRuntime.wrap(function _callee75$(_context75) {
+        return regeneratorRuntime.wrap(function _callee39$(_context39) {
           while (1) {
-            switch (_context75.prev = _context75.next) {
+            switch (_context39.prev = _context39.next) {
               case 0:
                 if (!(point === undefined || currPointsArr.includes(point))) {
-                  _context75.next = 2;
+                  _context39.next = 2;
                   break;
                 }
 
-                return _context75.abrupt("return", currPointsArr);
+                return _context39.abrupt("return", currPointsArr);
 
               case 2:
                 if (!([StatusEnum.POINT_FREE_BLUE, StatusEnum.POINT_STARTING, StatusEnum.POINT_IN_PATH].includes(point.GetStatus()) === false || point.GetFillColor() !== this.COLOR_BLUE)) {
-                  _context75.next = 4;
+                  _context39.next = 4;
                   break;
                 }
 
-                return _context75.abrupt("return", currPointsArr);
+                return _context39.abrupt("return", currPointsArr);
 
               case 4:
                 _point$GetPosition2 = point.GetPosition(), x = _point$GetPosition2.x, y = _point$GetPosition2.y;
@@ -6747,7 +5304,7 @@ var InkBallGame = /*#__PURE__*/function () {
                 last = null;
 
                 if (!(currPointsArr.length > 0)) {
-                  _context75.next = 21;
+                  _context39.next = 21;
                   break;
                 }
 
@@ -6758,20 +5315,20 @@ var InkBallGame = /*#__PURE__*/function () {
                 last_y /= this.m_iGridSizeY;
 
                 if (!(Math.abs(parseInt(last_x - x)) <= 1 && Math.abs(parseInt(last_y - y)) <= 1)) {
-                  _context75.next = 18;
+                  _context39.next = 18;
                   break;
                 }
 
                 currPointsArr.push(point); //nearby point 1 jump away
 
-                _context75.next = 19;
+                _context39.next = 19;
                 break;
 
               case 18:
-                return _context75.abrupt("return", currPointsArr);
+                return _context39.abrupt("return", currPointsArr);
 
               case 19:
-                _context75.next = 22;
+                _context39.next = 22;
                 break;
 
               case 21:
@@ -6800,130 +5357,130 @@ var InkBallGame = /*#__PURE__*/function () {
                 } //TODO: awawit all together promises
 
 
-                _context75.next = 25;
+                _context39.next = 25;
                 return this.m_Points.get(y * this.m_iGridWidth + x + 1);
 
               case 25:
-                east = _context75.sent;
-                _context75.next = 28;
+                east = _context39.sent;
+                _context39.next = 28;
                 return this.m_Points.get(y * this.m_iGridWidth + x - 1);
 
               case 28:
-                west = _context75.sent;
-                _context75.next = 31;
+                west = _context39.sent;
+                _context39.next = 31;
                 return this.m_Points.get((y - 1) * this.m_iGridWidth + x);
 
               case 31:
-                north = _context75.sent;
-                _context75.next = 34;
+                north = _context39.sent;
+                _context39.next = 34;
                 return this.m_Points.get((y + 1) * this.m_iGridWidth + x);
 
               case 34:
-                south = _context75.sent;
-                _context75.next = 37;
+                south = _context39.sent;
+                _context39.next = 37;
                 return this.m_Points.get((y - 1) * this.m_iGridWidth + x - 1);
 
               case 37:
-                north_west = _context75.sent;
-                _context75.next = 40;
+                north_west = _context39.sent;
+                _context39.next = 40;
                 return this.m_Points.get((y - 1) * this.m_iGridWidth + x + 1);
 
               case 40:
-                north_east = _context75.sent;
-                _context75.next = 43;
+                north_east = _context39.sent;
+                _context39.next = 43;
                 return this.m_Points.get((y + 1) * this.m_iGridWidth + x - 1);
 
               case 43:
-                south_west = _context75.sent;
-                _context75.next = 46;
+                south_west = _context39.sent;
+                _context39.next = 46;
                 return this.m_Points.get((y + 1) * this.m_iGridWidth + x + 1);
 
               case 46:
-                south_east = _context75.sent;
+                south_east = _context39.sent;
 
                 if (!east) {
-                  _context75.next = 50;
+                  _context39.next = 50;
                   break;
                 }
 
-                _context75.next = 50;
+                _context39.next = 50;
                 return this.GroupPointsRecurse(currPointsArr, east);
 
               case 50:
                 if (!west) {
-                  _context75.next = 53;
+                  _context39.next = 53;
                   break;
                 }
 
-                _context75.next = 53;
+                _context39.next = 53;
                 return this.GroupPointsRecurse(currPointsArr, west);
 
               case 53:
                 if (!north) {
-                  _context75.next = 56;
+                  _context39.next = 56;
                   break;
                 }
 
-                _context75.next = 56;
+                _context39.next = 56;
                 return this.GroupPointsRecurse(currPointsArr, north);
 
               case 56:
                 if (!south) {
-                  _context75.next = 59;
+                  _context39.next = 59;
                   break;
                 }
 
-                _context75.next = 59;
+                _context39.next = 59;
                 return this.GroupPointsRecurse(currPointsArr, south);
 
               case 59:
                 if (!north_west) {
-                  _context75.next = 62;
+                  _context39.next = 62;
                   break;
                 }
 
-                _context75.next = 62;
+                _context39.next = 62;
                 return this.GroupPointsRecurse(currPointsArr, north_west);
 
               case 62:
                 if (!north_east) {
-                  _context75.next = 65;
+                  _context39.next = 65;
                   break;
                 }
 
-                _context75.next = 65;
+                _context39.next = 65;
                 return this.GroupPointsRecurse(currPointsArr, north_east);
 
               case 65:
                 if (!south_west) {
-                  _context75.next = 68;
+                  _context39.next = 68;
                   break;
                 }
 
-                _context75.next = 68;
+                _context39.next = 68;
                 return this.GroupPointsRecurse(currPointsArr, south_west);
 
               case 68:
                 if (!south_east) {
-                  _context75.next = 71;
+                  _context39.next = 71;
                   break;
                 }
 
-                _context75.next = 71;
+                _context39.next = 71;
                 return this.GroupPointsRecurse(currPointsArr, south_east);
 
               case 71:
-                return _context75.abrupt("return", currPointsArr);
+                return _context39.abrupt("return", currPointsArr);
 
               case 72:
               case "end":
-                return _context75.stop();
+                return _context39.stop();
             }
           }
-        }, _callee75, this);
+        }, _callee39, this);
       }));
 
-      function GroupPointsRecurse(_x88, _x89) {
+      function GroupPointsRecurse(_x65, _x66) {
         return _GroupPointsRecurse.apply(this, arguments);
       }
 
@@ -6932,54 +5489,54 @@ var InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "GroupPointsIterative",
     value: function () {
-      var _GroupPointsIterative = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee76() {
-        var _ref12,
-            _ref12$g,
+      var _GroupPointsIterative = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee40() {
+        var _ref13,
+            _ref13$g,
             graph,
             vertices,
             cycles,
             point,
-            _iterator21,
-            _step21,
+            _iterator20,
+            _step20,
             start,
             currPointsArr,
             traversed_path,
-            _args76 = arguments;
+            _args40 = arguments;
 
-        return regeneratorRuntime.wrap(function _callee76$(_context76) {
+        return regeneratorRuntime.wrap(function _callee40$(_context40) {
           while (1) {
-            switch (_context76.prev = _context76.next) {
+            switch (_context40.prev = _context40.next) {
               case 0:
-                _ref12 = _args76.length > 0 && _args76[0] !== undefined ? _args76[0] : {}, _ref12$g = _ref12.g, graph = _ref12$g === void 0 ? null : _ref12$g;
+                _ref13 = _args40.length > 0 && _args40[0] !== undefined ? _args40[0] : {}, _ref13$g = _ref13.g, graph = _ref13$g === void 0 ? null : _ref13$g;
 
                 if (graph) {
-                  _context76.next = 3;
+                  _context40.next = 3;
                   break;
                 }
 
-                return _context76.abrupt("return");
+                return _context40.abrupt("return");
 
               case 3:
                 vertices = graph.vertices, cycles = [];
-                _iterator21 = _createForOfIteratorHelper(vertices);
-                _context76.prev = 5;
+                _iterator20 = _createForOfIteratorHelper(vertices);
+                _context40.prev = 5;
 
-                _iterator21.s();
+                _iterator20.s();
 
               case 7:
-                if ((_step21 = _iterator21.n()).done) {
-                  _context76.next = 17;
+                if ((_step20 = _iterator20.n()).done) {
+                  _context40.next = 17;
                   break;
                 }
 
-                start = _step21.value;
+                start = _step20.value;
                 point = start;
                 currPointsArr = [];
-                _context76.next = 13;
+                _context40.next = 13;
                 return this.GroupPointsRecurse(currPointsArr, point);
 
               case 13:
-                traversed_path = _context76.sent;
+                traversed_path = _context40.sent;
 
                 if (traversed_path.length > 0 && this.lastCycle.length > 0) {
                   cycles.push(this.lastCycle);
@@ -6987,35 +5544,35 @@ var InkBallGame = /*#__PURE__*/function () {
                 }
 
               case 15:
-                _context76.next = 7;
+                _context40.next = 7;
                 break;
 
               case 17:
-                _context76.next = 22;
+                _context40.next = 22;
                 break;
 
               case 19:
-                _context76.prev = 19;
-                _context76.t0 = _context76["catch"](5);
+                _context40.prev = 19;
+                _context40.t0 = _context40["catch"](5);
 
-                _iterator21.e(_context76.t0);
+                _iterator20.e(_context40.t0);
 
               case 22:
-                _context76.prev = 22;
+                _context40.prev = 22;
 
-                _iterator21.f();
+                _iterator20.f();
 
-                return _context76.finish(22);
+                return _context40.finish(22);
 
               case 25:
-                return _context76.abrupt("return", cycles);
+                return _context40.abrupt("return", cycles);
 
               case 26:
               case "end":
-                return _context76.stop();
+                return _context40.stop();
             }
           }
-        }, _callee76, this, [[5, 19, 22, 25]]);
+        }, _callee40, this, [[5, 19, 22, 25]]);
       }));
 
       function GroupPointsIterative() {
@@ -7027,65 +5584,65 @@ var InkBallGame = /*#__PURE__*/function () {
   }, {
     key: "rAFCallBack",
     value: function () {
-      var _rAFCallBack = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee77(timeStamp) {
-        var _this28 = this;
+      var _rAFCallBack = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee41(timeStamp) {
+        var _this15 = this;
 
         var progress, point, centroid;
-        return regeneratorRuntime.wrap(function _callee77$(_context77) {
+        return regeneratorRuntime.wrap(function _callee41$(_context41) {
           while (1) {
-            switch (_context77.prev = _context77.next) {
+            switch (_context41.prev = _context41.next) {
               case 0:
                 if (this.rAF_StartTimestamp === null) this.rAF_StartTimestamp = timeStamp;
                 progress = timeStamp - this.rAF_StartTimestamp;
                 point = null;
-                _context77.next = 5;
+                _context41.next = 5;
                 return this.CalculateCPUCentroid();
 
               case 5:
-                centroid = _context77.sent;
+                centroid = _context41.sent;
 
                 if (!(centroid !== null)) {
-                  _context77.next = 10;
+                  _context41.next = 10;
                   break;
                 }
 
                 point = centroid;
-                _context77.next = 13;
+                _context41.next = 13;
                 break;
 
               case 10:
-                _context77.next = 12;
+                _context41.next = 12;
                 return this.FindRandomCPUPoint();
 
               case 12:
-                point = _context77.sent;
+                point = _context41.sent;
 
               case 13:
                 if (!(point === null)) {
-                  _context77.next = 17;
+                  _context41.next = 17;
                   break;
                 }
 
                 if (progress < 2000) this.rAF_FrameID = window.requestAnimationFrame(this.rAFCallBack.bind(this));
-                _context77.next = 19;
+                _context41.next = 19;
                 break;
 
               case 17:
-                _context77.next = 19;
+                _context41.next = 19;
                 return this.SendAsyncData(point, function () {
-                  _this28.m_bMouseDown = false;
-                  _this28.m_bHandlingEvent = false;
+                  _this15.m_bMouseDown = false;
+                  _this15.m_bHandlingEvent = false;
                 });
 
               case 19:
               case "end":
-                return _context77.stop();
+                return _context41.stop();
             }
           }
-        }, _callee77, this);
+        }, _callee41, this);
       }));
 
-      function rAFCallBack(_x90) {
+      function rAFCallBack(_x67) {
         return _rAFCallBack.apply(this, arguments);
       }
 
@@ -7106,11 +5663,11 @@ var InkBallGame = /*#__PURE__*/function () {
 /******** run code and events ********/
 
 
-window.addEventListener('load', /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee78() {
+window.addEventListener('load', /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee42() {
   var inkBallHubName, iGameID, iPlayerID, iOtherPlayerID, bPlayingWithRed, bPlayerActive, gameType, protocol, servTimeoutMillis, isReadonly, pathAfterPointDrawAllowanceSecAmount, sLastMoveTimeStampUtcIso, version, game;
-  return regeneratorRuntime.wrap(function _callee78$(_context78) {
+  return regeneratorRuntime.wrap(function _callee42$(_context42) {
     while (1) {
-      switch (_context78.prev = _context78.next) {
+      switch (_context42.prev = _context42.next) {
         case 0:
           //const gameOptions = this.window.gameOptions;
           inkBallHubName = gameOptions.inkBallHubName;
@@ -7129,37 +5686,37 @@ window.addEventListener('load', /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/reg
           pathAfterPointDrawAllowanceSecAmount = gameOptions.pathAfterPointDrawAllowanceSecAmount;
           sLastMoveTimeStampUtcIso = new Date(gameOptions.sLastMoveGameTimeStamp).toISOString();
           version = gameOptions.version;
-          _context78.next = 18;
+          _context42.next = 18;
           return importAllModulesAsync(gameOptions);
 
         case 18:
           game = new InkBallGame(iGameID, iPlayerID, iOtherPlayerID, inkBallHubName, signalR.LogLevel.Warning, protocol, signalR.HttpTransportType.None, servTimeoutMillis, gameType, bPlayingWithRed, bPlayerActive, isReadonly, pathAfterPointDrawAllowanceSecAmount);
-          _context78.next = 21;
-          return game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw', '#messageInput', '#messagesList', '#sendButton', sLastMoveTimeStampUtcIso, gameOptions.PointsAsJavaScriptArray === null, version, ['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints', '#TestFindFullSurroundedPoints']);
+          _context42.next = 21;
+          return game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw', '#messageInput', '#messagesList', '#sendButton', sLastMoveTimeStampUtcIso, gameOptions.PointsAsJavaScriptArray === null, version, ['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints', '#TestFindFullSurroundedPoints', '#TestWorkerify']);
 
         case 21:
           if (!(gameOptions.PointsAsJavaScriptArray !== null)) {
-            _context78.next = 30;
+            _context42.next = 30;
             break;
           }
 
-          _context78.next = 24;
+          _context42.next = 24;
           return game.StartSignalRConnection(false);
 
         case 24:
-          _context78.next = 26;
+          _context42.next = 26;
           return game.SetAllPoints(gameOptions.PointsAsJavaScriptArray);
 
         case 26:
-          _context78.next = 28;
+          _context42.next = 28;
           return game.SetAllPaths(gameOptions.PathsAsJavaScriptArray);
 
         case 28:
-          _context78.next = 32;
+          _context42.next = 32;
           break;
 
         case 30:
-          _context78.next = 32;
+          _context42.next = 32;
           return game.StartSignalRConnection(true);
 
         case 32:
@@ -7171,10 +5728,10 @@ window.addEventListener('load', /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/reg
 
         case 36:
         case "end":
-          return _context78.stop();
+          return _context42.stop();
       }
     }
-  }, _callee78);
+  }, _callee42);
 })));
 window.addEventListener('beforeunload', function () {
   if (window.game) window.game.StopSignalRConnection();

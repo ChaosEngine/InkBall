@@ -30,13 +30,13 @@ namespace InkBall.Module
 		public const string WwwIncludeInkballJS = "~/js/inkball.js";
 		public const string WwwIncludeInkballJSBundle = "~/js/inkballBundle.js";
 		public const string WwwIncludeSvgVmlJS = "~/js/svgvml.js";
-		public const string WwwIncludeConcavemanBundleJS = "~/js/concavemanBundle.js";
+		public const string WwwIncludeAIBundleJS = "~/js/AIBundle.js";
 		public const string WwwIncludeCSS = "~/css/inkball.css";
 #else
 		public const string WwwIncludeInkballJS = "~/js/inkball.min.js";
 		public const string WwwIncludeInkballJSBundle = "~/js/inkballBundle.min.js";
 		public const string WwwIncludeSvgVmlJS = "~/js/svgvml.min.js";
-		public const string WwwIncludeConcavemanBundleJS = "~/js/concavemanBundle.min.js";
+		public const string WwwIncludeAIBundleJS = "~/js/AIBundle.min.js";
 		public const string WwwIncludeCSS = "~/css/inkball.min.css";
 #endif
 
@@ -58,6 +58,8 @@ namespace InkBall.Module
 		public Action<AuthorizationPolicyBuilder> CustomMainAuthorizationPolicyBuilder { get; set; }
 
 		public Action<AuthorizationPolicyBuilder> CustomViewOtherGamesAuthorizationPolicyBuilder { get; set; }
+
+		public Action<StaticFileResponseContext> OnStaticFilePrepareResponse { get; set; }
 
 		public Type ApplicationUserType { get; set; }
 
@@ -85,6 +87,19 @@ namespace InkBall.Module
 
 			options.FileProvider = options.FileProvider ?? WebRootFileProvider;
 
+			if (OnStaticFilePrepareResponse != null)
+				options.OnPrepareResponse = OnStaticFilePrepareResponse;
+			else
+			{
+				options.OnPrepareResponse = (ctx) =>
+				{
+					//https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Embedder-Policy
+					//https://web.dev/coop-coep/
+					ctx.Context.Response.Headers.Add("Cross-Origin-Embedder-Policy", "require-corp");
+					ctx.Context.Response.Headers.Add("Cross-Origin-Opener-Policy", "same-origin");
+				};
+			}
+
 			// Add our provider
 			var filesProvider = new ManifestEmbeddedFileProvider(GetType().Assembly, WwwRoot);
 			options.FileProvider = new CompositeFileProvider(options.FileProvider, filesProvider);
@@ -98,7 +113,7 @@ namespace InkBall.Module
 			where TIdentUser : IdentityUser, INamedAgedUser
 		{
 			var env = services.FirstOrDefault(x => x.ServiceType == typeof(IWebHostEnvironment)).ImplementationInstance as IWebHostEnvironment;
-			if(env == null)
+			if (env == null)
 				throw new InvalidOperationException("Missing FileProvider.");
 
 			return services.AddInkBallCommonUI<TGamesDBContext, TIdentUser>(env.WebRootFileProvider, configureOptions);
