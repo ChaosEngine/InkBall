@@ -437,8 +437,9 @@ namespace IntegrationTests
 				}
 
 			}
-			catch (Exception ex)
+			catch (Exception)
 			{
+				throw;
 			}
 		}
 

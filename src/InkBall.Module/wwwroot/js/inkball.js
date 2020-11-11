@@ -2188,7 +2188,7 @@ class InkBallGame {
 			points = stateStore.GetPointStore();
 			await stateStore.PrepareStore();
 			LocalLog(`lines.count = ${await lines.count()}, points.count = ${await points.count()}`);
-
+			debugger;
 			// eslint-disable-next-line no-undef
 			const ai = new h(params.state.iGridWidth, params.state.iGridHeight, params.state.iGridSizeX, params.state.iGridSizeY,
 				points, StatusEnum.POINT_STARTING, StatusEnum.POINT_IN_PATH);
@@ -2197,6 +2197,7 @@ class InkBallGame {
 
 			return "blah";
 		};
+		debugger;
 		// Let the worker execute the above function, with the specified arguments and context
 		const result = await addNums.callAsWorker(
 			//context

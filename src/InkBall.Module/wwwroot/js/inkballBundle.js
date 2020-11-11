@@ -4123,21 +4123,22 @@ var InkBallGame = /*#__PURE__*/function () {
                             _context29.t4 = _context29.sent;
                             _context29.t5 = _context29.t1.concat.call(_context29.t1, _context29.t4);
                             (0, _context29.t0)(_context29.t5);
-                            // eslint-disable-next-line no-undef
+                            debugger; // eslint-disable-next-line no-undef
+
                             ai = new h(params.state.iGridWidth, params.state.iGridHeight, params.state.iGridSizeX, params.state.iGridSizeY, points, StatusEnum.POINT_STARTING, StatusEnum.POINT_IN_PATH);
-                            _context29.next = 22;
+                            _context29.next = 23;
                             return ai.BuildGraph({
                               freePointStatus: StatusEnum.POINT_FREE_BLUE,
                               fillCol: 'blue',
                               visuals: false
                             });
 
-                          case 22:
+                          case 23:
                             graph = _context29.sent;
                             LocalLog(graph);
                             return _context29.abrupt("return", "blah");
 
-                          case 25:
+                          case 26:
                           case "end":
                             return _context29.stop();
                         }
@@ -4148,10 +4149,11 @@ var InkBallGame = /*#__PURE__*/function () {
                   return function addNums(_x34) {
                     return _ref8.apply(this, arguments);
                   };
-                }(); // Let the worker execute the above function, with the specified arguments and context
+                }();
 
+                debugger; // Let the worker execute the above function, with the specified arguments and context
 
-                _context30.next = 4;
+                _context30.next = 5;
                 return addNums.callAsWorker( //context
                 [LocalLog, LocalError, "const StatusEnum = Object.freeze({\n\tPOINT_FREE_RED: -3,\n\tPOINT_FREE_BLUE: -2,\n\tPOINT_FREE: -1,\n\tPOINT_STARTING: 0,\n\tPOINT_IN_PATH: 1,\n\tPOINT_OWNED_BY_RED: 2,\n\tPOINT_OWNED_BY_BLUE: 3\n});", //SVG.CreateOval, SVG.CreatePolyline, SVG.RemovePolyline, SVG.CreateSVGVML, SVG.CreateLine, SVG.hasDuplicates, SVG.sortPointsClockwise,
                 SVG.SvgVml, SVG.GameStateStore, AIBundle.GraphAI], //parameters
@@ -4159,11 +4161,11 @@ var InkBallGame = /*#__PURE__*/function () {
                   state: this.GetGameStateForIndexedDb()
                 });
 
-              case 4:
+              case 5:
                 result = _context30.sent;
                 LocalLog('result: ' + result);
 
-              case 6:
+              case 7:
               case "end":
                 return _context30.stop();
             }
