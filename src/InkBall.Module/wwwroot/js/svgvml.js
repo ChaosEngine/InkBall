@@ -437,7 +437,6 @@ class GameStateStore {
 					y: parseInt(pos.y) / game_state.iGridSizeY,
 					Status: oval.GetStatus(),
 					Color: color
-					//, pos: key, //`${pos.x}_${pos.y}`
 				};
 
 				await this.StorePoint(key, idb_pt);
@@ -452,18 +451,17 @@ class GameStateStore {
 
 			async get(key) {
 				let val = this.store.get(key);
-				if (!val) {
-					const idb_pt = await this.GetPoint(key);
-					if (idb_pt && this.PointCreationCallback) {
-						val = this.PointCreationCallback(idb_pt.x, idb_pt.y, idb_pt.Status, idb_pt.Color);
-						this.store.set(key, val);
-						return val;
-					}
-					else
-						return undefined;
-				}
+				//if (!val) {
+				//	const idb_pt = await this.GetPoint(key);
+				//	if (idb_pt && this.PointCreationCallback) {
+				//		val = this.PointCreationCallback(idb_pt.x, idb_pt.y, idb_pt.Status, idb_pt.Color);
+				//		this.store.set(key, val);
+				//		return val;
+				//	}
+				//	else
+				//		return undefined;
+				//}
 				return val;
-				//return this.store.get(key);
 			}
 
 			async values() {
@@ -503,21 +501,28 @@ class GameStateStore {
 			}
 
 			async EndBulkStorage() {
+				await this.MainGameStateStore.StoreAllPaths();
+
 				await this.MainGameStateStore.EndBulkStorage([this.MainGameStateStore.DB_POINT_STORE, this.MainGameStateStore.DB_PATH_STORE]);
 			}
 
 			async push(val) {
+				const game_state = this.GetGameStateCallback();
+
 				const id_key = val.GetID();
 				const idb_path = {
 					iId: id_key,
 					Color: val.GetFillColor(),
-					PointsAsString: val.GetPointsString()
+					PointsAsString: val.GetPointsString().split(" ").map((pt) => {
+						const tab = pt.split(',');
+						const x = parseInt(tab[0]), y = parseInt(tab[1]);
+						return `${x / game_state.iGridSizeX},${y / game_state.iGridSizeY}`;
+					}).join(" ")
 				};
 
 				await this.StorePath(id_key, idb_path);
 
 				if (this.UpdateState) {
-					const game_state = this.GetGameStateCallback();
 					if (game_state.bPointsAndPathsLoaded === true)
 						await this.UpdateState(game_state.iGameID, game_state);
 				}
@@ -540,6 +545,10 @@ class GameStateStore {
 			this.DB_POINT_STORE = 'points';
 			this.DB_PATH_STORE = 'paths';
 			this.DB_STATE_STORE = 'state';
+			this.g_DB = null;//main DB object
+			this.bulkStores = null;
+			this.pointBulkBuffer = null;
+			this.pathBulkBuffer = null;
 
 			// Use a long long for this value (don't use a float)
 			if (!version || version === "" || version.length <= 0)
@@ -550,8 +559,6 @@ class GameStateStore {
 					return acc * 10 + (isNaN(val) ? 0 : val);
 				}, 0)) - 1010/*initial module versioning start number*/ + 4/*initial indexDB start number*/;
 			}
-
-			this.g_DB;//main DB object
 
 			this.PointStore = new IDBPointStoreDefinition(this, pointCreationCallbackFn, getGameStateFn);
 			this.PathStore = new IDBPathStoreDefinition(this, pathCreationCallbackFn, getGameStateFn);
@@ -589,7 +596,7 @@ class GameStateStore {
 			req.onerror = function (evt) {
 				this.LocalError("OpenDb:", evt.target.errorCode || evt.target.error);
 				reject();
-			};
+			}.bind(this);
 			req.onupgradeneeded = function (evt) {
 				this.LocalLog(`OpenDb.onupgradeneeded(version: ${this.DB_VERSION})`);
 
@@ -623,25 +630,33 @@ class GameStateStore {
 	  * @returns {object} store
 	  */
 	GetObjectStore(storeName, mode) {
-		if (this.bulkStores && this.bulkStores.has(storeName))
+		if (this.bulkStores !== null && this.bulkStores.has(storeName))
 			return this.bulkStores.get(storeName);
 
 		const tx = this.g_DB.transaction(storeName, mode);
 		return tx.objectStore(storeName);
 	}
 
-	async ClearObjectStore(storeName) {
-		return new Promise((resolve, reject) => {
-			const store = this.GetObjectStore(storeName, 'readwrite');
-			const req = store.clear();
-			req.onsuccess = function () {
-				resolve();
-			};
-			req.onerror = function (evt) {
-				this.LocalError("clearObjectStore:", evt.target.errorCode);
-				reject();
-			};
-		});
+	async ClearAllStores() {
+		const clearObjectStore = async function (storeName) {
+			return new Promise((resolve, reject) => {
+				const store = this.GetObjectStore(storeName, 'readwrite');
+				const req = store.clear();
+				req.onsuccess = function () {
+					resolve();
+				};
+				req.onerror = function (evt) {
+					this.LocalError("clearObjectStore:", evt.target.errorCode);
+					reject();
+				};
+			});
+		}.bind(this);
+
+		await Promise.all([
+			clearObjectStore(this.DB_POINT_STORE),
+			clearObjectStore(this.DB_PATH_STORE),
+			clearObjectStore(this.DB_STATE_STORE)
+		]);
 	}
 
 	/**
@@ -734,10 +749,10 @@ class GameStateStore {
 	  * @param {object} val is serialized, thin circle
 	  */
 	async StorePoint(key, val) {
-		if (this.bulkStores && this.bulkStores.has(this.DB_POINT_STORE)) {
-			if (!this.bulkBuffer)
-				this.bulkBuffer = new Map();
-			this.bulkBuffer.set(key, val);
+		if (this.bulkStores !== null && this.bulkStores.has(this.DB_POINT_STORE)) {
+			if (this.pointBulkBuffer === null)
+				this.pointBulkBuffer = new Map();
+			this.pointBulkBuffer.set(key, val);
 			return Promise.resolve();
 		}
 
@@ -761,11 +776,11 @@ class GameStateStore {
 		});
 	}
 
-	async StoreAllPoints(values) {
+	async StoreAllPoints(values = null) {
 		if (!values)
-			values = this.bulkBuffer;
+			values = this.pointBulkBuffer;
 
-		if (!values || !this.bulkStores)
+		if (!values || this.bulkStores === null)
 			return Promise.reject();
 
 		return new Promise((resolve, reject) => {
@@ -775,7 +790,7 @@ class GameStateStore {
 					store.add(v, key);
 				});
 
-				this.bulkBuffer = null;
+				this.pointBulkBuffer = null;
 				resolve();
 			} catch (e) {
 				this.LocalError("This engine doesn't know how to clone a Blob, use Firefox");
@@ -835,6 +850,13 @@ class GameStateStore {
 	  * @param {object} val is serialized thin path
 	  */
 	async StorePath(key, val) {
+		if (this.bulkStores !== null && this.bulkStores.has(this.DB_PATH_STORE)) {
+			if (this.pathBulkBuffer === null)
+				this.pathBulkBuffer = new Map();
+			this.pathBulkBuffer.set(key, val);
+			return Promise.resolve();
+		}
+
 		return new Promise((resolve, reject) => {
 			const store = this.GetObjectStore(this.DB_PATH_STORE, 'readwrite');
 			let req;
@@ -855,11 +877,34 @@ class GameStateStore {
 		});
 	}
 
+	async StoreAllPaths(values = null) {
+		if (!values)
+			values = this.pathBulkBuffer;
+
+		if (!values || this.bulkStores === null)
+			return Promise.reject();
+
+		return new Promise((resolve, reject) => {
+			const store = this.GetObjectStore(this.DB_PATH_STORE, 'readwrite');
+			try {
+				values.forEach(function (v, key) {
+					store.add(v, key);
+				});
+
+				this.pathBulkBuffer = null;
+				resolve();
+			} catch (e) {
+				this.LocalError("This engine doesn't know how to clone a Blob, use Firefox");
+				reject(e);
+			}
+		});
+	}
+
 	async PrepareStore() {
 		//detecting if we have IndexedDb advanced store (only checking point-store); otherwise, there is no point in going further
 		if (!this.PointStore.GetAllPoints) return false;
 
-		if (!this.g_DB)
+		if (this.g_DB === null)
 			await this.OpenDb();
 		else
 			return false;//all initiated, just exit
@@ -868,9 +913,7 @@ class GameStateStore {
 		const idb_state = await this.GetState(game_state.iGameID);
 		if (!idb_state) {
 			//no state entry in db
-			await Promise.all([this.ClearObjectStore(this.DB_POINT_STORE),
-			this.ClearObjectStore(this.DB_PATH_STORE),
-			this.ClearObjectStore(this.DB_STATE_STORE)]);
+			await this.ClearAllStores();
 
 			await this.StoreState(game_state.iGameID, game_state);
 
@@ -880,10 +923,7 @@ class GameStateStore {
 			//Verify date of last move and decide whether to need pull points from signalR
 			if (idb_state.sLastMoveGameTimeStamp !== game_state.sLastMoveGameTimeStamp) {
 
-				await Promise.all([this.ClearObjectStore(this.DB_POINT_STORE),
-				this.ClearObjectStore(this.DB_PATH_STORE),
-				this.ClearObjectStore(this.DB_STATE_STORE)]);
-
+				await this.ClearAllStores();
 				return false;
 			}
 			else if (game_state.bPointsAndPathsLoaded === false) {
@@ -893,9 +933,7 @@ class GameStateStore {
 
 					if ((await this.PointStore.PrepareStore()) !== true || (await this.PathStore.PrepareStore()) !== true) {
 
-						await Promise.all([this.ClearObjectStore(this.DB_POINT_STORE),
-						this.ClearObjectStore(this.DB_PATH_STORE),
-						this.ClearObjectStore(this.DB_STATE_STORE)]);
+						await this.ClearAllStores();
 
 						return false;
 					}
@@ -909,7 +947,7 @@ class GameStateStore {
 	}
 
 	async BeginBulkStorage(storeName, mode) {
-		if (!this.bulkStores)
+		if (this.bulkStores === null)
 			this.bulkStores = new Map();
 
 		const key = storeName;
@@ -925,7 +963,7 @@ class GameStateStore {
 	}
 
 	async EndBulkStorage(storeName) {
-		if (this.bulkStores) {
+		if (this.bulkStores !== null) {
 			if (Array.isArray(storeName)) {
 				this.bulkStores.delete(storeName[0]);
 				this.bulkStores.delete(storeName[1]);

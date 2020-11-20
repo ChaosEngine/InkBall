@@ -5,7 +5,7 @@
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
     <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
     <LangVersion>latest</LangVersion>
-    <Version>1.0.1.1</Version>
+    <Version>1.0.1.2</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -33,6 +33,8 @@
     <EmbeddedResource Include="wwwroot\js\inkball.js" />
     <EmbeddedResource Include="wwwroot\js\svgvml.js" />
     <EmbeddedResource Include="wwwroot\js\*Bundle.js" />
+
+    <EmbeddedResource Include="wwwroot\js\AIWorker.js" />
   </ItemGroup>
   <ItemGroup Condition="'$(Configuration)'!='Debug'">
     <EmbeddedResource Include="wwwroot\css\inkball.min.css" />
@@ -42,7 +44,7 @@
     <EmbeddedResource Include="wwwroot\js\*MinBundle.js" />
     <EmbeddedResource Include="wwwroot\js\*DepsBundle.js" />
     <EmbeddedResource Include="wwwroot\js\*Bundle.min.js" />
-    <EmbeddedResource Include="wwwroot\js\AIBundle.js" />
+    <EmbeddedResource Include="wwwroot\js\AIWorkerBundle.js" />
   </ItemGroup>
 
 </Project>
