@@ -2243,6 +2243,12 @@ var GameStateStore = /*#__PURE__*/function () {
 
       return PrepareStore;
     }()
+    /**
+     * Load all needed stores upfront
+     * @param {any} storeName array or string of store to load
+     * @param {any} mode - readonly/readwrite
+     */
+
   }, {
     key: "BeginBulkStorage",
     value: function () {

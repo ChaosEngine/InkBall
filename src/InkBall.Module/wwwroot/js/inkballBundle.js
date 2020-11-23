@@ -14463,6 +14463,8 @@ module.exports = function (it, key) {
 
 function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
 
+function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
 function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
 
 function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
@@ -14478,8 +14480,6 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
-
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
 
@@ -15240,6 +15240,7 @@ var InkBallGame = /*#__PURE__*/function () {
     };
     this.m_ApplicationUserSettings = null;
     this.m_sLastMoveGameTimeStamp = null;
+    this.m_sVersion = null;
     if (sHubName === null || sHubName === "") return;
     this.g_SignalRConnection = new signalR.HubConnectionBuilder().withUrl(sHubName, {
       transport: transportType,
@@ -18374,7 +18375,8 @@ var InkBallGame = /*#__PURE__*/function () {
                 };
 
                 this.wrk.postMessage({
-                  state: this.GetGameStateForIndexedDb()
+                  state: this.GetGameStateForIndexedDb(),
+                  version: this.m_sVersion
                 });
 
               case 5:
@@ -18492,7 +18494,8 @@ var InkBallGame = /*#__PURE__*/function () {
                 this.m_iGridSizeY = parseInt(Math.ceil(iClientHeight / this.m_BoardSize.height));
                 this.m_iGridWidth = parseInt(Math.ceil(iClientWidth / this.m_iGridSizeX));
                 this.m_iGridHeight = parseInt(Math.ceil(iClientHeight / this.m_iGridSizeY));
-                this.m_sLastMoveGameTimeStamp = sLastMoveGameTimeStamp; ///////CpuGame variables start//////
+                this.m_sLastMoveGameTimeStamp = sLastMoveGameTimeStamp;
+                this.m_sVersion = version; ///////CpuGame variables start//////
 
                 this.rAF_StartTimestamp = null;
                 this.rAF_FrameID = null;
@@ -18501,13 +18504,13 @@ var InkBallGame = /*#__PURE__*/function () {
                 this.SvgVml = new SVG.SvgVml();
                 if (this.SvgVml.CreateSVGVML(this.m_Screen, svg_width_x_height, svg_width_x_height, true) === null) alert('SVG is not supported!');
                 this.DisableSelection(this.m_Screen);
-                stateStore = new SVG.GameStateStore(useIndexedDbStore, this.CreateScreenPointFromIndexedDb.bind(this), this.CreateScreenPathFromIndexedDb.bind(this), this.GetGameStateForIndexedDb.bind(this), LocalLog, LocalError, version);
+                stateStore = new SVG.GameStateStore(useIndexedDbStore, this.CreateScreenPointFromIndexedDb.bind(this), this.CreateScreenPathFromIndexedDb.bind(this), this.GetGameStateForIndexedDb.bind(this), LocalLog, LocalError, this.m_sVersion);
                 this.m_Lines = stateStore.GetPathStore();
                 this.m_Points = stateStore.GetPointStore();
-                _context31.next = 56;
+                _context31.next = 57;
                 return stateStore.PrepareStore();
 
-              case 56:
+              case 57:
                 this.m_bPointsAndPathsLoaded = _context31.sent;
 
                 if (this.m_bViewOnly === false) {
@@ -18570,7 +18573,7 @@ var InkBallGame = /*#__PURE__*/function () {
                   document.querySelector(sPause).innerHTML = 'back to Game List';
                 }
 
-              case 58:
+              case 59:
               case "end":
                 return _context31.stop();
             }

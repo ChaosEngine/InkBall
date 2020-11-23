@@ -2,6 +2,7 @@
 import { SvgVml, GameStateStore } from "./svgvml.js";
 //self.importScripts('svgvmlBundle.js', 'AIBundle.js');
 
+//TODO: make shareable, no duplication
 const StatusEnum = Object.freeze({
 	POINT_FREE_RED: -3,
 	POINT_FREE_BLUE: -2,
@@ -12,11 +13,13 @@ const StatusEnum = Object.freeze({
 	POINT_OWNED_BY_BLUE: 3
 });
 
+//TODO: make shareable, no duplication
 function LocalLog(msg) {
 	// eslint-disable-next-line no-console
 	console.log(msg);
 }
 
+//TODO: make shareable, no duplication
 function LocalError(...args) {
 	let msg = '';
 	for (let i = 0; i < args.length; i++) {
@@ -135,7 +138,7 @@ addEventListener('message', async function (e) {
 		function GetGameStateForIndexedDb() {
 			return params.state;
 		},
-		LocalLog, LocalError, '1.0.1.2'
+		LocalLog, LocalError, params.version
 	);
 
 	lines = stateStore.GetPathStore();

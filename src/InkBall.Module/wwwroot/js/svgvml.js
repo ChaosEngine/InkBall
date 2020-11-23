@@ -946,6 +946,11 @@ class GameStateStore {
 		}
 	}
 
+	/**
+	 * Load all needed stores upfront
+	 * @param {any} storeName array or string of store to load
+	 * @param {any} mode - readonly/readwrite
+	 */
 	async BeginBulkStorage(storeName, mode) {
 		if (this.bulkStores === null)
 			this.bulkStores = new Map();

@@ -18513,6 +18513,12 @@ var GameStateStore = /*#__PURE__*/function () {
 
       return PrepareStore;
     }()
+    /**
+     * Load all needed stores upfront
+     * @param {any} storeName array or string of store to load
+     * @param {any} mode - readonly/readwrite
+     */
+
   }, {
     key: "BeginBulkStorage",
     value: function () {
@@ -18598,6 +18604,7 @@ function AIWorker_asyncToGenerator(fn) { return function () { var self = this, a
 
 
  //self.importScripts('svgvmlBundle.js', 'AIBundle.js');
+//TODO: make shareable, no duplication
 
 var StatusEnum = Object.freeze({
   POINT_FREE_RED: -3,
@@ -18607,12 +18614,13 @@ var StatusEnum = Object.freeze({
   POINT_IN_PATH: 1,
   POINT_OWNED_BY_RED: 2,
   POINT_OWNED_BY_BLUE: 3
-});
+}); //TODO: make shareable, no duplication
 
 function LocalLog(msg) {
   // eslint-disable-next-line no-console
   console.log(msg);
-}
+} //TODO: make shareable, no duplication
+
 
 function LocalError() {
   var msg = '';
@@ -18803,7 +18811,7 @@ addEventListener('message', /*#__PURE__*/function () {
               return CreateScreenPathFromIndexedDb;
             }(), function GetGameStateForIndexedDb() {
               return params.state;
-            }, LocalLog, LocalError, '1.0.1.2');
+            }, LocalLog, LocalError, params.version);
             lines = stateStore.GetPathStore();
             points = stateStore.GetPointStore();
             _context2.next = 9;

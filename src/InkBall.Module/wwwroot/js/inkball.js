@@ -468,6 +468,7 @@ class InkBallGame {
 		this.CursorPos = { x: -1, y: -1 };
 		this.m_ApplicationUserSettings = null;
 		this.m_sLastMoveGameTimeStamp = null;
+		this.m_sVersion = null;
 
 		if (sHubName === null || sHubName === "") return;
 
@@ -2244,7 +2245,8 @@ class InkBallGame {
 			//this.wrk.terminate();
 		};
 		this.wrk.postMessage({
-			state: this.GetGameStateForIndexedDb()
+			state: this.GetGameStateForIndexedDb(),
+			version: this.m_sVersion
 		});
 
 
@@ -2321,6 +2323,7 @@ class InkBallGame {
 		this.m_iGridWidth = parseInt(Math.ceil(iClientWidth / this.m_iGridSizeX));
 		this.m_iGridHeight = parseInt(Math.ceil(iClientHeight / this.m_iGridSizeY));
 		this.m_sLastMoveGameTimeStamp = sLastMoveGameTimeStamp;
+		this.m_sVersion = version;
 		///////CpuGame variables start//////
 		this.rAF_StartTimestamp = null;
 		this.rAF_FrameID = null;
@@ -2338,7 +2341,7 @@ class InkBallGame {
 			this.CreateScreenPathFromIndexedDb.bind(this),
 			this.GetGameStateForIndexedDb.bind(this),
 			LocalLog, LocalError,
-			version);
+			this.m_sVersion);
 		this.m_Lines = stateStore.GetPathStore();
 		this.m_Points = stateStore.GetPointStore();
 		this.m_bPointsAndPathsLoaded = await stateStore.PrepareStore();
