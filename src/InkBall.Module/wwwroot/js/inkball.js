@@ -2,7 +2,7 @@
 /*global signalR, gameOptions*/
 "use strict";
 
-let SVG, AIBundle;
+let SVG/*, AIBundle*/;
 
 /******** funcs-n-classes ********/
 const StatusEnum = Object.freeze({
@@ -336,6 +336,7 @@ async function importAllModulesAsync(gameOptions) {
 	else
 		SVG = await import(/* webpackChunkName: "svgvml" */'./svgvml.js');
 
+	//for CPU game enable AI libs and calculations
 	if (gameOptions.iOtherPlayerID === -1) {
 		//AIBundle = await import(/* webpackChunkName: "AIDeps" */'./AIBundle.js');
 	}
@@ -2241,15 +2242,27 @@ class InkBallGame {
 			);
 		this.wrk.onmessage = function (e) {
 			const data = e.data;
-			LocalLog('Message received from worker ' + data);
+			switch (data.operation) {
+				case "BUILD_GRAPH":
+					LocalLog('Message received from worker ' + data);
+					break;
+				default:
+					break;
+			}
 			//this.wrk.terminate();
 		};
-		this.wrk.postMessage({
-			state: this.GetGameStateForIndexedDb(),
-			version: this.m_sVersion
+		const serialized_points = Array.from(this.m_Points.store.entries()).map((arr) => {
+			return { key: arr[0], value: arr[1].Serialize() };
 		});
+		const serialized_paths = this.m_Lines.store.map(pa => pa.Serialize());
 
-
+		this.wrk.postMessage({
+			operation: "BUILD_GRAPH",
+			state: this.GetGameStateForIndexedDb(),
+			version: this.m_sVersion,
+			points: serialized_points,
+			paths: serialized_paths
+		});
 	}
 
 	/**
