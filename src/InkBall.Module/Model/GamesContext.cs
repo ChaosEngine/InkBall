@@ -134,7 +134,7 @@ namespace InkBall.Module.Model
             if (!optionsBuilder.IsConfigured)
             {
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. See http://go.microsoft.com/fwlink/?LinkId=723263 for guidance on storing connection strings.
-                optionsBuilder.UseMySql("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+                optionsBuilder.UseMySql("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", new MySqlServerVersion(new Version(8, 0, 21)));
             }
         }*/
 
@@ -147,10 +147,10 @@ namespace InkBall.Module.Model
 				entity.HasKey(e => e.iId);
 
 				entity.HasIndex(e => e.iPlayer1Id)
-					.HasName("ByPlayer1");
+					.HasDatabaseName("ByPlayer1");
 
 				entity.HasIndex(e => e.iPlayer2Id)
-					.HasName("ByPlayer2");
+					.HasDatabaseName("ByPlayer2");
 
 				entity.Property(e => e.iId).HasColumnName("iId")
 					.ValueGeneratedOnAdd()
@@ -225,10 +225,10 @@ namespace InkBall.Module.Model
 				entity.HasKey(e => e.iId);
 
 				entity.HasIndex(e => e.iGameId)
-					.HasName("IDX_InkBallPath_ByGame");
+					.HasDatabaseName("IDX_InkBallPath_ByGame");
 
 				entity.HasIndex(e => e.iPlayerId)
-					.HasName("IDX_InkBallPath_ByPlayer");
+					.HasDatabaseName("IDX_InkBallPath_ByPlayer");
 
 				entity.Property(e => e.iId).HasColumnName("iId")
 					.ValueGeneratedOnAdd()
@@ -266,7 +266,7 @@ namespace InkBall.Module.Model
 				entity.HasKey(e => e.iId);
 
 				entity.HasIndex(e => e.iUserId)
-					.HasName("ByUser");
+					.HasDatabaseName("ByUser");
 
 				entity.Property(e => e.iId).HasColumnName("iId")
 					.ValueGeneratedOnAdd()
@@ -328,13 +328,13 @@ namespace InkBall.Module.Model
 				entity.HasKey(e => e.iId);
 
 				entity.HasIndex(e => e.iEnclosingPathId)
-					.HasName("ByEnclosingPath");
+					.HasDatabaseName("ByEnclosingPath");
 
 				entity.HasIndex(e => e.iGameId)
-					.HasName("IDX_InkBallPoint_ByGame");
+					.HasDatabaseName("IDX_InkBallPoint_ByGame");
 
 				entity.HasIndex(e => e.iPlayerId)
-					.HasName("IDX_InkBallPoint_ByPlayer");
+					.HasDatabaseName("IDX_InkBallPoint_ByPlayer");
 
 				entity.Property(e => e.iId).HasColumnName("iId")
 					.ValueGeneratedOnAdd()
@@ -386,10 +386,10 @@ namespace InkBall.Module.Model
 				entity.HasKey(e => e.iId);
 
 				entity.HasIndex(e => e.iPathId)
-					.HasName("ByPath");
+					.HasDatabaseName("ByPath");
 
 				entity.HasIndex(e => e.iPointId)
-					.HasName("ByPoint");
+					.HasDatabaseName("ByPoint");
 
 				entity.Property(e => e.iId).HasColumnName("iId")
 					.ValueGeneratedOnAdd()
@@ -429,7 +429,7 @@ namespace InkBall.Module.Model
 				entity.HasKey(e => e.iId);
 
 				entity.HasIndex(e => e.sExternalId)
-					.HasName("sExternalId")
+					.HasDatabaseName("sExternalId")
 					.IsUnique();
 
 				entity.Property(e => e.iId)

@@ -126,7 +126,7 @@ namespace InkBall.Module.Pages
 								{
 									trans.Rollback();
 									_logger.LogError(ex, ex.Message);
-									throw ex;
+									throw;
 								}
 							}
 						}

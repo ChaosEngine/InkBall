@@ -67,11 +67,8 @@ namespace InkBall.Module.Model
 		{
 			try
 			{
-				//return (dt == null || dt == DateTime.MinValue) ?
-				//		new byte[] { } : BitConverter.GetBytes(dt.ToBinary());
-
-				if (dt == null || dt <= DateTime.MinValue)
-					return new byte[] { };
+				if (dt <= DateTime.MinValue)
+					return Array.Empty<byte>();
 
 				TimeSpan ts = dt - DateTime.MinValue;
 				var res = BitConverter.GetBytes(ts.Ticks);

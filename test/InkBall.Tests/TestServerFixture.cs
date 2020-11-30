@@ -183,10 +183,7 @@ namespace IntegrationTests
 			.AddJsonProtocol()
 			.AddMessagePackProtocol(options =>
 			{
-				options.FormatterResolvers = new List<MessagePack.IFormatterResolver>()
-				{
-					MessagePack.Resolvers.StandardResolver.Instance
-				};
+				options.SerializerOptions.WithResolver(MessagePack.Resolvers.StandardResolver.Instance);
 			});
 		}
 
