@@ -763,6 +763,9 @@ var GameStateStore = /*#__PURE__*/function () {
                     return this.MainGameStateStore.BeginBulkStorage(this.MainGameStateStore.DB_POINT_STORE, "readwrite");
 
                   case 2:
+                    null === this.MainGameStateStore.pointBulkBuffer && (this.MainGameStateStore.pointBulkBuffer = new Map());
+
+                  case 3:
                   case "end":
                     return _context16.stop();
                 }
@@ -1047,6 +1050,9 @@ var GameStateStore = /*#__PURE__*/function () {
                     return this.MainGameStateStore.BeginBulkStorage([this.MainGameStateStore.DB_POINT_STORE, this.MainGameStateStore.DB_PATH_STORE], "readwrite");
 
                   case 2:
+                    null === this.MainGameStateStore.pathBulkBuffer && (this.MainGameStateStore.pathBulkBuffer = new Map());
+
+                  case 3:
                   case "end":
                     return _context23.stop();
                 }

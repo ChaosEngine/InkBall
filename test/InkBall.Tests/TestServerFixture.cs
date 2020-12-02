@@ -1,5 +1,6 @@
 ﻿using InkBall.Module;
 using InkBall.Module.Model;
+using MessagePack;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -183,7 +184,11 @@ namespace IntegrationTests
 			.AddJsonProtocol()
 			.AddMessagePackProtocol(options =>
 			{
-				options.SerializerOptions.WithResolver(MessagePack.Resolvers.StandardResolver.Instance);
+				//options.SerializerOptions.WithResolver(MessagePack.Resolvers.StandardResolver.Instance);
+				options.SerializerOptions = MessagePackSerializerOptions
+					.Standard
+					.WithResolver(MessagePack.Resolvers.StandardResolver.Instance)
+					.WithSecurity(MessagePackSecurity.UntrustedData);
 			});
 		}
 

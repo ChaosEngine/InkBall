@@ -467,6 +467,9 @@ class GameStateStore {
 
 			async BeginBulkStorage() {
 				await this.MainGameStateStore.BeginBulkStorage(this.MainGameStateStore.DB_POINT_STORE, 'readwrite');
+
+				if (this.MainGameStateStore.pointBulkBuffer === null)
+					this.MainGameStateStore.pointBulkBuffer = new Map();
 			}
 
 			async EndBulkStorage() {
@@ -552,6 +555,9 @@ class GameStateStore {
 
 			async BeginBulkStorage() {
 				await this.MainGameStateStore.BeginBulkStorage([this.MainGameStateStore.DB_POINT_STORE, this.MainGameStateStore.DB_PATH_STORE], 'readwrite');
+				
+				if (this.MainGameStateStore.pathBulkBuffer === null)
+					this.MainGameStateStore.pathBulkBuffer = new Map();
 			}
 
 			async EndBulkStorage() {
