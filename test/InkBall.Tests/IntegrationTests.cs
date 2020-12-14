@@ -135,7 +135,7 @@ namespace IntegrationTests
 		}
 
 		[Theory]
-		[InlineData("InkBall/Home", "<picture alt=\"home screen\" aria-label=\"home screen image\">")]
+		[InlineData("InkBall/Home", "<picture aria-label=\"home screen image\">")]
 		[InlineData("InkBall/Rules", "<li>Player put dots on the grid one after another</li>")]
 		public async Task Pages_Anonymous(string page, string contentToCheck)
 		{
