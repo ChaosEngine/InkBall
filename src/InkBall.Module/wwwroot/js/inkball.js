@@ -322,9 +322,9 @@ async function importAllModulesAsync(gameOptions) {
 	const isMinified = selfFileName.indexOf("min") !== -1;
 
 	if (isMinified)
-		SHRD = await import(/* webpackChunkName: "svgvmlMin" */'./svgvml.min.js');
+		SHRD = await import(/* webpackChunkName: "sharedMin" */'./shared.min.js');
 	else
-		SHRD = await import(/* webpackChunkName: "svgvml" */'./svgvml.js');
+		SHRD = await import(/* webpackChunkName: "shared" */'./shared.js');
 	LocalLog = SHRD.LocalLog; LocalError = SHRD.LocalError, StatusEnum = SHRD.StatusEnum;
 
 	//for CPU game enable AI libs and calculations

@@ -1,5 +1,5 @@
 ﻿import { GraphAI, concaveman } from "./AISource.js";
-import { SvgVml, StatusEnum, LocalLog, LocalError, sortPointsClockwise } from "./svgvml.js";
+import { SvgVml, StatusEnum, LocalLog, LocalError, sortPointsClockwise } from "./shared.js";
 
 
 // This is the entry point for our worker

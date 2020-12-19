@@ -32,14 +32,14 @@
     <EmbeddedResource Include="wwwroot\css\inkball.css" />
     <EmbeddedResource Include="wwwroot\img\*" />
     <EmbeddedResource Include="wwwroot\js\inkball.js" />
-    <EmbeddedResource Include="wwwroot\js\svgvml.js" />
+    <EmbeddedResource Include="wwwroot\js\shared.js" />
     <EmbeddedResource Include="wwwroot\js\*Bundle.js" />
   </ItemGroup>
   <ItemGroup Condition="'$(Configuration)'!='Debug'">
     <EmbeddedResource Include="wwwroot\css\inkball.min.css" />
     <EmbeddedResource Include="wwwroot\img\*" />
     <EmbeddedResource Include="wwwroot\js\inkball.min.js" />
-    <EmbeddedResource Include="wwwroot\js\svgvml.min.js" />
+    <EmbeddedResource Include="wwwroot\js\shared.min.js" />
     <EmbeddedResource Include="wwwroot\js\*MinBundle.js" />
     <EmbeddedResource Include="wwwroot\js\*DepsBundle.js" />
     <EmbeddedResource Include="wwwroot\js\*Bundle.min.js" />

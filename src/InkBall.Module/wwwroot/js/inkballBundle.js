@@ -43,7 +43,7 @@
 /******/
 /******/ 	// script path function
 /******/ 	function jsonpScriptSrc(chunkId) {
-/******/ 		return __webpack_require__.p + "" + ({"1":"svgvml","2":"svgvmlMin"}[chunkId]||chunkId) + "Bundle.js"
+/******/ 		return __webpack_require__.p + "" + ({"1":"shared","2":"sharedMin"}[chunkId]||chunkId) + "Bundle.js"
 /******/ 	}
 /******/
 /******/ 	// The require function
@@ -794,7 +794,7 @@ function _importAllModulesAsync() {
             }
 
             _context40.next = 5;
-            return __webpack_require__.e(/* import() | svgvmlMin */ 2).then(__webpack_require__.bind(null, 2));
+            return __webpack_require__.e(/* import() | sharedMin */ 2).then(__webpack_require__.bind(null, 2));
 
           case 5:
             SHRD = _context40.sent;
@@ -803,7 +803,7 @@ function _importAllModulesAsync() {
 
           case 8:
             _context40.next = 10;
-            return __webpack_require__.e(/* import() | svgvml */ 1).then(__webpack_require__.bind(null, 3));
+            return __webpack_require__.e(/* import() | shared */ 1).then(__webpack_require__.bind(null, 3));
 
           case 10:
             SHRD = _context40.sent;

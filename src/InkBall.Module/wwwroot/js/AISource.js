@@ -1,7 +1,7 @@
 /*eslint-disable no-console*/
 import concaveman from "concaveman";
 import decomp from "poly-decomp";
-import { StatusEnum, /*LocalLog,*/ sortPointsClockwise, /*Sleep,*/ pnpoly2 } from "./svgvml.js";
+import { StatusEnum, /*LocalLog,*/ sortPointsClockwise, /*Sleep,*/ pnpoly2 } from "./shared.js";
 
 
 /**
