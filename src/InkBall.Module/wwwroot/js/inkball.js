@@ -2,19 +2,9 @@
 /*global signalR, gameOptions*/
 "use strict";
 
-let SVG/*, AIBundle*/;
+let SHRD, LocalLog, LocalError, StatusEnum/*, AIBundle*/;
 
 /******** funcs-n-classes ********/
-const StatusEnum = Object.freeze({
-	POINT_FREE_RED: -3,
-	POINT_FREE_BLUE: -2,
-	POINT_FREE: -1,
-	POINT_STARTING: 0,
-	POINT_IN_PATH: 1,
-	POINT_OWNED_BY_RED: 2,
-	POINT_OWNED_BY_BLUE: 3
-});
-
 const CommandKindEnum = Object.freeze({
 	UNKNOWN: -1,
 	PING: 0,
@@ -320,8 +310,8 @@ class CountdownTimer {
  * @param {object} gameOptions is an entry starter object definint game parameters
  */
 async function importAllModulesAsync(gameOptions) {
-	/*const IE11 = navigator.userAgent.indexOf('Trident') >= 0;
-	if (IE11) {
+	/*const isIE11 = navigator.userAgent.indexOf('Trident') >= 0;
+	if (isIE11) {
 		await import('@babel/polyfill');
 		//await import('core-js');
 		//await import('regenerator-runtime/runtime');
@@ -332,9 +322,10 @@ async function importAllModulesAsync(gameOptions) {
 	const isMinified = selfFileName.indexOf("min") !== -1;
 
 	if (isMinified)
-		SVG = await import(/* webpackChunkName: "svgvmlMin" */'./svgvml.min.js');
+		SHRD = await import(/* webpackChunkName: "svgvmlMin" */'./svgvml.min.js');
 	else
-		SVG = await import(/* webpackChunkName: "svgvml" */'./svgvml.js');
+		SHRD = await import(/* webpackChunkName: "svgvml" */'./svgvml.js');
+	LocalLog = SHRD.LocalLog; LocalError = SHRD.LocalError, StatusEnum = SHRD.StatusEnum;
 
 	//for CPU game enable AI libs and calculations
 	if (gameOptions.iOtherPlayerID === -1) {
@@ -342,29 +333,9 @@ async function importAllModulesAsync(gameOptions) {
 	}
 }
 
-function LocalLog(msg) {
-	// eslint-disable-next-line no-console
-	console.log(msg);
-}
-
-function LocalError(...args) {
-	let msg = '';
-	for (let i = 0; i < args.length; i++) {
-		const str = args[i];
-		if (str)
-			msg += str;
-	}
-	// eslint-disable-next-line no-console
-	console.error(msg);
-}
-
 function RandomColor() {
 	return 'var(--orange)';
 	//return '#' + Math.floor(Math.random() * 16777215).toString(16);
-}
-
-async function Sleep(ms) {
-	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 Function.prototype.callAsWorker = function (context, args) {
@@ -1183,50 +1154,11 @@ class InkBallGame {
 		return false;
 	}
 
-	/**
-	 * Based on http://www.faqs.org/faqs/graphics/algorithms-faq/
-	 * but mainly on http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
-	 * returns != 0 if point is inside path
-	 * @param {number} npol points count
-	 * @param {number} xp x point coordinates
-	 * @param {number} yp y point coordinates
-	 * @param {number} x point to check x coordinate
-	 * @param {number} y point to check y coordinate
-	 * @returns {boolean} if point lies inside the polygon
-	 */
-	pnpoly(npol, xp, yp, x, y) {
-		let i, j, c = false;
-		for (i = 0, j = npol - 1; i < npol; j = i++) {
-			if ((((yp[i] <= y) && (y < yp[j])) ||
-				((yp[j] <= y) && (y < yp[i]))) &&
-				(x < (xp[j] - xp[i]) * (y - yp[i]) / (yp[j] - yp[i]) + xp[i]))
-
-				c = !c;
-		}
-		return c;
-	}
-
-	pnpoly2(pathPoints, x, y) {
-		const npol = pathPoints.length;
-		let i, j, c = false;
-
-		for (i = 0, j = npol - 1; i < npol; j = i++) {
-			const pi = pathPoints[i], pj = pathPoints[j];
-
-			if ((((pi.y <= y) && (y < pj.y)) ||
-				((pj.y <= y) && (y < pi.y))) &&
-				(x < (pj.x - pi.x) * (y - pi.y) / (pj.y - pi.y) + pi.x))
-
-				c = !c;
-		}
-		return c;
-	}
-
 	async SurroundOponentPoints() {
 		const points = this.m_Line.GetPointsArray();
 
 		//uniqe point path test (no duplicates except starting-ending point)
-		const pts_not_unique = SVG.hasDuplicates(points.slice(0, -1).map(pt => pt.x + '_' + pt.y));
+		const pts_not_unique = SHRD.hasDuplicates(points.slice(0, -1).map(pt => pt.x + '_' + pt.y));
 
 		if (pts_not_unique ||
 			!(points[0].x === points[points.length - 1].x && points[0].y === points[points.length - 1].y)) {
@@ -1256,7 +1188,7 @@ class InkBallGame {
 			if (pt !== undefined && pt.GetFillColor() === sColor &&
 				([StatusEnum.POINT_FREE_BLUE, StatusEnum.POINT_FREE_RED].includes(pt.GetStatus()))) {
 				let { x, y } = pt.GetPosition();
-				if (false !== this.pnpoly2(points, x, y)) {
+				if (false !== SHRD.pnpoly2(points, x, y)) {
 					x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
 					sOwnedPoints += `${sDelimiter}${x},${y}`;
 					sDelimiter = " ";
@@ -1300,7 +1232,7 @@ class InkBallGame {
 		for (const line of lines) {
 			const points = line.GetPointsArray();
 
-			if (false !== this.pnpoly2(points, xmul, ymul))
+			if (false !== SHRD.pnpoly2(points, xmul, ymul))
 				return false;
 		}
 
@@ -2120,15 +2052,15 @@ class InkBallGame {
 					switch (iStatus) {
 						case StatusEnum.POINT_FREE_RED:
 							color = 'red';
-							oval.SetStatus(iStatus/*StatusEnum.POINT_FREE*/);
+							oval.SetStatus(iStatus);//StatusEnum.POINT_FREE
 							break;
 						case StatusEnum.POINT_FREE_BLUE:
 							color = 'blue';
-							oval.SetStatus(iStatus/*StatusEnum.POINT_FREE*/);
+							oval.SetStatus(iStatus);//StatusEnum.POINT_FREE
 							break;
 						case StatusEnum.POINT_FREE:
 							color = 'red';
-							oval.SetStatus(iStatus/*StatusEnum.POINT_FREE*/);
+							oval.SetStatus(iStatus);//StatusEnum.POINT_FREE
 							//console.warn('TODO: generic FREE point, really? change it!');
 							break;
 						case StatusEnum.POINT_STARTING:
@@ -2214,7 +2146,7 @@ class InkBallGame {
 			return "blah";
 		};
 		// Let the worker execute the above function, with the specified arguments and context
-		/*const result = await addNums.callAsWorker(
+		const result = await addNums.callAsWorker(
 			//context
 			[LocalLog, LocalError, `const StatusEnum = Object.freeze({
 	POINT_FREE_RED: -3,
@@ -2225,8 +2157,8 @@ class InkBallGame {
 	POINT_OWNED_BY_RED: 2,
 	POINT_OWNED_BY_BLUE: 3
 });`,
-				//SVG.CreateOval, SVG.CreatePolyline, SVG.RemovePolyline, SVG.CreateSVGVML, SVG.CreateLine, SVG.hasDuplicates, SVG.sortPointsClockwise,
-				SVG.SvgVml, SVG.GameStateStore,
+				//SHRD.CreateOval, SHRD.CreatePolyline, SHRD.RemovePolyline, SHRD.CreateSVGVML, SHRD.CreateLine, SHRD.hasDuplicates, SHRD.sortPointsClockwise,
+				SHRD.SvgVml, SHRD.GameStateStore,
 				AIBundle.GraphAI
 			],
 			//parameters
@@ -2343,17 +2275,16 @@ class InkBallGame {
 		this.lastCycle = [];
 		///////CpuGame variables end//////
 
-		this.SvgVml = new SVG.SvgVml();
+		this.SvgVml = new SHRD.SvgVml();
 		if (this.SvgVml.CreateSVGVML(this.m_Screen, svg_width_x_height, svg_width_x_height, true) === null)
 			alert('SVG is not supported!');
 
 		this.DisableSelection(this.m_Screen);
 
-		const stateStore = new SVG.GameStateStore(useIndexedDbStore,
+		const stateStore = new SHRD.GameStateStore(useIndexedDbStore,
 			this.CreateScreenPointFromIndexedDb.bind(this),
 			this.CreateScreenPathFromIndexedDb.bind(this),
 			this.GetGameStateForIndexedDb.bind(this),
-			LocalLog, LocalError,
 			this.m_sVersion);
 		this.m_Lines = stateStore.GetPathStore();
 		this.m_Points = stateStore.GetPointStore();
@@ -2689,7 +2620,7 @@ class InkBallGame {
 				vertex.SetStrokeColor('black');
 				vertex.SetFillColor('black');
 				//vertex.setAttribute("r", "6");
-				await Sleep(10);
+				await SHRD.Sleep(10);
 
 
 				// simple dfs on graph
@@ -2757,7 +2688,7 @@ class InkBallGame {
 						return { x: pt.x / this.m_iGridSizeX, y: pt.y / this.m_iGridSizeY };
 					}.bind(this));
 					//sort clockwise (https://stackoverflow.com/questions/45660743/sort-points-in-counter-clockwise-in-javascript)
-					const cw_sorted_verts = SVG.sortPointsClockwise(mapped_verts);
+					const cw_sorted_verts = SHRD.sortPointsClockwise(mapped_verts);
 
 					//display which cycle we are dealing with
 					for (const vert of cw_sorted_verts) {
@@ -2770,14 +2701,14 @@ class InkBallGame {
 							pt.SetFillColor(rand_color);
 							pt.setAttribute("r", "6");
 						}
-						await Sleep(50);
+						await SHRD.Sleep(50);
 					}
 
 					//find for all free_human_player_points which cycle might interepct it (surrounds)
 					//only convex, NOT concave :-(
 					let tmp = '', comma = '';
 					for (const possible_intercept of free_human_player_points) {
-						if (false !== this.pnpoly2(cw_sorted_verts, possible_intercept.x, possible_intercept.y)) {
+						if (false !== SHRD.pnpoly2(cw_sorted_verts, possible_intercept.x, possible_intercept.y)) {
 							tmp += `${comma}(${possible_intercept.x},${possible_intercept.y})`;
 
 							const pt1 = document.querySelector(`svg > circle[cx="${possible_intercept.x * this.m_iGridSizeX}"][cy="${possible_intercept.y * this.m_iGridSizeY}"]`);
@@ -2803,7 +2734,6 @@ class InkBallGame {
 					});
 				}
 			}
-			//console.log(str);
 			return tab;
 		}.bind(this);
 
@@ -2812,7 +2742,7 @@ class InkBallGame {
 
 		// call DFS to mark the cycles 
 		for (let vind = 0; vind < N; vind++) {
-			await dfs_cycle(vind + 1, vind/*, color, mark, par*/);
+			await dfs_cycle(vind + 1, vind);//, color, mark, par);
 		}
 
 		// function to print the cycles 

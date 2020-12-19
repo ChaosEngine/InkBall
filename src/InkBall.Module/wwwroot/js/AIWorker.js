@@ -1,35 +1,6 @@
-﻿import { GraphAI } from "./AISource.js";
-import { SvgVml } from "./svgvml.js";
-//self.importScripts('https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/7.12.1/polyfill.min.js');
+import { GraphAI, concaveman } from "./AISource.js";
+import { SvgVml, StatusEnum, LocalLog, LocalError, sortPointsClockwise } from "./svgvml.js";
 
-//TODO: make shareable, no duplication
-const StatusEnum = Object.freeze({
-	POINT_FREE_RED: -3,
-	POINT_FREE_BLUE: -2,
-	POINT_FREE: -1,
-	POINT_STARTING: 0,
-	POINT_IN_PATH: 1,
-	POINT_OWNED_BY_RED: 2,
-	POINT_OWNED_BY_BLUE: 3
-});
-
-//TODO: make shareable, no duplication
-function LocalLog(msg) {
-	// eslint-disable-next-line no-console
-	console.log(msg);
-}
-
-//TODO: make shareable, no duplication
-function LocalError(...args) {
-	let msg = '';
-	for (let i = 0; i < args.length; i++) {
-		const str = args[i];
-		if (str)
-			msg += str;
-	}
-	// eslint-disable-next-line no-console
-	console.error(msg);
-}
 
 // This is the entry point for our worker
 addEventListener('message', async function (e) {

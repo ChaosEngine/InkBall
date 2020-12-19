@@ -6,8 +6,15 @@
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SvgVml", function() { return SvgVml; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "StatusEnum", function() { return StatusEnum; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "pnpoly", function() { return pnpoly; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "pnpoly2", function() { return pnpoly2; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "LocalLog", function() { return LocalLog; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "LocalError", function() { return LocalError; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "hasDuplicates", function() { return hasDuplicates; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "sortPointsClockwise", function() { return sortPointsClockwise; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Sleep", function() { return Sleep; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "isESModuleSupport", function() { return isESModuleSupport; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "GameStateStore", function() { return GameStateStore; });
 /*eslint no-unused-vars: ["error", { "varsIgnorePattern": "$" }]*/
 //////////////////////////////////////////////////////
@@ -23,14 +30,12 @@ __webpack_require__.r(__webpack_exports__);
 //////////////////////////////////////////////////////
 
 /**
- * Test for array uniquness using default object comparator
- * @param {array} array of objects that are tested againstn uniqenes
- * @returns {boolean} true - has duplicates
- */
+ * Point status enum
+ * */
 
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
-function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function (_e) { function e(_x26) { return _e.apply(this, arguments); } e.toString = function () { return _e.toString(); }; return e; }(function (e) { throw e; }), f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function (_e2) { function e(_x27) { return _e2.apply(this, arguments); } e.toString = function () { return _e2.toString(); }; return e; }(function (e) { didErr = true; err = e; }), f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
+function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function (_e) { function e(_x27) { return _e.apply(this, arguments); } e.toString = function () { return _e.toString(); }; return e; }(function (e) { throw e; }), f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function (_e2) { function e(_x28) { return _e2.apply(this, arguments); } e.toString = function () { return _e2.toString(); }; return e; }(function (e) { didErr = true; err = e; }), f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
 
 function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
 
@@ -50,18 +55,128 @@ function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Re
 
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 
-function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
-
-function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
-
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
+function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
+
+function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
+
+var StatusEnum = Object.freeze({
+  POINT_FREE_RED: -3,
+  POINT_FREE_BLUE: -2,
+  POINT_FREE: -1,
+  POINT_STARTING: 0,
+  POINT_IN_PATH: 1,
+  POINT_OWNED_BY_RED: 2,
+  POINT_OWNED_BY_BLUE: 3
+});
+/**
+ * Shared log function
+ * @param {any} msg - object to log
+ */
+
+function LocalLog(msg) {
+  // eslint-disable-next-line no-console
+  console.log(msg);
+}
+/**
+ * Shared error log functoin
+ * @param {...any} args - objects to log
+ */
+
+
+function LocalError() {
+  var msg = '';
+
+  for (var i = 0; i < arguments.length; i++) {
+    var str = i < 0 || arguments.length <= i ? undefined : arguments[i];
+    if (str) msg += str;
+  } // eslint-disable-next-line no-console
+
+
+  console.error(msg);
+}
+/**
+ * Based on http://www.faqs.org/faqs/graphics/algorithms-faq/
+ * but mainly on http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+ * returns != 0 if point is inside path
+ * @param {number} npol points count
+ * @param {number} xp x point coordinates
+ * @param {number} yp y point coordinates
+ * @param {number} x point to check x coordinate
+ * @param {number} y point to check y coordinate
+ * @returns {boolean} if point lies inside the polygon
+ */
+
+
+function pnpoly(npol, xp, yp, x, y) {
+  var i,
+      j,
+      c = false;
+
+  for (i = 0, j = npol - 1; i < npol; j = i++) {
+    if ((yp[i] <= y && y < yp[j] || yp[j] <= y && y < yp[i]) && x < (xp[j] - xp[i]) * (y - yp[i]) / (yp[j] - yp[i]) + xp[i]) c = !c;
+  }
+
+  return c;
+}
+
+function pnpoly2(pathPoints, x, y) {
+  var npol = pathPoints.length;
+  var i,
+      j,
+      c = false;
+
+  for (i = 0, j = npol - 1; i < npol; j = i++) {
+    var pi = pathPoints[i],
+        pj = pathPoints[j];
+    if ((pi.y <= y && y < pj.y || pj.y <= y && y < pi.y) && x < (pj.x - pi.x) * (y - pi.y) / (pj.y - pi.y) + pi.x) c = !c;
+  }
+
+  return c;
+}
+/**
+ * Test for array uniquness using default object comparator
+ * @param {array} array of objects that are tested againstn uniqenes
+ * @returns {boolean} true - has duplicates
+ */
+
+
 function hasDuplicates(array) {
   return new Set(array).size !== array.length;
+}
+
+function Sleep(_x) {
+  return _Sleep.apply(this, arguments);
+}
+
+function _Sleep() {
+  _Sleep = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee44(ms) {
+    return regeneratorRuntime.wrap(function _callee44$(_context44) {
+      while (1) {
+        switch (_context44.prev = _context44.next) {
+          case 0:
+            return _context44.abrupt("return", new Promise(function (resolve) {
+              return setTimeout(resolve, ms);
+            }));
+
+          case 1:
+          case "end":
+            return _context44.stop();
+        }
+      }
+    }, _callee44);
+  }));
+  return _Sleep.apply(this, arguments);
+}
+
+function isESModuleSupport() {
+  var esModuleSupport = ('noModule' in HTMLScriptElement.prototype);
+  return esModuleSupport;
 }
 /**
  * Sorting point clockwise/anticlockwise
@@ -262,7 +377,7 @@ var SvgVml = /*#__PURE__*/function () {
       if (saveOldPoint) {
         var old_status = parseInt(this.getAttribute("data-status"));
         this.setAttribute("data-status", iStatus);
-        if (old_status !== -1 && old_status !== iStatus) this.setAttribute("data-old-status", old_status);
+        if (old_status !== StatusEnum.POINT_FREE && old_status !== iStatus) this.setAttribute("data-old-status", old_status);
       } else {
         this.setAttribute("data-status", iStatus);
       }
@@ -459,7 +574,7 @@ var SvgVml = /*#__PURE__*/function () {
       o.setAttribute("stroke-width", 0);
       o.setAttribute("r", Math.round(diam >> 1)); //ch_commented o.style.cursor = "pointer";
 
-      o.setAttribute("data-status", -1); //o.setAttribute("data-old-status", -1);
+      o.setAttribute("data-status", StatusEnum.POINT_FREE); //o.setAttribute("data-old-status", StatusEnum.POINT_FREE);
 
       this.cont.appendChild(o);
       return o;
@@ -512,18 +627,13 @@ var GameStateStore = /*#__PURE__*/function () {
     var pointCreationCallbackFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
     var pathCreationCallbackFn = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
     var getGameStateFn = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
-    var localLogFn = arguments.length > 4 ? arguments[4] : undefined;
-    var localErrorFn = arguments.length > 5 ? arguments[5] : undefined;
-    var version = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : "";
+    var version = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : "";
 
     _classCallCheck(this, GameStateStore);
 
-    this.LocalLog = localLogFn;
-    this.LocalError = localErrorFn;
-
     if (useIndexedDb) {
       if (!('indexedDB' in self)) {
-        this.LocalError("This browser doesn't support IndexedDB");
+        LocalError("This browser doesn't support IndexedDB");
         useIndexedDb = false;
       } else useIndexedDb = true;
     } else useIndexedDb = false; /////////inner class definitions start/////////
@@ -621,7 +731,7 @@ var GameStateStore = /*#__PURE__*/function () {
             }, _callee4, this);
           }));
 
-          function has(_x) {
+          function has(_x2) {
             return _has.apply(this, arguments);
           }
 
@@ -645,7 +755,7 @@ var GameStateStore = /*#__PURE__*/function () {
             }, _callee5, this);
           }));
 
-          function set(_x2, _x3) {
+          function set(_x3, _x4) {
             return _set.apply(this, arguments);
           }
 
@@ -669,7 +779,7 @@ var GameStateStore = /*#__PURE__*/function () {
             }, _callee6, this);
           }));
 
-          function get(_x4) {
+          function get(_x5) {
             return _get.apply(this, arguments);
           }
 
@@ -819,7 +929,7 @@ var GameStateStore = /*#__PURE__*/function () {
             }, _callee12, this);
           }));
 
-          function push(_x5) {
+          function push(_x6) {
             return _push.apply(this, arguments);
           }
 
@@ -1054,7 +1164,7 @@ var GameStateStore = /*#__PURE__*/function () {
             }, _callee18, this);
           }));
 
-          function has(_x6) {
+          function has(_x7) {
             return _has2.apply(this, arguments);
           }
 
@@ -1106,7 +1216,7 @@ var GameStateStore = /*#__PURE__*/function () {
             }, _callee19, this);
           }));
 
-          function set(_x7, _x8) {
+          function set(_x8, _x9) {
             return _set2.apply(this, arguments);
           }
 
@@ -1142,7 +1252,7 @@ var GameStateStore = /*#__PURE__*/function () {
             }, _callee20, this);
           }));
 
-          function get(_x9) {
+          function get(_x10) {
             return _get2.apply(this, arguments);
           }
 
@@ -1397,7 +1507,7 @@ var GameStateStore = /*#__PURE__*/function () {
             }, _callee25, this);
           }));
 
-          function push(_x10) {
+          function push(_x11) {
             return _push2.apply(this, arguments);
           }
 
@@ -1498,7 +1608,7 @@ var GameStateStore = /*#__PURE__*/function () {
           while (1) {
             switch (_context27.prev = _context27.next) {
               case 0:
-                this.LocalLog("OpenDb ...");
+                LocalLog("OpenDb ...");
                 return _context27.abrupt("return", new Promise(function (resolve, reject) {
                   var req;
                   if (_this3.DB_VERSION !== null) req = indexedDB.open(_this3.DB_NAME, _this3.DB_VERSION);else req = indexedDB.open(_this3.DB_NAME);
@@ -1506,17 +1616,17 @@ var GameStateStore = /*#__PURE__*/function () {
                   req.onsuccess = function (evt) {
                     // Equal to: db = req.result;
                     this.g_DB = evt.currentTarget.result;
-                    this.LocalLog("OpenDb DONE");
+                    LocalLog("OpenDb DONE");
                     resolve(evt.currentTarget.result);
                   }.bind(_this3);
 
                   req.onerror = function (evt) {
-                    this.LocalError("OpenDb:", evt.target.errorCode || evt.target.error);
+                    LocalError("OpenDb:", evt.target.errorCode || evt.target.error);
                     reject();
                   }.bind(_this3);
 
                   req.onupgradeneeded = function (evt) {
-                    this.LocalLog("OpenDb.onupgradeneeded(version: ".concat(this.DB_VERSION, ")"));
+                    LocalLog("OpenDb.onupgradeneeded(version: ".concat(this.DB_VERSION, ")"));
                     var store_list = Array.from(evt.currentTarget.result.objectStoreNames);
                     if (store_list.includes(this.DB_POINT_STORE)) evt.currentTarget.result.deleteObjectStore(this.DB_POINT_STORE);
                     if (store_list.includes(this.DB_PATH_STORE)) evt.currentTarget.result.deleteObjectStore(this.DB_PATH_STORE);
@@ -1544,7 +1654,7 @@ var GameStateStore = /*#__PURE__*/function () {
                 return _context27.stop();
             }
           }
-        }, _callee27, this);
+        }, _callee27);
       }));
 
       function OpenDb() {
@@ -1593,7 +1703,7 @@ var GameStateStore = /*#__PURE__*/function () {
                               };
 
                               req.onerror = function (evt) {
-                                this.LocalError("clearObjectStore:", evt.target.errorCode);
+                                LocalError("clearObjectStore:", evt.target.errorCode);
                                 reject();
                               };
                             }));
@@ -1606,7 +1716,7 @@ var GameStateStore = /*#__PURE__*/function () {
                     }, _callee28);
                   }));
 
-                  return function (_x11) {
+                  return function (_x12) {
                     return _ref3.apply(this, arguments);
                   };
                 }().bind(this);
@@ -1664,7 +1774,7 @@ var GameStateStore = /*#__PURE__*/function () {
         }, _callee30);
       }));
 
-      function GetPoint(_x12) {
+      function GetPoint(_x13) {
         return _GetPoint.apply(this, arguments);
       }
 
@@ -1746,7 +1856,7 @@ var GameStateStore = /*#__PURE__*/function () {
         }, _callee32);
       }));
 
-      function GetState(_x13) {
+      function GetState(_x14) {
         return _GetState.apply(this, arguments);
       }
 
@@ -1788,7 +1898,7 @@ var GameStateStore = /*#__PURE__*/function () {
         }, _callee33);
       }));
 
-      function GetPath(_x14) {
+      function GetPath(_x15) {
         return _GetPath.apply(this, arguments);
       }
 
@@ -1871,7 +1981,7 @@ var GameStateStore = /*#__PURE__*/function () {
                   try {
                     req = store.add(val, key);
                   } catch (e) {
-                    if (e.name === 'DataCloneError') _this10.LocalError("This engine doesn't know how to clone a Blob, use Firefox");
+                    if (e.name === 'DataCloneError') LocalError("This engine doesn't know how to clone a Blob, use Firefox");
                     throw e;
                   }
 
@@ -1880,7 +1990,7 @@ var GameStateStore = /*#__PURE__*/function () {
                   };
 
                   req.onerror = function () {
-                    this.LocalError("StorePoint error", this.error);
+                    LocalError("StorePoint error", this.error);
                     reject();
                   };
                 }));
@@ -1893,7 +2003,7 @@ var GameStateStore = /*#__PURE__*/function () {
         }, _callee35, this);
       }));
 
-      function StorePoint(_x15, _x16) {
+      function StorePoint(_x16, _x17) {
         return _StorePoint.apply(this, arguments);
       }
 
@@ -1932,8 +2042,7 @@ var GameStateStore = /*#__PURE__*/function () {
                     _this11.pointBulkBuffer = null;
                     resolve();
                   } catch (e) {
-                    _this11.LocalError("This engine doesn't know how to clone a Blob, use Firefox");
-
+                    LocalError("This engine doesn't know how to clone a Blob, use Firefox");
                     reject(e);
                   }
                 }));
@@ -1975,7 +2084,7 @@ var GameStateStore = /*#__PURE__*/function () {
                   try {
                     req = store.add(gameState, key);
                   } catch (e) {
-                    if (e.name === 'DataCloneError') _this12.LocalError("This engine doesn't know how to clone a Blob, use Firefox");
+                    if (e.name === 'DataCloneError') LocalError("This engine doesn't know how to clone a Blob, use Firefox");
                     throw e;
                   }
 
@@ -1984,7 +2093,7 @@ var GameStateStore = /*#__PURE__*/function () {
                   };
 
                   req.onerror = function () {
-                    this.LocalError("StoreState error", this.error);
+                    LocalError("StoreState error", this.error);
                     reject();
                   };
                 }));
@@ -1997,7 +2106,7 @@ var GameStateStore = /*#__PURE__*/function () {
         }, _callee37);
       }));
 
-      function StoreState(_x17, _x18) {
+      function StoreState(_x18, _x19) {
         return _StoreState.apply(this, arguments);
       }
 
@@ -2021,7 +2130,7 @@ var GameStateStore = /*#__PURE__*/function () {
                   try {
                     req = store.put(gameState, key);
                   } catch (e) {
-                    if (e.name === 'DataCloneError') _this13.LocalError("This engine doesn't know how to clone a Blob, use Firefox");
+                    if (e.name === 'DataCloneError') LocalError("This engine doesn't know how to clone a Blob, use Firefox");
                     throw e;
                   }
 
@@ -2030,7 +2139,7 @@ var GameStateStore = /*#__PURE__*/function () {
                   };
 
                   req.onerror = function () {
-                    this.LocalError("UpdateState error", this.error);
+                    LocalError("UpdateState error", this.error);
                     reject();
                   };
                 }));
@@ -2043,7 +2152,7 @@ var GameStateStore = /*#__PURE__*/function () {
         }, _callee38);
       }));
 
-      function UpdateState(_x19, _x20) {
+      function UpdateState(_x20, _x21) {
         return _UpdateState.apply(this, arguments);
       }
 
@@ -2082,7 +2191,7 @@ var GameStateStore = /*#__PURE__*/function () {
                   try {
                     req = store.add(val, key);
                   } catch (e) {
-                    if (e.name === 'DataCloneError') _this14.LocalError("This engine doesn't know how to clone a Blob, use Firefox");
+                    if (e.name === 'DataCloneError') LocalError("This engine doesn't know how to clone a Blob, use Firefox");
                     throw e;
                   }
 
@@ -2091,7 +2200,7 @@ var GameStateStore = /*#__PURE__*/function () {
                   };
 
                   req.onerror = function () {
-                    this.LocalError("StorePath error", this.error);
+                    LocalError("StorePath error", this.error);
                     reject();
                   };
                 }));
@@ -2104,7 +2213,7 @@ var GameStateStore = /*#__PURE__*/function () {
         }, _callee39, this);
       }));
 
-      function StorePath(_x21, _x22) {
+      function StorePath(_x22, _x23) {
         return _StorePath.apply(this, arguments);
       }
 
@@ -2143,8 +2252,7 @@ var GameStateStore = /*#__PURE__*/function () {
                     _this15.pathBulkBuffer = null;
                     resolve();
                   } catch (e) {
-                    _this15.LocalError("This engine doesn't know how to clone a Blob, use Firefox");
-
+                    LocalError("This engine doesn't know how to clone a Blob, use Firefox");
                     reject(e);
                   }
                 }));
@@ -2342,7 +2450,7 @@ var GameStateStore = /*#__PURE__*/function () {
         }, _callee42, this);
       }));
 
-      function BeginBulkStorage(_x23, _x24) {
+      function BeginBulkStorage(_x24, _x25) {
         return _BeginBulkStorage5.apply(this, arguments);
       }
 
@@ -2375,7 +2483,7 @@ var GameStateStore = /*#__PURE__*/function () {
         }, _callee43, this);
       }));
 
-      function EndBulkStorage(_x25) {
+      function EndBulkStorage(_x26) {
         return _EndBulkStorage5.apply(this, arguments);
       }
 

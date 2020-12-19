@@ -14,12 +14,97 @@
 "use strict";
 
 /**
+ * Point status enum
+ * */
+const StatusEnum = Object.freeze({
+	POINT_FREE_RED: -3,
+	POINT_FREE_BLUE: -2,
+	POINT_FREE: -1,
+	POINT_STARTING: 0,
+	POINT_IN_PATH: 1,
+	POINT_OWNED_BY_RED: 2,
+	POINT_OWNED_BY_BLUE: 3
+});
+
+/**
+ * Shared log function
+ * @param {any} msg - object to log
+ */
+function LocalLog(msg) {
+	// eslint-disable-next-line no-console
+	console.log(msg);
+}
+
+/**
+ * Shared error log functoin
+ * @param {...any} args - objects to log
+ */
+function LocalError(...args) {
+	let msg = '';
+	for (let i = 0; i < args.length; i++) {
+		const str = args[i];
+		if (str)
+			msg += str;
+	}
+	// eslint-disable-next-line no-console
+	console.error(msg);
+}
+
+/**
+ * Based on http://www.faqs.org/faqs/graphics/algorithms-faq/
+ * but mainly on http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+ * returns != 0 if point is inside path
+ * @param {number} npol points count
+ * @param {number} xp x point coordinates
+ * @param {number} yp y point coordinates
+ * @param {number} x point to check x coordinate
+ * @param {number} y point to check y coordinate
+ * @returns {boolean} if point lies inside the polygon
+ */
+function pnpoly(npol, xp, yp, x, y) {
+	let i, j, c = false;
+	for (i = 0, j = npol - 1; i < npol; j = i++) {
+		if ((((yp[i] <= y) && (y < yp[j])) ||
+			((yp[j] <= y) && (y < yp[i]))) &&
+			(x < (xp[j] - xp[i]) * (y - yp[i]) / (yp[j] - yp[i]) + xp[i]))
+
+			c = !c;
+	}
+	return c;
+}
+
+function pnpoly2(pathPoints, x, y) {
+	const npol = pathPoints.length;
+	let i, j, c = false;
+
+	for (i = 0, j = npol - 1; i < npol; j = i++) {
+		const pi = pathPoints[i], pj = pathPoints[j];
+
+		if ((((pi.y <= y) && (y < pj.y)) ||
+			((pj.y <= y) && (y < pi.y))) &&
+			(x < (pj.x - pi.x) * (y - pi.y) / (pj.y - pi.y) + pi.x))
+
+			c = !c;
+	}
+	return c;
+}
+
+/**
  * Test for array uniquness using default object comparator
  * @param {array} array of objects that are tested againstn uniqenes
  * @returns {boolean} true - has duplicates
  */
 function hasDuplicates(array) {
 	return (new Set(array)).size !== array.length;
+}
+
+async function Sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function isESModuleSupport() {
+	const esModuleSupport = 'noModule' in HTMLScriptElement.prototype;
+	return esModuleSupport;
 }
 
 /**
@@ -172,7 +257,7 @@ class SvgVml {
 			if (saveOldPoint) {
 				const old_status = parseInt(this.getAttribute("data-status"));
 				this.setAttribute("data-status", iStatus);
-				if (old_status !== -1 && old_status !== iStatus)
+				if (old_status !== StatusEnum.POINT_FREE && old_status !== iStatus)
 					this.setAttribute("data-old-status", old_status);
 			}
 			else {
@@ -317,8 +402,8 @@ class SvgVml {
 			o.setAttribute("stroke-width", 0);
 			o.setAttribute("r", Math.round(diam >> 1));
 			//ch_commented o.style.cursor = "pointer";
-			o.setAttribute("data-status", -1);
-			//o.setAttribute("data-old-status", -1);
+			o.setAttribute("data-status", StatusEnum.POINT_FREE);
+			//o.setAttribute("data-old-status", StatusEnum.POINT_FREE);
 
 			this.cont.appendChild(o);
 			return o;
@@ -352,13 +437,10 @@ class SvgVml {
 }
 
 class GameStateStore {
-	constructor(useIndexedDb, pointCreationCallbackFn = null, pathCreationCallbackFn = null, getGameStateFn = null,
-		localLogFn, localErrorFn, version = "") {
-		this.LocalLog = localLogFn;
-		this.LocalError = localErrorFn;
+	constructor(useIndexedDb, pointCreationCallbackFn = null, pathCreationCallbackFn = null, getGameStateFn = null, version = "") {
 		if (useIndexedDb) {
 			if (!('indexedDB' in self)) {
-				this.LocalError("This browser doesn't support IndexedDB");
+				LocalError("This browser doesn't support IndexedDB");
 				useIndexedDb = false;
 			}
 			else
@@ -638,7 +720,7 @@ class GameStateStore {
 	}
 
 	async OpenDb() {
-		this.LocalLog("OpenDb ...");
+		LocalLog("OpenDb ...");
 		return new Promise((resolve, reject) => {
 			let req;
 			if (this.DB_VERSION !== null)
@@ -650,15 +732,15 @@ class GameStateStore {
 				// Equal to: db = req.result;
 				this.g_DB = evt.currentTarget.result;
 
-				this.LocalLog("OpenDb DONE");
+				LocalLog("OpenDb DONE");
 				resolve(evt.currentTarget.result);
 			}.bind(this);
 			req.onerror = function (evt) {
-				this.LocalError("OpenDb:", evt.target.errorCode || evt.target.error);
+				LocalError("OpenDb:", evt.target.errorCode || evt.target.error);
 				reject();
 			}.bind(this);
 			req.onupgradeneeded = function (evt) {
-				this.LocalLog(`OpenDb.onupgradeneeded(version: ${this.DB_VERSION})`);
+				LocalLog(`OpenDb.onupgradeneeded(version: ${this.DB_VERSION})`);
 
 				const store_list = Array.from(evt.currentTarget.result.objectStoreNames);
 				if (store_list.includes(this.DB_POINT_STORE))
@@ -706,7 +788,7 @@ class GameStateStore {
 					resolve();
 				};
 				req.onerror = function (evt) {
-					this.LocalError("clearObjectStore:", evt.target.errorCode);
+					LocalError("clearObjectStore:", evt.target.errorCode);
 					reject();
 				};
 			});
@@ -823,14 +905,14 @@ class GameStateStore {
 				req = store.add(val, key);
 			} catch (e) {
 				if (e.name === 'DataCloneError')
-					this.LocalError("This engine doesn't know how to clone a Blob, use Firefox");
+					LocalError("This engine doesn't know how to clone a Blob, use Firefox");
 				throw e;
 			}
 			req.onsuccess = function () {
 				resolve();
 			};
 			req.onerror = function () {
-				this.LocalError("StorePoint error", this.error);
+				LocalError("StorePoint error", this.error);
 				reject();
 			};
 		});
@@ -853,7 +935,7 @@ class GameStateStore {
 				this.pointBulkBuffer = null;
 				resolve();
 			} catch (e) {
-				this.LocalError("This engine doesn't know how to clone a Blob, use Firefox");
+				LocalError("This engine doesn't know how to clone a Blob, use Firefox");
 				reject(e);
 			}
 		});
@@ -871,14 +953,14 @@ class GameStateStore {
 				req = store.add(gameState, key);
 			} catch (e) {
 				if (e.name === 'DataCloneError')
-					this.LocalError("This engine doesn't know how to clone a Blob, use Firefox");
+					LocalError("This engine doesn't know how to clone a Blob, use Firefox");
 				throw e;
 			}
 			req.onsuccess = function () {
 				resolve();
 			};
 			req.onerror = function () {
-				this.LocalError("StoreState error", this.error);
+				LocalError("StoreState error", this.error);
 				reject();
 			};
 		});
@@ -892,14 +974,14 @@ class GameStateStore {
 				req = store.put(gameState, key);
 			} catch (e) {
 				if (e.name === 'DataCloneError')
-					this.LocalError("This engine doesn't know how to clone a Blob, use Firefox");
+					LocalError("This engine doesn't know how to clone a Blob, use Firefox");
 				throw e;
 			}
 			req.onsuccess = function () {
 				resolve();
 			};
 			req.onerror = function () {
-				this.LocalError("UpdateState error", this.error);
+				LocalError("UpdateState error", this.error);
 				reject();
 			};
 		});
@@ -924,14 +1006,14 @@ class GameStateStore {
 				req = store.add(val, key);
 			} catch (e) {
 				if (e.name === 'DataCloneError')
-					this.LocalError("This engine doesn't know how to clone a Blob, use Firefox");
+					LocalError("This engine doesn't know how to clone a Blob, use Firefox");
 				throw e;
 			}
 			req.onsuccess = function () {
 				resolve();
 			};
 			req.onerror = function () {
-				this.LocalError("StorePath error", this.error);
+				LocalError("StorePath error", this.error);
 				reject();
 			};
 		});
@@ -954,7 +1036,7 @@ class GameStateStore {
 				this.pathBulkBuffer = null;
 				resolve();
 			} catch (e) {
-				this.LocalError("This engine doesn't know how to clone a Blob, use Firefox");
+				LocalError("This engine doesn't know how to clone a Blob, use Firefox");
 				reject(e);
 			}
 		});
@@ -1043,7 +1125,7 @@ class GameStateStore {
 
 
 export {
-	SvgVml,
-	hasDuplicates, sortPointsClockwise,
+	SvgVml, StatusEnum, pnpoly, pnpoly2, LocalLog, LocalError,
+	hasDuplicates, sortPointsClockwise, Sleep, isESModuleSupport,
 	GameStateStore
 };

@@ -1,6 +1,7 @@
 /*eslint-disable no-console*/
 import concaveman from "concaveman";
 import decomp from "poly-decomp";
+import { StatusEnum, /*LocalLog,*/ sortPointsClockwise, /*Sleep,*/ pnpoly2 } from "./svgvml.js";
 
 class GraphAI {
 	constructor(iGridWidth, iGridHeight, iGridSizeX, iGridSizeY, pointStore, POINT_STARTING, POINT_IN_PATH) {
