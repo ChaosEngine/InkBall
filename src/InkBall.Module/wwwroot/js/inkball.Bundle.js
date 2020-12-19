@@ -43,7 +43,7 @@
 /******/
 /******/ 	// script path function
 /******/ 	function jsonpScriptSrc(chunkId) {
-/******/ 		return __webpack_require__.p + "" + ({"1":"shared","2":"sharedMin"}[chunkId]||chunkId) + "Bundle.js"
+/******/ 		return __webpack_require__.p + "" + ({"1":"shared","2":"shared.Min"}[chunkId]||chunkId) + ".Bundle.js"
 /******/ 	}
 /******/
 /******/ 	// The require function
@@ -764,12 +764,12 @@ var CountdownTimer = /*#__PURE__*/function () {
  */
 
 
-function importAllModulesAsync(_x) {
+function importAllModulesAsync() {
   return _importAllModulesAsync.apply(this, arguments);
 }
 
 function _importAllModulesAsync() {
-  _importAllModulesAsync = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee40(gameOptions) {
+  _importAllModulesAsync = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee40() {
     var selfFileName, isMinified;
     return regeneratorRuntime.wrap(function _callee40$(_context40) {
       while (1) {
@@ -794,7 +794,7 @@ function _importAllModulesAsync() {
             }
 
             _context40.next = 5;
-            return __webpack_require__.e(/* import() | sharedMin */ 2).then(__webpack_require__.bind(null, 2));
+            return __webpack_require__.e(/* import() | shared.Min */ 2).then(__webpack_require__.bind(null, 2));
 
           case 5:
             SHRD = _context40.sent;
@@ -811,11 +811,11 @@ function _importAllModulesAsync() {
           case 11:
             LocalLog = SHRD.LocalLog;
             LocalError = SHRD.LocalError, StatusEnum = SHRD.StatusEnum; //for CPU game enable AI libs and calculations
+            //if (gameOptions.iOtherPlayerID === -1) {
+            //	AIBundle = await import(/* webpackChunkName: "AIDeps" */'./AIBundle.js');
+            //}
 
-            if (gameOptions.iOtherPlayerID === -1) {//AIBundle = await import(/* webpackChunkName: "AIDeps" */'./AIBundle.js');
-            }
-
-          case 14:
+          case 13:
           case "end":
             return _context40.stop();
         }
@@ -984,7 +984,7 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee);
       }));
 
-      return function (_x2) {
+      return function (_x) {
         return _ref3.apply(this, arguments);
       };
     }());
@@ -1265,7 +1265,7 @@ var InkBallGame = /*#__PURE__*/function () {
                     }, _callee4, this);
                   }));
 
-                  return function (_x4) {
+                  return function (_x3) {
                     return _ref4.apply(this, arguments);
                   };
                 }().bind(this));
@@ -1412,7 +1412,7 @@ var InkBallGame = /*#__PURE__*/function () {
                       }, _callee5, this);
                     }));
 
-                    return function (_x5) {
+                    return function (_x4) {
                       return _ref5.apply(this, arguments);
                     };
                   }().bind(this), false); // Execute a function when the user releases a key on the keyboard
@@ -1438,7 +1438,7 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee6, this);
       }));
 
-      function StartSignalRConnection(_x3) {
+      function StartSignalRConnection(_x2) {
         return _StartSignalRConnection.apply(this, arguments);
       }
 
@@ -1621,7 +1621,7 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee7, this);
       }));
 
-      function SetPoint(_x6, _x7, _x8, _x9) {
+      function SetPoint(_x5, _x6, _x7, _x8) {
         return _SetPoint.apply(this, arguments);
       }
 
@@ -1799,7 +1799,7 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee8, this, [[2,, 22, 26], [6, 16, 19, 22]]);
       }));
 
-      function SetAllPoints(_x10) {
+      function SetAllPoints(_x9) {
         return _SetAllPoints.apply(this, arguments);
       }
 
@@ -1914,7 +1914,7 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee9, this, [[4, 23, 26, 29]]);
       }));
 
-      function SetPath(_x11, _x12, _x13) {
+      function SetPath(_x10, _x11, _x12) {
         return _SetPath.apply(this, arguments);
       }
 
@@ -2015,7 +2015,7 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee10, this, [[3, 22, 25, 28]]);
       }));
 
-      function CreateScreenPathFromIndexedDb(_x14, _x15, _x16) {
+      function CreateScreenPathFromIndexedDb(_x13, _x14, _x15) {
         return _CreateScreenPathFromIndexedDb.apply(this, arguments);
       }
 
@@ -2103,7 +2103,7 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee11, this, [[0,, 22, 26], [4, 16, 19, 22]]);
       }));
 
-      function SetAllPaths(_x17) {
+      function SetAllPaths(_x16) {
         return _SetAllPaths.apply(this, arguments);
       }
 
@@ -2314,7 +2314,7 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee13, this, [[5, 16, 19, 22]]);
       }));
 
-      function IsPointOutsideAllPaths(_x18, _x19) {
+      function IsPointOutsideAllPaths(_x17, _x18) {
         return _IsPointOutsideAllPaths.apply(this, arguments);
       }
 
@@ -2500,7 +2500,7 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee14, this, [[6, 14], [21, 39], [44, 51], [55, 65]]);
       }));
 
-      function SendAsyncData(_x20) {
+      function SendAsyncData(_x19) {
         return _SendAsyncData.apply(this, arguments);
       }
 
@@ -2580,7 +2580,7 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee15, this);
       }));
 
-      function ReceivedPointProcessing(_x21) {
+      function ReceivedPointProcessing(_x20) {
         return _ReceivedPointProcessing.apply(this, arguments);
       }
 
@@ -2590,7 +2590,7 @@ var InkBallGame = /*#__PURE__*/function () {
     key: "ReceivedPathProcessing",
     value: function () {
       var _ReceivedPathProcessing = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee16(path) {
-        var str_path, owned, points, point_status, sOwnedCol, _iterator8, _step8, packed, p, x, y, _points, _x23, _y, p0;
+        var str_path, owned, points, point_status, sOwnedCol, _iterator8, _step8, packed, p, x, y, _points, _x22, _y, p0;
 
         return regeneratorRuntime.wrap(function _callee16$(_context16) {
           while (1) {
@@ -2682,11 +2682,11 @@ var InkBallGame = /*#__PURE__*/function () {
               case 38:
                 //set starting point to POINT_IN_PATH to block further path closing with it
                 _points = this.m_Line.GetPointsArray();
-                _x23 = _points[0].x, _y = _points[0].y;
-                _x23 /= this.m_iGridSizeX;
+                _x22 = _points[0].x, _y = _points[0].y;
+                _x22 /= this.m_iGridSizeX;
                 _y /= this.m_iGridSizeY;
                 _context16.next = 44;
-                return this.m_Points.get(_y * this.m_iGridWidth + _x23);
+                return this.m_Points.get(_y * this.m_iGridWidth + _x22);
 
               case 44:
                 p0 = _context16.sent;
@@ -2723,7 +2723,7 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee16, this, [[9, 23, 26, 29]]);
       }));
 
-      function ReceivedPathProcessing(_x22) {
+      function ReceivedPathProcessing(_x21) {
         return _ReceivedPathProcessing.apply(this, arguments);
       }
 
@@ -3045,7 +3045,7 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee18, this);
       }));
 
-      function OnMouseMove(_x24) {
+      function OnMouseMove(_x23) {
         return _OnMouseMove.apply(this, arguments);
       }
 
@@ -3318,7 +3318,7 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee20, this);
       }));
 
-      function OnMouseDown(_x25) {
+      function OnMouseDown(_x24) {
         return _OnMouseDown.apply(this, arguments);
       }
 
@@ -3382,7 +3382,7 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee21, this);
       }));
 
-      function OnStopAndDraw(_x26) {
+      function OnStopAndDraw(_x25) {
         return _OnStopAndDraw.apply(this, arguments);
       }
 
@@ -3522,14 +3522,14 @@ var InkBallGame = /*#__PURE__*/function () {
     key: "SetupAIWorker",
     value: function SetupAIWorker() {
       if (this.Worker === null) {
-        this.Worker = new Worker(SHRD.isESModuleSupport() ? '../js/AIWorkerBundle.js' : '../js/AIWorkerPolyfillBundle.js' //, { type: 'module' }
+        this.Worker = new Worker(SHRD.isESModuleSupport() ? '../js/AIWorker.Bundle.js' : '../js/AIWorker.PolyfillBundle.js' //, { type: 'module' }
         );
 
         this.Worker.onmessage = /*#__PURE__*/function () {
           var _ref8 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee23(e) {
             var _this14 = this;
 
-            var data, convex_hull, cw_sorted_verts, rand_color, _iterator10, _step10, vert, x, y, view_x, view_y, pt, free_human_player_points, _iterator11, _step11, _pt2, _x29, _y3, _view_x, _view_y, _pt3, tab, i, new_cycl, str, trailing_points, _rand_color, _cw_sorted_verts, _iterator12, _step12, _vert, _x28, _y2, _pt, tmp, comma, _iterator13, _step13, possible_intercept, pt1, pts2reset;
+            var data, convex_hull, cw_sorted_verts, rand_color, _iterator10, _step10, vert, x, y, view_x, view_y, pt, free_human_player_points, _iterator11, _step11, _pt2, _x28, _y3, _view_x, _view_y, _pt3, tab, i, new_cycl, str, trailing_points, _rand_color, _cw_sorted_verts, _iterator12, _step12, _vert, _x27, _y2, _pt, tmp, comma, _iterator13, _step13, possible_intercept, pt1, pts2reset;
 
             return regeneratorRuntime.wrap(function _callee23$(_context23) {
               while (1) {
@@ -3628,14 +3628,14 @@ var InkBallGame = /*#__PURE__*/function () {
                       for (_iterator11.s(); !(_step11 = _iterator11.n()).done;) {
                         _pt2 = _step11.value;
                         //if (pt !== undefined && pt.GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.GetStatus()) {
-                        _x29 = _pt2.x, _y3 = _pt2.y;
-                        _view_x = _x29 * this.m_iGridSizeX, _view_y = _y3 * this.m_iGridSizeY; //	if (false === await this.IsPointOutsideAllPaths(x, y))
+                        _x28 = _pt2.x, _y3 = _pt2.y;
+                        _view_x = _x28 * this.m_iGridSizeX, _view_y = _y3 * this.m_iGridSizeY; //	if (false === await this.IsPointOutsideAllPaths(x, y))
                         //		continue;
                         //check if really exists
 
                         _pt3 = document.querySelector("svg > circle[cx=\"".concat(_view_x, "\"][cy=\"").concat(_view_y, "\"]"));
                         if (_pt3) free_human_player_points.push({
-                          x: _x29,
+                          x: _x28,
                           y: _y3
                         }); //}
                       }
@@ -3680,12 +3680,12 @@ var InkBallGame = /*#__PURE__*/function () {
                     }
 
                     _vert = _step12.value;
-                    _x28 = _vert.x, _y2 = _vert.y;
-                    _pt = document.querySelector("svg > circle[cx=\"".concat(_x28 * this.m_iGridSizeX, "\"][cy=\"").concat(_y2 * this.m_iGridSizeY, "\"]"));
+                    _x27 = _vert.x, _y2 = _vert.y;
+                    _pt = document.querySelector("svg > circle[cx=\"".concat(_x27 * this.m_iGridSizeX, "\"][cy=\"").concat(_y2 * this.m_iGridSizeY, "\"]"));
 
                     if (_pt) {
                       //again some basic checks
-                      str += "(".concat(_x28, ",").concat(_y2, ")");
+                      str += "(".concat(_x27, ",").concat(_y2, ")");
 
                       _pt.SetStrokeColor(_rand_color);
 
@@ -3783,7 +3783,7 @@ var InkBallGame = /*#__PURE__*/function () {
             }, _callee23, this, [[13, 27, 30, 33], [47, 60, 63, 66]]);
           }));
 
-          return function (_x27) {
+          return function (_x26) {
             return _ref8.apply(this, arguments);
           };
         }().bind(this);
@@ -3825,7 +3825,7 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee24, this);
       }));
 
-      function OnTestBuildCurrentGraph(_x30) {
+      function OnTestBuildCurrentGraph(_x29) {
         return _OnTestBuildCurrentGraph.apply(this, arguments);
       }
 
@@ -3863,7 +3863,7 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee25, this);
       }));
 
-      function OnTestConcaveman(_x31) {
+      function OnTestConcaveman(_x30) {
         return _OnTestConcaveman.apply(this, arguments);
       }
 
@@ -3907,7 +3907,7 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee26, this);
       }));
 
-      function OnTestMarkAllCycles(_x32) {
+      function OnTestMarkAllCycles(_x31) {
         return _OnTestMarkAllCycles.apply(this, arguments);
       }
 
@@ -3952,7 +3952,7 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee27, this);
       }));
 
-      function OnTestGroupPoints(_x33) {
+      function OnTestGroupPoints(_x32) {
         return _OnTestGroupPoints.apply(this, arguments);
       }
 
@@ -4064,7 +4064,7 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee28, this, [[8, 26, 29, 32]]);
       }));
 
-      function OnTestFindFullSurroundedPoints(_x34) {
+      function OnTestFindFullSurroundedPoints(_x33) {
         return _OnTestFindFullSurroundedPoints.apply(this, arguments);
       }
 
@@ -4210,7 +4210,7 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee29);
       }));
 
-      function OnTestWorkerify(_x35) {
+      function OnTestWorkerify(_x34) {
         return _OnTestWorkerify.apply(this, arguments);
       }
 
@@ -4404,7 +4404,7 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee30, this);
       }));
 
-      function PrepareDrawing(_x36, _x37, _x38, _x39, _x40, _x41, _x42, _x43, _x44, _x45, _x46, _x47, _x48, _x49) {
+      function PrepareDrawing(_x35, _x36, _x37, _x38, _x39, _x40, _x41, _x42, _x43, _x44, _x45, _x46, _x47, _x48) {
         return _PrepareDrawing.apply(this, arguments);
       }
 
@@ -4812,7 +4812,7 @@ var InkBallGame = /*#__PURE__*/function () {
                     }, _callee33, null, [[17, 30, 33, 36]]);
                   }));
 
-                  return function dfs_cycle(_x51, _x52) {
+                  return function dfs_cycle(_x50, _x51) {
                     return _ref9.apply(this, arguments);
                   };
                 }();
@@ -4821,7 +4821,7 @@ var InkBallGame = /*#__PURE__*/function () {
                   var _ref10 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee34(edges, mark) {
                     var _this15 = this;
 
-                    var e, mark_e, m, found_c, free_human_player_points, sHumanColor, _iterator18, _step18, _pt5, _pt5$GetPosition, view_x, view_y, _x55, _y4, _pt6, tab, _i, cycl, str, trailing_points, rand_color, mapped_verts, cw_sorted_verts, _iterator19, _step19, vert, x, y, pt, tmp, comma, _iterator20, _step20, possible_intercept, pt1, pts2reset;
+                    var e, mark_e, m, found_c, free_human_player_points, sHumanColor, _iterator18, _step18, _pt5, _pt5$GetPosition, view_x, view_y, _x54, _y4, _pt6, tab, _i, cycl, str, trailing_points, rand_color, mapped_verts, cw_sorted_verts, _iterator19, _step19, vert, x, y, pt, tmp, comma, _iterator20, _step20, possible_intercept, pt1, pts2reset;
 
                     return regeneratorRuntime.wrap(function _callee34$(_context34) {
                       while (1) {
@@ -4874,9 +4874,9 @@ var InkBallGame = /*#__PURE__*/function () {
                             }
 
                             _pt5$GetPosition = _pt5.GetPosition(), view_x = _pt5$GetPosition.x, view_y = _pt5$GetPosition.y;
-                            _x55 = view_x / this.m_iGridSizeX, _y4 = view_y / this.m_iGridSizeY;
+                            _x54 = view_x / this.m_iGridSizeX, _y4 = view_y / this.m_iGridSizeY;
                             _context34.next = 18;
-                            return this.IsPointOutsideAllPaths(_x55, _y4);
+                            return this.IsPointOutsideAllPaths(_x54, _y4);
 
                           case 18:
                             _context34.t2 = _context34.sent;
@@ -4892,7 +4892,7 @@ var InkBallGame = /*#__PURE__*/function () {
                             //check if really exists
                             _pt6 = document.querySelector("svg > circle[cx=\"".concat(view_x, "\"][cy=\"").concat(view_y, "\"]"));
                             if (_pt6) free_human_player_points.push({
-                              x: _x55,
+                              x: _x54,
                               y: _y4
                             });
 
@@ -5055,7 +5055,7 @@ var InkBallGame = /*#__PURE__*/function () {
                     }, _callee34, this, [[9, 27, 30, 33], [43, 56, 59, 62]]);
                   }));
 
-                  return function (_x53, _x54) {
+                  return function (_x52, _x53) {
                     return _ref10.apply(this, arguments);
                   };
                 }().bind(this); // store the numbers of cycle 
@@ -5094,7 +5094,7 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee35, this);
       }));
 
-      function MarkAllCycles(_x50) {
+      function MarkAllCycles(_x49) {
         return _MarkAllCycles.apply(this, arguments);
       }
 
@@ -5308,7 +5308,7 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee36, this);
       }));
 
-      function GroupPointsRecurse(_x56, _x57) {
+      function GroupPointsRecurse(_x55, _x56) {
         return _GroupPointsRecurse.apply(this, arguments);
       }
 
@@ -5470,7 +5470,7 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee38, this);
       }));
 
-      function rAFCallBack(_x58) {
+      function rAFCallBack(_x57) {
         return _rAFCallBack.apply(this, arguments);
       }
 

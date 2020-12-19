@@ -309,7 +309,7 @@ class CountdownTimer {
  * don't break webpack logic here! https://webpack.js.org/guides/code-splitting/
  * @param {object} gameOptions is an entry starter object definint game parameters
  */
-async function importAllModulesAsync(gameOptions) {
+async function importAllModulesAsync(/*gameOptions*/) {
 	/*const isIE11 = navigator.userAgent.indexOf('Trident') >= 0;
 	if (isIE11) {
 		await import('@babel/polyfill');
@@ -322,15 +322,15 @@ async function importAllModulesAsync(gameOptions) {
 	const isMinified = selfFileName.indexOf("min") !== -1;
 
 	if (isMinified)
-		SHRD = await import(/* webpackChunkName: "sharedMin" */'./shared.min.js');
+		SHRD = await import(/* webpackChunkName: "shared.Min" */'./shared.min.js');
 	else
 		SHRD = await import(/* webpackChunkName: "shared" */'./shared.js');
 	LocalLog = SHRD.LocalLog; LocalError = SHRD.LocalError, StatusEnum = SHRD.StatusEnum;
 
 	//for CPU game enable AI libs and calculations
-	if (gameOptions.iOtherPlayerID === -1) {
-		//AIBundle = await import(/* webpackChunkName: "AIDeps" */'./AIBundle.js');
-	}
+	//if (gameOptions.iOtherPlayerID === -1) {
+	//	AIBundle = await import(/* webpackChunkName: "AIDeps" */'./AIBundle.js');
+	//}
 }
 
 function RandomColor() {
@@ -1923,7 +1923,7 @@ class InkBallGame {
 
 	SetupAIWorker() {
 		if (this.Worker === null) {
-			this.Worker = new Worker(SHRD.isESModuleSupport() ? '../js/AIWorkerBundle.js' : '../js/AIWorkerPolyfillBundle.js'
+			this.Worker = new Worker(SHRD.isESModuleSupport() ? '../js/AIWorker.Bundle.js' : '../js/AIWorker.PolyfillBundle.js'
 				//, { type: 'module' }
 			);
 			this.Worker.onmessage = async function (e) {

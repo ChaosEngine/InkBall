@@ -110,10 +110,10 @@ namespace IntegrationTests
 
 		[Theory]
 		[InlineData("js/inkball.js")]
-		[InlineData("js/inkballBundle.js")]
+		[InlineData("js/inkball.Bundle.js")]
 		[InlineData("js/shared.js")]
-		[InlineData("js/sharedBundle.js")]
-		[InlineData("js/AIWorkerBundle.js")]
+		[InlineData("js/shared.Bundle.js")]
+		[InlineData("js/AIWorker.Bundle.js")]
 		[InlineData("css/inkball.css")]
 		[InlineData("img/homescreen.webp")]
 		[InlineData("img/homescreen.jpg")]
