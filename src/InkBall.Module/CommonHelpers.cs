@@ -1,11 +1,14 @@
-using Microsoft.AspNetCore.Http;
-//using Newtonsoft.Json;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Razor;
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace InkBall.Module
 {
+	#region Old code
+
 	/*public static class SessionExtensions
 	{
 		static readonly JsonSerializerSettings _jsonSerializerSettings = new JsonSerializerSettings
@@ -35,6 +38,8 @@ namespace InkBall.Module
 			}
 		}
 	}*/
+
+	#endregion Old code
 
 	public class SynchronizedCache<V> : IDisposable
 		where V : IEquatable<V>
@@ -180,7 +185,6 @@ namespace InkBall.Module
 			}
 		}
 
-
 		#region IDisposable Support
 		private bool disposedValue = false; // To detect redundant calls
 
@@ -218,5 +222,21 @@ namespace InkBall.Module
 			// GC.SuppressFinalize(this);
 		}
 		#endregion
+	}
+
+	public static class HtmlHelpers
+	{
+		public static void RenderHeaderSection(RazorPageBase page, IUrlHelper url, Microsoft.Extensions.Options.IOptions<InkBallOptions> options)
+		{
+			if (!string.IsNullOrEmpty(options.Value.HeadElementsSectionName))
+			{
+				page.DefineSection(options.Value.HeadElementsSectionName, () =>
+				{
+					page.WriteLiteral($"<link rel='stylesheet' href='{url.Content(Constants.WwwIncludeCSS)}' />");
+
+					return Task.CompletedTask;
+				});
+			}
+		}
 	}
 }

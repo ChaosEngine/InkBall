@@ -4,13 +4,7 @@
 @{
     ViewData["Title"] = "Highscores";
 
-    if (!string.IsNullOrEmpty(commonUIConfigureOptions.Value.HeadElementsSectionName))
-    {
-        DefineSection(commonUIConfigureOptions.Value.HeadElementsSectionName, async () =>
-        {
-            WriteLiteral($"<link rel='stylesheet' href='{Url.Content(Constants.WwwIncludeCSS)}' />");
-        });
-    }
+    HtmlHelpers.RenderHeaderSection(this, Url, commonUIConfigureOptions);
 }
 
 <div class="container inkstats">
