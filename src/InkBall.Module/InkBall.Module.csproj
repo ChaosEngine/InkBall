@@ -34,8 +34,6 @@
     <EmbeddedResource Include="wwwroot\js\inkball.js" />
     <EmbeddedResource Include="wwwroot\js\svgvml.js" />
     <EmbeddedResource Include="wwwroot\js\*Bundle.js" />
-
-    <EmbeddedResource Include="wwwroot\js\AIWorker.js" />
   </ItemGroup>
   <ItemGroup Condition="'$(Configuration)'!='Debug'">
     <EmbeddedResource Include="wwwroot\css\inkball.min.css" />
@@ -46,6 +44,7 @@
     <EmbeddedResource Include="wwwroot\js\*DepsBundle.js" />
     <EmbeddedResource Include="wwwroot\js\*Bundle.min.js" />
     <EmbeddedResource Include="wwwroot\js\AIWorkerBundle.js" />
+    <EmbeddedResource Include="wwwroot\js\AIWorkerPolyfillBundle.js" />
   </ItemGroup>
 
 </Project>
