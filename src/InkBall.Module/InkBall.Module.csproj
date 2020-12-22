@@ -41,7 +41,6 @@
     <EmbeddedResource Include="wwwroot\js\inkball.min.js" />
     <EmbeddedResource Include="wwwroot\js\shared.min.js" />
     <EmbeddedResource Include="wwwroot\js\*Min.Bundle.js" />
-    <EmbeddedResource Include="wwwroot\js\*DepsBundle.js" />
     <EmbeddedResource Include="wwwroot\js\*Bundle.min.js" />
     <EmbeddedResource Include="wwwroot\js\AIWorker.Bundle.js" />
     <EmbeddedResource Include="wwwroot\js\AIWorker.PolyfillBundle.js" />

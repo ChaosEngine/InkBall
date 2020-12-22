@@ -114,6 +114,7 @@ namespace IntegrationTests
 		[InlineData("js/shared.js")]
 		[InlineData("js/shared.Bundle.js")]
 		[InlineData("js/AIWorker.Bundle.js")]
+		[InlineData("js/AIWorker.PolyfillBundle.js")]
 		[InlineData("css/inkball.css")]
 		[InlineData("img/homescreen.webp")]
 		[InlineData("img/homescreen.jpg")]

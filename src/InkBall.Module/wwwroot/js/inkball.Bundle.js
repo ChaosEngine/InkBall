@@ -256,9 +256,7 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-var SHRD, LocalLog, LocalError, StatusEnum
-/*, AIBundle*/
-;
+var SHRD, LocalLog, LocalError, StatusEnum, hasDuplicates, pnpoly2, sortPointsClockwise, Sleep, isESModuleSupport;
 /******** funcs-n-classes ********/
 
 var CommandKindEnum = Object.freeze({
@@ -809,13 +807,12 @@ function _importAllModulesAsync() {
             SHRD = _context40.sent;
 
           case 11:
-            LocalLog = SHRD.LocalLog;
-            LocalError = SHRD.LocalError, StatusEnum = SHRD.StatusEnum; //for CPU game enable AI libs and calculations
+            LocalLog = SHRD.LocalLog, LocalError = SHRD.LocalError, StatusEnum = SHRD.StatusEnum, hasDuplicates = SHRD.hasDuplicates, pnpoly2 = SHRD.pnpoly2, sortPointsClockwise = SHRD.sortPointsClockwise, Sleep = SHRD.Sleep, isESModuleSupport = SHRD.isESModuleSupport; //for CPU game enable AI libs and calculations
             //if (gameOptions.iOtherPlayerID === -1) {
             //	AIBundle = await import(/* webpackChunkName: "AIDeps" */'./AIBundle.js');
             //}
 
-          case 13:
+          case 12:
           case "end":
             return _context40.stop();
         }
@@ -2143,7 +2140,7 @@ var InkBallGame = /*#__PURE__*/function () {
               case 0:
                 points = this.m_Line.GetPointsArray(); //uniqe point path test (no duplicates except starting-ending point)
 
-                pts_not_unique = SHRD.hasDuplicates(points.slice(0, -1).map(function (pt) {
+                pts_not_unique = hasDuplicates(points.slice(0, -1).map(function (pt) {
                   return pt.x + '_' + pt.y;
                 }));
 
@@ -2188,7 +2185,7 @@ var InkBallGame = /*#__PURE__*/function () {
                     if (pt !== undefined && pt.GetFillColor() === sColor && [StatusEnum.POINT_FREE_BLUE, StatusEnum.POINT_FREE_RED].includes(pt.GetStatus())) {
                       _pt$GetPosition = pt.GetPosition(), x = _pt$GetPosition.x, y = _pt$GetPosition.y;
 
-                      if (false !== SHRD.pnpoly2(points, x, y)) {
+                      if (false !== pnpoly2(points, x, y)) {
                         x /= this.m_iGridSizeX;
                         y /= this.m_iGridSizeY;
                         sOwnedPoints += "".concat(sDelimiter).concat(x, ",").concat(y);
@@ -2275,7 +2272,7 @@ var InkBallGame = /*#__PURE__*/function () {
                 line = _step7.value;
                 points = line.GetPointsArray();
 
-                if (!(false !== SHRD.pnpoly2(points, xmul, ymul))) {
+                if (!(false !== pnpoly2(points, xmul, ymul))) {
                   _context13.next = 12;
                   break;
                 }
@@ -3522,7 +3519,7 @@ var InkBallGame = /*#__PURE__*/function () {
     key: "SetupAIWorker",
     value: function SetupAIWorker() {
       if (this.Worker === null) {
-        this.Worker = new Worker(SHRD.isESModuleSupport() ? '../js/AIWorker.Bundle.js' : '../js/AIWorker.PolyfillBundle.js' //, { type: 'module' }
+        this.Worker = new Worker(isESModuleSupport() ? '../js/AIWorker.Bundle.js' : '../js/AIWorker.PolyfillBundle.js' //, { type: 'module' }
         );
 
         this.Worker.onmessage = /*#__PURE__*/function () {
@@ -3587,7 +3584,7 @@ var InkBallGame = /*#__PURE__*/function () {
                     }
 
                     _context23.next = 23;
-                    return SHRD.Sleep(50);
+                    return Sleep(50);
 
                   case 23:
                     _context23.next = 15;
@@ -3695,7 +3692,7 @@ var InkBallGame = /*#__PURE__*/function () {
                     }
 
                     _context23.next = 56;
-                    return SHRD.Sleep(50);
+                    return Sleep(50);
 
                   case 56:
                     _context23.next = 49;
@@ -3728,7 +3725,7 @@ var InkBallGame = /*#__PURE__*/function () {
                       for (_iterator13.s(); !(_step13 = _iterator13.n()).done;) {
                         possible_intercept = _step13.value;
 
-                        if (false !== SHRD.pnpoly2(_cw_sorted_verts, possible_intercept.x, possible_intercept.y)) {
+                        if (false !== pnpoly2(_cw_sorted_verts, possible_intercept.x, possible_intercept.y)) {
                           tmp += "".concat(comma, "(").concat(possible_intercept.x, ",").concat(possible_intercept.y, ")");
                           pt1 = document.querySelector("svg > circle[cx=\"".concat(possible_intercept.x * this.m_iGridSizeX, "\"][cy=\"").concat(possible_intercept.y * this.m_iGridSizeY, "\"]"));
 
@@ -4750,7 +4747,7 @@ var InkBallGame = /*#__PURE__*/function () {
                             vertex.SetFillColor('black'); //vertex.setAttribute("r", "6");
 
                             _context33.next = 16;
-                            return SHRD.Sleep(10);
+                            return Sleep(10);
 
                           case 16:
                             // simple dfs on graph
@@ -4948,7 +4945,7 @@ var InkBallGame = /*#__PURE__*/function () {
                               };
                             }.bind(this)); //sort clockwise (https://stackoverflow.com/questions/45660743/sort-points-in-counter-clockwise-in-javascript)
 
-                            cw_sorted_verts = SHRD.sortPointsClockwise(mapped_verts); //display which cycle we are dealing with
+                            cw_sorted_verts = sortPointsClockwise(mapped_verts); //display which cycle we are dealing with
 
                             _iterator19 = _createForOfIteratorHelper(cw_sorted_verts);
                             _context34.prev = 43;
@@ -4974,7 +4971,7 @@ var InkBallGame = /*#__PURE__*/function () {
                             }
 
                             _context34.next = 52;
-                            return SHRD.Sleep(50);
+                            return Sleep(50);
 
                           case 52:
                             _context34.next = 45;
@@ -5007,7 +5004,7 @@ var InkBallGame = /*#__PURE__*/function () {
                               for (_iterator20.s(); !(_step20 = _iterator20.n()).done;) {
                                 possible_intercept = _step20.value;
 
-                                if (false !== SHRD.pnpoly2(cw_sorted_verts, possible_intercept.x, possible_intercept.y)) {
+                                if (false !== pnpoly2(cw_sorted_verts, possible_intercept.x, possible_intercept.y)) {
                                   tmp += "".concat(comma, "(").concat(possible_intercept.x, ",").concat(possible_intercept.y, ")");
                                   pt1 = document.querySelector("svg > circle[cx=\"".concat(possible_intercept.x * this.m_iGridSizeX, "\"][cy=\"").concat(possible_intercept.y * this.m_iGridSizeY, "\"]"));
 

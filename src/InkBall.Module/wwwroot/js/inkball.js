@@ -2,7 +2,7 @@
 /*global signalR, gameOptions*/
 "use strict";
 
-let SHRD, LocalLog, LocalError, StatusEnum/*, AIBundle*/;
+let SHRD, LocalLog, LocalError, StatusEnum, hasDuplicates, pnpoly2, sortPointsClockwise, Sleep, isESModuleSupport;
 
 /******** funcs-n-classes ********/
 const CommandKindEnum = Object.freeze({
@@ -325,7 +325,9 @@ async function importAllModulesAsync(/*gameOptions*/) {
 		SHRD = await import(/* webpackChunkName: "shared.Min" */'./shared.min.js');
 	else
 		SHRD = await import(/* webpackChunkName: "shared" */'./shared.js');
-	LocalLog = SHRD.LocalLog; LocalError = SHRD.LocalError, StatusEnum = SHRD.StatusEnum;
+	LocalLog = SHRD.LocalLog, LocalError = SHRD.LocalError, StatusEnum = SHRD.StatusEnum,
+		hasDuplicates = SHRD.hasDuplicates, pnpoly2 = SHRD.pnpoly2, sortPointsClockwise = SHRD.sortPointsClockwise,
+		Sleep = SHRD.Sleep, isESModuleSupport = SHRD.isESModuleSupport;
 
 	//for CPU game enable AI libs and calculations
 	//if (gameOptions.iOtherPlayerID === -1) {
@@ -1159,7 +1161,7 @@ class InkBallGame {
 		const points = this.m_Line.GetPointsArray();
 
 		//uniqe point path test (no duplicates except starting-ending point)
-		const pts_not_unique = SHRD.hasDuplicates(points.slice(0, -1).map(pt => pt.x + '_' + pt.y));
+		const pts_not_unique = hasDuplicates(points.slice(0, -1).map(pt => pt.x + '_' + pt.y));
 
 		if (pts_not_unique ||
 			!(points[0].x === points[points.length - 1].x && points[0].y === points[points.length - 1].y)) {
@@ -1189,7 +1191,7 @@ class InkBallGame {
 			if (pt !== undefined && pt.GetFillColor() === sColor &&
 				([StatusEnum.POINT_FREE_BLUE, StatusEnum.POINT_FREE_RED].includes(pt.GetStatus()))) {
 				let { x, y } = pt.GetPosition();
-				if (false !== SHRD.pnpoly2(points, x, y)) {
+				if (false !== pnpoly2(points, x, y)) {
 					x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
 					sOwnedPoints += `${sDelimiter}${x},${y}`;
 					sDelimiter = " ";
@@ -1233,7 +1235,7 @@ class InkBallGame {
 		for (const line of lines) {
 			const points = line.GetPointsArray();
 
-			if (false !== SHRD.pnpoly2(points, xmul, ymul))
+			if (false !== pnpoly2(points, xmul, ymul))
 				return false;
 		}
 
@@ -1923,7 +1925,7 @@ class InkBallGame {
 
 	SetupAIWorker() {
 		if (this.Worker === null) {
-			this.Worker = new Worker(SHRD.isESModuleSupport() ? '../js/AIWorker.Bundle.js' : '../js/AIWorker.PolyfillBundle.js'
+			this.Worker = new Worker(isESModuleSupport() ? '../js/AIWorker.Bundle.js' : '../js/AIWorker.PolyfillBundle.js'
 				//, { type: 'module' }
 			);
 			this.Worker.onmessage = async function (e) {
@@ -1960,7 +1962,7 @@ class InkBallGame {
 									pt.SetZIndex(100);
 									pt.setAttribute('r', "6");
 								}
-								await SHRD.Sleep(50);
+								await Sleep(50);
 							}
 						}
 						break;
@@ -2007,14 +2009,14 @@ class InkBallGame {
 											pt.SetFillColor(rand_color);
 											pt.setAttribute("r", "6");
 										}
-										await SHRD.Sleep(50);
+										await Sleep(50);
 									}
 
 									//find for all free_human_player_points which cycle might interepct it (surrounds)
 									//only convex, NOT concave :-(
 									let tmp = '', comma = '';
 									for (const possible_intercept of free_human_player_points) {
-										if (false !== SHRD.pnpoly2(cw_sorted_verts, possible_intercept.x, possible_intercept.y)) {
+										if (false !== pnpoly2(cw_sorted_verts, possible_intercept.x, possible_intercept.y)) {
 											tmp += `${comma}(${possible_intercept.x},${possible_intercept.y})`;
 
 											const pt1 = document.querySelector(`svg > circle[cx="${possible_intercept.x * this.m_iGridSizeX}"][cy="${possible_intercept.y * this.m_iGridSizeY}"]`);
@@ -2639,7 +2641,7 @@ class InkBallGame {
 				vertex.SetStrokeColor('black');
 				vertex.SetFillColor('black');
 				//vertex.setAttribute("r", "6");
-				await SHRD.Sleep(10);
+				await Sleep(10);
 
 
 				// simple dfs on graph
@@ -2707,7 +2709,7 @@ class InkBallGame {
 						return { x: pt.x / this.m_iGridSizeX, y: pt.y / this.m_iGridSizeY };
 					}.bind(this));
 					//sort clockwise (https://stackoverflow.com/questions/45660743/sort-points-in-counter-clockwise-in-javascript)
-					const cw_sorted_verts = SHRD.sortPointsClockwise(mapped_verts);
+					const cw_sorted_verts = sortPointsClockwise(mapped_verts);
 
 					//display which cycle we are dealing with
 					for (const vert of cw_sorted_verts) {
@@ -2720,14 +2722,14 @@ class InkBallGame {
 							pt.SetFillColor(rand_color);
 							pt.setAttribute("r", "6");
 						}
-						await SHRD.Sleep(50);
+						await Sleep(50);
 					}
 
 					//find for all free_human_player_points which cycle might interepct it (surrounds)
 					//only convex, NOT concave :-(
 					let tmp = '', comma = '';
 					for (const possible_intercept of free_human_player_points) {
-						if (false !== SHRD.pnpoly2(cw_sorted_verts, possible_intercept.x, possible_intercept.y)) {
+						if (false !== pnpoly2(cw_sorted_verts, possible_intercept.x, possible_intercept.y)) {
 							tmp += `${comma}(${possible_intercept.x},${possible_intercept.y})`;
 
 							const pt1 = document.querySelector(`svg > circle[cx="${possible_intercept.x * this.m_iGridSizeX}"][cy="${possible_intercept.y * this.m_iGridSizeY}"]`);
