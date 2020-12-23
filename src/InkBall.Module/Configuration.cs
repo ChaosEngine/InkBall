@@ -159,6 +159,8 @@ namespace InkBall.Module
 			services.ConfigureOptions(options);
 			services.AddSingleton<IOptions<InkBallOptions>>(Options.Create(options));
 
+			HtmlHelpers.SetupHelpers(options);
+
 			return services;
 		}
 
