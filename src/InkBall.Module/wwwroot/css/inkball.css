@@ -9,12 +9,11 @@ p.inkgame {
   vertical-align: middle;
   display: inline-block;
   line-height: 1em; }
-
-.inkgame div#status span#gameStatus {
-  font-size: 2em;
-  vertical-align: middle;
-  display: inline-block;
-  line-height: 1em; }
+  .inkgame div#status span#gameStatus {
+    font-size: 2em;
+    vertical-align: middle;
+    display: inline-block;
+    line-height: 1em; }
 
 .inkgame div#screen {
   border: 1px solid red;
@@ -51,7 +50,7 @@ p.inkgame {
 
 .inkgames .table-responsive {
   overflow-y: auto;
-  max-height: calc(100vh - 56px - 72px - 33px - 24px); }
+  max-height: 75vh; }
 
 /**********inkstats*********/
 .inkstats .grid-striped .row:nth-of-type(odd) {
