@@ -4,13 +4,7 @@
 @{
     ViewData["Title"] = "Home";
 
-    if (!string.IsNullOrEmpty(commonUIConfigureOptions.Value.HeadElementsSectionName))
-    {
-		DefineSection(commonUIConfigureOptions.Value.HeadElementsSectionName, async () =>
-		{
-			WriteLiteral($"<link rel='stylesheet' href='{Url.Content(Constants.WwwIncludeCSS)}' />");
-		});
-    }
+    HtmlHelpers.RenderHeaderSection(this, Url, commonUIConfigureOptions);
 }
 
 <p class="inkhome"></p>
@@ -24,7 +18,7 @@
 		<form method='post' class="order-last order-sm-first pr-md-2 btn-group-vertical was-validated">
 		</form>
 		<div class="order-first order-sm-last pb-2 pb-md-0">
-			<picture alt="home screen" aria-label="home screen image">
+			<picture aria-label="home screen image">
 				<source type="image/webp" srcset="../img/homescreen.webp" />
 				<img src="../img/homescreen.jpg" alt="home screen" aria-label="home screen image" />
 			</picture>

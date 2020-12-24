@@ -110,10 +110,11 @@ namespace IntegrationTests
 
 		[Theory]
 		[InlineData("js/inkball.js")]
-		[InlineData("js/inkballBundle.js")]
-		[InlineData("js/svgvml.js")]
-		[InlineData("js/svgvmlBundle.js")]
-		[InlineData("js/AIWorkerBundle.js")]
+		[InlineData("js/inkball.Bundle.js")]
+		[InlineData("js/shared.js")]
+		[InlineData("js/shared.Bundle.js")]
+		[InlineData("js/AIWorker.Bundle.js")]
+		[InlineData("js/AIWorker.PolyfillBundle.js")]
 		[InlineData("css/inkball.css")]
 		[InlineData("img/homescreen.webp")]
 		[InlineData("img/homescreen.jpg")]
@@ -135,7 +136,7 @@ namespace IntegrationTests
 		}
 
 		[Theory]
-		[InlineData("InkBall/Home", "<picture alt=\"home screen\" aria-label=\"home screen image\">")]
+		[InlineData("InkBall/Home", "<picture aria-label=\"home screen image\">")]
 		[InlineData("InkBall/Rules", "<li>Player put dots on the grid one after another</li>")]
 		public async Task Pages_Anonymous(string page, string contentToCheck)
 		{
