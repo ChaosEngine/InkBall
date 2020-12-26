@@ -706,9 +706,12 @@ class InkBallGame {
 		this.g_SignalRConnection.on("ServerToClientPlayerWin", function (win) {
 			let encodedMsg = WinCommand.Format(win);
 
-			let li = document.createElement("li");
-			li.innerHTML = `<strong class="text-warning">${encodedMsg}</strong>`;
-			document.querySelector(this.m_sMsgListSel).appendChild(li);
+			const msg_lst = document.querySelector(this.m_sMsgListSel);
+			if (msg_lst !== null) {
+				let li = document.createElement("li");
+				li.innerHTML = `<strong class="text-warning">${encodedMsg}</strong>`;
+				msg_lst.appendChild(li);
+			}
 
 			this.ReceivedWinProcessing(win);
 			this.NotifyBrowser('We have a winner', encodedMsg);
@@ -2431,7 +2434,7 @@ class InkBallGame {
 					document.querySelector(ddlTestActions[i++]).onclick = this.OnTestWorkerify.bind(this);
 
 				//disable or even delete chat functionality, coz we're not going to chat with CPU bot
-				const chatSection = document.getElementById('chatSection');
+				const chatSection = document.querySelector(this.m_sMsgListSel).parentElement;
 				while (chatSection.lastElementChild)
 					chatSection.removeChild(chatSection.lastElementChild);
 

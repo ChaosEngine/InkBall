@@ -1325,9 +1325,14 @@ var InkBallGame = /*#__PURE__*/function () {
                 }.bind(this));
                 this.g_SignalRConnection.on("ServerToClientPlayerWin", function (win) {
                   var encodedMsg = WinCommand.Format(win);
-                  var li = document.createElement("li");
-                  li.innerHTML = "<strong class=\"text-warning\">".concat(encodedMsg, "</strong>");
-                  document.querySelector(this.m_sMsgListSel).appendChild(li);
+                  var msg_lst = document.querySelector(this.m_sMsgListSel);
+
+                  if (msg_lst !== null) {
+                    var li = document.createElement("li");
+                    li.innerHTML = "<strong class=\"text-warning\">".concat(encodedMsg, "</strong>");
+                    msg_lst.appendChild(li);
+                  }
+
                   this.ReceivedWinProcessing(win);
                   this.NotifyBrowser('We have a winner', encodedMsg);
                 }.bind(this));
@@ -4361,7 +4366,7 @@ var InkBallGame = /*#__PURE__*/function () {
                     if (ddlTestActions.length > i) document.querySelector(ddlTestActions[i++]).onclick = this.OnTestFindFullSurroundedPoints.bind(this);
                     if (ddlTestActions.length > i) document.querySelector(ddlTestActions[i++]).onclick = this.OnTestWorkerify.bind(this); //disable or even delete chat functionality, coz we're not going to chat with CPU bot
 
-                    chatSection = document.getElementById('chatSection');
+                    chatSection = document.querySelector(this.m_sMsgListSel).parentElement;
 
                     while (chatSection.lastElementChild) {
                       chatSection.removeChild(chatSection.lastElementChild);
