@@ -22,7 +22,6 @@ namespace InkBall.Module.Model
 		DbSet<InkBallPath> InkBallPath { get; set; }
 		DbSet<InkBallPlayer> InkBallPlayer { get; set; }
 		DbSet<InkBallPoint> InkBallPoint { get; set; }
-		//DbSet<InkBallPointsInPath> InkBallPointsInPath { get; set; }
 		DbSet<InkBallUser> InkBallUsers { get; set; }
 	}
 
@@ -34,7 +33,6 @@ namespace InkBall.Module.Model
 		public virtual DbSet<InkBallPath> InkBallPath { get; set; }
 		public virtual DbSet<InkBallPlayer> InkBallPlayer { get; set; }
 		public virtual DbSet<InkBallPoint> InkBallPoint { get; set; }
-		//public virtual DbSet<InkBallPointsInPath> InkBallPointsInPath { get; set; }
 		public virtual DbSet<InkBallUser> InkBallUsers { get; set; }
 
 		public GamesContext(DbContextOptions<GamesContext> options) : base(options)
@@ -378,52 +376,6 @@ namespace InkBall.Module.Model
 					.HasConstraintName("InkBallPoint_ibfk_4");
 			});
 
-			#region Old code
-
-			//TODO: remove coz not needed anymore - points are stored inside InkBallPath.PointsAsString JSON field
-			/*modelBuilder.Entity<InkBallPointsInPath>(entity =>
-			{
-				entity.HasKey(e => e.iId);
-
-				entity.HasIndex(e => e.iPathId)
-					.HasDatabaseName("ByPath");
-
-				entity.HasIndex(e => e.iPointId)
-					.HasDatabaseName("ByPoint");
-
-				entity.Property(e => e.iId).HasColumnName("iId")
-					.ValueGeneratedOnAdd()
-					.HasAnnotation("Sqlite:Autoincrement", true)
-					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
-					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
-#if INCLUDE_ORACLE
-					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
-#endif
-					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
-
-				entity.Property(e => e.iPathId).HasColumnName("iPathId");
-
-				entity.Property(e => e.iPointId).HasColumnName("iPointId");
-
-				entity.Property(e => e.Order)
-					.HasColumnName("Order")
-					.HasDefaultValue(0);
-
-				entity.HasOne(d => d.Path)
-					.WithMany(p => p.InkBallPointsInPath)
-					.HasForeignKey(d => d.iPathId)
-					.OnDelete(DeleteBehavior.Restrict)
-					.HasConstraintName("InkBallPointsInPath_ibfk_1");
-
-				entity.HasOne(d => d.Point)
-					.WithMany(p => p.InkBallPointsInPath)
-					.HasForeignKey(d => d.iPointId)
-					.OnDelete(DeleteBehavior.Restrict)
-					.HasConstraintName("InkBallPointsInPath_ibfk_2");
-			});*/
-
-			#endregion Old code
-
 			modelBuilder.Entity<InkBallUser>(entity =>
 			{
 				entity.HasKey(e => e.iId);
@@ -481,7 +433,7 @@ namespace InkBall.Module.Model
 			bool bIsPlayer1Active = cpuOponent;
 			GameStateEnum gameState = cpuOponent ? GameStateEnum.ACTIVE : GameStateEnum.AWAITING;
 			int game_id = await PrivInkBallGameInsertAsync(null, sPlayer1ExternaUserID, gridSize, width, height, bIsPlayer1Active,
-				gameState, gameType, cpuOponent);
+				cpuOponent);
 
 			if (game_id <= -1)
 				throw new ArgumentNullException(nameof(game_id), "Could not create new game");
@@ -492,10 +444,8 @@ namespace InkBall.Module.Model
 			//
 			// private functions
 			//
-			async Task<int> PrivInkBallGameInsertAsync(
-				int? iPlayer1ID, string iPlayer1ExternalUserID,
-				int iGridSize, int iBoardWidth, int iBoardHeight, bool bIsPlayer1ActiveHere,
-				InkBallGame.GameStateEnum GameState, InkBallGame.GameTypeEnum GameType, bool cpuOponent)
+			async Task<int> PrivInkBallGameInsertAsync(int? iPlayer1ID, string iPlayer1ExternalUserID,
+				int iGridSize, int iBoardWidth, int iBoardHeight, bool bIsPlayer1ActiveHere, bool cpuOponent)
 			{
 				var cp1_query = from cp1 in this.InkBallPlayer//.Include(u => u.User)
 								where ((!iPlayer1ID.HasValue || cp1.iId == iPlayer1ID.Value)
@@ -794,13 +744,6 @@ namespace InkBall.Module.Model
 			return await query.ToArrayAsync(token);
 		}
 
-		/*private static InkBallPath LoadPointsInPathFromRelationTable(InkBallPath path)
-		{
-			path.InkBallPointsInPath = path.InkBallPointsInPath.OrderBy(o => o.Order).ToArray();
-
-			return path;
-		}*/
-
 		private static InkBallPath LoadPointsInPathFromJson(InkBallPath path)
 		{
 			path.InkBallPoint = JsonSerializer.Deserialize<InkBallPathViewModel>(path.PointsAsString)
@@ -824,9 +767,7 @@ namespace InkBall.Module.Model
 			if (deserializeJsonPath)
 			{
 				var paths = await InkBallPath.AsNoTracking()
-					//.Include(x => x.InkBallPointsInPath)//uncomment for LoadPointsInPathFromRelationTable method
 					.Where(pa => pa.iGameId == iGameID)
-					// .Select(m => LoadPointsInPathFromRelationTable(m))
 					.Select(m => LoadPointsInPathFromJson(m))
 					.ToListAsync(token);
 
@@ -835,9 +776,7 @@ namespace InkBall.Module.Model
 			else
 			{
 				return await InkBallPath.AsNoTracking()
-					//.Include(x => x.InkBallPointsInPath)//uncomment for LoadPointsInPathFromRelationTable method
 					.Where(pa => pa.iGameId == iGameID)
-					// .Select(m => LoadPointsInPathFromRelationTable(m))
 					.ToListAsync(token);
 			}
 		}

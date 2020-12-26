@@ -208,41 +208,6 @@ namespace InkBall.Module.Migrations
 				b.ToTable("InkBallPoint");
 			});
 
-			//TODO: remove coz not needed anymore - points are stored inside InkBallPath.PointsAsString JSON field
-			/*modelBuilder.Entity("InkBall.Module.Model.InkBallPointsInPath", b =>
-			{
-				b.Property<int>("iId")
-					.ValueGeneratedOnAdd()
-					.HasColumnName("iId")
-					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
-					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
-					.HasAnnotation("Sqlite:Autoincrement", true)
-#if INCLUDE_ORACLE
-					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
-#endif
-					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-				b.Property<int>("iPathId")
-					.HasColumnName("iPathId");
-
-				b.Property<int>("iPointId")
-					.HasColumnName("iPointId");
-
-				b.Property<int>("Order")
-					.HasColumnName("Order")
-					.HasDefaultValue(0);
-
-				b.HasKey("iId");
-
-				b.HasIndex("iPathId")
-					.HasName("ByPath");
-
-				b.HasIndex("iPointId")
-					.HasName("ByPoint");
-
-				b.ToTable("InkBallPointsInPath");
-			});*/
-
 			modelBuilder.Entity("InkBall.Module.Model.InkBallUser", b =>
 			{
 				b.Property<int>("iId")
@@ -327,19 +292,6 @@ namespace InkBall.Module.Migrations
 					.HasConstraintName("InkBallPoint_ibfk_4");
 			});
 
-			//TODO: remove coz not needed anymore - points are stored inside InkBallPath.PointsAsString JSON field
-			/*modelBuilder.Entity("InkBall.Module.Model.InkBallPointsInPath", b =>
-			{
-				b.HasOne("InkBall.Module.Model.InkBallPath", "Path")
-					.WithMany("InkBallPointsInPath")
-					.HasForeignKey("iPathId")
-					.HasConstraintName("InkBallPointsInPath_ibfk_1");
-
-				b.HasOne("InkBall.Module.Model.InkBallPoint", "Point")
-					.WithMany("InkBallPointsInPath")
-					.HasForeignKey("iPointId")
-					.HasConstraintName("InkBallPointsInPath_ibfk_2");
-			});*/
 #pragma warning restore 612, 618
 		}
     }

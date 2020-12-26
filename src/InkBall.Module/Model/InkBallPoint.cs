@@ -251,11 +251,8 @@ namespace InkBall.Module.Model
 
 		public InkBallPlayer Player { get; set; }
 
-		//public ICollection<InkBallPointsInPath> InkBallPointsInPath { get; set; }
-
 		public InkBallPoint()
 		{
-			// InkBallPointsInPath = new HashSet<InkBallPointsInPath>();
 		}
 	}
 

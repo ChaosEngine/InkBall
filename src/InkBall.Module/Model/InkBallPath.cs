@@ -115,12 +115,10 @@ namespace InkBall.Module.Model
 		public InkBallGame Game { get; set; }
 		public InkBallPlayer Player { get; set; }
 		public override ICollection<InkBallPoint> InkBallPoint { get; set; }
-		//public ICollection<InkBallPointsInPath> InkBallPointsInPath { get; set; }
 
 		public InkBallPath()
 		{
 			// InkBallPoint = new HashSet<InkBallPoint>();
-			// InkBallPointsInPath = new HashSet<InkBallPointsInPath>();
 		}
 
 		public static string GetPathsAsJavaScriptArrayForPageOld(IEnumerable<InkBallPath> paths)
