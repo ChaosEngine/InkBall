@@ -1,4 +1,4 @@
-﻿using InkBall.Module.Hubs;
+using InkBall.Module.Hubs;
 using InkBall.Module.Model;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Connections.Features;
@@ -699,7 +699,7 @@ namespace InkBall.Tests
 				Assert.Equal(1, ((WinCommand)winMessagesgStatus).WinningPlayerId);
 
 
-				var exception = await Assert.ThrowsAsync<NullReferenceException>(async () =>
+				var exception = await Assert.ThrowsAsync<NoGameArgumentNullException>(async () =>
 				{
 					await hub_P2.ClientToServerPath(new InkBallPathViewModel
 					{
@@ -710,7 +710,71 @@ namespace InkBall.Tests
 					});
 
 				});
-				Assert.Equal("game == null", exception.Message);
+				Assert.Equal("game == null (Parameter 'dbGame')", exception.Message);
+			}
+		}
+
+
+		[Fact]
+		public async Task SignalR_ClientDisconnect()
+		{
+			//Arrange
+			var token = base.CancellationToken;
+
+			await CreateComplexGameHierarchy(token);
+
+			using (var db = new GamesContext(Setup.DbOpts))
+			{
+				var mockGameClient = new Mock<IGameClient>();
+				mockGameClient.Setup(c => c.ServerToClientPath(It.IsAny<InkBallPathViewModel>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPing(It.IsAny<PingCommand>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPlayerJoin(It.IsAny<PlayerJoiningCommand>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPlayerSurrender(It.IsAny<PlayerSurrenderingCommand>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPlayerWin(It.IsAny<WinCommand>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPoint(It.IsAny<InkBallPointViewModel>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientOtherPlayerDisconnected(It.IsAny<string>())).Returns(Task.FromResult(0));
+
+				var mockHubCallerClients = new Mock<IHubCallerClients<IGameClient>>();
+				mockHubCallerClients.Setup(c => c.Client(It.IsAny<string>())).Returns(mockGameClient.Object);
+				mockHubCallerClients.Setup(c => c.User(It.IsAny<string>())).Returns(mockGameClient.Object);
+
+				var mockHubCallerContext_P1 = GetMockHubCallerContext(gameID: 1, playerID: 1, userID: 1, externalUserIdentifier: "xxxxx");
+				var mockHubCallerContext_P2 = GetMockHubCallerContext(gameID: 1, playerID: 2, userID: 2, externalUserIdentifier: "yyyyy");
+
+				using var hub_P1 = new GameHub(db, Setup.Logger)
+				{
+					Clients = mockHubCallerClients.Object,
+					Context = mockHubCallerContext_P1.Object
+				};
+				using var hub_P2 = new GameHub(db, Setup.Logger)
+				{
+					Clients = mockHubCallerClients.Object,
+					Context = mockHubCallerContext_P2.Object
+				};
+
+				//Act
+				await hub_P1.OnConnectedAsync();
+				await hub_P2.OnConnectedAsync();
+
+				//Assert
+				mockGameClient.Verify(client => client.ServerToClientOtherPlayerConnected(It.Is<string>(msg =>
+				   msg == $"Other player {hub_P1.ThisPlayer.User.UserName} connected 😁"
+				   )), Times.Once);
+
+				//Act 
+				await hub_P1.OnDisconnectedAsync(null);
+				//Assert
+				mockGameClient.Verify(client => client.ServerToClientOtherPlayerDisconnected(It.Is<string>(msg =>
+				   msg == $"Other player {hub_P1.ThisPlayer.User.UserName} disconnected 😢"
+				   )), Times.Once);
+
+				//Act
+				await hub_P1.OnConnectedAsync();
+				await hub_P2.OnDisconnectedAsync(null);
+				//Assert
+				mockGameClient.Verify(client => client.ServerToClientOtherPlayerDisconnected(It.Is<string>(msg =>
+				   msg == $"Other player {hub_P2.ThisPlayer.User.UserName} disconnected 😢"
+				   )), Times.Once);
 			}
 		}
 

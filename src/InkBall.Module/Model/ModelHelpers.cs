@@ -199,4 +199,11 @@ END;";
 			return migrationBuilder;
 		}
 	}
+
+	public class NoGameArgumentNullException : ArgumentNullException
+	{
+		public NoGameArgumentNullException(string paramName, string message) : base(paramName, message)
+		{
+		}
+	}
 }

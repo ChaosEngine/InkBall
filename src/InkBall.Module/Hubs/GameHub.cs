@@ -248,7 +248,7 @@ namespace InkBall.Module.Hubs
 					&& (GamesContext.ActiveVisibleGameStates.Contains(w.GameState))
 				, token);
 				if (dbGame == null)
-					throw new NullReferenceException("game == null");
+					throw new NoGameArgumentNullException(nameof(dbGame), "game == null");
 				if (!(dbGame.iPlayer1Id == ThisPlayerID || (dbGame.iPlayer2Id.HasValue && dbGame.iPlayer2Id.Value == ThisPlayerID)))
 					throw new ArgumentException("no player exist in that game");
 
@@ -339,6 +339,10 @@ namespace InkBall.Module.Hubs
 				var msg = $"Other player {ThisPlayer?.User?.UserName} disconnected 😢";
 				await Clients.User(OtherUserIdentifier).ServerToClientOtherPlayerDisconnected(msg);
 			}
+			catch (NoGameArgumentNullException ex)
+			{
+				_logger.LogError(ex, ex.Message);
+			}
 			catch (Exception ex)
 			{
 				_logger.LogError(ex.Message);
@@ -369,7 +373,8 @@ namespace InkBall.Module.Hubs
 
 		public override async Task OnDisconnectedAsync(Exception exception)
 		{
-			await OtherPlayerDisconnectNotification(exception);
+			//Can not pass Context.ConnectionAborted because it would stop from sending disconnect notification to other player
+			await OtherPlayerDisconnectNotification(exception/*, Context.ConnectionAborted*/);
 		}
 
 		#region IGameServer implementation
