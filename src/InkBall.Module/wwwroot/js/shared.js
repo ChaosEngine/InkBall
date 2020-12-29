@@ -1,16 +1,4 @@
 /*eslint no-unused-vars: ["error", { "varsIgnorePattern": "$" }]*/
-
-//////////////////////////////////////////////////////
-// SVG-VML mini graphic library 
-// ==========================================
-// written by Gerard Ferrandez
-// initial version - June 28, 2006
-// modified - 2020 - Andrzej Pauli dropping vml - obsoleet and no support so why bother
-// modified - 2018-2020 - Andrzej Pauli polyline and oval functions & extensions
-// modified - July 21 - use object functions
-// modified - July 24 - debug
-// www.dhteumeuleu.com
-//////////////////////////////////////////////////////
 "use strict";
 
 /**
@@ -134,6 +122,17 @@ function sortPointsClockwise(points) {
 	return pointsSorted;
 }
 
+//////////////////////////////////////////////////////
+// SVG-VML mini graphic library 
+// ==========================================
+// written by Gerard Ferrandez
+// initial version - June 28, 2006
+// modified - 2020 - Andrzej Pauli dropping vml - obsoleet and no support so why bother
+// modified - 2018-2020 - Andrzej Pauli polyline and oval functions & extensions
+// modified - July 21 - use object functions
+// modified - July 24 - debug
+// www.dhteumeuleu.com
+//////////////////////////////////////////////////////
 class SvgVml {
 	constructor() {
 		const svgNS = "http://www.w3.org/2000/svg";

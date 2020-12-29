@@ -581,7 +581,7 @@ namespace InkBall.Module.Hubs
 						//#if DEBUG
 						//						var saved_pts = await _dbContext.LoadPointsAndPathsAsync(ThisGameID.Value, token);
 						//						var restored_from_db = saved_pts.Paths.LastOrDefault()?.InkBallPoint.Select(z => $"{z.iX},{z.iY}");
-						//						var str = InkBallPath.GetPathsAsJavaScriptArrayForPage2(saved_pts.Paths);
+						//						var str = InkBallPath.GetPathsAsJavaScriptArrayForPage(saved_pts.Paths);
 						//						throw new Exception($"FAKE EXCEPTION org pts:[{path.PointsAsString}], restored pts:[{str}], owned:[{path.OwnedPointsAsString}]");
 						//#endif
 
@@ -775,8 +775,6 @@ namespace InkBall.Module.Hubs
 				var settings_json = this.Context.User.FindFirst(c => c.ValueType == "UserSettings" && c.Type == ClaimTypes.UserData);
 				if (settings_json != null && settings_json.Value != null)
 				{
-					// var settings = Newtonsoft.Json.JsonConvert.DeserializeObject<ApplicationUserSettings>(settings_json.Value,
-					// 	new Newtonsoft.Json.JsonSerializerSettings { NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore });
 					var settings = settings_json.Value;
 					return settings;
 				}

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -121,46 +121,6 @@ namespace InkBall.Module.Model
 			// InkBallPoint = new HashSet<InkBallPoint>();
 		}
 
-		public static string GetPathsAsJavaScriptArrayForPageOld(IEnumerable<InkBallPath> paths)
-		{
-			StringBuilder builder = new StringBuilder("[", 300);
-			string comma = "";
-			foreach (var path in paths)
-			{
-				var points = path.InkBallPoint;
-				builder.AppendFormat("{0}[{1}\"", comma
-#if DEBUG
-				, $"/*ID={path.iId}*/"
-#else
-				, ""
-#endif
-				);
-
-				string space = string.Empty;
-				foreach (var point in points)
-				{
-#if DEBUG
-					builder.AppendFormat("{2}{0}/*x*/,{1}/*y*//*id={3}*/", point.iX, point.iY, space, point.iId);
-#else
-					builder.AppendFormat("{2}{0},{1}", point.iX, point.iY, space);
-#endif
-					space = " ";
-				}
-
-				builder.AppendFormat(
-#if DEBUG
-					"\",{0}/*playerID*/]",
-#else
-					"\",{0}]",
-#endif
-					path.iPlayerId);
-				comma = ",\r";
-			}
-			builder.Append(']');
-
-			return builder.ToString();
-		}
-
 		public static string GetPathsAsJavaScriptArrayForPage(IEnumerable<InkBallPath> paths)
 		{
 			StringBuilder builder = new StringBuilder("[", 300);
@@ -183,7 +143,64 @@ namespace InkBall.Module.Model
 			return builder.ToString();
 		}
 
-		public static string GetPathsAsJavaScriptArrayForSignalROld(IEnumerable<InkBallPath> paths)
+		public static string GetPathsAsJavaScriptArrayForSignalR(IEnumerable<InkBallPath> paths)
+		{
+			StringBuilder builder = new StringBuilder("[", 300);
+			string comma = "";
+			foreach (var path in paths)
+			{
+				builder.Append(comma).Append(path.PointsAsString);
+
+				comma = ",";
+			}
+			builder.Append(']');
+
+			return builder.ToString();
+		}
+
+		#region Old code
+
+		//		public static string GetPathsAsJavaScriptArrayForPageOld(IEnumerable<InkBallPath> paths)
+		//		{
+		//			StringBuilder builder = new StringBuilder("[", 300);
+		//			string comma = "";
+		//			foreach (var path in paths)
+		//			{
+		//				var points = path.InkBallPoint;
+		//				builder.AppendFormat("{0}[{1}\"", comma
+		//#if DEBUG
+		//				, $"/*ID={path.iId}*/"
+		//#else
+		//				, ""
+		//#endif
+		//				);
+
+		//				string space = string.Empty;
+		//				foreach (var point in points)
+		//				{
+		//#if DEBUG
+		//					builder.AppendFormat("{2}{0}/*x*/,{1}/*y*//*id={3}*/", point.iX, point.iY, space, point.iId);
+		//#else
+		//					builder.AppendFormat("{2}{0},{1}", point.iX, point.iY, space);
+		//#endif
+		//					space = " ";
+		//				}
+
+		//				builder.AppendFormat(
+		//#if DEBUG
+		//					"\",{0}/*playerID*/]",
+		//#else
+		//					"\",{0}]",
+		//#endif
+		//					path.iPlayerId);
+		//				comma = ",\r";
+		//			}
+		//			builder.Append(']');
+
+		//			return builder.ToString();
+		//		}
+
+		/*public static string GetPathsAsJavaScriptArrayForSignalROld(IEnumerable<InkBallPath> paths)
 		{
 			StringBuilder builder = new StringBuilder("[", 300);
 			string comma = "";
@@ -205,7 +222,10 @@ namespace InkBall.Module.Model
 			builder.Append(']');
 
 			return builder.ToString();
-		}
+		}*/
+
+		#endregion Old code
+	}
 
 		public static string GetPathsAsJavaScriptArrayForSignalR(IEnumerable<InkBallPath> paths)
 		{
@@ -267,7 +287,7 @@ namespace InkBall.Module.Model
 		}
 
 		///Oponent points enclosed within this users path
-		public ICollection<InkBallPointViewModel> GetOwnedPoints(InkBall.Module.Model.InkBallPoint.StatusEnum ownedStatus, int otherPlayerID)
+		public ICollection<InkBallPointViewModel> GetOwnedPoints(InkBallPoint.StatusEnum ownedStatus, int otherPlayerID)
 		{
 			if (!(_ownedPoints?.Count > 0) && !string.IsNullOrEmpty(OwnedPointsAsString))
 			{
@@ -362,7 +382,7 @@ namespace InkBall.Module.Model
 			return collection;
 		}
 
-		void EnsureContinuityOfPointsOnPath(ref int prevX, ref int prevY, ref int x, ref int y)
+		static void EnsureContinuityOfPointsOnPath(ref int prevX, ref int prevY, ref int x, ref int y)
 		{
 			int diff_x = Math.Abs(prevX - x), diff_y = Math.Abs(prevY - y);
 
