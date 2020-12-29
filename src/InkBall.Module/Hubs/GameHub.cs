@@ -532,6 +532,7 @@ namespace InkBall.Module.Hubs
 				{
 					try
 					{
+						//Oracle EF-Core bug: must split path SaveChangesAsync into to: save path and add/update points. Revert if possible
 						await _dbContext.InkBallPath.AddAsync(db_path, token);
 						await _dbContext.SaveChangesAsync(token);
 
@@ -581,6 +582,7 @@ namespace InkBall.Module.Hubs
 						if (!db_path_player.IsCpuPlayer)
 							db_path_player.sLastMoveCode = last_move;
 
+						//Oracle EF-Core bug: must split path SaveChangesAsync into to: save path and add/update points. Revert if possible
 						await _dbContext.SaveChangesAsync(token);
 						//#if DEBUG
 						//						var saved_pts = await _dbContext.LoadPointsAndPathsAsync(ThisGameID.Value, token);
