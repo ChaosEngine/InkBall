@@ -1,14 +1,26 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using MessagePack;
 using Microsoft.Extensions.Primitives;
 
 namespace InkBall.Module.Model
 {
+	interface IThinPath
+	{
+		string PointsAsString { get; set; }
+		string OwnedPointsAsString { get; set; }
+	}
+
+	interface IThisSerializablePath<T> where T : IThinPath
+	{
+		string SerializeThin();
+	}
+
 	public interface IPath<Point> : IBelongingToCPU
 		where Point : IPoint
 	{
@@ -227,26 +239,24 @@ namespace InkBall.Module.Model
 		#endregion Old code
 	}
 
-		public static string GetPathsAsJavaScriptArrayForSignalR(IEnumerable<InkBallPath> paths)
-		{
-			StringBuilder builder = new StringBuilder("[", 300);
-			string comma = "";
-			foreach (var path in paths)
-			{
-				builder.Append(comma).Append(path.PointsAsString);
-
-				comma = ",";
-			}
-			builder.Append(']');
-
-			return builder.ToString();
-		}
-	}
-
 	[MessagePackObject(true)]
-	public class InkBallPathViewModel : CommonPath<InkBallPointViewModel>, ILastMoveTimestamp
+	public sealed class InkBallPathViewModel : CommonPath<InkBallPointViewModel>, ILastMoveTimestamp,
+		IThinPath, IThisSerializablePath<InkBallPathViewModel>
 	{
 		delegate void ActionRef<T1, T2, T3, T4>(ref T1 arg1, ref T2 arg2, ref T3 arg3, ref T4 arg4);
+
+		/// <summary>
+		/// Helper for serialization only selected properties
+		/// </summary>
+		private sealed record ThinSerializedPath : IThinPath
+		{
+			public string PointsAsString { get; set; }
+
+			public string OwnedPointsAsString { get; set; }
+
+			public ThinSerializedPath(IThinPath thinPath)
+				=> (PointsAsString, OwnedPointsAsString) = (thinPath.PointsAsString, thinPath.OwnedPointsAsString);
+		}
 
 		#region Fields
 
@@ -426,6 +436,20 @@ namespace InkBall.Module.Model
 			}
 
 			Debug.Assert(this.iId >= 0);
+		}
+
+		public string SerializeThin()
+		{
+			var thin_path = new ThinSerializedPath(this);
+
+			//string last_move_and_path_json = JsonSerializer.Serialize(thin_path, new JsonSerializerOptions
+			//{
+			//	//IgnoreNullValues = true,
+			//	DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault
+			//});
+			string last_move_and_path_json = JsonSerializer.Serialize(thin_path);
+
+			return last_move_and_path_json;
 		}
 	}
 }

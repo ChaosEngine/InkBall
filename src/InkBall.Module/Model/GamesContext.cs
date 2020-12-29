@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Http;
 using static InkBall.Module.Model.InkBallGame;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace InkBall.Module.Model
 {
@@ -43,6 +44,11 @@ namespace InkBall.Module.Model
 
 		internal static readonly GameStateEnum[] ActiveVisibleGameStates =
 			new GameStateEnum[] { GameStateEnum.ACTIVE, GameStateEnum.AWAITING };
+
+		static readonly JsonSerializerOptions _ignoreDefaultsSerializerOptions = new JsonSerializerOptions
+		{
+			DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault
+		};
 
 		internal static string TimeStampDefaultValueFromProvider(string activeProvider)
 		{
@@ -737,55 +743,82 @@ namespace InkBall.Module.Model
 
 		private async Task<IEnumerable<InkBallPoint>> GetPointsFromDatabaseAsync(int iGameID, CancellationToken token = default)
 		{
-			var query = from ip in InkBallPoint
+			var query = from ip in InkBallPoint.AsNoTracking()
 						where ip.iGameId == iGameID
 						select ip;
 
 			return await query.ToArrayAsync(token);
 		}
 
-		private static InkBallPath LoadPointsInPathFromJson(InkBallPath path)
+		private static InkBallPath LoadPointsInPathFromJson(InkBallPath path,
+			Action<InkBallPath, InkBallPathViewModel> jsonPathHandler,
+			Action<InkBallPath, InkBallPathViewModel> createPathPointCollectionHandler)
 		{
-			path.InkBallPoint = JsonSerializer.Deserialize<InkBallPathViewModel>(path.PointsAsString)
-				.InkBallPoint.Select(c => new InkBallPoint
-				{
-					iId = c.iId,
-					iGameId = c.iGameId,
-					iPlayerId = c.iPlayerId,
-					iX = c.iX,
-					iY = c.iY,
-					Status = c.Status,
-					iEnclosingPathId = c.iEnclosingPathId
-				}).ToList();
+			var from_json = JsonSerializer.Deserialize<InkBallPathViewModel>(path.PointsAsString);
+
+			jsonPathHandler(path, from_json);
+
+			createPathPointCollectionHandler(path, from_json);
 
 			return path;
 		}
 
-		protected internal async Task<IEnumerable<InkBallPath>> GetPathsFromDatabaseAsync(int iGameID, bool deserializeJsonPath,
-			CancellationToken token = default)
+		protected internal async Task<IEnumerable<InkBallPath>> GetPathsFromDatabaseAsync(int iGameID, bool reserializeJsonPath,
+			bool createPathPointCollection, CancellationToken token = default)
 		{
-			if (deserializeJsonPath)
-			{
-				var paths = await InkBallPath.AsNoTracking()
-					.Where(pa => pa.iGameId == iGameID)
-					.Select(m => LoadPointsInPathFromJson(m))
-					.ToListAsync(token);
+			///Detect type of operation to pre-perform on paths:
+			/// - reconstruct full JSON path or not
+			/// - construct points collection form string point represetation or not
+			Action<InkBallPath, InkBallPathViewModel> jsonPath_Handler = reserializeJsonPath ?
+				jsonPath_HandlerImpl : (_, _) => { /* dummy empty body*/ };
+			Action<InkBallPath, InkBallPathViewModel> createPathPointCollection_Handler = createPathPointCollection ?
+				createPathPointCollection_HandlerImpl : (_, _) => { /* dummy empty body*/ };
 
-				return paths;
-			}
-			else
+			var paths = await InkBallPath.AsNoTracking()
+				 .Where(pa => pa.iGameId == iGameID)
+				 .Select(m => LoadPointsInPathFromJson(m, jsonPath_Handler, createPathPointCollection_Handler))
+				 .ToListAsync(token);
+
+			return paths;
+
+			//
+			// private functions
+			//
+			///Reconstruct full JSON path 
+			static void jsonPath_HandlerImpl(InkBallPath path, InkBallPathViewModel fromJson)
 			{
-				return await InkBallPath.AsNoTracking()
-					.Where(pa => pa.iGameId == iGameID)
-					.ToListAsync(token);
+				fromJson.iId = path.iId;
+				fromJson.iGameId = 0;
+				fromJson.iPlayerId = path.iPlayerId;
+
+				//var reserialized = JsonSerializer.Serialize(fromJson, new JsonSerializerOptions { IgnoreNullValues = true });
+				var reserialized = JsonSerializer.Serialize(fromJson, _ignoreDefaultsSerializerOptions);
+
+				path.PointsAsString = reserialized;
+			}
+
+			///Construct points collection form string point represetation
+			static void createPathPointCollection_HandlerImpl(InkBallPath path, InkBallPathViewModel fromJson)
+			{
+				path.InkBallPoint = fromJson
+					.InkBallPoint.Select(c => new InkBallPoint
+					{
+						//iId = c.iId,
+						//iGameId = c.iGameId,
+						//iPlayerId = c.iPlayerId,
+						iX = c.iX,
+						iY = c.iY,
+						Status = c.Status,
+						iEnclosingPathId = path.iId
+					}).ToList();
 			}
 		}
 
 		public async Task<(IEnumerable<InkBallPath> Paths, IEnumerable<InkBallPoint> Points)> LoadPointsAndPathsAsync(int iGameID,
-			CancellationToken token = default, bool deserializeJsonPath = true)
+			CancellationToken token = default, bool reserializeJsonPath = true, bool createPathPointCollection = false)
 		{
 			var points = await GetPointsFromDatabaseAsync(iGameID, token);
-			var paths = await GetPathsFromDatabaseAsync(iGameID, deserializeJsonPath, token);
+			var paths = await GetPathsFromDatabaseAsync(iGameID, reserializeJsonPath, createPathPointCollection, token);
 
 			return (paths, points);
 		}

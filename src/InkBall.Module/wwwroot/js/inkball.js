@@ -1138,8 +1138,8 @@ class InkBallGame {
 
 			for (const unpacked of packedPaths) {
 				//const unpacked = JSON.parse(packed.Serialized);
-				if (unpacked.iGameId !== this.g_iGameID)
-					throw new Error("Bad game from path!");
+				//if (unpacked.iGameId !== this.g_iGameID)
+				//	throw new Error("Bad game from path!");
 
 				await this.SetPath(unpacked.PointsAsString/*points*/, this.m_bIsPlayingWithRed,
 					unpacked.iPlayerId === this.g_iPlayerID/*isMainPlayerPoints*/, unpacked.iId/*real DB id*/);

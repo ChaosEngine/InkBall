@@ -414,7 +414,7 @@ namespace InkBall.Module.Hubs
 				if (already_placed)
 					throw new ArgumentException($"point already placed ({point})");
 
-				var game_paths = await _dbContext.GetPathsFromDatabaseAsync(point.iGameId, true, token);
+				var game_paths = await _dbContext.GetPathsFromDatabaseAsync(point.iGameId, false, true, token);
 				if (game_paths.Any(pa => pa.IsPointInsidePath(point)))
 					throw new ArgumentException("point inside path");
 
@@ -440,8 +440,8 @@ namespace InkBall.Module.Hubs
 						new_point = new InkBallPointViewModel(db_point);
 						if (!db_point_player.IsCpuPlayer)
 						{
-							db_point_player.sLastMoveCode = JsonSerializer.Serialize(new_point,
-								new JsonSerializerOptions { IgnoreNullValues = true });
+							string last_move = new_point.SerializeThin();
+							db_point_player.sLastMoveCode = last_move;
 						}
 
 						//#if DEBUG
@@ -576,8 +576,7 @@ namespace InkBall.Module.Hubs
 							found.EnclosingPath = db_path;
 						}
 						path.iId = db_path.iId;//get real DB id saved previously
-
-						string last_move = JsonSerializer.Serialize(path, new JsonSerializerOptions { IgnoreNullValues = true });
+						string last_move = path.SerializeThin();
 						db_path.PointsAsString = last_move;
 						if (!db_path_player.IsCpuPlayer)
 							db_path_player.sLastMoveCode = last_move;
@@ -753,9 +752,9 @@ namespace InkBall.Module.Hubs
 
 			try
 			{
-				var packed = await _dbContext.LoadPointsAndPathsAsync(gameID, token, false);
-				var points = CommonPoint.GetPointsAsJavaScriptArrayForSignalR(packed.Points);
-				var paths = InkBallPath.GetPathsAsJavaScriptArrayForSignalR(packed.Paths);
+				var packed = await _dbContext.LoadPointsAndPathsAsync(gameID, token, true);
+				string points = CommonPoint.GetPointsAsJavaScriptArrayForSignalR(packed.Points);
+				string paths = InkBallPath.GetPathsAsJavaScriptArrayForSignalR(packed.Paths);
 				var dto = new PlayerPointsAndPathsDTO(points, paths);
 
 				return dto;

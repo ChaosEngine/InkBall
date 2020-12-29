@@ -2045,21 +2045,12 @@ var InkBallGame = /*#__PURE__*/function () {
 
               case 6:
                 if ((_step4 = _iterator4.n()).done) {
-                  _context11.next = 14;
+                  _context11.next = 12;
                   break;
                 }
 
                 unpacked = _step4.value;
-
-                if (!(unpacked.iGameId !== this.g_iGameID)) {
-                  _context11.next = 10;
-                  break;
-                }
-
-                throw new Error("Bad game from path!");
-
-              case 10:
-                _context11.next = 12;
+                _context11.next = 10;
                 return this.SetPath(unpacked.PointsAsString
                 /*points*/
                 , this.m_bIsPlayingWithRed, unpacked.iPlayerId === this.g_iPlayerID
@@ -2068,41 +2059,41 @@ var InkBallGame = /*#__PURE__*/function () {
                 /*real DB id*/
                 );
 
-              case 12:
+              case 10:
                 _context11.next = 6;
                 break;
 
-              case 14:
-                _context11.next = 19;
+              case 12:
+                _context11.next = 17;
                 break;
 
-              case 16:
-                _context11.prev = 16;
+              case 14:
+                _context11.prev = 14;
                 _context11.t0 = _context11["catch"](4);
 
                 _iterator4.e(_context11.t0);
 
-              case 19:
-                _context11.prev = 19;
+              case 17:
+                _context11.prev = 17;
 
                 _iterator4.f();
 
-                return _context11.finish(19);
+                return _context11.finish(17);
 
-              case 22:
-                _context11.prev = 22;
-                _context11.next = 25;
+              case 20:
+                _context11.prev = 20;
+                _context11.next = 23;
                 return this.m_Lines.EndBulkStorage();
 
-              case 25:
-                return _context11.finish(22);
+              case 23:
+                return _context11.finish(20);
 
-              case 26:
+              case 24:
               case "end":
                 return _context11.stop();
             }
           }
-        }, _callee11, this, [[0,, 22, 26], [4, 16, 19, 22]]);
+        }, _callee11, this, [[0,, 20, 24], [4, 14, 17, 20]]);
       }));
 
       function SetAllPaths(_x16) {

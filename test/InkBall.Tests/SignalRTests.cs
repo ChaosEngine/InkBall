@@ -1,4 +1,4 @@
-using InkBall.Module.Hubs;
+﻿using InkBall.Module.Hubs;
 using InkBall.Module.Model;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Connections.Features;
@@ -1010,7 +1010,7 @@ namespace InkBall.Tests
 				Assert.NotNull(json_paths);
 				Assert.True(json_points.All(pt =>
 					CommonPoint.UnDataMinimizerPlayerId(pt.iPlayerId) == 1 || CommonPoint.UnDataMinimizerPlayerId(pt.iPlayerId) == 2));
-				Assert.True(json_paths.All(pa => pa.iGameId == 1 && (pa.iPlayerId == 1 || pa.iPlayerId == 2)));
+				Assert.True(json_paths.All(pa => /*pa.iGameId == 1 &&*/ (pa.iPlayerId == 1 || pa.iPlayerId == 2)));
 
 				//Assert
 				Assert.All(Enumerable.Range(0, p1_pts.GetLength(0)), (rank) =>
@@ -1029,7 +1029,7 @@ namespace InkBall.Tests
 					CommonPoint.UnDataMinimizerStatus(pt.Status) == 2 || CommonPoint.UnDataMinimizerStatus(pt.Status) == 3));
 
 				//Assert
-				Assert.Single(json_paths, q => q.iPlayerId == 1 && q.iGameId == 1 &&
+				Assert.Single(json_paths, q => q.iPlayerId == 1 &&// q.iGameId == 1 &&
 
 					q.PointsAsString == Enumerable.Range(0, p1_pts.GetLength(0))
 					.Select(rank => $"{p1_pts[rank, 0]},{p1_pts[rank, 1]}")
@@ -1039,7 +1039,7 @@ namespace InkBall.Tests
 					.Select(rank => $"{p1_owned[rank, 0]},{p1_owned[rank, 1]}")
 					.Aggregate((prev, next) => $"{prev} {next}")
 				);
-				Assert.Single(json_paths, q => q.iPlayerId == 2 && q.iGameId == 1 &&
+				Assert.Single(json_paths, q => q.iPlayerId == 2 &&// q.iGameId == 1 &&
 
 					q.PointsAsString == Enumerable.Range(0, p2_pts.GetLength(0))
 					.Select(rank => $"{p2_pts[rank, 0]},{p2_pts[rank, 1]}")
@@ -1060,8 +1060,8 @@ namespace InkBall.Tests
 
 				var json_paths1 = JsonSerializer.Serialize(JsonSerializer.Deserialize<InkBallPathViewModel[]>(
 					InkBallPath.GetPathsAsJavaScriptArrayForPage(points_n_paths.Paths),
-					new JsonSerializerOptions { ReadCommentHandling = JsonCommentHandling.Skip, IgnoreNullValues = true, AllowTrailingCommas = true }),
-					new JsonSerializerOptions { ReadCommentHandling = JsonCommentHandling.Skip, IgnoreNullValues = true, AllowTrailingCommas = true });
+					new JsonSerializerOptions { ReadCommentHandling = JsonCommentHandling.Skip, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault, AllowTrailingCommas = true }),
+					new JsonSerializerOptions { ReadCommentHandling = JsonCommentHandling.Skip, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault, AllowTrailingCommas = true });
 
 				//Assert
 				Assert.Equal(dto.Points, json_points1);
