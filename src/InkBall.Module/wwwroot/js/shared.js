@@ -636,7 +636,7 @@ class GameStateStore {
 
 			async BeginBulkStorage() {
 				await this.MainGameStateStore.BeginBulkStorage([this.MainGameStateStore.DB_POINT_STORE, this.MainGameStateStore.DB_PATH_STORE], 'readwrite');
-				
+
 				if (this.MainGameStateStore.pathBulkBuffer === null)
 					this.MainGameStateStore.pathBulkBuffer = new Map();
 			}
@@ -1062,6 +1062,7 @@ class GameStateStore {
 		}
 		else {
 			//Verify date of last move and decide whether to need pull points from signalR
+			//Both datetimes should be ISO UTC
 			if (idb_state.sLastMoveGameTimeStamp !== game_state.sLastMoveGameTimeStamp) {
 
 				await this.ClearAllStores();
