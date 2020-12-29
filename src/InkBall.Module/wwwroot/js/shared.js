@@ -1110,11 +1110,11 @@ class GameStateStore {
 	async EndBulkStorage(storeName) {
 		if (this.bulkStores !== null) {
 			const keys = Array.isArray(storeName) ? storeName : [storeName];
-			keys.forEach(function (key) {
-				if (!this.bulkStores.has(key)) {
+			for (const key of keys) {
+				if (this.bulkStores.has(key)) {
 					this.bulkStores.delete(key);
 				}
-			}.bind(this));
+			}
 
 			if (this.bulkStores.size <= 0)
 				this.bulkStores = null;

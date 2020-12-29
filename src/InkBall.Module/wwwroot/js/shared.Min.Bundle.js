@@ -1997,14 +1997,28 @@ var GameStateStore = /*#__PURE__*/function () {
     key: "EndBulkStorage",
     value: function () {
       var _EndBulkStorage5 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee43(t) {
+        var e, _iterator4, _step4, _t6;
+
         return regeneratorRuntime.wrap(function _callee43$(_context43) {
           while (1) {
             switch (_context43.prev = _context43.next) {
               case 0:
                 if (null !== this.bulkStores) {
-                  (Array.isArray(t) ? t : [t]).forEach(function (t) {
-                    this.bulkStores.has(t) || this.bulkStores["delete"](t);
-                  }.bind(this)), this.bulkStores.size <= 0 && (this.bulkStores = null);
+                  e = Array.isArray(t) ? t : [t];
+                  _iterator4 = _createForOfIteratorHelper(e);
+
+                  try {
+                    for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
+                      _t6 = _step4.value;
+                      this.bulkStores.has(_t6) && this.bulkStores["delete"](_t6);
+                    }
+                  } catch (err) {
+                    _iterator4.e(err);
+                  } finally {
+                    _iterator4.f();
+                  }
+
+                  this.bulkStores.size <= 0 && (this.bulkStores = null);
                 }
 
               case 1:
