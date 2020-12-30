@@ -185,14 +185,14 @@ namespace InkBall.Module.Model
 					//.IsUnicode(false)
 					.HasConversion(
 						v => v.ToString(),
-						v => (InkBallGame.GameTypeEnum)Enum.Parse(typeof(InkBallGame.GameTypeEnum), v));
+						v => (GameTypeEnum)Enum.Parse(typeof(GameTypeEnum), v));
 
 				entity.Property(e => e.GameState)
 					.HasMaxLength(256)
 					//.IsUnicode(false)
 					.HasConversion(
 						v => v.ToString(),
-						v => (InkBallGame.GameStateEnum)Enum.Parse(typeof(InkBallGame.GameStateEnum), v));
+						v => (GameStateEnum)Enum.Parse(typeof(GameStateEnum), v));
 
 				entity.Property(e => e.iGridSize)
 					.HasColumnName("iGridSize")
@@ -420,7 +420,7 @@ namespace InkBall.Module.Model
 
 		#region Business logic methods
 
-		public async Task<InkBallGame> CreateNewGameFromExternalUserIDAsync(string sPlayer1ExternaUserID, InkBallGame.GameTypeEnum gameType,
+		public async Task<InkBallGame> CreateNewGameFromExternalUserIDAsync(string sPlayer1ExternaUserID, GameTypeEnum gameType,
 			int gridSize, int width, int height, bool cpuOponent = false, CancellationToken token = default)
 		{
 			try
@@ -453,12 +453,12 @@ namespace InkBall.Module.Model
 			async Task<int> PrivInkBallGameInsertAsync(int? iPlayer1ID, string iPlayer1ExternalUserID,
 				int iGridSize, int iBoardWidth, int iBoardHeight, bool bIsPlayer1ActiveHere, bool cpuOponent)
 			{
-				var cp1_query = from cp1 in this.InkBallPlayer//.Include(u => u.User)
+				var cp1_query = from cp1 in this.InkBallPlayer
 								where ((!iPlayer1ID.HasValue || cp1.iId == iPlayer1ID.Value)
 								&& (string.IsNullOrEmpty(iPlayer1ExternalUserID) || cp1.User.sExternalId == iPlayer1ExternalUserID)
 								&& (iPlayer1ID.HasValue || !string.IsNullOrEmpty(iPlayer1ExternalUserID)))
 								&& !InkBallGame.Any(tmp => (tmp.iPlayer1Id == cp1.iId || tmp.iPlayer2Id == cp1.iId)
-									&& (ActiveVisibleGameStates.Contains(tmp.GameState)))
+									&& ActiveVisibleGameStates.Contains(tmp.GameState))
 
 								select (int?)cp1.iId;
 				int? p1 = await cp1_query.FirstOrDefaultAsync(token);
@@ -466,7 +466,7 @@ namespace InkBall.Module.Model
 				int? p2;
 				if (cpuOponent == true)
 				{
-					var cp2_query = from cp2 in this.InkBallPlayer//.Include(u => u.User)
+					var cp2_query = from cp2 in this.InkBallPlayer
 									where cp2.iId == -1 && cp2.iUserId == -1
 									select (int?)cp2.iId;
 					p2 = await cp2_query.FirstOrDefaultAsync(token);
@@ -500,14 +500,10 @@ namespace InkBall.Module.Model
 
 					await SaveChangesAsync(token);
 
-					// select LAST_INSERT_ID() as iGameID, p1 as iPlayer1ID, p2 as iPlayer2ID, iGridSize,
-					// 	iBoardWidth, iBoardHeight, bIsPlayer1Active, GameState;
 					return gm.iId;
 				}
 				else
 				{
-					// select -1 as iGameID, p1 as iPlayer1ID, p2 as iPlayer2ID, iGridSize, iBoardWidth, iBoardHeight,
-					// 	bIsPlayer1Active, GameState;
 					return -1;
 				}
 			}
@@ -520,8 +516,6 @@ namespace InkBall.Module.Model
 								.ThenInclude(p1 => p1.User)
 							.Include(gp2 => gp2.Player2)
 								.ThenInclude(p2 => p2.User)
-							// .Include(pt => pt.InkBallPoint)
-							// .Include(pa => pa.InkBallPath)
 						where g.iId == iID
 						select g;
 
@@ -614,7 +608,6 @@ namespace InkBall.Module.Model
 						//$sQuery = "call InkBallPlayerUpdate({$this->GetGameID()}, {$this->GetPlayer()->GetPlayerID()}, null, null, {$this->GetPlayer()->GetLossCount()}, null)";
 						game.GetPlayer().iLossCount = game.GetPlayer().iLossCount + 1;
 
-						//$sQuery = "call InkBallPlayerUpdate({$this->GetGameID()}, {$this->GetOtherPlayer()->GetPlayerID()}, null, {$this->GetOtherPlayer()->GetWinCount()}, null, null)";
 						game.GetOtherPlayer().iWinCount = game.GetOtherPlayer().iWinCount + 1;
 					}
 
@@ -717,9 +710,7 @@ namespace InkBall.Module.Model
 			return winningPlayerID;
 		}
 
-		public async Task<IEnumerable<InkBallGame>> GetGamesForRegistrationAsSelectTableRowsAsync(
-			//int? iGameID = null, int? iUserID = null, string sExternalUserId = null, bool? bShowOnlyActive = true,
-			CancellationToken token = default)
+		public async Task<IEnumerable<InkBallGame>> GetGamesForRegistrationAsSelectTableRowsAsync(CancellationToken token = default)
 		{
 
 			var query = from ig in InkBallGame
@@ -727,14 +718,7 @@ namespace InkBall.Module.Model
 							.ThenInclude(u1 => u1.User)
 						.Include(ip2 => ip2.Player2)
 							.ThenInclude(u2 => u2.User)
-						where //(!iGameID.HasValue || ig.iId == iGameID.Value) &&
-							(//!bShowOnlyActive.HasValue ||
-								(//bShowOnlyActive.Value == true &&
-								(ActiveVisibleGameStates.Contains(ig.GameState))))
-						//&& (!iUserID.HasValue ||
-						//	(iUserID.Value == ig.Player1.iUserId || (ig.Player2.iUserId.HasValue && iUserID == ig.Player2.iUserId)))
-						//&& (string.IsNullOrEmpty(sExternalUserId) ||
-						//	(sExternalUserId == ig.Player1.User.sExternalId || (ig.Player2.iUserId.HasValue && sExternalUserId == ig.Player2.User.sExternalId)))
+						where ActiveVisibleGameStates.Contains(ig.GameState)
 						orderby ig.iId
 						select ig;
 
@@ -825,7 +809,7 @@ namespace InkBall.Module.Model
 
 		public async Task<IEnumerable<(int, int?, string, int, int, int, int)>> GetPlayerStatisticTableAsync()
 		{
-			var query = this.InkBallPlayer//.Include(u => u.User)
+			var query = this.InkBallPlayer
 				.Select(ip => ValueTuple.Create(
 							ip.iId,
 							ip.iUserId,

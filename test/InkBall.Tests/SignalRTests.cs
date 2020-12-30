@@ -803,7 +803,7 @@ namespace InkBall.Tests
 
 				//Get active games for ALL the users and check if there is game for our user
 				//Act
-				IEnumerable<InkBallGame> games_from_db = await db.GetGamesForRegistrationAsSelectTableRowsAsync(/*null, null, null, true, */token);
+				IEnumerable<InkBallGame> games_from_db = await db.GetGamesForRegistrationAsSelectTableRowsAsync(token);
 				//Assert
 				Assert.NotNull(games_from_db);
 				Assert.NotEmpty(games_from_db);
