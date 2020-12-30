@@ -5,7 +5,7 @@
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
     <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
     <LangVersion>latest</LangVersion>
-    <Version>1.0.1.7</Version>
+    <Version>1.0.1.8</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -30,15 +30,14 @@
 
   <ItemGroup Condition="'$(Configuration)'=='Debug'">
     <EmbeddedResource Include="wwwroot\css\inkball.css" />
-    <EmbeddedResource Include="wwwroot\css\inkball.scss" />
-    <EmbeddedResource Include="wwwroot\img\*" />
+    <EmbeddedResource Include="wwwroot\img\homescreen*" />
     <EmbeddedResource Include="wwwroot\js\inkball.js" />
     <EmbeddedResource Include="wwwroot\js\shared.js" />
     <EmbeddedResource Include="wwwroot\js\*Bundle.js" />
   </ItemGroup>
   <ItemGroup Condition="'$(Configuration)'!='Debug'">
     <EmbeddedResource Include="wwwroot\css\inkball.min.css" />
-    <EmbeddedResource Include="wwwroot\img\*" />
+    <EmbeddedResource Include="wwwroot\img\homescreen*" />
     <EmbeddedResource Include="wwwroot\js\inkball.min.js" />
     <EmbeddedResource Include="wwwroot\js\shared.min.js" />
     <EmbeddedResource Include="wwwroot\js\*Min.Bundle.js" />

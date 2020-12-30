@@ -1,4 +1,6 @@
 ﻿@charset "UTF-8";
+@import "svg-url";
+
 /**********inkgame*********/
 h3.inkgame {
 	color: darkorange;
@@ -9,7 +11,8 @@ p.inkgame {
 }
 
 @mixin background($cellWidth, $cellHeight) {
-	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='grid' width='#{$cellWidth}' height='#{$cellHeight}' patternUnits='userSpaceOnUse'%3E%3Cpath d='M #{$cellWidth} 0 L 0 0 0 #{$cellHeight}' fill='none' stroke='gray' stroke-width='0.5'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23grid)' /%3E%3C/svg%3E");
+	//https://codepen.io/jakob-e/pen/doMoML processed SVG
+	background-image: svg-url('<svg xmlns="http://www.w3.org/2000/svg"><defs><pattern id="grid" width="#{$cellWidth}" height="#{$cellHeight}" patternUnits="userSpaceOnUse"><path d="M #{$cellWidth} 0 L 0 0 0 #{$cellHeight}" fill="none" stroke="gray" stroke-width="0.5"/></pattern></defs><rect width="100%" height="100%" fill="url(#grid)" /></svg>');
 }
 
 @mixin baseBoard($width, $height, $cellWidth, $cellHeight) {
@@ -17,14 +20,14 @@ p.inkgame {
 	height: calc(#{$cellHeight} * #{$height} * 1);
 }
 
-@mixin board($width, $height, $cellWidth: 1em, $cellHeight: 1em) {
-	.boardsize-#{$width}x#{$height} {
+@mixin board($parent, $width, $height, $cellWidth: 1em, $cellHeight: 1em) {
+	#{$parent}-#{$width}x#{$height} {
 		@include baseBoard(#{$width}, #{$height}, #{$cellWidth}, #{$cellHeight});
 	}
 }
 
-@mixin irregularboard($width, $height, $cellWidth: 15px, $cellHeight: 1em) {
-	.boardsize-#{$width}x#{$height} {
+@mixin irregularBoard($parent, $width, $height, $cellWidth: 15px, $cellHeight: 1em) {
+	#{$parent}-#{$width}x#{$height} {
 		@include background(15, 16);
 		background-size: calc(#{$cellWidth} * 5) calc(#{$cellHeight} * 5);
 		@include baseBoard(#{$width}, #{$height}, #{$cellWidth}, #{$cellHeight});
@@ -58,18 +61,18 @@ p.inkgame {
 		overflow: auto;
 		height: calc(26em * 1);
 	}
-
-	.boardsize-20x26, .boardsize-40x52 {
-		@include background(16, 16);
-		background-size: calc(1em * 5) calc(1em * 5);
-	}
-
-	@include board(20, 26);
-
-	@include board(40, 52);
-
-	@include irregularboard(64, 64);
 }
+
+.boardsize-20x26, .boardsize-40x52 {
+	@include background(16, 16);
+	background-size: calc(1em * 5) calc(1em * 5);
+}
+
+@include board('.boardsize', 20, 26);
+
+@include board('.boardsize', 40, 52);
+
+@include irregularBoard('.boardsize', 64, 64);
 
 /**********inkgames(list)*********/
 .inkgames {
