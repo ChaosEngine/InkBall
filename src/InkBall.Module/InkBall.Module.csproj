@@ -5,7 +5,7 @@
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
     <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
     <LangVersion>latest</LangVersion>
-    <Version>1.0.1.8</Version>
+    <Version>1.0.1.9</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -44,6 +44,12 @@
     <EmbeddedResource Include="wwwroot\js\*Bundle.min.js" />
     <EmbeddedResource Include="wwwroot\js\AIWorker.Bundle.js" />
     <EmbeddedResource Include="wwwroot\js\AIWorker.PolyfillBundle.js" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="wwwroot\css\*.scss" CopyToPublishDirectory="Never" />
+    <Content Update="wwwroot\img\grid.svg" CopyToPublishDirectory="Never" />
+    <Content Update="wwwroot\img\grid80.png" CopyToPublishDirectory="Never" />
   </ItemGroup>
 
 </Project>
