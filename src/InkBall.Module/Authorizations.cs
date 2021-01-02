@@ -24,7 +24,7 @@ namespace InkBall.Module
 			var identity = (ClaimsIdentity)principal.Identity;
 			var name_identifer = principal.FindFirstValue(ClaimTypes.NameIdentifier);
 
-			if (!string.IsNullOrEmpty(name_identifer) && user.Age >= MinimumAgeRequirement.MinimumAge.Value)//conditions for InkBallUser to create
+			if (!string.IsNullOrEmpty(name_identifer)/* && user.Age >= MinimumAgeRequirement.MinimumAge.Value*/)//conditions for InkBallUser to create
 			{
 				InkBallUser found_user = inkBallContext.InkBallUsers.FirstOrDefault(i => i.sExternalId == name_identifer);
 				if (found_user != null)
@@ -49,26 +49,18 @@ namespace InkBall.Module
 					await inkBallContext.SaveChangesAsync(token);
 				}
 
-				if (!identity.HasClaim(x => x.Type == nameof(InkBall.Module.Pages.HomeModel.InkBallUserId)))
+				if (!identity.HasClaim(x => x.Type == nameof(Pages.HomeModel.InkBallUserId)))
 				{
-					identity.AddClaim(new Claim(nameof(InkBall.Module.Pages.HomeModel.InkBallUserId), found_user.iId.ToString(),
-						nameof(InkBall.Module.Model.InkBallUser)));
+					identity.AddClaim(new Claim(nameof(Pages.HomeModel.InkBallUserId), found_user.iId.ToString(),
+						nameof(InkBallUser)));
 				}
 
-				if (!identity.HasClaim(x => x.Type == ClaimTypes.DateOfBirth))
-				{
-					var date_of_birth = new Claim(ClaimTypes.DateOfBirth,
-						DateTime.UtcNow.AddYears(-user.Age).ToString("O"));
-					identity.AddClaim(date_of_birth);
-				}
+				//if (!identity.HasClaim(x => x.Type == ClaimTypes.DateOfBirth))
+				//	identity.AddClaim(new Claim(ClaimTypes.DateOfBirth, DateTime.UtcNow.AddYears(-user.Age).ToString("O")));
 
 				if (!identity.HasClaim(x => x.Type == ClaimTypes.UserData))
 				{
-					var user_settings = new Claim(ClaimTypes.UserData,
-						// JsonConvert.SerializeObject(user.UserSettingsJSON,
-						// 	new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }),
-						user.UserSettingsJSON ?? "",
-						"UserSettings");
+					var user_settings = new Claim(ClaimTypes.UserData, user.UserSettingsJSON ?? "", nameof(user.UserSettings));
 					identity.AddClaim(user_settings);
 				}
 			}
@@ -76,14 +68,12 @@ namespace InkBall.Module
 
 		public static async Task InkBallCreateUserPrincipalAsync(HttpContext context, INamedAgedUser user, ClaimsPrincipal principal)
 		{
-			CancellationToken token = context.RequestAborted;
-
 			using (IServiceScope scope = context.RequestServices.CreateScope())
 			{
 				GamesContext inkBallContext = scope.ServiceProvider.GetRequiredService<GamesContext>();
 
 				if (inkBallContext != null && user != null)
-					await InkBall.Module.Authentication.InkBallCreateUserPrincipalAsync(user, principal, inkBallContext, context.RequestAborted);
+					await InkBallCreateUserPrincipalAsync(user, principal, inkBallContext, context.RequestAborted);
 			}
 		}
 
@@ -174,7 +164,7 @@ namespace InkBall.Module
 		}
 	}
 
-	public class MinimumAgeRequirement : AuthorizationHandler<MinimumAgeRequirement>, IAuthorizationRequirement
+	/*public class MinimumAgeRequirement : AuthorizationHandler<MinimumAgeRequirement>, IAuthorizationRequirement
 	{
 		internal static readonly SynchronizedCache<int> MinimumAge = new SynchronizedCache<int>();
 
@@ -205,5 +195,5 @@ namespace InkBall.Module
 
 			return Task.CompletedTask;
 		}
-	}
+	}*/
 }
