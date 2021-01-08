@@ -1,5 +1,5 @@
 /*eslint no-unused-vars: ["error", { "varsIgnorePattern": "InkBallGame" }]*/
-/*global signalR, gameOptions*/
+/*global signalR*/
 "use strict";
 
 let SHRD, LocalLog, LocalError, StatusEnum, hasDuplicates, pnpoly2, sortPointsClockwise, Sleep, isESModuleSupport;
@@ -2908,7 +2908,7 @@ class InkBallGame {
 
 /******** run code and events ********/
 window.addEventListener('load', async function () {
-	//const gameOptions = this.window.gameOptions;
+	const gameOptions = window.gameOptions;
 
 	const inkBallHubName = gameOptions.inkBallHubName;
 	const iGameID = gameOptions.iGameID;
@@ -2920,7 +2920,7 @@ window.addEventListener('load', async function () {
 	const bPlayingWithRed = gameOptions.bPlayingWithRed;
 	const bPlayerActive = gameOptions.bPlayerActive;
 	const gameType = gameOptions.gameType;
-	const protocol = gameOptions.protocol;
+	const protocol = gameOptions.isMessagePackProtocol === true ? new signalR.protocols.msgpack.MessagePackHubProtocol() : new signalR.JsonHubProtocol();
 	const servTimeoutMillis = gameOptions.servTimeoutMillis;
 	const isReadonly = gameOptions.isReadonly;
 	const pathAfterPointDrawAllowanceSecAmount = gameOptions.pathAfterPointDrawAllowanceSecAmount;

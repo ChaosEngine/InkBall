@@ -213,7 +213,7 @@ module.exports = __webpack_require__(1);
 "use strict";
 /*eslint no-unused-vars: ["error", { "varsIgnorePattern": "InkBallGame" }]*/
 
-/*global signalR, gameOptions*/
+/*global signalR*/
 
 
 function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
@@ -5485,12 +5485,12 @@ var InkBallGame = /*#__PURE__*/function () {
 
 
 window.addEventListener('load', /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee39() {
-  var inkBallHubName, iGameID, iPlayerID, iOtherPlayerID, bPlayingWithRed, bPlayerActive, gameType, protocol, servTimeoutMillis, isReadonly, pathAfterPointDrawAllowanceSecAmount, sLastMoveTimeStampUtcIso, version, game;
+  var gameOptions, inkBallHubName, iGameID, iPlayerID, iOtherPlayerID, bPlayingWithRed, bPlayerActive, gameType, protocol, servTimeoutMillis, isReadonly, pathAfterPointDrawAllowanceSecAmount, sLastMoveTimeStampUtcIso, version, game;
   return regeneratorRuntime.wrap(function _callee39$(_context39) {
     while (1) {
       switch (_context39.prev = _context39.next) {
         case 0:
-          //const gameOptions = this.window.gameOptions;
+          gameOptions = window.gameOptions;
           inkBallHubName = gameOptions.inkBallHubName;
           iGameID = gameOptions.iGameID;
           document.getElementById('gameID').innerHTML = iGameID;
@@ -5501,53 +5501,53 @@ window.addEventListener('load', /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/reg
           bPlayingWithRed = gameOptions.bPlayingWithRed;
           bPlayerActive = gameOptions.bPlayerActive;
           gameType = gameOptions.gameType;
-          protocol = gameOptions.protocol;
+          protocol = gameOptions.isMessagePackProtocol === true ? new signalR.protocols.msgpack.MessagePackHubProtocol() : new signalR.JsonHubProtocol();
           servTimeoutMillis = gameOptions.servTimeoutMillis;
           isReadonly = gameOptions.isReadonly;
           pathAfterPointDrawAllowanceSecAmount = gameOptions.pathAfterPointDrawAllowanceSecAmount;
           sLastMoveTimeStampUtcIso = new Date(gameOptions.sLastMoveGameTimeStamp).toISOString();
           version = gameOptions.version;
-          _context39.next = 18;
+          _context39.next = 19;
           return importAllModulesAsync(gameOptions);
 
-        case 18:
+        case 19:
           game = new InkBallGame(iGameID, iPlayerID, iOtherPlayerID, inkBallHubName, signalR.LogLevel.Warning, protocol, signalR.HttpTransportType.None, servTimeoutMillis, gameType, bPlayingWithRed, bPlayerActive, isReadonly, pathAfterPointDrawAllowanceSecAmount);
-          _context39.next = 21;
+          _context39.next = 22;
           return game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw', '#messageInput', '#messagesList', '#sendButton', sLastMoveTimeStampUtcIso, gameOptions.PointsAsJavaScriptArray === null, version, ['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints', '#TestFindFullSurroundedPoints', '#TestWorkerify']);
 
-        case 21:
+        case 22:
           if (!(gameOptions.PointsAsJavaScriptArray !== null)) {
-            _context39.next = 30;
+            _context39.next = 31;
             break;
           }
 
-          _context39.next = 24;
+          _context39.next = 25;
           return game.StartSignalRConnection(false);
 
-        case 24:
-          _context39.next = 26;
+        case 25:
+          _context39.next = 27;
           return game.SetAllPoints(gameOptions.PointsAsJavaScriptArray);
 
-        case 26:
-          _context39.next = 28;
+        case 27:
+          _context39.next = 29;
           return game.SetAllPaths(gameOptions.PathsAsJavaScriptArray);
 
-        case 28:
-          _context39.next = 32;
+        case 29:
+          _context39.next = 33;
           break;
 
-        case 30:
-          _context39.next = 32;
+        case 31:
+          _context39.next = 33;
           return game.StartSignalRConnection(true);
 
-        case 32:
+        case 33:
           //alert('a QQ');
           document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
           game.CountPointsDebug("#debug2");
           delete window.gameOptions;
           window.game = game;
 
-        case 36:
+        case 37:
         case "end":
           return _context39.stop();
       }
