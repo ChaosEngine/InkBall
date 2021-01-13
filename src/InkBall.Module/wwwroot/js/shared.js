@@ -1,16 +1,4 @@
 /*eslint no-unused-vars: ["error", { "varsIgnorePattern": "$" }]*/
-
-//////////////////////////////////////////////////////
-// SVG-VML mini graphic library 
-// ==========================================
-// written by Gerard Ferrandez
-// initial version - June 28, 2006
-// modified - 2020 - Andrzej Pauli dropping vml - obsoleet and no support so why bother
-// modified - 2018-2020 - Andrzej Pauli polyline and oval functions & extensions
-// modified - July 21 - use object functions
-// modified - July 24 - debug
-// www.dhteumeuleu.com
-//////////////////////////////////////////////////////
 "use strict";
 
 /**
@@ -134,6 +122,17 @@ function sortPointsClockwise(points) {
 	return pointsSorted;
 }
 
+//////////////////////////////////////////////////////
+// SVG-VML mini graphic library 
+// ==========================================
+// written by Gerard Ferrandez
+// initial version - June 28, 2006
+// modified - 2020 - Andrzej Pauli dropping vml - obsoleet and no support so why bother
+// modified - 2018-2020 - Andrzej Pauli polyline and oval functions & extensions
+// modified - July 21 - use object functions
+// modified - July 24 - debug
+// www.dhteumeuleu.com
+//////////////////////////////////////////////////////
 class SvgVml {
 	constructor() {
 		const svgNS = "http://www.w3.org/2000/svg";
@@ -637,7 +636,7 @@ class GameStateStore {
 
 			async BeginBulkStorage() {
 				await this.MainGameStateStore.BeginBulkStorage([this.MainGameStateStore.DB_POINT_STORE, this.MainGameStateStore.DB_PATH_STORE], 'readwrite');
-				
+
 				if (this.MainGameStateStore.pathBulkBuffer === null)
 					this.MainGameStateStore.pathBulkBuffer = new Map();
 			}
@@ -1063,6 +1062,7 @@ class GameStateStore {
 		}
 		else {
 			//Verify date of last move and decide whether to need pull points from signalR
+			//Both datetimes should be ISO UTC
 			if (idb_state.sLastMoveGameTimeStamp !== game_state.sLastMoveGameTimeStamp) {
 
 				await this.ClearAllStores();
@@ -1111,11 +1111,11 @@ class GameStateStore {
 	async EndBulkStorage(storeName) {
 		if (this.bulkStores !== null) {
 			const keys = Array.isArray(storeName) ? storeName : [storeName];
-			keys.forEach(function (key) {
-				if (!this.bulkStores.has(key)) {
+			for (const key of keys) {
+				if (this.bulkStores.has(key)) {
 					this.bulkStores.delete(key);
 				}
-			}.bind(this));
+			}
 
 			if (this.bulkStores.size <= 0)
 				this.bulkStores = null;

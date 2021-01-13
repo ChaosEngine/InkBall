@@ -33,9 +33,7 @@ namespace InkBall.Module.Pages
 
 		private async Task<IEnumerable<InkBallGame>> GetGameList(CancellationToken token)
 		{
-			IEnumerable<InkBallGame> games_from_db =
-				await _dbContext.GetGamesForRegistrationAsSelectTableRowsAsync(/*null, null, null, true,*/token);
-
+			IEnumerable<InkBallGame> games_from_db = await _dbContext.GetGamesForRegistrationAsSelectTableRowsAsync(token);
 			return games_from_db;
 		}
 

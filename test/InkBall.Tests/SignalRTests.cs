@@ -699,7 +699,7 @@ namespace InkBall.Tests
 				Assert.Equal(1, ((WinCommand)winMessagesgStatus).WinningPlayerId);
 
 
-				var exception = await Assert.ThrowsAsync<NullReferenceException>(async () =>
+				var exception = await Assert.ThrowsAsync<NoGameArgumentNullException>(async () =>
 				{
 					await hub_P2.ClientToServerPath(new InkBallPathViewModel
 					{
@@ -710,7 +710,71 @@ namespace InkBall.Tests
 					});
 
 				});
-				Assert.Equal("game == null", exception.Message);
+				Assert.Equal("game == null (Parameter 'dbGame')", exception.Message);
+			}
+		}
+
+
+		[Fact]
+		public async Task SignalR_ClientDisconnect()
+		{
+			//Arrange
+			var token = base.CancellationToken;
+
+			await CreateComplexGameHierarchy(token);
+
+			using (var db = new GamesContext(Setup.DbOpts))
+			{
+				var mockGameClient = new Mock<IGameClient>();
+				mockGameClient.Setup(c => c.ServerToClientPath(It.IsAny<InkBallPathViewModel>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPing(It.IsAny<PingCommand>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPlayerJoin(It.IsAny<PlayerJoiningCommand>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPlayerSurrender(It.IsAny<PlayerSurrenderingCommand>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPlayerWin(It.IsAny<WinCommand>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientPoint(It.IsAny<InkBallPointViewModel>())).Returns(Task.FromResult(0));
+				mockGameClient.Setup(c => c.ServerToClientOtherPlayerDisconnected(It.IsAny<string>())).Returns(Task.FromResult(0));
+
+				var mockHubCallerClients = new Mock<IHubCallerClients<IGameClient>>();
+				mockHubCallerClients.Setup(c => c.Client(It.IsAny<string>())).Returns(mockGameClient.Object);
+				mockHubCallerClients.Setup(c => c.User(It.IsAny<string>())).Returns(mockGameClient.Object);
+
+				var mockHubCallerContext_P1 = GetMockHubCallerContext(gameID: 1, playerID: 1, userID: 1, externalUserIdentifier: "xxxxx");
+				var mockHubCallerContext_P2 = GetMockHubCallerContext(gameID: 1, playerID: 2, userID: 2, externalUserIdentifier: "yyyyy");
+
+				using var hub_P1 = new GameHub(db, Setup.Logger)
+				{
+					Clients = mockHubCallerClients.Object,
+					Context = mockHubCallerContext_P1.Object
+				};
+				using var hub_P2 = new GameHub(db, Setup.Logger)
+				{
+					Clients = mockHubCallerClients.Object,
+					Context = mockHubCallerContext_P2.Object
+				};
+
+				//Act
+				await hub_P1.OnConnectedAsync();
+				await hub_P2.OnConnectedAsync();
+
+				//Assert
+				mockGameClient.Verify(client => client.ServerToClientOtherPlayerConnected(It.Is<string>(msg =>
+				   msg == $"Other player {hub_P1.ThisPlayer.User.UserName} connected 😁"
+				   )), Times.Once);
+
+				//Act 
+				await hub_P1.OnDisconnectedAsync(null);
+				//Assert
+				mockGameClient.Verify(client => client.ServerToClientOtherPlayerDisconnected(It.Is<string>(msg =>
+				   msg == $"Other player {hub_P1.ThisPlayer.User.UserName} disconnected 😢"
+				   )), Times.Once);
+
+				//Act
+				await hub_P1.OnConnectedAsync();
+				await hub_P2.OnDisconnectedAsync(null);
+				//Assert
+				mockGameClient.Verify(client => client.ServerToClientOtherPlayerDisconnected(It.Is<string>(msg =>
+				   msg == $"Other player {hub_P2.ThisPlayer.User.UserName} disconnected 😢"
+				   )), Times.Once);
 			}
 		}
 
@@ -739,7 +803,7 @@ namespace InkBall.Tests
 
 				//Get active games for ALL the users and check if there is game for our user
 				//Act
-				IEnumerable<InkBallGame> games_from_db = await db.GetGamesForRegistrationAsSelectTableRowsAsync(/*null, null, null, true, */token);
+				IEnumerable<InkBallGame> games_from_db = await db.GetGamesForRegistrationAsSelectTableRowsAsync(token);
 				//Assert
 				Assert.NotNull(games_from_db);
 				Assert.NotEmpty(games_from_db);
@@ -946,7 +1010,7 @@ namespace InkBall.Tests
 				Assert.NotNull(json_paths);
 				Assert.True(json_points.All(pt =>
 					CommonPoint.UnDataMinimizerPlayerId(pt.iPlayerId) == 1 || CommonPoint.UnDataMinimizerPlayerId(pt.iPlayerId) == 2));
-				Assert.True(json_paths.All(pa => pa.iGameId == 1 && (pa.iPlayerId == 1 || pa.iPlayerId == 2)));
+				Assert.True(json_paths.All(pa => /*pa.iGameId == 1 &&*/ (pa.iPlayerId == 1 || pa.iPlayerId == 2)));
 
 				//Assert
 				Assert.All(Enumerable.Range(0, p1_pts.GetLength(0)), (rank) =>
@@ -965,7 +1029,7 @@ namespace InkBall.Tests
 					CommonPoint.UnDataMinimizerStatus(pt.Status) == 2 || CommonPoint.UnDataMinimizerStatus(pt.Status) == 3));
 
 				//Assert
-				Assert.Single(json_paths, q => q.iPlayerId == 1 && q.iGameId == 1 &&
+				Assert.Single(json_paths, q => q.iPlayerId == 1 &&// q.iGameId == 1 &&
 
 					q.PointsAsString == Enumerable.Range(0, p1_pts.GetLength(0))
 					.Select(rank => $"{p1_pts[rank, 0]},{p1_pts[rank, 1]}")
@@ -975,7 +1039,7 @@ namespace InkBall.Tests
 					.Select(rank => $"{p1_owned[rank, 0]},{p1_owned[rank, 1]}")
 					.Aggregate((prev, next) => $"{prev} {next}")
 				);
-				Assert.Single(json_paths, q => q.iPlayerId == 2 && q.iGameId == 1 &&
+				Assert.Single(json_paths, q => q.iPlayerId == 2 &&// q.iGameId == 1 &&
 
 					q.PointsAsString == Enumerable.Range(0, p2_pts.GetLength(0))
 					.Select(rank => $"{p2_pts[rank, 0]},{p2_pts[rank, 1]}")
@@ -996,8 +1060,8 @@ namespace InkBall.Tests
 
 				var json_paths1 = JsonSerializer.Serialize(JsonSerializer.Deserialize<InkBallPathViewModel[]>(
 					InkBallPath.GetPathsAsJavaScriptArrayForPage(points_n_paths.Paths),
-					new JsonSerializerOptions { ReadCommentHandling = JsonCommentHandling.Skip, IgnoreNullValues = true, AllowTrailingCommas = true }),
-					new JsonSerializerOptions { ReadCommentHandling = JsonCommentHandling.Skip, IgnoreNullValues = true, AllowTrailingCommas = true });
+					new JsonSerializerOptions { ReadCommentHandling = JsonCommentHandling.Skip, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault, AllowTrailingCommas = true }),
+					new JsonSerializerOptions { ReadCommentHandling = JsonCommentHandling.Skip, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault, AllowTrailingCommas = true });
 
 				//Assert
 				Assert.Equal(dto.Points, json_points1);

@@ -33,10 +33,10 @@ namespace InkBall.Module.Model
 		/// </summary>
 		string Name { get; }
 
-		/// <summary>
-		// User age
-		/// </summary>
-		int Age { get; }
+		///// <summary>
+		//// User age
+		///// </summary>
+		//int Age { get; }
 
 		/// <summary>
 		// Various user settings

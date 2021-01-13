@@ -245,29 +245,6 @@ namespace InkBall.Module
 			});
 		}
 
-		public static void RenderDependencyScripts(RazorPageBase page, IWebHostEnvironment env, IUrlHelper url, bool useMessagePackBinaryTransport)
-		{
-			page.WriteLiteral(@"<script nomodule src='https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/7.12.1/polyfill.min.js' integrity='sha512-uzOpZ74myvXTYZ+mXUsPhDF+/iL/n32GDxdryI2SJronkEyKC8FBFRLiBQ7l7U/PTYebDbgTtbqTa6/vGtU23A==' crossorigin='anonymous'></script>");
-			if (env.IsDevelopment())
-			{
-				page.WriteLiteral($"<script src='{url.Content("~/lib/signalr/dist/browser/signalr.min.js")}'></script>");
-				if (useMessagePackBinaryTransport)
-				{
-					page.WriteLiteral($"<script src='{url.Content("~/lib/msgpack5/dist/msgpack5.min.js")}'></script>");
-					page.WriteLiteral($"<script src='{url.Content("~/lib/signalr-protocol-msgpack/dist/browser/signalr-protocol-msgpack.min.js")}'></script>");
-				}
-			}
-			else
-			{
-				page.WriteLiteral(@"<script src='https://cdn.jsdelivr.net/npm/@microsoft/signalr@5.0.1/dist/browser/signalr.min.js' integrity='sha256-+rjfFXjblzn2o2pRhyBUXYY5C8gbBVszl5GHfeI8oZE=' crossorigin='anonymous'></script>");
-				if (useMessagePackBinaryTransport)
-				{
-					page.WriteLiteral(@"<script src='https://cdn.jsdelivr.net/npm/msgpack5@4.4.0/dist/msgpack5.min.js' integrity='sha256-mY/RhkCJfd98j3c5s1EcUDJdRzffTeKzEzFIaI/2KQg=' crossorigin='anonymous'></script>");
-					page.WriteLiteral(@"<script src='https://cdn.jsdelivr.net/npm/@microsoft/signalr-protocol-msgpack@5.0.1/dist/browser/signalr-protocol-msgpack.min.js' integrity='sha256-Vu6Oco+sYBWnny8L1WQ3xLzMAOUSIW362OHOnC9BrSc=' crossorigin='anonymous'></script>");
-				}
-			}
-		}
-
 		internal static void SetupHelpers(InkBallOptions options)
 		{
 			if (!string.IsNullOrEmpty(options.HeadElementsSectionName))

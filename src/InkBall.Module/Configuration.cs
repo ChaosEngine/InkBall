@@ -139,7 +139,8 @@ namespace InkBall.Module
 					auth_options.AddPolicy(Constants.InkBallPolicyName, policy =>
 					{
 						policy.RequireAuthenticatedUser()
-							.AddRequirements(new MinimumAgeRequirement(18));
+							//.AddRequirements(new MinimumAgeRequirement(18))
+							;
 					});
 				}
 				if (options.CustomViewOtherGamesAuthorizationPolicyBuilder != null)
@@ -166,7 +167,7 @@ namespace InkBall.Module
 
 		public static void PrepareSignalRForInkBall(this IEndpointRouteBuilder endpoints, string path = "")
 		{
-			endpoints.MapHub<InkBall.Module.Hubs.GameHub>(path + InkBall.Module.Hubs.GameHub.HubName);
+			endpoints.MapHub<Hubs.GameHub>(path + Hubs.GameHub.HubName);
 		}
 	}
 }

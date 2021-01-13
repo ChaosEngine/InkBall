@@ -17,17 +17,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "isESModuleSupport", function() { return isESModuleSupport; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "GameStateStore", function() { return GameStateStore; });
 /*eslint no-unused-vars: ["error", { "varsIgnorePattern": "$" }]*/
-//////////////////////////////////////////////////////
-// SVG-VML mini graphic library 
-// ==========================================
-// written by Gerard Ferrandez
-// initial version - June 28, 2006
-// modified - 2020 - Andrzej Pauli dropping vml - obsoleet and no support so why bother
-// modified - 2018-2020 - Andrzej Pauli polyline and oval functions & extensions
-// modified - July 21 - use object functions
-// modified - July 24 - debug
-// www.dhteumeuleu.com
-//////////////////////////////////////////////////////
 
 /**
  * Point status enum
@@ -215,7 +204,18 @@ function sortPointsClockwise(points) {
     return a.angle - b.angle;
   });
   return pointsSorted;
-}
+} //////////////////////////////////////////////////////
+// SVG-VML mini graphic library 
+// ==========================================
+// written by Gerard Ferrandez
+// initial version - June 28, 2006
+// modified - 2020 - Andrzej Pauli dropping vml - obsoleet and no support so why bother
+// modified - 2018-2020 - Andrzej Pauli polyline and oval functions & extensions
+// modified - July 21 - use object functions
+// modified - July 24 - debug
+// www.dhteumeuleu.com
+//////////////////////////////////////////////////////
+
 
 var SvgVml = /*#__PURE__*/function () {
   function SvgVml() {
@@ -2460,18 +2460,30 @@ var GameStateStore = /*#__PURE__*/function () {
     key: "EndBulkStorage",
     value: function () {
       var _EndBulkStorage5 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee43(storeName) {
-        var keys;
+        var keys, _iterator4, _step4, key;
+
         return regeneratorRuntime.wrap(function _callee43$(_context43) {
           while (1) {
             switch (_context43.prev = _context43.next) {
               case 0:
                 if (this.bulkStores !== null) {
                   keys = Array.isArray(storeName) ? storeName : [storeName];
-                  keys.forEach(function (key) {
-                    if (!this.bulkStores.has(key)) {
-                      this.bulkStores["delete"](key);
+                  _iterator4 = _createForOfIteratorHelper(keys);
+
+                  try {
+                    for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
+                      key = _step4.value;
+
+                      if (this.bulkStores.has(key)) {
+                        this.bulkStores["delete"](key);
+                      }
                     }
-                  }.bind(this));
+                  } catch (err) {
+                    _iterator4.e(err);
+                  } finally {
+                    _iterator4.f();
+                  }
+
                   if (this.bulkStores.size <= 0) this.bulkStores = null;
                 }
 

@@ -248,7 +248,7 @@ namespace InkBall.Module.Hubs
 					&& (GamesContext.ActiveVisibleGameStates.Contains(w.GameState))
 				, token);
 				if (dbGame == null)
-					throw new NullReferenceException("game == null");
+					throw new NoGameArgumentNullException(nameof(dbGame), "game == null");
 				if (!(dbGame.iPlayer1Id == ThisPlayerID || (dbGame.iPlayer2Id.HasValue && dbGame.iPlayer2Id.Value == ThisPlayerID)))
 					throw new ArgumentException("no player exist in that game");
 
@@ -339,6 +339,10 @@ namespace InkBall.Module.Hubs
 				var msg = $"Other player {ThisPlayer?.User?.UserName} disconnected 😢";
 				await Clients.User(OtherUserIdentifier).ServerToClientOtherPlayerDisconnected(msg);
 			}
+			catch (NoGameArgumentNullException ex)
+			{
+				_logger.LogError(ex, ex.Message);
+			}
 			catch (Exception ex)
 			{
 				_logger.LogError(ex.Message);
@@ -369,7 +373,8 @@ namespace InkBall.Module.Hubs
 
 		public override async Task OnDisconnectedAsync(Exception exception)
 		{
-			await OtherPlayerDisconnectNotification(exception);
+			//Can not pass Context.ConnectionAborted because it would stop from sending disconnect notification to other player
+			await OtherPlayerDisconnectNotification(exception/*, Context.ConnectionAborted*/);
 		}
 
 		#region IGameServer implementation
@@ -409,7 +414,7 @@ namespace InkBall.Module.Hubs
 				if (already_placed)
 					throw new ArgumentException($"point already placed ({point})");
 
-				var game_paths = await _dbContext.GetPathsFromDatabaseAsync(point.iGameId, true, token);
+				var game_paths = await _dbContext.GetPathsFromDatabaseAsync(point.iGameId, false, true, token);
 				if (game_paths.Any(pa => pa.IsPointInsidePath(point)))
 					throw new ArgumentException("point inside path");
 
@@ -435,8 +440,8 @@ namespace InkBall.Module.Hubs
 						new_point = new InkBallPointViewModel(db_point);
 						if (!db_point_player.IsCpuPlayer)
 						{
-							db_point_player.sLastMoveCode = JsonSerializer.Serialize(new_point,
-								new JsonSerializerOptions { IgnoreNullValues = true });
+							string last_move = new_point.SerializeThin();
+							db_point_player.sLastMoveCode = last_move;
 						}
 
 						//#if DEBUG
@@ -453,7 +458,7 @@ namespace InkBall.Module.Hubs
 						throw;
 					}
 				}
-				new_point.TimeStamp = ThisGame.TimeStamp;
+				new_point.TimeStamp = ThisGame.TimeStamp.ToUniversalTime();
 
 				if (!ThisGame.CpuOponent)
 					await Clients.User(OtherUserIdentifier).ServerToClientPoint(new_point);
@@ -527,6 +532,7 @@ namespace InkBall.Module.Hubs
 				{
 					try
 					{
+						//Oracle EF-Core bug: must split path SaveChangesAsync into to: save path and add/update points. Revert if possible
 						await _dbContext.InkBallPath.AddAsync(db_path, token);
 						await _dbContext.SaveChangesAsync(token);
 
@@ -571,17 +577,17 @@ namespace InkBall.Module.Hubs
 							found.EnclosingPath = db_path;
 						}
 						path.iId = db_path.iId;//get real DB id saved previously
-
-						string last_move = JsonSerializer.Serialize(path, new JsonSerializerOptions { IgnoreNullValues = true });
+						string last_move = path.SerializeThin();
 						db_path.PointsAsString = last_move;
 						if (!db_path_player.IsCpuPlayer)
 							db_path_player.sLastMoveCode = last_move;
 
+						//Oracle EF-Core bug: must split path SaveChangesAsync into to: save path and add/update points. Revert if possible
 						await _dbContext.SaveChangesAsync(token);
 						//#if DEBUG
 						//						var saved_pts = await _dbContext.LoadPointsAndPathsAsync(ThisGameID.Value, token);
 						//						var restored_from_db = saved_pts.Paths.LastOrDefault()?.InkBallPoint.Select(z => $"{z.iX},{z.iY}");
-						//						var str = InkBallPath.GetPathsAsJavaScriptArrayForPage2(saved_pts.Paths);
+						//						var str = InkBallPath.GetPathsAsJavaScriptArrayForPage(saved_pts.Paths);
 						//						throw new Exception($"FAKE EXCEPTION org pts:[{path.PointsAsString}], restored pts:[{str}], owned:[{path.OwnedPointsAsString}]");
 						//#endif
 
@@ -603,7 +609,7 @@ namespace InkBall.Module.Hubs
 						else
 						{
 							path = new InkBallPathViewModel(db_path, path.PointsAsString, path.OwnedPointsAsString);
-							path.TimeStamp = ThisGame.TimeStamp;
+							path.TimeStamp = ThisGame.TimeStamp.ToUniversalTime();
 							dto = path;
 							if (!ThisGame.CpuOponent)
 								await Clients.User(OtherUserIdentifier).ServerToClientPath(path);
@@ -748,9 +754,9 @@ namespace InkBall.Module.Hubs
 
 			try
 			{
-				var packed = await _dbContext.LoadPointsAndPathsAsync(gameID, token, false);
-				var points = CommonPoint.GetPointsAsJavaScriptArrayForSignalR(packed.Points);
-				var paths = InkBallPath.GetPathsAsJavaScriptArrayForSignalR(packed.Paths);
+				var packed = await _dbContext.LoadPointsAndPathsAsync(gameID, token, true);
+				string points = CommonPoint.GetPointsAsJavaScriptArrayForSignalR(packed.Points);
+				string paths = InkBallPath.GetPathsAsJavaScriptArrayForSignalR(packed.Paths);
 				var dto = new PlayerPointsAndPathsDTO(points, paths);
 
 				return dto;
@@ -775,8 +781,6 @@ namespace InkBall.Module.Hubs
 				var settings_json = this.Context.User.FindFirst(c => c.ValueType == "UserSettings" && c.Type == ClaimTypes.UserData);
 				if (settings_json != null && settings_json.Value != null)
 				{
-					// var settings = Newtonsoft.Json.JsonConvert.DeserializeObject<ApplicationUserSettings>(settings_json.Value,
-					// 	new Newtonsoft.Json.JsonSerializerSettings { NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore });
 					var settings = settings_json.Value;
 					return settings;
 				}

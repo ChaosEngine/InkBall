@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using Microsoft.AspNetCore.Http;
 using static InkBall.Module.Model.InkBallGame;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace InkBall.Module.Model
 {
@@ -22,7 +23,6 @@ namespace InkBall.Module.Model
 		DbSet<InkBallPath> InkBallPath { get; set; }
 		DbSet<InkBallPlayer> InkBallPlayer { get; set; }
 		DbSet<InkBallPoint> InkBallPoint { get; set; }
-		//DbSet<InkBallPointsInPath> InkBallPointsInPath { get; set; }
 		DbSet<InkBallUser> InkBallUsers { get; set; }
 	}
 
@@ -34,7 +34,6 @@ namespace InkBall.Module.Model
 		public virtual DbSet<InkBallPath> InkBallPath { get; set; }
 		public virtual DbSet<InkBallPlayer> InkBallPlayer { get; set; }
 		public virtual DbSet<InkBallPoint> InkBallPoint { get; set; }
-		//public virtual DbSet<InkBallPointsInPath> InkBallPointsInPath { get; set; }
 		public virtual DbSet<InkBallUser> InkBallUsers { get; set; }
 
 		public GamesContext(DbContextOptions<GamesContext> options) : base(options)
@@ -45,6 +44,11 @@ namespace InkBall.Module.Model
 
 		internal static readonly GameStateEnum[] ActiveVisibleGameStates =
 			new GameStateEnum[] { GameStateEnum.ACTIVE, GameStateEnum.AWAITING };
+
+		static readonly JsonSerializerOptions _ignoreDefaultsSerializerOptions = new JsonSerializerOptions
+		{
+			DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault
+		};
 
 		internal static string TimeStampDefaultValueFromProvider(string activeProvider)
 		{
@@ -181,14 +185,14 @@ namespace InkBall.Module.Model
 					//.IsUnicode(false)
 					.HasConversion(
 						v => v.ToString(),
-						v => (InkBallGame.GameTypeEnum)Enum.Parse(typeof(InkBallGame.GameTypeEnum), v));
+						v => (GameTypeEnum)Enum.Parse(typeof(GameTypeEnum), v));
 
 				entity.Property(e => e.GameState)
 					.HasMaxLength(256)
 					//.IsUnicode(false)
 					.HasConversion(
 						v => v.ToString(),
-						v => (InkBallGame.GameStateEnum)Enum.Parse(typeof(InkBallGame.GameStateEnum), v));
+						v => (GameStateEnum)Enum.Parse(typeof(GameStateEnum), v));
 
 				entity.Property(e => e.iGridSize)
 					.HasColumnName("iGridSize")
@@ -378,52 +382,6 @@ namespace InkBall.Module.Model
 					.HasConstraintName("InkBallPoint_ibfk_4");
 			});
 
-			#region Old code
-
-			//TODO: remove coz not needed anymore - points are stored inside InkBallPath.PointsAsString JSON field
-			/*modelBuilder.Entity<InkBallPointsInPath>(entity =>
-			{
-				entity.HasKey(e => e.iId);
-
-				entity.HasIndex(e => e.iPathId)
-					.HasDatabaseName("ByPath");
-
-				entity.HasIndex(e => e.iPointId)
-					.HasDatabaseName("ByPoint");
-
-				entity.Property(e => e.iId).HasColumnName("iId")
-					.ValueGeneratedOnAdd()
-					.HasAnnotation("Sqlite:Autoincrement", true)
-					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
-					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
-#if INCLUDE_ORACLE
-					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
-#endif
-					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
-
-				entity.Property(e => e.iPathId).HasColumnName("iPathId");
-
-				entity.Property(e => e.iPointId).HasColumnName("iPointId");
-
-				entity.Property(e => e.Order)
-					.HasColumnName("Order")
-					.HasDefaultValue(0);
-
-				entity.HasOne(d => d.Path)
-					.WithMany(p => p.InkBallPointsInPath)
-					.HasForeignKey(d => d.iPathId)
-					.OnDelete(DeleteBehavior.Restrict)
-					.HasConstraintName("InkBallPointsInPath_ibfk_1");
-
-				entity.HasOne(d => d.Point)
-					.WithMany(p => p.InkBallPointsInPath)
-					.HasForeignKey(d => d.iPointId)
-					.OnDelete(DeleteBehavior.Restrict)
-					.HasConstraintName("InkBallPointsInPath_ibfk_2");
-			});*/
-
-			#endregion Old code
-
 			modelBuilder.Entity<InkBallUser>(entity =>
 			{
 				entity.HasKey(e => e.iId);
@@ -462,7 +420,7 @@ namespace InkBall.Module.Model
 
 		#region Business logic methods
 
-		public async Task<InkBallGame> CreateNewGameFromExternalUserIDAsync(string sPlayer1ExternaUserID, InkBallGame.GameTypeEnum gameType,
+		public async Task<InkBallGame> CreateNewGameFromExternalUserIDAsync(string sPlayer1ExternaUserID, GameTypeEnum gameType,
 			int gridSize, int width, int height, bool cpuOponent = false, CancellationToken token = default)
 		{
 			try
@@ -481,7 +439,7 @@ namespace InkBall.Module.Model
 			bool bIsPlayer1Active = cpuOponent;
 			GameStateEnum gameState = cpuOponent ? GameStateEnum.ACTIVE : GameStateEnum.AWAITING;
 			int game_id = await PrivInkBallGameInsertAsync(null, sPlayer1ExternaUserID, gridSize, width, height, bIsPlayer1Active,
-				gameState, gameType, cpuOponent);
+				cpuOponent);
 
 			if (game_id <= -1)
 				throw new ArgumentNullException(nameof(game_id), "Could not create new game");
@@ -492,17 +450,15 @@ namespace InkBall.Module.Model
 			//
 			// private functions
 			//
-			async Task<int> PrivInkBallGameInsertAsync(
-				int? iPlayer1ID, string iPlayer1ExternalUserID,
-				int iGridSize, int iBoardWidth, int iBoardHeight, bool bIsPlayer1ActiveHere,
-				InkBallGame.GameStateEnum GameState, InkBallGame.GameTypeEnum GameType, bool cpuOponent)
+			async Task<int> PrivInkBallGameInsertAsync(int? iPlayer1ID, string iPlayer1ExternalUserID,
+				int iGridSize, int iBoardWidth, int iBoardHeight, bool bIsPlayer1ActiveHere, bool cpuOponent)
 			{
-				var cp1_query = from cp1 in this.InkBallPlayer//.Include(u => u.User)
+				var cp1_query = from cp1 in this.InkBallPlayer
 								where ((!iPlayer1ID.HasValue || cp1.iId == iPlayer1ID.Value)
 								&& (string.IsNullOrEmpty(iPlayer1ExternalUserID) || cp1.User.sExternalId == iPlayer1ExternalUserID)
 								&& (iPlayer1ID.HasValue || !string.IsNullOrEmpty(iPlayer1ExternalUserID)))
 								&& !InkBallGame.Any(tmp => (tmp.iPlayer1Id == cp1.iId || tmp.iPlayer2Id == cp1.iId)
-									&& (ActiveVisibleGameStates.Contains(tmp.GameState)))
+									&& ActiveVisibleGameStates.Contains(tmp.GameState))
 
 								select (int?)cp1.iId;
 				int? p1 = await cp1_query.FirstOrDefaultAsync(token);
@@ -510,7 +466,7 @@ namespace InkBall.Module.Model
 				int? p2;
 				if (cpuOponent == true)
 				{
-					var cp2_query = from cp2 in this.InkBallPlayer//.Include(u => u.User)
+					var cp2_query = from cp2 in this.InkBallPlayer
 									where cp2.iId == -1 && cp2.iUserId == -1
 									select (int?)cp2.iId;
 					p2 = await cp2_query.FirstOrDefaultAsync(token);
@@ -544,14 +500,10 @@ namespace InkBall.Module.Model
 
 					await SaveChangesAsync(token);
 
-					// select LAST_INSERT_ID() as iGameID, p1 as iPlayer1ID, p2 as iPlayer2ID, iGridSize,
-					// 	iBoardWidth, iBoardHeight, bIsPlayer1Active, GameState;
 					return gm.iId;
 				}
 				else
 				{
-					// select -1 as iGameID, p1 as iPlayer1ID, p2 as iPlayer2ID, iGridSize, iBoardWidth, iBoardHeight,
-					// 	bIsPlayer1Active, GameState;
 					return -1;
 				}
 			}
@@ -564,8 +516,6 @@ namespace InkBall.Module.Model
 								.ThenInclude(p1 => p1.User)
 							.Include(gp2 => gp2.Player2)
 								.ThenInclude(p2 => p2.User)
-							// .Include(pt => pt.InkBallPoint)
-							// .Include(pa => pa.InkBallPath)
 						where g.iId == iID
 						select g;
 
@@ -658,7 +608,6 @@ namespace InkBall.Module.Model
 						//$sQuery = "call InkBallPlayerUpdate({$this->GetGameID()}, {$this->GetPlayer()->GetPlayerID()}, null, null, {$this->GetPlayer()->GetLossCount()}, null)";
 						game.GetPlayer().iLossCount = game.GetPlayer().iLossCount + 1;
 
-						//$sQuery = "call InkBallPlayerUpdate({$this->GetGameID()}, {$this->GetOtherPlayer()->GetPlayerID()}, null, {$this->GetOtherPlayer()->GetWinCount()}, null, null)";
 						game.GetOtherPlayer().iWinCount = game.GetOtherPlayer().iWinCount + 1;
 					}
 
@@ -761,9 +710,7 @@ namespace InkBall.Module.Model
 			return winningPlayerID;
 		}
 
-		public async Task<IEnumerable<InkBallGame>> GetGamesForRegistrationAsSelectTableRowsAsync(
-			//int? iGameID = null, int? iUserID = null, string sExternalUserId = null, bool? bShowOnlyActive = true,
-			CancellationToken token = default)
+		public async Task<IEnumerable<InkBallGame>> GetGamesForRegistrationAsSelectTableRowsAsync(CancellationToken token = default)
 		{
 
 			var query = from ig in InkBallGame
@@ -771,14 +718,7 @@ namespace InkBall.Module.Model
 							.ThenInclude(u1 => u1.User)
 						.Include(ip2 => ip2.Player2)
 							.ThenInclude(u2 => u2.User)
-						where //(!iGameID.HasValue || ig.iId == iGameID.Value) &&
-							(//!bShowOnlyActive.HasValue ||
-								(//bShowOnlyActive.Value == true &&
-								(ActiveVisibleGameStates.Contains(ig.GameState))))
-						//&& (!iUserID.HasValue ||
-						//	(iUserID.Value == ig.Player1.iUserId || (ig.Player2.iUserId.HasValue && iUserID == ig.Player2.iUserId)))
-						//&& (string.IsNullOrEmpty(sExternalUserId) ||
-						//	(sExternalUserId == ig.Player1.User.sExternalId || (ig.Player2.iUserId.HasValue && sExternalUserId == ig.Player2.User.sExternalId)))
+						where ActiveVisibleGameStates.Contains(ig.GameState)
 						orderby ig.iId
 						select ig;
 
@@ -787,73 +727,89 @@ namespace InkBall.Module.Model
 
 		private async Task<IEnumerable<InkBallPoint>> GetPointsFromDatabaseAsync(int iGameID, CancellationToken token = default)
 		{
-			var query = from ip in InkBallPoint
+			var query = from ip in InkBallPoint.AsNoTracking()
 						where ip.iGameId == iGameID
 						select ip;
 
 			return await query.ToArrayAsync(token);
 		}
 
-		/*private static InkBallPath LoadPointsInPathFromRelationTable(InkBallPath path)
+		private static InkBallPath LoadPointsInPathFromJson(InkBallPath path,
+			Action<InkBallPath, InkBallPathViewModel> jsonPathHandler,
+			Action<InkBallPath, InkBallPathViewModel> createPathPointCollectionHandler)
 		{
-			path.InkBallPointsInPath = path.InkBallPointsInPath.OrderBy(o => o.Order).ToArray();
+			var from_json = JsonSerializer.Deserialize<InkBallPathViewModel>(path.PointsAsString);
 
-			return path;
-		}*/
+			jsonPathHandler(path, from_json);
 
-		private static InkBallPath LoadPointsInPathFromJson(InkBallPath path)
-		{
-			path.InkBallPoint = JsonSerializer.Deserialize<InkBallPathViewModel>(path.PointsAsString)
-				.InkBallPoint.Select(c => new InkBallPoint
-				{
-					iId = c.iId,
-					iGameId = c.iGameId,
-					iPlayerId = c.iPlayerId,
-					iX = c.iX,
-					iY = c.iY,
-					Status = c.Status,
-					iEnclosingPathId = c.iEnclosingPathId
-				}).ToList();
+			createPathPointCollectionHandler(path, from_json);
 
 			return path;
 		}
 
-		protected internal async Task<IEnumerable<InkBallPath>> GetPathsFromDatabaseAsync(int iGameID, bool deserializeJsonPath,
-			CancellationToken token = default)
+		protected internal async Task<IEnumerable<InkBallPath>> GetPathsFromDatabaseAsync(int iGameID, bool reserializeJsonPath,
+			bool createPathPointCollection, CancellationToken token = default)
 		{
-			if (deserializeJsonPath)
-			{
-				var paths = await InkBallPath.AsNoTracking()
-					//.Include(x => x.InkBallPointsInPath)//uncomment for LoadPointsInPathFromRelationTable method
-					.Where(pa => pa.iGameId == iGameID)
-					// .Select(m => LoadPointsInPathFromRelationTable(m))
-					.Select(m => LoadPointsInPathFromJson(m))
-					.ToListAsync(token);
+			///Detect type of operation to pre-perform on paths:
+			/// - reconstruct full JSON path or not
+			/// - construct points collection form string point represetation or not
+			Action<InkBallPath, InkBallPathViewModel> jsonPath_Handler = reserializeJsonPath ?
+				jsonPath_HandlerImpl : (_, _) => { /* dummy empty body*/ };
+			Action<InkBallPath, InkBallPathViewModel> createPathPointCollection_Handler = createPathPointCollection ?
+				createPathPointCollection_HandlerImpl : (_, _) => { /* dummy empty body*/ };
 
-				return paths;
-			}
-			else
+			var paths = await InkBallPath.AsNoTracking()
+				 .Where(pa => pa.iGameId == iGameID)
+				 .Select(m => LoadPointsInPathFromJson(m, jsonPath_Handler, createPathPointCollection_Handler))
+				 .ToListAsync(token);
+
+			return paths;
+
+			//
+			// private functions
+			//
+			///Reconstruct full JSON path 
+			static void jsonPath_HandlerImpl(InkBallPath path, InkBallPathViewModel fromJson)
 			{
-				return await InkBallPath.AsNoTracking()
-					//.Include(x => x.InkBallPointsInPath)//uncomment for LoadPointsInPathFromRelationTable method
-					.Where(pa => pa.iGameId == iGameID)
-					// .Select(m => LoadPointsInPathFromRelationTable(m))
-					.ToListAsync(token);
+				fromJson.iId = path.iId;
+				fromJson.iGameId = 0;
+				fromJson.iPlayerId = path.iPlayerId;
+
+				//var reserialized = JsonSerializer.Serialize(fromJson, new JsonSerializerOptions { IgnoreNullValues = true });
+				var reserialized = JsonSerializer.Serialize(fromJson, _ignoreDefaultsSerializerOptions);
+
+				path.PointsAsString = reserialized;
+			}
+
+			///Construct points collection form string point represetation
+			static void createPathPointCollection_HandlerImpl(InkBallPath path, InkBallPathViewModel fromJson)
+			{
+				path.InkBallPoint = fromJson
+					.InkBallPoint.Select(c => new InkBallPoint
+					{
+						//iId = c.iId,
+						//iGameId = c.iGameId,
+						//iPlayerId = c.iPlayerId,
+						iX = c.iX,
+						iY = c.iY,
+						Status = c.Status,
+						iEnclosingPathId = path.iId
+					}).ToList();
 			}
 		}
 
 		public async Task<(IEnumerable<InkBallPath> Paths, IEnumerable<InkBallPoint> Points)> LoadPointsAndPathsAsync(int iGameID,
-			CancellationToken token = default, bool deserializeJsonPath = true)
+			CancellationToken token = default, bool reserializeJsonPath = true, bool createPathPointCollection = false)
 		{
 			var points = await GetPointsFromDatabaseAsync(iGameID, token);
-			var paths = await GetPathsFromDatabaseAsync(iGameID, deserializeJsonPath, token);
+			var paths = await GetPathsFromDatabaseAsync(iGameID, reserializeJsonPath, createPathPointCollection, token);
 
 			return (paths, points);
 		}
 
 		public async Task<IEnumerable<(int, int?, string, int, int, int, int)>> GetPlayerStatisticTableAsync()
 		{
-			var query = this.InkBallPlayer//.Include(u => u.User)
+			var query = this.InkBallPlayer
 				.Select(ip => ValueTuple.Create(
 							ip.iId,
 							ip.iUserId,

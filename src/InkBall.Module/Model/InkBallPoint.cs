@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace InkBall.Module.Model
@@ -12,12 +13,25 @@ namespace InkBall.Module.Model
 		bool BelongsToCPU { get; }
 	}
 
-	public interface ILastMoveTimestamp
+	interface ILastMoveTimestamp
 	{
 		/// <summary>
 		/// Last game move timestamp as UTC ISO-8601 format
 		/// </summary>
 		DateTime? TimeStamp { get; }
+	}
+
+	interface IThinPoint
+	{
+		int iGameId { get; set; }
+		int iX { get; set; }
+		int iY { get; set; }
+		InkBallPoint.StatusEnum Status { get; set; }
+	}
+
+	interface IThisSerializablePoint<T> where T : IThinPoint
+	{
+		string SerializeThin();
 	}
 
 	public interface IPoint : IBelongingToCPU
@@ -251,18 +265,35 @@ namespace InkBall.Module.Model
 
 		public InkBallPlayer Player { get; set; }
 
-		//public ICollection<InkBallPointsInPath> InkBallPointsInPath { get; set; }
-
 		public InkBallPoint()
 		{
-			// InkBallPointsInPath = new HashSet<InkBallPointsInPath>();
 		}
 	}
 
 	//[Serializable]
 	[MessagePackObject(true)]
-	public class InkBallPointViewModel : CommonPoint, IPoint, ILastMoveTimestamp
+	public sealed class InkBallPointViewModel : CommonPoint, IPoint, ILastMoveTimestamp,
+		IThinPoint, IThisSerializablePoint<InkBallPointViewModel>
 	{
+		//static readonly JsonSerializerOptions _ignoreNullJsonSerializerOptions = new JsonSerializerOptions { IgnoreNullValues = true };
+
+		/// <summary>
+		/// Helper for serialization only selected properties
+		/// </summary>
+		private sealed record ThinSerializedPoint : IThinPoint
+		{
+			public int iGameId { get; set; }
+
+			public int iX { get; set; }
+
+			public int iY { get; set; }
+
+			public InkBallPoint.StatusEnum Status { get; set; }
+
+			public ThinSerializedPoint(IThinPoint thinPoint)
+			=> (iGameId, iX, iY, Status) = (thinPoint.iGameId, thinPoint.iX, thinPoint.iY, thinPoint.Status);
+		}
+
 		public DateTime? TimeStamp { get; set; }
 
 		public InkBallPointViewModel()
@@ -293,6 +324,15 @@ namespace InkBall.Module.Model
 			this.iEnclosingPathId = point.iEnclosingPathId;
 
 			Debug.Assert(this.iId >= 0);
+		}
+
+		public string SerializeThin()
+		{
+			//string last_move = JsonSerializer.Serialize(this, _ignoreNullJsonSerializerOptions);
+			var thin_point = new ThinSerializedPoint(this);
+			string last_move = JsonSerializer.Serialize(thin_point);
+
+			return last_move;
 		}
 	}
 

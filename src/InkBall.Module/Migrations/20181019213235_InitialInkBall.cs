@@ -188,39 +188,6 @@ namespace InkBall.Module.Migrations
 						onDelete: ReferentialAction.Restrict);
 				});
 
-			//TODO: remove coz not needed anymore - points are stored inside InkBallPath.PointsAsString JSON field
-			/*migrationBuilder.CreateTable(
-				name: "InkBallPointsInPath",
-				columns: table => new
-				{
-					iId = table.Column<int>(nullable: false)
-						.Annotation("Sqlite:Autoincrement", true)
-						.Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
-						.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
-#if INCLUDE_ORACLE
-						.Annotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
-#endif
-						.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
-					iPathId = table.Column<int>(nullable: false),
-					iPointId = table.Column<int>(nullable: false),
-					Order = table.Column<int>(nullable: false, defaultValue: 0)
-				},
-				constraints: table =>
-				{
-					table.PrimaryKey("PK_InkBallPointsInPath", x => x.iId);
-					table.ForeignKey(
-						name: "InkBallPointsInPath_ibfk_1",
-						column: x => x.iPathId,
-						principalTable: "InkBallPath",
-						principalColumn: "iId",
-						onDelete: ReferentialAction.Restrict);
-					table.ForeignKey(
-						name: "InkBallPointsInPath_ibfk_2",
-						column: x => x.iPointId,
-						principalTable: "InkBallPoint",
-						principalColumn: "iId",
-						onDelete: ReferentialAction.Restrict);
-				});*/
 
 			migrationBuilder.CreateIndex(
 				name: "ByPlayer1",
@@ -262,17 +229,6 @@ namespace InkBall.Module.Migrations
 				table: "InkBallPoint",
 				column: "iPlayerID");
 
-			//TODO: remove coz not needed anymore - points are stored inside InkBallPath.PointsAsString JSON field
-			/*migrationBuilder.CreateIndex(
-				name: "ByPath",
-				table: "InkBallPointsInPath",
-				column: "iPathId");
-
-			migrationBuilder.CreateIndex(
-				name: "ByPoint",
-				table: "InkBallPointsInPath",
-				column: "iPointId");*/
-
 			migrationBuilder.CreateIndex(
 				name: "sExternalId",
 				table: "InkBallUsers",
@@ -282,10 +238,6 @@ namespace InkBall.Module.Migrations
 
 		protected override void Down(MigrationBuilder migrationBuilder)
 		{
-			//TODO: remove coz not needed anymore - points are stored inside InkBallPath.PointsAsString JSON field
-			// migrationBuilder.DropTable(
-			// 	name: "InkBallPointsInPath");
-
 			migrationBuilder.DropTable(
 				name: "InkBallPoint");
 

@@ -3,12 +3,24 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using MessagePack;
 using Microsoft.Extensions.Primitives;
 
 namespace InkBall.Module.Model
 {
+	interface IThinPath
+	{
+		string PointsAsString { get; set; }
+		string OwnedPointsAsString { get; set; }
+	}
+
+	interface IThisSerializablePath<T> where T : IThinPath
+	{
+		string SerializeThin();
+	}
+
 	public interface IPath<Point> : IBelongingToCPU
 		where Point : IPoint
 	{
@@ -115,52 +127,10 @@ namespace InkBall.Module.Model
 		public InkBallGame Game { get; set; }
 		public InkBallPlayer Player { get; set; }
 		public override ICollection<InkBallPoint> InkBallPoint { get; set; }
-		//public ICollection<InkBallPointsInPath> InkBallPointsInPath { get; set; }
 
 		public InkBallPath()
 		{
 			// InkBallPoint = new HashSet<InkBallPoint>();
-			// InkBallPointsInPath = new HashSet<InkBallPointsInPath>();
-		}
-
-		public static string GetPathsAsJavaScriptArrayForPageOld(IEnumerable<InkBallPath> paths)
-		{
-			StringBuilder builder = new StringBuilder("[", 300);
-			string comma = "";
-			foreach (var path in paths)
-			{
-				var points = path.InkBallPoint;
-				builder.AppendFormat("{0}[{1}\"", comma
-#if DEBUG
-				, $"/*ID={path.iId}*/"
-#else
-				, ""
-#endif
-				);
-
-				string space = string.Empty;
-				foreach (var point in points)
-				{
-#if DEBUG
-					builder.AppendFormat("{2}{0}/*x*/,{1}/*y*//*id={3}*/", point.iX, point.iY, space, point.iId);
-#else
-					builder.AppendFormat("{2}{0},{1}", point.iX, point.iY, space);
-#endif
-					space = " ";
-				}
-
-				builder.AppendFormat(
-#if DEBUG
-					"\",{0}/*playerID*/]",
-#else
-					"\",{0}]",
-#endif
-					path.iPlayerId);
-				comma = ",\r";
-			}
-			builder.Append(']');
-
-			return builder.ToString();
 		}
 
 		public static string GetPathsAsJavaScriptArrayForPage(IEnumerable<InkBallPath> paths)
@@ -185,7 +155,64 @@ namespace InkBall.Module.Model
 			return builder.ToString();
 		}
 
-		public static string GetPathsAsJavaScriptArrayForSignalROld(IEnumerable<InkBallPath> paths)
+		public static string GetPathsAsJavaScriptArrayForSignalR(IEnumerable<InkBallPath> paths)
+		{
+			StringBuilder builder = new StringBuilder("[", 300);
+			string comma = "";
+			foreach (var path in paths)
+			{
+				builder.Append(comma).Append(path.PointsAsString);
+
+				comma = ",";
+			}
+			builder.Append(']');
+
+			return builder.ToString();
+		}
+
+		#region Old code
+
+		//		public static string GetPathsAsJavaScriptArrayForPageOld(IEnumerable<InkBallPath> paths)
+		//		{
+		//			StringBuilder builder = new StringBuilder("[", 300);
+		//			string comma = "";
+		//			foreach (var path in paths)
+		//			{
+		//				var points = path.InkBallPoint;
+		//				builder.AppendFormat("{0}[{1}\"", comma
+		//#if DEBUG
+		//				, $"/*ID={path.iId}*/"
+		//#else
+		//				, ""
+		//#endif
+		//				);
+
+		//				string space = string.Empty;
+		//				foreach (var point in points)
+		//				{
+		//#if DEBUG
+		//					builder.AppendFormat("{2}{0}/*x*/,{1}/*y*//*id={3}*/", point.iX, point.iY, space, point.iId);
+		//#else
+		//					builder.AppendFormat("{2}{0},{1}", point.iX, point.iY, space);
+		//#endif
+		//					space = " ";
+		//				}
+
+		//				builder.AppendFormat(
+		//#if DEBUG
+		//					"\",{0}/*playerID*/]",
+		//#else
+		//					"\",{0}]",
+		//#endif
+		//					path.iPlayerId);
+		//				comma = ",\r";
+		//			}
+		//			builder.Append(']');
+
+		//			return builder.ToString();
+		//		}
+
+		/*public static string GetPathsAsJavaScriptArrayForSignalROld(IEnumerable<InkBallPath> paths)
 		{
 			StringBuilder builder = new StringBuilder("[", 300);
 			string comma = "";
@@ -207,28 +234,29 @@ namespace InkBall.Module.Model
 			builder.Append(']');
 
 			return builder.ToString();
-		}
+		}*/
 
-		public static string GetPathsAsJavaScriptArrayForSignalR(IEnumerable<InkBallPath> paths)
-		{
-			StringBuilder builder = new StringBuilder("[", 300);
-			string comma = "";
-			foreach (var path in paths)
-			{
-				builder.Append(comma).Append(path.PointsAsString);
-
-				comma = ",";
-			}
-			builder.Append(']');
-
-			return builder.ToString();
-		}
+		#endregion Old code
 	}
 
 	[MessagePackObject(true)]
-	public class InkBallPathViewModel : CommonPath<InkBallPointViewModel>, ILastMoveTimestamp
+	public sealed class InkBallPathViewModel : CommonPath<InkBallPointViewModel>, ILastMoveTimestamp,
+		IThinPath, IThisSerializablePath<InkBallPathViewModel>
 	{
 		delegate void ActionRef<T1, T2, T3, T4>(ref T1 arg1, ref T2 arg2, ref T3 arg3, ref T4 arg4);
+
+		/// <summary>
+		/// Helper for serialization only selected properties
+		/// </summary>
+		private sealed record ThinSerializedPath : IThinPath
+		{
+			public string PointsAsString { get; set; }
+
+			public string OwnedPointsAsString { get; set; }
+
+			public ThinSerializedPath(IThinPath thinPath)
+				=> (PointsAsString, OwnedPointsAsString) = (thinPath.PointsAsString, thinPath.OwnedPointsAsString);
+		}
 
 		#region Fields
 
@@ -269,7 +297,7 @@ namespace InkBall.Module.Model
 		}
 
 		///Oponent points enclosed within this users path
-		public ICollection<InkBallPointViewModel> GetOwnedPoints(InkBall.Module.Model.InkBallPoint.StatusEnum ownedStatus, int otherPlayerID)
+		public ICollection<InkBallPointViewModel> GetOwnedPoints(InkBallPoint.StatusEnum ownedStatus, int otherPlayerID)
 		{
 			if (!(_ownedPoints?.Count > 0) && !string.IsNullOrEmpty(OwnedPointsAsString))
 			{
@@ -364,7 +392,7 @@ namespace InkBall.Module.Model
 			return collection;
 		}
 
-		void EnsureContinuityOfPointsOnPath(ref int prevX, ref int prevY, ref int x, ref int y)
+		static void EnsureContinuityOfPointsOnPath(ref int prevX, ref int prevY, ref int x, ref int y)
 		{
 			int diff_x = Math.Abs(prevX - x), diff_y = Math.Abs(prevY - y);
 
@@ -408,6 +436,20 @@ namespace InkBall.Module.Model
 			}
 
 			Debug.Assert(this.iId >= 0);
+		}
+
+		public string SerializeThin()
+		{
+			var thin_path = new ThinSerializedPath(this);
+
+			//string last_move_and_path_json = JsonSerializer.Serialize(thin_path, new JsonSerializerOptions
+			//{
+			//	//IgnoreNullValues = true,
+			//	DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault
+			//});
+			string last_move_and_path_json = JsonSerializer.Serialize(thin_path);
+
+			return last_move_and_path_json;
 		}
 	}
 }

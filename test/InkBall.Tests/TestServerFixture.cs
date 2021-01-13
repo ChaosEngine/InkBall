@@ -34,8 +34,8 @@ namespace IntegrationTests
 		[ProtectedPersonalData]
 		public string Name { get; set; }
 
-		[PersonalData]
-		public int Age { get; set; }
+		//[PersonalData]
+		//public int Age { get; set; }
 
 		[PersonalData]
 		[NotMapped]
@@ -333,7 +333,7 @@ namespace IntegrationTests
 			usersDb.Users.AddRange(new TestingApplicationUser
 			{
 				Id = "1",
-				Age = 18,
+				//Age = 18,
 				Email = "test.user1@gmail.com",
 				NormalizedEmail = "TEST.USER1@GMAIL.COM",
 				NormalizedUserName = "TEST.USER1@GMAIL.COM",
@@ -349,7 +349,7 @@ namespace IntegrationTests
 			new TestingApplicationUser
 			{
 				Id = "2",
-				Age = 20,
+				//Age = 20,
 				Email = "test.user2@gmail.com",
 				NormalizedEmail = "TEST.USER2@GMAIL.COM",
 				NormalizedUserName = "TEST.USER2@GMAIL.COM",
@@ -408,7 +408,7 @@ namespace IntegrationTests
 						{
 							UserName = "alice.testing@example.org",
 							Email = "alice.testing@example.org",
-							Age = 20,
+							//Age = 20,
 							UserSettingsJSON = "{}",
 							Name = "Alice Testing"
 						},
@@ -418,7 +418,7 @@ namespace IntegrationTests
 						{
 							UserName = "bob.testing@example.org",
 							Email = "bob.testing@example.org",
-							Age = 18,
+							//Age = 18,
 							UserSettingsJSON = "{}",
 							Name = "Bob Testing"
 						},

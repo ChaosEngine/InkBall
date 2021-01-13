@@ -77,7 +77,7 @@ namespace InkBall.Module.Pages
 								.Include(p1 => p1.Player1).ThenInclude(x => x.User)
 								.Include(p2 => p2.Player2).ThenInclude(x => x.User)
 							where (g.iPlayer1Id == player.iId || g.iPlayer2Id == player.iId)
-							&& (GamesContext.ActiveVisibleGameStates.Contains(g.GameState))
+							&& GamesContext.ActiveVisibleGameStates.Contains(g.GameState)
 							select g;
 				var dbGame = await query.FirstOrDefaultAsync(token);
 				if (dbGame != null)

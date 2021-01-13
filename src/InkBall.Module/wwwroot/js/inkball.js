@@ -1,5 +1,5 @@
 /*eslint no-unused-vars: ["error", { "varsIgnorePattern": "InkBallGame" }]*/
-/*global signalR, gameOptions*/
+/*global signalR*/
 "use strict";
 
 let SHRD, LocalLog, LocalError, StatusEnum, hasDuplicates, pnpoly2, sortPointsClockwise, Sleep, isESModuleSupport;
@@ -706,9 +706,12 @@ class InkBallGame {
 		this.g_SignalRConnection.on("ServerToClientPlayerWin", function (win) {
 			let encodedMsg = WinCommand.Format(win);
 
-			let li = document.createElement("li");
-			li.innerHTML = `<strong class="text-warning">${encodedMsg}</strong>`;
-			document.querySelector(this.m_sMsgListSel).appendChild(li);
+			const msg_lst = document.querySelector(this.m_sMsgListSel);
+			if (msg_lst !== null) {
+				let li = document.createElement("li");
+				li.innerHTML = `<strong class="text-warning">${encodedMsg}</strong>`;
+				msg_lst.appendChild(li);
+			}
 
 			this.ReceivedWinProcessing(win);
 			this.NotifyBrowser('We have a winner', encodedMsg);
@@ -1135,8 +1138,8 @@ class InkBallGame {
 
 			for (const unpacked of packedPaths) {
 				//const unpacked = JSON.parse(packed.Serialized);
-				if (unpacked.iGameId !== this.g_iGameID)
-					throw new Error("Bad game from path!");
+				//if (unpacked.iGameId !== this.g_iGameID)
+				//	throw new Error("Bad game from path!");
 
 				await this.SetPath(unpacked.PointsAsString/*points*/, this.m_bIsPlayingWithRed,
 					unpacked.iPlayerId === this.g_iPlayerID/*isMainPlayerPoints*/, unpacked.iId/*real DB id*/);
@@ -2431,7 +2434,7 @@ class InkBallGame {
 					document.querySelector(ddlTestActions[i++]).onclick = this.OnTestWorkerify.bind(this);
 
 				//disable or even delete chat functionality, coz we're not going to chat with CPU bot
-				const chatSection = document.getElementById('chatSection');
+				const chatSection = document.querySelector(this.m_sMsgListSel).parentElement;
 				while (chatSection.lastElementChild)
 					chatSection.removeChild(chatSection.lastElementChild);
 
@@ -2905,7 +2908,7 @@ class InkBallGame {
 
 /******** run code and events ********/
 window.addEventListener('load', async function () {
-	//const gameOptions = this.window.gameOptions;
+	const gameOptions = window.gameOptions;
 
 	const inkBallHubName = gameOptions.inkBallHubName;
 	const iGameID = gameOptions.iGameID;
@@ -2917,7 +2920,7 @@ window.addEventListener('load', async function () {
 	const bPlayingWithRed = gameOptions.bPlayingWithRed;
 	const bPlayerActive = gameOptions.bPlayerActive;
 	const gameType = gameOptions.gameType;
-	const protocol = gameOptions.protocol;
+	const protocol = gameOptions.isMessagePackProtocol === true ? new signalR.protocols.msgpack.MessagePackHubProtocol() : new signalR.JsonHubProtocol();
 	const servTimeoutMillis = gameOptions.servTimeoutMillis;
 	const isReadonly = gameOptions.isReadonly;
 	const pathAfterPointDrawAllowanceSecAmount = gameOptions.pathAfterPointDrawAllowanceSecAmount;

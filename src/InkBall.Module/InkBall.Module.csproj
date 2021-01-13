@@ -5,7 +5,7 @@
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
     <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
     <LangVersion>latest</LangVersion>
-    <Version>1.0.1.6</Version>
+    <Version>1.0.1.9</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -16,35 +16,40 @@
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <!--<PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.2.0" />-->
-    <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="5.0.1" />
-    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="5.0.1" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="5.0.2" />
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="5.0.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.2" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="5.0.1" />
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="5.0.0-alpha.2" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="5.0.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="5.0.2" />
 		<PackageReference Include="Oracle.EntityFrameworkCore" Version="3.19.80" Condition="$(DefineConstants.Contains('INCLUDE_ORACLE'))" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="5.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="5.0.2" />
 		<PackageReference Include="MessagePack" Version="2.2.85" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(Configuration)'=='Debug'">
     <EmbeddedResource Include="wwwroot\css\inkball.css" />
-    <EmbeddedResource Include="wwwroot\css\inkball.scss" />
-    <EmbeddedResource Include="wwwroot\img\*" />
+    <EmbeddedResource Include="wwwroot\img\homescreen*" />
     <EmbeddedResource Include="wwwroot\js\inkball.js" />
     <EmbeddedResource Include="wwwroot\js\shared.js" />
     <EmbeddedResource Include="wwwroot\js\*Bundle.js" />
   </ItemGroup>
   <ItemGroup Condition="'$(Configuration)'!='Debug'">
     <EmbeddedResource Include="wwwroot\css\inkball.min.css" />
-    <EmbeddedResource Include="wwwroot\img\*" />
+    <EmbeddedResource Include="wwwroot\img\homescreen*" />
     <EmbeddedResource Include="wwwroot\js\inkball.min.js" />
     <EmbeddedResource Include="wwwroot\js\shared.min.js" />
     <EmbeddedResource Include="wwwroot\js\*Min.Bundle.js" />
     <EmbeddedResource Include="wwwroot\js\*Bundle.min.js" />
     <EmbeddedResource Include="wwwroot\js\AIWorker.Bundle.js" />
     <EmbeddedResource Include="wwwroot\js\AIWorker.PolyfillBundle.js" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="wwwroot\css\*.scss" CopyToPublishDirectory="Never" />
+    <Content Update="wwwroot\img\grid.svg" CopyToPublishDirectory="Never" />
+    <Content Update="wwwroot\img\grid80.png" CopyToPublishDirectory="Never" />
   </ItemGroup>
 
 </Project>
