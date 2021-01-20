@@ -45,9 +45,6 @@ p.inkgame {
   height: calc(1em * 64 * 1); }
 
 /**********inkgames(list)*********/
-.inkgames.grid-striped .row:nth-of-type(odd) {
-  background-color: rgba(0, 0, 0, 0.05); }
-
 .inkgames .table-responsive {
   overflow-y: auto;
   max-height: 75vh; }
