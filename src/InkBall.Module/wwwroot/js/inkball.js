@@ -669,6 +669,8 @@ class InkBallGame {
 			this.m_iOtherPlayerId = iOtherPlayerId;
 			const encodedMsg = PlayerJoiningCommand.Format(join);
 
+			document.querySelector('.msgchat').dataset.otherplayerid = iOtherPlayerId;
+
 			let li = document.createElement("li");
 			li.innerHTML = `<strong class="text-primary">${encodedMsg}</strong>`;
 			document.querySelector(this.m_sMsgListSel).appendChild(li);
@@ -2444,9 +2446,8 @@ class InkBallGame {
 					document.querySelector(ddlTestActions[i++]).onclick = this.OnTestWorkerify.bind(this);
 
 				//disable or even delete chat functionality, coz we're not going to chat with CPU bot
-				const chatSection = document.querySelector(this.m_sMsgListSel).parentElement;
-				while (chatSection.lastElementChild)
-					chatSection.removeChild(chatSection.lastElementChild);
+				//const chatSection = document.querySelector(this.m_sMsgListSel).parentElement;
+				//chatSection.parentElement.removeChild(chatSection);
 
 				//if (!this.m_bIsPlayerActive)
 				//	this.StartCPUCalculation();
@@ -2925,7 +2926,7 @@ window.addEventListener('load', async function () {
 	document.getElementById('gameID').innerHTML = iGameID;
 	document.querySelector(".container.inkgame form > input[type='hidden'][name='GameID']").value = iGameID;
 	const iPlayerID = gameOptions.iPlayerID;
-	const iOtherPlayerID = gameOptions.iOtherPlayerID;
+	const iOtherPlayerID = parseInt(document.querySelector('.msgchat').dataset.otherplayerid) || null;
 	document.getElementById('playerID').innerHTML = iPlayerID;
 	const bPlayingWithRed = gameOptions.bPlayingWithRed;
 	const bPlayerActive = gameOptions.bPlayerActive;

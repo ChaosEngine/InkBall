@@ -44,6 +44,9 @@ p.inkgame {
   width: calc(15px * 64 * 1);
   height: calc(1em * 64 * 1); }
 
+[data-otherplayerid="-1"], [data-otherplayerid=""] {
+  display: none; }
+
 /**********inkgames(list)*********/
 .inkgames .table-responsive {
   overflow-y: auto;
