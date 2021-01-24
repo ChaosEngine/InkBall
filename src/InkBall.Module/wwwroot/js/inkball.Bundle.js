@@ -3511,304 +3511,103 @@ var InkBallGame = /*#__PURE__*/function () {
       });
       document.querySelector(sSelector2Set).innerHTML = 'SVGs by tags: ' + aggregated;
     }
+    /**
+     * Worker entry point - asynced version
+     * @param {any} initFunction - init params callback to be given a worker as 1st param
+     */
+
   }, {
     key: "SetupAIWorker",
-    value: function SetupAIWorker() {
-      if (this.Worker === null) {
-        this.Worker = new Worker(isESModuleSupport() ? '../js/AIWorker.Bundle.js' : '../js/AIWorker.PolyfillBundle.js' //, { type: 'module' }
-        );
+    value: function () {
+      var _SetupAIWorker = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee23(initFunction) {
+        var _this14 = this;
 
-        this.Worker.onmessage = /*#__PURE__*/function () {
-          var _ref8 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee23(e) {
-            var _this14 = this;
+        return regeneratorRuntime.wrap(function _callee23$(_context23) {
+          while (1) {
+            switch (_context23.prev = _context23.next) {
+              case 0:
+                return _context23.abrupt("return", new Promise(function (resolve, reject) {
+                  if (_this14.Worker === null) {
+                    _this14.Worker = new Worker(isESModuleSupport() ? '../js/AIWorker.Bundle.js' : '../js/AIWorker.PolyfillBundle.js' //, { type: 'module' }
+                    );
 
-            var data, convex_hull, cw_sorted_verts, rand_color, _iterator10, _step10, vert, x, y, view_x, view_y, pt, free_human_player_points, _iterator11, _step11, _pt2, _x28, _y3, _view_x, _view_y, _pt3, tab, i, new_cycl, str, trailing_points, _rand_color, _cw_sorted_verts, _iterator12, _step12, _vert, _x27, _y2, _pt, tmp, comma, _iterator13, _step13, possible_intercept, pt1, pts2reset;
+                    _this14.Worker.onerror = function () {
+                      reject(new Error('no data'));
+                    };
 
-            return regeneratorRuntime.wrap(function _callee23$(_context23) {
-              while (1) {
-                switch (_context23.prev = _context23.next) {
-                  case 0:
-                    data = e.data;
-                    _context23.t0 = data.operation;
-                    _context23.next = _context23.t0 === "BUILD_GRAPH" ? 4 : _context23.t0 === "CONCAVEMAN" ? 6 : _context23.t0 === "MARK_ALL_CYCLES" ? 34 : 79;
-                    break;
+                    _this14.Worker.onmessage = function (e) {
+                      var data = e.data;
 
-                  case 4:
-                    LocalLog('Message received from worker ' + data);
-                    return _context23.abrupt("break", 81);
+                      switch (data.operation) {
+                        case "BUILD_GRAPH":
+                        case "CONCAVEMAN":
+                        case "MARK_ALL_CYCLES":
+                          resolve(data);
+                          break;
 
-                  case 6:
-                    if (!(data.convex_hull && data.convex_hull.length > 0)) {
-                      _context23.next = 33;
-                      break;
-                    }
+                        default:
+                          LocalError("unknown params.operation = ".concat(data.operation));
+                          reject(new Error("unknown params.operation = ".concat(data.operation)));
+                          break;
+                      } //this.Worker.terminate();
 
-                    convex_hull = data.convex_hull;
-                    this.SvgVml.CreatePolyline(6, convex_hull.map(function (fnd) {
-                      return parseInt(fnd[0]) * this.m_iGridSizeX + ',' + parseInt(fnd[1]) * this.m_iGridSizeY;
-                    }.bind(this)).join(' '), 'green');
-                    LocalLog("convex_hull = ".concat(convex_hull));
-                    cw_sorted_verts = data.cw_sorted_verts;
-                    rand_color = RandomColor();
-                    _iterator10 = _createForOfIteratorHelper(cw_sorted_verts);
-                    _context23.prev = 13;
+                    };
+                  }
 
-                    _iterator10.s();
+                  if (initFunction) initFunction(_this14.Worker);
+                }));
 
-                  case 15:
-                    if ((_step10 = _iterator10.n()).done) {
-                      _context23.next = 25;
-                      break;
-                    }
+              case 1:
+              case "end":
+                return _context23.stop();
+            }
+          }
+        }, _callee23);
+      }));
 
-                    vert = _step10.value;
-                    //const { x: view_x, y: view_y } = vertices[vert].GetPosition();
-                    x = vert.x, y = vert.y;
-                    view_x = x * this.m_iGridSizeX, view_y = y * this.m_iGridSizeY; //const line_pts = Array.from(document.querySelectorAll(`svg > line[x1="${view_x}"][y1="${view_y}"]`))
-                    //	.concat(Array.from(document.querySelectorAll(`svg > line[x2="${view_x}"][y2="${view_y}"]`)));
-                    //line_pts.forEach(line => {
-                    //	line.SetColor(rand_color);
-                    //});
-
-                    pt = document.querySelector("svg > circle[cx=\"".concat(view_x, "\"][cy=\"").concat(view_y, "\"]"));
-
-                    if (pt) {
-                      pt.SetStrokeColor(rand_color);
-                      pt.SetFillColor(rand_color);
-                      pt.SetZIndex(100);
-                      pt.setAttribute('r', "6");
-                    }
-
-                    _context23.next = 23;
-                    return Sleep(50);
-
-                  case 23:
-                    _context23.next = 15;
-                    break;
-
-                  case 25:
-                    _context23.next = 30;
-                    break;
-
-                  case 27:
-                    _context23.prev = 27;
-                    _context23.t1 = _context23["catch"](13);
-
-                    _iterator10.e(_context23.t1);
-
-                  case 30:
-                    _context23.prev = 30;
-
-                    _iterator10.f();
-
-                    return _context23.finish(30);
-
-                  case 33:
-                    return _context23.abrupt("break", 81);
-
-                  case 34:
-                    if (!(data.cycles && data.free_human_player_points && data.free_human_player_points.length > 0)) {
-                      _context23.next = 78;
-                      break;
-                    }
-
-                    //gather free human player points that could be intercepted.
-                    free_human_player_points = []; //const sHumanColor = this.COLOR_RED;
-
-                    _iterator11 = _createForOfIteratorHelper(data.free_human_player_points);
-
-                    try {
-                      for (_iterator11.s(); !(_step11 = _iterator11.n()).done;) {
-                        _pt2 = _step11.value;
-                        //if (pt !== undefined && pt.GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.GetStatus()) {
-                        _x28 = _pt2.x, _y3 = _pt2.y;
-                        _view_x = _x28 * this.m_iGridSizeX, _view_y = _y3 * this.m_iGridSizeY; //	if (false === await this.IsPointOutsideAllPaths(x, y))
-                        //		continue;
-                        //check if really exists
-
-                        _pt3 = document.querySelector("svg > circle[cx=\"".concat(_view_x, "\"][cy=\"").concat(_view_y, "\"]"));
-                        if (_pt3) free_human_player_points.push({
-                          x: _x28,
-                          y: _y3
-                        }); //}
-                      }
-                    } catch (err) {
-                      _iterator11.e(err);
-                    } finally {
-                      _iterator11.f();
-                    }
-
-                    tab = []; // traverse through all the vertices with same cycle
-
-                    i = 0;
-
-                  case 40:
-                    if (!(i <= data.cyclenumber)) {
-                      _context23.next = 77;
-                      break;
-                    }
-
-                    new_cycl = data.cycles[i]; //get cycle
-
-                    if (!(new_cycl && new_cycl.cycl && new_cycl.cycl.length > 0 && new_cycl.cw_sorted_verts)) {
-                      _context23.next = 74;
-                      break;
-                    }
-
-                    //some checks
-                    // Print the i-th cycle
-                    str = "Cycle Number ".concat(i, ": "), trailing_points = [];
-                    _rand_color = 'var(--indigo)';
-                    _cw_sorted_verts = new_cycl.cw_sorted_verts; //display which cycle we are dealing with
-
-                    _iterator12 = _createForOfIteratorHelper(_cw_sorted_verts);
-                    _context23.prev = 47;
-
-                    _iterator12.s();
-
-                  case 49:
-                    if ((_step12 = _iterator12.n()).done) {
-                      _context23.next = 58;
-                      break;
-                    }
-
-                    _vert = _step12.value;
-                    _x27 = _vert.x, _y2 = _vert.y;
-                    _pt = document.querySelector("svg > circle[cx=\"".concat(_x27 * this.m_iGridSizeX, "\"][cy=\"").concat(_y2 * this.m_iGridSizeY, "\"]"));
-
-                    if (_pt) {
-                      //again some basic checks
-                      str += "(".concat(_x27, ",").concat(_y2, ")");
-
-                      _pt.SetStrokeColor(_rand_color);
-
-                      _pt.SetFillColor(_rand_color);
-
-                      _pt.setAttribute("r", "6");
-                    }
-
-                    _context23.next = 56;
-                    return Sleep(50);
-
-                  case 56:
-                    _context23.next = 49;
-                    break;
-
-                  case 58:
-                    _context23.next = 63;
-                    break;
-
-                  case 60:
-                    _context23.prev = 60;
-                    _context23.t2 = _context23["catch"](47);
-
-                    _iterator12.e(_context23.t2);
-
-                  case 63:
-                    _context23.prev = 63;
-
-                    _iterator12.f();
-
-                    return _context23.finish(63);
-
-                  case 66:
-                    //find for all free_human_player_points which cycle might interepct it (surrounds)
-                    //only convex, NOT concave :-(
-                    tmp = '', comma = '';
-                    _iterator13 = _createForOfIteratorHelper(free_human_player_points);
-
-                    try {
-                      for (_iterator13.s(); !(_step13 = _iterator13.n()).done;) {
-                        possible_intercept = _step13.value;
-
-                        if (false !== pnpoly2(_cw_sorted_verts, possible_intercept.x, possible_intercept.y)) {
-                          tmp += "".concat(comma, "(").concat(possible_intercept.x, ",").concat(possible_intercept.y, ")");
-                          pt1 = document.querySelector("svg > circle[cx=\"".concat(possible_intercept.x * this.m_iGridSizeX, "\"][cy=\"").concat(possible_intercept.y * this.m_iGridSizeY, "\"]"));
-
-                          if (pt1) {
-                            pt1.SetStrokeColor('var(--yellow)');
-                            pt1.SetFillColor('var(--yellow)');
-                            pt1.setAttribute("r", "6");
-                          }
-
-                          comma = ',';
-                        }
-                      } //gaterhing of some data and console printing
-
-                    } catch (err) {
-                      _iterator13.e(err);
-                    } finally {
-                      _iterator13.f();
-                    }
-
-                    trailing_points.unshift(str);
-                    tab.push(trailing_points); //log...
-
-                    LocalLog(str + (tmp !== '' ? " possible intercepts: ".concat(tmp) : '')); //...and clear
-
-                    pts2reset = Array.from(document.querySelectorAll("svg > circle[fill=\"".concat(_rand_color, "\"][r=\"6\"]")));
-                    pts2reset.forEach(function (pt) {
-                      pt.SetStrokeColor(_this14.COLOR_BLUE);
-                      pt.SetFillColor(_this14.COLOR_BLUE);
-                      pt.setAttribute("r", "4");
-                    });
-
-                  case 74:
-                    i++;
-                    _context23.next = 40;
-                    break;
-
-                  case 77:
-                    return _context23.abrupt("return", tab);
-
-                  case 78:
-                    return _context23.abrupt("break", 81);
-
-                  case 79:
-                    LocalError("unknown params.operation = ".concat(data.operation));
-                    return _context23.abrupt("break", 81);
-
-                  case 81:
-                  case "end":
-                    return _context23.stop();
-                }
-              }
-            }, _callee23, this, [[13, 27, 30, 33], [47, 60, 63, 66]]);
-          }));
-
-          return function (_x26) {
-            return _ref8.apply(this, arguments);
-          };
-        }().bind(this);
+      function SetupAIWorker(_x26) {
+        return _SetupAIWorker.apply(this, arguments);
       }
-    }
+
+      return SetupAIWorker;
+    }()
   }, {
     key: "OnTestBuildCurrentGraph",
     value: function () {
       var _OnTestBuildCurrentGraph = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee24(event) {
-        var serialized_points, serialized_paths;
+        var _this15 = this;
+
+        var data;
         return regeneratorRuntime.wrap(function _callee24$(_context24) {
           while (1) {
             switch (_context24.prev = _context24.next) {
               case 0:
                 event.preventDefault(); //LocalLog(await this.BuildGraph());
 
-                this.SetupAIWorker();
-                serialized_points = Array.from(this.m_Points.store.entries()).map(function (arr) {
-                  return {
-                    key: arr[0],
-                    value: arr[1].Serialize()
-                  };
+                _context24.next = 3;
+                return this.SetupAIWorker(function (worker) {
+                  var serialized_points = Array.from(_this15.m_Points.store.entries()).map(function (arr) {
+                    return {
+                      key: arr[0],
+                      value: arr[1].Serialize()
+                    };
+                  });
+
+                  var serialized_paths = _this15.m_Lines.store.map(function (pa) {
+                    return pa.Serialize();
+                  });
+
+                  worker.postMessage({
+                    operation: "BUILD_GRAPH",
+                    state: _this15.GetGameStateForIndexedDb(),
+                    points: serialized_points,
+                    paths: serialized_paths
+                  });
                 });
-                serialized_paths = this.m_Lines.store.map(function (pa) {
-                  return pa.Serialize();
-                });
-                this.Worker.postMessage({
-                  operation: "BUILD_GRAPH",
-                  state: this.GetGameStateForIndexedDb(),
-                  points: serialized_points,
-                  paths: serialized_paths
-                });
+
+              case 3:
+                data = _context24.sent;
+                LocalLog('Message received from worker ' + data);
 
               case 5:
               case "end":
@@ -3818,7 +3617,7 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee24, this);
       }));
 
-      function OnTestBuildCurrentGraph(_x29) {
+      function OnTestBuildCurrentGraph(_x27) {
         return _OnTestBuildCurrentGraph.apply(this, arguments);
       }
 
@@ -3828,35 +3627,108 @@ var InkBallGame = /*#__PURE__*/function () {
     key: "OnTestConcaveman",
     value: function () {
       var _OnTestConcaveman = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee25(event) {
-        var serialized_points;
+        var _this16 = this;
+
+        var data, convex_hull, cw_sorted_verts, rand_color, _iterator10, _step10, vert, x, y, view_x, view_y, pt;
+
         return regeneratorRuntime.wrap(function _callee25$(_context25) {
           while (1) {
             switch (_context25.prev = _context25.next) {
               case 0:
                 event.preventDefault();
-                this.SetupAIWorker();
-                serialized_points = Array.from(this.m_Points.store.entries()).map(function (arr) {
-                  return {
-                    key: arr[0],
-                    value: arr[1].Serialize()
-                  };
-                }); //const serialized_paths = this.m_Lines.store.map(pa => pa.Serialize());
+                _context25.next = 3;
+                return this.SetupAIWorker(function (worker) {
+                  var serialized_points = Array.from(_this16.m_Points.store.entries()).map(function (arr) {
+                    return {
+                      key: arr[0],
+                      value: arr[1].Serialize()
+                    };
+                  }); //const serialized_paths = this.m_Lines.store.map(pa => pa.Serialize());
 
-                this.Worker.postMessage({
-                  operation: "CONCAVEMAN",
-                  state: this.GetGameStateForIndexedDb(),
-                  points: serialized_points
+                  worker.postMessage({
+                    operation: "CONCAVEMAN",
+                    state: _this16.GetGameStateForIndexedDb(),
+                    points: serialized_points
+                  });
                 });
 
-              case 4:
+              case 3:
+                data = _context25.sent;
+
+                if (!(data.convex_hull && data.convex_hull.length > 0)) {
+                  _context25.next = 31;
+                  break;
+                }
+
+                convex_hull = data.convex_hull;
+                this.SvgVml.CreatePolyline(6, convex_hull.map(function (fnd) {
+                  return parseInt(fnd[0]) * this.m_iGridSizeX + ',' + parseInt(fnd[1]) * this.m_iGridSizeY;
+                }.bind(this)).join(' '), 'green');
+                LocalLog("convex_hull = ".concat(convex_hull));
+                cw_sorted_verts = data.cw_sorted_verts;
+                rand_color = RandomColor();
+                _iterator10 = _createForOfIteratorHelper(cw_sorted_verts);
+                _context25.prev = 11;
+
+                _iterator10.s();
+
+              case 13:
+                if ((_step10 = _iterator10.n()).done) {
+                  _context25.next = 23;
+                  break;
+                }
+
+                vert = _step10.value;
+                //const { x: view_x, y: view_y } = vertices[vert].GetPosition();
+                x = vert.x, y = vert.y;
+                view_x = x * this.m_iGridSizeX, view_y = y * this.m_iGridSizeY; //const line_pts = Array.from(document.querySelectorAll(`svg > line[x1="${view_x}"][y1="${view_y}"]`))
+                //	.concat(Array.from(document.querySelectorAll(`svg > line[x2="${view_x}"][y2="${view_y}"]`)));
+                //line_pts.forEach(line => {
+                //	line.SetColor(rand_color);
+                //});
+
+                pt = document.querySelector("svg > circle[cx=\"".concat(view_x, "\"][cy=\"").concat(view_y, "\"]"));
+
+                if (pt) {
+                  pt.SetStrokeColor(rand_color);
+                  pt.SetFillColor(rand_color);
+                  pt.SetZIndex(100);
+                  pt.setAttribute('r', "6");
+                }
+
+                _context25.next = 21;
+                return Sleep(50);
+
+              case 21:
+                _context25.next = 13;
+                break;
+
+              case 23:
+                _context25.next = 28;
+                break;
+
+              case 25:
+                _context25.prev = 25;
+                _context25.t0 = _context25["catch"](11);
+
+                _iterator10.e(_context25.t0);
+
+              case 28:
+                _context25.prev = 28;
+
+                _iterator10.f();
+
+                return _context25.finish(28);
+
+              case 31:
               case "end":
                 return _context25.stop();
             }
           }
-        }, _callee25, this);
+        }, _callee25, this, [[11, 25, 28, 31]]);
       }));
 
-      function OnTestConcaveman(_x30) {
+      function OnTestConcaveman(_x28) {
         return _OnTestConcaveman.apply(this, arguments);
       }
 
@@ -3866,41 +3738,199 @@ var InkBallGame = /*#__PURE__*/function () {
     key: "OnTestMarkAllCycles",
     value: function () {
       var _OnTestMarkAllCycles = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee26(event) {
-        var serialized_points, serialized_paths;
+        var _this17 = this;
+
+        var data, free_human_player_points, _iterator11, _step11, _pt, _x30, _y2, view_x, view_y, _pt2, tab, i, new_cycl, str, trailing_points, rand_color, cw_sorted_verts, _iterator12, _step12, vert, x, y, pt, tmp, comma, _iterator13, _step13, possible_intercept, pt1, pts2reset;
+
         return regeneratorRuntime.wrap(function _callee26$(_context26) {
           while (1) {
             switch (_context26.prev = _context26.next) {
               case 0:
                 event.preventDefault(); //LocalLog(await this.MarkAllCycles(await this.BuildGraph({ visuals: true })));
 
-                this.SetupAIWorker();
-                serialized_points = Array.from(this.m_Points.store.entries()).map(function (arr) {
-                  return {
-                    key: arr[0],
-                    value: arr[1].Serialize()
-                  };
-                });
-                serialized_paths = this.m_Lines.store.map(function (pa) {
-                  return pa.Serialize();
-                });
-                this.Worker.postMessage({
-                  operation: "MARK_ALL_CYCLES",
-                  state: this.GetGameStateForIndexedDb(),
-                  points: serialized_points,
-                  paths: serialized_paths,
-                  colorRed: this.COLOR_RED,
-                  colorBlue: this.COLOR_BLUE
+                _context26.next = 3;
+                return this.SetupAIWorker(function (worker) {
+                  var serialized_points = Array.from(_this17.m_Points.store.entries()).map(function (arr) {
+                    return {
+                      key: arr[0],
+                      value: arr[1].Serialize()
+                    };
+                  });
+
+                  var serialized_paths = _this17.m_Lines.store.map(function (pa) {
+                    return pa.Serialize();
+                  });
+
+                  worker.postMessage({
+                    operation: "MARK_ALL_CYCLES",
+                    state: _this17.GetGameStateForIndexedDb(),
+                    points: serialized_points,
+                    paths: serialized_paths,
+                    colorRed: _this17.COLOR_RED,
+                    colorBlue: _this17.COLOR_BLUE
+                  });
                 });
 
-              case 5:
+              case 3:
+                data = _context26.sent;
+
+                if (!(data.cycles && data.free_human_player_points && data.free_human_player_points.length > 0)) {
+                  _context26.next = 47;
+                  break;
+                }
+
+                //gather free human player points that could be intercepted.
+                free_human_player_points = []; //const sHumanColor = this.COLOR_RED;
+
+                _iterator11 = _createForOfIteratorHelper(data.free_human_player_points);
+
+                try {
+                  for (_iterator11.s(); !(_step11 = _iterator11.n()).done;) {
+                    _pt = _step11.value;
+                    //if (pt !== undefined && pt.GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.GetStatus()) {
+                    _x30 = _pt.x, _y2 = _pt.y;
+                    view_x = _x30 * this.m_iGridSizeX, view_y = _y2 * this.m_iGridSizeY; //	if (false === await this.IsPointOutsideAllPaths(x, y))
+                    //		continue;
+                    //check if really exists
+
+                    _pt2 = document.querySelector("svg > circle[cx=\"".concat(view_x, "\"][cy=\"").concat(view_y, "\"]"));
+                    if (_pt2) free_human_player_points.push({
+                      x: _x30,
+                      y: _y2
+                    }); //}
+                  }
+                } catch (err) {
+                  _iterator11.e(err);
+                } finally {
+                  _iterator11.f();
+                }
+
+                tab = []; // traverse through all the vertices with same cycle
+
+                i = 0;
+
+              case 10:
+                if (!(i <= data.cyclenumber)) {
+                  _context26.next = 47;
+                  break;
+                }
+
+                new_cycl = data.cycles[i]; //get cycle
+
+                if (!(new_cycl && new_cycl.cycl && new_cycl.cycl.length > 0 && new_cycl.cw_sorted_verts)) {
+                  _context26.next = 44;
+                  break;
+                }
+
+                //some checks
+                // Print the i-th cycle
+                str = "Cycle Number ".concat(i, ": "), trailing_points = [];
+                rand_color = 'var(--indigo)';
+                cw_sorted_verts = new_cycl.cw_sorted_verts; //display which cycle we are dealing with
+
+                _iterator12 = _createForOfIteratorHelper(cw_sorted_verts);
+                _context26.prev = 17;
+
+                _iterator12.s();
+
+              case 19:
+                if ((_step12 = _iterator12.n()).done) {
+                  _context26.next = 28;
+                  break;
+                }
+
+                vert = _step12.value;
+                x = vert.x, y = vert.y;
+                pt = document.querySelector("svg > circle[cx=\"".concat(x * this.m_iGridSizeX, "\"][cy=\"").concat(y * this.m_iGridSizeY, "\"]"));
+
+                if (pt) {
+                  //again some basic checks
+                  str += "(".concat(x, ",").concat(y, ")");
+                  pt.SetStrokeColor(rand_color);
+                  pt.SetFillColor(rand_color);
+                  pt.setAttribute("r", "6");
+                }
+
+                _context26.next = 26;
+                return Sleep(50);
+
+              case 26:
+                _context26.next = 19;
+                break;
+
+              case 28:
+                _context26.next = 33;
+                break;
+
+              case 30:
+                _context26.prev = 30;
+                _context26.t0 = _context26["catch"](17);
+
+                _iterator12.e(_context26.t0);
+
+              case 33:
+                _context26.prev = 33;
+
+                _iterator12.f();
+
+                return _context26.finish(33);
+
+              case 36:
+                //find for all free_human_player_points which cycle might interepct it (surrounds)
+                //only convex, NOT concave :-(
+                tmp = '', comma = '';
+                _iterator13 = _createForOfIteratorHelper(free_human_player_points);
+
+                try {
+                  for (_iterator13.s(); !(_step13 = _iterator13.n()).done;) {
+                    possible_intercept = _step13.value;
+
+                    if (false !== pnpoly2(cw_sorted_verts, possible_intercept.x, possible_intercept.y)) {
+                      tmp += "".concat(comma, "(").concat(possible_intercept.x, ",").concat(possible_intercept.y, ")");
+                      pt1 = document.querySelector("svg > circle[cx=\"".concat(possible_intercept.x * this.m_iGridSizeX, "\"][cy=\"").concat(possible_intercept.y * this.m_iGridSizeY, "\"]"));
+
+                      if (pt1) {
+                        pt1.SetStrokeColor('var(--yellow)');
+                        pt1.SetFillColor('var(--yellow)');
+                        pt1.setAttribute("r", "6");
+                      }
+
+                      comma = ',';
+                    }
+                  } //gaterhing of some data and console printing
+
+                } catch (err) {
+                  _iterator13.e(err);
+                } finally {
+                  _iterator13.f();
+                }
+
+                trailing_points.unshift(str);
+                tab.push(trailing_points); //log...
+
+                LocalLog(str + (tmp !== '' ? " possible intercepts: ".concat(tmp) : '')); //...and clear
+
+                pts2reset = Array.from(document.querySelectorAll("svg > circle[fill=\"".concat(rand_color, "\"][r=\"6\"]")));
+                pts2reset.forEach(function (pt) {
+                  pt.SetStrokeColor(_this17.COLOR_BLUE);
+                  pt.SetFillColor(_this17.COLOR_BLUE);
+                  pt.setAttribute("r", "4");
+                });
+
+              case 44:
+                i++;
+                _context26.next = 10;
+                break;
+
+              case 47:
               case "end":
                 return _context26.stop();
             }
           }
-        }, _callee26, this);
+        }, _callee26, this, [[17, 30, 33, 36]]);
       }));
 
-      function OnTestMarkAllCycles(_x31) {
+      function OnTestMarkAllCycles(_x29) {
         return _OnTestMarkAllCycles.apply(this, arguments);
       }
 
@@ -3945,7 +3975,7 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee27, this);
       }));
 
-      function OnTestGroupPoints(_x32) {
+      function OnTestGroupPoints(_x31) {
         return _OnTestGroupPoints.apply(this, arguments);
       }
 
@@ -4057,7 +4087,7 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee28, this, [[8, 26, 29, 32]]);
       }));
 
-      function OnTestFindFullSurroundedPoints(_x33) {
+      function OnTestFindFullSurroundedPoints(_x32) {
         return _OnTestFindFullSurroundedPoints.apply(this, arguments);
       }
 
@@ -4203,7 +4233,7 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee29);
       }));
 
-      function OnTestWorkerify(_x34) {
+      function OnTestWorkerify(_x33) {
         return _OnTestWorkerify.apply(this, arguments);
       }
 
@@ -4397,7 +4427,7 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee30, this);
       }));
 
-      function PrepareDrawing(_x35, _x36, _x37, _x38, _x39, _x40, _x41, _x42, _x43, _x44, _x45, _x46, _x47, _x48) {
+      function PrepareDrawing(_x34, _x35, _x36, _x37, _x38, _x39, _x40, _x41, _x42, _x43, _x44, _x45, _x46, _x47) {
         return _PrepareDrawing.apply(this, arguments);
       }
 
@@ -4490,7 +4520,7 @@ var InkBallGame = /*#__PURE__*/function () {
     key: "CalculateCPUCentroid",
     value: function () {
       var _CalculateCPUCentroid = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee32() {
-        var centroidX, centroidY, count, x, y, sHumanColor, _iterator15, _step15, _pt4, pos, tox, toy, max_random_pick_amount, pt;
+        var centroidX, centroidY, count, x, y, sHumanColor, _iterator15, _step15, _pt3, pos, tox, toy, max_random_pick_amount, pt;
 
         return regeneratorRuntime.wrap(function _callee32$(_context32) {
           while (1) {
@@ -4508,10 +4538,10 @@ var InkBallGame = /*#__PURE__*/function () {
 
                 try {
                   for (_iterator15.s(); !(_step15 = _iterator15.n()).done;) {
-                    _pt4 = _step15.value;
+                    _pt3 = _step15.value;
 
-                    if (_pt4 !== undefined && _pt4.GetFillColor() === sHumanColor && _pt4.GetStatus() === StatusEnum.POINT_FREE_RED) {
-                      pos = _pt4.GetPosition();
+                    if (_pt3 !== undefined && _pt3.GetFillColor() === sHumanColor && _pt3.GetStatus() === StatusEnum.POINT_FREE_RED) {
+                      pos = _pt3.GetPosition();
                       x = pos.x;
                       y = pos.y;
                       x /= this.m_iGridSizeX;
@@ -4696,7 +4726,7 @@ var InkBallGame = /*#__PURE__*/function () {
                 }
 
                 dfs_cycle = /*#__PURE__*/function () {
-                  var _ref9 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee33(u, p) {
+                  var _ref8 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee33(u, p) {
                     var cur, vertex, _iterator17, _step17, adj, v;
 
                     return regeneratorRuntime.wrap(function _callee33$(_context33) {
@@ -4805,16 +4835,16 @@ var InkBallGame = /*#__PURE__*/function () {
                     }, _callee33, null, [[17, 30, 33, 36]]);
                   }));
 
-                  return function dfs_cycle(_x50, _x51) {
-                    return _ref9.apply(this, arguments);
+                  return function dfs_cycle(_x49, _x50) {
+                    return _ref8.apply(this, arguments);
                   };
                 }();
 
                 printCycles = /*#__PURE__*/function () {
-                  var _ref10 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee34(edges, mark) {
-                    var _this15 = this;
+                  var _ref9 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee34(edges, mark) {
+                    var _this18 = this;
 
-                    var e, mark_e, m, found_c, free_human_player_points, sHumanColor, _iterator18, _step18, _pt5, _pt5$GetPosition, view_x, view_y, _x54, _y4, _pt6, tab, _i, cycl, str, trailing_points, rand_color, mapped_verts, cw_sorted_verts, _iterator19, _step19, vert, x, y, pt, tmp, comma, _iterator20, _step20, possible_intercept, pt1, pts2reset;
+                    var e, mark_e, m, found_c, free_human_player_points, sHumanColor, _iterator18, _step18, _pt4, _pt4$GetPosition, view_x, view_y, _x53, _y3, _pt5, tab, _i, cycl, str, trailing_points, rand_color, mapped_verts, cw_sorted_verts, _iterator19, _step19, vert, x, y, pt, tmp, comma, _iterator20, _step20, possible_intercept, pt1, pts2reset;
 
                     return regeneratorRuntime.wrap(function _callee34$(_context34) {
                       while (1) {
@@ -4859,17 +4889,17 @@ var InkBallGame = /*#__PURE__*/function () {
                               break;
                             }
 
-                            _pt5 = _step18.value;
+                            _pt4 = _step18.value;
 
-                            if (!(_pt5 !== undefined && _pt5.GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === _pt5.GetStatus())) {
+                            if (!(_pt4 !== undefined && _pt4.GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === _pt4.GetStatus())) {
                               _context34.next = 23;
                               break;
                             }
 
-                            _pt5$GetPosition = _pt5.GetPosition(), view_x = _pt5$GetPosition.x, view_y = _pt5$GetPosition.y;
-                            _x54 = view_x / this.m_iGridSizeX, _y4 = view_y / this.m_iGridSizeY;
+                            _pt4$GetPosition = _pt4.GetPosition(), view_x = _pt4$GetPosition.x, view_y = _pt4$GetPosition.y;
+                            _x53 = view_x / this.m_iGridSizeX, _y3 = view_y / this.m_iGridSizeY;
                             _context34.next = 18;
-                            return this.IsPointOutsideAllPaths(_x54, _y4);
+                            return this.IsPointOutsideAllPaths(_x53, _y3);
 
                           case 18:
                             _context34.t2 = _context34.sent;
@@ -4883,10 +4913,10 @@ var InkBallGame = /*#__PURE__*/function () {
 
                           case 21:
                             //check if really exists
-                            _pt6 = document.querySelector("svg > circle[cx=\"".concat(view_x, "\"][cy=\"").concat(view_y, "\"]"));
-                            if (_pt6) free_human_player_points.push({
-                              x: _x54,
-                              y: _y4
+                            _pt5 = document.querySelector("svg > circle[cx=\"".concat(view_x, "\"][cy=\"").concat(view_y, "\"]"));
+                            if (_pt5) free_human_player_points.push({
+                              x: _x53,
+                              y: _y3
                             });
 
                           case 23:
@@ -5027,8 +5057,8 @@ var InkBallGame = /*#__PURE__*/function () {
 
                             pts2reset = Array.from(document.querySelectorAll("svg > circle[fill=\"".concat(rand_color, "\"][r=\"6\"]")));
                             pts2reset.forEach(function (pt) {
-                              pt.SetStrokeColor(_this15.COLOR_BLUE);
-                              pt.SetFillColor(_this15.COLOR_BLUE);
+                              pt.SetStrokeColor(_this18.COLOR_BLUE);
+                              pt.SetFillColor(_this18.COLOR_BLUE);
                               pt.setAttribute("r", "4");
                             });
 
@@ -5048,8 +5078,8 @@ var InkBallGame = /*#__PURE__*/function () {
                     }, _callee34, this, [[9, 27, 30, 33], [43, 56, 59, 62]]);
                   }));
 
-                  return function (_x52, _x53) {
-                    return _ref10.apply(this, arguments);
+                  return function (_x51, _x52) {
+                    return _ref9.apply(this, arguments);
                   };
                 }().bind(this); // store the numbers of cycle 
 
@@ -5087,7 +5117,7 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee35, this);
       }));
 
-      function MarkAllCycles(_x49) {
+      function MarkAllCycles(_x48) {
         return _MarkAllCycles.apply(this, arguments);
       }
 
@@ -5301,7 +5331,7 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee36, this);
       }));
 
-      function GroupPointsRecurse(_x55, _x56) {
+      function GroupPointsRecurse(_x54, _x55) {
         return _GroupPointsRecurse.apply(this, arguments);
       }
 
@@ -5311,8 +5341,8 @@ var InkBallGame = /*#__PURE__*/function () {
     key: "GroupPointsIterative",
     value: function () {
       var _GroupPointsIterative = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee37() {
-        var _ref11,
-            _ref11$g,
+        var _ref10,
+            _ref10$g,
             graph,
             vertices,
             cycles,
@@ -5328,7 +5358,7 @@ var InkBallGame = /*#__PURE__*/function () {
           while (1) {
             switch (_context37.prev = _context37.next) {
               case 0:
-                _ref11 = _args37.length > 0 && _args37[0] !== undefined ? _args37[0] : {}, _ref11$g = _ref11.g, graph = _ref11$g === void 0 ? null : _ref11$g;
+                _ref10 = _args37.length > 0 && _args37[0] !== undefined ? _args37[0] : {}, _ref10$g = _ref10.g, graph = _ref10$g === void 0 ? null : _ref10$g;
 
                 if (graph) {
                   _context37.next = 3;
@@ -5406,7 +5436,7 @@ var InkBallGame = /*#__PURE__*/function () {
     key: "rAFCallBack",
     value: function () {
       var _rAFCallBack = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee38(timeStamp) {
-        var _this16 = this;
+        var _this19 = this;
 
         var progress, point, centroid;
         return regeneratorRuntime.wrap(function _callee38$(_context38) {
@@ -5451,8 +5481,8 @@ var InkBallGame = /*#__PURE__*/function () {
               case 17:
                 _context38.next = 19;
                 return this.SendAsyncData(point, function () {
-                  _this16.m_bMouseDown = false;
-                  _this16.m_bHandlingEvent = false;
+                  _this19.m_bMouseDown = false;
+                  _this19.m_bHandlingEvent = false;
                 });
 
               case 19:
@@ -5463,7 +5493,7 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee38, this);
       }));
 
-      function rAFCallBack(_x57) {
+      function rAFCallBack(_x56) {
         return _rAFCallBack.apply(this, arguments);
       }
 

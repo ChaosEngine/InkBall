@@ -443,7 +443,6 @@ class InkBallGame {
 		this.m_ApplicationUserSettings = null;
 		this.m_sLastMoveGameTimeStamp = null;
 		this.m_sVersion = null;
-		this.Worker = null;
 
 		if (sHubName === null || sHubName === "") return;
 
@@ -1926,192 +1925,203 @@ class InkBallGame {
 		document.querySelector(sSelector2Set).innerHTML = 'SVGs by tags: ' + aggregated;
 	}
 
-	SetupAIWorker() {
-		if (this.Worker === null) {
-			this.Worker = new Worker(isESModuleSupport() ? '../js/AIWorker.Bundle.js' : '../js/AIWorker.PolyfillBundle.js'
+	/**
+	 * Worker entry point - asynced version
+	 * @param {any} setupFunction - init params callback to be given a worker as 1st param
+	 */
+	async RunAIWorker(setupFunction) {
+		return new Promise((resolve, reject) => {
+			const worker = new Worker(isESModuleSupport() ? '../js/AIWorker.Bundle.js' : '../js/AIWorker.PolyfillBundle.js'
 				//, { type: 'module' }
 			);
-			this.Worker.onmessage = async function (e) {
+
+			worker.onerror = function () {
+				worker.terminate();
+				reject(new Error('no data'));
+			};
+
+			worker.onmessage = function (e) {
 				const data = e.data;
 				switch (data.operation) {
 					case "BUILD_GRAPH":
-						LocalLog('Message received from worker ' + data);
-						break;
-
 					case "CONCAVEMAN":
-						if (data.convex_hull && data.convex_hull.length > 0) {
-							const convex_hull = data.convex_hull;
-							this.SvgVml.CreatePolyline(6, convex_hull.map(function (fnd) {
-								return parseInt(fnd[0]) * this.m_iGridSizeX + ',' + parseInt(fnd[1]) * this.m_iGridSizeY;
-							}.bind(this)).join(' '), 'green');
-							LocalLog(`convex_hull = ${convex_hull}`);
-
-							const cw_sorted_verts = data.cw_sorted_verts;
-
-							const rand_color = RandomColor();
-							for (const vert of cw_sorted_verts) {
-								//const { x: view_x, y: view_y } = vertices[vert].GetPosition();
-								const { x: x, y: y } = vert;
-								const view_x = x * this.m_iGridSizeX, view_y = y * this.m_iGridSizeY;
-								//const line_pts = Array.from(document.querySelectorAll(`svg > line[x1="${view_x}"][y1="${view_y}"]`))
-								//	.concat(Array.from(document.querySelectorAll(`svg > line[x2="${view_x}"][y2="${view_y}"]`)));
-								//line_pts.forEach(line => {
-								//	line.SetColor(rand_color);
-								//});
-								const pt = document.querySelector(`svg > circle[cx="${view_x}"][cy="${view_y}"]`);
-								if (pt) {
-									pt.SetStrokeColor(rand_color);
-									pt.SetFillColor(rand_color);
-									pt.SetZIndex(100);
-									pt.setAttribute('r', "6");
-								}
-								await Sleep(50);
-							}
-						}
-						break;
-
 					case "MARK_ALL_CYCLES":
-						if (data.cycles && data.free_human_player_points && data.free_human_player_points.length > 0) {
-							//gather free human player points that could be intercepted.
-							const free_human_player_points = [];
-							//const sHumanColor = this.COLOR_RED;
-							for (const pt of data.free_human_player_points) {
-								//if (pt !== undefined && pt.GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.GetStatus()) {
-								const { x, y } = pt;
-								const view_x = x * this.m_iGridSizeX, view_y = y * this.m_iGridSizeY;
-								//	if (false === await this.IsPointOutsideAllPaths(x, y))
-								//		continue;
-
-								//check if really exists
-								const pt1 = document.querySelector(`svg > circle[cx="${view_x}"][cy="${view_y}"]`);
-								if (pt1)
-									free_human_player_points.push({ x, y });
-								//}
-							}
-
-
-							const tab = [];
-							// traverse through all the vertices with same cycle
-							for (let i = 0; i <= data.cyclenumber; i++) {
-								const new_cycl = data.cycles[i];//get cycle
-								if (new_cycl && new_cycl.cycl && new_cycl.cycl.length > 0 && new_cycl.cw_sorted_verts) {	//some checks
-									// Print the i-th cycle
-									let str = (`Cycle Number ${i}: `), trailing_points = [];
-									const rand_color = 'var(--indigo)';
-
-									const cw_sorted_verts = new_cycl.cw_sorted_verts;
-
-									//display which cycle we are dealing with
-									for (const vert of cw_sorted_verts) {
-										const { x, y } = vert;
-										const pt = document.querySelector(`svg > circle[cx="${x * this.m_iGridSizeX}"][cy="${y * this.m_iGridSizeY}"]`);
-										if (pt) {//again some basic checks
-											str += (`(${x},${y})`);
-
-											pt.SetStrokeColor(rand_color);
-											pt.SetFillColor(rand_color);
-											pt.setAttribute("r", "6");
-										}
-										await Sleep(50);
-									}
-
-									//find for all free_human_player_points which cycle might interepct it (surrounds)
-									//only convex, NOT concave :-(
-									let tmp = '', comma = '';
-									for (const possible_intercept of free_human_player_points) {
-										if (false !== pnpoly2(cw_sorted_verts, possible_intercept.x, possible_intercept.y)) {
-											tmp += `${comma}(${possible_intercept.x},${possible_intercept.y})`;
-
-											const pt1 = document.querySelector(`svg > circle[cx="${possible_intercept.x * this.m_iGridSizeX}"][cy="${possible_intercept.y * this.m_iGridSizeY}"]`);
-											if (pt1) {
-												pt1.SetStrokeColor('var(--yellow)');
-												pt1.SetFillColor('var(--yellow)');
-												pt1.setAttribute("r", "6");
-											}
-											comma = ',';
-										}
-									}
-									//gaterhing of some data and console printing
-									trailing_points.unshift(str);
-									tab.push(trailing_points);
-									//log...
-									LocalLog(str + (tmp !== '' ? ` possible intercepts: ${tmp}` : ''));
-									//...and clear
-									const pts2reset = Array.from(document.querySelectorAll(`svg > circle[fill="${rand_color}"][r="6"]`));
-									pts2reset.forEach(pt => {
-										pt.SetStrokeColor(this.COLOR_BLUE);
-										pt.SetFillColor(this.COLOR_BLUE);
-										pt.setAttribute("r", "4");
-									});
-								}
-							}
-							return tab;
-						}
+						worker.terminate();
+						resolve(data);
 						break;
-
 					default:
 						LocalError(`unknown params.operation = ${data.operation}`);
+						worker.terminate();
+						reject(new Error(`unknown params.operation = ${data.operation}`));
 						break;
 				}
-				//this.Worker.terminate();
-			}.bind(this);
-		}
+			};
+
+			if (setupFunction)
+				setupFunction(worker);
+		});//primise end
 	}
 
 	async OnTestBuildCurrentGraph(event) {
 		event.preventDefault();
 		//LocalLog(await this.BuildGraph());
-		this.SetupAIWorker();
+		const data = await this.RunAIWorker((worker) => {
+			const serialized_points = Array.from(this.m_Points.store.entries()).map((arr) => {
+				return { key: arr[0], value: arr[1].Serialize() };
+			});
+			const serialized_paths = this.m_Lines.store.map(pa => pa.Serialize());
 
-		const serialized_points = Array.from(this.m_Points.store.entries()).map((arr) => {
-			return { key: arr[0], value: arr[1].Serialize() };
+			worker.postMessage({
+				operation: "BUILD_GRAPH",
+				state: this.GetGameStateForIndexedDb(),
+				points: serialized_points,
+				paths: serialized_paths
+			});
 		});
-		const serialized_paths = this.m_Lines.store.map(pa => pa.Serialize());
-
-		this.Worker.postMessage({
-			operation: "BUILD_GRAPH",
-			state: this.GetGameStateForIndexedDb(),
-			points: serialized_points,
-			paths: serialized_paths
-		});
+		LocalLog('Message received from worker ' + data);
 	}
 
 	async OnTestConcaveman(event) {
 		event.preventDefault();
 
-		this.SetupAIWorker();
+		const data = await this.RunAIWorker((worker) => {
+			const serialized_points = Array.from(this.m_Points.store.entries()).map((arr) => {
+				return { key: arr[0], value: arr[1].Serialize() };
+			});
+			//const serialized_paths = this.m_Lines.store.map(pa => pa.Serialize());
 
-		const serialized_points = Array.from(this.m_Points.store.entries()).map((arr) => {
-			return { key: arr[0], value: arr[1].Serialize() };
+			worker.postMessage({
+				operation: "CONCAVEMAN",
+				state: this.GetGameStateForIndexedDb(),
+				points: serialized_points
+			});
 		});
-		//const serialized_paths = this.m_Lines.store.map(pa => pa.Serialize());
+		if (data.convex_hull && data.convex_hull.length > 0) {
+			const convex_hull = data.convex_hull;
+			this.SvgVml.CreatePolyline(6, convex_hull.map(function (fnd) {
+				return parseInt(fnd[0]) * this.m_iGridSizeX + ',' + parseInt(fnd[1]) * this.m_iGridSizeY;
+			}.bind(this)).join(' '), 'green');
+			LocalLog(`convex_hull = ${convex_hull}`);
 
-		this.Worker.postMessage({
-			operation: "CONCAVEMAN",
-			state: this.GetGameStateForIndexedDb(),
-			points: serialized_points
-		});
+			const cw_sorted_verts = data.cw_sorted_verts;
+
+			const rand_color = RandomColor();
+			for (const vert of cw_sorted_verts) {
+				//const { x: view_x, y: view_y } = vertices[vert].GetPosition();
+				const { x: x, y: y } = vert;
+				const view_x = x * this.m_iGridSizeX, view_y = y * this.m_iGridSizeY;
+				//const line_pts = Array.from(document.querySelectorAll(`svg > line[x1="${view_x}"][y1="${view_y}"]`))
+				//	.concat(Array.from(document.querySelectorAll(`svg > line[x2="${view_x}"][y2="${view_y}"]`)));
+				//line_pts.forEach(line => {
+				//	line.SetColor(rand_color);
+				//});
+				const pt = document.querySelector(`svg > circle[cx="${view_x}"][cy="${view_y}"]`);
+				if (pt) {
+					pt.SetStrokeColor(rand_color);
+					pt.SetFillColor(rand_color);
+					pt.SetZIndex(100);
+					pt.setAttribute('r', "6");
+				}
+				await Sleep(50);
+			}
+		}
 	}
 
 	async OnTestMarkAllCycles(event) {
 		event.preventDefault();
 		//LocalLog(await this.MarkAllCycles(await this.BuildGraph({ visuals: true })));
 
-		this.SetupAIWorker();
+		const data = await this.RunAIWorker((worker) => {
+			const serialized_points = Array.from(this.m_Points.store.entries()).map((arr) => {
+				return { key: arr[0], value: arr[1].Serialize() };
+			});
+			const serialized_paths = this.m_Lines.store.map(pa => pa.Serialize());
 
-		const serialized_points = Array.from(this.m_Points.store.entries()).map((arr) => {
-			return { key: arr[0], value: arr[1].Serialize() };
+			worker.postMessage({
+				operation: "MARK_ALL_CYCLES",
+				state: this.GetGameStateForIndexedDb(),
+				points: serialized_points,
+				paths: serialized_paths,
+				colorRed: this.COLOR_RED,
+				colorBlue: this.COLOR_BLUE
+			});
 		});
-		const serialized_paths = this.m_Lines.store.map(pa => pa.Serialize());
 
-		this.Worker.postMessage({
-			operation: "MARK_ALL_CYCLES",
-			state: this.GetGameStateForIndexedDb(),
-			points: serialized_points,
-			paths: serialized_paths,
-			colorRed: this.COLOR_RED,
-			colorBlue: this.COLOR_BLUE
-		});
+		if (data.cycles && data.free_human_player_points && data.free_human_player_points.length > 0) {
+			//gather free human player points that could be intercepted.
+			const free_human_player_points = [];
+			//const sHumanColor = this.COLOR_RED;
+			for (const pt of data.free_human_player_points) {
+				//if (pt !== undefined && pt.GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.GetStatus()) {
+				const { x, y } = pt;
+				const view_x = x * this.m_iGridSizeX, view_y = y * this.m_iGridSizeY;
+				//	if (false === await this.IsPointOutsideAllPaths(x, y))
+				//		continue;
+
+				//check if really exists
+				const pt1 = document.querySelector(`svg > circle[cx="${view_x}"][cy="${view_y}"]`);
+				if (pt1)
+					free_human_player_points.push({ x, y });
+				//}
+			}
+
+
+			const tab = [];
+			// traverse through all the vertices with same cycle
+			for (let i = 0; i <= data.cyclenumber; i++) {
+				const new_cycl = data.cycles[i];//get cycle
+				if (new_cycl && new_cycl.cycl && new_cycl.cycl.length > 0 && new_cycl.cw_sorted_verts) {	//some checks
+					// Print the i-th cycle
+					let str = (`Cycle Number ${i}: `), trailing_points = [];
+					const rand_color = 'var(--indigo)';
+
+					const cw_sorted_verts = new_cycl.cw_sorted_verts;
+
+					//display which cycle we are dealing with
+					for (const vert of cw_sorted_verts) {
+						const { x, y } = vert;
+						const pt = document.querySelector(`svg > circle[cx="${x * this.m_iGridSizeX}"][cy="${y * this.m_iGridSizeY}"]`);
+						if (pt) {//again some basic checks
+							str += (`(${x},${y})`);
+
+							pt.SetStrokeColor(rand_color);
+							pt.SetFillColor(rand_color);
+							pt.setAttribute("r", "6");
+						}
+						await Sleep(50);
+					}
+
+					//find for all free_human_player_points which cycle might interepct it (surrounds)
+					//only convex, NOT concave :-(
+					let tmp = '', comma = '';
+					for (const possible_intercept of free_human_player_points) {
+						if (false !== pnpoly2(cw_sorted_verts, possible_intercept.x, possible_intercept.y)) {
+							tmp += `${comma}(${possible_intercept.x},${possible_intercept.y})`;
+
+							const pt1 = document.querySelector(`svg > circle[cx="${possible_intercept.x * this.m_iGridSizeX}"][cy="${possible_intercept.y * this.m_iGridSizeY}"]`);
+							if (pt1) {
+								pt1.SetStrokeColor('var(--yellow)');
+								pt1.SetFillColor('var(--yellow)');
+								pt1.setAttribute("r", "6");
+							}
+							comma = ',';
+						}
+					}
+					//gaterhing of some data and console printing
+					trailing_points.unshift(str);
+					tab.push(trailing_points);
+					//log...
+					LocalLog(str + (tmp !== '' ? ` possible intercepts: ${tmp}` : ''));
+					//...and clear
+					const pts2reset = Array.from(document.querySelectorAll(`svg > circle[fill="${rand_color}"][r="6"]`));
+					pts2reset.forEach(pt => {
+						pt.SetStrokeColor(this.COLOR_BLUE);
+						pt.SetFillColor(this.COLOR_BLUE);
+						pt.setAttribute("r", "4");
+					});
+				}
+			}
+		}
 	}
 
 	async OnTestGroupPoints(event) {
