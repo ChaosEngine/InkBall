@@ -74,6 +74,9 @@ p.inkgame {
 
 @include irregularBoard('.boardsize', 64, 64);
 
+[data-otherplayerid="-1"], [data-otherplayerid=""] {
+	display: none;
+}
 /**********inkgames(list)*********/
 .inkgames {
 	.table-responsive {
