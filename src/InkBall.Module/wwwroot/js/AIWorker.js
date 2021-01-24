@@ -24,7 +24,7 @@ addEventListener('message', async function (e) {
 				const ai = new GraphAI(params.state.iGridWidth, params.state.iGridHeight, params.state.iGridSizeX, params.state.iGridSizeY,
 					points, StatusEnum.POINT_STARTING, StatusEnum.POINT_IN_PATH);
 				const graph = await ai.BuildGraph({ freePointStatus: StatusEnum.POINT_FREE_BLUE, cpufillCol: 'blue', visuals: false });
-				LocalLog(graph);
+				//LocalLog(graph);
 
 				postMessage({ operation: params.operation, params: graph });
 			}
