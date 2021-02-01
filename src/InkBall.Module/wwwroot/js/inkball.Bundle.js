@@ -823,7 +823,8 @@ function _importAllModulesAsync() {
 }
 
 function RandomColor() {
-  return 'var(--orange)'; //return '#' + Math.floor(Math.random() * 16777215).toString(16);
+  //return 'var(--orange)';
+  return '#' + Math.floor(Math.random() * 16777215).toString(16);
 }
 
 Function.prototype.callAsWorker = function (context, args) {
@@ -1900,15 +1901,18 @@ var InkBallGame = /*#__PURE__*/function () {
                 } else {//debugger;
                 }
 
-                x *= this.m_iGridSizeX;
-                y *= this.m_iGridSizeY;
-                sPathPoints += "".concat(sDelimiter).concat(x, ",").concat(y);
+                if (sPoints[0] !== sPoints[sPoints.length - 1]) {
+                  x *= this.m_iGridSizeX;
+                  y *= this.m_iGridSizeY;
+                  sPathPoints += "".concat(sDelimiter).concat(x, ",").concat(y);
+                }
+
                 line = this.SvgVml.CreatePolyline(3, sPathPoints, bBelong2ThisPlayer ? this.m_sDotColor : bIsRed ? this.COLOR_BLUE : this.COLOR_RED);
                 line.SetID(iPathId);
-                _context9.next = 43;
+                _context9.next = 41;
                 return this.m_Lines.push(line);
 
-              case 43:
+              case 41:
               case "end":
                 return _context9.stop();
             }
@@ -2002,14 +2006,17 @@ var InkBallGame = /*#__PURE__*/function () {
                 } else {//debugger;
                 }
 
-                x *= this.m_iGridSizeX;
-                y *= this.m_iGridSizeY;
-                sPathPoints += "".concat(sDelimiter).concat(x, ",").concat(y);
+                if (sPoints[0] !== sPoints[sPoints.length - 1]) {
+                  x *= this.m_iGridSizeX;
+                  y *= this.m_iGridSizeY;
+                  sPathPoints += "".concat(sDelimiter).concat(x, ",").concat(y);
+                }
+
                 line = this.SvgVml.CreatePolyline(3, sPathPoints, sColor);
                 line.SetID(iPathId);
                 return _context10.abrupt("return", line);
 
-              case 41:
+              case 39:
               case "end":
                 return _context10.stop();
             }
@@ -3938,34 +3945,39 @@ var InkBallGame = /*#__PURE__*/function () {
     key: "OnTestGroupPoints",
     value: function () {
       var _OnTestGroupPoints = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee27(event) {
+        var _this17 = this;
+
+        var starting_point;
         return regeneratorRuntime.wrap(function _callee27$(_context27) {
           while (1) {
             switch (_context27.prev = _context27.next) {
               case 0:
                 event.preventDefault(); //LocalLog('OnTestGroupPoints');
 
-                _context27.t0 = this.SvgVml;
-                _context27.t1 = this;
-                _context27.t2 = [];
+                _context27.next = 3;
+                return this.m_Points.get(this.m_iMouseY * this.m_iGridWidth + this.m_iMouseX);
+
+              case 3:
+                starting_point = _context27.sent;
                 _context27.next = 6;
-                return this.m_Points.get(9 * this.m_iGridWidth + 26);
+                return this.GroupPointsRecurse([], starting_point);
 
               case 6:
-                _context27.t3 = _context27.sent;
-                _context27.next = 9;
-                return _context27.t1.GroupPointsRecurse.call(_context27.t1, _context27.t2, _context27.t3);
+                if (this.workingCyclePolyLine) {
+                  this.SvgVml.RemovePolyline(this.workingCyclePolyLine);
+                  this.workingCyclePolyLine = null;
+                }
 
-              case 9:
-                _context27.t4 = _context27.sent.map(function (fnd) {
-                  var pt = fnd.GetPosition();
-                  return pt.x + ',' + pt.y;
-                }).join(' ');
+                this.lastCycle.forEach(function (cyc) {
+                  _this17.SvgVml.CreatePolyline(6, cyc.map(function (fnd) {
+                    var pt = fnd.GetPosition();
+                    return "".concat(pt.x, ",").concat(pt.y);
+                  }).join(' '), RandomColor());
+                });
+                LocalLog('game.lastCycle = ', this.lastCycle);
+                this.lastCycle = [];
 
-                _context27.t0.CreatePolyline.call(_context27.t0, 6, _context27.t4, 'green');
-
-                LocalLog("game.lastCycle = ".concat(this.lastCycle));
-
-              case 12:
+              case 10:
               case "end":
                 return _context27.stop();
             }
@@ -3980,9 +3992,9 @@ var InkBallGame = /*#__PURE__*/function () {
       return OnTestGroupPoints;
     }()
   }, {
-    key: "OnTestFindFullSurroundedPoints",
+    key: "OnTestFindSurroundablePoints",
     value: function () {
-      var _OnTestFindFullSurroundedPoints = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee28(event) {
+      var _OnTestFindSurroundablePoints = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee28(event) {
         var sHumanColor, rand_color, _iterator14, _step14, pt, _pt$GetPosition2, view_x, view_y, x, y, pt1;
 
         return regeneratorRuntime.wrap(function _callee28$(_context28) {
@@ -4085,11 +4097,11 @@ var InkBallGame = /*#__PURE__*/function () {
         }, _callee28, this, [[8, 26, 29, 32]]);
       }));
 
-      function OnTestFindFullSurroundedPoints(_x32) {
-        return _OnTestFindFullSurroundedPoints.apply(this, arguments);
+      function OnTestFindSurroundablePoints(_x32) {
+        return _OnTestFindSurroundablePoints.apply(this, arguments);
       }
 
-      return OnTestFindFullSurroundedPoints;
+      return OnTestFindSurroundablePoints;
     }()
   }, {
     key: "OnTestWorkerify",
@@ -4381,7 +4393,7 @@ var InkBallGame = /*#__PURE__*/function () {
                     if (ddlTestActions.length > i) document.querySelector(ddlTestActions[i++]).onclick = this.OnTestConcaveman.bind(this);
                     if (ddlTestActions.length > i) document.querySelector(ddlTestActions[i++]).onclick = this.OnTestMarkAllCycles.bind(this);
                     if (ddlTestActions.length > i) document.querySelector(ddlTestActions[i++]).onclick = this.OnTestGroupPoints.bind(this);
-                    if (ddlTestActions.length > i) document.querySelector(ddlTestActions[i++]).onclick = this.OnTestFindFullSurroundedPoints.bind(this);
+                    if (ddlTestActions.length > i) document.querySelector(ddlTestActions[i++]).onclick = this.OnTestFindSurroundablePoints.bind(this);
                     if (ddlTestActions.length > i) document.querySelector(ddlTestActions[i++]).onclick = this.OnTestWorkerify.bind(this); //disable or even delete chat functionality, coz we're not going to chat with CPU bot
                     //const chatSection = document.querySelector(this.m_sMsgListSel).parentElement;
                     //chatSection.parentElement.removeChild(chatSection);
@@ -4835,7 +4847,7 @@ var InkBallGame = /*#__PURE__*/function () {
 
                 printCycles = /*#__PURE__*/function () {
                   var _ref9 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee34(edges, mark) {
-                    var _this17 = this;
+                    var _this18 = this;
 
                     var e, mark_e, m, found_c, free_human_player_points, sHumanColor, _iterator18, _step18, _pt4, _pt4$GetPosition, view_x, view_y, _x53, _y3, _pt5, tab, _i, cycl, str, trailing_points, rand_color, mapped_verts, cw_sorted_verts, _iterator19, _step19, vert, x, y, pt, tmp, comma, _iterator20, _step20, possible_intercept, pt1, pts2reset;
 
@@ -5050,8 +5062,8 @@ var InkBallGame = /*#__PURE__*/function () {
 
                             pts2reset = Array.from(document.querySelectorAll("svg > circle[fill=\"".concat(rand_color, "\"][r=\"6\"]")));
                             pts2reset.forEach(function (pt) {
-                              pt.SetStrokeColor(_this17.COLOR_BLUE);
-                              pt.SetFillColor(_this17.COLOR_BLUE);
+                              pt.SetStrokeColor(_this18.COLOR_BLUE);
+                              pt.SetFillColor(_this18.COLOR_BLUE);
                               pt.setAttribute("r", "4");
                             });
 
@@ -5120,13 +5132,14 @@ var InkBallGame = /*#__PURE__*/function () {
     key: "GroupPointsRecurse",
     value: function () {
       var _GroupPointsRecurse = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee36(currPointsArr, point) {
-        var _point$GetPosition, x, y, last, last_x, last_y, last_pos, first, first_pos, _last_pos, tmp, east, west, north, south, north_west, north_east, south_west, south_east;
+        var _point$GetPosition, x, y, last, last_x, last_y, last_pos, first, first_pos, _last_pos, tmp, east, west, north, south, north_west, north_east, south_west, south_east, ind, pts;
 
         return regeneratorRuntime.wrap(function _callee36$(_context36) {
           while (1) {
             switch (_context36.prev = _context36.next) {
               case 0:
-                if (!(point === undefined || currPointsArr.includes(point))) {
+                if (!(point === undefined || currPointsArr.includes(point) //|| currPointsArr.length > 60 || this.lastCycle.length > 3
+                )) {
                   _context36.next = 2;
                   break;
                 }
@@ -5148,37 +5161,35 @@ var InkBallGame = /*#__PURE__*/function () {
                 last = null;
 
                 if (!(currPointsArr.length > 0)) {
-                  _context36.next = 21;
+                  _context36.next = 19;
                   break;
                 }
 
                 last = currPointsArr[currPointsArr.length - 1];
                 last_pos = last.GetPosition();
-                last_x = last_pos.x, last_y = last_pos.y;
-                last_x /= this.m_iGridSizeX;
-                last_y /= this.m_iGridSizeY;
+                last_x = last_pos.x / this.m_iGridSizeX, last_y = last_pos.y / this.m_iGridSizeY;
 
                 if (!(Math.abs(parseInt(last_x - x)) <= 1 && Math.abs(parseInt(last_y - y)) <= 1)) {
-                  _context36.next = 18;
+                  _context36.next = 16;
                   break;
                 }
 
                 currPointsArr.push(point); //nearby point 1 jump away
 
-                _context36.next = 19;
+                _context36.next = 17;
                 break;
 
-              case 18:
+              case 16:
                 return _context36.abrupt("return", currPointsArr);
 
-              case 19:
-                _context36.next = 22;
+              case 17:
+                _context36.next = 20;
                 break;
 
-              case 21:
+              case 19:
                 currPointsArr.push(point);
 
-              case 22:
+              case 20:
                 //1st starting point
                 if (currPointsArr.length > 2 && last !== null) {
                   first = currPointsArr[0];
@@ -5187,136 +5198,153 @@ var InkBallGame = /*#__PURE__*/function () {
                   first_pos.y /= this.m_iGridSizeY;
                   last = currPointsArr[currPointsArr.length - 1];
                   _last_pos = last.GetPosition();
-                  last_x = _last_pos.x, last_y = _last_pos.y;
-                  last_x /= this.m_iGridSizeX;
-                  last_y /= this.m_iGridSizeY;
+                  last_x = _last_pos.x / this.m_iGridSizeX, last_y = _last_pos.y / this.m_iGridSizeY;
 
-                  if (Math.abs(parseInt(last_x - first_pos.x)) <= 1 && Math.abs(parseInt(last_y - first_pos.y)) <= 1) {
-                    tmp = [];
-                    currPointsArr.forEach(function (value) {
-                      return tmp.push(value);
-                    });
+                  if (Math.abs(parseInt(last_x - first_pos.x)) <= 1 && Math.abs(parseInt(last_y - first_pos.y)) <= 1 && currPointsArr.length >= 4) {
+                    tmp = currPointsArr.slice(); //copy array in current state
+
+                    tmp.push(currPointsArr[0]);
                     this.lastCycle.push(tmp);
                   }
                 } //TODO: awawit all together promises
 
 
-                _context36.next = 25;
+                _context36.next = 23;
                 return this.m_Points.get(y * this.m_iGridWidth + x + 1);
 
-              case 25:
+              case 23:
                 east = _context36.sent;
-                _context36.next = 28;
+                _context36.next = 26;
                 return this.m_Points.get(y * this.m_iGridWidth + x - 1);
 
-              case 28:
+              case 26:
                 west = _context36.sent;
-                _context36.next = 31;
+                _context36.next = 29;
                 return this.m_Points.get((y - 1) * this.m_iGridWidth + x);
 
-              case 31:
+              case 29:
                 north = _context36.sent;
-                _context36.next = 34;
+                _context36.next = 32;
                 return this.m_Points.get((y + 1) * this.m_iGridWidth + x);
 
-              case 34:
+              case 32:
                 south = _context36.sent;
-                _context36.next = 37;
+                _context36.next = 35;
                 return this.m_Points.get((y - 1) * this.m_iGridWidth + x - 1);
 
-              case 37:
+              case 35:
                 north_west = _context36.sent;
-                _context36.next = 40;
+                _context36.next = 38;
                 return this.m_Points.get((y - 1) * this.m_iGridWidth + x + 1);
 
-              case 40:
+              case 38:
                 north_east = _context36.sent;
-                _context36.next = 43;
+                _context36.next = 41;
                 return this.m_Points.get((y + 1) * this.m_iGridWidth + x - 1);
 
-              case 43:
+              case 41:
                 south_west = _context36.sent;
-                _context36.next = 46;
+                _context36.next = 44;
                 return this.m_Points.get((y + 1) * this.m_iGridWidth + x + 1);
 
-              case 46:
+              case 44:
                 south_east = _context36.sent;
 
                 if (!east) {
-                  _context36.next = 50;
+                  _context36.next = 48;
                   break;
                 }
 
-                _context36.next = 50;
+                _context36.next = 48;
                 return this.GroupPointsRecurse(currPointsArr, east);
 
-              case 50:
+              case 48:
                 if (!west) {
-                  _context36.next = 53;
+                  _context36.next = 51;
                   break;
                 }
 
-                _context36.next = 53;
+                _context36.next = 51;
                 return this.GroupPointsRecurse(currPointsArr, west);
 
-              case 53:
+              case 51:
                 if (!north) {
-                  _context36.next = 56;
+                  _context36.next = 54;
                   break;
                 }
 
-                _context36.next = 56;
+                _context36.next = 54;
                 return this.GroupPointsRecurse(currPointsArr, north);
 
-              case 56:
+              case 54:
                 if (!south) {
-                  _context36.next = 59;
+                  _context36.next = 57;
                   break;
                 }
 
-                _context36.next = 59;
+                _context36.next = 57;
                 return this.GroupPointsRecurse(currPointsArr, south);
 
-              case 59:
+              case 57:
                 if (!north_west) {
-                  _context36.next = 62;
+                  _context36.next = 60;
                   break;
                 }
 
-                _context36.next = 62;
+                _context36.next = 60;
                 return this.GroupPointsRecurse(currPointsArr, north_west);
 
-              case 62:
+              case 60:
                 if (!north_east) {
-                  _context36.next = 65;
+                  _context36.next = 63;
                   break;
                 }
 
-                _context36.next = 65;
+                _context36.next = 63;
                 return this.GroupPointsRecurse(currPointsArr, north_east);
 
-              case 65:
+              case 63:
                 if (!south_west) {
-                  _context36.next = 68;
+                  _context36.next = 66;
                   break;
                 }
 
-                _context36.next = 68;
+                _context36.next = 66;
                 return this.GroupPointsRecurse(currPointsArr, south_west);
 
-              case 68:
+              case 66:
                 if (!south_east) {
-                  _context36.next = 71;
+                  _context36.next = 69;
                   break;
                 }
 
-                _context36.next = 71;
+                _context36.next = 69;
                 return this.GroupPointsRecurse(currPointsArr, south_east);
 
-              case 71:
+              case 69:
+                ind = currPointsArr.lastIndexOf(point);
+
+                if (!(ind !== -1)) {
+                  _context36.next = 76;
+                  break;
+                }
+
+                currPointsArr.splice(ind
+                /* + 1*/
+                ); //draw currently constructed cycle path
+
+                pts = currPointsArr.map(function (fnd) {
+                  var pt = fnd.GetPosition();
+                  return "".concat(pt.x, ",").concat(pt.y);
+                }).join(' ');
+                if (!this.workingCyclePolyLine) this.workingCyclePolyLine = this.SvgVml.CreatePolyline(6, pts, 'black');else this.workingCyclePolyLine.SetPoints(pts);
+                _context36.next = 76;
+                return Sleep(50);
+
+              case 76:
                 return _context36.abrupt("return", currPointsArr);
 
-              case 72:
+              case 77:
               case "end":
                 return _context36.stop();
             }
@@ -5429,7 +5457,7 @@ var InkBallGame = /*#__PURE__*/function () {
     key: "rAFCallBack",
     value: function () {
       var _rAFCallBack = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee38(timeStamp) {
-        var _this18 = this;
+        var _this19 = this;
 
         var progress, point, centroid;
         return regeneratorRuntime.wrap(function _callee38$(_context38) {
@@ -5474,8 +5502,8 @@ var InkBallGame = /*#__PURE__*/function () {
               case 17:
                 _context38.next = 19;
                 return this.SendAsyncData(point, function () {
-                  _this18.m_bMouseDown = false;
-                  _this18.m_bHandlingEvent = false;
+                  _this19.m_bMouseDown = false;
+                  _this19.m_bHandlingEvent = false;
                 });
 
               case 19:
@@ -5536,7 +5564,7 @@ window.addEventListener('load', /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/reg
         case 19:
           game = new InkBallGame(iGameID, iPlayerID, iOtherPlayerID, inkBallHubName, signalR.LogLevel.Warning, protocol, signalR.HttpTransportType.None, servTimeoutMillis, gameType, bPlayingWithRed, bPlayerActive, isReadonly, pathAfterPointDrawAllowanceSecAmount);
           _context39.next = 22;
-          return game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw', '#messageInput', '#messagesList', '#sendButton', sLastMoveTimeStampUtcIso, gameOptions.PointsAsJavaScriptArray === null, version, ['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints', '#TestFindFullSurroundedPoints', '#TestWorkerify']);
+          return game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw', '#messageInput', '#messagesList', '#sendButton', sLastMoveTimeStampUtcIso, gameOptions.PointsAsJavaScriptArray === null, version, ['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints', '#TestFindSurroundablePoints', '#TestWorkerify']);
 
         case 22:
           if (!(gameOptions.PointsAsJavaScriptArray !== null)) {
