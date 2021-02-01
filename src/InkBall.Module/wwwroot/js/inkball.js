@@ -1083,8 +1083,10 @@ class InkBallGame {
 			//debugger;
 		}
 
-		x *= this.m_iGridSizeX; y *= this.m_iGridSizeY;
-		sPathPoints += `${sDelimiter}${x},${y}`;
+		if (sPoints[0] !== sPoints[sPoints.length - 1]) {
+			x *= this.m_iGridSizeX; y *= this.m_iGridSizeY;
+			sPathPoints += `${sDelimiter}${x},${y}`;
+		}
 
 		const line = this.SvgVml.CreatePolyline(3, sPathPoints,
 			(bBelong2ThisPlayer ? this.m_sDotColor : (bIsRed ? this.COLOR_BLUE : this.COLOR_RED)));
@@ -1124,8 +1126,10 @@ class InkBallGame {
 			//debugger;
 		}
 
-		x *= this.m_iGridSizeX; y *= this.m_iGridSizeY;
-		sPathPoints += `${sDelimiter}${x},${y}`;
+		if (sPoints[0] !== sPoints[sPoints.length - 1]) {
+			x *= this.m_iGridSizeX; y *= this.m_iGridSizeY;
+			sPathPoints += `${sDelimiter}${x},${y}`;
+		}
 
 		const line = this.SvgVml.CreatePolyline(3, sPathPoints, sColor);
 		line.SetID(iPathId);
