@@ -336,8 +336,8 @@ async function importAllModulesAsync(/*gameOptions*/) {
 }
 
 function RandomColor() {
-	return 'var(--orange)';
-	//return '#' + Math.floor(Math.random() * 16777215).toString(16);
+	//return 'var(--orange)';
+	return '#' + Math.floor(Math.random() * 16777215).toString(16);
 }
 
 Function.prototype.callAsWorker = function (context, args) {
@@ -2133,14 +2133,23 @@ class InkBallGame {
 	async OnTestGroupPoints(event) {
 		event.preventDefault();
 		//LocalLog('OnTestGroupPoints');
-		this.SvgVml.CreatePolyline(6, (await this.GroupPointsRecurse([], await this.m_Points.get(9 * this.m_iGridWidth + 26))).map(function (fnd) {
-			const pt = fnd.GetPosition();
-			return pt.x + ',' + pt.y;
-		}).join(' '), 'green');
-		LocalLog(`game.lastCycle = ${this.lastCycle}`);
+		const starting_point = await this.m_Points.get(this.m_iMouseY * this.m_iGridWidth + this.m_iMouseX);
+		await this.GroupPointsRecurse([], starting_point);
+		if (this.workingCyclePolyLine) {
+			this.SvgVml.RemovePolyline(this.workingCyclePolyLine);
+			this.workingCyclePolyLine = null;
+		}
+		this.lastCycle.forEach(cyc => {
+			this.SvgVml.CreatePolyline(6, cyc.map(function (fnd) {
+				const pt = fnd.GetPosition();
+				return `${pt.x},${pt.y}`;
+			}).join(' '), RandomColor());
+		});
+		LocalLog('game.lastCycle = ', this.lastCycle);
+		this.lastCycle = [];
 	}
 
-	async OnTestFindFullSurroundedPoints(event) {
+	async OnTestFindSurroundablePoints(event) {
 		event.preventDefault();
 
 		const sHumanColor = this.COLOR_RED/*, sCPUColor = this.COLOR_BLUE*/;
@@ -2445,7 +2454,7 @@ class InkBallGame {
 				if (ddlTestActions.length > i)
 					document.querySelector(ddlTestActions[i++]).onclick = this.OnTestGroupPoints.bind(this);
 				if (ddlTestActions.length > i)
-					document.querySelector(ddlTestActions[i++]).onclick = this.OnTestFindFullSurroundedPoints.bind(this);
+					document.querySelector(ddlTestActions[i++]).onclick = this.OnTestFindSurroundablePoints.bind(this);
 				if (ddlTestActions.length > i)
 					document.querySelector(ddlTestActions[i++]).onclick = this.OnTestWorkerify.bind(this);
 
@@ -2789,7 +2798,9 @@ class InkBallGame {
 	}
 
 	async GroupPointsRecurse(currPointsArr, point) {
-		if (point === undefined || currPointsArr.includes(point)) {
+		if (point === undefined || currPointsArr.includes(point)
+			//|| currPointsArr.length > 60 || this.lastCycle.length > 3
+		) {
 			return currPointsArr;
 		}
 		if ([StatusEnum.POINT_FREE_BLUE, StatusEnum.POINT_STARTING, StatusEnum.POINT_IN_PATH].includes(point.GetStatus()) === false ||
@@ -2797,19 +2808,20 @@ class InkBallGame {
 			return currPointsArr;
 		}
 
-		let { x: x, y: y } = point.GetPosition();
+		let { x, y } = point.GetPosition();
 		x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
 		let last = null, last_x, last_y;
 		if (currPointsArr.length > 0) {
 			last = currPointsArr[currPointsArr.length - 1];
 			const last_pos = last.GetPosition();
-			last_x = last_pos.x, last_y = last_pos.y;
-			last_x /= this.m_iGridSizeX; last_y /= this.m_iGridSizeY;
+			last_x = last_pos.x / this.m_iGridSizeX, last_y = last_pos.y / this.m_iGridSizeY;
 			if (Math.abs(parseInt(last_x - x)) <= 1 && Math.abs(parseInt(last_y - y)) <= 1) {
 				currPointsArr.push(point);//nearby point 1 jump away
 			}
-			else
+			else {
+				//const ind = currPointsArr.lastIndexOf(point);
 				return currPointsArr;//not nearby point
+			}
 		}
 		else
 			currPointsArr.push(point);//1st starting point
@@ -2820,12 +2832,12 @@ class InkBallGame {
 			first_pos.x /= this.m_iGridSizeX; first_pos.y /= this.m_iGridSizeY;
 			last = currPointsArr[currPointsArr.length - 1];
 			const last_pos = last.GetPosition();
-			last_x = last_pos.x, last_y = last_pos.y;
-			last_x /= this.m_iGridSizeX; last_y /= this.m_iGridSizeY;
+			last_x = last_pos.x / this.m_iGridSizeX, last_y = last_pos.y / this.m_iGridSizeY;
 
-			if (Math.abs(parseInt(last_x - first_pos.x)) <= 1 && Math.abs(parseInt(last_y - first_pos.y)) <= 1) {
-				const tmp = [];
-				currPointsArr.forEach((value) => tmp.push(value));
+			if (Math.abs(parseInt(last_x - first_pos.x)) <= 1 && Math.abs(parseInt(last_y - first_pos.y)) <= 1
+				&& currPointsArr.length >= 4) {
+				const tmp = currPointsArr.slice(); //copy array in current state
+				tmp.push(currPointsArr[0]);
 				this.lastCycle.push(tmp);
 			}
 		}
@@ -2857,6 +2869,22 @@ class InkBallGame {
 		if (south_east)
 			await this.GroupPointsRecurse(currPointsArr, south_east);
 
+		const ind = currPointsArr.lastIndexOf(point);
+		if (ind !== -1) {
+			currPointsArr.splice(ind/* + 1*/);
+
+			//draw currently constructed cycle path
+			const pts = currPointsArr.map(function (fnd) {
+				const pt = fnd.GetPosition();
+				return `${pt.x},${pt.y}`;
+			}).join(' ');
+			if (!this.workingCyclePolyLine)
+				this.workingCyclePolyLine = this.SvgVml.CreatePolyline(6, pts, 'black');
+			else
+				this.workingCyclePolyLine.SetPoints(pts);
+
+			await Sleep(50);
+		}
 		return currPointsArr;
 	}
 
@@ -2950,7 +2978,7 @@ window.addEventListener('load', async function () {
 	);
 	await game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw',
 		'#messageInput', '#messagesList', '#sendButton', sLastMoveTimeStampUtcIso, gameOptions.PointsAsJavaScriptArray === null, version,
-		['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints', '#TestFindFullSurroundedPoints', '#TestWorkerify']);
+		['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints', '#TestFindSurroundablePoints', '#TestWorkerify']);
 
 	if (gameOptions.PointsAsJavaScriptArray !== null) {
 		await game.StartSignalRConnection(false);
