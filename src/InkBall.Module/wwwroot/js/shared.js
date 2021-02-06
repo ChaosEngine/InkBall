@@ -351,6 +351,11 @@ class SvgVml {
 		SVGPolylineElement.prototype.GetID = function () { return parseInt(this.getAttribute("data-id")); };
 		SVGPolylineElement.prototype.SetID = function (iID) { this.setAttribute("data-id", iID); };
 		SVGPolylineElement.prototype.GetFillColor = function () { return this.getAttribute("fill"); };
+		SVGPolylineElement.prototype.IsPointInFill = function (x, y) {
+			const point = documentCreateElementNS_SVG("svg").createSVGPoint();
+			point.x = x; point.y = y;
+			return this.isPointInFill(point);//not in IE11
+		};
 		SVGPolylineElement.prototype.Serialize = function () {
 			const id = this.GetID();
 			const color = this.GetFillColor();

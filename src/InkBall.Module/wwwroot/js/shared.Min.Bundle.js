@@ -330,6 +330,9 @@ var SvgVml = /*#__PURE__*/function () {
       this.setAttribute("data-id", t);
     }, SVGPolylineElement.prototype.GetFillColor = function () {
       return this.getAttribute("fill");
+    }, SVGPolylineElement.prototype.IsPointInFill = function (t, r) {
+      var n = e("svg").createSVGPoint();
+      return n.x = t, n.y = r, this.isPointInFill(n);
     }, SVGPolylineElement.prototype.Serialize = function () {
       return {
         iId: this.GetID(),
