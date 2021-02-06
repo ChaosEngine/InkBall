@@ -523,6 +523,13 @@ var SvgVml = /*#__PURE__*/function () {
       return this.getAttribute("fill");
     };
 
+    SVGPolylineElement.prototype.IsPointInFill = function (x, y) {
+      var point = documentCreateElementNS_SVG("svg").createSVGPoint();
+      point.x = x;
+      point.y = y;
+      return this.isPointInFill(point); //not in IE11
+    };
+
     SVGPolylineElement.prototype.Serialize = function () {
       var id = this.GetID();
       var color = this.GetFillColor();
