@@ -2799,7 +2799,7 @@ class InkBallGame {
 
 	async GroupPointsRecurse(currPointsArr, point) {
 		if (point === undefined || currPointsArr.includes(point)
-			//|| currPointsArr.length > 60 || this.lastCycle.length > 3
+			|| currPointsArr.length > 60 || this.lastCycle.length > 3
 		) {
 			return currPointsArr;
 		}
