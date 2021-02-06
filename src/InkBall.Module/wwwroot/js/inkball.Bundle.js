@@ -5138,8 +5138,7 @@ var InkBallGame = /*#__PURE__*/function () {
           while (1) {
             switch (_context36.prev = _context36.next) {
               case 0:
-                if (!(point === undefined || currPointsArr.includes(point) //|| currPointsArr.length > 60 || this.lastCycle.length > 3
-                )) {
+                if (!(point === undefined || currPointsArr.includes(point) || currPointsArr.length > 60 || this.lastCycle.length > 3)) {
                   _context36.next = 2;
                   break;
                 }
