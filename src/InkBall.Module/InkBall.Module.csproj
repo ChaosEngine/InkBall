@@ -9,8 +9,8 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>TRACE;INCLUDE_ORACLE</DefineConstants>
-    <!--<DefineConstants>TRACE</DefineConstants>-->
+    <!--<DefineConstants>TRACE;INCLUDE_ORACLE</DefineConstants>-->
+    <DefineConstants>TRACE</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
