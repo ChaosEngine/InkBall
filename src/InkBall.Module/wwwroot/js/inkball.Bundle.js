@@ -216,7 +216,15 @@ module.exports = __webpack_require__(1);
 /*global signalR*/
 
 
-function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
+function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
+
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function _iterableToArrayLimit(arr, i) { if (typeof Symbol === "undefined" || !(Symbol.iterator in Object(arr))) return; var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+
+function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+
+function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e2) { throw _e2; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e3) { didErr = true; err = _e3; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
 
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
@@ -5132,7 +5140,7 @@ var InkBallGame = /*#__PURE__*/function () {
     key: "GroupPointsRecurse",
     value: function () {
       var _GroupPointsRecurse = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee36(currPointsArr, point) {
-        var _point$GetPosition, x, y, last, last_x, last_y, last_pos, first, first_pos, _last_pos, tmp, east, west, north, south, north_west, north_east, south_west, south_east, ind, pts;
+        var _point$GetPosition, x, y, last, last_x, last_y, last_pos, first, first_pos, _last_pos, tmp, _yield$Promise$all, _yield$Promise$all2, east, west, north, south, north_west, north_east, south_west, south_east, ind, pts;
 
         return regeneratorRuntime.wrap(function _callee36$(_context36) {
           while (1) {
@@ -5205,126 +5213,99 @@ var InkBallGame = /*#__PURE__*/function () {
                     tmp.push(currPointsArr[0]);
                     this.lastCycle.push(tmp);
                   }
-                } //TODO: awawit all together promises
-
+                }
 
                 _context36.next = 23;
-                return this.m_Points.get(y * this.m_iGridWidth + x + 1);
+                return Promise.all([this.m_Points.get(y * this.m_iGridWidth + x + 1), this.m_Points.get(y * this.m_iGridWidth + x - 1), this.m_Points.get((y - 1) * this.m_iGridWidth + x), this.m_Points.get((y + 1) * this.m_iGridWidth + x), this.m_Points.get((y - 1) * this.m_iGridWidth + x - 1), this.m_Points.get((y - 1) * this.m_iGridWidth + x + 1), this.m_Points.get((y + 1) * this.m_iGridWidth + x - 1), this.m_Points.get((y + 1) * this.m_iGridWidth + x + 1)]);
 
               case 23:
-                east = _context36.sent;
-                _context36.next = 26;
-                return this.m_Points.get(y * this.m_iGridWidth + x - 1);
-
-              case 26:
-                west = _context36.sent;
-                _context36.next = 29;
-                return this.m_Points.get((y - 1) * this.m_iGridWidth + x);
-
-              case 29:
-                north = _context36.sent;
-                _context36.next = 32;
-                return this.m_Points.get((y + 1) * this.m_iGridWidth + x);
-
-              case 32:
-                south = _context36.sent;
-                _context36.next = 35;
-                return this.m_Points.get((y - 1) * this.m_iGridWidth + x - 1);
-
-              case 35:
-                north_west = _context36.sent;
-                _context36.next = 38;
-                return this.m_Points.get((y - 1) * this.m_iGridWidth + x + 1);
-
-              case 38:
-                north_east = _context36.sent;
-                _context36.next = 41;
-                return this.m_Points.get((y + 1) * this.m_iGridWidth + x - 1);
-
-              case 41:
-                south_west = _context36.sent;
-                _context36.next = 44;
-                return this.m_Points.get((y + 1) * this.m_iGridWidth + x + 1);
-
-              case 44:
-                south_east = _context36.sent;
+                _yield$Promise$all = _context36.sent;
+                _yield$Promise$all2 = _slicedToArray(_yield$Promise$all, 8);
+                east = _yield$Promise$all2[0];
+                west = _yield$Promise$all2[1];
+                north = _yield$Promise$all2[2];
+                south = _yield$Promise$all2[3];
+                north_west = _yield$Promise$all2[4];
+                north_east = _yield$Promise$all2[5];
+                south_west = _yield$Promise$all2[6];
+                south_east = _yield$Promise$all2[7];
 
                 if (!east) {
+                  _context36.next = 36;
+                  break;
+                }
+
+                _context36.next = 36;
+                return this.GroupPointsRecurse(currPointsArr, east);
+
+              case 36:
+                if (!west) {
+                  _context36.next = 39;
+                  break;
+                }
+
+                _context36.next = 39;
+                return this.GroupPointsRecurse(currPointsArr, west);
+
+              case 39:
+                if (!north) {
+                  _context36.next = 42;
+                  break;
+                }
+
+                _context36.next = 42;
+                return this.GroupPointsRecurse(currPointsArr, north);
+
+              case 42:
+                if (!south) {
+                  _context36.next = 45;
+                  break;
+                }
+
+                _context36.next = 45;
+                return this.GroupPointsRecurse(currPointsArr, south);
+
+              case 45:
+                if (!north_west) {
                   _context36.next = 48;
                   break;
                 }
 
                 _context36.next = 48;
-                return this.GroupPointsRecurse(currPointsArr, east);
+                return this.GroupPointsRecurse(currPointsArr, north_west);
 
               case 48:
-                if (!west) {
+                if (!north_east) {
                   _context36.next = 51;
                   break;
                 }
 
                 _context36.next = 51;
-                return this.GroupPointsRecurse(currPointsArr, west);
+                return this.GroupPointsRecurse(currPointsArr, north_east);
 
               case 51:
-                if (!north) {
+                if (!south_west) {
                   _context36.next = 54;
                   break;
                 }
 
                 _context36.next = 54;
-                return this.GroupPointsRecurse(currPointsArr, north);
+                return this.GroupPointsRecurse(currPointsArr, south_west);
 
               case 54:
-                if (!south) {
+                if (!south_east) {
                   _context36.next = 57;
                   break;
                 }
 
                 _context36.next = 57;
-                return this.GroupPointsRecurse(currPointsArr, south);
-
-              case 57:
-                if (!north_west) {
-                  _context36.next = 60;
-                  break;
-                }
-
-                _context36.next = 60;
-                return this.GroupPointsRecurse(currPointsArr, north_west);
-
-              case 60:
-                if (!north_east) {
-                  _context36.next = 63;
-                  break;
-                }
-
-                _context36.next = 63;
-                return this.GroupPointsRecurse(currPointsArr, north_east);
-
-              case 63:
-                if (!south_west) {
-                  _context36.next = 66;
-                  break;
-                }
-
-                _context36.next = 66;
-                return this.GroupPointsRecurse(currPointsArr, south_west);
-
-              case 66:
-                if (!south_east) {
-                  _context36.next = 69;
-                  break;
-                }
-
-                _context36.next = 69;
                 return this.GroupPointsRecurse(currPointsArr, south_east);
 
-              case 69:
+              case 57:
                 ind = currPointsArr.lastIndexOf(point);
 
                 if (!(ind !== -1)) {
-                  _context36.next = 76;
+                  _context36.next = 64;
                   break;
                 }
 
@@ -5337,13 +5318,13 @@ var InkBallGame = /*#__PURE__*/function () {
                   return "".concat(pt.x, ",").concat(pt.y);
                 }).join(' ');
                 if (!this.workingCyclePolyLine) this.workingCyclePolyLine = this.SvgVml.CreatePolyline(6, pts, 'black');else this.workingCyclePolyLine.SetPoints(pts);
-                _context36.next = 76;
+                _context36.next = 64;
                 return Sleep(50);
 
-              case 76:
+              case 64:
                 return _context36.abrupt("return", currPointsArr);
 
-              case 77:
+              case 65:
               case "end":
                 return _context36.stop();
             }
