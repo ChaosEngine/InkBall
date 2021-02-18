@@ -2842,15 +2842,25 @@ class InkBallGame {
 			}
 		}
 
-		//TODO: awawit all together promises
-		const east = await this.m_Points.get(y * this.m_iGridWidth + x + 1);
-		const west = await this.m_Points.get(y * this.m_iGridWidth + x - 1);
-		const north = await this.m_Points.get((y - 1) * this.m_iGridWidth + x);
-		const south = await this.m_Points.get((y + 1) * this.m_iGridWidth + x);
-		const north_west = await this.m_Points.get((y - 1) * this.m_iGridWidth + x - 1);
-		const north_east = await this.m_Points.get((y - 1) * this.m_iGridWidth + x + 1);
-		const south_west = await this.m_Points.get((y + 1) * this.m_iGridWidth + x - 1);
-		const south_east = await this.m_Points.get((y + 1) * this.m_iGridWidth + x + 1);
+		const [
+			east,
+			west,
+			north,
+			south,
+			north_west,
+			north_east,
+			south_west,
+			south_east
+		] = await Promise.all([
+			this.m_Points.get(y * this.m_iGridWidth + x + 1),
+			this.m_Points.get(y * this.m_iGridWidth + x - 1),
+			this.m_Points.get((y - 1) * this.m_iGridWidth + x),
+			this.m_Points.get((y + 1) * this.m_iGridWidth + x),
+			this.m_Points.get((y - 1) * this.m_iGridWidth + x - 1),
+			this.m_Points.get((y - 1) * this.m_iGridWidth + x + 1),
+			this.m_Points.get((y + 1) * this.m_iGridWidth + x - 1),
+			this.m_Points.get((y + 1) * this.m_iGridWidth + x + 1)
+		]);
 
 		if (east)
 			await this.GroupPointsRecurse(currPointsArr, east);
