@@ -160,7 +160,9 @@ namespace InkBall.Module.Model
 					.ValueGeneratedOnAdd()
 					.HasAnnotation("Sqlite:Autoincrement", true)
 					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+#if INCLUDE_SQLSERVER
 					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
+#endif
 #if INCLUDE_ORACLE
 					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
 #endif
@@ -238,7 +240,9 @@ namespace InkBall.Module.Model
 					.ValueGeneratedOnAdd()
 					.HasAnnotation("Sqlite:Autoincrement", true)
 					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+#if INCLUDE_SQLSERVER
 					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
+#endif
 #if INCLUDE_ORACLE
 					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
 #endif
@@ -276,7 +280,9 @@ namespace InkBall.Module.Model
 					.ValueGeneratedOnAdd()
 					.HasAnnotation("Sqlite:Autoincrement", true)
 					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+#if INCLUDE_SQLSERVER
 					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
+#endif
 #if INCLUDE_ORACLE
 					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
 #endif
@@ -344,7 +350,9 @@ namespace InkBall.Module.Model
 					.ValueGeneratedOnAdd()
 					.HasAnnotation("Sqlite:Autoincrement", true)
 					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+#if INCLUDE_SQLSERVER
 					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
+#endif
 #if INCLUDE_ORACLE
 					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
 #endif
@@ -395,7 +403,9 @@ namespace InkBall.Module.Model
 					.ValueGeneratedOnAdd()
 					.HasAnnotation("Sqlite:Autoincrement", true)
 					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+#if INCLUDE_SQLSERVER
 					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
+#endif
 #if INCLUDE_ORACLE
 					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
 #endif
@@ -418,7 +428,7 @@ namespace InkBall.Module.Model
 			});
 		}
 
-		#region Business logic methods
+#region Business logic methods
 
 		public async Task<InkBallGame> CreateNewGameFromExternalUserIDAsync(string sPlayer1ExternaUserID, GameTypeEnum gameType,
 			int gridSize, int width, int height, bool cpuOponent = false, CancellationToken token = default)
@@ -823,10 +833,10 @@ namespace InkBall.Module.Model
 			return await query.ToArrayAsync();
 		}
 
-		#endregion Business logic methods
+#endregion Business logic methods
 	}
 
-	#region Helpers
+#region Helpers
 
 	public interface IPointAndPathCounter
 	{
@@ -923,5 +933,5 @@ namespace InkBall.Module.Model
 		}
 	}
 
-	#endregion Helpers
+#endregion Helpers
 }

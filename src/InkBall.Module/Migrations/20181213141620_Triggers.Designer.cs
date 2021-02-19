@@ -34,7 +34,10 @@ namespace InkBall.Module.Migrations
 #if INCLUDE_ORACLE
 					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
 #endif
-					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+#if INCLUDE_SQLSERVER
+					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
+#endif
+					;
 
 				b.Property<DateTime>("CreateTime");
 
@@ -99,7 +102,10 @@ namespace InkBall.Module.Migrations
 #if INCLUDE_ORACLE
 					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
 #endif
-					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+#if INCLUDE_SQLSERVER
+					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
+#endif
+					;
 
 				b.Property<int>("iGameId")
 					.HasColumnName("iGameID");
@@ -133,7 +139,10 @@ namespace InkBall.Module.Migrations
 #if INCLUDE_ORACLE
 					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
 #endif
-					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+#if INCLUDE_SQLSERVER
+					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
+#endif
+					;
 
 				b.Property<DateTime>("TimeStamp")
 					.ValueGeneratedOnAddOrUpdate()
@@ -219,7 +228,10 @@ namespace InkBall.Module.Migrations
 #if INCLUDE_ORACLE
 					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
 #endif
-					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+#if INCLUDE_SQLSERVER
+					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
+#endif
+					;
 
 				b.Property<int>("iPrivileges")
 					.ValueGeneratedOnAdd()
