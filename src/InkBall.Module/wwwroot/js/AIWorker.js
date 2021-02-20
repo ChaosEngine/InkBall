@@ -49,8 +49,8 @@ addEventListener('message', async function (e) {
 				});
 				const convex_hull = concaveman(vertices, 2.0, 0.0);
 
-				const mapped_verts = convex_hull.map(function (pt) {
-					return { x: pt[0], y: pt[1] };
+				const mapped_verts = convex_hull.map(function ([x, y]) {
+					return { x, y };
 				}.bind(this));
 				const cw_sorted_verts = sortPointsClockwise(mapped_verts);
 

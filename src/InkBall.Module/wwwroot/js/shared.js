@@ -329,8 +329,8 @@ class SvgVml {
 		SVGPolylineElement.prototype.GetPointsArray = function () {
 			//x0,y0 x1,y1 x2,y2
 			return this.getAttribute("points").split(" ").map(function (pt) {
-				const tab = pt.split(',');
-				return { x: parseInt(tab[0]), y: parseInt(tab[1]) };
+				const [x, y] = pt.split(',');
+				return { x: parseInt(x), y: parseInt(y) };
 			});
 		};
 		SVGPolylineElement.prototype.SetPoints = function (sPoints) {
