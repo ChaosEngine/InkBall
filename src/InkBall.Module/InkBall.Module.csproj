@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <!--<DefineConstants>TRACE;INCLUDE_ORACLE</DefineConstants>-->
+    <!--<DefineConstants>TRACE;INCLUDE_ORACLE;INCLUDE_SQLSERVER</DefineConstants>-->
     <DefineConstants>TRACE</DefineConstants>
   </PropertyGroup>
 
