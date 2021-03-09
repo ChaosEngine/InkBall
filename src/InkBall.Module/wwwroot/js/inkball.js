@@ -1042,8 +1042,8 @@ class InkBallGame {
 		try {
 			await this.m_Points.BeginBulkStorage();
 
-			for (const p of points) {
-				await this.SetPoint(p[0]/*x*/, p[1]/*y*/, DataUnMinimizerStatus(p[2]/*Status*/), DataUnMinimizerPlayerId(p[3]/*iPlayerId*/));
+			for (const [x, y, Status, iPlayerId] of points) {
+				await this.SetPoint(x, y, DataUnMinimizerStatus(Status), DataUnMinimizerPlayerId(iPlayerId));
 			}
 		}
 		finally {
@@ -1157,8 +1157,7 @@ class InkBallGame {
 
 	IsPointBelongingToLine(sPoints, iX, iY) {
 		for (const packed of sPoints) {
-			const pnt = packed.split(",");
-			const x = pnt[0], y = pnt[1];
+			const [x, y] = packed.split(",");
 			if (x === iX && y === iY)
 				return true;
 		}
@@ -1972,8 +1971,8 @@ class InkBallGame {
 		event.preventDefault();
 		//LocalLog(await this.BuildGraph());
 		const data = await this.RunAIWorker((worker) => {
-			const serialized_points = Array.from(this.m_Points.store.entries()).map((arr) => {
-				return { key: arr[0], value: arr[1].Serialize() };
+			const serialized_points = Array.from(this.m_Points.store.entries()).map(([key, value]) => {
+				return { key: key, value: value.Serialize() };
 			});
 			const serialized_paths = this.m_Lines.store.map(pa => pa.Serialize());
 
@@ -1991,8 +1990,8 @@ class InkBallGame {
 		event.preventDefault();
 
 		const data = await this.RunAIWorker((worker) => {
-			const serialized_points = Array.from(this.m_Points.store.entries()).map((arr) => {
-				return { key: arr[0], value: arr[1].Serialize() };
+			const serialized_points = Array.from(this.m_Points.store.entries()).map(([key, value]) => {
+				return { key: key, value: value.Serialize() };
 			});
 			//const serialized_paths = this.m_Lines.store.map(pa => pa.Serialize());
 
@@ -2004,8 +2003,8 @@ class InkBallGame {
 		});
 		if (data.convex_hull && data.convex_hull.length > 0) {
 			const convex_hull = data.convex_hull;
-			this.SvgVml.CreatePolyline(6, convex_hull.map(function (fnd) {
-				return parseInt(fnd[0]) * this.m_iGridSizeX + ',' + parseInt(fnd[1]) * this.m_iGridSizeY;
+			this.SvgVml.CreatePolyline(6, convex_hull.map(function ([x, y]) {
+				return parseInt(x) * this.m_iGridSizeX + ',' + parseInt(y) * this.m_iGridSizeY;
 			}.bind(this)).join(' '), 'green');
 			LocalLog(`convex_hull = ${convex_hull}`);
 
@@ -2038,8 +2037,8 @@ class InkBallGame {
 		//LocalLog(await this.MarkAllCycles(await this.BuildGraph({ visuals: true })));
 
 		const data = await this.RunAIWorker((worker) => {
-			const serialized_points = Array.from(this.m_Points.store.entries()).map((arr) => {
-				return { key: arr[0], value: arr[1].Serialize() };
+			const serialized_points = Array.from(this.m_Points.store.entries()).map(([key, value]) => {
+				return { key: key, value: value.Serialize() };
 			});
 			const serialized_paths = this.m_Lines.store.map(pa => pa.Serialize());
 

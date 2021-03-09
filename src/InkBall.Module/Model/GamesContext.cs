@@ -3,7 +3,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
+#if INCLUDE_POSTGRES
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+#endif
 #if INCLUDE_ORACLE
 using Oracle.EntityFrameworkCore.Metadata;
 #endif
@@ -166,7 +168,10 @@ namespace InkBall.Module.Model
 #if INCLUDE_ORACLE
 					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
 #endif
-					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
+#if INCLUDE_POSTGRES
+					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
+#endif
+					;
 
 				entity.Property(e => e.bIsPlayer1Active)
 					.HasColumnName("bIsPlayer1Active")
@@ -246,7 +251,10 @@ namespace InkBall.Module.Model
 #if INCLUDE_ORACLE
 					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
 #endif
-					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
+#if INCLUDE_POSTGRES
+					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
+#endif
+					;
 
 				entity.Property(e => e.iGameId).HasColumnName("iGameID");
 
@@ -286,7 +294,10 @@ namespace InkBall.Module.Model
 #if INCLUDE_ORACLE
 					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
 #endif
-					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
+#if INCLUDE_POSTGRES
+					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
+#endif
+					;
 
 				entity.Property(e => e.iUserId)
 					.HasColumnName("iUserID");
@@ -356,7 +367,10 @@ namespace InkBall.Module.Model
 #if INCLUDE_ORACLE
 					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
 #endif
-					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
+#if INCLUDE_POSTGRES
+					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
+#endif
+					;
 
 				entity.Property(e => e.iEnclosingPathId).HasColumnName("iEnclosingPathId");
 
@@ -409,7 +423,10 @@ namespace InkBall.Module.Model
 #if INCLUDE_ORACLE
 					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
 #endif
-					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
+#if INCLUDE_POSTGRES
+					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
+#endif
+					;
 
 				entity.Property(e => e.iPrivileges)
 					.HasColumnName("iPrivileges")

@@ -254,7 +254,7 @@ function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) ===
 
 function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
 
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 
@@ -1731,7 +1731,7 @@ var InkBallGame = /*#__PURE__*/function () {
     key: "SetAllPoints",
     value: function () {
       var _SetAllPoints = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8(points) {
-        var DataUnMinimizerStatus, DataUnMinimizerPlayerId, _iterator, _step, p;
+        var DataUnMinimizerStatus, DataUnMinimizerPlayerId, _iterator, _step, _step$value, x, y, Status, iPlayerId;
 
         return regeneratorRuntime.wrap(function _callee8$(_context8) {
           while (1) {
@@ -1761,17 +1761,9 @@ var InkBallGame = /*#__PURE__*/function () {
                   break;
                 }
 
-                p = _step.value;
+                _step$value = _slicedToArray(_step.value, 4), x = _step$value[0], y = _step$value[1], Status = _step$value[2], iPlayerId = _step$value[3];
                 _context8.next = 12;
-                return this.SetPoint(p[0]
-                /*x*/
-                , p[1]
-                /*y*/
-                , DataUnMinimizerStatus(p[2]
-                /*Status*/
-                ), DataUnMinimizerPlayerId(p[3]
-                /*iPlayerId*/
-                ));
+                return this.SetPoint(x, y, DataUnMinimizerStatus(Status), DataUnMinimizerPlayerId(iPlayerId));
 
               case 12:
                 _context8.next = 8;
@@ -2126,9 +2118,12 @@ var InkBallGame = /*#__PURE__*/function () {
       try {
         for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
           var packed = _step5.value;
-          var pnt = packed.split(",");
-          var x = pnt[0],
-              y = pnt[1];
+
+          var _packed$split = packed.split(","),
+              _packed$split2 = _slicedToArray(_packed$split, 2),
+              x = _packed$split2[0],
+              y = _packed$split2[1];
+
           if (x === iX && y === iY) return true;
         }
       } catch (err) {
@@ -3599,10 +3594,14 @@ var InkBallGame = /*#__PURE__*/function () {
 
                 _context24.next = 3;
                 return this.RunAIWorker(function (worker) {
-                  var serialized_points = Array.from(_this14.m_Points.store.entries()).map(function (arr) {
+                  var serialized_points = Array.from(_this14.m_Points.store.entries()).map(function (_ref8) {
+                    var _ref9 = _slicedToArray(_ref8, 2),
+                        key = _ref9[0],
+                        value = _ref9[1];
+
                     return {
-                      key: arr[0],
-                      value: arr[1].Serialize()
+                      key: key,
+                      value: value.Serialize()
                     };
                   });
 
@@ -3651,10 +3650,14 @@ var InkBallGame = /*#__PURE__*/function () {
                 event.preventDefault();
                 _context25.next = 3;
                 return this.RunAIWorker(function (worker) {
-                  var serialized_points = Array.from(_this15.m_Points.store.entries()).map(function (arr) {
+                  var serialized_points = Array.from(_this15.m_Points.store.entries()).map(function (_ref10) {
+                    var _ref11 = _slicedToArray(_ref10, 2),
+                        key = _ref11[0],
+                        value = _ref11[1];
+
                     return {
-                      key: arr[0],
-                      value: arr[1].Serialize()
+                      key: key,
+                      value: value.Serialize()
                     };
                   }); //const serialized_paths = this.m_Lines.store.map(pa => pa.Serialize());
 
@@ -3674,8 +3677,12 @@ var InkBallGame = /*#__PURE__*/function () {
                 }
 
                 convex_hull = data.convex_hull;
-                this.SvgVml.CreatePolyline(6, convex_hull.map(function (fnd) {
-                  return parseInt(fnd[0]) * this.m_iGridSizeX + ',' + parseInt(fnd[1]) * this.m_iGridSizeY;
+                this.SvgVml.CreatePolyline(6, convex_hull.map(function (_ref12) {
+                  var _ref13 = _slicedToArray(_ref12, 2),
+                      x = _ref13[0],
+                      y = _ref13[1];
+
+                  return parseInt(x) * this.m_iGridSizeX + ',' + parseInt(y) * this.m_iGridSizeY;
                 }.bind(this)).join(' '), 'green');
                 LocalLog("convex_hull = ".concat(convex_hull));
                 cw_sorted_verts = data.cw_sorted_verts;
@@ -3763,10 +3770,14 @@ var InkBallGame = /*#__PURE__*/function () {
 
                 _context26.next = 3;
                 return this.RunAIWorker(function (worker) {
-                  var serialized_points = Array.from(_this16.m_Points.store.entries()).map(function (arr) {
+                  var serialized_points = Array.from(_this16.m_Points.store.entries()).map(function (_ref14) {
+                    var _ref15 = _slicedToArray(_ref14, 2),
+                        key = _ref15[0],
+                        value = _ref15[1];
+
                     return {
-                      key: arr[0],
-                      value: arr[1].Serialize()
+                      key: key,
+                      value: value.Serialize()
                     };
                   });
 
@@ -4739,7 +4750,7 @@ var InkBallGame = /*#__PURE__*/function () {
                 }
 
                 dfs_cycle = /*#__PURE__*/function () {
-                  var _ref8 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee33(u, p) {
+                  var _ref16 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee33(u, p) {
                     var cur, vertex, _iterator17, _step17, adj, v;
 
                     return regeneratorRuntime.wrap(function _callee33$(_context33) {
@@ -4849,15 +4860,15 @@ var InkBallGame = /*#__PURE__*/function () {
                   }));
 
                   return function dfs_cycle(_x49, _x50) {
-                    return _ref8.apply(this, arguments);
+                    return _ref16.apply(this, arguments);
                   };
                 }();
 
                 printCycles = /*#__PURE__*/function () {
-                  var _ref9 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee34(edges, mark) {
+                  var _ref17 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee34(edges, mark) {
                     var _this18 = this;
 
-                    var e, mark_e, m, found_c, free_human_player_points, sHumanColor, _iterator18, _step18, _pt4, _pt4$GetPosition, view_x, view_y, _x53, _y3, _pt5, tab, _i, cycl, str, trailing_points, rand_color, mapped_verts, cw_sorted_verts, _iterator19, _step19, vert, x, y, pt, tmp, comma, _iterator20, _step20, possible_intercept, pt1, pts2reset;
+                    var e, mark_e, m, found_c, free_human_player_points, sHumanColor, _iterator18, _step18, _pt4, _pt4$GetPosition, view_x, view_y, _x53, _y3, _pt5, tab, _i2, cycl, str, trailing_points, rand_color, mapped_verts, cw_sorted_verts, _iterator19, _step19, vert, x, y, pt, tmp, comma, _iterator20, _step20, possible_intercept, pt1, pts2reset;
 
                     return regeneratorRuntime.wrap(function _callee34$(_context34) {
                       while (1) {
@@ -4956,15 +4967,15 @@ var InkBallGame = /*#__PURE__*/function () {
                           case 33:
                             tab = []; // traverse through all the vertices with same cycle
 
-                            _i = 0;
+                            _i2 = 0;
 
                           case 35:
-                            if (!(_i <= cyclenumber)) {
+                            if (!(_i2 <= cyclenumber)) {
                               _context34.next = 73;
                               break;
                             }
 
-                            cycl = cycles[_i]; //get cycle
+                            cycl = cycles[_i2]; //get cycle
 
                             if (!(cycl && cycl.length > 0)) {
                               _context34.next = 70;
@@ -4973,7 +4984,7 @@ var InkBallGame = /*#__PURE__*/function () {
 
                             //somr checks
                             // Print the i-th cycle
-                            str = "Cycle Number ".concat(_i, ": "), trailing_points = [];
+                            str = "Cycle Number ".concat(_i2, ": "), trailing_points = [];
                             rand_color = 'var(--indigo)'; //convert to logical space
 
                             mapped_verts = cycl.map(function (c) {
@@ -5076,7 +5087,7 @@ var InkBallGame = /*#__PURE__*/function () {
                             });
 
                           case 70:
-                            _i++;
+                            _i2++;
                             _context34.next = 35;
                             break;
 
@@ -5092,7 +5103,7 @@ var InkBallGame = /*#__PURE__*/function () {
                   }));
 
                   return function (_x51, _x52) {
-                    return _ref9.apply(this, arguments);
+                    return _ref17.apply(this, arguments);
                   };
                 }().bind(this); // store the numbers of cycle 
 
@@ -5342,8 +5353,8 @@ var InkBallGame = /*#__PURE__*/function () {
     key: "GroupPointsIterative",
     value: function () {
       var _GroupPointsIterative = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee37() {
-        var _ref10,
-            _ref10$g,
+        var _ref18,
+            _ref18$g,
             graph,
             vertices,
             cycles,
@@ -5359,7 +5370,7 @@ var InkBallGame = /*#__PURE__*/function () {
           while (1) {
             switch (_context37.prev = _context37.next) {
               case 0:
-                _ref10 = _args37.length > 0 && _args37[0] !== undefined ? _args37[0] : {}, _ref10$g = _ref10.g, graph = _ref10$g === void 0 ? null : _ref10$g;
+                _ref18 = _args37.length > 0 && _args37[0] !== undefined ? _args37[0] : {}, _ref18$g = _ref18.g, graph = _ref18$g === void 0 ? null : _ref18$g;
 
                 if (graph) {
                   _context37.next = 3;

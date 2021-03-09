@@ -6,7 +6,9 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+#if INCLUDE_POSTGRES
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+#endif
 #if INCLUDE_ORACLE
 using Oracle.EntityFrameworkCore.Metadata;
 #endif
@@ -29,7 +31,9 @@ namespace InkBall.Module.Migrations
 					.ValueGeneratedOnAdd()
 					.HasColumnName("iId")
 					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+#if INCLUDE_POSTGRES
 					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
+#endif
 					.HasAnnotation("Sqlite:Autoincrement", true)
 #if INCLUDE_ORACLE
 					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
@@ -102,7 +106,9 @@ namespace InkBall.Module.Migrations
 					.ValueGeneratedOnAdd()
 					.HasColumnName("iId")
 					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+#if INCLUDE_POSTGRES
 					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
+#endif
 					.HasAnnotation("Sqlite:Autoincrement", true)
 #if INCLUDE_ORACLE
 					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
@@ -139,7 +145,9 @@ namespace InkBall.Module.Migrations
 					.ValueGeneratedOnAdd()
 					.HasColumnName("iId")
 					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+#if INCLUDE_POSTGRES
 					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
+#endif
 					.HasAnnotation("Sqlite:Autoincrement", true)
 #if INCLUDE_ORACLE
 					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
@@ -240,7 +248,9 @@ namespace InkBall.Module.Migrations
 					.ValueGeneratedOnAdd()
 					.HasColumnName("iId")
 					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+#if INCLUDE_POSTGRES
 					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
+#endif
 					.HasAnnotation("Sqlite:Autoincrement", true)
 #if INCLUDE_ORACLE
 					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)

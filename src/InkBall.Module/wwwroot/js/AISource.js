@@ -242,7 +242,7 @@ class GraphAI {
 					}.bind(this));
 					//sort clockwise (https://stackoverflow.com/questions/45660743/sort-points-in-counter-clockwise-in-javascript)
 					const cw_sorted_verts = sortPointsClockwise(mapped_verts);
-					cycles[i] = { cycl, cw_sorted_verts }; 
+					cycles[i] = { cycl, cw_sorted_verts };
 					////display which cycle we are dealing with
 					//for (const vert of cw_sorted_verts) {
 					//	const { x, y } = vert;

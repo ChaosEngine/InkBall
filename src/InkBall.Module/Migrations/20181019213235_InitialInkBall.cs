@@ -2,7 +2,9 @@
 using InkBall.Module.Model;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
+#if INCLUDE_POSTGRES
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+#endif
 #if INCLUDE_ORACLE
 using Oracle.EntityFrameworkCore.Metadata;
 #endif
@@ -26,8 +28,10 @@ namespace InkBall.Module.Migrations
 #if INCLUDE_ORACLE
 						.Annotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
 #endif
-						.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
-					iPrivileges = table.Column<int>(nullable: false, defaultValue: 0)
+#if INCLUDE_POSTGRES
+						.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
+#endif
+					, iPrivileges = table.Column<int>(nullable: false, defaultValue: 0)
 						.Annotation("Sqlite:Autoincrement", true),
 					sExternalId = table.Column<string>(nullable: true),
 					UserName = table.Column<string>(maxLength: 256, nullable: true),
@@ -50,8 +54,10 @@ namespace InkBall.Module.Migrations
 #if INCLUDE_ORACLE
 						.Annotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
 #endif
-						.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
-					iUserID = table.Column<int>(nullable: true),
+#if INCLUDE_POSTGRES
+						.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
+#endif
+					, iUserID = table.Column<int>(nullable: true),
 					sLastMoveCode = table.Column<string>(type: GamesContext.JsonColumnTypeFromProvider(this.ActiveProvider), nullable: true),
 					iWinCount = table.Column<int>(nullable: false, defaultValue: 0)
 						.Annotation("Sqlite:Autoincrement", true),
@@ -86,8 +92,10 @@ namespace InkBall.Module.Migrations
 #if INCLUDE_ORACLE
 						.Annotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
 #endif
-						.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
-					iPlayer1ID = table.Column<int>(nullable: false),
+#if INCLUDE_POSTGRES
+						.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
+#endif
+					, iPlayer1ID = table.Column<int>(nullable: false),
 					iPlayer2ID = table.Column<int>(nullable: true),
 					bIsPlayer1Active = table.Column<bool>(nullable: false, defaultValue: true),
 					iGridSize = table.Column<int>(nullable: false, defaultValue: 16)
@@ -132,8 +140,10 @@ namespace InkBall.Module.Migrations
 #if INCLUDE_ORACLE
 						.Annotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
 #endif
-						.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
-					iGameID = table.Column<int>(nullable: false),
+#if INCLUDE_POSTGRES
+						.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
+#endif
+					, iGameID = table.Column<int>(nullable: false),
 					iPlayerID = table.Column<int>(nullable: false),
 					PointsAsString = table.Column<string>(type: GamesContext.JsonColumnTypeFromProvider(this.ActiveProvider), nullable: true),
 				},
@@ -167,8 +177,10 @@ namespace InkBall.Module.Migrations
 #if INCLUDE_ORACLE
 						.Annotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
 #endif
-						.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
-					iGameID = table.Column<int>(nullable: false),
+#if INCLUDE_POSTGRES
+						.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
+#endif
+					, iGameID = table.Column<int>(nullable: false),
 					iPlayerID = table.Column<int>(nullable: false),
 					iX = table.Column<int>(nullable: false),
 					iY = table.Column<int>(nullable: false),
