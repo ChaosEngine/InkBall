@@ -220,7 +220,7 @@ function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArra
 
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 
-function _iterableToArrayLimit(arr, i) { var _i = arr && (typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"]); if (_i == null) return; var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (_i = _i.call(arr), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+function _iterableToArrayLimit(arr, i) { var _i = arr && (typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"]); if (_i == null) return; var _arr = []; var _n = true; var _d = false; var _s, _e; try { for (_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
 
 function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
@@ -2060,9 +2060,13 @@ var InkBallGame = /*#__PURE__*/function () {
                 _context11.next = 10;
                 return this.SetPath(unpacked.PointsAsString
                 /*points*/
-                , this.m_bIsPlayingWithRed, unpacked.iPlayerId === this.g_iPlayerID
+                ,
+                /*points*/
+                this.m_bIsPlayingWithRed, unpacked.iPlayerId === this.g_iPlayerID
                 /*isMainPlayerPoints*/
-                , unpacked.iId
+                ,
+                /*isMainPlayerPoints*/
+                unpacked.iId
                 /*real DB id*/
                 );
 
@@ -3661,6 +3665,7 @@ var InkBallGame = /*#__PURE__*/function () {
                     };
                   }); //const serialized_paths = this.m_Lines.store.map(pa => pa.Serialize());
 
+                  //const serialized_paths = this.m_Lines.store.map(pa => pa.Serialize());
                   worker.postMessage({
                     operation: "CONCAVEMAN",
                     state: _this15.GetGameStateForIndexedDb(),
