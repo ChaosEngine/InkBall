@@ -29,7 +29,7 @@
 		<PackageReference Include="Oracle.EntityFrameworkCore" Version="5.21.1" Condition="$(DefineConstants.Contains('INCLUDE_ORACLE'))" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="5.0.8" />
-		<PackageReference Include="MessagePack" Version="2.2.85" />
+		<PackageReference Include="MessagePack" Version="2.2.113" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(Configuration)'=='Debug'">
