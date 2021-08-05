@@ -2060,13 +2060,9 @@ var InkBallGame = /*#__PURE__*/function () {
                 _context11.next = 10;
                 return this.SetPath(unpacked.PointsAsString
                 /*points*/
-                ,
-                /*points*/
-                this.m_bIsPlayingWithRed, unpacked.iPlayerId === this.g_iPlayerID
+                , this.m_bIsPlayingWithRed, unpacked.iPlayerId === this.g_iPlayerID
                 /*isMainPlayerPoints*/
-                ,
-                /*isMainPlayerPoints*/
-                unpacked.iId
+                , unpacked.iId
                 /*real DB id*/
                 );
 
@@ -2329,9 +2325,7 @@ var InkBallGame = /*#__PURE__*/function () {
     }()
   }, {
     key: "CreateXMLWaitForPlayerRequest",
-    value: function CreateXMLWaitForPlayerRequest()
-    /*...args*/
-    {//let cmd = new WaitForPlayerCommand((args.length > 0 && args[0] === true) ? true : false);
+    value: function CreateXMLWaitForPlayerRequest() {//let cmd = new WaitForPlayerCommand((args.length > 0 && args[0] === true) ? true : false);
       //return cmd;
     }
   }, {
@@ -4691,15 +4685,15 @@ var InkBallGame = /*#__PURE__*/function () {
             // not parent of current vertex, 
             // then there is a cycle. 
             else if (i !== parent) {
-                var _i$GetPosition = i.GetPosition(),
-                    view_x = _i$GetPosition.x,
-                    view_y = _i$GetPosition.y;
+              var _i$GetPosition = i.GetPosition(),
+                  view_x = _i$GetPosition.x,
+                  view_y = _i$GetPosition.y;
 
-                var x = view_x / this.m_iGridSizeX,
-                    y = view_y / this.m_iGridSizeY;
-                LocalLog("cycle found at ".concat(x, ",").concat(y));
-                return true;
-              }
+              var x = view_x / this.m_iGridSizeX,
+                  y = view_y / this.m_iGridSizeY;
+              LocalLog("cycle found at ".concat(x, ",").concat(y));
+              return true;
+            }
           }
         } catch (err) {
           _iterator16.e(err);
