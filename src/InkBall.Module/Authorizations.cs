@@ -136,11 +136,11 @@ namespace InkBall.Module
 							}
 						}
 
-						trans.Commit();
+						await trans.CommitAsync(token);
 					}
 					catch (Exception ex)
 					{
-						trans.Rollback();
+						await trans.RollbackAsync(token);
 						logger.LogError(ex, ex.Message);
 					}
 				}

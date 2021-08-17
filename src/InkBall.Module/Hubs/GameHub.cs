@@ -449,11 +449,11 @@ namespace InkBall.Module.Hubs
 						//#endif
 						await _dbContext.SaveChangesAsync(token);
 
-						trans.Commit();
+						await trans.CommitAsync(token);
 					}
 					catch (Exception ex)
 					{
-						trans.Rollback();
+						await trans.RollbackAsync(token);
 						_logger.LogError(ex, nameof(ClientToServerPoint));
 						throw;
 					}
@@ -612,13 +612,13 @@ namespace InkBall.Module.Hubs
 								await Clients.User(OtherUserIdentifier).ServerToClientPath(path);
 						}
 
-						trans.Commit();
+						await trans.CommitAsync(token);
 
 						return dto;
 					}
 					catch (Exception ex)
 					{
-						trans.Rollback();
+						await trans.RollbackAsync(token);
 						_logger.LogError(ex, nameof(ClientToServerPath));
 						throw;
 					}
@@ -672,13 +672,13 @@ namespace InkBall.Module.Hubs
 
 						await Clients.User(OtherUserIdentifier).ServerToClientPlayerWin(win);
 
-						trans.Rollback();
+						await trans.RollbackAsync(token);
 
 						return win;
 					}
 					catch (Exception ex)
 					{
-						trans.Rollback();
+						await trans.RollbackAsync(token);
 						_logger.LogError(ex, nameof(ClientToServerPath));
 						throw;
 					}
