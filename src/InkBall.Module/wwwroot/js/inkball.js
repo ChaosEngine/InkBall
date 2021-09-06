@@ -2960,6 +2960,7 @@ class InkBallGame {
 
 /******** run code and events ********/
 window.addEventListener('load', async function () {
+	const isMsgpackDefined = window.msgpack5 !== undefined;
 	const gameOptions = window.gameOptions;
 
 	const inkBallHubName = gameOptions.inkBallHubName;
@@ -2972,7 +2973,7 @@ window.addEventListener('load', async function () {
 	const bPlayingWithRed = gameOptions.bPlayingWithRed;
 	const bPlayerActive = gameOptions.bPlayerActive;
 	const gameType = gameOptions.gameType;
-	const protocol = gameOptions.isMessagePackProtocol === true ? new signalR.protocols.msgpack.MessagePackHubProtocol() : new signalR.JsonHubProtocol();
+	const protocol = isMsgpackDefined && gameOptions.isMessagePackProtocol === true ? new signalR.protocols.msgpack.MessagePackHubProtocol() : new signalR.JsonHubProtocol();
 	const servTimeoutMillis = gameOptions.servTimeoutMillis;
 	const isReadonly = gameOptions.isReadonly;
 	const pathAfterPointDrawAllowanceSecAmount = gameOptions.pathAfterPointDrawAllowanceSecAmount;

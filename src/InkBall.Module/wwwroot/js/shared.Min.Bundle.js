@@ -1,26 +1,28 @@
-(window["webpackJsonp"] = window["webpackJsonp"] || []).push([[2],{
-
-/***/ 2:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
 "use strict";
+(self["webpackChunk"] = self["webpackChunk"] || []).push([[51],{
+
+/***/ 980:
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SvgVml", function() { return SvgVml; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "StatusEnum", function() { return StatusEnum; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "pnpoly", function() { return pnpoly; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "pnpoly2", function() { return pnpoly2; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "LocalLog", function() { return LocalLog; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "LocalError", function() { return LocalError; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "hasDuplicates", function() { return hasDuplicates; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "sortPointsClockwise", function() { return sortPointsClockwise; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Sleep", function() { return Sleep; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "isESModuleSupport", function() { return isESModuleSupport; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "GameStateStore", function() { return GameStateStore; });
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "SvgVml": function() { return /* binding */ SvgVml; },
+/* harmony export */   "StatusEnum": function() { return /* binding */ StatusEnum; },
+/* harmony export */   "pnpoly": function() { return /* binding */ pnpoly; },
+/* harmony export */   "pnpoly2": function() { return /* binding */ pnpoly2; },
+/* harmony export */   "LocalLog": function() { return /* binding */ LocalLog; },
+/* harmony export */   "LocalError": function() { return /* binding */ LocalError; },
+/* harmony export */   "hasDuplicates": function() { return /* binding */ hasDuplicates; },
+/* harmony export */   "sortPointsClockwise": function() { return /* binding */ sortPointsClockwise; },
+/* harmony export */   "Sleep": function() { return /* binding */ Sleep; },
+/* harmony export */   "isESModuleSupport": function() { return /* binding */ isESModuleSupport; },
+/* harmony export */   "GameStateStore": function() { return /* binding */ GameStateStore; }
+/* harmony export */ });
 
 
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
-function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e4) { throw _e4; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e5) { didErr = true; err = _e5; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
+function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e4) { throw _e4; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e5) { didErr = true; err = _e5; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
 
@@ -28,7 +30,7 @@ function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || func
 
 function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
 
 function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
 
@@ -208,7 +210,7 @@ var SvgVml = /*#__PURE__*/function () {
     }, SVGCircleElement.prototype.getAttribute = function (t) {
       return this.attributes.get(t);
     }, SVGCircleElement.prototype.removeAttribute = function (t) {
-      this.attributes["delete"](t);
+      this.attributes.delete(t);
     }, self.SVGLineElement = function () {
       this.attributes = new Map();
     }, SVGLineElement.prototype.setAttribute = function (t, e) {
@@ -216,7 +218,7 @@ var SvgVml = /*#__PURE__*/function () {
     }, SVGLineElement.prototype.getAttribute = function (t) {
       return this.attributes.get(t);
     }, SVGLineElement.prototype.removeAttribute = function (t) {
-      this.attributes["delete"](t);
+      this.attributes.delete(t);
     }, self.SVGPolylineElement = function () {
       this.attributes = new Map();
     }, SVGPolylineElement.prototype.setAttribute = function (t, e) {
@@ -224,7 +226,7 @@ var SvgVml = /*#__PURE__*/function () {
     }, SVGPolylineElement.prototype.getAttribute = function (t) {
       return this.attributes.get(t);
     }, SVGPolylineElement.prototype.removeAttribute = function (t) {
-      this.attributes["delete"](t);
+      this.attributes.delete(t);
     }, r = function r(t) {
       switch (t) {
         case "circle":
@@ -1463,7 +1465,7 @@ var GameStateStore = /*#__PURE__*/function () {
 
                   i.onsuccess = function (e) {
                     var r = e.target.result;
-                    r ? (n.push(r.value), r["continue"]()) : t(n);
+                    r ? (n.push(r.value), r.continue()) : t(n);
                   }, i.onerror = function (t) {
                     e(new Error("GetAllPoints => " + t));
                   };
@@ -1568,7 +1570,7 @@ var GameStateStore = /*#__PURE__*/function () {
 
                   i.onsuccess = function (e) {
                     var r = e.target.result;
-                    r ? (n.push(r.value), r["continue"]()) : t(n);
+                    r ? (n.push(r.value), r.continue()) : t(n);
                   }, i.onerror = function (t) {
                     e(new Error("GetAllPaths => " + t));
                   };
@@ -2025,7 +2027,7 @@ var GameStateStore = /*#__PURE__*/function () {
                   try {
                     for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
                       _t6 = _step4.value;
-                      this.bulkStores.has(_t6) && this.bulkStores["delete"](_t6);
+                      this.bulkStores.has(_t6) && this.bulkStores.delete(_t6);
                     }
                   } catch (err) {
                     _iterator4.e(err);

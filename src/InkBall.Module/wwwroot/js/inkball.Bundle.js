@@ -1,216 +1,230 @@
-/******/ (function(modules) { // webpackBootstrap
-/******/ 	// install a JSONP callback for chunk loading
-/******/ 	function webpackJsonpCallback(data) {
-/******/ 		var chunkIds = data[0];
-/******/ 		var moreModules = data[1];
-/******/
-/******/
-/******/ 		// add "moreModules" to the modules object,
-/******/ 		// then flag all "chunkIds" as loaded and fire callback
-/******/ 		var moduleId, chunkId, i = 0, resolves = [];
-/******/ 		for(;i < chunkIds.length; i++) {
-/******/ 			chunkId = chunkIds[i];
-/******/ 			if(Object.prototype.hasOwnProperty.call(installedChunks, chunkId) && installedChunks[chunkId]) {
-/******/ 				resolves.push(installedChunks[chunkId][0]);
-/******/ 			}
-/******/ 			installedChunks[chunkId] = 0;
-/******/ 		}
-/******/ 		for(moduleId in moreModules) {
-/******/ 			if(Object.prototype.hasOwnProperty.call(moreModules, moduleId)) {
-/******/ 				modules[moduleId] = moreModules[moduleId];
-/******/ 			}
-/******/ 		}
-/******/ 		if(parentJsonpFunction) parentJsonpFunction(data);
-/******/
-/******/ 		while(resolves.length) {
-/******/ 			resolves.shift()();
-/******/ 		}
-/******/
-/******/ 	};
-/******/
-/******/
+/******/ (function() { // webpackBootstrap
+/******/ 	"use strict";
+/******/ 	var __webpack_modules__ = ({});
+/************************************************************************/
 /******/ 	// The module cache
-/******/ 	var installedModules = {};
-/******/
-/******/ 	// object to store loaded and loading chunks
-/******/ 	// undefined = chunk not loaded, null = chunk preloaded/prefetched
-/******/ 	// Promise = chunk loading, 0 = chunk loaded
-/******/ 	var installedChunks = {
-/******/ 		0: 0
-/******/ 	};
-/******/
-/******/
-/******/
-/******/ 	// script path function
-/******/ 	function jsonpScriptSrc(chunkId) {
-/******/ 		return __webpack_require__.p + "" + ({"1":"shared","2":"shared.Min"}[chunkId]||chunkId) + ".Bundle.js"
-/******/ 	}
-/******/
+/******/ 	var __webpack_module_cache__ = {};
+/******/ 	
 /******/ 	// The require function
 /******/ 	function __webpack_require__(moduleId) {
-/******/
 /******/ 		// Check if module is in cache
-/******/ 		if(installedModules[moduleId]) {
-/******/ 			return installedModules[moduleId].exports;
+/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
 /******/ 		}
 /******/ 		// Create a new module (and put it into the cache)
-/******/ 		var module = installedModules[moduleId] = {
-/******/ 			i: moduleId,
-/******/ 			l: false,
+/******/ 		var module = __webpack_module_cache__[moduleId] = {
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
 /******/ 			exports: {}
 /******/ 		};
-/******/
+/******/ 	
 /******/ 		// Execute the module function
-/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-/******/
-/******/ 		// Flag the module as loaded
-/******/ 		module.l = true;
-/******/
+/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
+/******/ 	
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
-/******/
-/******/ 	// This file contains only the entry chunk.
-/******/ 	// The chunk loading function for additional chunks
-/******/ 	__webpack_require__.e = function requireEnsure(chunkId) {
-/******/ 		var promises = [];
-/******/
-/******/
-/******/ 		// JSONP chunk loading for javascript
-/******/
-/******/ 		var installedChunkData = installedChunks[chunkId];
-/******/ 		if(installedChunkData !== 0) { // 0 means "already installed".
-/******/
-/******/ 			// a Promise means "currently loading".
-/******/ 			if(installedChunkData) {
-/******/ 				promises.push(installedChunkData[2]);
-/******/ 			} else {
-/******/ 				// setup Promise in chunk cache
-/******/ 				var promise = new Promise(function(resolve, reject) {
-/******/ 					installedChunkData = installedChunks[chunkId] = [resolve, reject];
-/******/ 				});
-/******/ 				promises.push(installedChunkData[2] = promise);
-/******/
-/******/ 				// start chunk loading
-/******/ 				var script = document.createElement('script');
-/******/ 				var onScriptComplete;
-/******/
+/******/ 	
+/******/ 	// expose the modules object (__webpack_modules__)
+/******/ 	__webpack_require__.m = __webpack_modules__;
+/******/ 	
+/************************************************************************/
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	!function() {
+/******/ 		// define getter functions for harmony exports
+/******/ 		__webpack_require__.d = function(exports, definition) {
+/******/ 			for(var key in definition) {
+/******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
+/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 				}
+/******/ 			}
+/******/ 		};
+/******/ 	}();
+/******/ 	
+/******/ 	/* webpack/runtime/ensure chunk */
+/******/ 	!function() {
+/******/ 		__webpack_require__.f = {};
+/******/ 		// This file contains only the entry chunk.
+/******/ 		// The chunk loading function for additional chunks
+/******/ 		__webpack_require__.e = function(chunkId) {
+/******/ 			return Promise.all(Object.keys(__webpack_require__.f).reduce(function(promises, key) {
+/******/ 				__webpack_require__.f[key](chunkId, promises);
+/******/ 				return promises;
+/******/ 			}, []));
+/******/ 		};
+/******/ 	}();
+/******/ 	
+/******/ 	/* webpack/runtime/get javascript chunk filename */
+/******/ 	!function() {
+/******/ 		// This function allow to reference async chunks
+/******/ 		__webpack_require__.u = function(chunkId) {
+/******/ 			// return url for filenames based on template
+/******/ 			return "" + {"51":"shared.Min","712":"shared"}[chunkId] + ".Bundle.js";
+/******/ 		};
+/******/ 	}();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	!function() {
+/******/ 		__webpack_require__.o = function(obj, prop) { return Object.prototype.hasOwnProperty.call(obj, prop); }
+/******/ 	}();
+/******/ 	
+/******/ 	/* webpack/runtime/load script */
+/******/ 	!function() {
+/******/ 		var inProgress = {};
+/******/ 		// data-webpack is not used as build has no uniqueName
+/******/ 		// loadScript function to load a script via script tag
+/******/ 		__webpack_require__.l = function(url, done, key, chunkId) {
+/******/ 			if(inProgress[url]) { inProgress[url].push(done); return; }
+/******/ 			var script, needAttach;
+/******/ 			if(key !== undefined) {
+/******/ 				var scripts = document.getElementsByTagName("script");
+/******/ 				for(var i = 0; i < scripts.length; i++) {
+/******/ 					var s = scripts[i];
+/******/ 					if(s.getAttribute("src") == url) { script = s; break; }
+/******/ 				}
+/******/ 			}
+/******/ 			if(!script) {
+/******/ 				needAttach = true;
+/******/ 				script = document.createElement('script');
+/******/ 		
 /******/ 				script.charset = 'utf-8';
 /******/ 				script.timeout = 120;
 /******/ 				if (__webpack_require__.nc) {
 /******/ 					script.setAttribute("nonce", __webpack_require__.nc);
 /******/ 				}
-/******/ 				script.src = jsonpScriptSrc(chunkId);
-/******/
-/******/ 				// create error before stack unwound to get useful stacktrace later
-/******/ 				var error = new Error();
-/******/ 				onScriptComplete = function (event) {
-/******/ 					// avoid mem leaks in IE.
-/******/ 					script.onerror = script.onload = null;
-/******/ 					clearTimeout(timeout);
-/******/ 					var chunk = installedChunks[chunkId];
-/******/ 					if(chunk !== 0) {
-/******/ 						if(chunk) {
-/******/ 							var errorType = event && (event.type === 'load' ? 'missing' : event.type);
-/******/ 							var realSrc = event && event.target && event.target.src;
-/******/ 							error.message = 'Loading chunk ' + chunkId + ' failed.\n(' + errorType + ': ' + realSrc + ')';
-/******/ 							error.name = 'ChunkLoadError';
-/******/ 							error.type = errorType;
-/******/ 							error.request = realSrc;
-/******/ 							chunk[1](error);
-/******/ 						}
-/******/ 						installedChunks[chunkId] = undefined;
-/******/ 					}
-/******/ 				};
-/******/ 				var timeout = setTimeout(function(){
-/******/ 					onScriptComplete({ type: 'timeout', target: script });
-/******/ 				}, 120000);
-/******/ 				script.onerror = script.onload = onScriptComplete;
-/******/ 				document.head.appendChild(script);
+/******/ 		
+/******/ 				script.src = url;
 /******/ 			}
+/******/ 			inProgress[url] = [done];
+/******/ 			var onScriptComplete = function(prev, event) {
+/******/ 				// avoid mem leaks in IE.
+/******/ 				script.onerror = script.onload = null;
+/******/ 				clearTimeout(timeout);
+/******/ 				var doneFns = inProgress[url];
+/******/ 				delete inProgress[url];
+/******/ 				script.parentNode && script.parentNode.removeChild(script);
+/******/ 				doneFns && doneFns.forEach(function(fn) { return fn(event); });
+/******/ 				if(prev) return prev(event);
+/******/ 			}
+/******/ 			;
+/******/ 			var timeout = setTimeout(onScriptComplete.bind(null, undefined, { type: 'timeout', target: script }), 120000);
+/******/ 			script.onerror = onScriptComplete.bind(null, script.onerror);
+/******/ 			script.onload = onScriptComplete.bind(null, script.onload);
+/******/ 			needAttach && document.head.appendChild(script);
+/******/ 		};
+/******/ 	}();
+/******/ 	
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	!function() {
+/******/ 		// define __esModule on exports
+/******/ 		__webpack_require__.r = function(exports) {
+/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	}();
+/******/ 	
+/******/ 	/* webpack/runtime/publicPath */
+/******/ 	!function() {
+/******/ 		__webpack_require__.p = "../js/";
+/******/ 	}();
+/******/ 	
+/******/ 	/* webpack/runtime/jsonp chunk loading */
+/******/ 	!function() {
+/******/ 		// no baseURI
+/******/ 		
+/******/ 		// object to store loaded and loading chunks
+/******/ 		// undefined = chunk not loaded, null = chunk preloaded/prefetched
+/******/ 		// [resolve, reject, Promise] = chunk loading, 0 = chunk loaded
+/******/ 		var installedChunks = {
+/******/ 			817: 0
+/******/ 		};
+/******/ 		
+/******/ 		__webpack_require__.f.j = function(chunkId, promises) {
+/******/ 				// JSONP chunk loading for javascript
+/******/ 				var installedChunkData = __webpack_require__.o(installedChunks, chunkId) ? installedChunks[chunkId] : undefined;
+/******/ 				if(installedChunkData !== 0) { // 0 means "already installed".
+/******/ 		
+/******/ 					// a Promise means "currently loading".
+/******/ 					if(installedChunkData) {
+/******/ 						promises.push(installedChunkData[2]);
+/******/ 					} else {
+/******/ 						if(true) { // all chunks have JS
+/******/ 							// setup Promise in chunk cache
+/******/ 							var promise = new Promise(function(resolve, reject) { installedChunkData = installedChunks[chunkId] = [resolve, reject]; });
+/******/ 							promises.push(installedChunkData[2] = promise);
+/******/ 		
+/******/ 							// start chunk loading
+/******/ 							var url = __webpack_require__.p + __webpack_require__.u(chunkId);
+/******/ 							// create error before stack unwound to get useful stacktrace later
+/******/ 							var error = new Error();
+/******/ 							var loadingEnded = function(event) {
+/******/ 								if(__webpack_require__.o(installedChunks, chunkId)) {
+/******/ 									installedChunkData = installedChunks[chunkId];
+/******/ 									if(installedChunkData !== 0) installedChunks[chunkId] = undefined;
+/******/ 									if(installedChunkData) {
+/******/ 										var errorType = event && (event.type === 'load' ? 'missing' : event.type);
+/******/ 										var realSrc = event && event.target && event.target.src;
+/******/ 										error.message = 'Loading chunk ' + chunkId + ' failed.\n(' + errorType + ': ' + realSrc + ')';
+/******/ 										error.name = 'ChunkLoadError';
+/******/ 										error.type = errorType;
+/******/ 										error.request = realSrc;
+/******/ 										installedChunkData[1](error);
+/******/ 									}
+/******/ 								}
+/******/ 							};
+/******/ 							__webpack_require__.l(url, loadingEnded, "chunk-" + chunkId, chunkId);
+/******/ 						} else installedChunks[chunkId] = 0;
+/******/ 					}
+/******/ 				}
+/******/ 		};
+/******/ 		
+/******/ 		// no prefetching
+/******/ 		
+/******/ 		// no preloaded
+/******/ 		
+/******/ 		// no HMR
+/******/ 		
+/******/ 		// no HMR manifest
+/******/ 		
+/******/ 		// no on chunks loaded
+/******/ 		
+/******/ 		// install a JSONP callback for chunk loading
+/******/ 		var webpackJsonpCallback = function(parentChunkLoadingFunction, data) {
+/******/ 			var chunkIds = data[0];
+/******/ 			var moreModules = data[1];
+/******/ 			var runtime = data[2];
+/******/ 			// add "moreModules" to the modules object,
+/******/ 			// then flag all "chunkIds" as loaded and fire callback
+/******/ 			var moduleId, chunkId, i = 0;
+/******/ 			if(chunkIds.some(function(id) { return installedChunks[id] !== 0; })) {
+/******/ 				for(moduleId in moreModules) {
+/******/ 					if(__webpack_require__.o(moreModules, moduleId)) {
+/******/ 						__webpack_require__.m[moduleId] = moreModules[moduleId];
+/******/ 					}
+/******/ 				}
+/******/ 				if(runtime) var result = runtime(__webpack_require__);
+/******/ 			}
+/******/ 			if(parentChunkLoadingFunction) parentChunkLoadingFunction(data);
+/******/ 			for(;i < chunkIds.length; i++) {
+/******/ 				chunkId = chunkIds[i];
+/******/ 				if(__webpack_require__.o(installedChunks, chunkId) && installedChunks[chunkId]) {
+/******/ 					installedChunks[chunkId][0]();
+/******/ 				}
+/******/ 				installedChunks[chunkIds[i]] = 0;
+/******/ 			}
+/******/ 		
 /******/ 		}
-/******/ 		return Promise.all(promises);
-/******/ 	};
-/******/
-/******/ 	// expose the modules object (__webpack_modules__)
-/******/ 	__webpack_require__.m = modules;
-/******/
-/******/ 	// expose the module cache
-/******/ 	__webpack_require__.c = installedModules;
-/******/
-/******/ 	// define getter function for harmony exports
-/******/ 	__webpack_require__.d = function(exports, name, getter) {
-/******/ 		if(!__webpack_require__.o(exports, name)) {
-/******/ 			Object.defineProperty(exports, name, { enumerable: true, get: getter });
-/******/ 		}
-/******/ 	};
-/******/
-/******/ 	// define __esModule on exports
-/******/ 	__webpack_require__.r = function(exports) {
-/******/ 		if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
-/******/ 			Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-/******/ 		}
-/******/ 		Object.defineProperty(exports, '__esModule', { value: true });
-/******/ 	};
-/******/
-/******/ 	// create a fake namespace object
-/******/ 	// mode & 1: value is a module id, require it
-/******/ 	// mode & 2: merge all properties of value into the ns
-/******/ 	// mode & 4: return value when already ns object
-/******/ 	// mode & 8|1: behave like require
-/******/ 	__webpack_require__.t = function(value, mode) {
-/******/ 		if(mode & 1) value = __webpack_require__(value);
-/******/ 		if(mode & 8) return value;
-/******/ 		if((mode & 4) && typeof value === 'object' && value && value.__esModule) return value;
-/******/ 		var ns = Object.create(null);
-/******/ 		__webpack_require__.r(ns);
-/******/ 		Object.defineProperty(ns, 'default', { enumerable: true, value: value });
-/******/ 		if(mode & 2 && typeof value != 'string') for(var key in value) __webpack_require__.d(ns, key, function(key) { return value[key]; }.bind(null, key));
-/******/ 		return ns;
-/******/ 	};
-/******/
-/******/ 	// getDefaultExport function for compatibility with non-harmony modules
-/******/ 	__webpack_require__.n = function(module) {
-/******/ 		var getter = module && module.__esModule ?
-/******/ 			function getDefault() { return module['default']; } :
-/******/ 			function getModuleExports() { return module; };
-/******/ 		__webpack_require__.d(getter, 'a', getter);
-/******/ 		return getter;
-/******/ 	};
-/******/
-/******/ 	// Object.prototype.hasOwnProperty.call
-/******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
-/******/
-/******/ 	// __webpack_public_path__
-/******/ 	__webpack_require__.p = "../js/";
-/******/
-/******/ 	// on error function for async loading
-/******/ 	__webpack_require__.oe = function(err) { console.error(err); throw err; };
-/******/
-/******/ 	var jsonpArray = window["webpackJsonp"] = window["webpackJsonp"] || [];
-/******/ 	var oldJsonpFunction = jsonpArray.push.bind(jsonpArray);
-/******/ 	jsonpArray.push = webpackJsonpCallback;
-/******/ 	jsonpArray = jsonpArray.slice();
-/******/ 	for(var i = 0; i < jsonpArray.length; i++) webpackJsonpCallback(jsonpArray[i]);
-/******/ 	var parentJsonpFunction = oldJsonpFunction;
-/******/
-/******/
-/******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 0);
-/******/ })
+/******/ 		
+/******/ 		var chunkLoadingGlobal = self["webpackChunk"] = self["webpackChunk"] || [];
+/******/ 		chunkLoadingGlobal.forEach(webpackJsonpCallback.bind(null, 0));
+/******/ 		chunkLoadingGlobal.push = webpackJsonpCallback.bind(null, chunkLoadingGlobal.push.bind(chunkLoadingGlobal));
+/******/ 	}();
+/******/ 	
 /************************************************************************/
-/******/ ([
-/* 0 */
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = __webpack_require__(1);
-
-
-/***/ }),
-/* 1 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
+var __webpack_exports__ = {};
 /*eslint no-unused-vars: ["error", { "varsIgnorePattern": "InkBallGame" }]*/
 
 /*global signalR*/
@@ -224,7 +238,7 @@ function _iterableToArrayLimit(arr, i) { var _i = arr == null ? null : typeof Sy
 
 function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
-function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e2) { throw _e2; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e3) { didErr = true; err = _e3; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
+function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e2) { throw _e2; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e3) { didErr = true; err = _e3; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
 
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
@@ -250,7 +264,7 @@ function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || func
 
 function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
 
 function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
 
@@ -800,7 +814,7 @@ function _importAllModulesAsync() {
             }
 
             _context40.next = 5;
-            return __webpack_require__.e(/* import() | shared.Min */ 2).then(__webpack_require__.bind(null, 2));
+            return __webpack_require__.e(/* import() | shared.Min */ 51).then(__webpack_require__.bind(__webpack_require__, 980));
 
           case 5:
             SHRD = _context40.sent;
@@ -809,7 +823,7 @@ function _importAllModulesAsync() {
 
           case 8:
             _context40.next = 10;
-            return __webpack_require__.e(/* import() | shared */ 1).then(__webpack_require__.bind(null, 3));
+            return __webpack_require__.e(/* import() | shared */ 712).then(__webpack_require__.bind(__webpack_require__, 289));
 
           case 10:
             SHRD = _context40.sent;
@@ -1173,7 +1187,7 @@ var InkBallGame = /*#__PURE__*/function () {
               LocalLog('User blocked notifications.');
               return false;
             }
-          })["catch"](function (err) {
+          }).catch(function (err) {
             LocalError(err);
             return false;
           });
@@ -1213,7 +1227,7 @@ var InkBallGame = /*#__PURE__*/function () {
               LocalLog('User blocked notifications.');
               return false;
             }
-          })["catch"](function (err) {
+          }).catch(function (err) {
             LocalError(err);
             return false;
           });
@@ -5526,11 +5540,12 @@ var InkBallGame = /*#__PURE__*/function () {
 
 
 window.addEventListener('load', /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee39() {
-  var gameOptions, inkBallHubName, iGameID, iPlayerID, iOtherPlayerID, bPlayingWithRed, bPlayerActive, gameType, protocol, servTimeoutMillis, isReadonly, pathAfterPointDrawAllowanceSecAmount, sLastMoveTimeStampUtcIso, version, game;
+  var isMsgpackDefined, gameOptions, inkBallHubName, iGameID, iPlayerID, iOtherPlayerID, bPlayingWithRed, bPlayerActive, gameType, protocol, servTimeoutMillis, isReadonly, pathAfterPointDrawAllowanceSecAmount, sLastMoveTimeStampUtcIso, version, game;
   return regeneratorRuntime.wrap(function _callee39$(_context39) {
     while (1) {
       switch (_context39.prev = _context39.next) {
         case 0:
+          isMsgpackDefined = window.msgpack5 !== undefined;
           gameOptions = window.gameOptions;
           inkBallHubName = gameOptions.inkBallHubName;
           iGameID = gameOptions.iGameID;
@@ -5542,53 +5557,53 @@ window.addEventListener('load', /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/reg
           bPlayingWithRed = gameOptions.bPlayingWithRed;
           bPlayerActive = gameOptions.bPlayerActive;
           gameType = gameOptions.gameType;
-          protocol = gameOptions.isMessagePackProtocol === true ? new signalR.protocols.msgpack.MessagePackHubProtocol() : new signalR.JsonHubProtocol();
+          protocol = isMsgpackDefined && gameOptions.isMessagePackProtocol === true ? new signalR.protocols.msgpack.MessagePackHubProtocol() : new signalR.JsonHubProtocol();
           servTimeoutMillis = gameOptions.servTimeoutMillis;
           isReadonly = gameOptions.isReadonly;
           pathAfterPointDrawAllowanceSecAmount = gameOptions.pathAfterPointDrawAllowanceSecAmount;
           sLastMoveTimeStampUtcIso = new Date(gameOptions.sLastMoveGameTimeStamp).toISOString();
           version = gameOptions.version;
-          _context39.next = 19;
+          _context39.next = 20;
           return importAllModulesAsync(gameOptions);
 
-        case 19:
+        case 20:
           game = new InkBallGame(iGameID, iPlayerID, iOtherPlayerID, inkBallHubName, signalR.LogLevel.Warning, protocol, signalR.HttpTransportType.None, servTimeoutMillis, gameType, bPlayingWithRed, bPlayerActive, isReadonly, pathAfterPointDrawAllowanceSecAmount);
-          _context39.next = 22;
+          _context39.next = 23;
           return game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw', '#messageInput', '#messagesList', '#sendButton', sLastMoveTimeStampUtcIso, gameOptions.PointsAsJavaScriptArray === null, version, ['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints', '#TestFindSurroundablePoints', '#TestWorkerify']);
 
-        case 22:
+        case 23:
           if (!(gameOptions.PointsAsJavaScriptArray !== null)) {
-            _context39.next = 31;
+            _context39.next = 32;
             break;
           }
 
-          _context39.next = 25;
+          _context39.next = 26;
           return game.StartSignalRConnection(false);
 
-        case 25:
-          _context39.next = 27;
+        case 26:
+          _context39.next = 28;
           return game.SetAllPoints(gameOptions.PointsAsJavaScriptArray);
 
-        case 27:
-          _context39.next = 29;
+        case 28:
+          _context39.next = 30;
           return game.SetAllPaths(gameOptions.PathsAsJavaScriptArray);
 
-        case 29:
-          _context39.next = 33;
+        case 30:
+          _context39.next = 34;
           break;
 
-        case 31:
-          _context39.next = 33;
+        case 32:
+          _context39.next = 34;
           return game.StartSignalRConnection(true);
 
-        case 33:
+        case 34:
           //alert('a QQ');
           document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
           game.CountPointsDebug("#debug2");
           delete window.gameOptions;
           window.game = game;
 
-        case 37:
+        case 38:
         case "end":
           return _context39.stop();
       }
@@ -5600,6 +5615,5 @@ window.addEventListener('beforeunload', function () {
 });
 /******** /run code and events ********/
 //export { InkBallGame };
-
-/***/ })
-/******/ ]);
+/******/ })()
+;
