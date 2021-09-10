@@ -239,7 +239,7 @@ namespace InkBall.Module
 		{
 			page.DefineSection(options.Value.HeadElementsSectionName, () =>
 			{
-				page.WriteLiteral($"<link rel='stylesheet' href='{url.Content(Constants.WwwIncludeCSS)}' />");
+				page.WriteLiteral($"<link rel='stylesheet' href='{url.Content(Constants.WwwIncludeCSS)}' media=\"print\" onload=\"media='all'\" />");
 
 				return Task.CompletedTask;
 			});
