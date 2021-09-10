@@ -443,6 +443,7 @@ class InkBallGame {
 		this.m_ApplicationUserSettings = null;
 		this.m_sLastMoveGameTimeStamp = null;
 		this.m_sVersion = null;
+		this.m_Worker = null;
 
 		if (sHubName === null || sHubName === "") return;
 
@@ -1936,34 +1937,35 @@ class InkBallGame {
 	 */
 	async RunAIWorker(setupFunction) {
 		return new Promise((resolve, reject) => {
-			const worker = new Worker(isESModuleSupport() ? '../js/AIWorker.Bundle.js' : '../js/AIWorker.PolyfillBundle.js'
+			this.m_Worker = this.m_Worker ?? new Worker(isESModuleSupport() ? '../js/AIWorker.Bundle.js' : '../js/AIWorker.PolyfillBundle.js'
 				//, { type: 'module' }
 			);
 
-			worker.onerror = function () {
-				worker.terminate();
+			this.m_Worker.onerror = function () {
+				this.m_Worker.terminate();
+				this.m_Worker = null;
 				reject(new Error('no data'));
 			};
 
-			worker.onmessage = function (e) {
+			this.m_Worker.onmessage = function (e) {
 				const data = e.data;
 				switch (data.operation) {
 					case "BUILD_GRAPH":
 					case "CONCAVEMAN":
 					case "MARK_ALL_CYCLES":
-						worker.terminate();
+						//worker.terminate();
 						resolve(data);
 						break;
 					default:
 						LocalError(`unknown params.operation = ${data.operation}`);
-						worker.terminate();
+						//worker.terminate();
 						reject(new Error(`unknown params.operation = ${data.operation}`));
 						break;
 				}
 			};
 
 			if (setupFunction)
-				setupFunction(worker);
+				setupFunction(this.m_Worker);
 		});//primise end
 	}
 

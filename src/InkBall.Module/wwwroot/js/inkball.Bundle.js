@@ -971,6 +971,7 @@ var InkBallGame = /*#__PURE__*/function () {
     this.m_ApplicationUserSettings = null;
     this.m_sLastMoveGameTimeStamp = null;
     this.m_sVersion = null;
+    this.m_Worker = null;
     if (sHubName === null || sHubName === "") return;
     this.g_SignalRConnection = new signalR.HubConnectionBuilder().withUrl(sHubName, {
       transport: transportType,
@@ -3542,39 +3543,45 @@ var InkBallGame = /*#__PURE__*/function () {
     key: "RunAIWorker",
     value: function () {
       var _RunAIWorker = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee23(setupFunction) {
+        var _this14 = this;
+
         return regeneratorRuntime.wrap(function _callee23$(_context23) {
           while (1) {
             switch (_context23.prev = _context23.next) {
               case 0:
                 return _context23.abrupt("return", new Promise(function (resolve, reject) {
-                  var worker = new Worker(isESModuleSupport() ? '../js/AIWorker.Bundle.js' : '../js/AIWorker.PolyfillBundle.js' //, { type: 'module' }
+                  var _this14$m_Worker;
+
+                  _this14.m_Worker = (_this14$m_Worker = _this14.m_Worker) !== null && _this14$m_Worker !== void 0 ? _this14$m_Worker : new Worker(isESModuleSupport() ? '../js/AIWorker.Bundle.js' : '../js/AIWorker.PolyfillBundle.js' //, { type: 'module' }
                   );
 
-                  worker.onerror = function () {
-                    worker.terminate();
+                  _this14.m_Worker.onerror = function () {
+                    this.m_Worker.terminate();
+                    this.m_Worker = null;
                     reject(new Error('no data'));
                   };
 
-                  worker.onmessage = function (e) {
+                  _this14.m_Worker.onmessage = function (e) {
                     var data = e.data;
 
                     switch (data.operation) {
                       case "BUILD_GRAPH":
                       case "CONCAVEMAN":
                       case "MARK_ALL_CYCLES":
-                        worker.terminate();
+                        //worker.terminate();
                         resolve(data);
                         break;
 
                       default:
-                        LocalError("unknown params.operation = ".concat(data.operation));
-                        worker.terminate();
+                        LocalError("unknown params.operation = ".concat(data.operation)); //worker.terminate();
+
+                        //worker.terminate();
                         reject(new Error("unknown params.operation = ".concat(data.operation)));
                         break;
                     }
                   };
 
-                  if (setupFunction) setupFunction(worker);
+                  if (setupFunction) setupFunction(_this14.m_Worker);
                 }));
 
               case 1:
@@ -3595,7 +3602,7 @@ var InkBallGame = /*#__PURE__*/function () {
     key: "OnTestBuildCurrentGraph",
     value: function () {
       var _OnTestBuildCurrentGraph = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee24(event) {
-        var _this14 = this;
+        var _this15 = this;
 
         var data;
         return regeneratorRuntime.wrap(function _callee24$(_context24) {
@@ -3606,7 +3613,7 @@ var InkBallGame = /*#__PURE__*/function () {
 
                 _context24.next = 3;
                 return this.RunAIWorker(function (worker) {
-                  var serialized_points = Array.from(_this14.m_Points.store.entries()).map(function (_ref8) {
+                  var serialized_points = Array.from(_this15.m_Points.store.entries()).map(function (_ref8) {
                     var _ref9 = _slicedToArray(_ref8, 2),
                         key = _ref9[0],
                         value = _ref9[1];
@@ -3617,13 +3624,13 @@ var InkBallGame = /*#__PURE__*/function () {
                     };
                   });
 
-                  var serialized_paths = _this14.m_Lines.store.map(function (pa) {
+                  var serialized_paths = _this15.m_Lines.store.map(function (pa) {
                     return pa.Serialize();
                   });
 
                   worker.postMessage({
                     operation: "BUILD_GRAPH",
-                    state: _this14.GetGameStateForIndexedDb(),
+                    state: _this15.GetGameStateForIndexedDb(),
                     points: serialized_points,
                     paths: serialized_paths
                   });
@@ -3651,7 +3658,7 @@ var InkBallGame = /*#__PURE__*/function () {
     key: "OnTestConcaveman",
     value: function () {
       var _OnTestConcaveman = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee25(event) {
-        var _this15 = this;
+        var _this16 = this;
 
         var data, convex_hull, cw_sorted_verts, rand_color, _iterator10, _step10, vert, x, y, view_x, view_y, pt;
 
@@ -3662,7 +3669,7 @@ var InkBallGame = /*#__PURE__*/function () {
                 event.preventDefault();
                 _context25.next = 3;
                 return this.RunAIWorker(function (worker) {
-                  var serialized_points = Array.from(_this15.m_Points.store.entries()).map(function (_ref10) {
+                  var serialized_points = Array.from(_this16.m_Points.store.entries()).map(function (_ref10) {
                     var _ref11 = _slicedToArray(_ref10, 2),
                         key = _ref11[0],
                         value = _ref11[1];
@@ -3676,7 +3683,7 @@ var InkBallGame = /*#__PURE__*/function () {
                   //const serialized_paths = this.m_Lines.store.map(pa => pa.Serialize());
                   worker.postMessage({
                     operation: "CONCAVEMAN",
-                    state: _this15.GetGameStateForIndexedDb(),
+                    state: _this16.GetGameStateForIndexedDb(),
                     points: serialized_points
                   });
                 });
@@ -3771,7 +3778,7 @@ var InkBallGame = /*#__PURE__*/function () {
     key: "OnTestMarkAllCycles",
     value: function () {
       var _OnTestMarkAllCycles = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee26(event) {
-        var _this16 = this;
+        var _this17 = this;
 
         var data, free_human_player_points, _iterator11, _step11, _pt, _x30, _y2, view_x, view_y, _pt2, tab, i, new_cycl, str, trailing_points, rand_color, cw_sorted_verts, _iterator12, _step12, vert, x, y, pt, tmp, comma, _iterator13, _step13, possible_intercept, pt1, pts2reset;
 
@@ -3783,7 +3790,7 @@ var InkBallGame = /*#__PURE__*/function () {
 
                 _context26.next = 3;
                 return this.RunAIWorker(function (worker) {
-                  var serialized_points = Array.from(_this16.m_Points.store.entries()).map(function (_ref14) {
+                  var serialized_points = Array.from(_this17.m_Points.store.entries()).map(function (_ref14) {
                     var _ref15 = _slicedToArray(_ref14, 2),
                         key = _ref15[0],
                         value = _ref15[1];
@@ -3794,17 +3801,17 @@ var InkBallGame = /*#__PURE__*/function () {
                     };
                   });
 
-                  var serialized_paths = _this16.m_Lines.store.map(function (pa) {
+                  var serialized_paths = _this17.m_Lines.store.map(function (pa) {
                     return pa.Serialize();
                   });
 
                   worker.postMessage({
                     operation: "MARK_ALL_CYCLES",
-                    state: _this16.GetGameStateForIndexedDb(),
+                    state: _this17.GetGameStateForIndexedDb(),
                     points: serialized_points,
                     paths: serialized_paths,
-                    colorRed: _this16.COLOR_RED,
-                    colorBlue: _this16.COLOR_BLUE
+                    colorRed: _this17.COLOR_RED,
+                    colorBlue: _this17.COLOR_BLUE
                   });
                 });
 
@@ -3949,8 +3956,8 @@ var InkBallGame = /*#__PURE__*/function () {
 
                 pts2reset = Array.from(document.querySelectorAll("svg > circle[fill=\"".concat(rand_color, "\"][r=\"6\"]")));
                 pts2reset.forEach(function (pt) {
-                  pt.SetStrokeColor(_this16.COLOR_BLUE);
-                  pt.SetFillColor(_this16.COLOR_BLUE);
+                  pt.SetStrokeColor(_this17.COLOR_BLUE);
+                  pt.SetFillColor(_this17.COLOR_BLUE);
                   pt.setAttribute("r", "4");
                 });
 
@@ -3977,7 +3984,7 @@ var InkBallGame = /*#__PURE__*/function () {
     key: "OnTestGroupPoints",
     value: function () {
       var _OnTestGroupPoints = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee27(event) {
-        var _this17 = this;
+        var _this18 = this;
 
         var starting_point;
         return regeneratorRuntime.wrap(function _callee27$(_context27) {
@@ -4001,7 +4008,7 @@ var InkBallGame = /*#__PURE__*/function () {
                 }
 
                 this.lastCycle.forEach(function (cyc) {
-                  _this17.SvgVml.CreatePolyline(6, cyc.map(function (fnd) {
+                  _this18.SvgVml.CreatePolyline(6, cyc.map(function (fnd) {
                     var pt = fnd.GetPosition();
                     return "".concat(pt.x, ",").concat(pt.y);
                   }).join(' '), RandomColor());
@@ -4879,7 +4886,7 @@ var InkBallGame = /*#__PURE__*/function () {
 
                 printCycles = /*#__PURE__*/function () {
                   var _ref17 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee34(edges, mark) {
-                    var _this18 = this;
+                    var _this19 = this;
 
                     var e, mark_e, m, found_c, free_human_player_points, sHumanColor, _iterator18, _step18, _pt4, _pt4$GetPosition, view_x, view_y, _x53, _y3, _pt5, tab, _i2, cycl, str, trailing_points, rand_color, mapped_verts, cw_sorted_verts, _iterator19, _step19, vert, x, y, pt, tmp, comma, _iterator20, _step20, possible_intercept, pt1, pts2reset;
 
@@ -5094,8 +5101,8 @@ var InkBallGame = /*#__PURE__*/function () {
 
                             pts2reset = Array.from(document.querySelectorAll("svg > circle[fill=\"".concat(rand_color, "\"][r=\"6\"]")));
                             pts2reset.forEach(function (pt) {
-                              pt.SetStrokeColor(_this18.COLOR_BLUE);
-                              pt.SetFillColor(_this18.COLOR_BLUE);
+                              pt.SetStrokeColor(_this19.COLOR_BLUE);
+                              pt.SetFillColor(_this19.COLOR_BLUE);
                               pt.setAttribute("r", "4");
                             });
 
@@ -5461,7 +5468,7 @@ var InkBallGame = /*#__PURE__*/function () {
     key: "rAFCallBack",
     value: function () {
       var _rAFCallBack = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee38(timeStamp) {
-        var _this19 = this;
+        var _this20 = this;
 
         var progress, point, centroid;
         return regeneratorRuntime.wrap(function _callee38$(_context38) {
@@ -5506,8 +5513,8 @@ var InkBallGame = /*#__PURE__*/function () {
               case 17:
                 _context38.next = 19;
                 return this.SendAsyncData(point, function () {
-                  _this19.m_bMouseDown = false;
-                  _this19.m_bHandlingEvent = false;
+                  _this20.m_bMouseDown = false;
+                  _this20.m_bHandlingEvent = false;
                 });
 
               case 19:
