@@ -44,16 +44,16 @@
 <div class="container inkgame">
     <form action="GamesList" method="post" asp-antiforgery="true" class="row">
         <input type='hidden' name='GameID' />
-        <div class="col-xs-6 col-sm-auto pl-0">
+        <div class="col-xs-6 col-sm-auto ps-0">
             <a id='Pause' href='GamesList' class="btn btn-outline-primary">pause</a>
             <input id='SurrenderButton' type='submit' name='action' value="@surrender_win_cancel_name" class='btn btn-outline-primary' disabled />
         </div>
-        <div class="col-xs-6 col-sm-auto pl-0">
+        <div class="col-xs-6 col-sm-auto ps-0">
             <input id="StopAndDraw" type="button" value="Stop and Draw" class='btn btn-warning' disabled />
             <input id="CancelPath" type="button" value="Cancel path" class='btn btn-primary' disabled />
         </div>
-        <div id="testArea" class="dropdown dropright">
-            <button class="btn btn-secondary dropdown-toggle" type="button" id="ddlTest" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <div id="testArea" class="col-xs-6 col-sm-auto ps-0 dropdown dropright">
+            <button class="btn btn-secondary dropdown-toggle" type="button" id="ddlTest" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 Test
             </button>
             <div class="dropdown-menu" aria-labelledby="ddlTest">
