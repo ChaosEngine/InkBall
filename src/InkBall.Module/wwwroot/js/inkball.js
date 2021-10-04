@@ -336,7 +336,7 @@ async function importAllModulesAsync(/*gameOptions*/) {
 }
 
 function RandomColor() {
-	//return 'var(--orange)';
+	//return 'var(--bs-orange)';
 	return '#' + Math.floor(Math.random() * 16777215).toString(16);
 }
 
@@ -2080,7 +2080,7 @@ class InkBallGame {
 				if (new_cycl && new_cycl.cycl && new_cycl.cycl.length > 0 && new_cycl.cw_sorted_verts) {	//some checks
 					// Print the i-th cycle
 					let str = (`Cycle Number ${i}: `), trailing_points = [];
-					const rand_color = 'var(--indigo)';
+					const rand_color = 'var(--bs-indigo)';
 
 					const cw_sorted_verts = new_cycl.cw_sorted_verts;
 
@@ -2107,8 +2107,8 @@ class InkBallGame {
 
 							const pt1 = document.querySelector(`svg > circle[cx="${possible_intercept.x * this.m_iGridSizeX}"][cy="${possible_intercept.y * this.m_iGridSizeY}"]`);
 							if (pt1) {
-								pt1.SetStrokeColor('var(--yellow)');
-								pt1.SetFillColor('var(--yellow)');
+								pt1.SetStrokeColor('var(--bs-yellow)');
+								pt1.SetFillColor('var(--bs-yellow)');
 								pt1.setAttribute("r", "6");
 							}
 							comma = ',';
@@ -2729,7 +2729,7 @@ class InkBallGame {
 				if (cycl && cycl.length > 0) {	//somr checks
 					// Print the i-th cycle
 					let str = (`Cycle Number ${i}: `), trailing_points = [];
-					const rand_color = 'var(--indigo)';
+					const rand_color = 'var(--bs-indigo)';
 
 					//convert to logical space
 					const mapped_verts = cycl.map(function (c) {
@@ -2762,8 +2762,8 @@ class InkBallGame {
 
 							const pt1 = document.querySelector(`svg > circle[cx="${possible_intercept.x * this.m_iGridSizeX}"][cy="${possible_intercept.y * this.m_iGridSizeY}"]`);
 							if (pt1) {
-								pt1.SetStrokeColor('var(--yellow)');
-								pt1.SetFillColor('var(--yellow)');
+								pt1.SetStrokeColor('var(--bs-yellow)');
+								pt1.SetFillColor('var(--bs-yellow)');
 								pt1.setAttribute("r", "6");
 							}
 							comma = ',';
