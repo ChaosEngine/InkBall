@@ -784,7 +784,9 @@ var CountdownTimer = /*#__PURE__*/function () {
  */
 
 
-function importAllModulesAsync() {
+function
+  /*gameOptions*/
+importAllModulesAsync() {
   return _importAllModulesAsync.apply(this, arguments);
 }
 
@@ -2340,7 +2342,9 @@ var InkBallGame = /*#__PURE__*/function () {
     }()
   }, {
     key: "CreateXMLWaitForPlayerRequest",
-    value: function CreateXMLWaitForPlayerRequest() {//let cmd = new WaitForPlayerCommand((args.length > 0 && args[0] === true) ? true : false);
+    value: function
+      /*...args*/
+    CreateXMLWaitForPlayerRequest() {//let cmd = new WaitForPlayerCommand((args.length > 0 && args[0] === true) ? true : false);
       //return cmd;
     }
   }, {
