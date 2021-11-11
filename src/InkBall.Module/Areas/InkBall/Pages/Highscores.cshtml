@@ -11,11 +11,11 @@
 	<a href="Home" class="btn btn-primary my-2">Home</a>
 	<div class="grid-striped">
 		<div class="row">
-			<div class="col font-weight-bold">Player</div>
-			<div class="col font-weight-bold">Wins</div>
-			<div class="col font-weight-bold">Loses</div>
-			<div class="col font-weight-bold">Draws</div>
-			<div class="col font-weight-bold">Game count</div>
+			<div class="col fw-bold">Player</div>
+			<div class="col fw-bold">Wins</div>
+			<div class="col fw-bold">Loses</div>
+			<div class="col fw-bold">Draws</div>
+			<div class="col fw-bold">Game count</div>
 		</div>
 		@foreach ((int PlayerId, int? UserId, string UserName, int WinCount, int LossCount, int DrawCount, int GameCount) plyr_stat in Model.Stats)
 		{

@@ -847,7 +847,7 @@ function _importAllModulesAsync() {
 }
 
 function RandomColor() {
-  //return 'var(--orange)';
+  //return 'var(--bs-orange)';
   return '#' + Math.floor(Math.random() * 16777215).toString(16);
 }
 
@@ -3873,7 +3873,7 @@ var InkBallGame = /*#__PURE__*/function () {
                 //some checks
                 // Print the i-th cycle
                 str = "Cycle Number ".concat(i, ": "), trailing_points = [];
-                rand_color = 'var(--indigo)';
+                rand_color = 'var(--bs-indigo)';
                 cw_sorted_verts = new_cycl.cw_sorted_verts; //display which cycle we are dealing with
 
                 _iterator12 = _createForOfIteratorHelper(cw_sorted_verts);
@@ -3938,8 +3938,8 @@ var InkBallGame = /*#__PURE__*/function () {
                       pt1 = document.querySelector("svg > circle[cx=\"".concat(possible_intercept.x * this.m_iGridSizeX, "\"][cy=\"").concat(possible_intercept.y * this.m_iGridSizeY, "\"]"));
 
                       if (pt1) {
-                        pt1.SetStrokeColor('var(--yellow)');
-                        pt1.SetFillColor('var(--yellow)');
+                        pt1.SetStrokeColor('var(--bs-yellow)');
+                        pt1.SetFillColor('var(--bs-yellow)');
                         pt1.setAttribute("r", "6");
                       }
 
@@ -5009,7 +5009,7 @@ var InkBallGame = /*#__PURE__*/function () {
                             //somr checks
                             // Print the i-th cycle
                             str = "Cycle Number ".concat(_i2, ": "), trailing_points = [];
-                            rand_color = 'var(--indigo)'; //convert to logical space
+                            rand_color = 'var(--bs-indigo)'; //convert to logical space
 
                             mapped_verts = cycl.map(function (c) {
                               var pt = vertices[c].GetPosition();
@@ -5083,8 +5083,8 @@ var InkBallGame = /*#__PURE__*/function () {
                                   pt1 = document.querySelector("svg > circle[cx=\"".concat(possible_intercept.x * this.m_iGridSizeX, "\"][cy=\"").concat(possible_intercept.y * this.m_iGridSizeY, "\"]"));
 
                                   if (pt1) {
-                                    pt1.SetStrokeColor('var(--yellow)');
-                                    pt1.SetFillColor('var(--yellow)');
+                                    pt1.SetStrokeColor('var(--bs-yellow)');
+                                    pt1.SetFillColor('var(--bs-yellow)');
                                     pt1.setAttribute("r", "6");
                                   }
 

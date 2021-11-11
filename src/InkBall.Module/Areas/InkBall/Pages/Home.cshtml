@@ -7,20 +7,20 @@
     HtmlHelpers.RenderHeaderSection(this, Url, commonUIConfigureOptions);
 }
 
-<p class="inkhome"></p>
+<p class="h6 inkhome"></p>
 
-<div class="alert alert-dismissible fade show inkhome" role="alert">
-	<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+<div class="alert alert-success alert-dismissible fade show inkhome" role="alert">
+	<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 </div>
 
 <div class="container inkhome">
 	<div class="row" role="group" aria-label="Game menu">
-		<form method='post' class="order-last order-sm-first pr-md-2 btn-group-vertical was-validated">
+		<form method='post' class="col-sm-12 col-md-4 order-last order-md-first btn-group-vertical m-1 was-validated">
 		</form>
-		<div class="order-first order-sm-last pb-2 pb-md-0">
+		<div class="col-sm-12 col-md-auto m-1">
 			<picture aria-label="home screen image">
 				<source type="image/webp" srcset="../img/homescreen.webp" />
-				<img src="../img/homescreen.jpg" alt="home screen" aria-label="home screen image" />
+				<img src="../img/homescreen.jpg" alt="home screen" aria-label="home screen image" class="img-fluid" />
 			</picture>
 		</div>
 	</div>
@@ -63,14 +63,14 @@
 		if (bIsCurrentGameOk)
 		{
 			//continue
-            innerForm += "<a href='Game' class='btn btn-primary btn-lg rounded-top d-flex align-items-center justify-content-center'>Continue</a>";
+            innerForm += "<a href='Game' class='btn btn-primary btn-lg rounded-top'>Continue</a>";
 		}
 		else
 		{
 			//new game
 			innerForm +=
 				"<input type='submit' name='action' value='New game' class='btn btn-primary btn-lg rounded-top' />" +
-				"<div class='w-100'><select name='GameType' id='GameType' class='custom-select' required>" +
+				"<div class='w-100'><select name='GameType' id='GameType' class='form-select' required>" +
 					"<option value='' selected='selected'>Choose game type</option>" +
 					"<optgroup label='Game types'>" +
 						"<option value='0'>First capture wins</option>" +
@@ -81,7 +81,7 @@
 				"</select>" +
 				"<div class='invalid-feedback'>Invalid game type</div></div>" +
 
-				"<div class='w-100'><select name='BoardSize' id='BoardSize' class='custom-select' required>" +
+				"<div class='w-100'><select name='BoardSize' id='BoardSize' class='form-select' required>" +
 					"<option value='' selected='selected'>Choose board size</option>" +
 					"<optgroup label='Board sizes'>" +
 						"<option value='20'>20 x 26</option>" +
@@ -91,17 +91,17 @@
 				"</select>" +
 				"<div class='invalid-feedback'>Invalid board size</div></div>" +
 
-				"<div class='form-group custom-control custom-switch w-100'>" +
-					"<input type='checkbox' class='custom-control-input' name='CpuOponent' id='CpuOponent' />" +
-					"<label class='custom-control-label' for='CpuOponent'>Play against CPU</label>" +
+				"<div class='form-check form-switch w-100'>" +
+					"<input type='checkbox' class='form-check-input form-control-input' name='CpuOponent' id='CpuOponent' />" +
+					"<label class='form-check-label' for='CpuOponent'>Play against CPU</label>" +
 				"</div>";
 		}
 		const logoutPath = '@commonUIConfigureOptions.Value.LogoutPath';
 
 		innerForm +=
-			"<a href='GamesList' class='btn btn-primary d-flex align-items-center justify-content-center'>Games list</a>" +
-			"<a href='Highscores' class='btn btn-primary d-flex align-items-center justify-content-center'>Best</a>" +
-			"<a href='Rules' class='btn btn-primary d-flex align-items-center justify-content-center'>Game rules</a>" +
+			"<a href='GamesList' class='btn btn-primary'>Games list</a>" +
+			"<a href='Highscores' class='btn btn-primary'>Best</a>" +
+			"<a href='Rules' class='btn btn-primary'>Game rules</a>" +
 			(logoutPath ? "<input type='submit' name='action' value='Logout' class='btn btn-warning rounded-bottom' formnovalidate='formnovalidate' />" : "");
 	}
 	else
@@ -113,9 +113,9 @@
 		const registerPath = '@commonUIConfigureOptions.Value.RegisterPath';
 
 		innerForm +=
-			"<a href='Rules' class='btn btn-primary rounded-top d-flex align-items-center justify-content-center'>Game rules</a>" +
-			(loginPath ? "<a href='" + loginPath + "' class='btn btn-primary d-flex align-items-center justify-content-center'>Login</a>" : "") +
-			(registerPath ? "<a href='" + registerPath + "' class='btn btn-primary d-flex align-items-center justify-content-center rounded-bottom'>Register</a>" : "");
+			"<a href='Rules' class='btn btn-primary rounded-top'>Game rules</a>" +
+			(loginPath ? "<a href='" + loginPath + "' class='btn btn-primary'>Login</a>" : "") +
+			(registerPath ? "<a href='" + registerPath + "' class='btn btn-primary rounded-bottom'>Register</a>" : "");
 	}
 	form.innerHTML += innerForm;
 
