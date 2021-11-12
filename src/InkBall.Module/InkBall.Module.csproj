@@ -5,7 +5,7 @@
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
     <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
     <LangVersion>latest</LangVersion>
-    <Version>1.0.1.13</Version>
+    <Version>1.0.1.14</Version>
     <Configurations>Debug;Release;Oracle</Configurations>
   </PropertyGroup>
 
