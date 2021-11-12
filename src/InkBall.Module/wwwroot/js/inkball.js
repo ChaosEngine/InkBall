@@ -336,7 +336,7 @@ async function importAllModulesAsync(/*gameOptions*/) {
 }
 
 function RandomColor() {
-	//return 'var(--orange)';
+	//return 'var(--bs-orange)';
 	return '#' + Math.floor(Math.random() * 16777215).toString(16);
 }
 
@@ -443,6 +443,7 @@ class InkBallGame {
 		this.m_ApplicationUserSettings = null;
 		this.m_sLastMoveGameTimeStamp = null;
 		this.m_sVersion = null;
+		this.m_Worker = null;
 
 		if (sHubName === null || sHubName === "") return;
 
@@ -1936,34 +1937,35 @@ class InkBallGame {
 	 */
 	async RunAIWorker(setupFunction) {
 		return new Promise((resolve, reject) => {
-			const worker = new Worker(isESModuleSupport() ? '../js/AIWorker.Bundle.js' : '../js/AIWorker.PolyfillBundle.js'
+			this.m_Worker = this.m_Worker ?? new Worker(isESModuleSupport() ? '../js/AIWorker.Bundle.js' : '../js/AIWorker.PolyfillBundle.js'
 				//, { type: 'module' }
 			);
 
-			worker.onerror = function () {
-				worker.terminate();
+			this.m_Worker.onerror = function () {
+				this.m_Worker.terminate();
+				this.m_Worker = null;
 				reject(new Error('no data'));
 			};
 
-			worker.onmessage = function (e) {
+			this.m_Worker.onmessage = function (e) {
 				const data = e.data;
 				switch (data.operation) {
 					case "BUILD_GRAPH":
 					case "CONCAVEMAN":
 					case "MARK_ALL_CYCLES":
-						worker.terminate();
+						//worker.terminate();
 						resolve(data);
 						break;
 					default:
 						LocalError(`unknown params.operation = ${data.operation}`);
-						worker.terminate();
+						//worker.terminate();
 						reject(new Error(`unknown params.operation = ${data.operation}`));
 						break;
 				}
 			};
 
 			if (setupFunction)
-				setupFunction(worker);
+				setupFunction(this.m_Worker);
 		});//primise end
 	}
 
@@ -2078,7 +2080,7 @@ class InkBallGame {
 				if (new_cycl && new_cycl.cycl && new_cycl.cycl.length > 0 && new_cycl.cw_sorted_verts) {	//some checks
 					// Print the i-th cycle
 					let str = (`Cycle Number ${i}: `), trailing_points = [];
-					const rand_color = 'var(--indigo)';
+					const rand_color = 'var(--bs-indigo)';
 
 					const cw_sorted_verts = new_cycl.cw_sorted_verts;
 
@@ -2105,8 +2107,8 @@ class InkBallGame {
 
 							const pt1 = document.querySelector(`svg > circle[cx="${possible_intercept.x * this.m_iGridSizeX}"][cy="${possible_intercept.y * this.m_iGridSizeY}"]`);
 							if (pt1) {
-								pt1.SetStrokeColor('var(--yellow)');
-								pt1.SetFillColor('var(--yellow)');
+								pt1.SetStrokeColor('var(--bs-yellow)');
+								pt1.SetFillColor('var(--bs-yellow)');
 								pt1.setAttribute("r", "6");
 							}
 							comma = ',';
@@ -2727,7 +2729,7 @@ class InkBallGame {
 				if (cycl && cycl.length > 0) {	//somr checks
 					// Print the i-th cycle
 					let str = (`Cycle Number ${i}: `), trailing_points = [];
-					const rand_color = 'var(--indigo)';
+					const rand_color = 'var(--bs-indigo)';
 
 					//convert to logical space
 					const mapped_verts = cycl.map(function (c) {
@@ -2760,8 +2762,8 @@ class InkBallGame {
 
 							const pt1 = document.querySelector(`svg > circle[cx="${possible_intercept.x * this.m_iGridSizeX}"][cy="${possible_intercept.y * this.m_iGridSizeY}"]`);
 							if (pt1) {
-								pt1.SetStrokeColor('var(--yellow)');
-								pt1.SetFillColor('var(--yellow)');
+								pt1.SetStrokeColor('var(--bs-yellow)');
+								pt1.SetFillColor('var(--bs-yellow)');
 								pt1.setAttribute("r", "6");
 							}
 							comma = ',';
@@ -2960,6 +2962,7 @@ class InkBallGame {
 
 /******** run code and events ********/
 window.addEventListener('load', async function () {
+	const isMsgpackDefined = window.msgpack5 !== undefined;
 	const gameOptions = window.gameOptions;
 
 	const inkBallHubName = gameOptions.inkBallHubName;
@@ -2972,7 +2975,7 @@ window.addEventListener('load', async function () {
 	const bPlayingWithRed = gameOptions.bPlayingWithRed;
 	const bPlayerActive = gameOptions.bPlayerActive;
 	const gameType = gameOptions.gameType;
-	const protocol = gameOptions.isMessagePackProtocol === true ? new signalR.protocols.msgpack.MessagePackHubProtocol() : new signalR.JsonHubProtocol();
+	const protocol = isMsgpackDefined && gameOptions.isMessagePackProtocol === true ? new signalR.protocols.msgpack.MessagePackHubProtocol() : new signalR.JsonHubProtocol();
 	const servTimeoutMillis = gameOptions.servTimeoutMillis;
 	const isReadonly = gameOptions.isReadonly;
 	const pathAfterPointDrawAllowanceSecAmount = gameOptions.pathAfterPointDrawAllowanceSecAmount;

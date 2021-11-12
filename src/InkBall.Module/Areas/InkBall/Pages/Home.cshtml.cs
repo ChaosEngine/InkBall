@@ -123,12 +123,12 @@ namespace InkBall.Module.Pages
 								var dbGame = await _dbContext.CreateNewGameFromExternalUserIDAsync(GameUser.sExternalId,
 									selectedGameType, grid_size, width, height, bCpuOponent, token);
 
-								trans.Commit();
+								await trans.CommitAsync(token);
 								return RedirectToPage("Game");
 							}
 							catch (Exception ex)
 							{
-								trans.Rollback();
+								await trans.RollbackAsync(token);
 								msg = "Could not create new game for this user";
 								_logger.LogError(ex, msg);
 							}
@@ -191,11 +191,11 @@ namespace InkBall.Module.Pages
 										token);
 									}
 
-									trans.Commit();
+									await trans.CommitAsync(token);
 								}
 								catch (Exception ex)
 								{
-									trans.Rollback();
+									await trans.RollbackAsync(token);
 									_logger.LogError(ex, nameof(_dbContext.SurrenderGameFromPlayerAsync));
 									throw;
 								}

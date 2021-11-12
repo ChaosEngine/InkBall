@@ -44,16 +44,16 @@
 <div class="container inkgame">
     <form action="GamesList" method="post" asp-antiforgery="true" class="row">
         <input type='hidden' name='GameID' />
-        <div class="col-xs-6 col-sm-auto pl-0">
+        <div class="col-xs-6 col-sm-auto ps-0">
             <a id='Pause' href='GamesList' class="btn btn-outline-primary">pause</a>
             <input id='SurrenderButton' type='submit' name='action' value="@surrender_win_cancel_name" class='btn btn-outline-primary' disabled />
         </div>
-        <div class="col-xs-6 col-sm-auto pl-0">
+        <div class="col-xs-6 col-sm-auto ps-0">
             <input id="StopAndDraw" type="button" value="Stop and Draw" class='btn btn-warning' disabled />
             <input id="CancelPath" type="button" value="Cancel path" class='btn btn-primary' disabled />
         </div>
-        <div id="testArea" class="dropdown dropright">
-            <button class="btn btn-secondary dropdown-toggle" type="button" id="ddlTest" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <div id="testArea" class="col-xs-6 col-sm-auto ps-0 dropdown dropend">
+            <button class="btn btn-secondary dropdown-toggle" type="button" id="ddlTest" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 Test
             </button>
             <div class="dropdown-menu" aria-labelledby="ddlTest">
@@ -95,16 +95,16 @@
     <script defer src='@Url.Content("~/lib/signalr/browser/signalr.min.js")'></script>
     @if (useMessagePackBinaryTransport)
     {
-        @:<script defer src='@Url.Content("~/lib/msgpack5/msgpack5.min.js")'></script>
-        @:<script defer src='@Url.Content("~/lib/signalr-protocol-msgpack/browser/signalr-protocol-msgpack.min.js")'></script>
+        @:<script type='module' src='@Url.Content("~/lib/msgpack5/msgpack5.min.js")'></script>
+        @:<script type='module' src='@Url.Content("~/lib/signalr-protocol-msgpack/browser/signalr-protocol-msgpack.min.js")'></script>
     }
 </environment>
 <environment exclude="Development">
-    <script defer src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@5.0.5/dist/browser/signalr.min.js" integrity="sha256-mp8kOLx6zyKeDxP7yNNQlIdeA4/jQgGkeHw1CYghzsE=" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@5.0.11/dist/browser/signalr.min.js" integrity="sha256-SMd5+n5UiWqz1CHObTcgHBGI7wyRW3fBwK7UP8L8plo=" crossorigin="anonymous"></script>
     @if (useMessagePackBinaryTransport)
     {
-        @:<script defer src="https://cdn.jsdelivr.net/npm/msgpack5@5.3.2/dist/msgpack5.min.js" integrity="sha256-YNDaaIkCIrzWZlbWxFzF+g9pn1F5tkgTGaNSLs/HCbU=" crossorigin="anonymous"></script>
-        @:<script defer src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr-protocol-msgpack@5.0.5/dist/browser/signalr-protocol-msgpack.min.js" integrity="sha256-8AUb2d3DJH57Z737lBrslkH5xvei0PoHpD4s+XimKyI=" crossorigin="anonymous"></script>
+        @:<script type='module' src="https://cdn.jsdelivr.net/npm/msgpack5@5.3.2/dist/msgpack5.min.js" integrity="sha256-YNDaaIkCIrzWZlbWxFzF+g9pn1F5tkgTGaNSLs/HCbU=" crossorigin="anonymous"></script>
+        @:<script type='module' src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr-protocol-msgpack@5.0.11/dist/browser/signalr-protocol-msgpack.min.js" integrity="sha256-SQ/Dkr9tMBwX028EuD6x5kcnq0HxMHmAejzdv9bA8Vc=" crossorigin="anonymous"></script>
     }
 </environment>
 <script type='text/javascript'>

@@ -89,13 +89,17 @@ namespace InkBall.Module
 				options.OnPrepareResponse = OnStaticFilePrepareResponse;
 			else
 			{
-				//options.OnPrepareResponse = (ctx) =>
-				//{
-				//	//https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Embedder-Policy
-				//	//https://web.dev/coop-coep/
-				//	ctx.Context.Response.Headers.Add("Cross-Origin-Embedder-Policy", "require-corp");
-				//	ctx.Context.Response.Headers.Add("Cross-Origin-Opener-Policy", "same-origin");
-				//};
+				options.OnPrepareResponse = (ctx) =>
+				{
+					var path = ctx.Context.Request.Path.Value;
+					if (path.StartsWith("/js/AIWorker"))
+					{
+						//https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Embedder-Policy
+						//https://web.dev/coop-coep/
+						ctx.Context.Response.Headers.Add("Cross-Origin-Embedder-Policy", "require-corp");
+						ctx.Context.Response.Headers.Add("Cross-Origin-Opener-Policy", "same-origin");
+					}
+				};
 			}
 
 			// Add our provider

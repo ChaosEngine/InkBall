@@ -5,7 +5,7 @@ header
     {
         DefineSection(commonUIConfigureOptions.Value.HeadElementsSectionName, async () =>
         {
-            WriteLiteral($"<link rel='stylesheet' href='{Url.Content(Constants.WwwIncludeCSS)}' />");
+            WriteLiteral($"<link rel='stylesheet' href='{Url.Content(Constants.WwwIncludeCSS)}' media=\"print\" onload=\"media='all'\" />");
         });
     }
 }

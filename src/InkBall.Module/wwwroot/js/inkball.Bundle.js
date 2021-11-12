@@ -1,216 +1,230 @@
-/******/ (function(modules) { // webpackBootstrap
-/******/ 	// install a JSONP callback for chunk loading
-/******/ 	function webpackJsonpCallback(data) {
-/******/ 		var chunkIds = data[0];
-/******/ 		var moreModules = data[1];
-/******/
-/******/
-/******/ 		// add "moreModules" to the modules object,
-/******/ 		// then flag all "chunkIds" as loaded and fire callback
-/******/ 		var moduleId, chunkId, i = 0, resolves = [];
-/******/ 		for(;i < chunkIds.length; i++) {
-/******/ 			chunkId = chunkIds[i];
-/******/ 			if(Object.prototype.hasOwnProperty.call(installedChunks, chunkId) && installedChunks[chunkId]) {
-/******/ 				resolves.push(installedChunks[chunkId][0]);
-/******/ 			}
-/******/ 			installedChunks[chunkId] = 0;
-/******/ 		}
-/******/ 		for(moduleId in moreModules) {
-/******/ 			if(Object.prototype.hasOwnProperty.call(moreModules, moduleId)) {
-/******/ 				modules[moduleId] = moreModules[moduleId];
-/******/ 			}
-/******/ 		}
-/******/ 		if(parentJsonpFunction) parentJsonpFunction(data);
-/******/
-/******/ 		while(resolves.length) {
-/******/ 			resolves.shift()();
-/******/ 		}
-/******/
-/******/ 	};
-/******/
-/******/
+/******/ (function() { // webpackBootstrap
+/******/ 	"use strict";
+/******/ 	var __webpack_modules__ = ({});
+/************************************************************************/
 /******/ 	// The module cache
-/******/ 	var installedModules = {};
-/******/
-/******/ 	// object to store loaded and loading chunks
-/******/ 	// undefined = chunk not loaded, null = chunk preloaded/prefetched
-/******/ 	// Promise = chunk loading, 0 = chunk loaded
-/******/ 	var installedChunks = {
-/******/ 		0: 0
-/******/ 	};
-/******/
-/******/
-/******/
-/******/ 	// script path function
-/******/ 	function jsonpScriptSrc(chunkId) {
-/******/ 		return __webpack_require__.p + "" + ({"1":"shared","2":"shared.Min"}[chunkId]||chunkId) + ".Bundle.js"
-/******/ 	}
-/******/
+/******/ 	var __webpack_module_cache__ = {};
+/******/ 	
 /******/ 	// The require function
 /******/ 	function __webpack_require__(moduleId) {
-/******/
 /******/ 		// Check if module is in cache
-/******/ 		if(installedModules[moduleId]) {
-/******/ 			return installedModules[moduleId].exports;
+/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
 /******/ 		}
 /******/ 		// Create a new module (and put it into the cache)
-/******/ 		var module = installedModules[moduleId] = {
-/******/ 			i: moduleId,
-/******/ 			l: false,
+/******/ 		var module = __webpack_module_cache__[moduleId] = {
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
 /******/ 			exports: {}
 /******/ 		};
-/******/
+/******/ 	
 /******/ 		// Execute the module function
-/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-/******/
-/******/ 		// Flag the module as loaded
-/******/ 		module.l = true;
-/******/
+/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
+/******/ 	
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
-/******/
-/******/ 	// This file contains only the entry chunk.
-/******/ 	// The chunk loading function for additional chunks
-/******/ 	__webpack_require__.e = function requireEnsure(chunkId) {
-/******/ 		var promises = [];
-/******/
-/******/
-/******/ 		// JSONP chunk loading for javascript
-/******/
-/******/ 		var installedChunkData = installedChunks[chunkId];
-/******/ 		if(installedChunkData !== 0) { // 0 means "already installed".
-/******/
-/******/ 			// a Promise means "currently loading".
-/******/ 			if(installedChunkData) {
-/******/ 				promises.push(installedChunkData[2]);
-/******/ 			} else {
-/******/ 				// setup Promise in chunk cache
-/******/ 				var promise = new Promise(function(resolve, reject) {
-/******/ 					installedChunkData = installedChunks[chunkId] = [resolve, reject];
-/******/ 				});
-/******/ 				promises.push(installedChunkData[2] = promise);
-/******/
-/******/ 				// start chunk loading
-/******/ 				var script = document.createElement('script');
-/******/ 				var onScriptComplete;
-/******/
+/******/ 	
+/******/ 	// expose the modules object (__webpack_modules__)
+/******/ 	__webpack_require__.m = __webpack_modules__;
+/******/ 	
+/************************************************************************/
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	!function() {
+/******/ 		// define getter functions for harmony exports
+/******/ 		__webpack_require__.d = function(exports, definition) {
+/******/ 			for(var key in definition) {
+/******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
+/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 				}
+/******/ 			}
+/******/ 		};
+/******/ 	}();
+/******/ 	
+/******/ 	/* webpack/runtime/ensure chunk */
+/******/ 	!function() {
+/******/ 		__webpack_require__.f = {};
+/******/ 		// This file contains only the entry chunk.
+/******/ 		// The chunk loading function for additional chunks
+/******/ 		__webpack_require__.e = function(chunkId) {
+/******/ 			return Promise.all(Object.keys(__webpack_require__.f).reduce(function(promises, key) {
+/******/ 				__webpack_require__.f[key](chunkId, promises);
+/******/ 				return promises;
+/******/ 			}, []));
+/******/ 		};
+/******/ 	}();
+/******/ 	
+/******/ 	/* webpack/runtime/get javascript chunk filename */
+/******/ 	!function() {
+/******/ 		// This function allow to reference async chunks
+/******/ 		__webpack_require__.u = function(chunkId) {
+/******/ 			// return url for filenames based on template
+/******/ 			return "" + {"51":"shared.Min","712":"shared"}[chunkId] + ".Bundle.js";
+/******/ 		};
+/******/ 	}();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	!function() {
+/******/ 		__webpack_require__.o = function(obj, prop) { return Object.prototype.hasOwnProperty.call(obj, prop); }
+/******/ 	}();
+/******/ 	
+/******/ 	/* webpack/runtime/load script */
+/******/ 	!function() {
+/******/ 		var inProgress = {};
+/******/ 		// data-webpack is not used as build has no uniqueName
+/******/ 		// loadScript function to load a script via script tag
+/******/ 		__webpack_require__.l = function(url, done, key, chunkId) {
+/******/ 			if(inProgress[url]) { inProgress[url].push(done); return; }
+/******/ 			var script, needAttach;
+/******/ 			if(key !== undefined) {
+/******/ 				var scripts = document.getElementsByTagName("script");
+/******/ 				for(var i = 0; i < scripts.length; i++) {
+/******/ 					var s = scripts[i];
+/******/ 					if(s.getAttribute("src") == url) { script = s; break; }
+/******/ 				}
+/******/ 			}
+/******/ 			if(!script) {
+/******/ 				needAttach = true;
+/******/ 				script = document.createElement('script');
+/******/ 		
 /******/ 				script.charset = 'utf-8';
 /******/ 				script.timeout = 120;
 /******/ 				if (__webpack_require__.nc) {
 /******/ 					script.setAttribute("nonce", __webpack_require__.nc);
 /******/ 				}
-/******/ 				script.src = jsonpScriptSrc(chunkId);
-/******/
-/******/ 				// create error before stack unwound to get useful stacktrace later
-/******/ 				var error = new Error();
-/******/ 				onScriptComplete = function (event) {
-/******/ 					// avoid mem leaks in IE.
-/******/ 					script.onerror = script.onload = null;
-/******/ 					clearTimeout(timeout);
-/******/ 					var chunk = installedChunks[chunkId];
-/******/ 					if(chunk !== 0) {
-/******/ 						if(chunk) {
-/******/ 							var errorType = event && (event.type === 'load' ? 'missing' : event.type);
-/******/ 							var realSrc = event && event.target && event.target.src;
-/******/ 							error.message = 'Loading chunk ' + chunkId + ' failed.\n(' + errorType + ': ' + realSrc + ')';
-/******/ 							error.name = 'ChunkLoadError';
-/******/ 							error.type = errorType;
-/******/ 							error.request = realSrc;
-/******/ 							chunk[1](error);
-/******/ 						}
-/******/ 						installedChunks[chunkId] = undefined;
-/******/ 					}
-/******/ 				};
-/******/ 				var timeout = setTimeout(function(){
-/******/ 					onScriptComplete({ type: 'timeout', target: script });
-/******/ 				}, 120000);
-/******/ 				script.onerror = script.onload = onScriptComplete;
-/******/ 				document.head.appendChild(script);
+/******/ 		
+/******/ 				script.src = url;
 /******/ 			}
+/******/ 			inProgress[url] = [done];
+/******/ 			var onScriptComplete = function(prev, event) {
+/******/ 				// avoid mem leaks in IE.
+/******/ 				script.onerror = script.onload = null;
+/******/ 				clearTimeout(timeout);
+/******/ 				var doneFns = inProgress[url];
+/******/ 				delete inProgress[url];
+/******/ 				script.parentNode && script.parentNode.removeChild(script);
+/******/ 				doneFns && doneFns.forEach(function(fn) { return fn(event); });
+/******/ 				if(prev) return prev(event);
+/******/ 			}
+/******/ 			;
+/******/ 			var timeout = setTimeout(onScriptComplete.bind(null, undefined, { type: 'timeout', target: script }), 120000);
+/******/ 			script.onerror = onScriptComplete.bind(null, script.onerror);
+/******/ 			script.onload = onScriptComplete.bind(null, script.onload);
+/******/ 			needAttach && document.head.appendChild(script);
+/******/ 		};
+/******/ 	}();
+/******/ 	
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	!function() {
+/******/ 		// define __esModule on exports
+/******/ 		__webpack_require__.r = function(exports) {
+/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	}();
+/******/ 	
+/******/ 	/* webpack/runtime/publicPath */
+/******/ 	!function() {
+/******/ 		__webpack_require__.p = "../js/";
+/******/ 	}();
+/******/ 	
+/******/ 	/* webpack/runtime/jsonp chunk loading */
+/******/ 	!function() {
+/******/ 		// no baseURI
+/******/ 		
+/******/ 		// object to store loaded and loading chunks
+/******/ 		// undefined = chunk not loaded, null = chunk preloaded/prefetched
+/******/ 		// [resolve, reject, Promise] = chunk loading, 0 = chunk loaded
+/******/ 		var installedChunks = {
+/******/ 			817: 0
+/******/ 		};
+/******/ 		
+/******/ 		__webpack_require__.f.j = function(chunkId, promises) {
+/******/ 				// JSONP chunk loading for javascript
+/******/ 				var installedChunkData = __webpack_require__.o(installedChunks, chunkId) ? installedChunks[chunkId] : undefined;
+/******/ 				if(installedChunkData !== 0) { // 0 means "already installed".
+/******/ 		
+/******/ 					// a Promise means "currently loading".
+/******/ 					if(installedChunkData) {
+/******/ 						promises.push(installedChunkData[2]);
+/******/ 					} else {
+/******/ 						if(true) { // all chunks have JS
+/******/ 							// setup Promise in chunk cache
+/******/ 							var promise = new Promise(function(resolve, reject) { installedChunkData = installedChunks[chunkId] = [resolve, reject]; });
+/******/ 							promises.push(installedChunkData[2] = promise);
+/******/ 		
+/******/ 							// start chunk loading
+/******/ 							var url = __webpack_require__.p + __webpack_require__.u(chunkId);
+/******/ 							// create error before stack unwound to get useful stacktrace later
+/******/ 							var error = new Error();
+/******/ 							var loadingEnded = function(event) {
+/******/ 								if(__webpack_require__.o(installedChunks, chunkId)) {
+/******/ 									installedChunkData = installedChunks[chunkId];
+/******/ 									if(installedChunkData !== 0) installedChunks[chunkId] = undefined;
+/******/ 									if(installedChunkData) {
+/******/ 										var errorType = event && (event.type === 'load' ? 'missing' : event.type);
+/******/ 										var realSrc = event && event.target && event.target.src;
+/******/ 										error.message = 'Loading chunk ' + chunkId + ' failed.\n(' + errorType + ': ' + realSrc + ')';
+/******/ 										error.name = 'ChunkLoadError';
+/******/ 										error.type = errorType;
+/******/ 										error.request = realSrc;
+/******/ 										installedChunkData[1](error);
+/******/ 									}
+/******/ 								}
+/******/ 							};
+/******/ 							__webpack_require__.l(url, loadingEnded, "chunk-" + chunkId, chunkId);
+/******/ 						} else installedChunks[chunkId] = 0;
+/******/ 					}
+/******/ 				}
+/******/ 		};
+/******/ 		
+/******/ 		// no prefetching
+/******/ 		
+/******/ 		// no preloaded
+/******/ 		
+/******/ 		// no HMR
+/******/ 		
+/******/ 		// no HMR manifest
+/******/ 		
+/******/ 		// no on chunks loaded
+/******/ 		
+/******/ 		// install a JSONP callback for chunk loading
+/******/ 		var webpackJsonpCallback = function(parentChunkLoadingFunction, data) {
+/******/ 			var chunkIds = data[0];
+/******/ 			var moreModules = data[1];
+/******/ 			var runtime = data[2];
+/******/ 			// add "moreModules" to the modules object,
+/******/ 			// then flag all "chunkIds" as loaded and fire callback
+/******/ 			var moduleId, chunkId, i = 0;
+/******/ 			if(chunkIds.some(function(id) { return installedChunks[id] !== 0; })) {
+/******/ 				for(moduleId in moreModules) {
+/******/ 					if(__webpack_require__.o(moreModules, moduleId)) {
+/******/ 						__webpack_require__.m[moduleId] = moreModules[moduleId];
+/******/ 					}
+/******/ 				}
+/******/ 				if(runtime) var result = runtime(__webpack_require__);
+/******/ 			}
+/******/ 			if(parentChunkLoadingFunction) parentChunkLoadingFunction(data);
+/******/ 			for(;i < chunkIds.length; i++) {
+/******/ 				chunkId = chunkIds[i];
+/******/ 				if(__webpack_require__.o(installedChunks, chunkId) && installedChunks[chunkId]) {
+/******/ 					installedChunks[chunkId][0]();
+/******/ 				}
+/******/ 				installedChunks[chunkIds[i]] = 0;
+/******/ 			}
+/******/ 		
 /******/ 		}
-/******/ 		return Promise.all(promises);
-/******/ 	};
-/******/
-/******/ 	// expose the modules object (__webpack_modules__)
-/******/ 	__webpack_require__.m = modules;
-/******/
-/******/ 	// expose the module cache
-/******/ 	__webpack_require__.c = installedModules;
-/******/
-/******/ 	// define getter function for harmony exports
-/******/ 	__webpack_require__.d = function(exports, name, getter) {
-/******/ 		if(!__webpack_require__.o(exports, name)) {
-/******/ 			Object.defineProperty(exports, name, { enumerable: true, get: getter });
-/******/ 		}
-/******/ 	};
-/******/
-/******/ 	// define __esModule on exports
-/******/ 	__webpack_require__.r = function(exports) {
-/******/ 		if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
-/******/ 			Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-/******/ 		}
-/******/ 		Object.defineProperty(exports, '__esModule', { value: true });
-/******/ 	};
-/******/
-/******/ 	// create a fake namespace object
-/******/ 	// mode & 1: value is a module id, require it
-/******/ 	// mode & 2: merge all properties of value into the ns
-/******/ 	// mode & 4: return value when already ns object
-/******/ 	// mode & 8|1: behave like require
-/******/ 	__webpack_require__.t = function(value, mode) {
-/******/ 		if(mode & 1) value = __webpack_require__(value);
-/******/ 		if(mode & 8) return value;
-/******/ 		if((mode & 4) && typeof value === 'object' && value && value.__esModule) return value;
-/******/ 		var ns = Object.create(null);
-/******/ 		__webpack_require__.r(ns);
-/******/ 		Object.defineProperty(ns, 'default', { enumerable: true, value: value });
-/******/ 		if(mode & 2 && typeof value != 'string') for(var key in value) __webpack_require__.d(ns, key, function(key) { return value[key]; }.bind(null, key));
-/******/ 		return ns;
-/******/ 	};
-/******/
-/******/ 	// getDefaultExport function for compatibility with non-harmony modules
-/******/ 	__webpack_require__.n = function(module) {
-/******/ 		var getter = module && module.__esModule ?
-/******/ 			function getDefault() { return module['default']; } :
-/******/ 			function getModuleExports() { return module; };
-/******/ 		__webpack_require__.d(getter, 'a', getter);
-/******/ 		return getter;
-/******/ 	};
-/******/
-/******/ 	// Object.prototype.hasOwnProperty.call
-/******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
-/******/
-/******/ 	// __webpack_public_path__
-/******/ 	__webpack_require__.p = "../js/";
-/******/
-/******/ 	// on error function for async loading
-/******/ 	__webpack_require__.oe = function(err) { console.error(err); throw err; };
-/******/
-/******/ 	var jsonpArray = window["webpackJsonp"] = window["webpackJsonp"] || [];
-/******/ 	var oldJsonpFunction = jsonpArray.push.bind(jsonpArray);
-/******/ 	jsonpArray.push = webpackJsonpCallback;
-/******/ 	jsonpArray = jsonpArray.slice();
-/******/ 	for(var i = 0; i < jsonpArray.length; i++) webpackJsonpCallback(jsonpArray[i]);
-/******/ 	var parentJsonpFunction = oldJsonpFunction;
-/******/
-/******/
-/******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 0);
-/******/ })
+/******/ 		
+/******/ 		var chunkLoadingGlobal = self["webpackChunk"] = self["webpackChunk"] || [];
+/******/ 		chunkLoadingGlobal.forEach(webpackJsonpCallback.bind(null, 0));
+/******/ 		chunkLoadingGlobal.push = webpackJsonpCallback.bind(null, chunkLoadingGlobal.push.bind(chunkLoadingGlobal));
+/******/ 	}();
+/******/ 	
 /************************************************************************/
-/******/ ([
-/* 0 */
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = __webpack_require__(1);
-
-
-/***/ }),
-/* 1 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
+var __webpack_exports__ = {};
 /*eslint no-unused-vars: ["error", { "varsIgnorePattern": "InkBallGame" }]*/
 
 /*global signalR*/
@@ -220,11 +234,11 @@ function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArra
 
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 
-function _iterableToArrayLimit(arr, i) { if (typeof Symbol === "undefined" || !(Symbol.iterator in Object(arr))) return; var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+function _iterableToArrayLimit(arr, i) { var _i = arr == null ? null : typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"]; if (_i == null) return; var _arr = []; var _n = true; var _d = false; var _s, _e; try { for (_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
 
 function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
-function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e2) { throw _e2; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e3) { didErr = true; err = _e3; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
+function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e2) { throw _e2; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e3) { didErr = true; err = _e3; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
 
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
@@ -234,7 +248,7 @@ function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread n
 
 function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
 
-function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && Symbol.iterator in Object(iter)) return Array.from(iter); }
+function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter); }
 
 function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
 
@@ -250,7 +264,7 @@ function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || func
 
 function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
 
 function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
 
@@ -770,7 +784,9 @@ var CountdownTimer = /*#__PURE__*/function () {
  */
 
 
-function importAllModulesAsync() {
+function
+  /*gameOptions*/
+importAllModulesAsync() {
   return _importAllModulesAsync.apply(this, arguments);
 }
 
@@ -800,7 +816,7 @@ function _importAllModulesAsync() {
             }
 
             _context40.next = 5;
-            return __webpack_require__.e(/* import() | shared.Min */ 2).then(__webpack_require__.bind(null, 2));
+            return __webpack_require__.e(/* import() | shared.Min */ 51).then(__webpack_require__.bind(__webpack_require__, 980));
 
           case 5:
             SHRD = _context40.sent;
@@ -809,7 +825,7 @@ function _importAllModulesAsync() {
 
           case 8:
             _context40.next = 10;
-            return __webpack_require__.e(/* import() | shared */ 1).then(__webpack_require__.bind(null, 3));
+            return __webpack_require__.e(/* import() | shared */ 712).then(__webpack_require__.bind(__webpack_require__, 289));
 
           case 10:
             SHRD = _context40.sent;
@@ -831,7 +847,7 @@ function _importAllModulesAsync() {
 }
 
 function RandomColor() {
-  //return 'var(--orange)';
+  //return 'var(--bs-orange)';
   return '#' + Math.floor(Math.random() * 16777215).toString(16);
 }
 
@@ -957,6 +973,7 @@ var InkBallGame = /*#__PURE__*/function () {
     this.m_ApplicationUserSettings = null;
     this.m_sLastMoveGameTimeStamp = null;
     this.m_sVersion = null;
+    this.m_Worker = null;
     if (sHubName === null || sHubName === "") return;
     this.g_SignalRConnection = new signalR.HubConnectionBuilder().withUrl(sHubName, {
       transport: transportType,
@@ -1173,7 +1190,7 @@ var InkBallGame = /*#__PURE__*/function () {
               LocalLog('User blocked notifications.');
               return false;
             }
-          })["catch"](function (err) {
+          }).catch(function (err) {
             LocalError(err);
             return false;
           });
@@ -1213,7 +1230,7 @@ var InkBallGame = /*#__PURE__*/function () {
               LocalLog('User blocked notifications.');
               return false;
             }
-          })["catch"](function (err) {
+          }).catch(function (err) {
             LocalError(err);
             return false;
           });
@@ -2325,9 +2342,9 @@ var InkBallGame = /*#__PURE__*/function () {
     }()
   }, {
     key: "CreateXMLWaitForPlayerRequest",
-    value: function CreateXMLWaitForPlayerRequest()
-    /*...args*/
-    {//let cmd = new WaitForPlayerCommand((args.length > 0 && args[0] === true) ? true : false);
+    value: function
+      /*...args*/
+    CreateXMLWaitForPlayerRequest() {//let cmd = new WaitForPlayerCommand((args.length > 0 && args[0] === true) ? true : false);
       //return cmd;
     }
   }, {
@@ -3530,39 +3547,45 @@ var InkBallGame = /*#__PURE__*/function () {
     key: "RunAIWorker",
     value: function () {
       var _RunAIWorker = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee23(setupFunction) {
+        var _this14 = this;
+
         return regeneratorRuntime.wrap(function _callee23$(_context23) {
           while (1) {
             switch (_context23.prev = _context23.next) {
               case 0:
                 return _context23.abrupt("return", new Promise(function (resolve, reject) {
-                  var worker = new Worker(isESModuleSupport() ? '../js/AIWorker.Bundle.js' : '../js/AIWorker.PolyfillBundle.js' //, { type: 'module' }
+                  var _this14$m_Worker;
+
+                  _this14.m_Worker = (_this14$m_Worker = _this14.m_Worker) !== null && _this14$m_Worker !== void 0 ? _this14$m_Worker : new Worker(isESModuleSupport() ? '../js/AIWorker.Bundle.js' : '../js/AIWorker.PolyfillBundle.js' //, { type: 'module' }
                   );
 
-                  worker.onerror = function () {
-                    worker.terminate();
+                  _this14.m_Worker.onerror = function () {
+                    this.m_Worker.terminate();
+                    this.m_Worker = null;
                     reject(new Error('no data'));
                   };
 
-                  worker.onmessage = function (e) {
+                  _this14.m_Worker.onmessage = function (e) {
                     var data = e.data;
 
                     switch (data.operation) {
                       case "BUILD_GRAPH":
                       case "CONCAVEMAN":
                       case "MARK_ALL_CYCLES":
-                        worker.terminate();
+                        //worker.terminate();
                         resolve(data);
                         break;
 
                       default:
-                        LocalError("unknown params.operation = ".concat(data.operation));
-                        worker.terminate();
+                        LocalError("unknown params.operation = ".concat(data.operation)); //worker.terminate();
+
+                        //worker.terminate();
                         reject(new Error("unknown params.operation = ".concat(data.operation)));
                         break;
                     }
                   };
 
-                  if (setupFunction) setupFunction(worker);
+                  if (setupFunction) setupFunction(_this14.m_Worker);
                 }));
 
               case 1:
@@ -3583,7 +3606,7 @@ var InkBallGame = /*#__PURE__*/function () {
     key: "OnTestBuildCurrentGraph",
     value: function () {
       var _OnTestBuildCurrentGraph = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee24(event) {
-        var _this14 = this;
+        var _this15 = this;
 
         var data;
         return regeneratorRuntime.wrap(function _callee24$(_context24) {
@@ -3594,7 +3617,7 @@ var InkBallGame = /*#__PURE__*/function () {
 
                 _context24.next = 3;
                 return this.RunAIWorker(function (worker) {
-                  var serialized_points = Array.from(_this14.m_Points.store.entries()).map(function (_ref8) {
+                  var serialized_points = Array.from(_this15.m_Points.store.entries()).map(function (_ref8) {
                     var _ref9 = _slicedToArray(_ref8, 2),
                         key = _ref9[0],
                         value = _ref9[1];
@@ -3605,13 +3628,13 @@ var InkBallGame = /*#__PURE__*/function () {
                     };
                   });
 
-                  var serialized_paths = _this14.m_Lines.store.map(function (pa) {
+                  var serialized_paths = _this15.m_Lines.store.map(function (pa) {
                     return pa.Serialize();
                   });
 
                   worker.postMessage({
                     operation: "BUILD_GRAPH",
-                    state: _this14.GetGameStateForIndexedDb(),
+                    state: _this15.GetGameStateForIndexedDb(),
                     points: serialized_points,
                     paths: serialized_paths
                   });
@@ -3639,7 +3662,7 @@ var InkBallGame = /*#__PURE__*/function () {
     key: "OnTestConcaveman",
     value: function () {
       var _OnTestConcaveman = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee25(event) {
-        var _this15 = this;
+        var _this16 = this;
 
         var data, convex_hull, cw_sorted_verts, rand_color, _iterator10, _step10, vert, x, y, view_x, view_y, pt;
 
@@ -3650,7 +3673,7 @@ var InkBallGame = /*#__PURE__*/function () {
                 event.preventDefault();
                 _context25.next = 3;
                 return this.RunAIWorker(function (worker) {
-                  var serialized_points = Array.from(_this15.m_Points.store.entries()).map(function (_ref10) {
+                  var serialized_points = Array.from(_this16.m_Points.store.entries()).map(function (_ref10) {
                     var _ref11 = _slicedToArray(_ref10, 2),
                         key = _ref11[0],
                         value = _ref11[1];
@@ -3661,9 +3684,10 @@ var InkBallGame = /*#__PURE__*/function () {
                     };
                   }); //const serialized_paths = this.m_Lines.store.map(pa => pa.Serialize());
 
+                  //const serialized_paths = this.m_Lines.store.map(pa => pa.Serialize());
                   worker.postMessage({
                     operation: "CONCAVEMAN",
-                    state: _this15.GetGameStateForIndexedDb(),
+                    state: _this16.GetGameStateForIndexedDb(),
                     points: serialized_points
                   });
                 });
@@ -3758,7 +3782,7 @@ var InkBallGame = /*#__PURE__*/function () {
     key: "OnTestMarkAllCycles",
     value: function () {
       var _OnTestMarkAllCycles = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee26(event) {
-        var _this16 = this;
+        var _this17 = this;
 
         var data, free_human_player_points, _iterator11, _step11, _pt, _x30, _y2, view_x, view_y, _pt2, tab, i, new_cycl, str, trailing_points, rand_color, cw_sorted_verts, _iterator12, _step12, vert, x, y, pt, tmp, comma, _iterator13, _step13, possible_intercept, pt1, pts2reset;
 
@@ -3770,7 +3794,7 @@ var InkBallGame = /*#__PURE__*/function () {
 
                 _context26.next = 3;
                 return this.RunAIWorker(function (worker) {
-                  var serialized_points = Array.from(_this16.m_Points.store.entries()).map(function (_ref14) {
+                  var serialized_points = Array.from(_this17.m_Points.store.entries()).map(function (_ref14) {
                     var _ref15 = _slicedToArray(_ref14, 2),
                         key = _ref15[0],
                         value = _ref15[1];
@@ -3781,17 +3805,17 @@ var InkBallGame = /*#__PURE__*/function () {
                     };
                   });
 
-                  var serialized_paths = _this16.m_Lines.store.map(function (pa) {
+                  var serialized_paths = _this17.m_Lines.store.map(function (pa) {
                     return pa.Serialize();
                   });
 
                   worker.postMessage({
                     operation: "MARK_ALL_CYCLES",
-                    state: _this16.GetGameStateForIndexedDb(),
+                    state: _this17.GetGameStateForIndexedDb(),
                     points: serialized_points,
                     paths: serialized_paths,
-                    colorRed: _this16.COLOR_RED,
-                    colorBlue: _this16.COLOR_BLUE
+                    colorRed: _this17.COLOR_RED,
+                    colorBlue: _this17.COLOR_BLUE
                   });
                 });
 
@@ -3849,7 +3873,7 @@ var InkBallGame = /*#__PURE__*/function () {
                 //some checks
                 // Print the i-th cycle
                 str = "Cycle Number ".concat(i, ": "), trailing_points = [];
-                rand_color = 'var(--indigo)';
+                rand_color = 'var(--bs-indigo)';
                 cw_sorted_verts = new_cycl.cw_sorted_verts; //display which cycle we are dealing with
 
                 _iterator12 = _createForOfIteratorHelper(cw_sorted_verts);
@@ -3914,8 +3938,8 @@ var InkBallGame = /*#__PURE__*/function () {
                       pt1 = document.querySelector("svg > circle[cx=\"".concat(possible_intercept.x * this.m_iGridSizeX, "\"][cy=\"").concat(possible_intercept.y * this.m_iGridSizeY, "\"]"));
 
                       if (pt1) {
-                        pt1.SetStrokeColor('var(--yellow)');
-                        pt1.SetFillColor('var(--yellow)');
+                        pt1.SetStrokeColor('var(--bs-yellow)');
+                        pt1.SetFillColor('var(--bs-yellow)');
                         pt1.setAttribute("r", "6");
                       }
 
@@ -3936,8 +3960,8 @@ var InkBallGame = /*#__PURE__*/function () {
 
                 pts2reset = Array.from(document.querySelectorAll("svg > circle[fill=\"".concat(rand_color, "\"][r=\"6\"]")));
                 pts2reset.forEach(function (pt) {
-                  pt.SetStrokeColor(_this16.COLOR_BLUE);
-                  pt.SetFillColor(_this16.COLOR_BLUE);
+                  pt.SetStrokeColor(_this17.COLOR_BLUE);
+                  pt.SetFillColor(_this17.COLOR_BLUE);
                   pt.setAttribute("r", "4");
                 });
 
@@ -3964,7 +3988,7 @@ var InkBallGame = /*#__PURE__*/function () {
     key: "OnTestGroupPoints",
     value: function () {
       var _OnTestGroupPoints = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee27(event) {
-        var _this17 = this;
+        var _this18 = this;
 
         var starting_point;
         return regeneratorRuntime.wrap(function _callee27$(_context27) {
@@ -3988,7 +4012,7 @@ var InkBallGame = /*#__PURE__*/function () {
                 }
 
                 this.lastCycle.forEach(function (cyc) {
-                  _this17.SvgVml.CreatePolyline(6, cyc.map(function (fnd) {
+                  _this18.SvgVml.CreatePolyline(6, cyc.map(function (fnd) {
                     var pt = fnd.GetPosition();
                     return "".concat(pt.x, ",").concat(pt.y);
                   }).join(' '), RandomColor());
@@ -4686,15 +4710,15 @@ var InkBallGame = /*#__PURE__*/function () {
             // not parent of current vertex, 
             // then there is a cycle. 
             else if (i !== parent) {
-                var _i$GetPosition = i.GetPosition(),
-                    view_x = _i$GetPosition.x,
-                    view_y = _i$GetPosition.y;
+              var _i$GetPosition = i.GetPosition(),
+                  view_x = _i$GetPosition.x,
+                  view_y = _i$GetPosition.y;
 
-                var x = view_x / this.m_iGridSizeX,
-                    y = view_y / this.m_iGridSizeY;
-                LocalLog("cycle found at ".concat(x, ",").concat(y));
-                return true;
-              }
+              var x = view_x / this.m_iGridSizeX,
+                  y = view_y / this.m_iGridSizeY;
+              LocalLog("cycle found at ".concat(x, ",").concat(y));
+              return true;
+            }
           }
         } catch (err) {
           _iterator16.e(err);
@@ -4866,7 +4890,7 @@ var InkBallGame = /*#__PURE__*/function () {
 
                 printCycles = /*#__PURE__*/function () {
                   var _ref17 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee34(edges, mark) {
-                    var _this18 = this;
+                    var _this19 = this;
 
                     var e, mark_e, m, found_c, free_human_player_points, sHumanColor, _iterator18, _step18, _pt4, _pt4$GetPosition, view_x, view_y, _x53, _y3, _pt5, tab, _i2, cycl, str, trailing_points, rand_color, mapped_verts, cw_sorted_verts, _iterator19, _step19, vert, x, y, pt, tmp, comma, _iterator20, _step20, possible_intercept, pt1, pts2reset;
 
@@ -4985,7 +5009,7 @@ var InkBallGame = /*#__PURE__*/function () {
                             //somr checks
                             // Print the i-th cycle
                             str = "Cycle Number ".concat(_i2, ": "), trailing_points = [];
-                            rand_color = 'var(--indigo)'; //convert to logical space
+                            rand_color = 'var(--bs-indigo)'; //convert to logical space
 
                             mapped_verts = cycl.map(function (c) {
                               var pt = vertices[c].GetPosition();
@@ -5059,8 +5083,8 @@ var InkBallGame = /*#__PURE__*/function () {
                                   pt1 = document.querySelector("svg > circle[cx=\"".concat(possible_intercept.x * this.m_iGridSizeX, "\"][cy=\"").concat(possible_intercept.y * this.m_iGridSizeY, "\"]"));
 
                                   if (pt1) {
-                                    pt1.SetStrokeColor('var(--yellow)');
-                                    pt1.SetFillColor('var(--yellow)');
+                                    pt1.SetStrokeColor('var(--bs-yellow)');
+                                    pt1.SetFillColor('var(--bs-yellow)');
                                     pt1.setAttribute("r", "6");
                                   }
 
@@ -5081,8 +5105,8 @@ var InkBallGame = /*#__PURE__*/function () {
 
                             pts2reset = Array.from(document.querySelectorAll("svg > circle[fill=\"".concat(rand_color, "\"][r=\"6\"]")));
                             pts2reset.forEach(function (pt) {
-                              pt.SetStrokeColor(_this18.COLOR_BLUE);
-                              pt.SetFillColor(_this18.COLOR_BLUE);
+                              pt.SetStrokeColor(_this19.COLOR_BLUE);
+                              pt.SetFillColor(_this19.COLOR_BLUE);
                               pt.setAttribute("r", "4");
                             });
 
@@ -5448,7 +5472,7 @@ var InkBallGame = /*#__PURE__*/function () {
     key: "rAFCallBack",
     value: function () {
       var _rAFCallBack = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee38(timeStamp) {
-        var _this19 = this;
+        var _this20 = this;
 
         var progress, point, centroid;
         return regeneratorRuntime.wrap(function _callee38$(_context38) {
@@ -5493,8 +5517,8 @@ var InkBallGame = /*#__PURE__*/function () {
               case 17:
                 _context38.next = 19;
                 return this.SendAsyncData(point, function () {
-                  _this19.m_bMouseDown = false;
-                  _this19.m_bHandlingEvent = false;
+                  _this20.m_bMouseDown = false;
+                  _this20.m_bHandlingEvent = false;
                 });
 
               case 19:
@@ -5527,11 +5551,12 @@ var InkBallGame = /*#__PURE__*/function () {
 
 
 window.addEventListener('load', /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee39() {
-  var gameOptions, inkBallHubName, iGameID, iPlayerID, iOtherPlayerID, bPlayingWithRed, bPlayerActive, gameType, protocol, servTimeoutMillis, isReadonly, pathAfterPointDrawAllowanceSecAmount, sLastMoveTimeStampUtcIso, version, game;
+  var isMsgpackDefined, gameOptions, inkBallHubName, iGameID, iPlayerID, iOtherPlayerID, bPlayingWithRed, bPlayerActive, gameType, protocol, servTimeoutMillis, isReadonly, pathAfterPointDrawAllowanceSecAmount, sLastMoveTimeStampUtcIso, version, game;
   return regeneratorRuntime.wrap(function _callee39$(_context39) {
     while (1) {
       switch (_context39.prev = _context39.next) {
         case 0:
+          isMsgpackDefined = window.msgpack5 !== undefined;
           gameOptions = window.gameOptions;
           inkBallHubName = gameOptions.inkBallHubName;
           iGameID = gameOptions.iGameID;
@@ -5543,53 +5568,53 @@ window.addEventListener('load', /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/reg
           bPlayingWithRed = gameOptions.bPlayingWithRed;
           bPlayerActive = gameOptions.bPlayerActive;
           gameType = gameOptions.gameType;
-          protocol = gameOptions.isMessagePackProtocol === true ? new signalR.protocols.msgpack.MessagePackHubProtocol() : new signalR.JsonHubProtocol();
+          protocol = isMsgpackDefined && gameOptions.isMessagePackProtocol === true ? new signalR.protocols.msgpack.MessagePackHubProtocol() : new signalR.JsonHubProtocol();
           servTimeoutMillis = gameOptions.servTimeoutMillis;
           isReadonly = gameOptions.isReadonly;
           pathAfterPointDrawAllowanceSecAmount = gameOptions.pathAfterPointDrawAllowanceSecAmount;
           sLastMoveTimeStampUtcIso = new Date(gameOptions.sLastMoveGameTimeStamp).toISOString();
           version = gameOptions.version;
-          _context39.next = 19;
+          _context39.next = 20;
           return importAllModulesAsync(gameOptions);
 
-        case 19:
+        case 20:
           game = new InkBallGame(iGameID, iPlayerID, iOtherPlayerID, inkBallHubName, signalR.LogLevel.Warning, protocol, signalR.HttpTransportType.None, servTimeoutMillis, gameType, bPlayingWithRed, bPlayerActive, isReadonly, pathAfterPointDrawAllowanceSecAmount);
-          _context39.next = 22;
+          _context39.next = 23;
           return game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw', '#messageInput', '#messagesList', '#sendButton', sLastMoveTimeStampUtcIso, gameOptions.PointsAsJavaScriptArray === null, version, ['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints', '#TestFindSurroundablePoints', '#TestWorkerify']);
 
-        case 22:
+        case 23:
           if (!(gameOptions.PointsAsJavaScriptArray !== null)) {
-            _context39.next = 31;
+            _context39.next = 32;
             break;
           }
 
-          _context39.next = 25;
+          _context39.next = 26;
           return game.StartSignalRConnection(false);
 
-        case 25:
-          _context39.next = 27;
+        case 26:
+          _context39.next = 28;
           return game.SetAllPoints(gameOptions.PointsAsJavaScriptArray);
 
-        case 27:
-          _context39.next = 29;
+        case 28:
+          _context39.next = 30;
           return game.SetAllPaths(gameOptions.PathsAsJavaScriptArray);
 
-        case 29:
-          _context39.next = 33;
+        case 30:
+          _context39.next = 34;
           break;
 
-        case 31:
-          _context39.next = 33;
+        case 32:
+          _context39.next = 34;
           return game.StartSignalRConnection(true);
 
-        case 33:
+        case 34:
           //alert('a QQ');
           document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
           game.CountPointsDebug("#debug2");
           delete window.gameOptions;
           window.game = game;
 
-        case 37:
+        case 38:
         case "end":
           return _context39.stop();
       }
@@ -5601,6 +5626,5 @@ window.addEventListener('beforeunload', function () {
 });
 /******** /run code and events ********/
 //export { InkBallGame };
-
-/***/ })
-/******/ ]);
+/******/ })()
+;

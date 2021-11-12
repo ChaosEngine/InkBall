@@ -14,13 +14,13 @@
 }
 
 <div class="alert alert-dismissible fade show inkgames" role="alert">
-	<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+	<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 </div>
 
 <div class='container inkgames'>
 	<div class="table-responsive">
 		<table class='table game_tab'>
-			<thead class="thead-light">
+			<thead class="table-light">
 				<tr>
 					<th scope='row'>#</th>
 					<th scope='col'>Player 1</th>
@@ -55,47 +55,41 @@
 							switch (game.GameState)
 							{
 								case InkBallGame.GameStateEnum.AWAITING:
-									<td class='font-italic gtd'>waiting for another player</td>
+									<td class='fst-italic gtd'>waiting for another player</td>
 									<td class='gtd'>
 										@if (bIsMyOwnGame)
 										{
 											<a href='Game' class='btn btn-outline-primary'>Continue</a>
 										}
-										else
+										else if (!bIsCurrentGameOk)
 										{
-											if (!bIsCurrentGameOk)
-											{
-												<form method='post'>
-													<input type='hidden' name='GameID' value='@game.iId' />
-													<input type='submit' name='action' value='Join' class='btn btn-outline-primary' />
-												</form>
-											}
+											<form method='post'>
+												<input type='hidden' name='GameID' value='@game.iId' />
+												<input type='submit' name='action' value='Join' class='btn btn-outline-primary' />
+											</form>
 										}
 									</td>
 									break;
 
 								case InkBallGame.GameStateEnum.ACTIVE:
-									<td class='font-italic gtd'>game in progress</td>
+									<td class='fst-italic gtd'>game in progress</td>
 									<td class='gtd'>
 										@if (bIsMyOwnGame)
 										{
 											<a href='Game' class="btn btn-outline-primary">Continue</a>
 										}
-										else
+										else if (!bIsCurrentGameOk && bCanViewOtherPlayerGames)
 										{
-											if (!bIsCurrentGameOk && bCanViewOtherPlayerGames)
-											{
-												<a href='Game?handler=View&GameID=@game.iId'>View only</a>
-											}
+											<a href='Game?handler=View&GameID=@game.iId'>View only</a>
 										}
 									</td>
 									break;
 
 								case InkBallGame.GameStateEnum.INACTIVE:
-									<td class='font-italic gtd' colspan="2">game inactive</td>
+									<td class='fst-italic gtd' colspan="2">game inactive</td>
 									break;
 								case InkBallGame.GameStateEnum.FINISHED:
-									<td class='font-italic gtd' colspan="2">game finished</td>
+									<td class='fst-italic gtd' colspan="2">game finished</td>
 									break;
 								default:
 									throw new ArgumentNullException(nameof(game.GameState), "bad game state");
@@ -104,16 +98,16 @@
 							switch (game.GameType)
 							{
 								case InkBallGame.GameTypeEnum.FIRST_5_ADVANTAGE_PATHS:
-									<td class='font-italic gtd'>FIRST 5 ADVANTAGE PATHS</td>
+									<td class='fst-italic gtd'>FIRST 5 ADVANTAGE PATHS</td>
 									break;
 								case InkBallGame.GameTypeEnum.FIRST_5_CAPTURES:
-									<td class='font-italic gtd'>FIRST 5 CAPTURES</td>
+									<td class='fst-italic gtd'>FIRST 5 CAPTURES</td>
 									break;
 								case InkBallGame.GameTypeEnum.FIRST_5_PATHS:
-									<td class='font-italic gtd'>FIRST 5 PATHS</td>
+									<td class='fst-italic gtd'>FIRST 5 PATHS</td>
 									break;
 								case InkBallGame.GameTypeEnum.FIRST_CAPTURE:
-									<td class='font-italic gtd'>FIRST CAPTURE</td>
+									<td class='fst-italic gtd'>FIRST CAPTURE</td>
 									break;
 								default:
 									throw new ArgumentNullException(nameof(game.GameType), "bad game type");
@@ -128,11 +122,11 @@
 	<form method='post' class="was-validated">
 		@if (!bIsCurrentGameOk)
 		{
-			<fieldset class="form-group bg-light">
-				<div class="form-row" role="group" aria-label="New game options">
-					<legend class="col-form-label col-sm-2 pt-0">New game creation</legend>
-					<div class="col-auto">
-						<select name='GameType' id='GameType' class="custom-select" required>
+			<fieldset class="bg-light g-3">
+				<div class="row" role="group" aria-label="New game options">
+					<legend class="col-sm-12 col-md-4 col-lg-4 col-xl-3">New game creation</legend>
+					<div class="col-sm-12 col-md-4 col-lg-4 col-xl-3">
+						<select name='GameType' id='GameType' class="form-select" required>
 							<option value='' selected='selected'>Choose game type</option>
 							<optgroup label='Game types'>
 								<option value='0'>First capture wins</option>
@@ -143,8 +137,8 @@
 						</select>
 						<div class="invalid-feedback">Invalid game type</div>
 					</div>
-					<div class="col-auto">
-						<select name='BoardSize' id='BoardSize' class="custom-select" required>
+					<div class="col-sm-12 col-md-4 col-lg-4 col-xl-3">
+						<select name='BoardSize' id='BoardSize' class="form-select" required>
 							<option value='' selected='selected'>Choose board size</option>
 							<optgroup label='Board sizes'>
 								<option value='20'>20 x 26</option>
@@ -154,16 +148,16 @@
 						</select>
 						<div class="invalid-feedback">Invalid bard size</div>
 					</div>
-					<div class="form-group custom-control custom-switch m-2">
-						<input type="checkbox" class="custom-control-input" name="CpuOponent" id="CpuOponent" />
-						<label class="custom-control-label" for="CpuOponent">Play against CPU</label>
+					<div class="col-sm-12 col-md-auto col-xl-3 form-check form-switch ps-2">
+						<input type="checkbox" class="form-check-input form-control-input mx-1" name="CpuOponent" id="CpuOponent" />
+						<label class="form-check-label" for="CpuOponent">Play against CPU</label>
 					</div>
-					<input type='submit' name='action' value='New game' class='col-auto mx-1 btn btn-primary' />
+					<div class="col-sm-12 col-md-auto">
+						<input type='submit' name='action' value='New game' class='btn btn-primary' />
+					</div>
 				</div>
 			</fieldset>
-			<div class="form-row">
-				<a href='Home' class='col-auto mx-1 btn btn-outline-primary'>Home</a>
-			</div>
+			<a href='Home' class='mt-2 btn btn-outline-primary'>Home</a>
 		}
 		else
 		{

@@ -449,11 +449,11 @@ namespace InkBall.Module.Hubs
 						//#endif
 						await _dbContext.SaveChangesAsync(token);
 
-						trans.Commit();
+						await trans.CommitAsync(token);
 					}
 					catch (Exception ex)
 					{
-						trans.Rollback();
+						await trans.RollbackAsync(token);
 						_logger.LogError(ex, nameof(ClientToServerPoint));
 						throw;
 					}
@@ -528,68 +528,65 @@ namespace InkBall.Module.Hubs
 					iPlayerId = path.iPlayerId,
 					//PointsAsString = path.PointsAsString
 				};
+
+				var status = InkBallPoint.StatusEnum.POINT_STARTING;
+				var last_point_in_path = points_on_path.Last();
+				foreach (var pop in points_on_path)
+				{
+					//TODO: check in-path-next-point from start to end with closing
+					if (!(all_placed_points_fromDB.TryGetValue(pop, out IPoint iobj) && iobj is InkBallPoint found)
+						|| !(found.iPlayerId == ThisPlayer.iId &&
+							(
+								((found.iEnclosingPathId == null && (found.Status == current_player_color || _simpleCoordsPointComparer.Equals(found, last_point_in_path))) ||
+								(found.iEnclosingPathId != null && in_path_colors.Contains(found.Status)))
+							))
+						)
+					{
+						throw new ArgumentOutOfRangeException($"point not in path [{pop}]");
+					}
+
+					found.Status = status;
+					status = InkBallPoint.StatusEnum.POINT_IN_PATH;
+					found.EnclosingPath = db_path;
+				}
+
+				if (!isDelayedPathDrawn)
+					ThisGame.bIsPlayer1Active = !ThisGame.bIsPlayer1Active;
+
+				var owning_points = path.GetOwnedPoints(owning_color, OtherPlayer.iId);
+				foreach (var op in owning_points)
+				{
+					if (!(all_placed_points_fromDB.TryGetValue(op, out IPoint iobj) && iobj is InkBallPoint found)
+						|| !(found.Status == other_player_color && found.iPlayerId == OtherPlayer.iId))
+					{
+						throw new ArgumentOutOfRangeException($"owning point not found [{op}]");
+					}
+					if (!path.IsPointInsidePath(op))
+					{
+						throw new ArgumentOutOfRangeException($"owning point not found [{op}]");
+					}
+
+					found.Status = owning_color;
+					found.EnclosingPath = db_path;
+				}
+				string last_move = path.SerializeThin();
+				db_path.PointsAsString = last_move;
+				if (!db_path_player.IsCpuPlayer)
+					db_path_player.sLastMoveCode = last_move;
+
 				using (var trans = await _dbContext.Database.BeginTransactionAsync(token))
 				{
 					try
 					{
-						//Oracle EF-Core bug: must split path SaveChangesAsync into to: save path and add/update points. Revert if possible
 						await _dbContext.InkBallPath.AddAsync(db_path, token);
+
 						await _dbContext.SaveChangesAsync(token);
-
-						var status = InkBallPoint.StatusEnum.POINT_STARTING;
-						var last_point_in_path = points_on_path.Last();
-						foreach (var pop in points_on_path)
-						{
-							//TODO: check in-path-next-point from start to end with closing
-							if (!(all_placed_points_fromDB.TryGetValue(pop, out IPoint iobj) && iobj is InkBallPoint found)
-								|| !(found.iPlayerId == ThisPlayer.iId &&
-									(
-										((found.iEnclosingPathId == null && (found.Status == current_player_color || _simpleCoordsPointComparer.Equals(found, last_point_in_path))) ||
-										(found.iEnclosingPathId != null && in_path_colors.Contains(found.Status)))
-									))
-								)
-							{
-								throw new ArgumentOutOfRangeException($"point not in path [{pop}]");
-							}
-
-							found.Status = status;
-							status = InkBallPoint.StatusEnum.POINT_IN_PATH;
-							found.EnclosingPath = db_path;
-						}
-
-						if (!isDelayedPathDrawn)
-							ThisGame.bIsPlayer1Active = !ThisGame.bIsPlayer1Active;
-
-						var owning_points = path.GetOwnedPoints(owning_color, OtherPlayer.iId);
-						foreach (var op in owning_points)
-						{
-							if (!(all_placed_points_fromDB.TryGetValue(op, out IPoint iobj) && iobj is InkBallPoint found)
-								|| !(found.Status == other_player_color && found.iPlayerId == OtherPlayer.iId))
-							{
-								throw new ArgumentOutOfRangeException($"owning point not found [{op}]");
-							}
-							if (!path.IsPointInsidePath(op))
-							{
-								throw new ArgumentOutOfRangeException($"owning point not found [{op}]");
-							}
-
-							found.Status = owning_color;
-							found.EnclosingPath = db_path;
-						}
-						path.iId = db_path.iId;//get real DB id saved previously
-						string last_move = path.SerializeThin();
-						db_path.PointsAsString = last_move;
-						if (!db_path_player.IsCpuPlayer)
-							db_path_player.sLastMoveCode = last_move;
-
-						//Oracle EF-Core bug: must split path SaveChangesAsync into to: save path and add/update points. Revert if possible
-						await _dbContext.SaveChangesAsync(token);
-						//#if DEBUG
-						//						var saved_pts = await _dbContext.LoadPointsAndPathsAsync(ThisGameID.Value, token);
-						//						var restored_from_db = saved_pts.Paths.LastOrDefault()?.InkBallPoint.Select(z => $"{z.iX},{z.iY}");
-						//						var str = InkBallPath.GetPathsAsJavaScriptArrayForPage(saved_pts.Paths);
-						//						throw new Exception($"FAKE EXCEPTION org pts:[{path.PointsAsString}], restored pts:[{str}], owned:[{path.OwnedPointsAsString}]");
-						//#endif
+						// #if DEBUG
+						// 						var saved_pts = await _dbContext.LoadPointsAndPathsAsync(ThisGameID.Value, token);
+						// 						var restored_from_db = saved_pts.Paths.LastOrDefault();
+						// 						var str = InkBallPath.GetPathsAsJavaScriptArrayForPage(saved_pts.Paths);
+						// 						throw new Exception($"FAKE EXCEPTION org pts:[{path.PointsAsString}], restored pts:[{str}], owned:[{path.OwnedPointsAsString}]");
+						// #endif
 
 						var statisticalPointAndPathCounter = new StatisticalPointAndPathCounter(_dbContext, ThisGame.iId,
 							ThisPlayer.iId, OtherPlayer.iId, ref owning_color, ref other_owning_color, ref token);
@@ -615,13 +612,13 @@ namespace InkBall.Module.Hubs
 								await Clients.User(OtherUserIdentifier).ServerToClientPath(path);
 						}
 
-						trans.Commit();
+						await trans.CommitAsync(token);
 
 						return dto;
 					}
 					catch (Exception ex)
 					{
-						trans.Rollback();
+						await trans.RollbackAsync(token);
 						_logger.LogError(ex, nameof(ClientToServerPath));
 						throw;
 					}
@@ -675,13 +672,13 @@ namespace InkBall.Module.Hubs
 
 						await Clients.User(OtherUserIdentifier).ServerToClientPlayerWin(win);
 
-						trans.Rollback();
+						await trans.RollbackAsync(token);
 
 						return win;
 					}
 					catch (Exception ex)
 					{
-						trans.Rollback();
+						await trans.RollbackAsync(token);
 						_logger.LogError(ex, nameof(ClientToServerPath));
 						throw;
 					}
