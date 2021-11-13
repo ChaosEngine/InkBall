@@ -1055,8 +1055,8 @@ namespace InkBall.Tests
 
 				var json_points1 = JsonSerializer.Serialize(JsonSerializer.Deserialize<TempPoint[]>(
 					CommonPoint.GetPointsAsJavaScriptArrayForPage(points_n_paths.Points),
-					new JsonSerializerOptions { ReadCommentHandling = JsonCommentHandling.Skip, IgnoreNullValues = true, AllowTrailingCommas = true }),
-					new JsonSerializerOptions { ReadCommentHandling = JsonCommentHandling.Skip, IgnoreNullValues = true, AllowTrailingCommas = true });
+					new JsonSerializerOptions { ReadCommentHandling = JsonCommentHandling.Skip, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, AllowTrailingCommas = true }),
+					new JsonSerializerOptions { ReadCommentHandling = JsonCommentHandling.Skip, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, AllowTrailingCommas = true });
 
 				var json_paths1 = JsonSerializer.Serialize(JsonSerializer.Deserialize<InkBallPathViewModel[]>(
 					InkBallPath.GetPathsAsJavaScriptArrayForPage(points_n_paths.Paths),

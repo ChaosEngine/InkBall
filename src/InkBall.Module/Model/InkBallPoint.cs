@@ -275,7 +275,7 @@ namespace InkBall.Module.Model
 	public sealed class InkBallPointViewModel : CommonPoint, IPoint, ILastMoveTimestamp,
 		IThinPoint, IThisSerializablePoint<InkBallPointViewModel>
 	{
-		//static readonly JsonSerializerOptions _ignoreNullJsonSerializerOptions = new JsonSerializerOptions { IgnoreNullValues = true };
+		//static readonly JsonSerializerOptions _ignoreNullJsonSerializerOptions = new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull };
 
 		/// <summary>
 		/// Helper for serialization only selected properties

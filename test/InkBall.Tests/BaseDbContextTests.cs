@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using InkBall.Module.Hubs;
@@ -208,7 +209,7 @@ namespace InkBall.Tests
 					});
 				}
 				path_vm.OwnedPointsAsString = parameters.ownedPoints.Select(o => $"{o.x},{o.y}").Aggregate((me, me1) => me + " " + me1);
-				db_path.PointsAsString = JsonSerializer.Serialize(path_vm, new JsonSerializerOptions { IgnoreNullValues = true });
+				db_path.PointsAsString = JsonSerializer.Serialize(path_vm, new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull });
 
 				is_player_turn = !is_player_turn;
 			}

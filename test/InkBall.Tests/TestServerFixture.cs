@@ -24,6 +24,7 @@ using System.Net.Http;
 using System.Reflection;
 using System.Security.Claims;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -44,11 +45,11 @@ namespace IntegrationTests
 			get
 			{
 				return JsonSerializer.Deserialize<ApplicationUserSettings>(UserSettingsJSON ?? "{}",
-					new JsonSerializerOptions { IgnoreNullValues = true });
+					new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull });
 			}
 			set
 			{
-				UserSettingsJSON = JsonSerializer.Serialize(value, new JsonSerializerOptions { IgnoreNullValues = true });
+				UserSettingsJSON = JsonSerializer.Serialize(value, new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull });
 			}
 		}
 

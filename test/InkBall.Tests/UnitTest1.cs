@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -112,7 +113,7 @@ namespace InkBall.Tests
 				//Assert
 				Assert.Equal($"{pointsTab[0]},{pointsTab[1]}", expectedCoords);
 				//Act
-				string serialized = System.Text.Json.JsonSerializer.Serialize(db, new JsonSerializerOptions { IgnoreNullValues = true });
+				string serialized = System.Text.Json.JsonSerializer.Serialize(db, new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull });
 				//Assert
 				Assert.DoesNotContain(nameof(InkBallPathViewModel.TimeStamp), serialized);
 				Assert.DoesNotContain(nameof(InkBallPathViewModel.InkBallPoint), serialized);
@@ -131,7 +132,7 @@ namespace InkBall.Tests
 					iPlayerId = 1
 				};
 				//Act
-				serialized = System.Text.Json.JsonSerializer.Serialize(db, new JsonSerializerOptions { IgnoreNullValues = true });
+				serialized = System.Text.Json.JsonSerializer.Serialize(db, new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull });
 				//Assert
 				Assert.DoesNotContain(nameof(InkBallPathViewModel.TimeStamp), serialized);
 				Assert.DoesNotContain(nameof(InkBallPathViewModel.InkBallPoint), serialized);
@@ -152,7 +153,7 @@ namespace InkBall.Tests
 
 				//Act
 				var str = db.ToString();
-				string serialized = System.Text.Json.JsonSerializer.Serialize(db, new JsonSerializerOptions { IgnoreNullValues = true });
+				string serialized = System.Text.Json.JsonSerializer.Serialize(db, new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull });
 				//Assert
 				Assert.NotNull(str);
 				Assert.DoesNotContain(nameof(InkBallPathViewModel.TimeStamp), serialized);
@@ -172,7 +173,7 @@ namespace InkBall.Tests
 					PointsAsString = expectedCoords,
 				};
 				//Act
-				serialized = System.Text.Json.JsonSerializer.Serialize(view, new JsonSerializerOptions { IgnoreNullValues = true });
+				serialized = System.Text.Json.JsonSerializer.Serialize(view, new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull });
 				//Assert
 				Assert.DoesNotContain(nameof(InkBallPathViewModel.BelongsToCPU), serialized);
 				Assert.DoesNotContain(nameof(InkBallPathViewModel.TimeStamp), serialized);
@@ -190,7 +191,7 @@ namespace InkBall.Tests
 					TimeStamp = DateTime.Now////////NOT NULL!!
 				};
 				//Act
-				serialized = System.Text.Json.JsonSerializer.Serialize(view, new JsonSerializerOptions { IgnoreNullValues = true });
+				serialized = System.Text.Json.JsonSerializer.Serialize(view, new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull });
 				//Assert
 				Assert.DoesNotContain(nameof(InkBallPathViewModel.BelongsToCPU), serialized);
 				Assert.Contains(nameof(InkBallPathViewModel.TimeStamp), serialized);
