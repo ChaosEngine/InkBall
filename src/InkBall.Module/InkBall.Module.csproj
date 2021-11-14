@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>TRACE;INCLUDE_ORACLE;INCLUDE_SQLSERVER;INCLUDE_POSTGRES</DefineConstants>
+    <DefineConstants>TRACE;INCLUDE_SQLSERVER;INCLUDE_POSTGRES</DefineConstants>
     <!--<DefineConstants>TRACE;INCLUDE_ORACLE</DefineConstants>-->
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Oracle|AnyCPU'">
