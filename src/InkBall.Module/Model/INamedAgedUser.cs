@@ -12,7 +12,7 @@ namespace InkBall.Module.Model
 	public interface IApplicationUserSettings
 	{
 		[PersonalData]
-		[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+		//[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
 		bool DesktopNotifications { get; set; }
 	}
 
@@ -20,7 +20,7 @@ namespace InkBall.Module.Model
 	public sealed class ApplicationUserSettings : IApplicationUserSettings, IDtoMsg
 	{
 		[PersonalData]
-		[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+		//[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
 		public bool DesktopNotifications { get; set; }
 
 		public CommandKindEnum GetKind()
@@ -41,7 +41,7 @@ namespace InkBall.Module.Model
 		/// </summary>	
 		[PersonalData]
 		[NotMapped]
-		IApplicationUserSettings UserSettings { get; set; }
+		ApplicationUserSettings UserSettings { get; set; }
 
 		/// <summary>
 		// Various user settings as JSON

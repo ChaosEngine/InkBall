@@ -40,7 +40,7 @@ namespace IntegrationTests
 
 		[PersonalData]
 		[NotMapped]
-		public IApplicationUserSettings UserSettings
+		public ApplicationUserSettings UserSettings
 		{
 			get
 			{

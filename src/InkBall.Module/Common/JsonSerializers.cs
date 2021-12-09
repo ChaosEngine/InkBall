@@ -8,8 +8,8 @@ using System.Threading.Tasks;
 
 namespace InkBall.Module
 {
-	[JsonSerializable(typeof(IApplicationUserSettings))]
-	public partial class IApplicationUserSettingsContext : JsonSerializerContext
+	[JsonSerializable(typeof(ApplicationUserSettings))]
+	public partial class ApplicationUserSettingsContext : JsonSerializerContext
 	{
 	}
 }
