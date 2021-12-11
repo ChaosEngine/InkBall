@@ -28,15 +28,12 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace IntegrationTests
+namespace InkBall.IntegrationTests
 {
 	public class TestingApplicationUser : IdentityUser, INamedAgedUser
 	{
 		[ProtectedPersonalData]
 		public string Name { get; set; }
-
-		//[PersonalData]
-		//public int Age { get; set; }
 
 		[PersonalData]
 		[NotMapped]
