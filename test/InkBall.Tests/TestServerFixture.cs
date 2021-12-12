@@ -116,7 +116,7 @@ namespace InkBall.IntegrationTests
 			Connection = GetSqliteInMemoryBuildOptions();
 		}
 
-		SqliteConnection GetSqliteInMemoryBuildOptions()
+		protected virtual SqliteConnection GetSqliteInMemoryBuildOptions()
 		{
 			var connection = new SqliteConnection("DataSource=:memory:");
 
@@ -257,7 +257,7 @@ namespace InkBall.IntegrationTests
 					.UseStartup<TStartup>();
 			});
 
-		public HttpClient AnonymousClient
+		public virtual HttpClient AnonymousClient
 		{
 			get
 			{
@@ -274,7 +274,7 @@ namespace InkBall.IntegrationTests
 			}
 		}
 
-		public async Task<HttpClient> CreateAuthenticatedClientAsync(string userName = "alice.testing@example.org",
+		public virtual async Task<HttpClient> CreateAuthenticatedClientAsync(string userName = "alice.testing@example.org",
 			string password = "#SecurePassword123")
 		{
 			var client = this.CreateClient();
@@ -299,47 +299,7 @@ namespace InkBall.IntegrationTests
 			return client;
 		}
 
-		/// <summary>
-		/// Gets the full path to the target project that we wish to test
-		/// </summary>
-		/// <param name="projectRelativePath">
-		/// The parent directory of the target project.
-		/// e.g. src, samples, test, or test/Websites
-		/// </param>
-		/// <param name="startupAssembly">The target project's assembly.</param>
-		/// <returns>The full path to the target project.</returns>
-		internal static string GetProjectPath<T>(string projectRelativePath = null) where T : class
-		{
-			// Get name of the target project which we want to test
-			var projectName = typeof(T).GetTypeInfo().Assembly.GetName().Name;
-
-			projectRelativePath = projectRelativePath ?? projectName;
-
-			// Get currently executing test project path
-			var applicationBasePath = AppContext.BaseDirectory;
-
-			// Find the path to the target project
-			var directoryInfo = new DirectoryInfo(applicationBasePath);
-			do
-			{
-				directoryInfo = directoryInfo.Parent;
-
-				var projectDirectoryInfo = directoryInfo.EnumerateDirectories().FirstOrDefault(d => d.Name == projectRelativePath);
-				if (projectDirectoryInfo != null)
-				{
-					var projectFileInfo = new FileInfo(Path.Combine(projectDirectoryInfo.FullName, $"{projectName}.csproj"));
-					if (projectFileInfo.Exists)
-					{
-						return projectDirectoryInfo.FullName;
-					}
-				}
-			}
-			while (directoryInfo.Parent != null);
-
-			throw new Exception($"Project root could not be located using the application root {applicationBasePath}.");
-		}
-
-		private async Task InitializeuserDbsForTests(ApplicationDbContext<TApplicationUser> usersDb, GamesContext gameDb)
+		protected virtual async Task InitializeuserDbsForTests(ApplicationDbContext<TApplicationUser> usersDb, GamesContext gameDb)
 		{
 			usersDb.Users.AddRange(new TApplicationUser
 			{
