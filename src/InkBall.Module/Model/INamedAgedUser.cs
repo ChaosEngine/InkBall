@@ -34,7 +34,7 @@ namespace InkBall.Module.Model
 		/// <summary>
 		// User name
 		/// </summary>
-		string Name { get; }
+		string Name { get; set; }
 
 		/// <summary>
 		// Various user settings

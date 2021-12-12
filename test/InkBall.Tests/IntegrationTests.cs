@@ -103,10 +103,10 @@ namespace InkBall.IntegrationTests
 	[Collection(nameof(TestingServerCollection))]
 	public class UnAuthenticated
 	{
-		private readonly TestServerFixture<TestingStartup> _fixture;
+		private readonly TestServerFixture _fixture;
 		private readonly HttpClient _anonclient;
 
-		public UnAuthenticated(TestServerFixture<TestingStartup> fixture)
+		public UnAuthenticated(TestServerFixture fixture)
 		{
 			_fixture = fixture;
 			_anonclient = _fixture.AnonymousClient;
@@ -186,10 +186,10 @@ namespace InkBall.IntegrationTests
 	[Collection(nameof(TestingServerCollection))]
 	public class Authenticated
 	{
-		private readonly TestServerFixture<TestingStartup> _fixture;
+		private readonly TestServerFixture _fixture;
 		private readonly HttpClient _anonClient;
 
-		public Authenticated(TestServerFixture<TestingStartup> fixture)
+		public Authenticated(TestServerFixture fixture)
 		{
 			_fixture = fixture;
 			_anonClient = _fixture.AnonymousClient;

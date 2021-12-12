@@ -2,11 +2,9 @@
 	Partial file used only to initiate integration tests; not used in the module.
 *@
 @using Microsoft.AspNetCore.Identity
-@inject SignInManager<InkBall.IntegrationTests.TestingApplicationUser> SignInManager
-@inject UserManager<InkBall.IntegrationTests.TestingApplicationUser> UserManager
 
 <ul class="navbar-nav">
-	@if (SignInManager.IsSignedIn(User))
+	@if (User.Identity.IsAuthenticated)
 	{
 		<li class="nav-item">
 			<a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Hello @User.Identity.Name!</a>
