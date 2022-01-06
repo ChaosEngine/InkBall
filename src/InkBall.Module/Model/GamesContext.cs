@@ -802,7 +802,7 @@ namespace InkBall.Module.Model
 				fromJson.iGameId = 0;
 				fromJson.iPlayerId = path.iPlayerId;
 
-				//var reserialized = JsonSerializer.Serialize(fromJson, new JsonSerializerOptions { IgnoreNullValues = true });
+				//var reserialized = JsonSerializer.Serialize(fromJson, new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull });
 				var reserialized = JsonSerializer.Serialize(fromJson, _ignoreDefaultsSerializerOptions);
 
 				path.PointsAsString = reserialized;

@@ -444,7 +444,7 @@ namespace InkBall.Module.Model
 
 			//string last_move_and_path_json = JsonSerializer.Serialize(thin_path, new JsonSerializerOptions
 			//{
-			//	//IgnoreNullValues = true,
+			//	//DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
 			//	DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault
 			//});
 			string last_move_and_path_json = JsonSerializer.Serialize(thin_path);

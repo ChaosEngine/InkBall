@@ -24,40 +24,39 @@ using System.Net.Http;
 using System.Reflection;
 using System.Security.Claims;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace IntegrationTests
+namespace InkBall.IntegrationTests
 {
 	public class TestingApplicationUser : IdentityUser, INamedAgedUser
 	{
 		[ProtectedPersonalData]
 		public string Name { get; set; }
 
-		//[PersonalData]
-		//public int Age { get; set; }
-
 		[PersonalData]
 		[NotMapped]
-		public IApplicationUserSettings UserSettings
+		public ApplicationUserSettings UserSettings
 		{
 			get
 			{
 				return JsonSerializer.Deserialize<ApplicationUserSettings>(UserSettingsJSON ?? "{}",
-					new JsonSerializerOptions { IgnoreNullValues = true });
+					new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull });
 			}
 			set
 			{
-				UserSettingsJSON = JsonSerializer.Serialize(value, new JsonSerializerOptions { IgnoreNullValues = true });
+				UserSettingsJSON = JsonSerializer.Serialize(value, new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull });
 			}
 		}
 
 		public string UserSettingsJSON { get; set; }
 	}
 
-	public partial class ApplicationDbContext : IdentityDbContext<TestingApplicationUser>
+	public partial class ApplicationDbContext<TApplicationUser> : IdentityDbContext<TApplicationUser>
+		where TApplicationUser : IdentityUser, INamedAgedUser
 	{
-		public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
+		public ApplicationDbContext(DbContextOptions<ApplicationDbContext<TApplicationUser>> options) : base(options)
 		{
 		}
 
@@ -102,20 +101,22 @@ namespace IntegrationTests
 	/// <summary>
 	/// Test fixture startup
 	/// </summary>
-	public class TestingStartup
+	public abstract class BaseTestingStartup<TApplicationUser, TSignInManager>
+		where TApplicationUser : IdentityUser, INamedAgedUser
+		where TSignInManager : SignInManager<TApplicationUser>
 	{
 		public IConfiguration Configuration { get; }
 
 		internal static SqliteConnection Connection { get; set; }
 
-		public TestingStartup(IConfiguration configuration)
+		public BaseTestingStartup(IConfiguration configuration)
 		{
 			Configuration = configuration;
 
 			Connection = GetSqliteInMemoryBuildOptions();
 		}
 
-		SqliteConnection GetSqliteInMemoryBuildOptions()
+		protected virtual SqliteConnection GetSqliteInMemoryBuildOptions()
 		{
 			var connection = new SqliteConnection("DataSource=:memory:");
 
@@ -134,19 +135,19 @@ namespace IntegrationTests
 		// For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
 		public void ConfigureServices(IServiceCollection services)
 		{
-			services.AddDbContextPool<ApplicationDbContext>(options => options.UseSqlite(Connection));
+			services.AddDbContextPool<ApplicationDbContext<TApplicationUser>>(options => options.UseSqlite(Connection));
 			services.AddDbContextPool<GamesContext>(options => options.UseSqlite(Connection));
 
-			services.AddDefaultIdentity<TestingApplicationUser>()
-				.AddEntityFrameworkStores<ApplicationDbContext>()
-				.AddDefaultTokenProviders().AddSignInManager<TestingSignInManager>();
-			;
+			services.AddDefaultIdentity<TApplicationUser>()
+				.AddEntityFrameworkStores<ApplicationDbContext<TApplicationUser>>()
+				.AddDefaultTokenProviders().AddSignInManager<TSignInManager>();
+
 			services
 				.AddAuthentication();
 
 			services
 				.AddAuthorization()
-				.AddInkBallCommonUI<GamesContext, TestingApplicationUser>(options =>
+				.AddInkBallCommonUI<GamesContext, TApplicationUser>(options =>
 				{
 					options.AppRootPath = "/";
 					options.UseMessagePackBinaryTransport = false;
@@ -225,16 +226,26 @@ namespace IntegrationTests
 		}
 	}
 
+	public class TestingStartup : BaseTestingStartup<TestingApplicationUser, TestingSignInManager>
+	{
+		public TestingStartup(IConfiguration configuration) : base(configuration)
+		{
+		}
+	}
+
 	/// <summary>
 	/// A test fixture which hosts the target project (project we wish to test) in an in-memory server.
 	/// </summary>
 	/// <typeparam name="TStartup"/>Target project's startup type</typeparam>
-	public class TestServerFixture<TStartup> : WebApplicationFactory<TStartup>
+	public abstract class BaseTestServerFixture<TStartup, TApplicationUser> : WebApplicationFactory<TStartup>
 		where TStartup : class
+		where TApplicationUser : IdentityUser, INamedAgedUser, new()
 	{
 		private HttpClient _client;
 
 		internal string AppRootPath { get; private set; }
+
+		public virtual string DesiredContentRoot => null;
 
 		internal bool DOTNET_RUNNING_IN_CONTAINER { get; private set; }
 
@@ -243,10 +254,10 @@ namespace IntegrationTests
 			{
 				webBuilder
 					.UseEnvironment("Test")
-					.UseStartup<TestingStartup>();
+					.UseStartup<TStartup>();
 			});
 
-		public HttpClient AnonymousClient
+		public virtual HttpClient AnonymousClient
 		{
 			get
 			{
@@ -263,7 +274,7 @@ namespace IntegrationTests
 			}
 		}
 
-		public async Task<HttpClient> CreateAuthenticatedClientAsync(string userName = "alice.testing@example.org",
+		public virtual async Task<HttpClient> CreateAuthenticatedClientAsync(string userName = "alice.testing@example.org",
 			string password = "#SecurePassword123")
 		{
 			var client = this.CreateClient();
@@ -288,49 +299,9 @@ namespace IntegrationTests
 			return client;
 		}
 
-		/// <summary>
-		/// Gets the full path to the target project that we wish to test
-		/// </summary>
-		/// <param name="projectRelativePath">
-		/// The parent directory of the target project.
-		/// e.g. src, samples, test, or test/Websites
-		/// </param>
-		/// <param name="startupAssembly">The target project's assembly.</param>
-		/// <returns>The full path to the target project.</returns>
-		private static string GetProjectPath(string projectRelativePath, Assembly startupAssembly)
+		protected virtual async Task InitializeuserDbsForTests(ApplicationDbContext<TApplicationUser> usersDb, GamesContext gameDb)
 		{
-			// Get name of the target project which we want to test
-			var projectName = startupAssembly.GetName().Name;
-
-			projectRelativePath = projectRelativePath ?? projectName;
-
-			// Get currently executing test project path
-			var applicationBasePath = AppContext.BaseDirectory;
-
-			// Find the path to the target project
-			var directoryInfo = new DirectoryInfo(applicationBasePath);
-			do
-			{
-				directoryInfo = directoryInfo.Parent;
-
-				var projectDirectoryInfo = directoryInfo.EnumerateDirectories().FirstOrDefault(d => d.Name == projectRelativePath);
-				if (projectDirectoryInfo != null)
-				{
-					var projectFileInfo = new FileInfo(Path.Combine(projectDirectoryInfo.FullName, $"{projectName}.csproj"));
-					if (projectFileInfo.Exists)
-					{
-						return projectDirectoryInfo.FullName;
-					}
-				}
-			}
-			while (directoryInfo.Parent != null);
-
-			throw new Exception($"Project root could not be located using the application root {applicationBasePath}.");
-		}
-
-		private async Task InitializeuserDbsForTests(ApplicationDbContext usersDb, GamesContext gameDb)
-		{
-			usersDb.Users.AddRange(new TestingApplicationUser
+			usersDb.Users.AddRange(new TApplicationUser
 			{
 				Id = "1",
 				//Age = 18,
@@ -346,7 +317,7 @@ namespace IntegrationTests
 				UserSettingsJSON = "{}",
 				PhoneNumber = "1234435345345",
 			},
-			new TestingApplicationUser
+			new TApplicationUser
 			{
 				Id = "2",
 				//Age = 20,
@@ -395,16 +366,16 @@ namespace IntegrationTests
 			await gameDb.SaveChangesAsync();
 		}
 
-		private async Task SeedUsers(IServiceProvider scopedServices)
+		protected virtual async Task SeedUsers(IServiceProvider scopedServices)
 		{
 			try
 			{
-				var userManager = scopedServices.GetRequiredService<UserManager<TestingApplicationUser>>();
+				var userManager = scopedServices.GetRequiredService<UserManager<TApplicationUser>>();
 
 				// Seed the database with test data.
-				var user_pass_pairs = new (TestingApplicationUser user, string pass)[]
+				var user_pass_pairs = new (TApplicationUser user, string pass)[]
 				{
-					(   new TestingApplicationUser
+					(   new TApplicationUser
 						{
 							UserName = "alice.testing@example.org",
 							Email = "alice.testing@example.org",
@@ -414,7 +385,7 @@ namespace IntegrationTests
 						},
 						"#SecurePassword123"
 					),
-					(   new TestingApplicationUser
+					(   new TApplicationUser
 						{
 							UserName = "bob.testing@example.org",
 							Email = "bob.testing@example.org",
@@ -447,7 +418,13 @@ namespace IntegrationTests
 
 		protected override void ConfigureWebHost(IWebHostBuilder builder)
 		{
-			builder.UseContentRoot(Directory.GetCurrentDirectory());
+			string contentRoot;
+			if (string.IsNullOrEmpty(DesiredContentRoot))
+				contentRoot = Directory.GetCurrentDirectory();
+			else
+				contentRoot = DesiredContentRoot;
+
+			builder.UseContentRoot(contentRoot);
 
 			builder.ConfigureServices(async services =>
 			{
@@ -465,7 +442,7 @@ namespace IntegrationTests
 					string temp = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER");
 					DOTNET_RUNNING_IN_CONTAINER = !string.IsNullOrEmpty(temp) && temp.Equals(true.ToString(), StringComparison.InvariantCultureIgnoreCase);
 
-					var auth_user_db = scopedServices.GetRequiredService<ApplicationDbContext>();
+					var auth_user_db = scopedServices.GetRequiredService<ApplicationDbContext<TApplicationUser>>();
 					var inkball_db = scopedServices.GetRequiredService<GamesContext>();
 
 					await auth_user_db.Database.EnsureCreatedAsync();
@@ -489,7 +466,8 @@ namespace IntegrationTests
 				if (disposing)
 				{
 					// TODO: dispose managed state (managed objects)
-					if (TestingStartup.Connection != null && TestingStartup.Connection.State == System.Data.ConnectionState.Open)
+					if (TestingStartup.Connection != null
+						&& TestingStartup.Connection.State == System.Data.ConnectionState.Open)
 					{
 						TestingStartup.Connection.Close();
 						TestingStartup.Connection.Dispose();
@@ -508,8 +486,12 @@ namespace IntegrationTests
 		#endregion IDisposable
 	}
 
+	public class TestServerFixture : BaseTestServerFixture<TestingStartup, TestingApplicationUser>
+	{
+	}
+
 	[CollectionDefinition(nameof(TestingServerCollection))]
-	public class TestingServerCollection : ICollectionFixture<TestServerFixture<TestingStartup>>
+	public class TestingServerCollection : ICollectionFixture<TestServerFixture>
 	{
 		// This class has no code, and is never created. Its purpose is simply
 		// to be the place to apply [CollectionDefinition] and all the

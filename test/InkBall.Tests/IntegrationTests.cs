@@ -12,9 +12,13 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace IntegrationTests
+namespace InkBall.IntegrationTests
 {
-	static class PostRequestHelper
+	/// <summary>
+	/// http://geeklearning.io/asp-net-core-mvc-testing-and-the-synchronizer-token-pattern/
+	/// http://www.stefanhendriks.com/2016/05/11/integration-testing-your-asp-net-core-app-dealing-with-anti-request-forgery-csrf-formdata-and-cookies/
+	/// </summary>
+	public static class PostRequestHelper
 	{
 		public static string ExtractAntiForgeryToken(string htmlResponseText)
 		{
@@ -99,10 +103,10 @@ namespace IntegrationTests
 	[Collection(nameof(TestingServerCollection))]
 	public class UnAuthenticated
 	{
-		private readonly TestServerFixture<TestingStartup> _fixture;
+		private readonly TestServerFixture _fixture;
 		private readonly HttpClient _anonclient;
 
-		public UnAuthenticated(TestServerFixture<TestingStartup> fixture)
+		public UnAuthenticated(TestServerFixture fixture)
 		{
 			_fixture = fixture;
 			_anonclient = _fixture.AnonymousClient;
@@ -120,7 +124,7 @@ namespace IntegrationTests
 		[InlineData("img/homescreen.jpg")]
 		public async Task StaticAssets(string asset)
 		{
-			if (_fixture.DOTNET_RUNNING_IN_CONTAINER) return;//pass on fake DB with no data
+			//if (_fixture.DOTNET_RUNNING_IN_CONTAINER) return;//pass on fake DB with no data
 
 
 			// Arrange
@@ -140,7 +144,7 @@ namespace IntegrationTests
 		[InlineData("InkBall/Rules", "<li>Player put dots on the grid one after another</li>")]
 		public async Task Pages_Anonymous(string page, string contentToCheck)
 		{
-			if (_fixture.DOTNET_RUNNING_IN_CONTAINER) return;//pass on fake DB with no data
+			//if (_fixture.DOTNET_RUNNING_IN_CONTAINER) return;//pass on fake DB with no data
 
 
 			// Arrange
@@ -164,7 +168,7 @@ namespace IntegrationTests
 		[InlineData(InkBall.Module.Hubs.GameHub.HubName)]
 		public async Task Pages_Unauthorized(string page)
 		{
-			if (_fixture.DOTNET_RUNNING_IN_CONTAINER) return;//pass on fake DB with no data
+			//if (_fixture.DOTNET_RUNNING_IN_CONTAINER) return;//pass on fake DB with no data
 
 			// Arrange
 			//Act
@@ -182,13 +186,13 @@ namespace IntegrationTests
 	[Collection(nameof(TestingServerCollection))]
 	public class Authenticated
 	{
-		private readonly TestServerFixture<TestingStartup> _fixture;
-		private readonly HttpClient _anonclient;
+		private readonly TestServerFixture _fixture;
+		private readonly HttpClient _anonClient;
 
-		public Authenticated(TestServerFixture<TestingStartup> fixture)
+		public Authenticated(TestServerFixture fixture)
 		{
 			_fixture = fixture;
-			_anonclient = _fixture.AnonymousClient;
+			_anonClient = _fixture.AnonymousClient;
 		}
 
 		[Theory]
@@ -197,7 +201,7 @@ namespace IntegrationTests
 		[InlineData("InkBall/Home", "Alice Testing")]
 		public async Task Pages_Authenticated(string page, string contentToCheck)
 		{
-			if (_fixture.DOTNET_RUNNING_IN_CONTAINER) return;//pass on fake DB with no data
+			//if (_fixture.DOTNET_RUNNING_IN_CONTAINER) return;//pass on fake DB with no data
 
 
 			// Arrange
@@ -219,7 +223,7 @@ namespace IntegrationTests
 		[Fact]
 		public async Task SignalR_Hub_GET_Authenticated()
 		{
-			if (_fixture.DOTNET_RUNNING_IN_CONTAINER) return;//pass on fake DB with no data
+			//if (_fixture.DOTNET_RUNNING_IN_CONTAINER) return;//pass on fake DB with no data
 
 
 			// Arrange
@@ -243,7 +247,7 @@ namespace IntegrationTests
 		[InlineData("alice.testing@example.org", "#SecurePassword123")]
 		public async Task NewAuth(string email, string password)
 		{
-			if (_fixture.DOTNET_RUNNING_IN_CONTAINER) return;//pass on fake DB with no data
+			//if (_fixture.DOTNET_RUNNING_IN_CONTAINER) return;//pass on fake DB with no data
 
 
 			// Arrange
@@ -262,7 +266,7 @@ namespace IntegrationTests
 		[InlineData("bob.testing@example.org", "P@ssw0rd123!")]
 		public async Task Game_Authenticated_NoGame(string email, string password)
 		{
-			if (_fixture.DOTNET_RUNNING_IN_CONTAINER) return;//pass on fake DB with no data
+			//if (_fixture.DOTNET_RUNNING_IN_CONTAINER) return;//pass on fake DB with no data
 
 
 			// Arrange
@@ -285,28 +289,28 @@ namespace IntegrationTests
 		[Fact]
 		public async Task Home_Authenticated_CreateGame()
 		{
-			if (_fixture.DOTNET_RUNNING_IN_CONTAINER) return;//pass on fake DB with no data
+			//if (_fixture.DOTNET_RUNNING_IN_CONTAINER) return;//pass on fake DB with no data
 
 
 
 			//not logged in
 			// Arrange
-			using (var get_response = await _anonclient.GetAsync($"{_anonclient.BaseAddress}InkBall/Home", HttpCompletionOption.ResponseContentRead))
+			using (var get_response = await _anonClient.GetAsync($"{_anonClient.BaseAddress}InkBall/Home", HttpCompletionOption.ResponseContentRead))
 			{
 				// Assert
 				get_response.EnsureSuccessStatusCode();
 				var antiforgery_token = await PostRequestHelper.ExtractAntiForgeryToken(get_response);
 
 				// Arrange
-				var data = new Dictionary<string, string> {
+				var payload = new Dictionary<string, string> {
 					{ "action", "New game" }, { "gameType", "FIRST_CAPTURE"}, { "boardSize", "20" }, { "cpuOponent", "off" },
 					{ "__RequestVerificationToken", antiforgery_token }
 				};
 
-				using (var formPostBodyData = new FormUrlEncodedContent(data))
+				using (var formPostBodyData = new FormUrlEncodedContent(payload))
 				{
 					PostRequestHelper.CreateFormUrlEncodedContentWithCookiesFromResponse(formPostBodyData.Headers, get_response);
-					using (var response = await _anonclient.PostAsync($"{_anonclient.BaseAddress}InkBall/Home", formPostBodyData))
+					using (var response = await _anonClient.PostAsync($"{_anonClient.BaseAddress}InkBall/Home", formPostBodyData))
 					{
 						Assert.NotNull(response);
 						response.EnsureSuccessStatusCode();
@@ -332,12 +336,12 @@ namespace IntegrationTests
 					var antiforgery_token = await PostRequestHelper.ExtractAntiForgeryToken(get_response);
 
 					// Arrange
-					var data = new Dictionary<string, string> {
+					var payload = new Dictionary<string, string> {
 						{ "__RequestVerificationToken", antiforgery_token },
 						{ "action", "New game" }, { "gameType", "FIRST_CAPTURE"}, { "boardSize", "20" }, { "cpuOponent", "off" },
 					};
 
-					using (var formPostBodyData = new FormUrlEncodedContent(data))
+					using (var formPostBodyData = new FormUrlEncodedContent(payload))
 					{
 						PostRequestHelper.CreateFormUrlEncodedContentWithCookiesFromResponse(formPostBodyData.Headers, get_response);
 						// Act
@@ -359,7 +363,7 @@ namespace IntegrationTests
 		[Fact]
 		public async Task CreateAndCancelGame()
 		{
-			if (_fixture.DOTNET_RUNNING_IN_CONTAINER) return;//pass on fake DB with no data
+			//if (_fixture.DOTNET_RUNNING_IN_CONTAINER) return;//pass on fake DB with no data
 
 
 
@@ -369,6 +373,7 @@ namespace IntegrationTests
 
 			using (var request = new HttpRequestMessage(HttpMethod.Get, $"{client.BaseAddress}InkBall/Home"))
 			{
+			
 				// Act
 				using (var get_response = await client.SendAsync(request, HttpCompletionOption.ResponseContentRead))
 				{
@@ -377,13 +382,13 @@ namespace IntegrationTests
 					antiforgery_token = await PostRequestHelper.ExtractAntiForgeryToken(get_response);
 
 					// Arrange
-					var data = new Dictionary<string, string> {
+					var payload = new Dictionary<string, string> {
 						{ "__RequestVerificationToken", antiforgery_token },
 						{ "action", "New game" }, { "gameType", "FIRST_CAPTURE"}, { "boardSize", "20" }, { "cpuOponent", "off" },
 					};
 
 					//Create game POST request
-					using (var formPostBodyData_create = new FormUrlEncodedContent(data))
+					using (var formPostBodyData_create = new FormUrlEncodedContent(payload))
 					{
 						PostRequestHelper.CreateFormUrlEncodedContentWithCookiesFromResponse(formPostBodyData_create.Headers, get_response);
 						// Act
@@ -405,13 +410,13 @@ namespace IntegrationTests
 
 
 							//cancel waiting game POST request to GameList page
-							data = new Dictionary<string, string> {
+							payload = new Dictionary<string, string> {
 								{ "__RequestVerificationToken", antiforgery_token },
 								{ "action", "cancel" }, { "GameID", GameID.ToString() }
 							};
 
 							//Create game POST request
-							using (var formPostBodyData_cancel = new FormUrlEncodedContent(data))
+							using (var formPostBodyData_cancel = new FormUrlEncodedContent(payload))
 							{
 								PostRequestHelper.CreateFormUrlEncodedContentWithCookiesFromResponse(formPostBodyData_cancel.Headers, create_game_response);
 								// Act

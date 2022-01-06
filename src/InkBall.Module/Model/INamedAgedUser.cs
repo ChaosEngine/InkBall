@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 using MessagePack;
 using Microsoft.AspNetCore.Identity;
 
@@ -11,6 +12,7 @@ namespace InkBall.Module.Model
 	public interface IApplicationUserSettings
 	{
 		[PersonalData]
+		//[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
 		bool DesktopNotifications { get; set; }
 	}
 
@@ -18,6 +20,7 @@ namespace InkBall.Module.Model
 	public sealed class ApplicationUserSettings : IApplicationUserSettings, IDtoMsg
 	{
 		[PersonalData]
+		//[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
 		public bool DesktopNotifications { get; set; }
 
 		public CommandKindEnum GetKind()
@@ -31,19 +34,14 @@ namespace InkBall.Module.Model
 		/// <summary>
 		// User name
 		/// </summary>
-		string Name { get; }
-
-		///// <summary>
-		//// User age
-		///// </summary>
-		//int Age { get; }
+		string Name { get; set; }
 
 		/// <summary>
 		// Various user settings
 		/// </summary>	
 		[PersonalData]
 		[NotMapped]
-		IApplicationUserSettings UserSettings { get; set; }
+		ApplicationUserSettings UserSettings { get; set; }
 
 		/// <summary>
 		// Various user settings as JSON
