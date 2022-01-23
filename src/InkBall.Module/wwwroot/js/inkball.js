@@ -310,13 +310,6 @@ class CountdownTimer {
  * @param {object} gameOptions is an entry starter object definint game parameters
  */
 async function importAllModulesAsync(/*gameOptions*/) {
-	/*const isIE11 = navigator.userAgent.indexOf('Trident') >= 0;
-	if (isIE11) {
-		await import('@babel/polyfill');
-		//await import('core-js');
-		//await import('regenerator-runtime/runtime');
-	}*/
-
 	const selfFileName = Array.prototype.slice.call(document.getElementsByTagName('script'))
 		.map(x => x.src).find(s => s.indexOf('inkball') !== -1).split('/').pop();
 	const isMinified = selfFileName.indexOf("min") !== -1;

@@ -90,7 +90,7 @@
     </div>
 </div>
 
-<script nomodule defer src="https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/7.12.1/polyfill.min.js" integrity="sha512-uzOpZ74myvXTYZ+mXUsPhDF+/iL/n32GDxdryI2SJronkEyKC8FBFRLiBQ7l7U/PTYebDbgTtbqTa6/vGtU23A==" crossorigin="anonymous"></script>
+@* <script nomodule defer src="https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/7.12.1/polyfill.min.js" integrity="sha512-uzOpZ74myvXTYZ+mXUsPhDF+/iL/n32GDxdryI2SJronkEyKC8FBFRLiBQ7l7U/PTYebDbgTtbqTa6/vGtU23A==" crossorigin="anonymous"></script> *@
 <environment include="Development">
     <script defer src='@Url.Content("~/lib/signalr/browser/signalr.min.js")'></script>
     @if (useMessagePackBinaryTransport)
@@ -136,4 +136,4 @@
     };
 </script>
 <script type='module' src='@Url.Content(Constants.WwwIncludeInkballJS)'></script>
-<script nomodule defer type='text/javascript' src='@Url.Content(Constants.WwwIncludeInkballJSBundle)'></script>
+@* <script nomodule defer type='text/javascript' src='@Url.Content(Constants.WwwIncludeInkballJSBundle)'></script> *@
