@@ -2,7 +2,7 @@
 /*global signalR*/
 "use strict";
 
-let SHRD, LocalLog, LocalError, StatusEnum, hasDuplicates, pnpoly2, sortPointsClockwise, Sleep, isESModuleSupport;
+let SHRD, LocalLog, LocalError, StatusEnum, hasDuplicates, pnpoly2, sortPointsClockwise, Sleep;
 
 /******** funcs-n-classes ********/
 const CommandKindEnum = Object.freeze({
@@ -320,7 +320,7 @@ async function importAllModulesAsync(/*gameOptions*/) {
 		SHRD = await import(/* webpackChunkName: "shared" */'./shared.js');
 	LocalLog = SHRD.LocalLog, LocalError = SHRD.LocalError, StatusEnum = SHRD.StatusEnum,
 		hasDuplicates = SHRD.hasDuplicates, pnpoly2 = SHRD.pnpoly2, sortPointsClockwise = SHRD.sortPointsClockwise,
-		Sleep = SHRD.Sleep, isESModuleSupport = SHRD.isESModuleSupport;
+		Sleep = SHRD.Sleep;
 
 	//for CPU game enable AI libs and calculations
 	//if (gameOptions.iOtherPlayerID === -1) {
@@ -1930,7 +1930,7 @@ class InkBallGame {
 	 */
 	async RunAIWorker(setupFunction) {
 		return new Promise((resolve, reject) => {
-			this.m_Worker = this.m_Worker ?? new Worker(isESModuleSupport() ? '../js/AIWorker.Bundle.js' : '../js/AIWorker.PolyfillBundle.js'
+			this.m_Worker = this.m_Worker ?? new Worker('../js/AIWorker.Bundle.js'
 				//, { type: 'module' }
 			);
 
@@ -1966,9 +1966,7 @@ class InkBallGame {
 		event.preventDefault();
 		//LocalLog(await this.BuildGraph());
 		const data = await this.RunAIWorker((worker) => {
-			const serialized_points = Array.from(this.m_Points.store.entries()).map(([key, value]) => {
-				return { key: key, value: value.Serialize() };
-			});
+			const serialized_points = Array.from(this.m_Points.store.entries()).map(([key, value]) => ({ key, value: value.Serialize() }));
 			const serialized_paths = this.m_Lines.store.map(pa => pa.Serialize());
 
 			worker.postMessage({
@@ -1985,9 +1983,7 @@ class InkBallGame {
 		event.preventDefault();
 
 		const data = await this.RunAIWorker((worker) => {
-			const serialized_points = Array.from(this.m_Points.store.entries()).map(([key, value]) => {
-				return { key: key, value: value.Serialize() };
-			});
+			const serialized_points = Array.from(this.m_Points.store.entries()).map(([key, value]) => ({ key, value: value.Serialize() }));
 			//const serialized_paths = this.m_Lines.store.map(pa => pa.Serialize());
 
 			worker.postMessage({
@@ -1998,9 +1994,9 @@ class InkBallGame {
 		});
 		if (data.convex_hull && data.convex_hull.length > 0) {
 			const convex_hull = data.convex_hull;
-			this.SvgVml.CreatePolyline(6, convex_hull.map(function ([x, y]) {
-				return parseInt(x) * this.m_iGridSizeX + ',' + parseInt(y) * this.m_iGridSizeY;
-			}.bind(this)).join(' '), 'green');
+			this.SvgVml.CreatePolyline(6, convex_hull.map(([x, y]) =>
+				parseInt(x) * this.m_iGridSizeX + ',' + parseInt(y) * this.m_iGridSizeY)
+				.join(' '), 'green');
 			LocalLog(`convex_hull = ${convex_hull}`);
 
 			const cw_sorted_verts = data.cw_sorted_verts;
@@ -2032,9 +2028,8 @@ class InkBallGame {
 		//LocalLog(await this.MarkAllCycles(await this.BuildGraph({ visuals: true })));
 
 		const data = await this.RunAIWorker((worker) => {
-			const serialized_points = Array.from(this.m_Points.store.entries()).map(([key, value]) => {
-				return { key: key, value: value.Serialize() };
-			});
+			const serialized_points = Array.from(this.m_Points.store.entries()).map(([key, value]) =>
+				({ key, value: value.Serialize() }));
 			const serialized_paths = this.m_Lines.store.map(pa => pa.Serialize());
 
 			worker.postMessage({
@@ -2133,8 +2128,8 @@ class InkBallGame {
 			this.SvgVml.RemovePolyline(this.workingCyclePolyLine);
 			this.workingCyclePolyLine = null;
 		}
-		this.lastCycle.forEach(cyc => {
-			this.SvgVml.CreatePolyline(6, cyc.map(function (fnd) {
+		this.lastCycle.forEach(cycle => {
+			this.SvgVml.CreatePolyline(6, cycle.map(function (fnd) {
 				const pt = fnd.GetPosition();
 				return `${pt.x},${pt.y}`;
 			}).join(' '), RandomColor());
@@ -2378,7 +2373,7 @@ class InkBallGame {
 		this.m_iPosX = this.m_Screen.offsetLeft;
 		this.m_iPosY = this.m_Screen.offsetTop;
 
-		const boardsize = Array.from(this.m_Screen.classList).find(x => x.startsWith('boardsize')).split('-')[1].split('x');
+		const boardsize = [...this.m_Screen.classList].find(x => x.startsWith('boardsize')).split('-')[1].split('x');
 		this.m_BoardSize = { width: parseInt(boardsize[0]), height: parseInt(boardsize[1]) };
 
 		let iClientWidth = this.m_Screen.clientWidth;
@@ -2779,15 +2774,15 @@ class InkBallGame {
 			return tab;
 		}.bind(this);
 
-		// store the numbers of cycle 
+		// store the numbers of cycle
 		let cyclenumber = 0, edges = N;
 
-		// call DFS to mark the cycles 
+		// call DFS to mark the cycles
 		for (let vind = 0; vind < N; vind++) {
 			await dfs_cycle(vind + 1, vind);//, color, mark, par);
 		}
 
-		// function to print the cycles 
+		// function to print the cycles
 		return await printCycles(edges, mark);
 	}
 

@@ -290,15 +290,15 @@ class GraphAI {
 			/*return tab;*/return { cycles, free_human_player_points, cyclenumber };
 		}.bind(this);
 
-		// store the numbers of cycle 
+		// store the numbers of cycle
 		let cyclenumber = 0, edges = N;
 
-		// call DFS to mark the cycles 
+		// call DFS to mark the cycles
 		for (let vind = 0; vind < N; vind++) {
 			await dfs_cycle(vind + 1, vind);//, color, mark, par);
 		}
 
-		// function to print the cycles 
+		// function to print the cycles
 		return await printCycles(edges, mark);
 	}
 }

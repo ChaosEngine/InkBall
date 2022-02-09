@@ -45,13 +45,12 @@ addEventListener('message', async function (e) {
 
 
 				const vertices = graph.vertices.map(function (pt) {
-					const pos = pt.GetPosition(); return [pos.x / params.state.iGridSizeX, pos.y / params.state.iGridSizeX];
+					const pos = pt.GetPosition();
+					return [pos.x / params.state.iGridSizeX, pos.y / params.state.iGridSizeX];
 				});
 				const convex_hull = concaveman(vertices, 2.0, 0.0);
 
-				const mapped_verts = convex_hull.map(function ([x, y]) {
-					return { x, y };
-				}.bind(this));
+				const mapped_verts = convex_hull.map(([x, y]) => ({ x, y }));
 				const cw_sorted_verts = sortPointsClockwise(mapped_verts);
 
 				postMessage({ operation: params.operation, convex_hull: convex_hull, cw_sorted_verts: cw_sorted_verts });

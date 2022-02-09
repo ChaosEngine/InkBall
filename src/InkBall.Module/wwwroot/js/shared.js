@@ -90,11 +90,6 @@ async function Sleep(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function isESModuleSupport() {
-	const esModuleSupport = 'noModule' in HTMLScriptElement.prototype;
-	return esModuleSupport;
-}
-
 /**
  * Sorting point clockwise/anticlockwise
  * @param {array} points array of points to sort
@@ -1131,6 +1126,6 @@ class GameStateStore {
 
 export {
 	SvgVml, StatusEnum, pnpoly, pnpoly2, LocalLog, LocalError,
-	hasDuplicates, sortPointsClockwise, Sleep, isESModuleSupport,
+	hasDuplicates, sortPointsClockwise, Sleep,
 	GameStateStore
 };

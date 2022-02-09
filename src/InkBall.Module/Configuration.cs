@@ -63,7 +63,7 @@ namespace InkBall.Module
 
 		public bool UseMessagePackBinaryTransport { get; set; } = false;
 
-		public bool EnablePolyfill { get; set; } = true;
+		// public bool EnablePolyfill { get; set; } = true;
 
 		public string LoginPath { get; set; }
 
