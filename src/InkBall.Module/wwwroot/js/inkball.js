@@ -398,11 +398,13 @@ class InkBallGame {
 			countdownReachedHandler: this.CountDownReachedHandler.bind(this)
 		};
 		this.m_iSlowdownLevel = 0;
-		this.m_iGridSizeX = 0;
-		this.m_iGridSizeY = 0;
 		this.m_iGridWidth = 0;
 		this.m_iGridHeight = 0;
-		this.m_BoardSize = null;
+		this.m_BoardSize = { logicalWidth: 0, logicalHeight: 0 };
+		this.m_iGridSpacingX = 0;
+		this.m_iGridSpacingY = 0;
+		this.m_PointRadius = 0;
+		this.m_LineStrokeWidth = 0;
 		this.m_iLastX = -1;
 		this.m_iLastY = -1;
 		this.m_iMouseX = 0;
@@ -425,7 +427,6 @@ class InkBallGame {
 		this.m_bIsPlayingWithRed = bIsPlayingWithRed;
 		this.m_bIsPlayerActive = bIsPlayerActive;
 		this.m_sDotColor = this.m_bIsPlayingWithRed ? this.COLOR_RED : this.COLOR_BLUE;
-		this.m_PointRadius = 4;
 		this.SvgVml = null;
 		this.m_Line = null;
 		this.m_Lines = null;
@@ -900,8 +901,8 @@ class InkBallGame {
 		if (await this.m_Points.has(iY * this.m_iGridWidth + iX))
 			return;
 
-		const x = iX * this.m_iGridSizeX;
-		const y = iY * this.m_iGridSizeY;
+		const x = iX;
+		const y = iY;
 
 		const oval = this.SvgVml.CreateOval(this.m_PointRadius);
 		oval.move(x, y, this.m_PointRadius);
@@ -959,9 +960,7 @@ class InkBallGame {
 			sLastMoveGameTimeStamp: this.m_sLastMoveGameTimeStamp,
 			bPointsAndPathsLoaded: this.m_bPointsAndPathsLoaded,
 			iGridWidth: this.m_iGridWidth,
-			iGridHeight: this.m_iGridHeight,
-			iGridSizeX: this.m_iGridSizeX,
-			iGridSizeY: this.m_iGridSizeY
+			iGridHeight: this.m_iGridHeight
 		};
 	}
 
@@ -974,8 +973,8 @@ class InkBallGame {
 	 * @returns {object} created oval/cirle
 	 */
 	CreateScreenPointFromIndexedDb(iX, iY, iStatus, sColor) {
-		const x = iX * this.m_iGridSizeX;
-		const y = iY * this.m_iGridSizeY;
+		const x = iX;
+		const y = iY;
 
 		const oval = this.SvgVml.CreateOval(this.m_PointRadius);
 		oval.move(x, y, this.m_PointRadius);
@@ -1062,7 +1061,6 @@ class InkBallGame {
 				//debugger;
 			}
 
-			x *= this.m_iGridSizeX; y *= this.m_iGridSizeY;
 			sPathPoints += `${sDelimiter}${x},${y}`;
 			sDelimiter = " ";
 		}
@@ -1078,11 +1076,10 @@ class InkBallGame {
 		}
 
 		if (sPoints[0] !== sPoints[sPoints.length - 1]) {
-			x *= this.m_iGridSizeX; y *= this.m_iGridSizeY;
 			sPathPoints += `${sDelimiter}${x},${y}`;
 		}
 
-		const line = this.SvgVml.CreatePolyline(3, sPathPoints,
+		const line = this.SvgVml.CreatePolyline(this.m_LineStrokeWidth, sPathPoints,
 			(bBelong2ThisPlayer ? this.m_sDotColor : (bIsRed ? this.COLOR_BLUE : this.COLOR_RED)));
 		line.SetID(iPathId);
 		await this.m_Lines.push(line);
@@ -1105,7 +1102,6 @@ class InkBallGame {
 				//debugger;
 			}
 
-			x *= this.m_iGridSizeX; y *= this.m_iGridSizeY;
 			sPathPoints += `${sDelimiter}${x},${y}`;
 			sDelimiter = " ";
 		}
@@ -1121,11 +1117,10 @@ class InkBallGame {
 		}
 
 		if (sPoints[0] !== sPoints[sPoints.length - 1]) {
-			x *= this.m_iGridSizeX; y *= this.m_iGridSizeY;
 			sPathPoints += `${sDelimiter}${x},${y}`;
 		}
 
-		const line = this.SvgVml.CreatePolyline(3, sPathPoints, sColor);
+		const line = this.SvgVml.CreatePolyline(this.m_LineStrokeWidth, sPathPoints, sColor);
 		line.SetID(iPathId);
 
 		return line;
@@ -1193,7 +1188,6 @@ class InkBallGame {
 				([StatusEnum.POINT_FREE_BLUE, StatusEnum.POINT_FREE_RED].includes(pt.GetStatus()))) {
 				let { x, y } = pt.GetPosition();
 				if (false !== pnpoly2(points, x, y)) {
-					x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
 					sOwnedPoints += `${sDelimiter}${x},${y}`;
 					sDelimiter = " ";
 					ownedPoints.push({
@@ -1214,7 +1208,6 @@ class InkBallGame {
 			sPathPoints = points.map(function (pt) {
 				let x = pt.x, y = pt.y;
 				if (x === null || y === null) return '';
-				x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
 
 				return `${x},${y}`;
 			}.bind(this)).join(' ');
@@ -1230,7 +1223,7 @@ class InkBallGame {
 	}
 
 	async IsPointOutsideAllPaths(x, y) {
-		const xmul = x * this.m_iGridSizeX, ymul = y * this.m_iGridSizeY;
+		const xmul = x, ymul = y;
 
 		const lines = await this.m_Lines.all();//TODO: async for
 		for (const line of lines) {
@@ -1440,7 +1433,6 @@ class InkBallGame {
 			//set starting point to POINT_IN_PATH to block further path closing with it
 			const points = this.m_Line.GetPointsArray();
 			let x = points[0].x, y = points[0].y;
-			x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
 			const p0 = await this.m_Points.get(y * this.m_iGridWidth + x);
 			if (p0 !== undefined)
 				p0.SetStatus(StatusEnum.POINT_IN_PATH);
@@ -1606,14 +1598,15 @@ class InkBallGame {
 			return;
 		}
 
+		const cursor = this.SvgVml.ToCursorPoint(event.clientX, event.clientY);
+		let x = cursor.x + 0.5;
+		let y = cursor.y + 0.5;
 
-		let x = (event ? event.clientX : window.event.clientX) - this.m_Screen.offsetLeft + this.f_scrollLeft() + 0.5 * this.m_iGridSizeX;
-		let y = (event ? event.clientY : window.event.clientY) - this.m_Screen.offsetTop + this.f_scrollTop() + 0.5 * this.m_iGridSizeY;
+		x = parseInt(x);
+		y = parseInt(y);
 
-		x = parseInt(x / this.m_iGridSizeX);
-		y = parseInt(y / this.m_iGridSizeY);
-		let tox = x * this.m_iGridSizeX;
-		let toy = y * this.m_iGridSizeY;
+		let tox = x;
+		let toy = y;
 
 		if (this.CursorPos.x !== tox || this.CursorPos.y !== toy) {
 			this.m_MouseCursorOval.move(tox, toy, this.m_PointRadius);
@@ -1643,13 +1636,13 @@ class InkBallGame {
 							p0.GetFillColor() === this.m_sDotColor && p1.GetFillColor() === this.m_sDotColor) {
 							const line_contains_point = this.m_Line.ContainsPoint(tox, toy);
 							if (line_contains_point < 1 && p1.GetStatus() !== StatusEnum.POINT_STARTING &&
-								true === this.m_Line.AppendPoints(tox, toy, this.m_iGridSizeX, this.m_iGridSizeY)) {
+								true === this.m_Line.AppendPoints(tox, toy)) {
 								p1.SetStatus(StatusEnum.POINT_IN_PATH, true);
 								this.m_iLastX = x;
 								this.m_iLastY = y;
 							}
 							else if (line_contains_point === 1 && p1.GetStatus() === StatusEnum.POINT_STARTING &&
-								true === this.m_Line.AppendPoints(tox, toy, this.m_iGridSizeX, this.m_iGridSizeY)) {
+								true === this.m_Line.AppendPoints(tox, toy)) {
 								const val = await this.SurroundOponentPoints();
 								if (val.owned.length > 0) {
 									this.Debug('Closing path', 0);
@@ -1673,7 +1666,7 @@ class InkBallGame {
 								this.m_iLastY = y;
 							}
 							else if (line_contains_point >= 1 && p0.GetStatus() === StatusEnum.POINT_IN_PATH &&
-								this.m_Line.GetPointsString().endsWith(`${this.m_iLastX * this.m_iGridSizeX},${this.m_iLastY * this.m_iGridSizeY}`)) {
+								this.m_Line.GetPointsString().endsWith(`${this.m_iLastX},${this.m_iLastY}`)) {
 
 								if (this.m_Line.GetLength() > 2) {
 									p0.RevertOldStatus();
@@ -1692,9 +1685,9 @@ class InkBallGame {
 
 						if (p0 !== undefined && p1 !== undefined &&
 							p0.GetFillColor() === this.m_sDotColor && p1.GetFillColor() === this.m_sDotColor) {
-							const fromx = this.m_iLastX * this.m_iGridSizeX;
-							const fromy = this.m_iLastY * this.m_iGridSizeY;
-							this.m_Line = this.SvgVml.CreatePolyline(6, fromx + "," + fromy + " " + tox + "," + toy, this.DRAWING_PATH_COLOR);
+							const fromx = this.m_iLastX;
+							const fromy = this.m_iLastY;
+							this.m_Line = this.SvgVml.CreatePolyline(this.m_LineStrokeWidth * 2, fromx + "," + fromy + " " + tox + "," + toy, this.DRAWING_PATH_COLOR);
 							this.m_CancelPath.disabled = '';
 							p0.SetStatus(StatusEnum.POINT_STARTING, true);
 							p1.SetStatus(StatusEnum.POINT_IN_PATH, true);
@@ -1716,10 +1709,12 @@ class InkBallGame {
 			|| this.iConnErrCount > 0)
 			return;
 
-		let x = (event ? event.clientX : window.event.clientX) - this.m_Screen.offsetLeft + this.f_scrollLeft() + 0.5 * this.m_iGridSizeX;
-		let y = (event ? event.clientY : window.event.clientY) - this.m_Screen.offsetTop + this.f_scrollTop() + 0.5 * this.m_iGridSizeY;
-		x = this.m_iMouseX = parseInt(x / this.m_iGridSizeX);
-		y = this.m_iMouseY = parseInt(y / this.m_iGridSizeY);
+		const cursor = this.SvgVml.ToCursorPoint(event.clientX, event.clientY);
+		let x = cursor.x + 0.5;
+		let y = cursor.y + 0.5;
+
+		x = this.m_iMouseX = parseInt(x);
+		y = this.m_iMouseY = parseInt(y);
 
 		this.m_bMouseDown = true;
 		if (!this.m_bDrawLines) {
@@ -1729,8 +1724,6 @@ class InkBallGame {
 
 			const loc_x = x;
 			const loc_y = y;
-			x = loc_x * this.m_iGridSizeX;
-			y = loc_y * this.m_iGridSizeY;
 
 			if (await this.m_Points.get(loc_y * this.m_iGridWidth + loc_x) !== undefined) {
 				this.Debug('Wrong point - already existing', 0);
@@ -1760,17 +1753,17 @@ class InkBallGame {
 
 					if (p0 !== undefined && p1 !== undefined &&
 						p0.GetFillColor() === this.m_sDotColor && p1.GetFillColor() === this.m_sDotColor) {
-						const tox = x * this.m_iGridSizeX;
-						const toy = y * this.m_iGridSizeY;
+						const tox = x;
+						const toy = y;
 						const line_contains_point = this.m_Line.ContainsPoint(tox, toy);
 						if (line_contains_point < 1 && p1.GetStatus() !== StatusEnum.POINT_STARTING &&
-							true === this.m_Line.AppendPoints(tox, toy, this.m_iGridSizeX, this.m_iGridSizeY)) {
+							true === this.m_Line.AppendPoints(tox, toy)) {
 							p1.SetStatus(StatusEnum.POINT_IN_PATH, true);
 							this.m_iLastX = x;
 							this.m_iLastY = y;
 						}
 						else if (line_contains_point === 1 && p1.GetStatus() === StatusEnum.POINT_STARTING &&
-							true === this.m_Line.AppendPoints(tox, toy, this.m_iGridSizeX, this.m_iGridSizeY)) {
+							true === this.m_Line.AppendPoints(tox, toy)) {
 							const val = await this.SurroundOponentPoints();
 							if (val.owned.length > 0) {
 								this.Debug('Closing path', 0);
@@ -1795,7 +1788,7 @@ class InkBallGame {
 							this.m_iLastY = y;
 						}
 						else if (line_contains_point >= 1 && p0.GetStatus() === StatusEnum.POINT_IN_PATH &&
-							this.m_Line.GetPointsString().endsWith(`${this.m_iLastX * this.m_iGridSizeX},${this.m_iLastY * this.m_iGridSizeY}`)) {
+							this.m_Line.GetPointsString().endsWith(`${this.m_iLastX},${this.m_iLastY}`)) {
 
 							if (this.m_Line.GetLength() > 2) {
 								p0.RevertOldStatus();
@@ -1814,11 +1807,11 @@ class InkBallGame {
 
 					if (p0 !== undefined && p1 !== undefined &&
 						p0.GetFillColor() === this.m_sDotColor && p1.GetFillColor() === this.m_sDotColor) {
-						const fromx = this.m_iLastX * this.m_iGridSizeX;
-						const fromy = this.m_iLastY * this.m_iGridSizeY;
-						const tox = x * this.m_iGridSizeX;
-						const toy = y * this.m_iGridSizeY;
-						this.m_Line = this.SvgVml.CreatePolyline(6, fromx + "," + fromy + " " + tox + "," + toy, this.DRAWING_PATH_COLOR);
+						const fromx = this.m_iLastX;
+						const fromy = this.m_iLastY;
+						const tox = x;
+						const toy = y;
+						this.m_Line = this.SvgVml.CreatePolyline(this.m_LineStrokeWidth * 2, fromx + "," + fromy + " " + tox + "," + toy, this.DRAWING_PATH_COLOR);
 						this.m_CancelPath.disabled = '';
 						p0.SetStatus(StatusEnum.POINT_STARTING, true);
 						p1.SetStatus(StatusEnum.POINT_IN_PATH, true);
@@ -1871,7 +1864,7 @@ class InkBallGame {
 				for (const point of points) {
 					let x = point.x, y = point.y;
 					if (x === null || y === null) continue;
-					x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
+					x = parseInt(x); y = parseInt(y);
 					const p0 = await this.m_Points.get(y * this.m_iGridWidth + x);
 					if (p0 !== undefined) {
 						p0.RevertOldStatus();
@@ -1971,6 +1964,7 @@ class InkBallGame {
 
 			worker.postMessage({
 				operation: "BUILD_GRAPH",
+				boardSize: this.m_BoardSize,
 				state: this.GetGameStateForIndexedDb(),
 				points: serialized_points,
 				paths: serialized_paths
@@ -1988,14 +1982,15 @@ class InkBallGame {
 
 			worker.postMessage({
 				operation: "CONCAVEMAN",
+				boardSize: this.m_BoardSize,
 				state: this.GetGameStateForIndexedDb(),
 				points: serialized_points
 			});
 		});
 		if (data.convex_hull && data.convex_hull.length > 0) {
 			const convex_hull = data.convex_hull;
-			this.SvgVml.CreatePolyline(6, convex_hull.map(([x, y]) =>
-				parseInt(x) * this.m_iGridSizeX + ',' + parseInt(y) * this.m_iGridSizeY)
+			this.SvgVml.CreatePolyline(this.m_LineStrokeWidth * 2, convex_hull.map(([x, y]) =>
+				parseInt(x) + ',' + parseInt(y))
 				.join(' '), 'green');
 			LocalLog(`convex_hull = ${convex_hull}`);
 
@@ -2005,7 +2000,7 @@ class InkBallGame {
 			for (const vert of cw_sorted_verts) {
 				//const { x: view_x, y: view_y } = vertices[vert].GetPosition();
 				const { x: x, y: y } = vert;
-				const view_x = x * this.m_iGridSizeX, view_y = y * this.m_iGridSizeY;
+				const view_x = x, view_y = y;
 				//const line_pts = Array.from(document.querySelectorAll(`svg > line[x1="${view_x}"][y1="${view_y}"]`))
 				//	.concat(Array.from(document.querySelectorAll(`svg > line[x2="${view_x}"][y2="${view_y}"]`)));
 				//line_pts.forEach(line => {
@@ -2016,7 +2011,7 @@ class InkBallGame {
 					pt.SetStrokeColor(rand_color);
 					pt.SetFillColor(rand_color);
 					pt.SetZIndex(100);
-					pt.setAttribute('r', "6");
+					pt.setAttribute('r', 6/this.m_iGridSpacingX);
 				}
 				await Sleep(50);
 			}
@@ -2034,6 +2029,7 @@ class InkBallGame {
 
 			worker.postMessage({
 				operation: "MARK_ALL_CYCLES",
+				boardSize: this.m_BoardSize,
 				state: this.GetGameStateForIndexedDb(),
 				points: serialized_points,
 				paths: serialized_paths,
@@ -2049,7 +2045,7 @@ class InkBallGame {
 			for (const pt of data.free_human_player_points) {
 				//if (pt !== undefined && pt.GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.GetStatus()) {
 				const { x, y } = pt;
-				const view_x = x * this.m_iGridSizeX, view_y = y * this.m_iGridSizeY;
+				const view_x = x, view_y = y;
 				//	if (false === await this.IsPointOutsideAllPaths(x, y))
 				//		continue;
 
@@ -2075,13 +2071,13 @@ class InkBallGame {
 					//display which cycle we are dealing with
 					for (const vert of cw_sorted_verts) {
 						const { x, y } = vert;
-						const pt = document.querySelector(`svg > circle[cx="${x * this.m_iGridSizeX}"][cy="${y * this.m_iGridSizeY}"]`);
+						const pt = document.querySelector(`svg > circle[cx="${x}"][cy="${y}"]`);
 						if (pt) {//again some basic checks
 							str += (`(${x},${y})`);
 
 							pt.SetStrokeColor(rand_color);
 							pt.SetFillColor(rand_color);
-							pt.setAttribute("r", "6");
+							pt.setAttribute("r", 6/this.m_iGridSpacingX);
 						}
 						await Sleep(50);
 					}
@@ -2093,11 +2089,11 @@ class InkBallGame {
 						if (false !== pnpoly2(cw_sorted_verts, possible_intercept.x, possible_intercept.y)) {
 							tmp += `${comma}(${possible_intercept.x},${possible_intercept.y})`;
 
-							const pt1 = document.querySelector(`svg > circle[cx="${possible_intercept.x * this.m_iGridSizeX}"][cy="${possible_intercept.y * this.m_iGridSizeY}"]`);
+							const pt1 = document.querySelector(`svg > circle[cx="${possible_intercept.x}"][cy="${possible_intercept.y}"]`);
 							if (pt1) {
 								pt1.SetStrokeColor('var(--bs-yellow)');
 								pt1.SetFillColor('var(--bs-yellow)');
-								pt1.setAttribute("r", "6");
+								pt1.setAttribute("r", 6/this.m_iGridSpacingX);
 							}
 							comma = ',';
 						}
@@ -2108,11 +2104,11 @@ class InkBallGame {
 					//log...
 					LocalLog(str + (tmp !== '' ? ` possible intercepts: ${tmp}` : ''));
 					//...and clear
-					const pts2reset = Array.from(document.querySelectorAll(`svg > circle[fill="${rand_color}"][r="6"]`));
+					const pts2reset = Array.from(document.querySelectorAll(`svg > circle[fill="${rand_color}"][r="${this.m_LineStrokeWidth * 2}"]`));
 					pts2reset.forEach(pt => {
 						pt.SetStrokeColor(this.COLOR_BLUE);
 						pt.SetFillColor(this.COLOR_BLUE);
-						pt.setAttribute("r", "4");
+						pt.setAttribute("r", 6/this.m_iGridSpacingX);
 					});
 				}
 			}
@@ -2129,7 +2125,7 @@ class InkBallGame {
 			this.workingCyclePolyLine = null;
 		}
 		this.lastCycle.forEach(cycle => {
-			this.SvgVml.CreatePolyline(6, cycle.map(function (fnd) {
+			this.SvgVml.CreatePolyline(this.m_LineStrokeWidth * 2, cycle.map(function (fnd) {
 				const pt = fnd.GetPosition();
 				return `${pt.x},${pt.y}`;
 			}).join(' '), RandomColor());
@@ -2146,7 +2142,7 @@ class InkBallGame {
 		for (const pt of await this.m_Points.values()) {
 			if (pt !== undefined && pt.GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.GetStatus()) {
 				const { x: view_x, y: view_y } = pt.GetPosition();
-				const x = view_x / this.m_iGridSizeX, y = view_y / this.m_iGridSizeY;
+				const x = parseInt(view_x), y = parseInt(view_y);
 				if (false === await this.IsPointOutsideAllPaths(x, y))
 					continue;
 
@@ -2171,7 +2167,7 @@ class InkBallGame {
 				if (pt1) {
 					pt1.SetStrokeColor(rand_color);
 					pt1.SetFillColor(rand_color);
-					pt1.setAttribute("r", "6");
+					pt1.setAttribute("r", 6/this.m_iGridSpacingX);
 				}
 				//}
 			}
@@ -2192,8 +2188,8 @@ class InkBallGame {
 			// eslint-disable-next-line no-undef
 			const stateStore = new GameStateStore(true,
 				function CreateScreenPointFromIndexedDb(iX, iY, iStatus, sColor) {
-					const x = iX * params.state.iGridSizeX;
-					const y = iY * params.state.iGridSizeY;
+					const x = iX;
+					const y = iY;
 
 					const oval = svgVml.CreateOval(3);
 					oval.move(x, y, 3);
@@ -2257,7 +2253,6 @@ class InkBallGame {
 							status = StatusEnum.POINT_IN_PATH;
 						}
 
-						x *= params.state.m_iGridSizeX; y *= params.state.m_iGridSizeY;
 						sPathPoints += `${sDelimiter}${x},${y}`;
 						sDelimiter = " ";
 					}
@@ -2269,10 +2264,9 @@ class InkBallGame {
 						p.SetStatus(status);
 					}
 
-					x *= params.state.m_iGridSizeX; y *= params.state.m_iGridSizeY;
 					sPathPoints += `${sDelimiter}${x},${y}`;
 
-					const line = svgVml.CreatePolyline(3, sPathPoints, sColor);
+					const line = svgVml.CreatePolyline(this.m_LineStrokeWidth, sPathPoints, sColor);
 					line.SetID(iPathId);
 
 					return line;
@@ -2287,7 +2281,7 @@ class InkBallGame {
 			LocalLog(`lines.count = ${await lines.count()}, points.count = ${await points.count()}`);
 			debugger;
 			// eslint-disable-next-line no-undef
-			const ai = new h(params.state.iGridWidth, params.state.iGridHeight, params.state.iGridSizeX, params.state.iGridSizeY,
+			const ai = new h(params.state.iGridWidth, params.state.iGridHeight,
 				points, StatusEnum.POINT_STARTING, StatusEnum.POINT_IN_PATH);
 			const graph = await ai.BuildGraph({ freePointStatus: StatusEnum.POINT_FREE_BLUE, fillCol: 'blue', visuals: false });
 			LocalLog(graph);
@@ -2374,20 +2368,23 @@ class InkBallGame {
 		this.m_iPosY = this.m_Screen.offsetTop;
 
 		const boardsize = [...this.m_Screen.classList].find(x => x.startsWith('boardsize')).split('-')[1].split('x');
-		this.m_BoardSize = { width: parseInt(boardsize[0]), height: parseInt(boardsize[1]) };
+		this.m_BoardSize = { logicalWidth: parseInt(boardsize[0]), logicalHeight: parseInt(boardsize[1]) };
 
 		let iClientWidth = this.m_Screen.clientWidth;
 		let iClientHeight = this.m_Screen.clientHeight;
 		let svg_width_x_height = null;
 		if (iClientHeight <= 0) { //no styles loaded case, emulating calculation with 16px font size
-			iClientHeight = 16 * this.m_BoardSize.height;
+			iClientHeight = 16 * this.m_BoardSize.logicalHeight;
 			this.m_Screen.style.height = iClientHeight + 'px';
 			svg_width_x_height = "100%";
 		}
-		this.m_iGridSizeX = parseInt(Math.ceil(iClientWidth / this.m_BoardSize.width));
-		this.m_iGridSizeY = parseInt(Math.ceil(iClientHeight / this.m_BoardSize.height));
-		this.m_iGridWidth = parseInt(Math.ceil(iClientWidth / this.m_iGridSizeX));
-		this.m_iGridHeight = parseInt(Math.ceil(iClientHeight / this.m_iGridSizeY));
+		this.m_iGridSpacingX = Math.ceil(iClientWidth / this.m_BoardSize.logicalWidth);
+		this.m_iGridSpacingY = Math.ceil(iClientHeight / this.m_BoardSize.logicalHeight);
+		this.m_iGridWidth = this.m_BoardSize.logicalWidth;
+		this.m_iGridHeight = this.m_BoardSize.logicalHeight;
+		this.m_PointRadius = (4 / this.m_iGridSpacingX);
+		this.m_LineStrokeWidth = (3 / this.m_iGridSpacingX);
+
 		this.m_sLastMoveGameTimeStamp = sLastMoveGameTimeStamp;
 		this.m_sVersion = version;
 		///////CpuGame variables start//////
@@ -2397,7 +2394,7 @@ class InkBallGame {
 		///////CpuGame variables end//////
 
 		this.SvgVml = new SHRD.SvgVml();
-		if (this.SvgVml.CreateSVGVML(this.m_Screen, svg_width_x_height, svg_width_x_height, true) === null)
+		if (this.SvgVml.CreateSVGVML(this.m_Screen, svg_width_x_height, svg_width_x_height, true, this.m_BoardSize) === null)
 			alert('SVG is not supported!');
 
 		this.DisableSelection(this.m_Screen);
@@ -2523,8 +2520,7 @@ class InkBallGame {
 		for (const pt of await this.m_Points.values()) {
 			if (pt !== undefined && pt.GetFillColor() === sHumanColor && pt.GetStatus() === StatusEnum.POINT_FREE_RED) {
 				const pos = pt.GetPosition();
-				x = pos.x; y = pos.y;
-				x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
+				x = parseInt(pos.x); y = parseInt(pos.y);
 
 				centroidX += x; centroidY += y;
 				count++;
@@ -2535,10 +2531,8 @@ class InkBallGame {
 
 		x = centroidX / count;
 		y = centroidY / count;
-		x = x * this.m_iGridSizeX;
-		y = y * this.m_iGridSizeY;
-		const tox = parseInt(x / this.m_iGridSizeX);
-		const toy = parseInt(y / this.m_iGridSizeY);
+		const tox = parseInt(x);
+		const toy = parseInt(y);
 		x = tox; y = toy;
 
 		let max_random_pick_amount = 20;
@@ -2580,7 +2574,7 @@ class InkBallGame {
 				// then there is a cycle. 
 				else if (i !== parent) {
 					const { x: view_x, y: view_y } = i.GetPosition();
-					const x = view_x / this.m_iGridSizeX, y = view_y / this.m_iGridSizeY;
+					const x = parseInt(view_x), y = parseInt(view_y);
 
 					LocalLog(`cycle found at ${x},${y}`);
 					return true;
@@ -2656,7 +2650,7 @@ class InkBallGame {
 
 				vertex.SetStrokeColor('black');
 				vertex.SetFillColor('black');
-				//vertex.setAttribute("r", "6");
+				//vertex.setAttribute("r", 6/this.m_iGridSpacingX);
 				await Sleep(10);
 
 
@@ -2698,7 +2692,7 @@ class InkBallGame {
 			for (const pt of await this.m_Points.values()) {
 				if (pt !== undefined && pt.GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.GetStatus()) {
 					const { x: view_x, y: view_y } = pt.GetPosition();
-					const x = view_x / this.m_iGridSizeX, y = view_y / this.m_iGridSizeY;
+					const x = parseInt(view_x), y = parseInt(view_y);
 					if (false === await this.IsPointOutsideAllPaths(x, y))
 						continue;
 
@@ -2722,7 +2716,7 @@ class InkBallGame {
 					//convert to logical space
 					const mapped_verts = cycl.map(function (c) {
 						const pt = vertices[c].GetPosition();
-						return { x: pt.x / this.m_iGridSizeX, y: pt.y / this.m_iGridSizeY };
+						return { x: parseInt(pt.x), y: parseInt(pt.y) };
 					}.bind(this));
 					//sort clockwise (https://stackoverflow.com/questions/45660743/sort-points-in-counter-clockwise-in-javascript)
 					const cw_sorted_verts = sortPointsClockwise(mapped_verts);
@@ -2730,13 +2724,13 @@ class InkBallGame {
 					//display which cycle we are dealing with
 					for (const vert of cw_sorted_verts) {
 						const { x, y } = vert;
-						const pt = document.querySelector(`svg > circle[cx="${x * this.m_iGridSizeX}"][cy="${y * this.m_iGridSizeY}"]`);
+						const pt = document.querySelector(`svg > circle[cx="${x}"][cy="${y}"]`);
 						if (pt) {//again some basic checks
 							str += (`(${x},${y})`);
 
 							pt.SetStrokeColor(rand_color);
 							pt.SetFillColor(rand_color);
-							pt.setAttribute("r", "6");
+							pt.setAttribute("r", 6/this.m_iGridSpacingX);
 						}
 						await Sleep(50);
 					}
@@ -2748,11 +2742,11 @@ class InkBallGame {
 						if (false !== pnpoly2(cw_sorted_verts, possible_intercept.x, possible_intercept.y)) {
 							tmp += `${comma}(${possible_intercept.x},${possible_intercept.y})`;
 
-							const pt1 = document.querySelector(`svg > circle[cx="${possible_intercept.x * this.m_iGridSizeX}"][cy="${possible_intercept.y * this.m_iGridSizeY}"]`);
+							const pt1 = document.querySelector(`svg > circle[cx="${possible_intercept.x}"][cy="${possible_intercept.y}"]`);
 							if (pt1) {
 								pt1.SetStrokeColor('var(--bs-yellow)');
 								pt1.SetFillColor('var(--bs-yellow)');
-								pt1.setAttribute("r", "6");
+								pt1.setAttribute("r", 6/this.m_iGridSpacingX);
 							}
 							comma = ',';
 						}
@@ -2763,11 +2757,11 @@ class InkBallGame {
 					//log...
 					LocalLog(str + (tmp !== '' ? ` possible intercepts: ${tmp}` : ''));
 					//...and clear
-					const pts2reset = Array.from(document.querySelectorAll(`svg > circle[fill="${rand_color}"][r="6"]`));
+					const pts2reset = Array.from(document.querySelectorAll(`svg > circle[fill="${rand_color}"][r="${6/this.m_iGridSpacingX}"]`));
 					pts2reset.forEach(pt => {
 						pt.SetStrokeColor(this.COLOR_BLUE);
 						pt.SetFillColor(this.COLOR_BLUE);
-						pt.setAttribute("r", "4");
+						pt.setAttribute("r", 6/this.m_iGridSpacingX);
 					});
 				}
 			}
@@ -2798,12 +2792,12 @@ class InkBallGame {
 		}
 
 		let { x, y } = point.GetPosition();
-		x /= this.m_iGridSizeX; y /= this.m_iGridSizeY;
+		x = parseInt(x); y = parseInt(y);
 		let last = null, last_x, last_y;
 		if (currPointsArr.length > 0) {
 			last = currPointsArr[currPointsArr.length - 1];
 			const last_pos = last.GetPosition();
-			last_x = last_pos.x / this.m_iGridSizeX, last_y = last_pos.y / this.m_iGridSizeY;
+			last_x = parseInt(last_pos.x), last_y = parseInt(last_pos.y);
 			if (Math.abs(parseInt(last_x - x)) <= 1 && Math.abs(parseInt(last_y - y)) <= 1) {
 				currPointsArr.push(point);//nearby point 1 jump away
 			}
@@ -2818,10 +2812,10 @@ class InkBallGame {
 		if (currPointsArr.length > 2 && last !== null) {
 			const first = currPointsArr[0];
 			const first_pos = first.GetPosition();
-			first_pos.x /= this.m_iGridSizeX; first_pos.y /= this.m_iGridSizeY;
+			first_pos.x = parseInt(first_pos.x); first_pos.y = parseInt(first_pos.y);
 			last = currPointsArr[currPointsArr.length - 1];
 			const last_pos = last.GetPosition();
-			last_x = last_pos.x / this.m_iGridSizeX, last_y = last_pos.y / this.m_iGridSizeY;
+			last_x = parseInt(last_pos.x), last_y = parseInt(last_pos.y);
 
 			if (Math.abs(parseInt(last_x - first_pos.x)) <= 1 && Math.abs(parseInt(last_y - first_pos.y)) <= 1
 				&& currPointsArr.length >= 4) {
@@ -2878,7 +2872,7 @@ class InkBallGame {
 				return `${pt.x},${pt.y}`;
 			}).join(' ');
 			if (!this.workingCyclePolyLine)
-				this.workingCyclePolyLine = this.SvgVml.CreatePolyline(6, pts, 'black');
+				this.workingCyclePolyLine = this.SvgVml.CreatePolyline(this.m_LineStrokeWidth * 2, pts, 'black');
 			else
 				this.workingCyclePolyLine.SetPoints(pts);
 

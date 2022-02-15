@@ -11,7 +11,7 @@ addEventListener('message', async function (e) {
 			{
 				//debugger;
 				const svgVml = new SvgVml();
-				svgVml.CreateSVGVML(null, null, null, true);
+				svgVml.CreateSVGVML(null, null, null, true, params.boardSize);
 
 				const lines = params.paths.map(pa => svgVml.DeserializePolyline(pa));
 				const points = new Map();
@@ -21,7 +21,7 @@ addEventListener('message', async function (e) {
 
 				LocalLog(`lines.count = ${await lines.length}, points.count = ${await points.size}`);
 
-				const ai = new GraphAI(params.state.iGridWidth, params.state.iGridHeight, params.state.iGridSizeX, params.state.iGridSizeY,
+				const ai = new GraphAI(params.state.iGridWidth, params.state.iGridHeight,
 					points, StatusEnum.POINT_STARTING, StatusEnum.POINT_IN_PATH);
 				const graph = await ai.BuildGraph({ freePointStatus: StatusEnum.POINT_FREE_BLUE, cpufillCol: 'blue', visuals: false });
 				//LocalLog(graph);
@@ -33,20 +33,20 @@ addEventListener('message', async function (e) {
 		case "CONCAVEMAN":
 			{
 				const svgVml = new SvgVml();
-				svgVml.CreateSVGVML(null, null, null, true);
+				svgVml.CreateSVGVML(null, null, null, true, params.boardSize);
 
 				const points = new Map();
 				params.points.forEach((pt) => {
 					points.set(pt.key, svgVml.DeserializeOval(pt.value));
 				});
-				const ai = new GraphAI(params.state.iGridWidth, params.state.iGridHeight, params.state.iGridSizeX, params.state.iGridSizeY,
+				const ai = new GraphAI(params.state.iGridWidth, params.state.iGridHeight,
 					points, StatusEnum.POINT_STARTING, StatusEnum.POINT_IN_PATH);
 				const graph = await ai.BuildGraph({ freePointStatus: StatusEnum.POINT_FREE_BLUE, cpufillCol: 'blue', visuals: false });
 
 
 				const vertices = graph.vertices.map(function (pt) {
 					const pos = pt.GetPosition();
-					return [pos.x / params.state.iGridSizeX, pos.y / params.state.iGridSizeX];
+					return [parseInt(pos.x), parseInt(pos.y)];
 				});
 				const convex_hull = concaveman(vertices, 2.0, 0.0);
 
@@ -60,14 +60,14 @@ addEventListener('message', async function (e) {
 		case "MARK_ALL_CYCLES":
 			{
 				const svgVml = new SvgVml();
-				svgVml.CreateSVGVML(null, null, null, true);
+				svgVml.CreateSVGVML(null, null, null, true, params.boardSize);
 
 				const lines = params.paths.map(pa => svgVml.DeserializePolyline(pa));
 				const points = new Map();
 				params.points.forEach((pt) => {
 					points.set(pt.key, svgVml.DeserializeOval(pt.value));
 				});
-				const ai = new GraphAI(params.state.iGridWidth, params.state.iGridHeight, params.state.iGridSizeX, params.state.iGridSizeY,
+				const ai = new GraphAI(params.state.iGridWidth, params.state.iGridHeight,
 					points, StatusEnum.POINT_STARTING, StatusEnum.POINT_IN_PATH);
 				const graph = await ai.BuildGraph({ freePointStatus: StatusEnum.POINT_FREE_BLUE, cpufillCol: params.colorBlue, visuals: false });
 				const result = await ai.MarkAllCycles(graph, params.colorBlue, params.colorRed, lines);

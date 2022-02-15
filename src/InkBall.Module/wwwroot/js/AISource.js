@@ -8,11 +8,9 @@ import { StatusEnum, /*LocalLog,*/ sortPointsClockwise, /*Sleep,*/ pnpoly2 } fro
  * AI operations class
  * */
 class GraphAI {
-	constructor(iGridWidth, iGridHeight, iGridSizeX, iGridSizeY, pointStore, POINT_STARTING, POINT_IN_PATH) {
+	constructor(iGridWidth, iGridHeight, pointStore, POINT_STARTING, POINT_IN_PATH) {
 		this.m_iGridWidth = iGridWidth;
 		this.m_iGridHeight = iGridHeight;
-		this.m_iGridSizeX = iGridSizeX;
-		this.m_iGridSizeY = iGridSizeY;
 		this.m_Points = pointStore;
 		this.POINT_STARTING = POINT_STARTING;
 		this.POINT_IN_PATH = POINT_IN_PATH;
@@ -45,7 +43,7 @@ class GraphAI {
 				if (next && isPointOKForPath([freePointStatus], next) === true) {
 					//const next_pos = next.GetPosition();
 
-					//const to_x = next_pos.x / this.m_iGridSizeX, to_y = next_pos.y / this.m_iGridSizeY;
+					//const to_x = next_pos.x, to_y = next_pos.y;
 					if (graph_edges.has(`${x},${y}_${to_x},${to_y}`) === false && graph_edges.has(`${to_x},${to_y}_${x},${y}`) === false) {
 
 						const edge = {
@@ -82,7 +80,7 @@ class GraphAI {
 		for (const point of await this.m_Points.values()) {
 			if (point && isPointOKForPath([freePointStatus, this.POINT_STARTING, this.POINT_IN_PATH], point) === true) {
 				const { x: view_x, y: view_y } = point.GetPosition();
-				const x = view_x / this.m_iGridSizeX, y = view_y / this.m_iGridSizeY;
+				const x = parseInt(view_x), y = parseInt(view_y);
 				//TODO: await all below promises
 				//east
 				await addPointsAndEdgestoGraph(point, x + 1, y, view_x, view_y, x, y);
@@ -107,7 +105,7 @@ class GraphAI {
 	}
 
 	async IsPointOutsideAllPaths(lines, x, y) {
-		const xmul = x * this.m_iGridSizeX, ymul = y * this.m_iGridSizeY;
+		const xmul = x, ymul = y;
 
 		//const lines = await linesStore.all();//TODO: async for
 		for (const line of lines) {
@@ -214,7 +212,7 @@ class GraphAI {
 			for (const pt of await this.m_Points.values()) {
 				if (pt !== undefined && pt.GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.GetStatus()) {
 					const { x: view_x, y: view_y } = pt.GetPosition();
-					const x = view_x / this.m_iGridSizeX, y = view_y / this.m_iGridSizeY;
+					const x = parseInt(view_x), y = parseInt(view_y);
 					if (false === await this.IsPointOutsideAllPaths(lines, x, y))
 						continue;
 
@@ -238,7 +236,7 @@ class GraphAI {
 					//convert to logical space
 					const mapped_verts = cycl.map(function (c) {
 						const pt = vertices[c].GetPosition();
-						return { x: pt.x / this.m_iGridSizeX, y: pt.y / this.m_iGridSizeY };
+						return { x: parseInt(pt.x), y: parseInt(pt.y) };
 					}.bind(this));
 					//sort clockwise (https://stackoverflow.com/questions/45660743/sort-points-in-counter-clockwise-in-javascript)
 					const cw_sorted_verts = sortPointsClockwise(mapped_verts);
@@ -246,7 +244,7 @@ class GraphAI {
 					////display which cycle we are dealing with
 					//for (const vert of cw_sorted_verts) {
 					//	const { x, y } = vert;
-					//	const pt = document.querySelector(`svg > circle[cx="${x * this.m_iGridSizeX}"][cy="${y * this.m_iGridSizeY}"]`);
+					//	const pt = document.querySelector(`svg > circle[cx="${x}"][cy="${y}"]`);
 					//	if (pt) {//again some basic checks
 					//		str += (`(${x},${y})`);
 
@@ -264,7 +262,7 @@ class GraphAI {
 					//	if (false !== pnpoly2(cw_sorted_verts, possible_intercept.x, possible_intercept.y)) {
 					//		tmp += `${comma}(${possible_intercept.x},${possible_intercept.y})`;
 
-					//		const pt1 = document.querySelector(`svg > circle[cx="${possible_intercept.x * this.m_iGridSizeX}"][cy="${possible_intercept.y * this.m_iGridSizeY}"]`);
+					//		const pt1 = document.querySelector(`svg > circle[cx="${possible_intercept.x}"][cy="${possible_intercept.y}"]`);
 					//		if (pt1) {
 					//			pt1.SetStrokeColor('var(--yellow)');
 					//			pt1.SetFillColor('var(--yellow)');

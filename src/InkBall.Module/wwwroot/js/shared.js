@@ -134,16 +134,18 @@ class SvgVml {
 		let svgAvailable = false, svgAntialias = false;
 		let documentCreateElementNS_SVG, documentCreateElementNS_Element;
 		this.cont = null;
+		// Create an SVGPoint for future math
+		this.mathSVGPoint = null;
 
 		if (self && self.document && self.document.createElementNS) {
-			this.cont = document.createElementNS(svgNS, "svg");
-			svgAvailable = (this.cont.x !== null);
+			const some_cont = document.createElementNS(svgNS, "svg");
+			svgAvailable = (some_cont.x !== null);
 		}
 
 		if (svgAvailable) {
 			/* ============= displayable SVG ============== */
-			documentCreateElementNS_SVG = function () {
-				return this.cont;
+			documentCreateElementNS_SVG = function (contextElement) {
+				return contextElement;
 			}.bind(this);
 			documentCreateElementNS_Element = function (elemeName) {
 				switch (elemeName) {
@@ -237,7 +239,7 @@ class SvgVml {
 		SVGCircleElement.prototype.move = function (x1, y1, radius) {
 			this.setAttribute("cx", x1);
 			this.setAttribute("cy", y1);
-			this.setAttribute("r", Math.round(radius));
+			this.setAttribute("r", /* Math.round */(radius));
 		};
 		SVGCircleElement.prototype.GetStrokeColor = function () { return this.getAttribute("stroke"); };
 		SVGCircleElement.prototype.SetStrokeColor = function (col) { this.setAttribute("stroke", col); };
@@ -287,9 +289,9 @@ class SvgVml {
 		};
 		SVGLineElement.prototype.RGBcolor = function (R, G, B) { this.setAttribute("stroke", "rgb(" + Math.round(R) + "," + Math.round(G) + "," + Math.round(B) + ")"); };
 		SVGLineElement.prototype.SetColor = function (color) { this.setAttribute("stroke", color); };
-		SVGLineElement.prototype.strokeWidth = function (s) { this.setAttribute("stroke-width", Math.round(s) + "px"); };
+		SVGLineElement.prototype.strokeWidth = function (sw) { this.setAttribute("stroke-width", /* Math.round */(sw) + "px"); };
 
-		SVGPolylineElement.prototype.AppendPoints = function (x, y, diffX, diffY) {
+		SVGPolylineElement.prototype.AppendPoints = function (x, y, diffX = 1, diffY = 1) {
 			const pts_str = this.getAttribute("points");
 			const pts = pts_str.split(" ");
 
@@ -338,19 +340,14 @@ class SvgVml {
 		SVGPolylineElement.prototype.GetLength = function () {
 			return this.getAttribute("points").split(" ").length;
 		};
-		SVGPolylineElement.prototype.SetWidthAndColor = function (w, col) {
+		SVGPolylineElement.prototype.SetWidthAndColor = function (sw, col) {
 			this.setAttribute("stroke", col);
 			this.setAttribute("fill", col);
-			this.setAttribute("stroke-width", Math.round(w));
+			this.setAttribute("stroke-width", /* Math.round */(sw));
 		};
 		SVGPolylineElement.prototype.GetID = function () { return parseInt(this.getAttribute("data-id")); };
 		SVGPolylineElement.prototype.SetID = function (iID) { this.setAttribute("data-id", iID); };
 		SVGPolylineElement.prototype.GetFillColor = function () { return this.getAttribute("fill"); };
-		SVGPolylineElement.prototype.IsPointInFill = function (x, y) {
-			const point = documentCreateElementNS_SVG("svg").createSVGPoint();
-			point.x = x; point.y = y;
-			return this.isPointInFill(point);//not in IE11
-		};
 		SVGPolylineElement.prototype.Serialize = function () {
 			const id = this.GetID();
 			const color = this.GetFillColor();
@@ -358,14 +355,18 @@ class SvgVml {
 			return { iId: id, Color: color, PointsAsString: pts };
 		};
 
-		this.CreateSVGVML = function (contextParent, iWidth, iHeight, antialias) {
-			this.cont = documentCreateElementNS_SVG("svg");
+		this.CreateSVGVML = function (contextElement, iWidth, iHeight, antialias, { logicalWidth, logicalHeight }) {
+			this.cont = documentCreateElementNS_SVG(contextElement);
 			if (iWidth)
 				this.cont.setAttributeNS(null, 'width', iWidth);
 			if (iHeight)
 				this.cont.setAttributeNS(null, 'height', iHeight);
-			if (contextParent)
-				contextParent.appendChild(this.cont);
+			if (contextElement) {
+				if (logicalWidth !== undefined && logicalHeight !== undefined)
+					this.cont.setAttribute("viewBox", `0 0 ${logicalWidth} ${logicalHeight}`);
+
+				this.mathSVGPoint = this.cont.createSVGPoint();
+			}
 			svgAntialias = antialias;
 
 			return svgAvailable ? this.cont : null;
@@ -373,7 +374,7 @@ class SvgVml {
 		this.CreateLine = function (w, col, linecap) {
 			const o = documentCreateElementNS_Element("line");
 			o.setAttribute("shape-rendering", svgAntialias ? "auto" : "optimizeSpeed");
-			o.setAttribute("stroke-width", Math.round(w) + "px");
+			o.setAttribute("stroke-width", /* Math.round */(w) + "px");
 			if (col) o.setAttribute("stroke", col);
 			if (linecap) o.setAttribute("stroke-linecap", linecap);
 
@@ -383,7 +384,7 @@ class SvgVml {
 		this.CreatePolyline = function (width, points, col) {
 			const o = documentCreateElementNS_Element("polyline");
 			o.setAttribute("shape-rendering", svgAntialias ? "auto" : "optimizeSpeed");
-			o.setAttribute("stroke-width", Math.round(width));
+			o.setAttribute("stroke-width", /* Math.round */(width));
 			if (col) o.setAttribute("stroke", col);
 			o.setAttribute("fill", col);
 			o.setAttribute("fill-opacity", "0.1");
@@ -399,7 +400,7 @@ class SvgVml {
 			const o = documentCreateElementNS_Element("circle");
 			o.setAttribute("shape-rendering", svgAntialias ? "auto" : "optimizeSpeed");
 			o.setAttribute("stroke-width", 0);
-			o.setAttribute("r", Math.round(diam >> 1));
+			o.setAttribute("r", /* Math.round */(diam / 2));
 			//ch_commented o.style.cursor = "pointer";
 			o.setAttribute("data-status", StatusEnum.POINT_FREE);
 			//o.setAttribute("data-old-status", StatusEnum.POINT_FREE);
@@ -418,8 +419,10 @@ class SvgVml {
 	}
 
 	DeserializeOval(packed, radius = 4) {
-		const { x, y, Status, Color } = packed;
-		const o = this.CreateOval(4);
+		let { x, y, Status, Color } = packed;
+		x = parseInt(x);
+		y = parseInt(y);
+		const o = this.CreateOval(radius);
 		o.move(x, y, radius);
 		o.SetStrokeColor(Color);
 		o.SetFillColor(Color);
@@ -432,6 +435,22 @@ class SvgVml {
 		const o = this.CreatePolyline(width, PointsAsString, Color);
 		o.SetID(iId);
 		return o;
+	}
+
+	/**
+	 * Converts coordinates point from screen to scaled SVG as according to
+	 * https://docs.microsoft.com/en-us/previous-versions/windows/internet-explorer/ie-developer/samples/hh535760(v=vs.85)?redirectedfrom=MSDN
+	 * https://stackoverflow.com/questions/22183727/how-do-you-convert-screen-coordinates-to-document-space-in-a-scaled-svg
+	 * @param {number} clientX X coordinate
+	 * @param {number} clientY Y coordinate
+	 * @returns {object} coordinate {x,y} point
+	 */
+	ToCursorPoint(clientX, clientY) {
+		// Get point in global SVG space
+		this.mathSVGPoint.x = clientX; this.mathSVGPoint.y = clientY;
+		const loc = this.mathSVGPoint.matrixTransform(this.cont.getScreenCTM().inverse());
+
+		return loc;
 	}
 }
 
@@ -571,8 +590,8 @@ class GameStateStore {
 				const pos = oval.GetPosition();
 				const color = oval.GetFillColor();
 				const idb_pt = {
-					x: parseInt(pos.x) / game_state.iGridSizeX,
-					y: parseInt(pos.y) / game_state.iGridSizeY,
+					x: parseInt(pos.x),
+					y: parseInt(pos.y),
 					Status: oval.GetStatus(),
 					Color: color
 				};
@@ -657,7 +676,7 @@ class GameStateStore {
 					PointsAsString: val.GetPointsString().split(" ").map((pt) => {
 						const tab = pt.split(',');
 						const x = parseInt(tab[0]), y = parseInt(tab[1]);
-						return `${x / game_state.iGridSizeX},${y / game_state.iGridSizeY}`;
+						return `${x},${y}`;
 					}).join(" ")
 				};
 
