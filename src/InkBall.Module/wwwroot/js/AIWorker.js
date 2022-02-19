@@ -11,7 +11,7 @@ addEventListener('message', async function (e) {
 			{
 				//debugger;
 				const svgVml = new SvgVml();
-				svgVml.CreateSVGVML(null, null, null, true, params.boardSize);
+				svgVml.CreateSVGVML(null, null, null, undefined, params.boardSize);
 
 				const lines = params.paths.map(pa => svgVml.DeserializePolyline(pa));
 				const points = new Map();
@@ -33,7 +33,7 @@ addEventListener('message', async function (e) {
 		case "CONCAVEMAN":
 			{
 				const svgVml = new SvgVml();
-				svgVml.CreateSVGVML(null, null, null, true, params.boardSize);
+				svgVml.CreateSVGVML(null, null, null, undefined, params.boardSize);
 
 				const points = new Map();
 				params.points.forEach((pt) => {
@@ -60,7 +60,7 @@ addEventListener('message', async function (e) {
 		case "MARK_ALL_CYCLES":
 			{
 				const svgVml = new SvgVml();
-				svgVml.CreateSVGVML(null, null, null, true, params.boardSize);
+				svgVml.CreateSVGVML(null, null, null, undefined, params.boardSize);
 
 				const lines = params.paths.map(pa => svgVml.DeserializePolyline(pa));
 				const points = new Map();

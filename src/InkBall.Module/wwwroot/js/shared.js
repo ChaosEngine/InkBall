@@ -175,7 +175,7 @@ function sortPointsClockwise(points) {
 class SvgVml {
 	constructor() {
 		const svgNS = "http://www.w3.org/2000/svg";
-		let svgAvailable = false, svgAntialias = false;
+		let svgAvailable = false, svgAntialias = undefined;
 		let documentCreateElementNS_SVG, documentCreateElementNS_Element;
 		this.cont = null;
 		// Create an SVGPoint for future math
@@ -401,7 +401,7 @@ class SvgVml {
 			return { iId: id, Color: color, PointsAsString: pts };
 		};
 
-		this.CreateSVGVML = function (contextElement, iWidth, iHeight, antialias, { iGridWidth, iGridHeight}) {
+		this.CreateSVGVML = function (contextElement, iWidth, iHeight, antialias, { iGridWidth, iGridHeight }) {
 			this.cont = documentCreateElementNS_SVG(contextElement);
 			if (iWidth)
 				this.cont.setAttributeNS(null, 'width', iWidth);
@@ -419,7 +419,8 @@ class SvgVml {
 		};
 		this.CreateLine = function (w, col, linecap) {
 			const o = documentCreateElementNS_Element("line");
-			o.setAttribute("shape-rendering", svgAntialias ? "auto" : "optimizeSpeed");
+			if (svgAntialias !== undefined)
+				o.setAttribute("shape-rendering", svgAntialias === true ? "auto" : "optimizeSpeed");
 			o.setAttribute("stroke-width", /* Math.round */(w) + "px");
 			if (col) o.setAttribute("stroke", col);
 			if (linecap) o.setAttribute("stroke-linecap", linecap);
@@ -429,7 +430,8 @@ class SvgVml {
 		};
 		this.CreatePolyline = function (width, points, col) {
 			const o = documentCreateElementNS_Element("polyline");
-			o.setAttribute("shape-rendering", svgAntialias ? "auto" : "optimizeSpeed");
+			if (svgAntialias !== undefined)
+				o.setAttribute("shape-rendering", svgAntialias === true ? "auto" : "optimizeSpeed");
 			o.setAttribute("stroke-width", /* Math.round */(width));
 			if (col) o.setAttribute("stroke", col);
 			o.setAttribute("fill", col);
@@ -444,7 +446,8 @@ class SvgVml {
 		};
 		this.CreateOval = function (diam) {
 			const o = documentCreateElementNS_Element("circle");
-			o.setAttribute("shape-rendering", svgAntialias ? "auto" : "optimizeSpeed");
+			if (svgAntialias !== undefined)
+				o.setAttribute("shape-rendering", svgAntialias === true ? "auto" : "optimizeSpeed");
 			o.setAttribute("stroke-width", 0);
 			o.setAttribute("r", /* Math.round */(diam / 2));
 			//ch_commented o.style.cursor = "pointer";

@@ -64,7 +64,7 @@ p.inkgame {
 
 .boardsize-20x26, .boardsize-40x52, .boardsize-64x64 {
 	@include background(16, 16);
-	background-size: calc(1em * 5) calc(1em * 5);
+	background-size: 1em 1em;
 }
 
 @include board('.boardsize', 20, 26);

@@ -2,7 +2,7 @@
 /*global signalR*/
 "use strict";
 
-let SHRD, LocalLog, LocalError, StatusEnum, hasDuplicates, pnpoly2, sortPointsClockwise, Sleep;
+let SHRD, LocalLog, LocalError, StatusEnum, hasDuplicates, pnpoly2, Sleep;
 
 /******** funcs-n-classes ********/
 const CommandKindEnum = Object.freeze({
@@ -319,8 +319,7 @@ async function importAllModulesAsync(/*gameOptions*/) {
 	else
 		SHRD = await import(/* webpackChunkName: "shared" */'./shared.js');
 	LocalLog = SHRD.LocalLog, LocalError = SHRD.LocalError, StatusEnum = SHRD.StatusEnum,
-		hasDuplicates = SHRD.hasDuplicates, pnpoly2 = SHRD.pnpoly2, sortPointsClockwise = SHRD.sortPointsClockwise,
-		Sleep = SHRD.Sleep;
+		hasDuplicates = SHRD.hasDuplicates, pnpoly2 = SHRD.pnpoly2, Sleep = SHRD.Sleep;
 
 	//for CPU game enable AI libs and calculations
 	//if (gameOptions.iOtherPlayerID === -1) {
@@ -1980,7 +1979,8 @@ class InkBallGame {
 				paths: serialized_paths
 			});
 		});
-		LocalLog('Message received from worker ' + data);
+		LocalLog('Message received from worker:');
+		LocalLog(data);
 	}
 
 	async OnTestConcaveman(event) {
@@ -2184,144 +2184,6 @@ class InkBallGame {
 		}
 	}
 
-	async OnTestWorkerify(event) {
-		event.preventDefault();
-
-		/*const addNums = async function (params) {
-			params.state.bPointsAndPathsLoaded = false;
-
-			// eslint-disable-next-line no-undef
-			const svgVml = new SvgVml();
-			svgVml.CreateSVGVML(null, null, null, true);
-
-			let lines, points;
-			// eslint-disable-next-line no-undef
-			const stateStore = new GameStateStore(true,
-				function CreateScreenPointFromIndexedDb(iX, iY, iStatus, sColor) {
-					const x = iX;
-					const y = iY;
-
-					const oval = svgVml.CreateOval(3);
-					oval.move(x, y, 3);
-
-					let color;
-					switch (iStatus) {
-						case StatusEnum.POINT_FREE_RED:
-							color = 'red';
-							oval.SetStatus(iStatus);//StatusEnum.POINT_FREE
-							break;
-						case StatusEnum.POINT_FREE_BLUE:
-							color = 'blue';
-							oval.SetStatus(iStatus);//StatusEnum.POINT_FREE
-							break;
-						case StatusEnum.POINT_FREE:
-							color = 'red';
-							oval.SetStatus(iStatus);//StatusEnum.POINT_FREE
-							//console.warn('TODO: generic FREE point, really? change it!');
-							break;
-						case StatusEnum.POINT_STARTING:
-							color = 'red';
-							oval.SetStatus(iStatus);
-							break;
-						case StatusEnum.POINT_IN_PATH:
-							//if (this.g_iPlayerID === iPlayerId)//bPlayingWithRed
-							//	color = this.m_bIsPlayingWithRed === true ? this.COLOR_RED : this.COLOR_BLUE;
-							//else
-							//	color = this.m_bIsPlayingWithRed === true ? this.COLOR_BLUE : this.COLOR_RED;
-							color = sColor;
-							oval.SetStatus(iStatus);
-							break;
-						case StatusEnum.POINT_OWNED_BY_RED:
-							color = '#DC143C';
-							oval.SetStatus(iStatus);
-							break;
-						case StatusEnum.POINT_OWNED_BY_BLUE:
-							color = '#8A2BE2';
-							oval.SetStatus(iStatus);
-							break;
-						default:
-							alert('bad point');
-							break;
-					}
-
-					oval.SetFillColor(color);
-					oval.SetStrokeColor(color);
-
-					return oval;
-				},
-				async function CreateScreenPathFromIndexedDb(packed, sColor, iPathId) {
-					const sPoints = packed.split(" ");
-					let sDelimiter = "", sPathPoints = "", p = null, x, y,
-						status = StatusEnum.POINT_STARTING;
-					for (const pair of sPoints) {
-						p = pair.split(",");
-						x = parseInt(p[0]); y = parseInt(p[1]);
-
-						p = await points.get(y * params.state.iGridWidth + x);
-						if (p !== null && p !== undefined) {
-							p.SetStatus(status);
-							status = StatusEnum.POINT_IN_PATH;
-						}
-
-						sPathPoints += `${sDelimiter}${x},${y}`;
-						sDelimiter = " ";
-					}
-					p = sPoints[0].split(",");
-					x = parseInt(p[0]); y = parseInt(p[1]);
-
-					p = await points.get(y * params.state.iGridWidth + x);
-					if (p !== null && p !== undefined) {
-						p.SetStatus(status);
-					}
-
-					sPathPoints += `${sDelimiter}${x},${y}`;
-
-					const line = svgVml.CreatePolyline(this.m_LineStrokeWidth, sPathPoints, sColor);
-					line.SetID(iPathId);
-
-					return line;
-				},
-				function GetGameStateForIndexedDb() {
-					return params.state;
-				}
-			);
-			lines = stateStore.GetPathStore();
-			points = stateStore.GetPointStore();
-			await stateStore.PrepareStore();
-			LocalLog(`lines.count = ${await lines.count()}, points.count = ${await points.count()}`);
-			debugger;
-			// eslint-disable-next-line no-undef
-			const ai = new h(params.state.iGridWidth, params.state.iGridHeight,
-				points, StatusEnum.POINT_STARTING, StatusEnum.POINT_IN_PATH);
-			const graph = await ai.BuildGraph({ freePointStatus: StatusEnum.POINT_FREE_BLUE, fillCol: 'blue', visuals: false });
-			LocalLog(graph);
-
-			return "blah";
-		};
-		// Let the worker execute the above function, with the specified arguments and context
-		const result = await addNums.callAsWorker(
-			//context
-			[LocalLog, LocalError, `const StatusEnum = Object.freeze({
-	POINT_FREE_RED: -3,
-	POINT_FREE_BLUE: -2,
-	POINT_FREE: -1,
-	POINT_STARTING: 0,
-	POINT_IN_PATH: 1,
-	POINT_OWNED_BY_RED: 2,
-	POINT_OWNED_BY_BLUE: 3
-});`,
-				//SHRD.CreateOval, SHRD.CreatePolyline, SHRD.RemovePolyline, SHRD.CreateSVGVML, SHRD.CreateLine, SHRD.hasDuplicates, SHRD.sortPointsClockwise,
-				SHRD.SvgVml, SHRD.GameStateStore,
-				AIBundle.GraphAI
-			],
-			//parameters
-			{
-				state: this.GetGameStateForIndexedDb()
-			}
-		);
-		LocalLog('result: ' + result);*/
-	}
-
 	/**
 	 * Start drawing routines
 	 * @param {HTMLElement} sScreen screen dontainer selector
@@ -2402,7 +2264,7 @@ class InkBallGame {
 		///////CpuGame variables end//////
 
 		this.SvgVml = new SHRD.SvgVml();
-		if (this.SvgVml.CreateSVGVML(this.m_Screen, svg_width_x_height, svg_width_x_height, true,
+		if (this.SvgVml.CreateSVGVML(this.m_Screen, svg_width_x_height, svg_width_x_height, undefined,
 			{ iGridWidth: this.m_iGridWidth, iGridHeight: this.m_iGridHeight }) === null)
 			alert('SVG is not supported!');
 
@@ -2450,8 +2312,6 @@ class InkBallGame {
 					document.querySelector(ddlTestActions[i++]).onclick = this.OnTestGroupPoints.bind(this);
 				if (ddlTestActions.length > i)
 					document.querySelector(ddlTestActions[i++]).onclick = this.OnTestFindSurroundablePoints.bind(this);
-				if (ddlTestActions.length > i)
-					document.querySelector(ddlTestActions[i++]).onclick = this.OnTestWorkerify.bind(this);
 
 				//disable or even delete chat functionality, coz we're not going to chat with CPU bot
 				//const chatSection = document.querySelector(this.m_sMsgListSel).parentElement;
@@ -2540,31 +2400,37 @@ class InkBallGame {
 		if (count <= 0)
 			return null;
 
-		x = centroidX / count;
-		y = centroidY / count;
-		const tox = parseInt(x);
-		const toy = parseInt(y);
-		x = tox; y = toy;
-		LocalLog(`centroid coords ${x},${y}`);
+		centroidX = parseInt(centroidX / count);
+		centroidY = parseInt(centroidY / count);
+		x = centroidX; y = centroidY;
+		let log_str = "";
+		const random_picked_points = new Set();
 
-		let max_random_pick_amount = 50, spread = 2;
-		while (--max_random_pick_amount > 0) {
+		let random_pick_amount_cnter = 0, spread = 2;
+		while (++random_pick_amount_cnter <= 50) {
+			random_picked_points.add(`${x}_${y}`);
 			if (false === (await this.m_Points.has(y * this.m_iGridWidth + x)) &&
 				true === (await this.IsPointOutsideAllPaths(x, y))) {
-				LocalLog(`checking coords ${x},${y} succeed`);
+				log_str += (`checking coords ${x}_${y} succeed\n`);
 				break;
 			}
-			LocalLog(`checking coords ${x},${y} failed #${max_random_pick_amount}`);
-			if (max_random_pick_amount <= 10)
+			log_str += (`checking coords ${x}_${y} failed #${random_pick_amount_cnter}\n`);
+			if (random_pick_amount_cnter >= 25)
 				spread *= 2;
 
-			x = this.GetRandomInt(tox - spread, tox + spread + 1);
-			y = this.GetRandomInt(toy - spread, toy + spread + 1);
+			let spread_cnter = 50;
+			do {
+				x = this.GetRandomInt(centroidX - spread, centroidX + spread + 1);
+				y = this.GetRandomInt(centroidY - spread, centroidY + spread + 1);
+			} while (--spread_cnter > 0 && random_picked_points.has(`${x}_${y}`));
 		}
-		if (max_random_pick_amount <= 0) {
-			LocalLog('finding centroid failed');
+		if (random_pick_amount_cnter >= 50) {
+			log_str += ('finding centroid failed\n');
+			LocalLog(log_str);
 			return null;
 		}
+		else
+			LocalLog(log_str);
 
 		const pt = new InkBallPointViewModel(0, this.g_iGameID, -1/*player*/, x, y, StatusEnum.POINT_FREE_BLUE, 0);
 		return pt;
@@ -2618,185 +2484,6 @@ class InkBallGame {
 		}
 
 		return false;
-	}
-
-	/**
-	 * Based on https://www.geeksforgeeks.org/print-all-the-cycles-in-an-undirected-graph/
-	 * @param {any} graph constructed earlier with BuildGraph
-	 * @returns {array} of cycles
-	 */
-	async MarkAllCycles(graph) {
-		const vertices = graph.vertices;
-		const N = vertices.length;
-		let cycles = new Array(N);
-		// mark with unique numbers
-		const mark = new Array(N);
-		// arrays required to color the 
-		// graph, store the parent of node 
-		const color = new Array(N), par = new Array(N);
-
-		for (let i = 0; i < N; i++) {
-			mark[i] = []; cycles[i] = [];
-		}
-
-		const dfs_cycle = async function (u, p) {
-			// already (completely) visited vertex. 
-			if (color[u] === 2)
-				return;
-
-			// seen vertex, but was not completely visited -> cycle detected. 
-			// backtrack based on parents to find the complete cycle. 
-			if (color[u] === 1) {
-				cyclenumber++;
-				let cur = p;
-				mark[cur].push(cyclenumber);
-
-				// backtrack the vertex which are
-				// in the current cycle thats found
-				while (cur !== u) {
-					cur = par[cur];
-					mark[cur].push(cyclenumber);
-				}
-				return;
-			}
-			par[u] = p;
-
-			// partially visited.
-			color[u] = 1;
-			const vertex = vertices[u];
-			if (vertex) {
-
-
-				vertex.SetStrokeColor('black');
-				vertex.SetFillColor('black');
-				//vertex.setAttribute("r", 6/this.m_iGridSpacingX);
-				await Sleep(10);
-
-
-				// simple dfs on graph
-				for (const adj of vertex.adjacents) {
-					const v = vertices.indexOf(adj);
-					// if it has not been visited previously
-					if (v === par[u])
-						continue;
-
-					await dfs_cycle(v, u);
-				}
-			}
-
-			// completely visited. 
-			color[u] = 2;
-		};
-
-		const printCycles = async function (edges, mark) {
-			// push the edges that into the 
-			// cycle adjacency list 
-			for (let e = 0; e < edges; e++) {
-				const mark_e = mark[e];
-				if (mark_e !== undefined && mark_e.length > 0) {
-					for (let m = 0; m < mark_e.length; m++) {
-						const found_c = cycles[mark_e[m]];
-						if (found_c !== undefined)
-							found_c.push(e);
-					}
-				}
-			}
-
-			//sort by point length(only cycles >= 4): first longest cycles, most points
-			cycles = cycles.filter(c => c.length >= 4).sort((b, a) => a.length - b.length);
-
-			//gather free human player points that could be intercepted.
-			const free_human_player_points = [];
-			const sHumanColor = this.COLOR_RED;
-			for (const pt of await this.m_Points.values()) {
-				if (pt !== undefined && pt.GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.GetStatus()) {
-					const { x: view_x, y: view_y } = pt.GetPosition();
-					const x = parseInt(view_x), y = parseInt(view_y);
-					if (false === await this.IsPointOutsideAllPaths(x, y))
-						continue;
-
-					//check if really exists
-					const pt1 = document.querySelector(`svg > circle[cx="${view_x}"][cy="${view_y}"]`);
-					if (pt1)
-						free_human_player_points.push({ x, y });
-				}
-			}
-
-
-			const tab = [];
-			// traverse through all the vertices with same cycle
-			for (let i = 0; i <= cyclenumber; i++) {
-				const cycl = cycles[i];//get cycle
-				if (cycl && cycl.length > 0) {	//somr checks
-					// Print the i-th cycle
-					let str = (`Cycle Number ${i}: `), trailing_points = [];
-					const rand_color = 'var(--bs-indigo)';
-
-					//convert to logical space
-					const mapped_verts = cycl.map(function (c) {
-						const pt = vertices[c].GetPosition();
-						return { x: parseInt(pt.x), y: parseInt(pt.y) };
-					}.bind(this));
-					//sort clockwise (https://stackoverflow.com/questions/45660743/sort-points-in-counter-clockwise-in-javascript)
-					const cw_sorted_verts = sortPointsClockwise(mapped_verts);
-
-					//display which cycle we are dealing with
-					for (const vert of cw_sorted_verts) {
-						const { x, y } = vert;
-						const pt = document.querySelector(`svg > circle[cx="${x}"][cy="${y}"]`);
-						if (pt) {//again some basic checks
-							str += (`(${x},${y})`);
-
-							pt.SetStrokeColor(rand_color);
-							pt.SetFillColor(rand_color);
-							pt.setAttribute("r", 6 / this.m_iGridSpacingX);
-						}
-						await Sleep(50);
-					}
-
-					//find for all free_human_player_points which cycle might interepct it (surrounds)
-					//only convex, NOT concave :-(
-					let tmp = '', comma = '';
-					for (const possible_intercept of free_human_player_points) {
-						if (false !== pnpoly2(cw_sorted_verts, possible_intercept.x, possible_intercept.y)) {
-							tmp += `${comma}(${possible_intercept.x},${possible_intercept.y})`;
-
-							const pt1 = document.querySelector(`svg > circle[cx="${possible_intercept.x}"][cy="${possible_intercept.y}"]`);
-							if (pt1) {
-								pt1.SetStrokeColor('var(--bs-yellow)');
-								pt1.SetFillColor('var(--bs-yellow)');
-								pt1.setAttribute("r", 6 / this.m_iGridSpacingX);
-							}
-							comma = ',';
-						}
-					}
-					//gaterhing of some data and console printing
-					trailing_points.unshift(str);
-					tab.push(trailing_points);
-					//log...
-					LocalLog(str + (tmp !== '' ? ` possible intercepts: ${tmp}` : ''));
-					//...and clear
-					const pts2reset = Array.from(document.querySelectorAll(`svg > circle[fill="${rand_color}"][r="${6 / this.m_iGridSpacingX}"]`));
-					pts2reset.forEach(pt => {
-						pt.SetStrokeColor(this.COLOR_BLUE);
-						pt.SetFillColor(this.COLOR_BLUE);
-						pt.setAttribute("r", 6 / this.m_iGridSpacingX);
-					});
-				}
-			}
-			return tab;
-		}.bind(this);
-
-		// store the numbers of cycle
-		let cyclenumber = 0, edges = N;
-
-		// call DFS to mark the cycles
-		for (let vind = 0; vind < N; vind++) {
-			await dfs_cycle(vind + 1, vind);//, color, mark, par);
-		}
-
-		// function to print the cycles
-		return await printCycles(edges, mark);
 	}
 
 	async GroupPointsRecurse(currPointsArr, point) {
@@ -2895,7 +2582,7 @@ class InkBallGame {
 			else
 				this.workingCyclePolyLine.SetPoints(pts);
 
-			await Sleep(50);
+			await Sleep(25);
 		}
 		return currPointsArr;
 	}
