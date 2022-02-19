@@ -14,6 +14,50 @@ const StatusEnum = Object.freeze({
 	POINT_OWNED_BY_BLUE: 3
 });
 
+function StatusEnumToString(enumVal) {
+	switch (enumVal) {
+		case StatusEnum.POINT_FREE_RED:
+			return "POINT_FREE_RED";
+		case StatusEnum.POINT_FREE_BLUE:
+			return "POINT_FREE_BLUE";
+		case StatusEnum.POINT_FREE:
+			return "POINT_FREE";
+		case StatusEnum.POINT_STARTING:
+			return "POINT_STARTING";
+		case StatusEnum.POINT_IN_PATH:
+			return "POINT_IN_PATH";
+		case StatusEnum.POINT_OWNED_BY_RED:
+			return "POINT_OWNED_BY_RED";
+		case StatusEnum.POINT_OWNED_BY_BLUE:
+			return "POINT_OWNED_BY_BLUE";
+
+		default:
+			throw new Error('bad status enum value');
+	}
+}
+
+function StringToStatusEnum(str) {
+	switch (str.toUpperCase()) {
+		case "POINT_FREE_RED":
+			return StatusEnum.POINT_FREE_RED;
+		case "POINT_FREE_BLUE":
+			return StatusEnum.POINT_FREE_BLUE;
+		case "POINT_FREE":
+			return StatusEnum.POINT_FREE;
+		case "POINT_STARTING":
+			return StatusEnum.POINT_STARTING;
+		case "POINT_IN_PATH":
+			return StatusEnum.POINT_IN_PATH;
+		case "POINT_OWNED_BY_RED":
+			return StatusEnum.POINT_OWNED_BY_RED;
+		case "POINT_OWNED_BY_BLUE":
+			return StatusEnum.POINT_OWNED_BY_BLUE;
+
+		default:
+			throw new Error('bad status enum string');
+	}
+}
+
 /**
  * Shared log function
  * @param {any} msg - object to log
@@ -248,16 +292,18 @@ class SvgVml {
 		};
 		SVGCircleElement.prototype.GetFillColor = function () { return this.getAttribute("fill"); };
 		SVGCircleElement.prototype.SetFillColor = function (col) { this.setAttribute("fill", col); };
-		SVGCircleElement.prototype.GetStatus = function () { return parseInt(this.getAttribute("data-status")); };
+		SVGCircleElement.prototype.GetStatus = function () {
+			return StringToStatusEnum(this.getAttribute("data-status"));
+		};
 		SVGCircleElement.prototype.SetStatus = function (iStatus, saveOldPoint = false) {
 			if (saveOldPoint) {
-				const old_status = parseInt(this.getAttribute("data-status"));
-				this.setAttribute("data-status", iStatus);
+				const old_status = StringToStatusEnum(this.getAttribute("data-status"));
+				this.setAttribute("data-status", StatusEnumToString(iStatus));
 				if (old_status !== StatusEnum.POINT_FREE && old_status !== iStatus)
-					this.setAttribute("data-old-status", old_status);
+					this.setAttribute("data-old-status", StatusEnumToString(old_status));
 			}
 			else {
-				this.setAttribute("data-status", iStatus);
+				this.setAttribute("data-status", StatusEnumToString(iStatus));
 			}
 		};
 		SVGCircleElement.prototype.RevertOldStatus = function () {
@@ -265,7 +311,7 @@ class SvgVml {
 			if (old_status) {
 				this.removeAttribute("data-old-status");
 				this.setAttribute("data-status", old_status);
-				return parseInt(old_status);
+				return StringToStatusEnum(old_status);
 			}
 			return -1;
 		};
@@ -402,8 +448,8 @@ class SvgVml {
 			o.setAttribute("stroke-width", 0);
 			o.setAttribute("r", /* Math.round */(diam / 2));
 			//ch_commented o.style.cursor = "pointer";
-			o.setAttribute("data-status", StatusEnum.POINT_FREE);
-			//o.setAttribute("data-old-status", StatusEnum.POINT_FREE);
+			o.setAttribute("data-status", StatusEnumToString(StatusEnum.POINT_FREE));
+			//o.setAttribute("data-old-status", StatusEnumToString(StatusEnum.POINT_FREE));
 
 			this.cont.appendChild(o);
 			return o;
@@ -920,7 +966,7 @@ class GameStateStore {
 			const store = this.GetObjectStore(this.DB_POINT_STORE, 'readwrite');
 			let req;
 			try {
-				req = store.add(val, key);
+				req = store.put(val, key);//earlier was 'add'
 			} catch (e) {
 				if (e.name === 'DataCloneError')
 					LocalError("This engine doesn't know how to clone a Blob, use Firefox");
