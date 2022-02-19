@@ -2129,6 +2129,10 @@ class InkBallGame {
 		event.preventDefault();
 		//LocalLog('OnTestGroupPoints');
 		const starting_point = await this.m_Points.get(this.m_iMouseY * this.m_iGridWidth + this.m_iMouseX);
+		if (starting_point === undefined) {
+			LocalLog("!!!You need to click first 'blue' starting point with mouse!!!");
+			return;
+		}
 		await this.GroupPointsRecurse([], starting_point);
 		if (this.workingCyclePolyLine) {
 			this.SvgVml.RemovePolyline(this.workingCyclePolyLine);
@@ -2140,7 +2144,8 @@ class InkBallGame {
 				return `${pt.x},${pt.y}`;
 			}).join(' '), RandomColor());
 		});
-		LocalLog('game.lastCycle = ', this.lastCycle);
+		LocalLog('game.lastCycle = ');
+		LocalLog(this.lastCycle);
 		this.lastCycle = [];
 	}
 
@@ -2516,8 +2521,7 @@ class InkBallGame {
 			currPointsArr.push(point);//1st starting point
 
 		if (currPointsArr.length > 2 && last !== null) {
-			const first = currPointsArr[0];
-			const first_pos = first.GetPosition();
+			const first_pos = currPointsArr[0].GetPosition();
 			first_pos.x = parseInt(first_pos.x); first_pos.y = parseInt(first_pos.y);
 			last = currPointsArr[currPointsArr.length - 1];
 			const last_pos = last.GetPosition();
@@ -2531,16 +2535,7 @@ class InkBallGame {
 			}
 		}
 
-		const [
-			east,
-			west,
-			north,
-			south,
-			north_west,
-			north_east,
-			south_west,
-			south_east
-		] = await Promise.all([
+		const [east, west, north, south, north_west, north_east, south_west, south_east] = await Promise.all([
 			this.m_Points.get(y * this.m_iGridWidth + x + 1),
 			this.m_Points.get(y * this.m_iGridWidth + x - 1),
 			this.m_Points.get((y - 1) * this.m_iGridWidth + x),
@@ -2573,10 +2568,10 @@ class InkBallGame {
 			currPointsArr.splice(ind/* + 1*/);
 
 			//draw currently constructed cycle path
-			const pts = currPointsArr.map(function (fnd) {
-				const pt = fnd.GetPosition();
-				return `${pt.x},${pt.y}`;
-			}).join(' ');
+			const pts = currPointsArr.map((fnd) => {
+					const pt = fnd.GetPosition();
+					return `${pt.x},${pt.y}`;
+				}).join(' ');
 			if (!this.workingCyclePolyLine)
 				this.workingCyclePolyLine = this.SvgVml.CreatePolyline(this.m_LineStrokeWidth * 2, pts, 'black');
 			else
