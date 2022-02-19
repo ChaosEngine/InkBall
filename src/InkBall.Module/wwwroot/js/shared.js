@@ -401,15 +401,15 @@ class SvgVml {
 			return { iId: id, Color: color, PointsAsString: pts };
 		};
 
-		this.CreateSVGVML = function (contextElement, iWidth, iHeight, antialias, { logicalWidth, logicalHeight }) {
+		this.CreateSVGVML = function (contextElement, iWidth, iHeight, antialias, { iGridWidth, iGridHeight}) {
 			this.cont = documentCreateElementNS_SVG(contextElement);
 			if (iWidth)
 				this.cont.setAttributeNS(null, 'width', iWidth);
 			if (iHeight)
 				this.cont.setAttributeNS(null, 'height', iHeight);
 			if (contextElement) {
-				if (logicalWidth !== undefined && logicalHeight !== undefined)
-					this.cont.setAttribute("viewBox", `0 0 ${logicalWidth} ${logicalHeight}`);
+				if (iGridWidth !== undefined && iGridHeight !== undefined)
+					this.cont.setAttribute("viewBox", `0 0 ${iGridWidth} ${iGridHeight}`);
 
 				this.mathSVGPoint = this.cont.createSVGPoint();
 			}

@@ -400,7 +400,6 @@ class InkBallGame {
 		this.m_iSlowdownLevel = 0;
 		this.m_iGridWidth = 0;
 		this.m_iGridHeight = 0;
-		this.m_BoardSize = { logicalWidth: 0, logicalHeight: 0 };
 		this.m_iGridSpacingX = 0;
 		this.m_iGridSpacingY = 0;
 		this.m_PointRadius = 0;
@@ -1975,7 +1974,7 @@ class InkBallGame {
 
 			worker.postMessage({
 				operation: "BUILD_GRAPH",
-				boardSize: this.m_BoardSize,
+				boardSize: { iGridWidth: this.m_iGridWidth, iGridHeight: this.m_iGridHeight },
 				state: this.GetGameStateForIndexedDb(),
 				points: serialized_points,
 				paths: serialized_paths
@@ -1993,7 +1992,7 @@ class InkBallGame {
 
 			worker.postMessage({
 				operation: "CONCAVEMAN",
-				boardSize: this.m_BoardSize,
+				boardSize: { iGridWidth: this.m_iGridWidth, iGridHeight: this.m_iGridHeight },
 				state: this.GetGameStateForIndexedDb(),
 				points: serialized_points
 			});
@@ -2040,7 +2039,7 @@ class InkBallGame {
 
 			worker.postMessage({
 				operation: "MARK_ALL_CYCLES",
-				boardSize: this.m_BoardSize,
+				boardSize: { iGridWidth: this.m_iGridWidth, iGridHeight: this.m_iGridHeight },
 				state: this.GetGameStateForIndexedDb(),
 				points: serialized_points,
 				paths: serialized_paths,
@@ -2378,21 +2377,19 @@ class InkBallGame {
 		this.m_iPosX = this.m_Screen.offsetLeft;
 		this.m_iPosY = this.m_Screen.offsetTop;
 
-		const boardsize = [...this.m_Screen.classList].find(x => x.startsWith('boardsize')).split('-')[1].split('x');
-		this.m_BoardSize = { logicalWidth: parseInt(boardsize[0]), logicalHeight: parseInt(boardsize[1]) };
-
+		let [iGridWidth, iGridHeight] = [...this.m_Screen.classList].find(x => x.startsWith('boardsize')).split('-')[1].split('x');
+		this.m_iGridWidth = parseInt(iGridWidth);
+		this.m_iGridHeight = parseInt(iGridHeight);
 		let iClientWidth = this.m_Screen.clientWidth;
 		let iClientHeight = this.m_Screen.clientHeight;
 		let svg_width_x_height = null;
 		if (iClientHeight <= 0) { //no styles loaded case, emulating calculation with 16px font size
-			iClientHeight = 16 * this.m_BoardSize.logicalHeight;
+			iClientHeight = 16 * this.m_iGridHeight;
 			this.m_Screen.style.height = iClientHeight + 'px';
 			svg_width_x_height = "100%";
 		}
-		this.m_iGridSpacingX = Math.ceil(iClientWidth / this.m_BoardSize.logicalWidth);
-		this.m_iGridSpacingY = Math.ceil(iClientHeight / this.m_BoardSize.logicalHeight);
-		this.m_iGridWidth = this.m_BoardSize.logicalWidth;
-		this.m_iGridHeight = this.m_BoardSize.logicalHeight;
+		this.m_iGridSpacingX = Math.ceil(iClientWidth / this.m_iGridWidth);
+		this.m_iGridSpacingY = Math.ceil(iClientHeight / this.m_iGridHeight);
 		this.m_PointRadius = (4 / this.m_iGridSpacingX);
 		this.m_LineStrokeWidth = (3 / this.m_iGridSpacingX);
 
@@ -2405,7 +2402,8 @@ class InkBallGame {
 		///////CpuGame variables end//////
 
 		this.SvgVml = new SHRD.SvgVml();
-		if (this.SvgVml.CreateSVGVML(this.m_Screen, svg_width_x_height, svg_width_x_height, true, this.m_BoardSize) === null)
+		if (this.SvgVml.CreateSVGVML(this.m_Screen, svg_width_x_height, svg_width_x_height, true,
+			{ iGridWidth: this.m_iGridWidth, iGridHeight: this.m_iGridHeight }) === null)
 			alert('SVG is not supported!');
 
 		this.DisableSelection(this.m_Screen);
