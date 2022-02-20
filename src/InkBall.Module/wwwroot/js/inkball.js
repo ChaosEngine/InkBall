@@ -1221,13 +1221,11 @@ class InkBallGame {
 	}
 
 	async IsPointOutsideAllPaths(x, y) {
-		const xmul = x, ymul = y;
-
 		const lines = await this.m_Lines.all();//TODO: async for
 		for (const line of lines) {
 			const points = line.GetPointsArray();
 
-			if (false !== pnpoly2(points, xmul, ymul))
+			if (false !== pnpoly2(points, x, y))
 				return false;
 		}
 
@@ -1871,15 +1869,11 @@ class InkBallGame {
 				const points = this.m_Line.GetPointsArray();
 				this.m_CancelPath.disabled = 'disabled';
 				for (const point of points) {
-					let x = point.x, y = point.y;
+					const { x, y } = point;
 					if (x === null || y === null) continue;
-					x = parseInt(x); y = parseInt(y);
 					const p0 = await this.m_Points.get(y * this.m_iGridWidth + x);
 					if (p0 !== undefined) {
 						p0.RevertOldStatus();
-					}
-					else {
-						//debugger;
 					}
 				}
 				this.SvgVml.RemovePolyline(this.m_Line);
@@ -2008,15 +2002,8 @@ class InkBallGame {
 
 			const rand_color = RandomColor();
 			for (const vert of cw_sorted_verts) {
-				//const { x: view_x, y: view_y } = vertices[vert].GetPosition();
-				const { x: x, y: y } = vert;
-				const view_x = x, view_y = y;
-				//const line_pts = Array.from(document.querySelectorAll(`svg > line[x1="${view_x}"][y1="${view_y}"]`))
-				//	.concat(Array.from(document.querySelectorAll(`svg > line[x2="${view_x}"][y2="${view_y}"]`)));
-				//line_pts.forEach(line => {
-				//	line.SetColor(rand_color);
-				//});
-				const pt = document.querySelector(`svg > circle[cx="${view_x}"][cy="${view_y}"]`);
+				const { x, y } = vert;
+				const pt = document.querySelector(`svg > circle[cx="${x}"][cy="${y}"]`);
 				if (pt) {
 					pt.SetStrokeColor(rand_color);
 					pt.SetFillColor(rand_color);
@@ -2055,12 +2042,11 @@ class InkBallGame {
 			for (const pt of data.free_human_player_points) {
 				//if (pt !== undefined && pt.GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.GetStatus()) {
 				const { x, y } = pt;
-				const view_x = x, view_y = y;
 				//	if (false === await this.IsPointOutsideAllPaths(x, y))
 				//		continue;
 
 				//check if really exists
-				const pt1 = document.querySelector(`svg > circle[cx="${view_x}"][cy="${view_y}"]`);
+				const pt1 = document.querySelector(`svg > circle[cx="${x}"][cy="${y}"]`);
 				if (pt1)
 					free_human_player_points.push({ x, y });
 				//}
@@ -2156,8 +2142,7 @@ class InkBallGame {
 		const rand_color = RandomColor();
 		for (const pt of await this.m_Points.values()) {
 			if (pt !== undefined && pt.GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.GetStatus()) {
-				const { x: view_x, y: view_y } = pt.GetPosition();
-				const x = parseInt(view_x), y = parseInt(view_y);
+				const { x, y } = pt.GetPosition();
 				if (false === await this.IsPointOutsideAllPaths(x, y))
 					continue;
 
@@ -2178,7 +2163,7 @@ class InkBallGame {
 				//	//south.GetFillColor() === sCPUColor
 				//) {
 				//visualise
-				const pt1 = document.querySelector(`svg > circle[cx="${view_x}"][cy="${view_y}"]`);
+				const pt1 = document.querySelector(`svg > circle[cx="${x}"][cy="${y}"]`);
 				if (pt1) {
 					pt1.SetStrokeColor(rand_color);
 					pt1.SetFillColor(rand_color);
@@ -2265,11 +2250,12 @@ class InkBallGame {
 		///////CpuGame variables start//////
 		this.rAF_StartTimestamp = null;
 		this.rAF_FrameID = null;
+		this.workingCyclePolyLine = null;
 		this.lastCycle = [];
 		///////CpuGame variables end//////
 
 		this.SvgVml = new SHRD.SvgVml();
-		if (this.SvgVml.CreateSVGVML(this.m_Screen, svg_width_x_height, svg_width_x_height, undefined,
+		if (this.SvgVml.CreateSVGVML(this.m_Screen, svg_width_x_height, svg_width_x_height,
 			{ iGridWidth: this.m_iGridWidth, iGridHeight: this.m_iGridHeight }) === null)
 			alert('SVG is not supported!');
 
@@ -2395,8 +2381,7 @@ class InkBallGame {
 
 		for (const pt of await this.m_Points.values()) {
 			if (pt !== undefined && pt.GetFillColor() === sHumanColor && pt.GetStatus() === StatusEnum.POINT_FREE_RED) {
-				const pos = pt.GetPosition();
-				x = parseInt(pos.x); y = parseInt(pos.y);
+				const { x, y } = pt.GetPosition();
 
 				centroidX += x; centroidY += y;
 				count++;
@@ -2463,8 +2448,7 @@ class InkBallGame {
 				// not parent of current vertex, 
 				// then there is a cycle. 
 				else if (i !== parent) {
-					const { x: view_x, y: view_y } = i.GetPosition();
-					const x = parseInt(view_x), y = parseInt(view_y);
+					const { x, y } = i.GetPosition();
 
 					LocalLog(`cycle found at ${x},${y}`);
 					return true;
@@ -2491,6 +2475,19 @@ class InkBallGame {
 		return false;
 	}
 
+	async DisplayPointsProgressWithDelay(ptsArr, sleepMillisecs = 25) {
+		const pts = ptsArr.map((fnd) => {
+			const pt = fnd.GetPosition();
+			return `${pt.x},${pt.y}`;
+		}).join(' ');
+		if (!this.workingCyclePolyLine)
+			this.workingCyclePolyLine = this.SvgVml.CreatePolyline(this.m_LineStrokeWidth * 2, pts, 'black');
+		else
+			this.workingCyclePolyLine.SetPoints(pts);
+
+		await Sleep(sleepMillisecs);
+	}
+
 	async GroupPointsRecurse(currPointsArr, point) {
 		if (point === undefined || currPointsArr.includes(point)
 			|| currPointsArr.length > 60 || this.lastCycle.length > 3
@@ -2502,14 +2499,12 @@ class InkBallGame {
 			return currPointsArr;
 		}
 
-		let { x, y } = point.GetPosition();
-		x = parseInt(x); y = parseInt(y);
-		let last = null, last_x, last_y;
+		const { x, y } = point.GetPosition();
+		let last = null;
 		if (currPointsArr.length > 0) {
 			last = currPointsArr[currPointsArr.length - 1];
-			const last_pos = last.GetPosition();
-			last_x = parseInt(last_pos.x), last_y = parseInt(last_pos.y);
-			if (Math.abs(parseInt(last_x - x)) <= 1 && Math.abs(parseInt(last_y - y)) <= 1) {
+			const { x: last_x, y: last_y } = last.GetPosition();
+			if (Math.abs(last_x - x) <= 1 && Math.abs(last_y - y) <= 1) {
 				currPointsArr.push(point);//nearby point 1 jump away
 			}
 			else {
@@ -2520,18 +2515,20 @@ class InkBallGame {
 		else
 			currPointsArr.push(point);//1st starting point
 
-		if (currPointsArr.length > 2 && last !== null) {
-			const first_pos = currPointsArr[0].GetPosition();
-			first_pos.x = parseInt(first_pos.x); first_pos.y = parseInt(first_pos.y);
-			last = currPointsArr[currPointsArr.length - 1];
-			const last_pos = last.GetPosition();
-			last_x = parseInt(last_pos.x), last_y = parseInt(last_pos.y);
+		if (currPointsArr.length > 2) {
+			//draw currently constructed cycle path
+			await this.DisplayPointsProgressWithDelay(currPointsArr);
 
-			if (Math.abs(parseInt(last_x - first_pos.x)) <= 1 && Math.abs(parseInt(last_y - first_pos.y)) <= 1
-				&& currPointsArr.length >= 4) {
-				const tmp = currPointsArr.slice(); //copy array in current state
-				tmp.push(currPointsArr[0]);
-				this.lastCycle.push(tmp);
+			if (currPointsArr.length >= 4) {
+				const first_pos = currPointsArr[0].GetPosition();
+				last = currPointsArr[currPointsArr.length - 1];
+				const { x: last_x, y: last_y } = last.GetPosition();
+
+				if (Math.abs(last_x - first_pos.x) <= 1 && Math.abs(last_y - first_pos.y) <= 1) {
+					const tmp = currPointsArr.slice(); //copy array in current state
+					tmp.push(currPointsArr[0]);
+					this.lastCycle.push(tmp);
+				}
 			}
 		}
 
@@ -2567,18 +2564,13 @@ class InkBallGame {
 		if (ind !== -1) {
 			currPointsArr.splice(ind/* + 1*/);
 
-			//draw currently constructed cycle path
-			const pts = currPointsArr.map((fnd) => {
-					const pt = fnd.GetPosition();
-					return `${pt.x},${pt.y}`;
-				}).join(' ');
-			if (!this.workingCyclePolyLine)
-				this.workingCyclePolyLine = this.SvgVml.CreatePolyline(this.m_LineStrokeWidth * 2, pts, 'black');
-			else
-				this.workingCyclePolyLine.SetPoints(pts);
-
-			await Sleep(25);
+			if (currPointsArr.length >= 2) {
+				//draw currently constructed cycle path
+				await this.DisplayPointsProgressWithDelay(currPointsArr);
+			}
 		}
+		//all is lost. nothing found. record this path and make sure
+		//no other traversal nver repeat those blind travers again
 		return currPointsArr;
 	}
 

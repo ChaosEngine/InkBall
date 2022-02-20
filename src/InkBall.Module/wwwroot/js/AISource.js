@@ -7,12 +7,12 @@ import { StatusEnum, LocalLog, sortPointsClockwise, /*Sleep,*/ pnpoly2 } from ".
  * AI operations class
  * */
 class GraphAI {
-	constructor(iGridWidth, iGridHeight, pointStore, POINT_STARTING, POINT_IN_PATH) {
+	constructor(iGridWidth, iGridHeight, pointStore) {
 		this.m_iGridWidth = iGridWidth;
 		this.m_iGridHeight = iGridHeight;
 		this.m_Points = pointStore;
-		this.POINT_STARTING = POINT_STARTING;
-		this.POINT_IN_PATH = POINT_IN_PATH;
+		this.POINT_STARTING = StatusEnum.POINT_STARTING;
+		this.POINT_IN_PATH = StatusEnum.POINT_IN_PATH;
 	}
 
 	/**
@@ -36,13 +36,11 @@ class GraphAI {
 			return false;
 		};
 
-		const addPointsAndEdgestoGraph = async function (point, to_x, to_y, view_x, view_y, x, y) {
+		const addPointsAndEdgestoGraph = async function (point, to_x, to_y, x, y) {
 			if (to_x >= 0 && to_x < this.m_iGridWidth && to_y >= 0 && to_y < this.m_iGridHeight) {
 				const next = await this.m_Points.get(to_y * this.m_iGridWidth + to_x);
 				if (next && isPointOKForPath([freePointStatus], next) === true) {
-					//const next_pos = next.GetPosition();
 
-					//const to_x = next_pos.x, to_y = next_pos.y;
 					if (graph_edges.has(`${x},${y}_${to_x},${to_y}`) === false && graph_edges.has(`${to_x},${to_y}_${x},${y}`) === false) {
 
 						const edge = {
@@ -51,7 +49,7 @@ class GraphAI {
 						};
 						//if (presentVisually === true) {
 						//	const line = CreateLine(3, 'rgba(0, 255, 0, 0.3)');
-						//	line.move(view_x, view_y, next_pos.x, next_pos.y);
+						//	line.move(x, y, next_pos.x, next_pos.y);
 						//	edge.line = line;
 						//}
 						graph_edges.set(`${x},${y}_${to_x},${to_y}`, edge);
@@ -78,25 +76,24 @@ class GraphAI {
 
 		for (const point of await this.m_Points.values()) {
 			if (point && isPointOKForPath([freePointStatus, this.POINT_STARTING, this.POINT_IN_PATH], point) === true) {
-				const { x: view_x, y: view_y } = point.GetPosition();
-				const x = parseInt(view_x), y = parseInt(view_y);
+				const { x, y } = point.GetPosition();
 				//TODO: await all below promises
 				//east
-				await addPointsAndEdgestoGraph(point, x + 1, y, view_x, view_y, x, y);
+				await addPointsAndEdgestoGraph(point, x + 1, y, x, y);
 				//west
-				await addPointsAndEdgestoGraph(point, x - 1, y, view_x, view_y, x, y);
+				await addPointsAndEdgestoGraph(point, x - 1, y, x, y);
 				//north
-				await addPointsAndEdgestoGraph(point, x, (y - 1), view_x, view_y, x, y);
+				await addPointsAndEdgestoGraph(point, x, (y - 1), x, y);
 				//south
-				await addPointsAndEdgestoGraph(point, x, (y + 1), view_x, view_y, x, y);
+				await addPointsAndEdgestoGraph(point, x, (y + 1), x, y);
 				//north_west
-				await addPointsAndEdgestoGraph(point, x - 1, (y - 1), view_x, view_y, x, y);
+				await addPointsAndEdgestoGraph(point, x - 1, (y - 1), x, y);
 				//north_east
-				await addPointsAndEdgestoGraph(point, x + 1, (y - 1), view_x, view_y, x, y);
+				await addPointsAndEdgestoGraph(point, x + 1, (y - 1), x, y);
 				//south_west
-				await addPointsAndEdgestoGraph(point, x - 1, (y + 1), view_x, view_y, x, y);
+				await addPointsAndEdgestoGraph(point, x - 1, (y + 1), x, y);
 				//south_east
-				await addPointsAndEdgestoGraph(point, x + 1, (y + 1), view_x, view_y, x, y);
+				await addPointsAndEdgestoGraph(point, x + 1, (y + 1), x, y);
 			}
 		}
 		//return graph
@@ -104,13 +101,10 @@ class GraphAI {
 	}
 
 	async IsPointOutsideAllPaths(lines, x, y) {
-		const xmul = x, ymul = y;
-
-		//const lines = await linesStore.all();//TODO: async for
 		for (const line of lines) {
 			const points = line.GetPointsArray();
 
-			if (false !== pnpoly2(points, xmul, ymul))
+			if (false !== pnpoly2(points, x, y))
 				return false;
 		}
 
@@ -210,13 +204,12 @@ class GraphAI {
 			const sHumanColor = COLOR_RED;
 			for (const pt of await this.m_Points.values()) {
 				if (pt !== undefined && pt.GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.GetStatus()) {
-					const { x: view_x, y: view_y } = pt.GetPosition();
-					const x = parseInt(view_x), y = parseInt(view_y);
+					const { x, y } = pt.GetPosition();
 					if (false === await this.IsPointOutsideAllPaths(lines, x, y))
 						continue;
 
 					//check if really exists
-					//const pt1 = document.querySelector(`svg > circle[cx="${view_x}"][cy="${view_y}"]`);
+					//const pt1 = document.querySelector(`svg > circle[cx="${x}"][cy="${y}"]`);
 					//if (pt1)
 					free_human_player_points.push({ x, y });
 				}
@@ -234,8 +227,7 @@ class GraphAI {
 
 					//convert to logical space
 					const mapped_verts = cycl.map(function (c) {
-						const pt = vertices[c].GetPosition();
-						return { x: parseInt(pt.x), y: parseInt(pt.y) };
+						return vertices[c].GetPosition();
 					}.bind(this));
 					//sort clockwise (https://stackoverflow.com/questions/45660743/sort-points-in-counter-clockwise-in-javascript)
 					const cw_sorted_verts = sortPointsClockwise(mapped_verts);

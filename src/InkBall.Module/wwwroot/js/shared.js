@@ -280,15 +280,15 @@ class SvgVml {
 			};
 		}
 
-		SVGCircleElement.prototype.move = function (x1, y1, radius) {
-			this.setAttribute("cx", x1);
-			this.setAttribute("cy", y1);
+		SVGCircleElement.prototype.move = function (x, y, radius) {
+			this.setAttribute("cx", x);
+			this.setAttribute("cy", y);
 			this.setAttribute("r", /* Math.round */(radius));
 		};
 		SVGCircleElement.prototype.GetStrokeColor = function () { return this.getAttribute("stroke"); };
 		SVGCircleElement.prototype.SetStrokeColor = function (col) { this.setAttribute("stroke", col); };
 		SVGCircleElement.prototype.GetPosition = function () {
-			return { x: this.getAttribute("cx"), y: this.getAttribute("cy") };
+			return { x: parseInt(this.getAttribute("cx")), y: parseInt(this.getAttribute("cy")) };
 		};
 		SVGCircleElement.prototype.GetFillColor = function () { return this.getAttribute("fill"); };
 		SVGCircleElement.prototype.SetFillColor = function (col) { this.setAttribute("fill", col); };
@@ -322,9 +322,9 @@ class SvgVml {
 		SVGCircleElement.prototype.strokeWeight = function (sw) { this.setAttribute("stroke-width", sw); };
 		SVGCircleElement.prototype.Serialize = function () {
 			const { x, y } = this.GetPosition();
-			const status = this.GetStatus();
-			const color = this.GetFillColor();
-			return { x: x, y: y, Status: status, Color: color };
+			const Status = this.GetStatus();
+			const Color = this.GetFillColor();
+			return { x, y, Status, Color };
 		};
 
 		SVGLineElement.prototype.move = function (x1, y1, x2, y2) {
@@ -333,7 +333,9 @@ class SvgVml {
 			this.setAttribute("x2", x2);
 			this.setAttribute("y2", y2);
 		};
-		SVGLineElement.prototype.RGBcolor = function (R, G, B) { this.setAttribute("stroke", "rgb(" + Math.round(R) + "," + Math.round(G) + "," + Math.round(B) + ")"); };
+		SVGLineElement.prototype.RGBcolor = function (r, g, b) {
+			this.setAttribute("stroke", `rgb(${Math.round(r)},${Math.round(g)},${Math.round(b)})`);
+		};
 		SVGLineElement.prototype.SetColor = function (color) { this.setAttribute("stroke", color); };
 		SVGLineElement.prototype.strokeWidth = function (sw) { this.setAttribute("stroke-width", /* Math.round */(sw) + "px"); };
 
@@ -401,7 +403,7 @@ class SvgVml {
 			return { iId: id, Color: color, PointsAsString: pts };
 		};
 
-		this.CreateSVGVML = function (contextElement, iWidth, iHeight, antialias, { iGridWidth, iGridHeight }) {
+		this.CreateSVGVML = function (contextElement, iWidth, iHeight, { iGridWidth, iGridHeight }, antialias) {
 			this.cont = documentCreateElementNS_SVG(contextElement);
 			if (iWidth)
 				this.cont.setAttributeNS(null, 'width', iWidth);
@@ -639,8 +641,8 @@ class GameStateStore {
 				const pos = oval.GetPosition();
 				const color = oval.GetFillColor();
 				const idb_pt = {
-					x: parseInt(pos.x),
-					y: parseInt(pos.y),
+					x: pos.x,
+					y: pos.y,
 					Status: oval.GetStatus(),
 					Color: color
 				};
