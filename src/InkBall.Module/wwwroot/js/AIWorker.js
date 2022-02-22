@@ -6,13 +6,13 @@ import { SvgVml, StatusEnum, LocalLog, LocalError, sortPointsClockwise } from ".
 addEventListener('message', async function (e) {
 	const params = e.data;
 
+	const svgVml = new SvgVml();
+	svgVml.CreateSVGVML(null, null, null, params.boardSize);
+
 	switch (params.operation) {
 		case "BUILD_GRAPH":
 			{
 				//debugger;
-				const svgVml = new SvgVml();
-				svgVml.CreateSVGVML(null, null, null, params.boardSize);
-
 				const lines = params.paths.map(pa => svgVml.DeserializePolyline(pa));
 				const points = new Map();
 				params.points.forEach((pt) => {
@@ -31,9 +31,6 @@ addEventListener('message', async function (e) {
 
 		case "CONCAVEMAN":
 			{
-				const svgVml = new SvgVml();
-				svgVml.CreateSVGVML(null, null, null, params.boardSize);
-
 				const points = new Map();
 				params.points.forEach((pt) => {
 					points.set(pt.key, svgVml.DeserializeOval(pt.value));
@@ -57,9 +54,6 @@ addEventListener('message', async function (e) {
 
 		case "MARK_ALL_CYCLES":
 			{
-				const svgVml = new SvgVml();
-				svgVml.CreateSVGVML(null, null, null, params.boardSize);
-
 				const lines = params.paths.map(pa => svgVml.DeserializePolyline(pa));
 				const points = new Map();
 				params.points.forEach((pt) => {

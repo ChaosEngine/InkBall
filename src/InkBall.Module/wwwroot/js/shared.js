@@ -17,40 +17,40 @@ const StatusEnum = Object.freeze({
 function StatusEnumToString(enumVal) {
 	switch (enumVal) {
 		case StatusEnum.POINT_FREE_RED:
-			return "POINT_FREE_RED";
+			return Object.keys(StatusEnum)[0];
 		case StatusEnum.POINT_FREE_BLUE:
-			return "POINT_FREE_BLUE";
+			return Object.keys(StatusEnum)[1];
 		case StatusEnum.POINT_FREE:
-			return "POINT_FREE";
+			return Object.keys(StatusEnum)[2];
 		case StatusEnum.POINT_STARTING:
-			return "POINT_STARTING";
+			return Object.keys(StatusEnum)[3];
 		case StatusEnum.POINT_IN_PATH:
-			return "POINT_IN_PATH";
+			return Object.keys(StatusEnum)[4];
 		case StatusEnum.POINT_OWNED_BY_RED:
-			return "POINT_OWNED_BY_RED";
+			return Object.keys(StatusEnum)[5];
 		case StatusEnum.POINT_OWNED_BY_BLUE:
-			return "POINT_OWNED_BY_BLUE";
+			return Object.keys(StatusEnum)[6];
 
 		default:
 			throw new Error('bad status enum value');
 	}
 }
 
-function StringToStatusEnum(str) {
-	switch (str.toUpperCase()) {
-		case "POINT_FREE_RED":
+function StringToStatusEnum(enumStr) {
+	switch (enumStr.toUpperCase()) {
+		case Object.keys(StatusEnum)[0]:
 			return StatusEnum.POINT_FREE_RED;
-		case "POINT_FREE_BLUE":
+		case Object.keys(StatusEnum)[1]:
 			return StatusEnum.POINT_FREE_BLUE;
-		case "POINT_FREE":
+		case Object.keys(StatusEnum)[2]:
 			return StatusEnum.POINT_FREE;
-		case "POINT_STARTING":
+		case Object.keys(StatusEnum)[3]:
 			return StatusEnum.POINT_STARTING;
-		case "POINT_IN_PATH":
+		case Object.keys(StatusEnum)[4]:
 			return StatusEnum.POINT_IN_PATH;
-		case "POINT_OWNED_BY_RED":
+		case Object.keys(StatusEnum)[5]:
 			return StatusEnum.POINT_OWNED_BY_RED;
-		case "POINT_OWNED_BY_BLUE":
+		case Object.keys(StatusEnum)[6]:
 			return StatusEnum.POINT_OWNED_BY_BLUE;
 
 		default:
@@ -283,7 +283,7 @@ class SvgVml {
 		SVGCircleElement.prototype.move = function (x, y, radius) {
 			this.setAttribute("cx", x);
 			this.setAttribute("cy", y);
-			this.setAttribute("r", /* Math.round */(radius));
+			this.setAttribute("r", radius);
 		};
 		SVGCircleElement.prototype.GetStrokeColor = function () { return this.getAttribute("stroke"); };
 		SVGCircleElement.prototype.SetStrokeColor = function (col) { this.setAttribute("stroke", col); };
@@ -337,7 +337,7 @@ class SvgVml {
 			this.setAttribute("stroke", `rgb(${Math.round(r)},${Math.round(g)},${Math.round(b)})`);
 		};
 		SVGLineElement.prototype.SetColor = function (color) { this.setAttribute("stroke", color); };
-		SVGLineElement.prototype.strokeWidth = function (sw) { this.setAttribute("stroke-width", /* Math.round */(sw) + "px"); };
+		SVGLineElement.prototype.strokeWidth = function (sw) { this.setAttribute("stroke-width", sw + "px"); };
 
 		SVGPolylineElement.prototype.AppendPoints = function (x, y, diffX = 1, diffY = 1) {
 			const pts_str = this.getAttribute("points");
@@ -391,7 +391,7 @@ class SvgVml {
 		SVGPolylineElement.prototype.SetWidthAndColor = function (sw, col) {
 			this.setAttribute("stroke", col);
 			this.setAttribute("fill", col);
-			this.setAttribute("stroke-width", /* Math.round */(sw));
+			this.setAttribute("stroke-width", sw);
 		};
 		SVGPolylineElement.prototype.GetID = function () { return parseInt(this.getAttribute("data-id")); };
 		SVGPolylineElement.prototype.SetID = function (iID) { this.setAttribute("data-id", iID); };
@@ -423,7 +423,7 @@ class SvgVml {
 			const o = documentCreateElementNS_Element("line");
 			if (svgAntialias !== undefined)
 				o.setAttribute("shape-rendering", svgAntialias === true ? "auto" : "optimizeSpeed");
-			o.setAttribute("stroke-width", /* Math.round */(w) + "px");
+			o.setAttribute("stroke-width", w + "px");
 			if (col) o.setAttribute("stroke", col);
 			if (linecap) o.setAttribute("stroke-linecap", linecap);
 
@@ -434,7 +434,7 @@ class SvgVml {
 			const o = documentCreateElementNS_Element("polyline");
 			if (svgAntialias !== undefined)
 				o.setAttribute("shape-rendering", svgAntialias === true ? "auto" : "optimizeSpeed");
-			o.setAttribute("stroke-width", /* Math.round */(width));
+			o.setAttribute("stroke-width", width);
 			if (col) o.setAttribute("stroke", col);
 			o.setAttribute("fill", col);
 			o.setAttribute("fill-opacity", "0.1");
@@ -451,7 +451,7 @@ class SvgVml {
 			if (svgAntialias !== undefined)
 				o.setAttribute("shape-rendering", svgAntialias === true ? "auto" : "optimizeSpeed");
 			o.setAttribute("stroke-width", 0);
-			o.setAttribute("r", /* Math.round */(diam / 2));
+			o.setAttribute("r", diam / 2);
 			//ch_commented o.style.cursor = "pointer";
 			o.setAttribute("data-status", StatusEnumToString(StatusEnum.POINT_FREE));
 			//o.setAttribute("data-old-status", StatusEnumToString(StatusEnum.POINT_FREE));
