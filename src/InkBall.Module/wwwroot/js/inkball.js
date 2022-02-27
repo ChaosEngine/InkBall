@@ -1,6 +1,7 @@
 /*eslint no-unused-vars: ["error", { "varsIgnorePattern": "InkBallGame" }]*/
 /*global signalR*/
 "use strict";
+import depthFirstSearch from "./depthFirstSearch.js";
 
 let SHRD, LocalLog, LocalError, StatusEnum, hasDuplicates, pnpoly2, sortPointsClockwise, Sleep;
 
@@ -2188,6 +2189,11 @@ class InkBallGame {
 		}
 	}
 
+	async OnTestDFS2(event) {
+		event.preventDefault();
+		await this.DFS2(await this.BuildGraph(), this.COLOR_RED);
+	}
+
 	/**
 	 * Start drawing routines
 	 * @param {HTMLElement} sScreen screen dontainer selector
@@ -2317,6 +2323,8 @@ class InkBallGame {
 					document.querySelector(ddlTestActions[i++]).onclick = this.OnTestGroupPoints.bind(this);
 				if (ddlTestActions.length > i)
 					document.querySelector(ddlTestActions[i++]).onclick = this.OnTestFindSurroundablePoints.bind(this);
+				if (ddlTestActions.length > i)
+					document.querySelector(ddlTestActions[i++]).onclick = this.OnTestDFS2.bind(this);
 
 				//disable or even delete chat functionality, coz we're not going to chat with CPU bot
 				//const chatSection = document.querySelector(this.m_sMsgListSel).parentElement;
@@ -2571,7 +2579,16 @@ class InkBallGame {
 			}
 		}
 		//return graph
-		return { vertices: graph_points, edges: Array.from(graph_edges.values()) };
+		return {
+			vertices: graph_points,
+			edges: Array.from(graph_edges.values()),
+			getNeighbors: function (vert) {
+				const found = this.vertices.find(v => v === vert);
+				if (found)
+					return found.adjacents;
+				return null;
+			}
+		};
 	}
 
 	/**
@@ -2622,7 +2639,7 @@ class InkBallGame {
 			if (vertex) {
 
 
-				const {x, y} = vertex.GetPosition();
+				const { x, y } = vertex.GetPosition();
 				const vis_v = await this.m_Points.get(y * this.m_iGridWidth + x);
 				vis_v.SetStrokeColor('black');
 				vis_v.SetFillColor('black');
@@ -2751,6 +2768,25 @@ class InkBallGame {
 
 		// function to print the cycles
 		return await printCycles(edges, mark);
+	}
+
+	async DFS2(graph, sHumanColor) {
+		const enterVertex = () => {
+		};
+		const leaveVertex = () => {
+		};
+		const showCycle = async (lastSeen, _nextVertex) => {
+			lastSeen = Object.values(lastSeen);
+			lastSeen.forEach(p => {
+				const { x, y } = p.GetPosition();
+				p.x = x; p.y = y;
+			});
+			const cw_sorted_verts = sortPointsClockwise(lastSeen);
+
+			await this.DisplayPointsProgressWithDelay(cw_sorted_verts, 250);
+		};
+
+		await depthFirstSearch(graph, graph.vertices[0], { enterVertex, leaveVertex, showCycle });
 	}
 
 	async DisplayPointsProgressWithDelay(ptsArr, sleepMillisecs = 25) {
@@ -2943,7 +2979,7 @@ window.addEventListener('load', async function () {
 	);
 	await game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw',
 		'#messageInput', '#messagesList', '#sendButton', sLastMoveTimeStampUtcIso, gameOptions.PointsAsJavaScriptArray === null, version,
-		['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints', '#TestFindSurroundablePoints', '#TestWorkerify']);
+		['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints', '#TestFindSurroundablePoints', '#TestDFS2']);
 
 	if (gameOptions.PointsAsJavaScriptArray !== null) {
 		await game.StartSignalRConnection(false);

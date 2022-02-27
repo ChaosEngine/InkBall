@@ -140,8 +140,6 @@ async function Sleep(ms) {
  * @returns {array} of points
  */
 function sortPointsClockwise(points) {
-	//Modern
-
 	// Get the center (mean value) using reduce
 	const center = points.reduce((acc, { x, y }) => {
 		acc.x += x;
@@ -152,12 +150,13 @@ function sortPointsClockwise(points) {
 	center.y /= points.length;
 
 	// Add an angle property to each point using tan(angle) = y/x
-	const angles = points.map(({ x, y }) => {
-		return { x, y, angle: Math.atan2(y - center.y, x - center.x) * 180 / Math.PI };
+	const added_angles = points.map(p => {
+		p.angle = Math.atan2(p.y - center.y, p.x - center.x) * 180 / Math.PI;
+		return p;
 	});
 
 	// Sort your points by angle
-	const pointsSorted = angles.sort((a, b) => a.angle - b.angle);
+	const pointsSorted = added_angles.sort((a, b) => a.angle - b.angle);
 	return pointsSorted;
 }
 
