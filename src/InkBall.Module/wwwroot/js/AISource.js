@@ -115,11 +115,11 @@ class GraphAI {
 	 * Based on https://www.geeksforgeeks.org/print-all-the-cycles-in-an-undirected-graph/
 	 * @param {any} graph constructed earlier with BuildGraph
 	 * @param {string} COLOR_BLUE - cpu blue playing color
-	 * @param {string} COLOR_RED - human red playing color
+	 * @param {string} sHumanColor - human red playing color
 	 * @param {object} lines - line array
 	 * @returns {array} of cycles
 	 */
-	async MarkAllCycles(graph, COLOR_BLUE, COLOR_RED, lines) {
+	async MarkAllCycles(graph, COLOR_BLUE, sHumanColor, lines) {
 		const vertices = graph.vertices;
 		const N = vertices.length;
 		let cycles = new Array(N);
@@ -159,8 +159,8 @@ class GraphAI {
 			color[u] = 1;
 			const vertex = vertices[u];
 			if (vertex) {
-
-
+				
+				//const x = vertex.attributes.get('cx'), y = vertex.attributes.get('cy');
 				//vertex.SetStrokeColor('black');
 				//vertex.SetFillColor('black');
 				////vertex.setAttribute("r", "6");
@@ -201,7 +201,6 @@ class GraphAI {
 
 			//gather free human player points that could be intercepted.
 			const free_human_player_points = [];
-			const sHumanColor = COLOR_RED;
 			for (const pt of await this.m_Points.values()) {
 				if (pt !== undefined && pt.GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.GetStatus()) {
 					const { x, y } = pt.GetPosition();

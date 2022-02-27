@@ -2,7 +2,7 @@
 /*global signalR*/
 "use strict";
 
-let SHRD, LocalLog, LocalError, StatusEnum, hasDuplicates, pnpoly2, Sleep;
+let SHRD, LocalLog, LocalError, StatusEnum, hasDuplicates, pnpoly2, sortPointsClockwise, Sleep;
 
 /******** funcs-n-classes ********/
 const CommandKindEnum = Object.freeze({
@@ -319,7 +319,8 @@ async function importAllModulesAsync(/*gameOptions*/) {
 	else
 		SHRD = await import(/* webpackChunkName: "shared" */'./shared.js');
 	LocalLog = SHRD.LocalLog, LocalError = SHRD.LocalError, StatusEnum = SHRD.StatusEnum,
-		hasDuplicates = SHRD.hasDuplicates, pnpoly2 = SHRD.pnpoly2, Sleep = SHRD.Sleep;
+		hasDuplicates = SHRD.hasDuplicates, pnpoly2 = SHRD.pnpoly2, sortPointsClockwise = SHRD.sortPointsClockwise,
+		Sleep = SHRD.Sleep;
 
 	//for CPU game enable AI libs and calculations
 	//if (gameOptions.iOtherPlayerID === -1) {
@@ -2017,98 +2018,111 @@ class InkBallGame {
 
 	async OnTestMarkAllCycles(event) {
 		event.preventDefault();
-		//LocalLog(await this.MarkAllCycles(await this.BuildGraph({ visuals: true })));
+		// const data = await this.RunAIWorker((worker) => {
+		// 	const serialized_points = Array.from(this.m_Points.store.entries()).map(([key, value]) => ({ key, value: value.Serialize() }));
+		// 	const serialized_paths = this.m_Lines.store.map(pa => pa.Serialize());
 
-		const data = await this.RunAIWorker((worker) => {
-			const serialized_points = Array.from(this.m_Points.store.entries()).map(([key, value]) =>
-				({ key, value: value.Serialize() }));
-			const serialized_paths = this.m_Lines.store.map(pa => pa.Serialize());
+		// 	worker.postMessage({
+		// 		operation: "BUILD_GRAPH",
+		// 		boardSize: { iGridWidth: this.m_iGridWidth, iGridHeight: this.m_iGridHeight },
+		// 		state: this.GetGameStateForIndexedDb(),
+		// 		points: serialized_points,
+		// 		paths: serialized_paths
+		// 	});
+		// });
 
-			worker.postMessage({
-				operation: "MARK_ALL_CYCLES",
-				boardSize: { iGridWidth: this.m_iGridWidth, iGridHeight: this.m_iGridHeight },
-				state: this.GetGameStateForIndexedDb(),
-				points: serialized_points,
-				paths: serialized_paths,
-				colorRed: this.COLOR_RED,
-				colorBlue: this.COLOR_BLUE
-			});
-		});
+		LocalLog(await this.MarkAllCycles(await this.BuildGraph(), this.COLOR_RED));
 
-		if (data.cycles && data.free_human_player_points && data.free_human_player_points.length > 0) {
-			//gather free human player points that could be intercepted.
-			const free_human_player_points = [];
-			//const sHumanColor = this.COLOR_RED;
-			for (const pt of data.free_human_player_points) {
-				//if (pt !== undefined && pt.GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.GetStatus()) {
-				const { x, y } = pt;
-				//	if (false === await this.IsPointOutsideAllPaths(x, y))
-				//		continue;
+		// const data = await this.RunAIWorker((worker) => {
+		// 	const serialized_points = Array.from(this.m_Points.store.entries()).map(([key, value]) =>
+		// 		({ key, value: value.Serialize() }));
+		// 	const serialized_paths = this.m_Lines.store.map(pa => pa.Serialize());
 
-				//check if really exists
-				const pt1 = document.querySelector(`svg > circle[cx="${x}"][cy="${y}"]`);
-				if (pt1)
-					free_human_player_points.push({ x, y });
-				//}
-			}
+		// 	worker.postMessage({
+		// 		operation: "MARK_ALL_CYCLES",
+		// 		boardSize: { iGridWidth: this.m_iGridWidth, iGridHeight: this.m_iGridHeight },
+		// 		state: this.GetGameStateForIndexedDb(),
+		// 		points: serialized_points,
+		// 		paths: serialized_paths,
+		// 		colorRed: this.COLOR_RED,
+		// 		colorBlue: this.COLOR_BLUE
+		// 	});
+		// });
+
+		// if (data.cycles && data.free_human_player_points && data.free_human_player_points.length > 0) {
+		// 	//gather free human player points that could be intercepted.
+		// 	const free_human_player_points = [];
+		// 	//const sHumanColor = this.COLOR_RED;
+		// 	for (const pt of data.free_human_player_points) {
+		// 		//if (pt !== undefined && pt.GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.GetStatus()) {
+		// 		const { x, y } = pt;
+		// 		//	if (false === await this.IsPointOutsideAllPaths(x, y))
+		// 		//		continue;
+
+		// 		//check if really exists
+		// 		const pt1 = document.querySelector(`svg > circle[cx="${x}"][cy="${y}"]`);
+		// 		if (pt1)
+		// 			free_human_player_points.push({ x, y });
+		// 		//}
+		// 	}
 
 
-			const tab = [];
-			// traverse through all the vertices with same cycle
-			for (let i = 0; i <= data.cyclenumber; i++) {
-				const new_cycl = data.cycles[i];//get cycle
-				if (new_cycl && new_cycl.cycl && new_cycl.cycl.length > 0 && new_cycl.cw_sorted_verts) {	//some checks
-					// Print the i-th cycle
-					let str = (`Cycle Number ${i}: `), trailing_points = [];
-					const rand_color = 'var(--bs-teal)';
+		// 	const tab = [];
+		// 	// traverse through all the vertices with same cycle
+		// 	for (let i = 0; i <= data.cyclenumber; i++) {
+		// 		const new_cycl = data.cycles[i];//get cycle
+		// 		if (new_cycl && new_cycl.cycl && new_cycl.cycl.length > 0 && new_cycl.cw_sorted_verts) {	//some checks
+		// 			// Print the i-th cycle
+		// 			let str = (`Cycle Number ${i}: `), trailing_points = [];
+		// 			const rand_color = 'var(--bs-teal)';
 
-					const cw_sorted_verts = new_cycl.cw_sorted_verts;
+		// 			const cw_sorted_verts = new_cycl.cw_sorted_verts;
 
-					//display which cycle we are dealing with
-					for (const vert of cw_sorted_verts) {
-						const { x, y } = vert;
-						const pt = document.querySelector(`svg > circle[cx="${x}"][cy="${y}"]`);
-						if (pt) {//again some basic checks
-							str += (`(${x},${y})`);
+		// 			//display which cycle we are dealing with
+		// 			for (const vert of cw_sorted_verts) {
+		// 				const { x, y } = vert;
+		// 				const pt = document.querySelector(`svg > circle[cx="${x}"][cy="${y}"]`);
+		// 				if (pt) {//again some basic checks
+		// 					str += (`(${x},${y})`);
 
-							pt.SetStrokeColor(rand_color);
-							pt.SetFillColor(rand_color);
-							pt.setAttribute("r", 6 / this.m_iGridSpacingX);
-						}
-						await Sleep(50);
-					}
+		// 					pt.SetStrokeColor(rand_color);
+		// 					pt.SetFillColor(rand_color);
+		// 					pt.setAttribute("r", 6 / this.m_iGridSpacingX);
+		// 				}
+		// 				await Sleep(50);
+		// 			}
 
-					//find for all free_human_player_points which cycle might interepct it (surrounds)
-					//only convex, NOT concave :-(
-					let tmp = '', comma = '';
-					for (const possible_intercept of free_human_player_points) {
-						if (false !== pnpoly2(cw_sorted_verts, possible_intercept.x, possible_intercept.y)) {
-							tmp += `${comma}(${possible_intercept.x},${possible_intercept.y})`;
+		// 			//find for all free_human_player_points which cycle might interepct it (surrounds)
+		// 			//only convex, NOT concave :-(
+		// 			let tmp = '', comma = '';
+		// 			for (const possible_intercept of free_human_player_points) {
+		// 				if (false !== pnpoly2(cw_sorted_verts, possible_intercept.x, possible_intercept.y)) {
+		// 					tmp += `${comma}(${possible_intercept.x},${possible_intercept.y})`;
 
-							const pt1 = document.querySelector(`svg > circle[cx="${possible_intercept.x}"][cy="${possible_intercept.y}"]`);
-							if (pt1) {
-								pt1.SetStrokeColor('var(--bs-yellow)');
-								pt1.SetFillColor('var(--bs-yellow)');
-								pt1.setAttribute("r", 6 / this.m_iGridSpacingX);
-							}
-							comma = ',';
-						}
-					}
-					//gaterhing of some data and console printing
-					trailing_points.unshift(str);
-					tab.push(trailing_points);
-					//log...
-					LocalLog(str + (tmp !== '' ? ` possible intercepts: ${tmp}` : ''));
-					//...and clear
-					const pts2reset = Array.from(document.querySelectorAll(`svg > circle[fill="${rand_color}"][r="${this.m_LineStrokeWidth * 2}"]`));
-					pts2reset.forEach(pt => {
-						pt.SetStrokeColor(this.COLOR_BLUE);
-						pt.SetFillColor(this.COLOR_BLUE);
-						pt.setAttribute("r", 6 / this.m_iGridSpacingX);
-					});
-				}
-			}
-		}
+		// 					const pt1 = document.querySelector(`svg > circle[cx="${possible_intercept.x}"][cy="${possible_intercept.y}"]`);
+		// 					if (pt1) {
+		// 						pt1.SetStrokeColor('var(--bs-yellow)');
+		// 						pt1.SetFillColor('var(--bs-yellow)');
+		// 						pt1.setAttribute("r", 6 / this.m_iGridSpacingX);
+		// 					}
+		// 					comma = ',';
+		// 				}
+		// 			}
+		// 			//gaterhing of some data and console printing
+		// 			trailing_points.unshift(str);
+		// 			tab.push(trailing_points);
+		// 			//log...
+		// 			LocalLog(str + (tmp !== '' ? ` possible intercepts: ${tmp}` : ''));
+		// 			//...and clear
+		// 			const pts2reset = Array.from(document.querySelectorAll(`svg > circle[fill="${rand_color}"][r="${this.m_LineStrokeWidth * 2}"]`));
+		// 			pts2reset.forEach(pt => {
+		// 				pt.SetStrokeColor(this.COLOR_BLUE);
+		// 				pt.SetFillColor(this.COLOR_BLUE);
+		// 				pt.setAttribute("r", 6 / this.m_iGridSpacingX);
+		// 			});
+		// 		}
+		// 	}
+		// }
 	}
 
 	async OnTestGroupPoints(event) {
@@ -2473,6 +2487,270 @@ class InkBallGame {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Building graph of connected vertices and edges
+	 * @param {any} param0 is a optional object comprised of:
+	 *	freePointStatus - status of free point
+	 *	cpuFillColor - CPU point color
+	 */
+	async BuildGraph({
+		freePointStatus = StatusEnum.POINT_FREE_BLUE,
+		cpufillCol: cpuFillColor = 'blue'
+		//, visuals: presentVisually = false
+	} = {}) {
+		const graph_points = [], graph_edges = new Map();
+
+		const isPointOKForPath = function (freePointStatusArr, pt) {
+			const status = pt.GetStatus();
+
+			if (freePointStatusArr.includes(status) && pt.GetFillColor() === cpuFillColor)
+				return true;
+			return false;
+		};
+
+		const addPointsAndEdgestoGraph = async function (point, to_x, to_y, x, y) {
+			if (to_x >= 0 && to_x < this.m_iGridWidth && to_y >= 0 && to_y < this.m_iGridHeight) {
+				const next = await this.m_Points.get(to_y * this.m_iGridWidth + to_x);
+				if (next && isPointOKForPath([freePointStatus], next) === true) {
+
+					if (graph_edges.has(`${x},${y}_${to_x},${to_y}`) === false && graph_edges.has(`${to_x},${to_y}_${x},${y}`) === false) {
+
+						const edge = {
+							from: point,
+							to: next
+						};
+						//if (presentVisually === true) {
+						//	const line = CreateLine(3, 'rgba(0, 255, 0, 0.3)');
+						//	line.move(x, y, next_pos.x, next_pos.y);
+						//	edge.line = line;
+						//}
+						graph_edges.set(`${x},${y}_${to_x},${to_y}`, edge);
+
+
+						if (graph_points.includes(point) === false) {
+							point.adjacents = [next];
+							graph_points.push(point);
+						} else {
+							const pt = graph_points.find(x => x === point);
+							pt.adjacents.push(next);
+						}
+						if (graph_points.includes(next) === false) {
+							next.adjacents = [point];
+							graph_points.push(next);
+						} else {
+							const pt = graph_points.find(x => x === next);
+							pt.adjacents.push(point);
+						}
+					}
+				}
+			}
+		}.bind(this);
+
+		for (const point of await this.m_Points.values()) {
+			if (point && isPointOKForPath([freePointStatus, this.POINT_STARTING, this.POINT_IN_PATH], point) === true) {
+				const { x, y } = point.GetPosition();
+				//TODO: await all below promises
+				//east
+				await addPointsAndEdgestoGraph(point, x + 1, y, x, y);
+				//west
+				await addPointsAndEdgestoGraph(point, x - 1, y, x, y);
+				//north
+				await addPointsAndEdgestoGraph(point, x, (y - 1), x, y);
+				//south
+				await addPointsAndEdgestoGraph(point, x, (y + 1), x, y);
+				//north_west
+				await addPointsAndEdgestoGraph(point, x - 1, (y - 1), x, y);
+				//north_east
+				await addPointsAndEdgestoGraph(point, x + 1, (y - 1), x, y);
+				//south_west
+				await addPointsAndEdgestoGraph(point, x - 1, (y + 1), x, y);
+				//south_east
+				await addPointsAndEdgestoGraph(point, x + 1, (y + 1), x, y);
+			}
+		}
+		//return graph
+		return { vertices: graph_points, edges: Array.from(graph_edges.values()) };
+	}
+
+	/**
+	 * Based on https://www.geeksforgeeks.org/print-all-the-cycles-in-an-undirected-graph/
+	 * @param {any} graph constructed earlier with BuildGraph
+	 * @param {string} sHumanColor - human red playing color
+	 * @returns {array} of cycles
+	 */
+	async MarkAllCycles(graph, sHumanColor) {
+		const vertices = graph.vertices;
+		const N = vertices.length;
+		let cycles = new Array(N);
+		// mark with unique numbers
+		const mark = new Array(N);
+		// arrays required to color the 
+		// graph, store the parent of node 
+		const color = new Array(N), par = new Array(N);
+
+		for (let i = 0; i < N; i++) {
+			mark[i] = []; cycles[i] = [];
+		}
+
+		const dfs_cycle = async function (u, p) {
+			// already (completely) visited vertex. 
+			if (color[u] === 2)
+				return;
+
+			// seen vertex, but was not completely visited -> cycle detected. 
+			// backtrack based on parents to find the complete cycle. 
+			if (color[u] === 1) {
+				cyclenumber++;
+				let cur = p;
+				mark[cur].push(cyclenumber);
+
+				// backtrack the vertex which are
+				// in the current cycle thats found
+				while (cur !== u) {
+					cur = par[cur];
+					mark[cur].push(cyclenumber);
+				}
+				return;
+			}
+			par[u] = p;
+
+			// partially visited.
+			color[u] = 1;
+			const vertex = vertices[u];
+			if (vertex) {
+
+
+				const {x, y} = vertex.GetPosition();
+				const vis_v = await this.m_Points.get(y * this.m_iGridWidth + x);
+				vis_v.SetStrokeColor('black');
+				vis_v.SetFillColor('black');
+				vis_v.setAttribute("r", 6 / 16);
+				await Sleep(25);
+
+
+				// simple dfs on graph
+				for (const adj of vertex.adjacents) {
+					const v = vertices.indexOf(adj);
+					// if it has not been visited previously
+					if (v === par[u])
+						continue;
+
+					await dfs_cycle(v, u);
+				}
+			}
+
+			// completely visited. 
+			color[u] = 2;
+		}.bind(this);
+
+		const printCycles = async function (edges, mark) {
+			// push the edges that into the 
+			// cycle adjacency list 
+			for (let e = 0; e < edges; e++) {
+				const mark_e = mark[e];
+				if (mark_e !== undefined && mark_e.length > 0) {
+					for (let m = 0; m < mark_e.length; m++) {
+						const found_c = cycles[mark_e[m]];
+						if (found_c !== undefined)
+							found_c.push(e);
+					}
+				}
+			}
+
+			//sort by point length(only cycles >= 4): first longest cycles, most points
+			cycles = cycles.filter(c => c.length >= 4).sort((b, a) => a.length - b.length);
+
+			//gather free human player points that could be intercepted.
+			const free_human_player_points = [];
+			for (const pt of await this.m_Points.values()) {
+				if (pt !== undefined && pt.GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.GetStatus()) {
+					const { x, y } = pt.GetPosition();
+					if (false === await this.IsPointOutsideAllPaths(x, y))
+						continue;
+
+					//check if really exists
+					const pt1 = await this.m_Points.get(y * this.m_iGridWidth + x);
+					if (pt1)
+						free_human_player_points.push({ x, y });
+				}
+			}
+
+
+			const tab = [];
+			// traverse through all the vertices with same cycle
+			for (let i = 0; i <= cyclenumber; i++) {
+				const cycl = cycles[i];//get cycle
+				if (cycl && cycl.length > 0) {	//somr checks
+					// Print the i-th cycle
+					let str = (`Cycle Number ${i}: `), trailing_points = [];
+					const rand_color = 'var(--bs-teal)';
+
+					//convert to logical space
+					const mapped_verts = cycl.map(function (c) {
+						return vertices[c].GetPosition();
+					}.bind(this));
+					//sort clockwise (https://stackoverflow.com/questions/45660743/sort-points-in-counter-clockwise-in-javascript)
+					const cw_sorted_verts = sortPointsClockwise(mapped_verts);
+
+					//display which cycle we are dealing with
+					for (const vert of cw_sorted_verts) {
+						const { x, y } = vert;
+						const pt = await this.m_Points.get(y * this.m_iGridWidth + x);
+						if (pt) {//again some basic checks
+							str += (`(${x},${y})`);
+
+							pt.SetStrokeColor(rand_color);
+							pt.SetFillColor(rand_color);
+							pt.setAttribute("r", 6 / this.m_iGridSpacingX);
+						}
+						await Sleep(50);
+					}
+
+					//find for all free_human_player_points which cycle might interepct it (surrounds)
+					//only convex, NOT concave :-(
+					let tmp = '', comma = '';
+					for (const possible_intercept of free_human_player_points) {
+						if (false !== pnpoly2(cw_sorted_verts, possible_intercept.x, possible_intercept.y)) {
+							tmp += `${comma}(${possible_intercept.x},${possible_intercept.y})`;
+
+							const pt1 = await this.m_Points.get(possible_intercept.y * this.m_iGridWidth + possible_intercept.x);
+							if (pt1) {
+								pt1.SetStrokeColor('var(--bs-yellow)');
+								pt1.SetFillColor('var(--bs-yellow)');
+								pt1.setAttribute("r", 6 / this.m_iGridSpacingX);
+							}
+							comma = ',';
+						}
+					}
+					//gaterhing of some data and console printing
+					trailing_points.unshift(str);
+					tab.push(trailing_points);
+					//log...
+					LocalLog(str + (tmp !== '' ? ` possible intercepts: ${tmp}` : ''));
+					//...and clear
+					const pts2reset = Array.from(document.querySelectorAll(`svg > circle[fill="${rand_color}"][r="${6 / this.m_iGridSpacingX}"]`));
+					pts2reset.forEach(pt => {
+						pt.SetStrokeColor(this.COLOR_BLUE);
+						pt.SetFillColor(this.COLOR_BLUE);
+						pt.setAttribute("r", 6 / this.m_iGridSpacingX);
+					});
+				}
+			}
+			return tab;
+		}.bind(this);
+
+		// store the numbers of cycle
+		let cyclenumber = 0, edges = N;
+
+		// call DFS to mark the cycles
+		for (let vind = 0; vind < N; vind++) {
+			await dfs_cycle(vind + 1, vind);//, color, mark, par);
+		}
+
+		// function to print the cycles
+		return await printCycles(edges, mark);
 	}
 
 	async DisplayPointsProgressWithDelay(ptsArr, sleepMillisecs = 25) {
