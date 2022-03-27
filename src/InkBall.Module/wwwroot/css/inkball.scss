@@ -1,4 +1,4 @@
-@charset "UTF-8";
+﻿@charset "UTF-8";
 @import "svg-url";
 
 /**********inkgame*********/
@@ -12,7 +12,7 @@ p.inkgame {
 
 @mixin background($cellWidth, $cellHeight) {
 	//https://codepen.io/jakob-e/pen/doMoML processed SVG
-	background-image: svg-url('<svg xmlns="http://www.w3.org/2000/svg"><defs><pattern id="grid" width="#{$cellWidth}" height="#{$cellHeight}" patternUnits="userSpaceOnUse"><path d="M #{$cellWidth} 0 L 0 0 0 #{$cellHeight}" fill="none" stroke="gray" stroke-width="0.5"/></pattern></defs><rect width="100%" height="100%" fill="url(#grid)" /></svg>');
+	background-image: svg-url('<svg xmlns="http://www.w3.org/2000/svg"><defs><pattern id="grid" width="#{$cellWidth}" height="#{$cellHeight}" patternUnits="userSpaceOnUse"><rect width="#{$cellWidth}" height="#{$cellHeight}" fill="none" stroke="gray" stroke-width="0.25"/></pattern></defs><rect width="100%" height="100%" fill="url(#grid)" /></svg>');
 }
 
 @mixin baseBoard($width, $height, $cellWidth, $cellHeight) {
