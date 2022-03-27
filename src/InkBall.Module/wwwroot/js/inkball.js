@@ -841,23 +841,6 @@ class InkBallGame {
 		}
 	}
 
-	/**
-	 * Disable Text Selection script- © Dynamic Drive DHTML code library (www.dynamicdrive.com)
-	 * This notice MUST stay intact for legal use
-	 * Visit Dynamic Drive at http://www.dynamicdrive.com/ for full source code
-	 *
-	 * @param {element} Target is the element with disabled selection of text
-	 */
-	DisableSelection(Target) {
-		if (typeof Target.onselectstart !== undefined)//IE route
-			Target.onselectstart = function () { return false; };
-		else if (typeof Target.style.MozUserSelect !== undefined)//Firefox route
-			Target.style.MozUserSelect = "none";
-		else//All other route (ie: Opera)
-			Target.onmousedown = function () { return false; };
-		//Target.style.cursor = "default";
-	}
-
 	f_clientWidth() {
 		return this.f_filterResults(
 			window.innerWidth ? window.innerWidth : 0,
@@ -2278,8 +2261,6 @@ class InkBallGame {
 		if (this.SvgVml.CreateSVGVML(this.m_Screen, svg_width_x_height, svg_width_x_height,
 			{ iGridWidth: this.m_iGridWidth, iGridHeight: this.m_iGridHeight }) === null)
 			alert('SVG is not supported!');
-
-		this.DisableSelection(this.m_Screen);
 
 		const stateStore = new SHRD.GameStateStore(useIndexedDbStore,
 			this.CreateScreenPointFromIndexedDb.bind(this),

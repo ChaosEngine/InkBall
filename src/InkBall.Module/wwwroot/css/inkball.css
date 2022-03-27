@@ -22,6 +22,7 @@ p.inkgame {
   border: 1px solid red;
   /* font-size: 32px; */
   box-sizing: content-box;
+  user-select: none;
 }
 .inkgame ul#messagesList {
   overflow: auto;

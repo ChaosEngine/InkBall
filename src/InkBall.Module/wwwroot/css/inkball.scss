@@ -1,4 +1,4 @@
-﻿@charset "UTF-8";
+@charset "UTF-8";
 @import "svg-url";
 
 /**********inkgame*********/
@@ -54,6 +54,7 @@ p.inkgame {
 		border: 1px solid red;
 		/* font-size: 32px; */
 		box-sizing: content-box;
+		user-select: none;
 	}
 
 	ul#messagesList {
