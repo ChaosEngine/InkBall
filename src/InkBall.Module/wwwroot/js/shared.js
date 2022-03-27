@@ -14,50 +14,6 @@ const StatusEnum = Object.freeze({
 	POINT_OWNED_BY_BLUE: 3
 });
 
-function StatusEnumToString(enumVal) {
-	switch (enumVal) {
-		case StatusEnum.POINT_FREE_RED:
-			return Object.keys(StatusEnum)[0];
-		case StatusEnum.POINT_FREE_BLUE:
-			return Object.keys(StatusEnum)[1];
-		case StatusEnum.POINT_FREE:
-			return Object.keys(StatusEnum)[2];
-		case StatusEnum.POINT_STARTING:
-			return Object.keys(StatusEnum)[3];
-		case StatusEnum.POINT_IN_PATH:
-			return Object.keys(StatusEnum)[4];
-		case StatusEnum.POINT_OWNED_BY_RED:
-			return Object.keys(StatusEnum)[5];
-		case StatusEnum.POINT_OWNED_BY_BLUE:
-			return Object.keys(StatusEnum)[6];
-
-		default:
-			throw new Error('bad status enum value');
-	}
-}
-
-function StringToStatusEnum(enumStr) {
-	switch (enumStr.toUpperCase()) {
-		case Object.keys(StatusEnum)[0]:
-			return StatusEnum.POINT_FREE_RED;
-		case Object.keys(StatusEnum)[1]:
-			return StatusEnum.POINT_FREE_BLUE;
-		case Object.keys(StatusEnum)[2]:
-			return StatusEnum.POINT_FREE;
-		case Object.keys(StatusEnum)[3]:
-			return StatusEnum.POINT_STARTING;
-		case Object.keys(StatusEnum)[4]:
-			return StatusEnum.POINT_IN_PATH;
-		case Object.keys(StatusEnum)[5]:
-			return StatusEnum.POINT_OWNED_BY_RED;
-		case Object.keys(StatusEnum)[6]:
-			return StatusEnum.POINT_OWNED_BY_BLUE;
-
-		default:
-			throw new Error('bad status enum string');
-	}
-}
-
 /**
  * Shared log function
  * @param {any} msg - object to log
@@ -292,17 +248,17 @@ class SvgVml {
 		SVGCircleElement.prototype.GetFillColor = function () { return this.getAttribute("fill"); };
 		SVGCircleElement.prototype.SetFillColor = function (col) { this.setAttribute("fill", col); };
 		SVGCircleElement.prototype.GetStatus = function () {
-			return StringToStatusEnum(this.getAttribute("data-status"));
+			return SvgVml.StringToStatusEnum(this.getAttribute("data-status"));
 		};
 		SVGCircleElement.prototype.SetStatus = function (iStatus, saveOldPoint = false) {
 			if (saveOldPoint) {
-				const old_status = StringToStatusEnum(this.getAttribute("data-status"));
-				this.setAttribute("data-status", StatusEnumToString(iStatus));
+				const old_status = SvgVml.StringToStatusEnum(this.getAttribute("data-status"));
+				this.setAttribute("data-status", SvgVml.StatusEnumToString(iStatus));
 				if (old_status !== StatusEnum.POINT_FREE && old_status !== iStatus)
-					this.setAttribute("data-old-status", StatusEnumToString(old_status));
+					this.setAttribute("data-old-status", SvgVml.StatusEnumToString(old_status));
 			}
 			else {
-				this.setAttribute("data-status", StatusEnumToString(iStatus));
+				this.setAttribute("data-status", SvgVml.StatusEnumToString(iStatus));
 			}
 		};
 		SVGCircleElement.prototype.RevertOldStatus = function () {
@@ -310,7 +266,7 @@ class SvgVml {
 			if (old_status) {
 				this.removeAttribute("data-old-status");
 				this.setAttribute("data-status", old_status);
-				return StringToStatusEnum(old_status);
+				return SvgVml.StringToStatusEnum(old_status);
 			}
 			return -1;
 		};
@@ -452,8 +408,8 @@ class SvgVml {
 			o.setAttribute("stroke-width", 0);
 			o.setAttribute("r", diam / 2);
 			//ch_commented o.style.cursor = "pointer";
-			o.setAttribute("data-status", StatusEnumToString(StatusEnum.POINT_FREE));
-			//o.setAttribute("data-old-status", StatusEnumToString(StatusEnum.POINT_FREE));
+			o.setAttribute("data-status", SvgVml.StatusEnumToString(StatusEnum.POINT_FREE));
+			//o.setAttribute("data-old-status", SvgVml.StatusEnumToString(StatusEnum.POINT_FREE));
 
 			this.cont.appendChild(o);
 			return o;
@@ -485,6 +441,50 @@ class SvgVml {
 		const o = this.CreatePolyline(width, PointsAsString, Color);
 		o.SetID(iId);
 		return o;
+	}
+
+	static StatusEnumToString(enumVal) {
+		switch (enumVal) {
+			case StatusEnum.POINT_FREE_RED:
+				return Object.keys(StatusEnum)[0];
+			case StatusEnum.POINT_FREE_BLUE:
+				return Object.keys(StatusEnum)[1];
+			case StatusEnum.POINT_FREE:
+				return Object.keys(StatusEnum)[2];
+			case StatusEnum.POINT_STARTING:
+				return Object.keys(StatusEnum)[3];
+			case StatusEnum.POINT_IN_PATH:
+				return Object.keys(StatusEnum)[4];
+			case StatusEnum.POINT_OWNED_BY_RED:
+				return Object.keys(StatusEnum)[5];
+			case StatusEnum.POINT_OWNED_BY_BLUE:
+				return Object.keys(StatusEnum)[6];
+	
+			default:
+				throw new Error('bad status enum value');
+		}
+	}
+	
+	static StringToStatusEnum(enumStr) {
+		switch (enumStr.toUpperCase()) {
+			case Object.keys(StatusEnum)[0]:
+				return StatusEnum.POINT_FREE_RED;
+			case Object.keys(StatusEnum)[1]:
+				return StatusEnum.POINT_FREE_BLUE;
+			case Object.keys(StatusEnum)[2]:
+				return StatusEnum.POINT_FREE;
+			case Object.keys(StatusEnum)[3]:
+				return StatusEnum.POINT_STARTING;
+			case Object.keys(StatusEnum)[4]:
+				return StatusEnum.POINT_IN_PATH;
+			case Object.keys(StatusEnum)[5]:
+				return StatusEnum.POINT_OWNED_BY_RED;
+			case Object.keys(StatusEnum)[6]:
+				return StatusEnum.POINT_OWNED_BY_BLUE;
+	
+			default:
+				throw new Error('bad status enum string');
+		}
 	}
 
 	/**

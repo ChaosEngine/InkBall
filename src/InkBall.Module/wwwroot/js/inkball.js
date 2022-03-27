@@ -2499,7 +2499,7 @@ class InkBallGame {
 			return false;
 		};
 
-		const addPointsAndEdgestoGraph = async function (point, to_x, to_y, x, y) {
+		const addPointsAndEdgesToGraph = async function (point, to_x, to_y, x, y) {
 			if (to_x >= 0 && to_x < this.m_iGridWidth && to_y >= 0 && to_y < this.m_iGridHeight) {
 				const next = await this.m_Points.get(to_y * this.m_iGridWidth + to_x);
 				if (next && isPointOKForPath([freePointStatus], next) === true) {
@@ -2542,21 +2542,21 @@ class InkBallGame {
 				const { x, y } = point.GetPosition();
 				//TODO: await all below promises
 				//east
-				await addPointsAndEdgestoGraph(point, x + 1, y, x, y);
+				await addPointsAndEdgesToGraph(point, x + 1, y, x, y);
 				//west
-				await addPointsAndEdgestoGraph(point, x - 1, y, x, y);
+				await addPointsAndEdgesToGraph(point, x - 1, y, x, y);
 				//north
-				await addPointsAndEdgestoGraph(point, x, (y - 1), x, y);
+				await addPointsAndEdgesToGraph(point, x, (y - 1), x, y);
 				//south
-				await addPointsAndEdgestoGraph(point, x, (y + 1), x, y);
+				await addPointsAndEdgesToGraph(point, x, (y + 1), x, y);
 				//north_west
-				await addPointsAndEdgestoGraph(point, x - 1, (y - 1), x, y);
+				await addPointsAndEdgesToGraph(point, x - 1, (y - 1), x, y);
 				//north_east
-				await addPointsAndEdgestoGraph(point, x + 1, (y - 1), x, y);
+				await addPointsAndEdgesToGraph(point, x + 1, (y - 1), x, y);
 				//south_west
-				await addPointsAndEdgestoGraph(point, x - 1, (y + 1), x, y);
+				await addPointsAndEdgesToGraph(point, x - 1, (y + 1), x, y);
 				//south_east
-				await addPointsAndEdgestoGraph(point, x + 1, (y + 1), x, y);
+				await addPointsAndEdgesToGraph(point, x + 1, (y + 1), x, y);
 			}
 		}
 		//return graph
@@ -2751,12 +2751,14 @@ class InkBallGame {
 		return await printCycles(edges, mark);
 	}
 
+	// eslint-disable-next-line no-unused-vars
 	async DFS2(graph, sHumanColor) {
 		const enterVertex = () => {
 		};
 		const leaveVertex = () => {
 		};
-		const showCycle = async (lastSeen, _nextVertex) => {
+		// eslint-disable-next-line no-unused-vars
+		const showCycle = async (lastSeen, nextVertex) => {
 			lastSeen = Object.values(lastSeen);
 			lastSeen.forEach(p => {
 				const { x, y } = p.GetPosition();
