@@ -274,7 +274,7 @@ class SvgVml {
 		SVGCircleElement.prototype.SetZIndex = function (val) { this.setAttribute("z-index", val); };
 		SVGCircleElement.prototype.Hide = function () { this.setAttribute("visibility", 'hidden'); };
 		SVGCircleElement.prototype.Show = function () { this.setAttribute("visibility", 'visible'); };
-		SVGCircleElement.prototype.strokeWeight = function (sw) { this.setAttribute("stroke-width", sw); };
+		SVGCircleElement.prototype.StrokeWeight = function (sw) { this.setAttribute("stroke-width", sw); };
 		SVGCircleElement.prototype.Serialize = function () {
 			const { x, y } = this.GetPosition();
 			const Status = this.GetStatus();
@@ -459,12 +459,12 @@ class SvgVml {
 				return Object.keys(StatusEnum)[5];
 			case StatusEnum.POINT_OWNED_BY_BLUE:
 				return Object.keys(StatusEnum)[6];
-	
+
 			default:
 				throw new Error('bad status enum value');
 		}
 	}
-	
+
 	static StringToStatusEnum(enumStr) {
 		switch (enumStr.toUpperCase()) {
 			case Object.keys(StatusEnum)[0]:
@@ -481,7 +481,7 @@ class SvgVml {
 				return StatusEnum.POINT_OWNED_BY_RED;
 			case Object.keys(StatusEnum)[6]:
 				return StatusEnum.POINT_OWNED_BY_BLUE;
-	
+
 			default:
 				throw new Error('bad status enum string');
 		}
@@ -501,6 +501,29 @@ class SvgVml {
 		const loc = this.mathSVGPoint.matrixTransform(this.cont.getScreenCTM().inverse());
 
 		return loc;
+	}
+
+	/**
+	 * https://stackoverflow.com/a/68078941/4429828
+	 * @description Check if a pt is in, on or outside of a circle.
+	 * @param {point} pt The point to test. An array of two floats - x and y coordinates.
+	 * @param {point} center The circle center. An array of two floats - x and y coordinates.
+	 * @param {float} r The circle radius.
+	 * @returns {1 | 0 | -1} 1 if the point is inside, 0 if it is on and -1 if it is outside the circle.
+	 */
+	IsPointInCircle(pt, center, r) {
+		const lhs = Math.pow(center.x - pt.x, 2) + Math.pow(center.y - pt.y, 2);
+		const rhs = Math.pow(r, 2);
+
+		if (lhs < rhs) {//inside
+			// if ((rhs - lhs) > 6.0)
+			// 	return 0;
+			return 1;
+		}
+		else if (lhs === rhs)
+			return 0;//on circle
+		else
+			return -1;//outside
 	}
 }
 

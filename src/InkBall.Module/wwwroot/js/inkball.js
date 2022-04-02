@@ -2136,38 +2136,60 @@ class InkBallGame {
 	async OnTestFindSurroundablePoints(event) {
 		event.preventDefault();
 
-		const sHumanColor = this.COLOR_RED/*, sCPUColor = this.COLOR_BLUE*/;
-		const rand_color = RandomColor();
-		for (const pt of await this.m_Points.values()) {
-			if (pt !== undefined && pt.GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.GetStatus()) {
+		const sHumanColor = this.COLOR_RED, sCPUColor = this.COLOR_BLUE;
+		let all_human_points;
+		const pt = await this.m_Points.get(this.m_iMouseY * this.m_iGridWidth + this.m_iMouseX);
+		if (pt !== undefined)
+			all_human_points = [pt];
+		else
+			all_human_points = [...await this.m_Points.values()];
+
+		for (const pt of all_human_points) {
+			if (pt !== undefined && pt.GetFillColor() === sHumanColor
+				&& [StatusEnum.POINT_FREE_RED, StatusEnum.POINT_IN_PATH].includes(pt.GetStatus())) {
 				const { x, y } = pt.GetPosition();
-				if (false === await this.IsPointOutsideAllPaths(x, y))
+				if (false === await this.IsPointOutsideAllPaths(x, y)) {
+					LocalLog("!!!Point inside path!!!");
 					continue;
-
-
-				//const east = this.m_Points.get(y * this.m_iGridWidth + x + 1);
-				//const west = this.m_Points.get(y * this.m_iGridWidth + x - 1);
-				//const north = this.m_Points.get((y - 1) * this.m_iGridWidth + x);
-				//const south = this.m_Points.get((y + 1) * this.m_iGridWidth + x);
-				//const north_west = this.m_Points.get((y - 1) * this.m_iGridWidth + x - 1);
-				//const north_east = this.m_Points.get((y - 1) * this.m_iGridWidth + x + 1);
-				//const south_west = this.m_Points.get((y + 1) * this.m_iGridWidth + x - 1);
-				//const south_east = this.m_Points.get((y + 1) * this.m_iGridWidth + x + 1);
-
-				//if (east !== undefined && west !== undefined && north !== undefined && south !== undefined
-				//	//&& east.GetFillColor() === sCPUColor &&
-				//	//west.GetFillColor() === sCPUColor &&
-				//	//north.GetFillColor() === sCPUColor &&
-				//	//south.GetFillColor() === sCPUColor
-				//) {
-				//visualise
-				const pt1 = document.querySelector(`svg > circle[cx="${x}"][cy="${y}"]`);
-				if (pt1) {
-					pt1.SetStrokeColor(rand_color);
-					pt1.SetFillColor(rand_color);
-					pt1.setAttribute("r", 6 / this.m_iGridSpacingX);
 				}
-				//}
+				const rand_color = RandomColor();
+				const r = 3;
+
+				const o = this.SvgVml.CreateOval(r);
+				o.move(x, y, r);
+				o.SetStrokeColor(rand_color);
+				o.StrokeWeight(0.1);
+				o.SetFillColor('transparent');
+				// o.SetStatus(Status);
+
+				//pt,x,y is good "surroundable point"
+				//let's find closes CPU points to it lying on circle
+				const possible = [];
+				for (const cpu_pt of await this.m_Points.values()) {
+					if (cpu_pt !== undefined && cpu_pt.GetFillColor() === sCPUColor
+						&& [StatusEnum.POINT_FREE_BLUE, StatusEnum.POINT_IN_PATH].includes(cpu_pt.GetStatus())) {
+						const { x: cpu_x, y: cpu_y } = cpu_pt.GetPosition();
+						if (false === await this.IsPointOutsideAllPaths(cpu_x, cpu_y))
+							continue;
+
+						if (-1 !== this.SvgVml.IsPointInCircle({ x: cpu_x, y: cpu_y }, { x, y }, r)) {
+							const pt1 = document.querySelector(`svg > circle[cx="${cpu_x}"][cy="${cpu_y}"]`);
+							if (pt1) {
+								pt1.SetStrokeColor(rand_color);
+								pt1.SetFillColor(rand_color);
+								pt1.setAttribute("r", 6 / this.m_iGridSpacingX);
+								cpu_pt.x = cpu_x;
+								cpu_pt.y = cpu_y;
+								possible.push(cpu_pt);
+							}
+						}
+					}
+				}
+				if (possible.length > 0) {
+					const cw_sorted = sortPointsClockwise(possible);
+					LocalLog('circle sorted possible path points: ');
+					LocalLog(cw_sorted);
+				}
 			}
 		}
 	}
