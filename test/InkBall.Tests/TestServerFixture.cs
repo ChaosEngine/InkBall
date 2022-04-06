@@ -1,4 +1,4 @@
-﻿using InkBall.Module;
+using InkBall.Module;
 using InkBall.Module.Model;
 using MessagePack;
 using Microsoft.AspNetCore.Authentication;
@@ -207,6 +207,7 @@ namespace InkBall.IntegrationTests
 
 			//app.UseHttpsRedirection();
 			app.UseStaticFiles();
+			app.UseStaticFilesForInkBall();
 			app.UseRouting();
 			app.UseSession();
 			app.UseAuthentication();
