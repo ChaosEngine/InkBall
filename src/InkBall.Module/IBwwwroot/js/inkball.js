@@ -2172,7 +2172,7 @@ class InkBallGame {
 						if (false === await this.IsPointOutsideAllPaths(cpu_x, cpu_y))
 							continue;
 
-						if (-1 !== this.SvgVml.IsPointInCircle({ x: cpu_x, y: cpu_y }, { x, y }, r)) {
+						if (0 <= this.SvgVml.IsPointInCircle({ x: cpu_x, y: cpu_y }, { x, y }, r)) {
 							const pt1 = document.querySelector(`svg > circle[cx="${cpu_x}"][cy="${cpu_y}"]`);
 							if (pt1) {
 								pt1.SetStrokeColor(rand_color);
@@ -2186,9 +2186,12 @@ class InkBallGame {
 					}
 				}
 				if (possible.length > 0) {
-					const cw_sorted = sortPointsClockwise(possible);
+					const cw_sorted_verts = sortPointsClockwise(possible);
+					if (all_human_points.length <= 1)
+						await this.DisplayPointsProgressWithDelay(cw_sorted_verts, 250);
+
 					LocalLog('circle sorted possible path points: ');
-					LocalLog(cw_sorted);
+					LocalLog(cw_sorted_verts);
 				}
 			}
 		}
