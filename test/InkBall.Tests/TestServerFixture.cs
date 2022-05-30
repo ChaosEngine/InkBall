@@ -1,4 +1,4 @@
-﻿using InkBall.Module;
+using InkBall.Module;
 using InkBall.Module.Model;
 using MessagePack;
 using Microsoft.AspNetCore.Authentication;
@@ -207,6 +207,7 @@ namespace InkBall.IntegrationTests
 
 			//app.UseHttpsRedirection();
 			app.UseStaticFiles();
+			app.UseStaticFilesForInkBall();
 			app.UseRouting();
 			app.UseSession();
 			app.UseAuthentication();
@@ -275,9 +276,9 @@ namespace InkBall.IntegrationTests
 		}
 
 		public virtual async Task<HttpClient> CreateAuthenticatedClientAsync(string userName = "alice.testing@example.org",
-			string password = "#SecurePassword123")
+			string password = "#SecurePassword123", HttpClient incommingClient = null)
 		{
-			var client = this.CreateClient();
+			var client = incommingClient ?? this.CreateClient();
 
 			using var get_response = await client.GetAsync($"{client.BaseAddress}Identity/Account/Login");
 			var antiforgery_token = await PostRequestHelper.ExtractAntiForgeryToken(get_response);
@@ -297,6 +298,39 @@ namespace InkBall.IntegrationTests
 			response.EnsureSuccessStatusCode();
 
 			return client;
+		}
+
+		public virtual async Task<HttpResponseMessage> GetAuthenticationLoginResponseAsync(string userName = "alice.testing@example.org",
+			string password = "#SecurePassword123", HttpClient incommingClient = null)
+		{
+			var client = incommingClient ?? this.CreateClient();
+			try
+			{
+
+				using var get_response = await client.GetAsync($"{client.BaseAddress}Identity/Account/Login");
+				var antiforgery_token = await PostRequestHelper.ExtractAntiForgeryToken(get_response);
+				var form_data = new Dictionary<string, string> {
+					{ "Input.Email", userName },
+					{ "Input.Password", password },
+					{ "Input.RememberMe", "false" },
+					{ "__RequestVerificationToken", antiforgery_token }
+				};
+
+				using var postRequest = new HttpRequestMessage(HttpMethod.Post, $"{client.BaseAddress}Identity/Account/Login");
+
+				using var formPostBodyData = new FormUrlEncodedContent(form_data);
+				postRequest.Content = formPostBodyData;
+
+				var response = await client.SendAsync(postRequest);
+				//response.EnsureSuccessStatusCode();
+		
+				return response;
+			}
+			finally
+			{
+				if (incommingClient == null)
+					client.Dispose();
+			}
 		}
 
 		protected virtual async Task InitializeuserDbsForTests(ApplicationDbContext<TApplicationUser> usersDb, GamesContext gameDb)
@@ -394,6 +428,16 @@ namespace InkBall.IntegrationTests
 							Name = "Bob Testing"
 						},
 						"P@ssw0rd123!"
+					),
+					(   new TApplicationUser
+						{
+							UserName = "lockout.testing@example.org",
+							Email = "lockout.testing@example.org",
+							//Age = 20,
+							UserSettingsJSON = "{}",
+							Name = "Lockout Testing"
+						},
+						"#SecurePassword123"
 					)
 				};
 

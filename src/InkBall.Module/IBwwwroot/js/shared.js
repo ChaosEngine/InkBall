@@ -90,19 +90,12 @@ async function Sleep(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function isESModuleSupport() {
-	const esModuleSupport = 'noModule' in HTMLScriptElement.prototype;
-	return esModuleSupport;
-}
-
 /**
  * Sorting point clockwise/anticlockwise
  * @param {array} points array of points to sort
  * @returns {array} of points
  */
 function sortPointsClockwise(points) {
-	//Modern
-
 	// Get the center (mean value) using reduce
 	const center = points.reduce((acc, { x, y }) => {
 		acc.x += x;
@@ -113,12 +106,13 @@ function sortPointsClockwise(points) {
 	center.y /= points.length;
 
 	// Add an angle property to each point using tan(angle) = y/x
-	const angles = points.map(({ x, y }) => {
-		return { x, y, angle: Math.atan2(y - center.y, x - center.x) * 180 / Math.PI };
+	const added_angles = points.map(p => {
+		p.angle = Math.atan2(p.y - center.y, p.x - center.x) * 180 / Math.PI;
+		return p;
 	});
 
 	// Sort your points by angle
-	const pointsSorted = angles.sort((a, b) => a.angle - b.angle);
+	const pointsSorted = added_angles.sort((a, b) => a.angle - b.angle);
 	return pointsSorted;
 }
 
@@ -136,19 +130,21 @@ function sortPointsClockwise(points) {
 class SvgVml {
 	constructor() {
 		const svgNS = "http://www.w3.org/2000/svg";
-		let svgAvailable = false, svgAntialias = false;
+		let svgAvailable = false, svgAntialias = undefined;
 		let documentCreateElementNS_SVG, documentCreateElementNS_Element;
 		this.cont = null;
+		// Create an SVGPoint for future math
+		this.mathSVGPoint = null;
 
 		if (self && self.document && self.document.createElementNS) {
-			this.cont = document.createElementNS(svgNS, "svg");
-			svgAvailable = (this.cont.x !== null);
+			const some_cont = document.createElementNS(svgNS, "svg");
+			svgAvailable = (some_cont.x !== null);
 		}
 
 		if (svgAvailable) {
 			/* ============= displayable SVG ============== */
-			documentCreateElementNS_SVG = function () {
-				return this.cont;
+			documentCreateElementNS_SVG = function (contextElement) {
+				return contextElement;
 			}.bind(this);
 			documentCreateElementNS_Element = function (elemeName) {
 				switch (elemeName) {
@@ -239,28 +235,30 @@ class SvgVml {
 			};
 		}
 
-		SVGCircleElement.prototype.move = function (x1, y1, radius) {
-			this.setAttribute("cx", x1);
-			this.setAttribute("cy", y1);
-			this.setAttribute("r", Math.round(radius));
+		SVGCircleElement.prototype.move = function (x, y, radius) {
+			this.setAttribute("cx", x);
+			this.setAttribute("cy", y);
+			this.setAttribute("r", radius);
 		};
 		SVGCircleElement.prototype.GetStrokeColor = function () { return this.getAttribute("stroke"); };
 		SVGCircleElement.prototype.SetStrokeColor = function (col) { this.setAttribute("stroke", col); };
 		SVGCircleElement.prototype.GetPosition = function () {
-			return { x: this.getAttribute("cx"), y: this.getAttribute("cy") };
+			return { x: parseInt(this.getAttribute("cx")), y: parseInt(this.getAttribute("cy")) };
 		};
 		SVGCircleElement.prototype.GetFillColor = function () { return this.getAttribute("fill"); };
 		SVGCircleElement.prototype.SetFillColor = function (col) { this.setAttribute("fill", col); };
-		SVGCircleElement.prototype.GetStatus = function () { return parseInt(this.getAttribute("data-status")); };
+		SVGCircleElement.prototype.GetStatus = function () {
+			return SvgVml.StringToStatusEnum(this.getAttribute("data-status"));
+		};
 		SVGCircleElement.prototype.SetStatus = function (iStatus, saveOldPoint = false) {
 			if (saveOldPoint) {
-				const old_status = parseInt(this.getAttribute("data-status"));
-				this.setAttribute("data-status", iStatus);
+				const old_status = SvgVml.StringToStatusEnum(this.getAttribute("data-status"));
+				this.setAttribute("data-status", SvgVml.StatusEnumToString(iStatus));
 				if (old_status !== StatusEnum.POINT_FREE && old_status !== iStatus)
-					this.setAttribute("data-old-status", old_status);
+					this.setAttribute("data-old-status", SvgVml.StatusEnumToString(old_status));
 			}
 			else {
-				this.setAttribute("data-status", iStatus);
+				this.setAttribute("data-status", SvgVml.StatusEnumToString(iStatus));
 			}
 		};
 		SVGCircleElement.prototype.RevertOldStatus = function () {
@@ -268,7 +266,7 @@ class SvgVml {
 			if (old_status) {
 				this.removeAttribute("data-old-status");
 				this.setAttribute("data-status", old_status);
-				return parseInt(old_status);
+				return SvgVml.StringToStatusEnum(old_status);
 			}
 			return -1;
 		};
@@ -276,12 +274,12 @@ class SvgVml {
 		SVGCircleElement.prototype.SetZIndex = function (val) { this.setAttribute("z-index", val); };
 		SVGCircleElement.prototype.Hide = function () { this.setAttribute("visibility", 'hidden'); };
 		SVGCircleElement.prototype.Show = function () { this.setAttribute("visibility", 'visible'); };
-		SVGCircleElement.prototype.strokeWeight = function (sw) { this.setAttribute("stroke-width", sw); };
+		SVGCircleElement.prototype.StrokeWeight = function (sw) { this.setAttribute("stroke-width", sw); };
 		SVGCircleElement.prototype.Serialize = function () {
 			const { x, y } = this.GetPosition();
-			const status = this.GetStatus();
-			const color = this.GetFillColor();
-			return { x: x, y: y, Status: status, Color: color };
+			const Status = this.GetStatus();
+			const Color = this.GetFillColor();
+			return { x, y, Status, Color };
 		};
 
 		SVGLineElement.prototype.move = function (x1, y1, x2, y2) {
@@ -290,11 +288,13 @@ class SvgVml {
 			this.setAttribute("x2", x2);
 			this.setAttribute("y2", y2);
 		};
-		SVGLineElement.prototype.RGBcolor = function (R, G, B) { this.setAttribute("stroke", "rgb(" + Math.round(R) + "," + Math.round(G) + "," + Math.round(B) + ")"); };
+		SVGLineElement.prototype.RGBcolor = function (r, g, b) {
+			this.setAttribute("stroke", `rgb(${Math.round(r)},${Math.round(g)},${Math.round(b)})`);
+		};
 		SVGLineElement.prototype.SetColor = function (color) { this.setAttribute("stroke", color); };
-		SVGLineElement.prototype.strokeWidth = function (s) { this.setAttribute("stroke-width", Math.round(s) + "px"); };
+		SVGLineElement.prototype.strokeWidth = function (sw) { this.setAttribute("stroke-width", sw + "px"); };
 
-		SVGPolylineElement.prototype.AppendPoints = function (x, y, diffX, diffY) {
+		SVGPolylineElement.prototype.AppendPoints = function (x, y, diffX = 1, diffY = 1) {
 			const pts_str = this.getAttribute("points");
 			const pts = pts_str.split(" ");
 
@@ -343,19 +343,14 @@ class SvgVml {
 		SVGPolylineElement.prototype.GetLength = function () {
 			return this.getAttribute("points").split(" ").length;
 		};
-		SVGPolylineElement.prototype.SetWidthAndColor = function (w, col) {
+		SVGPolylineElement.prototype.SetWidthAndColor = function (sw, col) {
 			this.setAttribute("stroke", col);
 			this.setAttribute("fill", col);
-			this.setAttribute("stroke-width", Math.round(w));
+			this.setAttribute("stroke-width", sw);
 		};
 		SVGPolylineElement.prototype.GetID = function () { return parseInt(this.getAttribute("data-id")); };
 		SVGPolylineElement.prototype.SetID = function (iID) { this.setAttribute("data-id", iID); };
 		SVGPolylineElement.prototype.GetFillColor = function () { return this.getAttribute("fill"); };
-		SVGPolylineElement.prototype.IsPointInFill = function (x, y) {
-			const point = documentCreateElementNS_SVG("svg").createSVGPoint();
-			point.x = x; point.y = y;
-			return this.isPointInFill(point);//not in IE11
-		};
 		SVGPolylineElement.prototype.Serialize = function () {
 			const id = this.GetID();
 			const color = this.GetFillColor();
@@ -363,22 +358,27 @@ class SvgVml {
 			return { iId: id, Color: color, PointsAsString: pts };
 		};
 
-		this.CreateSVGVML = function (contextParent, iWidth, iHeight, antialias) {
-			this.cont = documentCreateElementNS_SVG("svg");
+		this.CreateSVGVML = function (contextElement, iWidth, iHeight, { iGridWidth, iGridHeight }, antialias) {
+			this.cont = documentCreateElementNS_SVG(contextElement);
 			if (iWidth)
 				this.cont.setAttributeNS(null, 'width', iWidth);
 			if (iHeight)
 				this.cont.setAttributeNS(null, 'height', iHeight);
-			if (contextParent)
-				contextParent.appendChild(this.cont);
+			if (contextElement) {
+				if (iGridWidth !== undefined && iGridHeight !== undefined)
+					this.cont.setAttribute("viewBox", `0 0 ${iGridWidth} ${iGridHeight}`);
+
+				this.mathSVGPoint = this.cont.createSVGPoint();
+			}
 			svgAntialias = antialias;
 
 			return svgAvailable ? this.cont : null;
 		};
 		this.CreateLine = function (w, col, linecap) {
 			const o = documentCreateElementNS_Element("line");
-			o.setAttribute("shape-rendering", svgAntialias ? "auto" : "optimizeSpeed");
-			o.setAttribute("stroke-width", Math.round(w) + "px");
+			if (svgAntialias !== undefined)
+				o.setAttribute("shape-rendering", svgAntialias === true ? "auto" : "optimizeSpeed");
+			o.setAttribute("stroke-width", w + "px");
 			if (col) o.setAttribute("stroke", col);
 			if (linecap) o.setAttribute("stroke-linecap", linecap);
 
@@ -387,8 +387,9 @@ class SvgVml {
 		};
 		this.CreatePolyline = function (width, points, col) {
 			const o = documentCreateElementNS_Element("polyline");
-			o.setAttribute("shape-rendering", svgAntialias ? "auto" : "optimizeSpeed");
-			o.setAttribute("stroke-width", Math.round(width));
+			if (svgAntialias !== undefined)
+				o.setAttribute("shape-rendering", svgAntialias === true ? "auto" : "optimizeSpeed");
+			o.setAttribute("stroke-width", width);
 			if (col) o.setAttribute("stroke", col);
 			o.setAttribute("fill", col);
 			o.setAttribute("fill-opacity", "0.1");
@@ -402,12 +403,13 @@ class SvgVml {
 		};
 		this.CreateOval = function (diam) {
 			const o = documentCreateElementNS_Element("circle");
-			o.setAttribute("shape-rendering", svgAntialias ? "auto" : "optimizeSpeed");
+			if (svgAntialias !== undefined)
+				o.setAttribute("shape-rendering", svgAntialias === true ? "auto" : "optimizeSpeed");
 			o.setAttribute("stroke-width", 0);
-			o.setAttribute("r", Math.round(diam >> 1));
+			o.setAttribute("r", diam / 2);
 			//ch_commented o.style.cursor = "pointer";
-			o.setAttribute("data-status", StatusEnum.POINT_FREE);
-			//o.setAttribute("data-old-status", StatusEnum.POINT_FREE);
+			o.setAttribute("data-status", SvgVml.StatusEnumToString(StatusEnum.POINT_FREE));
+			//o.setAttribute("data-old-status", SvgVml.StatusEnumToString(StatusEnum.POINT_FREE));
 
 			this.cont.appendChild(o);
 			return o;
@@ -423,8 +425,10 @@ class SvgVml {
 	}
 
 	DeserializeOval(packed, radius = 4) {
-		const { x, y, Status, Color } = packed;
-		const o = this.CreateOval(4);
+		let { x, y, Status, Color } = packed;
+		x = parseInt(x);
+		y = parseInt(y);
+		const o = this.CreateOval(radius);
 		o.move(x, y, radius);
 		o.SetStrokeColor(Color);
 		o.SetFillColor(Color);
@@ -437,6 +441,91 @@ class SvgVml {
 		const o = this.CreatePolyline(width, PointsAsString, Color);
 		o.SetID(iId);
 		return o;
+	}
+
+	static StatusEnumToString(enumVal) {
+		switch (enumVal) {
+			case StatusEnum.POINT_FREE_RED:
+				return Object.keys(StatusEnum)[0];
+			case StatusEnum.POINT_FREE_BLUE:
+				return Object.keys(StatusEnum)[1];
+			case StatusEnum.POINT_FREE:
+				return Object.keys(StatusEnum)[2];
+			case StatusEnum.POINT_STARTING:
+				return Object.keys(StatusEnum)[3];
+			case StatusEnum.POINT_IN_PATH:
+				return Object.keys(StatusEnum)[4];
+			case StatusEnum.POINT_OWNED_BY_RED:
+				return Object.keys(StatusEnum)[5];
+			case StatusEnum.POINT_OWNED_BY_BLUE:
+				return Object.keys(StatusEnum)[6];
+
+			default:
+				throw new Error('bad status enum value');
+		}
+	}
+
+	static StringToStatusEnum(enumStr) {
+		switch (enumStr.toUpperCase()) {
+			case Object.keys(StatusEnum)[0]:
+				return StatusEnum.POINT_FREE_RED;
+			case Object.keys(StatusEnum)[1]:
+				return StatusEnum.POINT_FREE_BLUE;
+			case Object.keys(StatusEnum)[2]:
+				return StatusEnum.POINT_FREE;
+			case Object.keys(StatusEnum)[3]:
+				return StatusEnum.POINT_STARTING;
+			case Object.keys(StatusEnum)[4]:
+				return StatusEnum.POINT_IN_PATH;
+			case Object.keys(StatusEnum)[5]:
+				return StatusEnum.POINT_OWNED_BY_RED;
+			case Object.keys(StatusEnum)[6]:
+				return StatusEnum.POINT_OWNED_BY_BLUE;
+
+			default:
+				throw new Error('bad status enum string');
+		}
+	}
+
+	/**
+	 * Converts coordinates point from screen to scaled SVG as according to
+	 * https://docs.microsoft.com/en-us/previous-versions/windows/internet-explorer/ie-developer/samples/hh535760(v=vs.85)?redirectedfrom=MSDN
+	 * https://stackoverflow.com/questions/22183727/how-do-you-convert-screen-coordinates-to-document-space-in-a-scaled-svg
+	 * @param {number} clientX X coordinate
+	 * @param {number} clientY Y coordinate
+	 * @returns {object} coordinate {x,y} point
+	 */
+	ToCursorPoint(clientX, clientY) {
+		// Get point in global SVG space
+		this.mathSVGPoint.x = clientX; this.mathSVGPoint.y = clientY;
+		const loc = this.mathSVGPoint.matrixTransform(this.cont.getScreenCTM().inverse());
+
+		return loc;
+	}
+
+	/**
+	 * https://stackoverflow.com/a/68078941/4429828
+	 * @description Check if a pt is in, on or outside of a circle.
+	 * @param {point} pt The point to test. An array of two floats - x and y coordinates.
+	 * @param {point} center The circle center. An array of two floats - x and y coordinates.
+	 * @param {float} r The circle radius.
+	 * @param {float} tolerance +- above below tolerance value
+	 * @returns {1 | 0 | -1} 1 if the point is inside, 0 if it is on and -1 if it is outside the circle.
+	 */
+	IsPointInCircle(pt, center, r, tolerance = 8) {
+		const lhs = Math.pow(center.x - pt.x, 2) + Math.pow(center.y - pt.y, 2);
+		const rhs = Math.pow(r, 2);
+
+		if (Math.abs(lhs - rhs) < tolerance) {//inside
+			// if ((rhs - lhs) < tolerance)
+			// 	return 0;
+			LocalLog(`lhs - rhs = ${lhs - rhs}`);
+			return 1;
+		}
+		else if (lhs === rhs)
+			return 0;//on circle
+		else
+			return -1;//outside
 	}
 }
 
@@ -576,8 +665,8 @@ class GameStateStore {
 				const pos = oval.GetPosition();
 				const color = oval.GetFillColor();
 				const idb_pt = {
-					x: parseInt(pos.x) / game_state.iGridSizeX,
-					y: parseInt(pos.y) / game_state.iGridSizeY,
+					x: pos.x,
+					y: pos.y,
 					Status: oval.GetStatus(),
 					Color: color
 				};
@@ -662,7 +751,7 @@ class GameStateStore {
 					PointsAsString: val.GetPointsString().split(" ").map((pt) => {
 						const tab = pt.split(',');
 						const x = parseInt(tab[0]), y = parseInt(tab[1]);
-						return `${x / game_state.iGridSizeX},${y / game_state.iGridSizeY}`;
+						return `${x},${y}`;
 					}).join(" ")
 				};
 
@@ -906,7 +995,7 @@ class GameStateStore {
 			const store = this.GetObjectStore(this.DB_POINT_STORE, 'readwrite');
 			let req;
 			try {
-				req = store.add(val, key);
+				req = store.put(val, key);//earlier was 'add'
 			} catch (e) {
 				if (e.name === 'DataCloneError')
 					LocalError("This engine doesn't know how to clone a Blob, use Firefox");
@@ -1131,6 +1220,6 @@ class GameStateStore {
 
 export {
 	SvgVml, StatusEnum, pnpoly, pnpoly2, LocalLog, LocalError,
-	hasDuplicates, sortPointsClockwise, Sleep, isESModuleSupport,
+	hasDuplicates, sortPointsClockwise, Sleep,
 	GameStateStore
 };

@@ -1,21 +1,18 @@
-/*eslint-disable no-console*/
 import concaveman from "concaveman";
 import decomp from "poly-decomp";
-import { StatusEnum, /*LocalLog,*/ sortPointsClockwise, /*Sleep,*/ pnpoly2 } from "./shared.js";
+import { StatusEnum, LocalLog, sortPointsClockwise, /*Sleep,*/ pnpoly2 } from "./shared.js";
 
 
 /**
  * AI operations class
  * */
 class GraphAI {
-	constructor(iGridWidth, iGridHeight, iGridSizeX, iGridSizeY, pointStore, POINT_STARTING, POINT_IN_PATH) {
+	constructor(iGridWidth, iGridHeight, pointStore) {
 		this.m_iGridWidth = iGridWidth;
 		this.m_iGridHeight = iGridHeight;
-		this.m_iGridSizeX = iGridSizeX;
-		this.m_iGridSizeY = iGridSizeY;
 		this.m_Points = pointStore;
-		this.POINT_STARTING = POINT_STARTING;
-		this.POINT_IN_PATH = POINT_IN_PATH;
+		this.POINT_STARTING = StatusEnum.POINT_STARTING;
+		this.POINT_IN_PATH = StatusEnum.POINT_IN_PATH;
 	}
 
 	/**
@@ -39,13 +36,11 @@ class GraphAI {
 			return false;
 		};
 
-		const addPointsAndEdgestoGraph = async function (point, to_x, to_y, view_x, view_y, x, y) {
+		const addPointsAndEdgesToGraph = async function (point, to_x, to_y, x, y) {
 			if (to_x >= 0 && to_x < this.m_iGridWidth && to_y >= 0 && to_y < this.m_iGridHeight) {
 				const next = await this.m_Points.get(to_y * this.m_iGridWidth + to_x);
 				if (next && isPointOKForPath([freePointStatus], next) === true) {
-					//const next_pos = next.GetPosition();
 
-					//const to_x = next_pos.x / this.m_iGridSizeX, to_y = next_pos.y / this.m_iGridSizeY;
 					if (graph_edges.has(`${x},${y}_${to_x},${to_y}`) === false && graph_edges.has(`${to_x},${to_y}_${x},${y}`) === false) {
 
 						const edge = {
@@ -54,7 +49,7 @@ class GraphAI {
 						};
 						//if (presentVisually === true) {
 						//	const line = CreateLine(3, 'rgba(0, 255, 0, 0.3)');
-						//	line.move(view_x, view_y, next_pos.x, next_pos.y);
+						//	line.move(x, y, next_pos.x, next_pos.y);
 						//	edge.line = line;
 						//}
 						graph_edges.set(`${x},${y}_${to_x},${to_y}`, edge);
@@ -81,25 +76,24 @@ class GraphAI {
 
 		for (const point of await this.m_Points.values()) {
 			if (point && isPointOKForPath([freePointStatus, this.POINT_STARTING, this.POINT_IN_PATH], point) === true) {
-				const { x: view_x, y: view_y } = point.GetPosition();
-				const x = view_x / this.m_iGridSizeX, y = view_y / this.m_iGridSizeY;
+				const { x, y } = point.GetPosition();
 				//TODO: await all below promises
 				//east
-				await addPointsAndEdgestoGraph(point, x + 1, y, view_x, view_y, x, y);
+				await addPointsAndEdgesToGraph(point, x + 1, y, x, y);
 				//west
-				await addPointsAndEdgestoGraph(point, x - 1, y, view_x, view_y, x, y);
+				await addPointsAndEdgesToGraph(point, x - 1, y, x, y);
 				//north
-				await addPointsAndEdgestoGraph(point, x, (y - 1), view_x, view_y, x, y);
+				await addPointsAndEdgesToGraph(point, x, (y - 1), x, y);
 				//south
-				await addPointsAndEdgestoGraph(point, x, (y + 1), view_x, view_y, x, y);
+				await addPointsAndEdgesToGraph(point, x, (y + 1), x, y);
 				//north_west
-				await addPointsAndEdgestoGraph(point, x - 1, (y - 1), view_x, view_y, x, y);
+				await addPointsAndEdgesToGraph(point, x - 1, (y - 1), x, y);
 				//north_east
-				await addPointsAndEdgestoGraph(point, x + 1, (y - 1), view_x, view_y, x, y);
+				await addPointsAndEdgesToGraph(point, x + 1, (y - 1), x, y);
 				//south_west
-				await addPointsAndEdgestoGraph(point, x - 1, (y + 1), view_x, view_y, x, y);
+				await addPointsAndEdgesToGraph(point, x - 1, (y + 1), x, y);
 				//south_east
-				await addPointsAndEdgestoGraph(point, x + 1, (y + 1), view_x, view_y, x, y);
+				await addPointsAndEdgesToGraph(point, x + 1, (y + 1), x, y);
 			}
 		}
 		//return graph
@@ -107,13 +101,10 @@ class GraphAI {
 	}
 
 	async IsPointOutsideAllPaths(lines, x, y) {
-		const xmul = x * this.m_iGridSizeX, ymul = y * this.m_iGridSizeY;
-
-		//const lines = await linesStore.all();//TODO: async for
 		for (const line of lines) {
 			const points = line.GetPointsArray();
 
-			if (false !== pnpoly2(points, xmul, ymul))
+			if (false !== pnpoly2(points, x, y))
 				return false;
 		}
 
@@ -124,11 +115,11 @@ class GraphAI {
 	 * Based on https://www.geeksforgeeks.org/print-all-the-cycles-in-an-undirected-graph/
 	 * @param {any} graph constructed earlier with BuildGraph
 	 * @param {string} COLOR_BLUE - cpu blue playing color
-	 * @param {string} COLOR_RED - human red playing color
+	 * @param {string} sHumanColor - human red playing color
 	 * @param {object} lines - line array
 	 * @returns {array} of cycles
 	 */
-	async MarkAllCycles(graph, COLOR_BLUE, COLOR_RED, lines) {
+	async MarkAllCycles(graph, COLOR_BLUE, sHumanColor, lines) {
 		const vertices = graph.vertices;
 		const N = vertices.length;
 		let cycles = new Array(N);
@@ -168,8 +159,8 @@ class GraphAI {
 			color[u] = 1;
 			const vertex = vertices[u];
 			if (vertex) {
-
-
+				
+				//const x = vertex.attributes.get('cx'), y = vertex.attributes.get('cy');
 				//vertex.SetStrokeColor('black');
 				//vertex.SetFillColor('black');
 				////vertex.setAttribute("r", "6");
@@ -210,16 +201,14 @@ class GraphAI {
 
 			//gather free human player points that could be intercepted.
 			const free_human_player_points = [];
-			const sHumanColor = COLOR_RED;
 			for (const pt of await this.m_Points.values()) {
 				if (pt !== undefined && pt.GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.GetStatus()) {
-					const { x: view_x, y: view_y } = pt.GetPosition();
-					const x = view_x / this.m_iGridSizeX, y = view_y / this.m_iGridSizeY;
+					const { x, y } = pt.GetPosition();
 					if (false === await this.IsPointOutsideAllPaths(lines, x, y))
 						continue;
 
 					//check if really exists
-					//const pt1 = document.querySelector(`svg > circle[cx="${view_x}"][cy="${view_y}"]`);
+					//const pt1 = document.querySelector(`svg > circle[cx="${x}"][cy="${y}"]`);
 					//if (pt1)
 					free_human_player_points.push({ x, y });
 				}
@@ -237,8 +226,7 @@ class GraphAI {
 
 					//convert to logical space
 					const mapped_verts = cycl.map(function (c) {
-						const pt = vertices[c].GetPosition();
-						return { x: pt.x / this.m_iGridSizeX, y: pt.y / this.m_iGridSizeY };
+						return vertices[c].GetPosition();
 					}.bind(this));
 					//sort clockwise (https://stackoverflow.com/questions/45660743/sort-points-in-counter-clockwise-in-javascript)
 					const cw_sorted_verts = sortPointsClockwise(mapped_verts);
@@ -246,7 +234,7 @@ class GraphAI {
 					////display which cycle we are dealing with
 					//for (const vert of cw_sorted_verts) {
 					//	const { x, y } = vert;
-					//	const pt = document.querySelector(`svg > circle[cx="${x * this.m_iGridSizeX}"][cy="${y * this.m_iGridSizeY}"]`);
+					//	const pt = document.querySelector(`svg > circle[cx="${x}"][cy="${y}"]`);
 					//	if (pt) {//again some basic checks
 					//		str += (`(${x},${y})`);
 
@@ -264,7 +252,7 @@ class GraphAI {
 					//	if (false !== pnpoly2(cw_sorted_verts, possible_intercept.x, possible_intercept.y)) {
 					//		tmp += `${comma}(${possible_intercept.x},${possible_intercept.y})`;
 
-					//		const pt1 = document.querySelector(`svg > circle[cx="${possible_intercept.x * this.m_iGridSizeX}"][cy="${possible_intercept.y * this.m_iGridSizeY}"]`);
+					//		const pt1 = document.querySelector(`svg > circle[cx="${possible_intercept.x}"][cy="${possible_intercept.y}"]`);
 					//		if (pt1) {
 					//			pt1.SetStrokeColor('var(--yellow)');
 					//			pt1.SetFillColor('var(--yellow)');
@@ -290,38 +278,41 @@ class GraphAI {
 			/*return tab;*/return { cycles, free_human_player_points, cyclenumber };
 		}.bind(this);
 
-		// store the numbers of cycle 
+		// store the numbers of cycle
 		let cyclenumber = 0, edges = N;
 
-		// call DFS to mark the cycles 
+		// call DFS to mark the cycles
 		for (let vind = 0; vind < N; vind++) {
 			await dfs_cycle(vind + 1, vind);//, color, mark, par);
 		}
 
-		// function to print the cycles 
+		// function to print the cycles
 		return await printCycles(edges, mark);
 	}
 }
 
-const precision_points = [[484, 480], [676, 363], [944, 342], [678, 41], [286, 237], [758, 215], [752, 117], [282, 492], [609, 262], [129, 252]];
-const concavity = 2.0, lengthThreshold = 0.0;
-const concaveman_output = concaveman(precision_points, concavity, lengthThreshold);
-//console.log('Hello concaveman. Simple test output points: \n' + JSON.stringify(output));
+// eslint-disable-next-line no-unused-vars
+function concavemanTesting() {
+	const precision_points = [[484, 480], [676, 363], [944, 342], [678, 41], [286, 237], [758, 215], [752, 117], [282, 492], [609, 262], [129, 252]];
+	const concavity = 2.0, lengthThreshold = 0.0;
+	const concaveman_output = concaveman(precision_points, concavity, lengthThreshold);
+	//console.log('Hello concaveman. Simple test output points: \n' + JSON.stringify(output));
 
 
-// Make sure the polygon has counter-clockwise winding. Skip this step if you know it's already counter-clockwise.
-//console.log(`decomp.makeCCW(concavePolygon) => ${decomp.makeCCW(precision_points)}`);
-//const convexPolygonsQuick = decomp.quickDecomp(precision_points);
-// ==> [  [[1,0],[1,1],[0.5,0.5]],  [[0.5,0.5],[-1,1],[-1,0],[1,0]]  ]
-//console.log(`decomp.quickDecomp => ${convexPolygons}`);
-// Decompose using the slow (but optimal) algorithm
-const convexPolygons = decomp.decomp(precision_points);
-// ==> [  [[-1,1],[-1,0],[1,0],[0.5,0.5]],  [[1,0],[1,1],[0.5,0.5]]  ]
-//console.log(`decomp.decomp => ${convexPolygons}`);
-if (!concaveman_output || concaveman_output.length <= 0 ||
-	//!convexPolygonsQuick || convexPolygonsQuick.length <= 0 || 
-	!convexPolygons || convexPolygons.length <= 0) {
-	console.log('decomp or concaveman error');
+	// Make sure the polygon has counter-clockwise winding. Skip this step if you know it's already counter-clockwise.
+	//console.log(`decomp.makeCCW(concavePolygon) => ${decomp.makeCCW(precision_points)}`);
+	//const convexPolygonsQuick = decomp.quickDecomp(precision_points);
+	// ==> [  [[1,0],[1,1],[0.5,0.5]],  [[0.5,0.5],[-1,1],[-1,0],[1,0]]  ]
+	//console.log(`decomp.quickDecomp => ${convexPolygons}`);
+	// Decompose using the slow (but optimal) algorithm
+	const convexPolygons = decomp.decomp(precision_points);
+	// ==> [  [[-1,1],[-1,0],[1,0],[0.5,0.5]],  [[1,0],[1,1],[0.5,0.5]]  ]
+	//console.log(`decomp.decomp => ${convexPolygons}`);
+	if (!concaveman_output || concaveman_output.length <= 0 ||
+		//!convexPolygonsQuick || convexPolygonsQuick.length <= 0 || 
+		!convexPolygons || convexPolygons.length <= 0) {
+		LocalLog('decomp or concaveman error');
+	}
 }
 
 export { concaveman, GraphAI };

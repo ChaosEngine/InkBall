@@ -61,8 +61,8 @@
                 <a class="dropdown-item" href="#" id="TestConcaveman">Concaveman</a>
                 <a class="dropdown-item" href="#" id="TestMarkAllCycles">Mark all cycles</a>
                 <a class="dropdown-item" href="#" id="TestGroupPoints">Group points recurse</a>
-                <a class="dropdown-item" href="#" id="TestFindSurroundablePoints">Find full surrounded points</a>
-                <a class="dropdown-item" href="#" id="TestWorkerify">XXXXX</a>
+                <a class="dropdown-item" href="#" id="TestFindSurroundablePoints">Find surroundable points</a>
+                <a class="dropdown-item" href="#" id="TestDFS2">DFS 2</a>
             </div>
         </div>
     </form>
@@ -75,8 +75,8 @@
         </div>
     </div>
     <div class="row mx-auto">
-        <div id="screen" class="col-auto p-0 mb-3 mx-auto boardsize-@(Model.Game.iBoardWidth)x@(Model.Game.iBoardHeight)">
-        </div>
+        <svg id="screen" class="col-auto p-0 mb-3 mx-auto boardsize-@(Model.Game.iBoardWidth)x@(Model.Game.iBoardHeight)">
+        </svg>
         <div class="col msgchat" data-otherplayerid="@(Model.Game.GetOtherPlayer()?.iId)">
             <div class="input-group">
                 <input id="messageInput" type="text" class="form-control" placeholder="Message..." aria-label="Message to send" aria-describedby="sendButton"
@@ -90,7 +90,7 @@
     </div>
 </div>
 
-<script nomodule defer src="https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/7.12.1/polyfill.min.js" integrity="sha512-uzOpZ74myvXTYZ+mXUsPhDF+/iL/n32GDxdryI2SJronkEyKC8FBFRLiBQ7l7U/PTYebDbgTtbqTa6/vGtU23A==" crossorigin="anonymous"></script>
+@* <script nomodule defer src="https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/7.12.1/polyfill.min.js" integrity="sha512-uzOpZ74myvXTYZ+mXUsPhDF+/iL/n32GDxdryI2SJronkEyKC8FBFRLiBQ7l7U/PTYebDbgTtbqTa6/vGtU23A==" crossorigin="anonymous"></script> *@
 <environment include="Development">
     <script defer src='@Url.Content("~/lib/signalr/browser/signalr.min.js")'></script>
     @if (useMessagePackBinaryTransport)
@@ -100,11 +100,11 @@
     }
 </environment>
 <environment exclude="Development">
-    <script defer src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@6.0.2/dist/browser/signalr.min.js" integrity="sha256-MEgWYAPCohorVwwwhp6z6gzmT1F2uOKmLw8KYQVNxJM=" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@6.0.5/dist/browser/signalr.min.js" integrity="sha256-61YZOlq8fEFPMIXLak8B5jqY2N22MIvVi/3k0GEhCbk=" crossorigin="anonymous"></script>
     @if (useMessagePackBinaryTransport)
     {
-        @:<script type='module' src="https://cdn.jsdelivr.net/npm/msgpack5@5.3.2/dist/msgpack5.min.js" integrity="sha256-YNDaaIkCIrzWZlbWxFzF+g9pn1F5tkgTGaNSLs/HCbU=" crossorigin="anonymous"></script>
-        @:<script type='module' src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr-protocol-msgpack@6.0.2/dist/browser/signalr-protocol-msgpack.min.js" integrity="sha256-4E/ec6Bg9T2T+eOkzKoSITzNIVfV+RHGlRinLHkKNHs=" crossorigin="anonymous"></script>
+        @:<script type='module' src="https://cdn.jsdelivr.net/npm/msgpack5@6.0.0/dist/msgpack5.min.js" integrity="sha256-IBzxZALpDMIa5MReT0CIXJOziXqGgd+rx62XYeFD2NU=" crossorigin="anonymous"></script>
+        @:<script type='module' src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr-protocol-msgpack@6.0.5/dist/browser/signalr-protocol-msgpack.min.js" integrity="sha256-Nf5TN6birWw5yu8Tih98Z5X1eJxl2ZfYNSGfreEpnAM=" crossorigin="anonymous"></script>
     }
 </environment>
 <script type='text/javascript'>
@@ -136,4 +136,4 @@
     };
 </script>
 <script type='module' src='@Url.Content(Constants.WwwIncludeInkballJS)'></script>
-<script nomodule defer type='text/javascript' src='@Url.Content(Constants.WwwIncludeInkballJSBundle)'></script>
+@* <script nomodule defer type='text/javascript' src='@Url.Content(Constants.WwwIncludeInkballJSBundle)'></script> *@

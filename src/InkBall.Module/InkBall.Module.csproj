@@ -3,9 +3,9 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
-    <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
+    <!-- <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest> -->
     <LangVersion>latest</LangVersion>
-    <Version>1.0.1.15</Version>
+    <Version>1.0.1.17</Version>
     <Configurations>Debug;Release;Oracle</Configurations>
   </PropertyGroup>
 
@@ -18,41 +18,38 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="6.0.2" />
-    <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="6.0.2" />
-    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="6.0.2" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.2" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.3" Condition="$(DefineConstants.Contains('INCLUDE_POSTGRES'))" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="6.0.5" />
+    <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="6.0.5" />
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="6.0.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.5" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.4" Condition="$(DefineConstants.Contains('INCLUDE_POSTGRES'))" />
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="6.0.1" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.2" Condition="$(DefineConstants.Contains('INCLUDE_SQLSERVER'))" />
-		<PackageReference Include="Oracle.EntityFrameworkCore" Version="6.21.5" Condition="$(DefineConstants.Contains('INCLUDE_ORACLE'))" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.5" Condition="$(DefineConstants.Contains('INCLUDE_SQLSERVER'))" />
+    <PackageReference Include="Oracle.EntityFrameworkCore" Version="6.21.61" Condition="$(DefineConstants.Contains('INCLUDE_ORACLE'))" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="6.0.2" />
-		<PackageReference Include="MessagePack" Version="2.3.85" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="6.0.5" />
+    <PackageReference Include="MessagePack" Version="2.3.85" />
   </ItemGroup>
-
+<!--
   <ItemGroup Condition="'$(Configuration)'=='Debug'">
-    <EmbeddedResource Include="wwwroot\css\inkball.css" />
+    <EmbeddedResource Include="wwwroot\css\*.css" />
     <EmbeddedResource Include="wwwroot\img\homescreen*" />
-    <EmbeddedResource Include="wwwroot\js\inkball.js" />
-    <EmbeddedResource Include="wwwroot\js\shared.js" />
-    <EmbeddedResource Include="wwwroot\js\*Bundle.js" />
+    <EmbeddedResource Include="wwwroot\js\*.js" />
+    <EmbeddedResource Include="wwwroot\js\*.map" />
+    <EmbeddedResource Include="wwwroot\css\*.map" />
   </ItemGroup>
   <ItemGroup Condition="'$(Configuration)'!='Debug'">
-    <EmbeddedResource Include="wwwroot\css\inkball.min.css" />
+    <EmbeddedResource Include="wwwroot\css\*.css" />
     <EmbeddedResource Include="wwwroot\img\homescreen*" />
-    <EmbeddedResource Include="wwwroot\js\inkball.min.js" />
-    <EmbeddedResource Include="wwwroot\js\shared.min.js" />
-    <EmbeddedResource Include="wwwroot\js\*Min.Bundle.js" />
-    <EmbeddedResource Include="wwwroot\js\*Bundle.min.js" />
-    <EmbeddedResource Include="wwwroot\js\AIWorker.Bundle.js" />
-    <EmbeddedResource Include="wwwroot\js\AIWorker.PolyfillBundle.js" />
+    <EmbeddedResource Include="wwwroot\js\*.js" />
+    <EmbeddedResource Include="wwwroot\js\*.map" />
+    <EmbeddedResource Include="wwwroot\css\*.map" />
   </ItemGroup>
-
+-->
   <ItemGroup>
-    <Content Update="wwwroot\css\*.scss" CopyToPublishDirectory="Never" />
-    <Content Update="wwwroot\img\grid.svg" CopyToPublishDirectory="Never" />
-    <Content Update="wwwroot\img\grid80.png" CopyToPublishDirectory="Never" />
+    <Content Include="IBwwwroot\css\*.css*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="IBwwwroot\img\homescreen.*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="IBwwwroot\js\*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>
