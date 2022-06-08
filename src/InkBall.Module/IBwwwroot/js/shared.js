@@ -519,7 +519,7 @@ class SvgVml {
 		if (Math.abs(lhs - rhs) < tolerance) {//inside
 			// if ((rhs - lhs) < tolerance)
 			// 	return 0;
-			LocalLog(`lhs - rhs = ${lhs - rhs}`);
+			// LocalLog(`lhs - rhs = ${lhs - rhs}`);
 			return 1;
 		}
 		else if (lhs === rhs)
