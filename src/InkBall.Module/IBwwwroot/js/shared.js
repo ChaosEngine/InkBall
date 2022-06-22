@@ -512,7 +512,7 @@ class SvgVml {
 	 * @param {float} tolerance +- above below tolerance value
 	 * @returns {1 | 0 | -1} 1 if the point is inside, 0 if it is on and -1 if it is outside the circle.
 	 */
-	IsPointInCircle(pt, center, r, tolerance = 8) {
+	IsPointInCircle(pt, center, r, tolerance = 4) {
 		const lhs = Math.pow(center.x - pt.x, 2) + Math.pow(center.y - pt.y, 2);
 		const rhs = Math.pow(r, 2);
 
