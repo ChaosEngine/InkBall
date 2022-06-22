@@ -1679,7 +1679,7 @@ class InkBallGame {
 							p0.GetFillColor() === this.m_sDotColor && p1.GetFillColor() === this.m_sDotColor) {
 							const fromx = this.m_iLastX;
 							const fromy = this.m_iLastY;
-							this.m_Line = this.SvgVml.CreatePolyline(this.m_LineStrokeWidth * 2, fromx + "," + fromy + " " + tox + "," + toy, this.DRAWING_PATH_COLOR);
+							this.m_Line = this.SvgVml.CreatePolyline(this.m_LineStrokeWidth * 2, `${fromx},${fromy} ${tox},${toy}`, this.DRAWING_PATH_COLOR);
 							this.m_CancelPath.disabled = '';
 							p0.SetStatus(StatusEnum.POINT_STARTING, true);
 							p1.SetStatus(StatusEnum.POINT_IN_PATH, true);
@@ -1803,7 +1803,7 @@ class InkBallGame {
 						const fromy = this.m_iLastY;
 						const tox = x;
 						const toy = y;
-						this.m_Line = this.SvgVml.CreatePolyline(this.m_LineStrokeWidth * 2, fromx + "," + fromy + " " + tox + "," + toy, this.DRAWING_PATH_COLOR);
+						this.m_Line = this.SvgVml.CreatePolyline(this.m_LineStrokeWidth * 2, `${fromx},${fromy} ${tox},${toy}`, this.DRAWING_PATH_COLOR);
 						this.m_CancelPath.disabled = '';
 						p0.SetStatus(StatusEnum.POINT_STARTING, true);
 						p1.SetStatus(StatusEnum.POINT_IN_PATH, true);
@@ -2153,7 +2153,7 @@ class InkBallGame {
 					continue;
 				}
 				const rand_color = RandomColor();
-				const r = 3;
+				const r = 2;
 
 				const o = this.SvgVml.CreateOval(r);
 				o.move(x, y, r);
@@ -2803,7 +2803,7 @@ class InkBallGame {
 			return `${pt.x},${pt.y}`;
 		}).join(' ');
 		if (!this.workingCyclePolyLine)
-			this.workingCyclePolyLine = this.SvgVml.CreatePolyline(this.m_LineStrokeWidth * 2, pts, 'black');
+			this.workingCyclePolyLine = this.SvgVml.CreatePolyline(this.m_LineStrokeWidth, pts, 'black');
 		else
 			this.workingCyclePolyLine.SetPoints(pts);
 
