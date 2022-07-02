@@ -298,11 +298,11 @@ class SvgVml {
 			const pts_str = this.getAttribute("points");
 			const pts = pts_str.split(" ");
 
-			if (true === hasDuplicates(pts))
+			if (pts.length <= 1 || true === hasDuplicates(pts))
 				return false;
 
-			let arr;//obtain last point coords
-			if (pts.length <= 1 || (arr = pts[pts.length - 1].split(",")).length !== 2)
+			const arr = pts[pts.length - 1].split(",");//obtain last point coords
+			if (arr.length !== 2)
 				return false;
 
 			const last_x = parseInt(arr[0]), last_y = parseInt(arr[1]);
