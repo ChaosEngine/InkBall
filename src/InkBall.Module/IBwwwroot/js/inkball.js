@@ -1058,7 +1058,7 @@ class InkBallGame {
 			//debugger;
 		}
 
-		if (sPoints[0] !== sPoints[sPoints.length - 1]) {
+		if (sPoints[0] !== sPoints.at(-1)) {
 			sPathPoints += `${sDelimiter}${x},${y}`;
 		}
 
@@ -1099,7 +1099,7 @@ class InkBallGame {
 			//debugger;
 		}
 
-		if (sPoints[0] !== sPoints[sPoints.length - 1]) {
+		if (sPoints[0] !== sPoints.at(-1)) {
 			sPathPoints += `${sDelimiter}${x},${y}`;
 		}
 
@@ -1143,7 +1143,7 @@ class InkBallGame {
 		const pts_not_unique = hasDuplicates(points.slice(0, -1).map(pt => pt.x + '_' + pt.y));
 
 		if (pts_not_unique ||
-			!(points[0].x === points[points.length - 1].x && points[0].y === points[points.length - 1].y)) {
+			!(points[0].x === points.at(-1).x && points[0].y === points.at(-1).y)) {
 			return {
 				OwnedPoints: undefined,
 				owned: "",
@@ -1169,7 +1169,7 @@ class InkBallGame {
 		for (const pt of await this.m_Points.values()) {
 			if (pt !== undefined && pt.GetFillColor() === sColor &&
 				([StatusEnum.POINT_FREE_BLUE, StatusEnum.POINT_FREE_RED].includes(pt.GetStatus()))) {
-				let { x, y } = pt.GetPosition();
+				const { x, y } = pt.GetPosition();
 				if (false !== pnpoly2(points, x, y)) {
 					sOwnedPoints += `${sDelimiter}${x},${y}`;
 					sDelimiter = " ";
@@ -1189,7 +1189,7 @@ class InkBallGame {
 
 		if (sOwnedPoints !== "") {
 			sPathPoints = points.map(function (pt) {
-				let x = pt.x, y = pt.y;
+				const x = pt.x, y = pt.y;
 				if (x === null || y === null) return '';
 
 				return `${x},${y}`;
@@ -2137,14 +2137,14 @@ class InkBallGame {
 		event.preventDefault();
 
 		const sHumanColor = this.COLOR_RED, sCPUColor = this.COLOR_BLUE;
-		let all_human_points;
+		let working_points;
 		const pt = await this.m_Points.get(this.m_iMouseY * this.m_iGridWidth + this.m_iMouseX);
 		if (pt !== undefined)
-			all_human_points = [pt];
+			working_points = [pt];
 		else
-			all_human_points = [...await this.m_Points.values()];
+			working_points = [...await this.m_Points.values()];
 
-		for (const pt of all_human_points) {
+		for (const pt of working_points) {
 			if (pt !== undefined && pt.GetFillColor() === sHumanColor
 				&& [StatusEnum.POINT_FREE_RED, StatusEnum.POINT_IN_PATH].includes(pt.GetStatus())) {
 				const { x, y } = pt.GetPosition();
@@ -2173,25 +2173,54 @@ class InkBallGame {
 							continue;
 
 						if (0 <= this.SvgVml.IsPointInCircle({ x: cpu_x, y: cpu_y }, { x, y }, r)) {
-							const pt1 = document.querySelector(`svg > circle[cx="${cpu_x}"][cy="${cpu_y}"]`);
+							cpu_pt.x = cpu_x;
+							cpu_pt.y = cpu_y;
+							possible.push(cpu_pt);
+						}
+					}
+				}
+				if (possible.length > 2) {
+					let cw_sorted_verts = sortPointsClockwise(possible);
+					let last = undefined;
+					//check if points are aligne  one-by-one next to each other no more than 1 point apart
+					for (const it of cw_sorted_verts) {
+						if (last !== undefined) {
+							if (!(Math.abs(last.x - it.x) <= 1 && Math.abs(last.y - it.y) <= 1)) {
+								cw_sorted_verts = null;
+								break;
+							}
+						}
+						last = it;
+					}
+					if (cw_sorted_verts === null)
+						continue;
+
+					if (!(Math.abs(cw_sorted_verts.at(-1).x - cw_sorted_verts[0].x) <= 1 && Math.abs(cw_sorted_verts.at(-1).y - cw_sorted_verts[0].y) <= 1)) {
+						cw_sorted_verts = null;
+						continue;
+					}
+
+					//check if "points-created-path" actually contains selected single point inside its boundaries
+					if (false === pnpoly2(cw_sorted_verts, x, y)) {
+						cw_sorted_verts = null;
+						continue;
+					}
+
+					if (working_points.length <= 1) {
+						for (const cpu_pt of cw_sorted_verts) {
+							const pt1 = document.querySelector(`svg > circle[cx="${cpu_pt.x}"][cy="${cpu_pt.y}"]`);
 							if (pt1) {
 								pt1.SetStrokeColor(rand_color);
 								pt1.SetFillColor(rand_color);
 								pt1.setAttribute("r", 6 / this.m_iGridSpacingX);
-								cpu_pt.x = cpu_x;
-								cpu_pt.y = cpu_y;
-								possible.push(cpu_pt);
 							}
 						}
-					}
-				}
-				if (possible.length > 0) {
-					const cw_sorted_verts = sortPointsClockwise(possible);
-					if (all_human_points.length <= 1)
 						await this.DisplayPointsProgressWithDelay(cw_sorted_verts, 250);
+					}
 
 					LocalLog('circle sorted possible path points: ');
 					LocalLog(cw_sorted_verts);
+
 				}
 			}
 		}
@@ -2824,7 +2853,7 @@ class InkBallGame {
 		const { x, y } = point.GetPosition();
 		let last = null;
 		if (currPointsArr.length > 0) {
-			last = currPointsArr[currPointsArr.length - 1];
+			last = currPointsArr.at(-1);
 			const { x: last_x, y: last_y } = last.GetPosition();
 			if (Math.abs(last_x - x) <= 1 && Math.abs(last_y - y) <= 1) {
 				currPointsArr.push(point);//nearby point 1 jump away
@@ -2843,7 +2872,7 @@ class InkBallGame {
 
 			if (currPointsArr.length >= 4) {
 				const first_pos = currPointsArr[0].GetPosition();
-				last = currPointsArr[currPointsArr.length - 1];
+				last = currPointsArr.at(-1);
 				const { x: last_x, y: last_y } = last.GetPosition();
 
 				if (Math.abs(last_x - first_pos.x) <= 1 && Math.abs(last_y - first_pos.y) <= 1) {

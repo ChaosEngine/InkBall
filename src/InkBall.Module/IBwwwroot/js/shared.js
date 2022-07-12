@@ -106,8 +106,9 @@ function sortPointsClockwise(points) {
 	center.y /= points.length;
 
 	// Add an angle property to each point using tan(angle) = y/x
+	const one80_div_by_pi = 180 / Math.PI;
 	const added_angles = points.map(p => {
-		p.angle = Math.atan2(p.y - center.y, p.x - center.x) * 180 / Math.PI;
+		p.angle = Math.atan2(p.y - center.y, p.x - center.x) * one80_div_by_pi;
 		return p;
 	});
 
@@ -294,20 +295,21 @@ class SvgVml {
 		SVGLineElement.prototype.SetColor = function (color) { this.setAttribute("stroke", color); };
 		SVGLineElement.prototype.strokeWidth = function (sw) { this.setAttribute("stroke-width", sw + "px"); };
 
-		SVGPolylineElement.prototype.AppendPoints = function (x, y, diffX = 1, diffY = 1) {
+		SVGPolylineElement.prototype.AppendPoints = function (x, y, diff = 1) {
 			const pts_str = this.getAttribute("points");
 			const pts = pts_str.split(" ");
 
 			if (pts.length <= 1 || true === hasDuplicates(pts))
 				return false;
 
-			const arr = pts[pts.length - 1].split(",");//obtain last point coords
+			const arr = pts.at(-1).split(",");//obtain last point coords
 			if (arr.length !== 2)
 				return false;
 
 			const last_x = parseInt(arr[0]), last_y = parseInt(arr[1]);
-			const x_diff = parseInt(x), y_diff = parseInt(y);
-			if (!(Math.abs(last_x - x_diff) <= diffX && Math.abs(last_y - y_diff) <= diffY))
+			x = parseInt(x);
+			y = parseInt(y);
+			if (!(Math.abs(last_x - x) <= diff && Math.abs(last_y - y) <= diff))
 				return false;
 
 			this.setAttribute("points", pts_str + ` ${x},${y}`);
@@ -338,7 +340,7 @@ class SvgVml {
 		};
 		SVGPolylineElement.prototype.GetIsClosed = function () {
 			const pts = this.getAttribute("points").split(" ");
-			return pts[0] === pts[pts.length - 1];
+			return pts[0] === pts.at(-1);
 		};
 		SVGPolylineElement.prototype.GetLength = function () {
 			return this.getAttribute("points").split(" ").length;
