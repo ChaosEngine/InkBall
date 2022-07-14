@@ -106,9 +106,9 @@ function sortPointsClockwise(points) {
 	center.y /= points.length;
 
 	// Add an angle property to each point using tan(angle) = y/x
-	const one80_div_by_pi = 180 / Math.PI;
+	// const one80_div_by_pi = 180 / Math.PI;
 	const added_angles = points.map(p => {
-		p.angle = Math.atan2(p.y - center.y, p.x - center.x) * one80_div_by_pi;
+		p.angle = Math.atan2(p.y - center.y, p.x - center.x)/*  * one80_div_by_pi */;
 		return p;
 	});
 
