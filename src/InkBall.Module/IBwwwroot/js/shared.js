@@ -49,18 +49,27 @@ function LocalError(...args) {
  * @param {number} y point to check y coordinate
  * @returns {boolean} if point lies inside the polygon
  */
-function pnpoly(npol, xp, yp, x, y) {
-	let i, j, c = false;
-	for (i = 0, j = npol - 1; i < npol; j = i++) {
-		if ((((yp[i] <= y) && (y < yp[j])) ||
-			((yp[j] <= y) && (y < yp[i]))) &&
-			(x < (xp[j] - xp[i]) * (y - yp[i]) / (yp[j] - yp[i]) + xp[i]))
+// function pnpoly(npol, xp, yp, x, y) {
+// 	let i, j, c = false;
+// 	for (i = 0, j = npol - 1; i < npol; j = i++) {
+// 		if ((((yp[i] <= y) && (y < yp[j])) ||
+// 			((yp[j] <= y) && (y < yp[i]))) &&
+// 			(x < (xp[j] - xp[i]) * (y - yp[i]) / (yp[j] - yp[i]) + xp[i]))
 
-			c = !c;
-	}
-	return c;
-}
+// 			c = !c;
+// 	}
+// 	return c;
+// }
 
+/**
+ * Based on http://www.faqs.org/faqs/graphics/algorithms-faq/
+ * but mainly on http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+ * returns != 0 if point is inside path
+ * @param {array} pathPoints points as array of {x,y}
+ * @param {number} x point to check x coordinate
+ * @param {number} y point to check y coordinate
+ * @returns {boolean} if point lies inside the polygon
+ */
 function pnpoly2(pathPoints, x, y) {
 	const npol = pathPoints.length;
 	let i, j, c = false;
@@ -461,7 +470,6 @@ class SvgVml {
 				return Object.keys(StatusEnum)[5];
 			case StatusEnum.POINT_OWNED_BY_BLUE:
 				return Object.keys(StatusEnum)[6];
-
 			default:
 				throw new Error('bad status enum value');
 		}
@@ -483,7 +491,6 @@ class SvgVml {
 				return StatusEnum.POINT_OWNED_BY_RED;
 			case Object.keys(StatusEnum)[6]:
 				return StatusEnum.POINT_OWNED_BY_BLUE;
-
 			default:
 				throw new Error('bad status enum string');
 		}
@@ -1221,7 +1228,7 @@ class GameStateStore {
 
 
 export {
-	SvgVml, StatusEnum, pnpoly, pnpoly2, LocalLog, LocalError,
+	SvgVml, StatusEnum, pnpoly2, LocalLog, LocalError,
 	hasDuplicates, sortPointsClockwise, Sleep,
 	GameStateStore
 };
