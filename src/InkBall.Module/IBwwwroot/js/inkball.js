@@ -563,7 +563,7 @@ class InkBallGame {
 	}
 
 	NotifyBrowser(title = 'Hi there!', body = 'How are you doing?') {
-		if (!document.hidden)
+		if (!document.hidden || this?.m_ApplicationUserSettings?.DesktopNotifications !== true)
 			return false;
 
 		if (!window.Notification) {
@@ -758,7 +758,7 @@ class InkBallGame {
 				li.innerHTML = `<strong class="text-primary">${encodedMsg}</strong>`;
 				document.querySelector(this.m_sMsgListSel).appendChild(li);
 
-				this.NotifyBrowser('User disconnected', encodedMsg);
+				this.NotifyBrowser('User connected', encodedMsg);
 				this.m_ReconnectTimer = null;
 			}
 		}.bind(this));
@@ -1205,9 +1205,10 @@ class InkBallGame {
 		};
 	}
 
-	async IsPointOutsideAllPaths(x, y) {
-		const lines = await this.m_Lines.all();//TODO: async for
-		for (const line of lines) {
+	async IsPointOutsideAllPaths(x, y, allLines = undefined) {
+		if (allLines === undefined)
+			allLines = await this.m_Lines.all();//TODO: async for
+		for (const line of allLines) {
 			const points = line.GetPointsArray();
 
 			if (false !== pnpoly2(points, x, y))
@@ -2139,37 +2140,39 @@ class InkBallGame {
 		const sHumanColor = this.COLOR_RED, sCPUColor = this.COLOR_BLUE;
 		let working_points;
 		const pt = await this.m_Points.get(this.m_iMouseY * this.m_iGridWidth + this.m_iMouseX);
+		const all_points = [...await this.m_Points.values()];
 		if (pt !== undefined)
 			working_points = [pt];
 		else
-			working_points = [...await this.m_Points.values()];
+			working_points = all_points;
 
+		//loading all line up front and pass into below "looped" function calls
+		const allLines = await this.m_Lines.all();//TODO: async for
 		for (const pt of working_points) {
 			if (pt !== undefined && pt.GetFillColor() === sHumanColor
 				&& [StatusEnum.POINT_FREE_RED, StatusEnum.POINT_IN_PATH].includes(pt.GetStatus())) {
 				const { x, y } = pt.GetPosition();
-				if (false === await this.IsPointOutsideAllPaths(x, y)) {
+				if (false === await this.IsPointOutsideAllPaths(x, y, allLines)) {
 					LocalLog("!!!Point inside path!!!");
 					continue;
 				}
 				const rand_color = RandomColor();
 				const r = 2;
 
-				const o = this.SvgVml.CreateOval(r);
-				o.move(x, y, r);
-				o.SetStrokeColor(rand_color);
-				o.StrokeWeight(0.1);
-				o.SetFillColor('transparent');
-				// o.SetStatus(Status);
+				const enclosing_circle = this.SvgVml.CreateOval(r);
+				enclosing_circle.move(x, y, r);
+				enclosing_circle.SetStrokeColor(rand_color);
+				enclosing_circle.StrokeWeight(0.1);
+				enclosing_circle.SetFillColor('transparent');
 
 				//pt,x,y is good "surroundable point"
 				//let's find closes CPU points to it lying on circle
 				const possible = [];
-				for (const cpu_pt of await this.m_Points.values()) {
+				for (const cpu_pt of all_points) {
 					if (cpu_pt !== undefined && cpu_pt.GetFillColor() === sCPUColor
 						&& [StatusEnum.POINT_FREE_BLUE, StatusEnum.POINT_IN_PATH].includes(cpu_pt.GetStatus())) {
 						const { x: cpu_x, y: cpu_y } = cpu_pt.GetPosition();
-						if (false === await this.IsPointOutsideAllPaths(cpu_x, cpu_y))
+						if (false === await this.IsPointOutsideAllPaths(cpu_x, cpu_y, allLines))
 							continue;
 
 						if (0 <= this.SvgVml.IsPointInCircle({ x: cpu_x, y: cpu_y }, { x, y }, r)) {
@@ -2192,17 +2195,19 @@ class InkBallGame {
 						}
 						last = it;
 					}
-					if (cw_sorted_verts === null)
-						continue;
 
-					if (!(Math.abs(cw_sorted_verts.at(-1).x - cw_sorted_verts[0].x) <= 1 && Math.abs(cw_sorted_verts.at(-1).y - cw_sorted_verts[0].y) <= 1)) {
-						cw_sorted_verts = null;
-						continue;
-					}
+					if (
+						//check if above loop exited with not consecutive points
+						cw_sorted_verts === null ||
 
-					//check if "points-created-path" actually contains selected single point inside its boundaries
-					if (false === pnpoly2(cw_sorted_verts, x, y)) {
-						cw_sorted_verts = null;
+						//check last and first path points that they close up nicely
+						!(Math.abs(cw_sorted_verts.at(-1).x - cw_sorted_verts[0].x) <= 1 &&
+							Math.abs(cw_sorted_verts.at(-1).y - cw_sorted_verts[0].y) <= 1
+						) ||
+
+						//check if "points-created-path" actually contains selected single point inside its boundaries
+						false === pnpoly2(cw_sorted_verts, x, y)
+					) {
 						continue;
 					}
 
@@ -2419,11 +2424,13 @@ class InkBallGame {
 
 	async FindRandomCPUPoint() {
 		let max_random_pick_amount = 100, x, y;
+		//loading all line up front and pass into below "looped" function calls
+		const allLines = await this.m_Lines.all();//TODO: async for
 		while (--max_random_pick_amount > 0) {
 			x = this.GetRandomInt(0, this.m_iGridWidth);
 			y = this.GetRandomInt(0, this.m_iGridHeight);
 
-			if (!(await this.m_Points.has(y * this.m_iGridWidth + x)) && await this.IsPointOutsideAllPaths(x, y)) {
+			if (!(await this.m_Points.has(y * this.m_iGridWidth + x)) && await this.IsPointOutsideAllPaths(x, y, allLines)) {
 				break;
 			}
 		}
@@ -2454,10 +2461,12 @@ class InkBallGame {
 		const random_picked_points = new Set();
 
 		let random_pick_amount_cnter = 0, spread = 2;
+		//loading all line up front and pass into below "looped" function calls
+		const allLines = await this.m_Lines.all();//TODO: async for
 		while (++random_pick_amount_cnter <= 50) {
 			random_picked_points.add(`${x}_${y}`);
 			if (false === (await this.m_Points.has(y * this.m_iGridWidth + x)) &&
-				true === (await this.IsPointOutsideAllPaths(x, y))) {
+				true === (await this.IsPointOutsideAllPaths(x, y, allLines))) {
 				log_str += (`checking coords ${x}_${y} succeed\n`);
 				break;
 			}
@@ -2716,10 +2725,12 @@ class InkBallGame {
 
 			//gather free human player points that could be intercepted.
 			const free_human_player_points = [];
+			//loading all line up front and pass into below "looped" function calls
+			const allLines = await this.m_Lines.all();//TODO: async for
 			for (const pt of await this.m_Points.values()) {
 				if (pt !== undefined && pt.GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.GetStatus()) {
 					const { x, y } = pt.GetPosition();
-					if (false === await this.IsPointOutsideAllPaths(x, y))
+					if (false === await this.IsPointOutsideAllPaths(x, y, allLines))
 						continue;
 
 					//check if really exists

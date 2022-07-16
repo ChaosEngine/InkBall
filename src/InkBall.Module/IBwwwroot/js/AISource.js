@@ -100,8 +100,8 @@ class GraphAI {
 		return { vertices: graph_points, edges: Array.from(graph_edges.values()) };
 	}
 
-	async IsPointOutsideAllPaths(lines, x, y) {
-		for (const line of lines) {
+	async IsPointOutsideAllPaths(x, y, allLines) {
+		for (const line of allLines) {
 			const points = line.GetPointsArray();
 
 			if (false !== pnpoly2(points, x, y))
@@ -204,7 +204,7 @@ class GraphAI {
 			for (const pt of await this.m_Points.values()) {
 				if (pt !== undefined && pt.GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.GetStatus()) {
 					const { x, y } = pt.GetPosition();
-					if (false === await this.IsPointOutsideAllPaths(lines, x, y))
+					if (false === await this.IsPointOutsideAllPaths(x, y, lines))
 						continue;
 
 					//check if really exists
