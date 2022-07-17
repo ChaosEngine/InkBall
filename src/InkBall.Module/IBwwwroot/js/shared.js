@@ -361,9 +361,9 @@ class SvgVml {
 			//
 			if (typeof (this.cachedPoints) === 'undefined') {
 				this.cachedPoints = this.getAttribute("points").split(" ").map(function (pt) {
-				const [x, y] = pt.split(',');
-				return { x: parseInt(x), y: parseInt(y) };
-			});
+					const [x, y] = pt.split(',');
+					return { x: parseInt(x), y: parseInt(y) };
+				});
 			}
 			return this.cachedPoints;
 		};
@@ -419,29 +419,32 @@ class SvgVml {
 			this.cont.appendChild(o);
 			return o;
 		};
-		this.CreatePolyline = function (width, points, col) {
+		this.CreatePolyline = function (points, col, width = undefined) {
 			const o = documentCreateElementNS_Element("polyline");
 			if (svgAntialias !== undefined)
 				o.setAttribute("shape-rendering", svgAntialias === true ? "auto" : "optimizeSpeed");
-			o.setAttribute("stroke-width", width);
-			if (col) o.setAttribute("stroke", col);
-			o.setAttribute("fill", col);
-			o.setAttribute("fill-opacity", "0.1");
+			if (width !== undefined)
+				o.setAttribute("stroke-width", width);
+			if (col) {
+				o.setAttribute("stroke", col);
+				o.setAttribute("fill", col);
+			}
+			// o.setAttribute("fill-opacity", "0.1");
 			if (points) o.setAttribute("points", points);
-			o.setAttribute("stroke-linecap", "round");
-			o.setAttribute("stroke-linejoin", "round");
+			// o.setAttribute("stroke-linecap", "round");
+			// o.setAttribute("stroke-linejoin", "round");
 			o.setAttribute("data-id", 0);
 
 			this.cont.appendChild(o);
 			return o;
 		};
-		this.CreateOval = function (diam) {
+		this.CreateOval = function (radius = undefined) {
 			const o = documentCreateElementNS_Element("circle");
 			if (svgAntialias !== undefined)
 				o.setAttribute("shape-rendering", svgAntialias === true ? "auto" : "optimizeSpeed");
-			o.setAttribute("stroke-width", 0);
-			o.setAttribute("r", diam / 2);
-			//ch_commented o.style.cursor = "pointer";
+			// o.setAttribute("stroke-width", 0);
+			if (radius !== undefined)
+				o.setAttribute("r", radius);
 			o.setAttribute("data-status", SvgVml.StatusEnumToString(StatusEnum.POINT_FREE));
 			//o.setAttribute("data-old-status", SvgVml.StatusEnumToString(StatusEnum.POINT_FREE));
 
@@ -458,21 +461,21 @@ class SvgVml {
 		this.cont.removeChild(polyline);
 	}
 
-	DeserializeOval(packed, radius = 4) {
+	DeserializeOval(packed, radius = undefined) {
 		let { x, y, Status, Color } = packed;
 		x = parseInt(x);
 		y = parseInt(y);
 		const o = this.CreateOval(radius);
-		o.move(x, y, radius);
-		o.SetStrokeColor(Color);
+		o.move(x, y);
+		// o.SetStrokeColor(Color);
 		o.SetFillColor(Color);
 		o.SetStatus(Status);
 		return o;
 	}
 
-	DeserializePolyline(packed, width = 3) {
+	DeserializePolyline(packed, width = undefined) {
 		const { iId, Color, PointsAsString } = packed;
-		const o = this.CreatePolyline(width, PointsAsString, Color);
+		const o = this.CreatePolyline(PointsAsString, Color, width);
 		o.SetID(iId);
 		return o;
 	}
@@ -699,9 +702,10 @@ class GameStateStore {
 				const idb_pt = {
 					x: pos.x,
 					y: pos.y,
-					Status: oval.GetStatus(),
-					Color: color
+					Status: oval.GetStatus()
 				};
+				if (color)
+					idb_pt.Color = color;
 
 				await this.StorePoint(key, idb_pt);
 

@@ -22,7 +22,7 @@ addEventListener('message', async function (e) {
 				LocalLog(`lines.count = ${await lines.length}, points.count = ${await points.size}`);
 
 				const ai = new GraphAI(params.state.iGridWidth, params.state.iGridHeight, points);
-				const graph = await ai.BuildGraph({ freePointStatus: StatusEnum.POINT_FREE_BLUE, cpufillCol: 'blue', visuals: false });
+				const graph = await ai.BuildGraph({ freePointStatus: StatusEnum.POINT_FREE_BLUE, cpufillCol: 'var(--bluish)', visuals: false });
 				//LocalLog(graph);
 
 				postMessage({ operation: params.operation, params: graph });
@@ -36,7 +36,7 @@ addEventListener('message', async function (e) {
 					points.set(pt.key, svgVml.DeserializeOval(pt.value));
 				});
 				const ai = new GraphAI(params.state.iGridWidth, params.state.iGridHeight, points);
-				const graph = await ai.BuildGraph({ freePointStatus: StatusEnum.POINT_FREE_BLUE, cpufillCol: 'blue', visuals: false });
+				const graph = await ai.BuildGraph({ freePointStatus: StatusEnum.POINT_FREE_BLUE, cpufillCol: 'var(--bluish)', visuals: false });
 
 
 				const vertices = graph.vertices.map(function (pt) {
