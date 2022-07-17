@@ -887,8 +887,8 @@ class InkBallGame {
 		const x = iX;
 		const y = iY;
 
-		const oval = this.SvgVml.CreateOval(this.m_PointRadius);
-		oval.move(x, y, this.m_PointRadius);
+		const oval = this.SvgVml.CreateOval(/* this.m_PointRadius */);
+		oval.move(x, y);
 
 		let color;
 		switch (iStatus) {
@@ -910,10 +910,11 @@ class InkBallGame {
 				oval.SetStatus(iStatus);
 				break;
 			case StatusEnum.POINT_IN_PATH:
-				if (this.g_iPlayerID === iPlayerId)//bPlayingWithRed
+				if (this.g_iPlayerID === iPlayerId)//is this point mine?
 					color = this.m_bIsPlayingWithRed === true ? this.COLOR_RED : this.COLOR_BLUE;
 				else
 					color = this.m_bIsPlayingWithRed === true ? this.COLOR_BLUE : this.COLOR_RED;
+				// oval.SetFillColor(color);
 				oval.SetStatus(iStatus);
 				break;
 			case StatusEnum.POINT_OWNED_BY_RED:
@@ -930,7 +931,7 @@ class InkBallGame {
 		}
 
 		oval.SetFillColor(color);
-		oval.SetStrokeColor(color);
+		// oval.SetStrokeColor(color);
 
 		await this.m_Points.set(iY * this.m_iGridWidth + iX, oval);
 	}
@@ -959,8 +960,8 @@ class InkBallGame {
 		const x = iX;
 		const y = iY;
 
-		const oval = this.SvgVml.CreateOval(this.m_PointRadius);
-		oval.move(x, y, this.m_PointRadius);
+		const oval = this.SvgVml.CreateOval(/* this.m_PointRadius */);
+		oval.move(x, y);
 
 		let color;
 		switch (iStatus) {
@@ -1003,7 +1004,7 @@ class InkBallGame {
 		}
 
 		oval.SetFillColor(color);
-		oval.SetStrokeColor(color);
+		// oval.SetStrokeColor(color);
 
 		return oval;
 	}
@@ -1040,9 +1041,6 @@ class InkBallGame {
 				p.SetStatus(status);
 				status = StatusEnum.POINT_IN_PATH;
 			}
-			else {
-				//debugger;
-			}
 
 			sPathPoints += `${sDelimiter}${x},${y}`;
 			sDelimiter = " ";
@@ -1054,16 +1052,14 @@ class InkBallGame {
 		if (p !== null && p !== undefined) {
 			p.SetStatus(status);
 		}
-		else {
-			//debugger;
-		}
 
 		if (sPoints[0] !== sPoints.at(-1)) {
 			sPathPoints += `${sDelimiter}${x},${y}`;
 		}
 
-		const line = this.SvgVml.CreatePolyline(this.m_LineStrokeWidth, sPathPoints,
-			(bBelong2ThisPlayer ? this.m_sDotColor : (bIsRed ? this.COLOR_BLUE : this.COLOR_RED)));
+		const line = this.SvgVml.CreatePolyline(sPathPoints,
+			(bBelong2ThisPlayer ? this.m_sDotColor : (bIsRed ? this.COLOR_BLUE : this.COLOR_RED))
+			/* ,this.m_LineStrokeWidth */);
 		line.SetID(iPathId);
 		await this.m_Lines.push(line);
 	}
@@ -1081,9 +1077,6 @@ class InkBallGame {
 				p.SetStatus(status);
 				status = StatusEnum.POINT_IN_PATH;
 			}
-			else {
-				//debugger;
-			}
 
 			sPathPoints += `${sDelimiter}${x},${y}`;
 			sDelimiter = " ";
@@ -1095,15 +1088,12 @@ class InkBallGame {
 		if (p !== null && p !== undefined) {
 			p.SetStatus(status);
 		}
-		else {
-			//debugger;
-		}
 
 		if (sPoints[0] !== sPoints.at(-1)) {
 			sPathPoints += `${sDelimiter}${x},${y}`;
 		}
 
-		const line = this.SvgVml.CreatePolyline(this.m_LineStrokeWidth, sPathPoints, sColor);
+		const line = this.SvgVml.CreatePolyline(sPathPoints, sColor/* , this.m_LineStrokeWidth */);
 		line.SetID(iPathId);
 
 		return line;
@@ -1176,13 +1166,13 @@ class InkBallGame {
 					ownedPoints.push({
 						point: pt,
 						revertStatus: pt.GetStatus(),
-						revertFillColor: pt.GetFillColor(),
-						revertStrokeColor: pt.GetStrokeColor()
+						revertFillColor: pt.GetFillColor()
+						//, revertStrokeColor: pt.GetStrokeColor()
 					});
 
 					pt.SetStatus(owned_by, true);
 					pt.SetFillColor(sOwnedCol);
-					pt.SetStrokeColor(sOwnedCol);
+					// pt.SetStrokeColor(sOwnedCol);
 				}
 			}
 		}
@@ -1357,6 +1347,7 @@ class InkBallGame {
 			this.m_bIsPlayerActive = false;
 			this.ShowMobileStatus('Waiting for oponent move');
 			this.m_Screen.style.cursor = "wait";
+			this.m_MouseCursorOval.Hide();
 			this.m_CancelPath.disabled = 'disabled';
 			this.m_StopAndDraw.disabled = '';
 			this.m_StopAndDraw.value = 'Stop and Draw';
@@ -1395,7 +1386,7 @@ class InkBallGame {
 				if (p !== undefined) {
 					p.SetStatus(point_status);
 					p.SetFillColor(sOwnedCol);
-					p.SetStrokeColor(sOwnedCol);
+					// p.SetStrokeColor(sOwnedCol);
 					await this.m_Points.set(y * this.m_iGridWidth + x, p);//update the point with new state,col etc.
 				}
 			}
@@ -1404,6 +1395,7 @@ class InkBallGame {
 			this.m_bIsPlayerActive = true;
 			this.ShowMobileStatus('Oponent has moved, your turn');
 			this.m_Screen.style.cursor = "crosshair";
+			this.m_MouseCursorOval.Hide();
 
 			if (this.m_Line !== null)
 				await this.OnCancelClick();
@@ -1434,7 +1426,7 @@ class InkBallGame {
 				if (p !== undefined) {
 					p.SetStatus(point_status);
 					p.SetFillColor(sOwnedCol);
-					p.SetStrokeColor(sOwnedCol);
+					// p.SetStrokeColor(sOwnedCol);
 					await this.m_Points.set(y * this.m_iGridWidth + x, p);//update the point with new state,col etc.
 				}
 			}
@@ -1443,6 +1435,7 @@ class InkBallGame {
 			this.m_bIsPlayerActive = false;
 			this.ShowMobileStatus('Waiting for oponent move');
 			this.m_Screen.style.cursor = "wait";
+			this.m_MouseCursorOval.Hide();
 
 			this.m_StopAndDraw.disabled = this.m_CancelPath.disabled = 'disabled';
 
@@ -1602,7 +1595,7 @@ class InkBallGame {
 		let toy = y;
 
 		if (this.CursorPos.x !== tox || this.CursorPos.y !== toy) {
-			this.m_MouseCursorOval.move(tox, toy, this.m_PointRadius);
+			this.m_MouseCursorOval.move(tox, toy);
 			this.m_MouseCursorOval.Show();
 			this.Debug(`[${x},${y}]`, 1);
 			this.CursorPos.x = tox; this.CursorPos.y = toy;
@@ -1644,11 +1637,9 @@ class InkBallGame {
 										await this.OnCancelClick();
 										val.OwnedPoints.forEach(revData => {
 											const p = revData.point;
-											const revertFillColor = revData.revertFillColor;
-											const revertStrokeColor = revData.revertStrokeColor;
 											p.RevertOldStatus();
-											p.SetFillColor(revertFillColor);
-											p.SetStrokeColor(revertStrokeColor);
+											p.SetFillColor(revData.revertFillColor);
+											// p.SetStrokeColor(revData.revertStrokeColor);
 										});
 										this.m_bHandlingEvent = false;
 									});
@@ -1680,7 +1671,8 @@ class InkBallGame {
 							p0.GetFillColor() === this.m_sDotColor && p1.GetFillColor() === this.m_sDotColor) {
 							const fromx = this.m_iLastX;
 							const fromy = this.m_iLastY;
-							this.m_Line = this.SvgVml.CreatePolyline(this.m_LineStrokeWidth * 2, `${fromx},${fromy} ${tox},${toy}`, this.DRAWING_PATH_COLOR);
+							this.m_Line = this.SvgVml.CreatePolyline(`${fromx},${fromy} ${tox},${toy}`, this.DRAWING_PATH_COLOR
+								/* , this.m_LineStrokeWidth * 2 */);
 							this.m_CancelPath.disabled = '';
 							p0.SetStatus(StatusEnum.POINT_STARTING, true);
 							p1.SetStatus(StatusEnum.POINT_IN_PATH, true);
@@ -1765,11 +1757,9 @@ class InkBallGame {
 									await this.OnCancelClick();
 									val.OwnedPoints.forEach(revData => {
 										const p = revData.point;
-										const revertFillColor = revData.revertFillColor;
-										const revertStrokeColor = revData.revertStrokeColor;
 										p.RevertOldStatus();
-										p.SetFillColor(revertFillColor);
-										p.SetStrokeColor(revertStrokeColor);
+										p.SetFillColor(revData.revertFillColor);
+										// p.SetStrokeColor(revData.revertStrokeColor);
 									});
 									this.m_bMouseDown = false;
 									this.m_bHandlingEvent = false;
@@ -1804,7 +1794,8 @@ class InkBallGame {
 						const fromy = this.m_iLastY;
 						const tox = x;
 						const toy = y;
-						this.m_Line = this.SvgVml.CreatePolyline(this.m_LineStrokeWidth * 2, `${fromx},${fromy} ${tox},${toy}`, this.DRAWING_PATH_COLOR);
+						this.m_Line = this.SvgVml.CreatePolyline(`${fromx},${fromy} ${tox},${toy}`, this.DRAWING_PATH_COLOR
+							/* , this.m_LineStrokeWidth * 2 */);
 						this.m_CancelPath.disabled = '';
 						p0.SetStatus(StatusEnum.POINT_STARTING, true);
 						p1.SetStatus(StatusEnum.POINT_IN_PATH, true);
@@ -1979,9 +1970,9 @@ class InkBallGame {
 		});
 		if (data.convex_hull && data.convex_hull.length > 0) {
 			const convex_hull = data.convex_hull;
-			this.SvgVml.CreatePolyline(this.m_LineStrokeWidth * 2, convex_hull.map(([x, y]) =>
+			this.SvgVml.CreatePolyline(convex_hull.map(([x, y]) =>
 				parseInt(x) + ',' + parseInt(y))
-				.join(' '), 'green');
+				.join(' '), 'green'/* , this.m_LineStrokeWidth * 2 */);
 			LocalLog(`convex_hull = ${convex_hull}`);
 
 			const cw_sorted_verts = data.cw_sorted_verts;
@@ -1994,7 +1985,7 @@ class InkBallGame {
 					pt.SetStrokeColor(rand_color);
 					pt.SetFillColor(rand_color);
 					pt.SetZIndex(100);
-					pt.setAttribute('r', 6 / this.m_iGridSpacingX);
+					pt.setAttribute("r", 6 / this.m_iGridSpacingX);
 				}
 				await Sleep(50);
 			}
@@ -2124,10 +2115,10 @@ class InkBallGame {
 			this.workingCyclePolyLine = null;
 		}
 		this.lastCycle.forEach(cycle => {
-			this.SvgVml.CreatePolyline(this.m_LineStrokeWidth * 2, cycle.map(function (fnd) {
+			this.SvgVml.CreatePolyline(cycle.map(function (fnd) {
 				const pt = fnd.GetPosition();
 				return `${pt.x},${pt.y}`;
-			}).join(' '), RandomColor());
+			}).join(' '), RandomColor()/* , this.m_LineStrokeWidth * 2 */);
 		});
 		LocalLog('game.lastCycle = ');
 		LocalLog(this.lastCycle);
@@ -2160,7 +2151,7 @@ class InkBallGame {
 				const r = 2;
 
 				const enclosing_circle = this.SvgVml.CreateOval(r);
-				enclosing_circle.move(x, y, r);
+				enclosing_circle.move(x, y);
 				enclosing_circle.SetStrokeColor(rand_color);
 				enclosing_circle.StrokeWeight(0.1);
 				enclosing_circle.SetFillColor('transparent');
@@ -2216,6 +2207,7 @@ class InkBallGame {
 							const pt1 = document.querySelector(`svg > circle[cx="${cpu_pt.x}"][cy="${cpu_pt.y}"]`);
 							if (pt1) {
 								pt1.SetStrokeColor(rand_color);
+								pt1.StrokeWeight('0.020em');
 								pt1.SetFillColor(rand_color);
 								pt1.setAttribute("r", 6 / this.m_iGridSpacingX);
 							}
@@ -2304,7 +2296,7 @@ class InkBallGame {
 		}
 		this.m_iGridSpacingX = Math.ceil(iClientWidth / this.m_iGridWidth);
 		this.m_iGridSpacingY = Math.ceil(iClientHeight / this.m_iGridHeight);
-		this.m_PointRadius = (4 / this.m_iGridSpacingX);
+		//this.m_PointRadius = (4 / this.m_iGridSpacingX);
 		this.m_LineStrokeWidth = (3 / this.m_iGridSpacingX);
 
 		this.m_sLastMoveGameTimeStamp = sLastMoveGameTimeStamp;
@@ -2333,11 +2325,12 @@ class InkBallGame {
 		if (this.m_bViewOnly === false) {
 
 			if (this.m_MouseCursorOval === null) {
-				this.m_MouseCursorOval = this.SvgVml.CreateOval(this.m_PointRadius);
+				this.m_MouseCursorOval = this.SvgVml.CreateOval(/* this.m_PointRadius */);
 				this.m_MouseCursorOval.SetFillColor(this.m_sDotColor);
-				this.m_MouseCursorOval.SetStrokeColor(this.m_sDotColor);
+				// this.m_MouseCursorOval.SetStrokeColor(this.m_sDotColor);
 				this.m_MouseCursorOval.SetZIndex(-1);
 				this.m_MouseCursorOval.Hide();
+				this.m_MouseCursorOval.setAttribute("data-status", "MOUSE_POINTER");
 			}
 
 			this.m_Screen.onmousedown = this.OnMouseDown.bind(this);
@@ -2687,6 +2680,7 @@ class InkBallGame {
 				const vis_v = await this.m_Points.get(y * this.m_iGridWidth + x);
 				vis_v.SetStrokeColor('black');
 				vis_v.SetFillColor('black');
+				vis_v.StrokeWeight(0.2);
 				vis_v.setAttribute("r", 6 / 16);
 				await Sleep(25);
 
@@ -2766,6 +2760,7 @@ class InkBallGame {
 
 							pt.SetStrokeColor(rand_color);
 							pt.SetFillColor(rand_color);
+							pt.StrokeWeight(0.2);
 							pt.setAttribute("r", 6 / this.m_iGridSpacingX);
 						}
 						await Sleep(50);
@@ -2781,6 +2776,7 @@ class InkBallGame {
 							const pt1 = await this.m_Points.get(possible_intercept.y * this.m_iGridWidth + possible_intercept.x);
 							if (pt1) {
 								pt1.SetStrokeColor('var(--bs-yellow)');
+								pt1.StrokeWeight(0.2);
 								pt1.SetFillColor('var(--bs-yellow)');
 								pt1.setAttribute("r", 6 / this.m_iGridSpacingX);
 							}
@@ -2796,6 +2792,7 @@ class InkBallGame {
 					const pts2reset = Array.from(document.querySelectorAll(`svg > circle[fill="${rand_color}"][r="${6 / this.m_iGridSpacingX}"]`));
 					pts2reset.forEach(pt => {
 						pt.SetStrokeColor(this.COLOR_BLUE);
+						pt.StrokeWeight(0.2);
 						pt.SetFillColor(this.COLOR_BLUE);
 						pt.setAttribute("r", 6 / this.m_iGridSpacingX);
 					});
@@ -2843,7 +2840,7 @@ class InkBallGame {
 			return `${pt.x},${pt.y}`;
 		}).join(' ');
 		if (!this.workingCyclePolyLine)
-			this.workingCyclePolyLine = this.SvgVml.CreatePolyline(this.m_LineStrokeWidth, pts, 'black');
+			this.workingCyclePolyLine = this.SvgVml.CreatePolyline(pts, 'black'/* , this.m_LineStrokeWidth */);
 		else
 			this.workingCyclePolyLine.SetPoints(pts);
 
