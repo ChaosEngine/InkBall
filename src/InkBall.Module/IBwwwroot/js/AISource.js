@@ -23,7 +23,7 @@ class GraphAI {
 	 */
 	async BuildGraph({
 		freePointStatus = StatusEnum.POINT_FREE_BLUE,
-		cpufillCol: cpuFillColor = 'blue'
+		cpufillCol: cpuFillColor = 'var(--bluish)'
 		//, visuals: presentVisually = false
 	} = {}) {
 		const graph_points = [], graph_edges = new Map();
