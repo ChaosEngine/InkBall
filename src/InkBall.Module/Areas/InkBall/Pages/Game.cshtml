@@ -1,4 +1,4 @@
-@page
+﻿@page
 @inject Microsoft.Extensions.Options.IOptions<InkBallOptions> commonUIConfigureOptions
 @model GameModel
 @{
@@ -12,6 +12,8 @@
     bool isThisPlayerActive = Model.Game.IsThisPlayerActive();
     bool useMessagePackBinaryTransport = commonUIConfigureOptions.Value.UseMessagePackBinaryTransport;
     string lastTimeStampISO = @Model.Game.TimeStamp.ToString("O");
+    string hubName = commonUIConfigureOptions.Value.AppRootPath + InkBall.Module.Hubs.GameHub.HubName;
+    string IBversion = this.GetType().Assembly.GetName().Version.ToString(4);
     if (Model.Game.Player2 != null)
     {
         if (Model.Game.GetOtherPlayer().IsLastMoveOverdue() && isThisPlayerActive)
@@ -109,7 +111,7 @@
 <script type='text/javascript'>
 "use strict";
     window.gameOptions = {
-	    inkBallHubName: '@(commonUIConfigureOptions.Value.AppRootPath + InkBall.Module.Hubs.GameHub.HubName)',
+	    inkBallHubName: '@hubName',
 	    iGameID: @Model.Game.iId,
 	    iPlayerID: @Model.Player.iId,
 	    bPlayingWithRed: JSON.parse('@Model.Game.IsThisPlayerPlayingWithRed()'.toLowerCase()),
@@ -120,7 +122,7 @@
 	    isReadonly: JSON.parse('@Model.IsReadonly'.toLowerCase()),
         pathAfterPointDrawAllowanceSecAmount: @Constants.PathAfterPointDrawAllowanceSecAmount,
         sLastMoveGameTimeStamp: '@lastTimeStampISO',
-        version: '@this.GetType().Assembly.GetName().Version.ToString(4)',
+        version: '@IBversion',
 
 	    @if(Model.PlayerPointsAndPaths.Points != null)
 	    {
