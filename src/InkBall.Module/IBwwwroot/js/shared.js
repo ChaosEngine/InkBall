@@ -245,29 +245,46 @@ class SvgVml {
 			};
 		}
 
-		SVGCircleElement.prototype.move = function (x, y, radius) {
+		SVGCircleElement.prototype.move = function (x, y/* , radius = undefined */) {
 			this.setAttribute("cx", x);
 			this.setAttribute("cy", y);
-			this.setAttribute("r", radius);
+			// if (radius)
+			// 	this.setAttribute("r", radius);
 		};
 		SVGCircleElement.prototype.GetStrokeColor = function () { return this.getAttribute("stroke"); };
 		SVGCircleElement.prototype.SetStrokeColor = function (col) { this.setAttribute("stroke", col); };
 		SVGCircleElement.prototype.GetPosition = function () {
-			return { x: parseInt(this.getAttribute("cx")), y: parseInt(this.getAttribute("cy")) };
+			if (typeof (this.cachedPosition) === 'undefined') {
+				this.cachedPosition = { x: parseInt(this.getAttribute("cx")), y: parseInt(this.getAttribute("cy")) };
+			}
+			return this.cachedPosition;
 		};
-		SVGCircleElement.prototype.GetFillColor = function () { return this.getAttribute("fill"); };
-		SVGCircleElement.prototype.SetFillColor = function (col) { this.setAttribute("fill", col); };
+		SVGCircleElement.prototype.GetFillColor = function () {
+			if (typeof (this.cachedFillColor) === 'undefined') {
+				this.cachedFillColor = this.getAttribute("fill");
+			}
+			return this.cachedFillColor;
+		};
+		SVGCircleElement.prototype.SetFillColor = function (col) {
+			this.cachedFillColor = col;
+			this.setAttribute("fill", col);
+		};
 		SVGCircleElement.prototype.GetStatus = function () {
-			return SvgVml.StringToStatusEnum(this.getAttribute("data-status"));
+			if (typeof (this.cachedStatus) === 'undefined') {
+				this.cachedStatus = SvgVml.StringToStatusEnum(this.getAttribute("data-status"));
+			}
+			return this.cachedStatus;
 		};
 		SVGCircleElement.prototype.SetStatus = function (iStatus, saveOldPoint = false) {
 			if (saveOldPoint) {
 				const old_status = SvgVml.StringToStatusEnum(this.getAttribute("data-status"));
-				this.setAttribute("data-status", SvgVml.StatusEnumToString(iStatus));
+				this.cachedStatus = iStatus;
+				this.setAttribute("data-status", SvgVml.StatusEnumToString(this.cachedStatus));
 				if (old_status !== StatusEnum.POINT_FREE && old_status !== iStatus)
 					this.setAttribute("data-old-status", SvgVml.StatusEnumToString(old_status));
 			}
 			else {
+				this.cachedStatus = iStatus;
 				this.setAttribute("data-status", SvgVml.StatusEnumToString(iStatus));
 			}
 		};
@@ -276,7 +293,8 @@ class SvgVml {
 			if (old_status) {
 				this.removeAttribute("data-old-status");
 				this.setAttribute("data-status", old_status);
-				return SvgVml.StringToStatusEnum(old_status);
+				this.cachedStatus = SvgVml.StringToStatusEnum(old_status);
+				return this.cachedStatus;
 			}
 			return -1;
 		};
@@ -338,11 +356,16 @@ class SvgVml {
 			return this.getAttribute("points");
 		};
 		SVGPolylineElement.prototype.GetPointsArray = function () {
+			//format is:
 			//x0,y0 x1,y1 x2,y2
-			return this.getAttribute("points").split(" ").map(function (pt) {
+			//
+			if (typeof (this.cachedPoints) === 'undefined') {
+				this.cachedPoints = this.getAttribute("points").split(" ").map(function (pt) {
 				const [x, y] = pt.split(',');
 				return { x: parseInt(x), y: parseInt(y) };
 			});
+			}
+			return this.cachedPoints;
 		};
 		SVGPolylineElement.prototype.SetPoints = function (sPoints) {
 			this.setAttribute("points", sPoints);
