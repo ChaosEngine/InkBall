@@ -30,12 +30,10 @@ namespace InkBall.Module
 
 #if DEBUG
 		public const string WwwIncludeInkballJS = "~/js/inkball.js";
-		// public const string WwwIncludeInkballJSBundle = "~/js/inkball.Bundle.js";
 		public const string WwwIncludeSharedJS = "~/js/shared.js";
 		public const string WwwIncludeCSS = "~/css/inkball.css";
 #else
 		public const string WwwIncludeInkballJS = "~/js/inkball.min.js";
-		// public const string WwwIncludeInkballJSBundle = "~/js/inkball.Bundle.min.js";
 		public const string WwwIncludeSharedJS = "~/js/shared.min.js";
 		public const string WwwIncludeCSS = "~/css/inkball.min.css";
 #endif
