@@ -10,9 +10,9 @@ p.inkgame {
 	margin-bottom: 0.3em;
 }
 
-@mixin background($cellWidth, $cellHeight) {
+@mixin background($cellWidth, $cellHeight, $fill, $stroke) {
 	//https://codepen.io/jakob-e/pen/doMoML processed SVG
-	background-image: svg-url('<svg xmlns="http://www.w3.org/2000/svg"><defs><pattern id="grid" width="#{$cellWidth}" height="#{$cellHeight}" patternUnits="userSpaceOnUse"><rect width="#{$cellWidth}" height="#{$cellHeight}" fill="none" stroke="gray" stroke-width="0.25"/></pattern></defs><rect width="100%" height="100%" fill="url(#grid)" /></svg>');
+	background-image: svg-url('<svg xmlns="http://www.w3.org/2000/svg"><defs><pattern id="grid" width="#{$cellWidth}" height="#{$cellHeight}" patternUnits="userSpaceOnUse"><rect width="#{$cellWidth}" height="#{$cellHeight}" fill="#{$fill}" stroke="#{$stroke}" stroke-width="0.25"/></pattern></defs><rect width="100%" height="100%" fill="url(#grid)" /></svg>');
 }
 
 @mixin baseBoard($width, $height, $cellWidth, $cellHeight) {
@@ -28,9 +28,9 @@ p.inkgame {
 	}
 }
 
-@mixin irregularBoard($parent, $width, $height, $cellWidth: 15px, $cellHeight: 1em) {
+@mixin irregularBoard($parent, $width, $height, $cellWidth: 15px, $cellHeight: 1em, $fill, $stroke) {
 	#{$parent}-#{$width}x#{$height} {
-		@include background(15, 16);
+		@include background(15, 16, $fill, $stroke);
 		background-size: calc(#{$cellWidth} * 5) calc(#{$cellHeight} * 5);
 		@include baseBoard(#{$width}, #{$height}, #{$cellWidth}, #{$cellHeight});
 	}
@@ -50,7 +50,14 @@ p.inkgame {
 		}
 	}
 
-	svg#screen {
+	--redish: red;
+	--bluish: blue;
+	--owned_by_red: #DC143C;
+	--owned_by_blue: #8A2BE2;
+	--path_draw: black;
+	--point_radius: 0.25px;
+	
+	& svg#screen {
 		border: 1px solid red;
 		/* font-size: 32px; */
 		box-sizing: content-box;
@@ -63,21 +70,92 @@ p.inkgame {
 	}
 }
 
-.boardsize-20x26, .boardsize-40x52, .boardsize-64x64 {
-	@include background(16, 16);
-	background-size: 1em 1em;
+svg {
+	&>circle {
+		&[data-status="POINT_FREE_RED"] {
+			fill: var(--redish);
+			r: var(--point_radius);
+		}
+
+		&[data-status="POINT_FREE_BLUE"] {
+			fill: var(--bluish);
+			r: var(--point_radius);
+		}
+
+		&[data-status="POINT_OWNED_BY_RED"] {
+			// fill: lightskyblue;
+			fill: var(--owned_by_red);
+			r: var(--point_radius);
+		}
+
+		&[data-status="POINT_OWNED_BY_BLUE"] {
+			// fill: lightpink;
+			fill: var(--owned_by_blue);
+			r: var(--point_radius);
+		}
+
+		&[data-status="POINT_IN_PATH"] {
+			// fill: lightgray;
+			r: var(--point_radius);
+		}
+
+		&[data-status="POINT_STARTING"] {
+			fill: yellow;
+			r: 0.5px;
+		}
+		
+		//mouse pointer/cursor style
+		&[data-status="MOUSE_POINTER"] {
+			/* fill: transparent; */
+			stroke: rgba(128, 255, 0, 0.5);
+			stroke-width: 0.06em;
+			r: var(--point_radius);
+		}
+
+		//test points
+		// &[data-status="POINT_FREE"] {
+		// 	// fill: transparent;
+		// 	// stroke: gray;
+		// 	stroke-width: 0.1em;
+		// }
+	}
+
+	&>polyline {
+		stroke-width: 0.1875;
+		fill-opacity: 0.1;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+}
+@media (prefers-color-scheme: light) {
+	.boardsize-20x26, .boardsize-40x52, .boardsize-64x64 {
+		@include background(16, 16, 'none', 'gray');
+		background-size: 1em 1em;
+	}
+}
+@media (prefers-color-scheme: dark) {
+	.boardsize-20x26, .boardsize-40x52, .boardsize-64x64 {
+		@include background(16, 16, 'black', 'white');
+		background-size: 1em 1em;
+	}
 }
 
 @include board('.boardsize', 20, 26);
 
 @include board('.boardsize', 40, 52);
 
-// @include irregularBoard('.boardsize', 64, 64);
+// @media (prefers-color-scheme: light) {
+// 	@include irregularBoard('.boardsize', 64, 64, 'none', 'gray');
+// }
+// @media (prefers-color-scheme: dark) {
+// 	@include irregularBoard('.boardsize', 64, 64, 'black', 'white');
+// }
 @include board('.boardsize', 64, 64);
 
 [data-otherplayerid="-1"], [data-otherplayerid=""] {
 	display: none;
 }
+
 /**********inkgames(list)*********/
 .inkgames {
 	.table-responsive {
@@ -85,7 +163,8 @@ p.inkgame {
 		max-height: 75vh;
 	}
 }
+
 /**********inkstats*********/
 .inkstats .grid-striped .row:nth-of-type(odd) {
-	background-color: rgba(0,0,0,.05);
+	background-color: rgba(0, 0, 0, .05);
 }

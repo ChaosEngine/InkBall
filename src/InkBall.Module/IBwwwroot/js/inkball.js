@@ -380,11 +380,11 @@ class InkBallGame {
 		this.GameType = GameTypeEnum[gameType];
 		this.iConnErrCount = 0;
 		this.iExponentialBackOffMillis = 2000;
-		this.COLOR_RED = 'red';
-		this.COLOR_BLUE = 'blue';
-		this.COLOR_OWNED_RED = '#DC143C';
-		this.COLOR_OWNED_BLUE = '#8A2BE2';
-		this.DRAWING_PATH_COLOR = "black";
+		this.COLOR_RED = 'var(--redish)';
+		this.COLOR_BLUE = 'var(--bluish)';
+		this.COLOR_OWNED_RED = 'var(--owned_by_red)';
+		this.COLOR_OWNED_BLUE = 'var(--owned_by_blue)';
+		this.DRAWING_PATH_COLOR = "var(--path_draw)";
 		this.m_bIsWon = false;
 		this.m_bPointsAndPathsLoaded = false;
 		this.m_iDelayBetweenMultiCaptures = 4000;
@@ -403,7 +403,7 @@ class InkBallGame {
 		this.m_iGridHeight = 0;
 		this.m_iGridSpacingX = 0;
 		this.m_iGridSpacingY = 0;
-		this.m_PointRadius = 0;
+		// this.m_PointRadius = "var(--point_radius)";
 		this.m_LineStrokeWidth = 0;
 		this.m_iLastX = -1;
 		this.m_iLastY = -1;
@@ -2549,7 +2549,7 @@ class InkBallGame {
 	 */
 	async BuildGraph({
 		freePointStatus = StatusEnum.POINT_FREE_BLUE,
-		cpufillCol: cpuFillColor = 'blue'
+		cpufillCol: cpuFillColor = 'var(--bluish)'
 		//, visuals: presentVisually = false
 	} = {}) {
 		const graph_points = [], graph_edges = new Map();
