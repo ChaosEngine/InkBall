@@ -72,48 +72,42 @@ p.inkgame {
 
 svg {
 	&>circle {
+		///
+		/// Those r: XXX need to go along with package.json overrides for gulp-clean-css to use clean-css: >5* version
+		/// "overrides": {
+		/// 	"clean-css": "5.3.1"
+		/// }
+		///
 		&[data-status="POINT_FREE_RED"] {
 			fill: var(--redish);
-			/* clean-css ignore:start */
 			r: var(--point_radius);
-			/* clean-css ignore:end */
 		}
 
 		&[data-status="POINT_FREE_BLUE"] {
 			fill: var(--bluish);
-			/* clean-css ignore:start */
 			r: var(--point_radius);
-			/* clean-css ignore:end */
 		}
 
 		&[data-status="POINT_OWNED_BY_RED"] {
 			// fill: lightskyblue;
 			fill: var(--owned_by_red);
-			/* clean-css ignore:start */
 			r: var(--point_radius);
-			/* clean-css ignore:end */
 		}
 
 		&[data-status="POINT_OWNED_BY_BLUE"] {
 			// fill: lightpink;
 			fill: var(--owned_by_blue);
-			/* clean-css ignore:start */
 			r: var(--point_radius);
-			/* clean-css ignore:end */
 		}
 
 		&[data-status="POINT_IN_PATH"] {
 			// fill: lightgray;
-			/* clean-css ignore:start */
 			r: var(--point_radius);
-			/* clean-css ignore:end */
 		}
 
 		&[data-status="POINT_STARTING"] {
 			fill: yellow;
-			/* clean-css ignore:start */
 			r: 0.5px;
-			/* clean-css ignore:end */
 		}
 		
 		//mouse pointer/cursor style
@@ -121,9 +115,7 @@ svg {
 			/* fill: transparent; */
 			stroke: rgba(128, 255, 0, 0.5);
 			stroke-width: 0.06em;
-			/* clean-css ignore:start */
 			r: var(--point_radius);
-			/* clean-css ignore:end */
 		}
 
 		//test points
