@@ -54,9 +54,25 @@ p.inkgame {
 	--bluish: blue;
 	--owned_by_red: #DC143C;
 	--owned_by_blue: #8A2BE2;
-	--path_draw: black;
 	--point_radius: 0.25px;
-	
+
+	@media (prefers-color-scheme: light) {
+		--path_draw: black;
+
+		.boardsize-20x26, .boardsize-40x52, .boardsize-64x64 {
+			@include background(16, 16, 'none', 'gray');
+			background-size: 1em 1em;
+		}
+	}
+	@media (prefers-color-scheme: dark) {
+		--path_draw: white;
+
+		.boardsize-20x26, .boardsize-40x52, .boardsize-64x64 {
+			@include background(16, 16, 'black', 'white');
+			background-size: 1em 1em;
+		}
+	}
+
 	& svg#screen {
 		border: 1px solid red;
 		/* font-size: 32px; */
@@ -74,36 +90,36 @@ svg {
 	&>circle {
 		///
 		/// Those r: XXX need to go along with package.json overrides for gulp-clean-css to use clean-css: >5* version
+		/// https://docs.npmjs.com/cli/v8/configuring-npm/package-json#overrides
 		/// "overrides": {
 		/// 	"clean-css": "5.3.1"
 		/// }
 		///
+		&[data-status] {
+			r: var(--point_radius);
+		}
+
 		&[data-status="POINT_FREE_RED"] {
 			fill: var(--redish);
-			r: var(--point_radius);
 		}
 
 		&[data-status="POINT_FREE_BLUE"] {
 			fill: var(--bluish);
-			r: var(--point_radius);
 		}
 
 		&[data-status="POINT_OWNED_BY_RED"] {
 			// fill: lightskyblue;
 			fill: var(--owned_by_red);
-			r: var(--point_radius);
 		}
 
 		&[data-status="POINT_OWNED_BY_BLUE"] {
 			// fill: lightpink;
 			fill: var(--owned_by_blue);
-			r: var(--point_radius);
 		}
 
-		&[data-status="POINT_IN_PATH"] {
-			// fill: lightgray;
-			r: var(--point_radius);
-		}
+		// &[data-status="POINT_IN_PATH"] {
+		// 	// fill: lightgray;
+		// }
 
 		&[data-status="POINT_STARTING"] {
 			fill: yellow;
@@ -115,7 +131,6 @@ svg {
 			/* fill: transparent; */
 			stroke: rgba(128, 255, 0, 0.5);
 			stroke-width: 0.06em;
-			r: var(--point_radius);
 		}
 
 		//test points
@@ -131,18 +146,6 @@ svg {
 		fill-opacity: 0.1;
 		stroke-linecap: round;
 		stroke-linejoin: round;
-	}
-}
-@media (prefers-color-scheme: light) {
-	.boardsize-20x26, .boardsize-40x52, .boardsize-64x64 {
-		@include background(16, 16, 'none', 'gray');
-		background-size: 1em 1em;
-	}
-}
-@media (prefers-color-scheme: dark) {
-	.boardsize-20x26, .boardsize-40x52, .boardsize-64x64 {
-		@include background(16, 16, 'black', 'white');
-		background-size: 1em 1em;
 	}
 }
 
