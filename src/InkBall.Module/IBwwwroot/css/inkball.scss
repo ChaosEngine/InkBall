@@ -95,31 +95,32 @@ svg {
 		/// 	"clean-css": "5.3.1"
 		/// }
 		///
-		&[data-status] {
-			r: var(--point_radius);
-		}
-
 		&[data-status="POINT_FREE_RED"] {
 			fill: var(--redish);
+			r: var(--point_radius);
 		}
 
 		&[data-status="POINT_FREE_BLUE"] {
 			fill: var(--bluish);
+			r: var(--point_radius);
 		}
 
 		&[data-status="POINT_OWNED_BY_RED"] {
 			// fill: lightskyblue;
 			fill: var(--owned_by_red);
+			r: var(--point_radius);
 		}
 
 		&[data-status="POINT_OWNED_BY_BLUE"] {
 			// fill: lightpink;
 			fill: var(--owned_by_blue);
+			r: var(--point_radius);
 		}
 
-		// &[data-status="POINT_IN_PATH"] {
-		// 	// fill: lightgray;
-		// }
+		&[data-status="POINT_IN_PATH"] {
+			// fill: lightgray;
+			r: var(--point_radius);
+		}
 
 		&[data-status="POINT_STARTING"] {
 			fill: yellow;
@@ -131,6 +132,7 @@ svg {
 			/* fill: transparent; */
 			stroke: rgba(128, 255, 0, 0.5);
 			stroke-width: 0.06em;
+			r: var(--point_radius);
 		}
 
 		//test points
