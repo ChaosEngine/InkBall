@@ -84,7 +84,7 @@ svg > circle[data-status=MOUSE_POINTER] {
   r: var(--point_radius);
 }
 svg > polyline {
-  stroke-width: 0.1875;
+  stroke-width: 0.1875px;
   fill-opacity: 0.1;
   stroke-linecap: round;
   stroke-linejoin: round;
