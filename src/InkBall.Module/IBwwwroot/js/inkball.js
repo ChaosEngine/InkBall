@@ -1,9 +1,8 @@
 /*eslint no-unused-vars: ["error", { "varsIgnorePattern": "InkBallGame" }]*/
 /*global signalR*/
 "use strict";
-import depthFirstSearch from "./depthFirstSearch.js";
 
-let SHRD, LocalLog, LocalError, StatusEnum, hasDuplicates, pnpoly2, sortPointsClockwise, Sleep;
+let SHRD, LocalLog, LocalError, StatusEnum, hasDuplicates, pnpoly2, sortPointsClockwise, Sleep, depthFirstSearch;
 
 /******** funcs-n-classes ********/
 const CommandKindEnum = Object.freeze({
@@ -310,7 +309,7 @@ class CountdownTimer {
  * don't break webpack logic here! https://webpack.js.org/guides/code-splitting/
  * @param {object} gameOptions is an entry starter object definint game parameters
  */
-async function importAllModulesAsync(/*gameOptions*/) {
+async function importAllModulesAsync(gameOptions) {
 	const selfFileName = Array.prototype.slice.call(document.getElementsByTagName('script'))
 		.map(x => x.src).find(s => s.indexOf('inkball') !== -1).split('/').pop();
 	const isMinified = selfFileName.indexOf("min") !== -1;
@@ -324,9 +323,13 @@ async function importAllModulesAsync(/*gameOptions*/) {
 		Sleep = SHRD.Sleep;
 
 	//for CPU game enable AI libs and calculations
-	//if (gameOptions.iOtherPlayerID === -1) {
-	//	AIBundle = await import(/* webpackChunkName: "AIDeps" */'./AIBundle.js');
-	//}
+	if (gameOptions.iOtherPlayerID === -1) {
+		// AIBundle = await import(/* webpackChunkName: "AIDeps" */'./AIBundle.js');
+
+		// import depthFirstSearch from "./depthFirstSearch.js";
+		const module = await import("./depthFirstSearch.js");
+		depthFirstSearch = module.default;
+	}
 }
 
 function RandomColor() {
