@@ -2323,10 +2323,11 @@ class InkBallGame {
 		this.m_sLastMoveGameTimeStamp = sLastMoveGameTimeStamp;
 		this.m_sVersion = version;
 		///////CpuGame variables start//////
-		this.rAF_StartTimestamp = null;
+		this.rAF_StartTimeStamp = null;
 		this.rAF_FrameID = null;
 		this.workingCyclePolyLine = null;
 		this.lastCycle = [];
+		this.m_AIMethod = null;
 		///////CpuGame variables end//////
 
 		this.SvgVml = new SHRD.SvgVml();
@@ -2386,6 +2387,11 @@ class InkBallGame {
 
 				//if (!this.m_bIsPlayerActive)
 				//	this.StartCPUCalculation();
+				this.m_AIMethod = localStorage.getItem('AIMethod');
+				if (!this.m_AIMethod) {
+					this.m_AIMethod = 'centroid';
+					localStorage.setItem('AIMethod', this.m_AIMethod);
+				}
 			}
 
 			this.m_SurrenderButton.disabled = '';
@@ -2481,7 +2487,7 @@ class InkBallGame {
 			random_picked_points.add(`${x}_${y}`);
 			if (false === (await this.m_Points.has(y * this.m_iGridWidth + x)) &&
 				true === (await this.IsPointOutsideAllPaths(x, y, allLines))) {
-				log_str += (`checking coords ${x}_${y} succeed\n`);
+				log_str += (`checking centroid coords ${x}_${y} succeed\n`);
 				break;
 			}
 			log_str += (`checking coords ${x}_${y} failed #${random_pick_amount_cnter}\n`);
@@ -2504,6 +2510,47 @@ class InkBallGame {
 
 		const pt = new InkBallPointViewModel(0, this.g_iGameID, -1/*player*/, x, y, StatusEnum.POINT_FREE_BLUE, 0);
 		return pt;
+	}
+
+	async FindNearestCPUPoint() {
+		if (this.m_iLastX >= 0 && this.m_iLastY >= 0) {
+			let x = this.m_iLastX, y = this.m_iLastY;
+			let log_str = "";
+			const random_picked_points = new Set();
+
+			let random_pick_amount_cnter = 0, spread = 1;
+			//loading all line up front and pass into below "looped" function calls
+			const allLines = await this.m_Lines.all();//TODO: async for
+			while (++random_pick_amount_cnter <= 50) {
+				random_picked_points.add(`${x}_${y}`);
+				if (false === (await this.m_Points.has(y * this.m_iGridWidth + x)) &&
+					true === (await this.IsPointOutsideAllPaths(x, y, allLines))) {
+					log_str += (`checking nearest coords ${x}_${y} succeed\n`);
+					break;
+				}
+				log_str += (`checking coords ${x}_${y} failed #${random_pick_amount_cnter}\n`);
+				// if (random_pick_amount_cnter >= 25)
+				// 	spread *= 2;
+
+				let spread_cnter = 20;
+				do {
+					x = this.GetRandomInt(this.m_iLastX - spread, this.m_iLastX + spread + 1);
+					y = this.GetRandomInt(this.m_iLastY - spread, this.m_iLastY + spread + 1);
+				} while (--spread_cnter > 0 && random_picked_points.has(`${x}_${y}`));
+			}
+			if (random_pick_amount_cnter >= 50) {
+				log_str += ('finding nearest failed\n');
+				LocalLog(log_str);
+				return null;
+			}
+			else
+				LocalLog(log_str);
+
+			const pt = new InkBallPointViewModel(0, this.g_iGameID, -1/*player*/, x, y, StatusEnum.POINT_FREE_BLUE, 0);
+			return pt;
+		}
+
+		return null;
 	}
 
 	// Returns true if the graph contains a cycle, else false. 
@@ -2976,19 +3023,30 @@ class InkBallGame {
 	}
 
 	async rAFCallBack(timeStamp) {
-		if (this.rAF_StartTimestamp === null) this.rAF_StartTimestamp = timeStamp;
-		const progress = timeStamp - this.rAF_StartTimestamp;
+		if (this.rAF_StartTimeStamp === null) this.rAF_StartTimeStamp = timeStamp;
+		const elapsed = timeStamp - this.rAF_StartTimeStamp;
 
 
 		let point = null;
-		const centroid = await this.CalculateCPUCentroid();
-		if (centroid !== null)
-			point = centroid;
-		else
-			point = await this.FindRandomCPUPoint();
+		switch (this.m_AIMethod) {
+			case 'centroid':
+				{
+					point = await this.CalculateCPUCentroid();
+					if (point === null)
+						point = await this.FindRandomCPUPoint();
+				}
+				break;
+			case 'nearest':
+				{
+					point = await this.FindNearestCPUPoint();
+					if (point === null)
+						point = await this.FindRandomCPUPoint();
+				}
+				break;
+		}
 
 		if (point === null) {
-			if (progress < 2000)
+			if (elapsed < 2000)
 				this.rAF_FrameID = window.requestAnimationFrame(this.rAFCallBack.bind(this));
 		}
 		else {
