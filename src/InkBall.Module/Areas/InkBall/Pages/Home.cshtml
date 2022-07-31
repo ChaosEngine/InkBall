@@ -1,4 +1,4 @@
-﻿@page
+@page
 @inject Microsoft.Extensions.Options.IOptions<InkBallOptions> commonUIConfigureOptions
 @model HomeModel
 @{
@@ -9,7 +9,8 @@
 
 <p class="h6 inkhome"></p>
 
-<div class="alert alert-success alert-dismissible fade show inkhome" role="alert">
+<div class="alert alert-dismissible fade show inkhome" role="alert">
+	<span></span>
 	<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 </div>
 
@@ -28,11 +29,10 @@
 
 <script type='text/javascript'>
 "use strict";
-	const alert = document.querySelector("div.alert.alert-dismissible.inkhome");
+	const alert = document.querySelector(".alert.alert-dismissible.inkhome");
 	const msg = "@Model.Message";
 	if (msg !== "") {
 		let addendum;
-		//debugger;
 		if (msg.toLowerCase().indexOf('exception') !== -1)
 			addendum = 'danger';
 		else if (msg.toLowerCase().indexOf('error') !== -1)
@@ -44,7 +44,8 @@
 
 		const statusMessageClass = 'alert-' + addendum;
 		alert.classList.add(statusMessageClass);
-		alert.innerHTML += "\r\n" + msg;
+		const span = alert.querySelector("span");
+		span.textContent = msg;
 	}
 	else
 		alert.parentNode.removeChild(alert);
@@ -58,7 +59,7 @@
 	let innerForm = '';
 	if (bIsLoggedIn)
     {
-		document.querySelector("p.inkhome").innerHTML = 'Welcome ' + userName;
+		document.querySelector("p.inkhome").textContent = 'Welcome ' + userName;
 
 		if (bIsCurrentGameOk)
 		{
@@ -106,7 +107,7 @@
 	}
 	else
 	{
-		document.querySelector("p.inkhome").innerHTML = 'You are not logged in ... or allowed 😅';
+		document.querySelector("p.inkhome").textContent = 'You are not logged in ... or allowed 😅';
 
 		//not logged or bad
 		const loginPath = '@commonUIConfigureOptions.Value.LoginPath';
