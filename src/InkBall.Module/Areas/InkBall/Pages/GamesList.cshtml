@@ -14,6 +14,7 @@
 }
 
 <div class="alert alert-dismissible fade show inkgames" role="alert">
+	<span></span>
 	<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 </div>
 
@@ -168,7 +169,7 @@
 
 <script type='text/javascript'>
 "use strict";
-	const alert = document.querySelector("div.alert.alert-dismissible.inkgames");
+	const alert = document.querySelector(".alert.alert-dismissible.inkgames");
 	const msg = "@Model.Message";
 	if (msg !== "") {
 		let addendum;
@@ -183,7 +184,8 @@
 
 		const statusMessageClass = 'alert-' + addendum;
 		alert.classList.add(statusMessageClass);
-		alert.innerHTML += "\r\n" + msg;
+		const span = alert.querySelector("span");
+		span.textContent = msg;
 	}
 	else
 		alert.parentNode.removeChild(alert);

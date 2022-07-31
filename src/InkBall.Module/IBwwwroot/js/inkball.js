@@ -261,7 +261,7 @@ class CountdownTimer {
 				this.countdownReachedHandler(this.label);
 		}
 		else if (this.label) {
-			this.label.innerHTML = this.pad(parseInt(this.totalSeconds / 60)) +
+			this.label.textContent = this.pad(parseInt(this.totalSeconds / 60)) +
 				':' + this.pad(this.totalSeconds % 60);
 		}
 	}
@@ -284,7 +284,7 @@ class CountdownTimer {
 		if (this.timerID > 0)
 			clearInterval(this.timerID);
 		if (this.label)
-			this.label.innerHTML = '';
+			this.label.textContent = '';
 	}
 
 	Reset({
@@ -615,7 +615,7 @@ class InkBallGame {
 
 		this.g_SignalRConnection.on("ServerToClientPoint", async function (point) {
 			if (this.g_iPlayerID !== point.iPlayerId) {
-				const user = this.m_Player2Name.innerHTML;
+				const user = this.m_Player2Name.textContent;
 				let encodedMsg = InkBallPointViewModel.Format(user, point);
 
 				const li = document.createElement("li");
@@ -632,8 +632,8 @@ class InkBallGame {
 			if (Object.prototype.hasOwnProperty.call(dto, 'PointsAsString') || Object.prototype.hasOwnProperty.call(dto, 'pointsAsString')) {
 				let path = dto;
 				if (this.g_iPlayerID !== path.iPlayerId) {
-					const user = this.m_Player2Name.innerHTML;
-					let encodedMsg = InkBallPathViewModel.Format(user, path);
+					const user = this.m_Player2Name.textContent;
+					const encodedMsg = InkBallPathViewModel.Format(user, path);
 
 					const li = document.createElement("li");
 					li.textContent = encodedMsg;
@@ -645,7 +645,7 @@ class InkBallGame {
 			}
 			else if (Object.prototype.hasOwnProperty.call(dto, 'WinningPlayerId') || Object.prototype.hasOwnProperty.call(dto, 'winningPlayerId')) {
 				let win = dto;
-				let encodedMsg = WinCommand.Format(win);
+				const encodedMsg = WinCommand.Format(win);
 
 				let li = document.createElement("li");
 				li.textContent = encodedMsg;
@@ -666,13 +666,16 @@ class InkBallGame {
 
 			document.querySelector('.msgchat').dataset.otherplayerid = iOtherPlayerId;
 
-			let li = document.createElement("li");
-			li.innerHTML = `<strong class="text-primary">${encodedMsg}</strong>`;
+			const li = document.createElement("li");
+			const strong = document.createElement("strong");
+			strong.classList.add('text-primary');
+			strong.textContent = encodedMsg;
+			li.appendChild(strong);
 			document.querySelector(this.m_sMsgListSel).appendChild(li);
 
 			if (this.m_SurrenderButton !== null) {
 				if (join.OtherPlayerName !== '') {
-					this.m_Player2Name.innerHTML = join.OtherPlayerName || join.otherPlayerName;
+					this.m_Player2Name.textContent = join.OtherPlayerName || join.otherPlayerName;
 					this.m_SurrenderButton.value = 'surrender';
 					this.ShowMobileStatus('Your move');
 				}
@@ -687,8 +690,11 @@ class InkBallGame {
 
 			let encodedMsg = PlayerSurrenderingCommand.Format(surrender);
 
-			let li = document.createElement("li");
-			li.innerHTML = `<strong class="text-warning">${encodedMsg}</strong>`;
+			const li = document.createElement("li");
+			const strong = document.createElement("strong");
+			strong.classList.add('text-warning');
+			strong.textContent = encodedMsg;
+			li.appendChild(strong);
 			document.querySelector(this.m_sMsgListSel).appendChild(li);
 
 
@@ -700,12 +706,15 @@ class InkBallGame {
 		}.bind(this));
 
 		this.g_SignalRConnection.on("ServerToClientPlayerWin", function (win) {
-			let encodedMsg = WinCommand.Format(win);
+			const encodedMsg = WinCommand.Format(win);
 
 			const msg_lst = document.querySelector(this.m_sMsgListSel);
 			if (msg_lst !== null) {
-				let li = document.createElement("li");
-				li.innerHTML = `<strong class="text-warning">${encodedMsg}</strong>`;
+				const li = document.createElement("li");
+				const strong = document.createElement("strong");
+				strong.classList.add('text-warning');
+				strong.textContent = encodedMsg;
+				li.appendChild(strong);
 				msg_lst.appendChild(li);
 			}
 
@@ -716,8 +725,8 @@ class InkBallGame {
 
 		this.g_SignalRConnection.on("ServerToClientPing", function (ping) {
 
-			const user = this.m_Player2Name.innerHTML;
-			let encodedMsg = PingCommand.Format(user, ping);
+			const user = this.m_Player2Name.textContent;
+			const encodedMsg = PingCommand.Format(user, ping);
 
 			let li = document.createElement("li");
 			li.textContent = encodedMsg;
@@ -732,9 +741,12 @@ class InkBallGame {
 				//labelSelector: "#debug2",
 				initialStart: true,
 				countdownReachedHandler: function () {
-					let encodedMsg = sMsg;
-					let li = document.createElement("li");
-					li.innerHTML = `<strong class="text-warning">${encodedMsg}</strong>`;
+					const encodedMsg = sMsg;
+					const li = document.createElement("li");
+					const strong = document.createElement("strong");
+					strong.classList.add('text-warning');
+					strong.textContent = encodedMsg;
+					li.appendChild(strong);
 					document.querySelector(this.m_sMsgListSel).appendChild(li);
 
 					this.NotifyBrowser('User disconnected', encodedMsg);
@@ -753,9 +765,12 @@ class InkBallGame {
 				this.m_ReconnectTimer = null;
 			}
 			else {
-				let encodedMsg = sMsg;
-				let li = document.createElement("li");
-				li.innerHTML = `<strong class="text-primary">${encodedMsg}</strong>`;
+				const encodedMsg = sMsg;
+				const li = document.createElement("li");
+				const strong = document.createElement("strong");
+				strong.classList.add('text-primary');
+				strong.textContent = encodedMsg;
+				li.appendChild(strong);
 				document.querySelector(this.m_sMsgListSel).appendChild(li);
 
 				this.NotifyBrowser('User connected', encodedMsg);
@@ -766,11 +781,14 @@ class InkBallGame {
 		this.g_SignalRConnection.on("ServerToClientStopAndDraw", function (cmd) {
 			if (!cmd) return;
 
-			const user = this.m_Player2Name.innerHTML;
-			let encodedMsg = StopAndDrawCommand.Format(user);
+			const user = this.m_Player2Name.textContent;
+			const encodedMsg = StopAndDrawCommand.Format(user);
 
-			let li = document.createElement("li");
-			li.innerHTML = `<strong class="text-info">${encodedMsg}</strong>`;
+			const li = document.createElement("li");
+			const strong = document.createElement("strong");
+			strong.classList.add('text-info');
+			strong.textContent = encodedMsg;
+			li.appendChild(strong);
 			document.querySelector(this.m_sMsgListSel).appendChild(li);
 
 			this.NotifyBrowser('User ' + user + ' started drawing new path', encodedMsg);
@@ -780,7 +798,7 @@ class InkBallGame {
 			document.querySelector(this.m_sMsgSendButtonSel).addEventListener("click", async function (event) {
 				event.preventDefault();
 
-				let encodedMsg = document.querySelector(this.m_sMsgInputSel).value.trim();
+				const encodedMsg = document.querySelector(this.m_sMsgInputSel).value.trim();
 				if (encodedMsg === '') return;
 
 				let ping = new PingCommand(encodedMsg);
@@ -820,12 +838,12 @@ class InkBallGame {
 	Debug(...args) {
 		switch (args.length) {
 			case 1:
-				this.m_Debug.innerHTML = args[0];
+				this.m_Debug.textContent = args[0];
 				break;
 			case 2:
 				{
 					const d = document.getElementById('debug' + args[1]);
-					d.innerHTML = args[0];
+					d.textContent = args[0];
 				}
 				break;
 			default:
@@ -834,7 +852,7 @@ class InkBallGame {
 					if (msg) {
 						const d = document.getElementById('debug' + i);
 						if (d)
-							d.innerHTML = msg;
+							d.textContent = msg;
 					}
 				}
 				break;
@@ -1309,7 +1327,7 @@ class InkBallGame {
 
 	CountDownReachedHandler(label) {
 		if (label)
-			label.innerHTML = '';
+			label.textContent = '';
 		//this.NotifyBrowser('Time is running out', 'make a move');
 		this.m_StopAndDraw.disabled = this.m_CancelPath.disabled = 'disabled';
 		this.m_Timer = null;
@@ -1458,7 +1476,7 @@ class InkBallGame {
 		this.ShowMobileStatus('Win situation');
 		this.m_bHandlingEvent = false;
 
-		let encodedMsg = WinCommand.Format(win);
+		const encodedMsg = WinCommand.Format(win);
 		const status = win.Status !== undefined ? win.Status : win.status;
 		const winningPlayerId = win.WinningPlayerId || win.winningPlayerId;
 
@@ -1550,7 +1568,7 @@ class InkBallGame {
 	}
 
 	ShowMobileStatus(sMessage = '') {
-		if (this.m_Player2Name.innerHTML === '???') {
+		if (this.m_Player2Name.textContent === '???') {
 			if (this.m_bIsPlayerActive)
 				this.m_GameStatus.style.color = this.COLOR_RED;
 			else
@@ -1575,7 +1593,7 @@ class InkBallGame {
 	}
 
 	async OnMouseMove(event) {
-		if (!this.m_bIsPlayerActive || this.m_Player2Name.innerHTML === '???' || this.m_bHandlingEvent === true
+		if (!this.m_bIsPlayerActive || this.m_Player2Name.textContent === '???' || this.m_bHandlingEvent === true
 			|| this.iConnErrCount > 0) {
 
 			if (this.iConnErrCount <= 0 && !this.m_bIsPlayerActive) {
@@ -1690,7 +1708,7 @@ class InkBallGame {
 	}
 
 	async OnMouseDown(event) {
-		if (!this.m_bIsPlayerActive || this.m_Player2Name.innerHTML === '???' || this.m_bHandlingEvent === true
+		if (!this.m_bIsPlayerActive || this.m_Player2Name.textContent === '???' || this.m_bHandlingEvent === true
 			|| this.iConnErrCount > 0)
 			return;
 
@@ -1894,7 +1912,7 @@ class InkBallGame {
 			const cnt = document.querySelectorAll(tag.query);
 			aggregated += tag.display.replace('%s', cnt.length);
 		});
-		document.querySelector(sSelector2Set).innerHTML = 'SVGs by tags: ' + aggregated;
+		document.querySelector(sSelector2Set).textContent = 'SVGs by tags: ' + aggregated;
 	}
 
 	/**
@@ -2369,7 +2387,7 @@ class InkBallGame {
 
 			this.m_SurrenderButton.disabled = '';
 
-			if (this.m_Player2Name.innerHTML === '???') {
+			if (this.m_Player2Name.textContent === '???') {
 				this.ShowMobileStatus('Waiting for other player to connect');
 				this.m_Screen.style.cursor = "wait";
 			}
@@ -2392,7 +2410,7 @@ class InkBallGame {
 			}
 		}
 		else {
-			document.querySelector(sPause).innerHTML = 'back to Game List';
+			document.querySelector(sPause).textContent = 'back to Game List';
 		}
 	}
 
@@ -3001,11 +3019,12 @@ window.addEventListener('load', async function () {
 
 	const inkBallHubName = gameOptions.inkBallHubName;
 	const iGameID = gameOptions.iGameID;
-	document.getElementById('gameID').innerHTML = iGameID;
+	document.getElementById('gameID').textContent = iGameID;
 	document.querySelector(".container.inkgame form > input[type='hidden'][name='GameID']").value = iGameID;
 	const iPlayerID = gameOptions.iPlayerID;
 	const iOtherPlayerID = parseInt(document.querySelector('.msgchat').dataset.otherplayerid) || null;
-	document.getElementById('playerID').innerHTML = iPlayerID;
+	gameOptions.iOtherPlayerID = iOtherPlayerID;
+	document.getElementById('playerID').textContent = iPlayerID;
 	const bPlayingWithRed = gameOptions.bPlayingWithRed;
 	const bPlayerActive = gameOptions.bPlayerActive;
 	const gameType = gameOptions.gameType;
