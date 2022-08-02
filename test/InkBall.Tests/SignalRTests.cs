@@ -1071,7 +1071,7 @@ namespace InkBall.Tests
 
 		[Theory]
 		[InlineData(false, null)]
-		[InlineData(true, 2 * InkBall.Module.Constants.PathAfterPointDrawAllowanceSecAmount)]
+		[InlineData(true, 2.0 * InkBall.Module.Constants.PathAfterPointDrawAllowanceSecAmount)]
 		[InlineData(false, 0.5 * InkBall.Module.Constants.PathAfterPointDrawAllowanceSecAmount)]
 		public async Task SignalR_ClientToServer_OnStopAndDraw_PossibleTooLate(bool isDelayed, double? delayTimeInSecs)
 		{
