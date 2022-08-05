@@ -862,45 +862,6 @@ class InkBallGame {
 		}
 	}
 
-	f_clientWidth() {
-		return this.f_filterResults(
-			window.innerWidth ? window.innerWidth : 0,
-			document.documentElement ? document.documentElement.clientWidth : 0,
-			document.body ? document.body.clientWidth : 0
-		);
-	}
-
-	f_clientHeight() {
-		return this.f_filterResults(
-			window.innerHeight ? window.innerHeight : 0,
-			document.documentElement ? document.documentElement.clientHeight : 0,
-			document.body ? document.body.clientHeight : 0
-		);
-	}
-
-	f_scrollLeft() {
-		return this.f_filterResults(
-			window.pageXOffset ? window.pageXOffset : 0,
-			document.documentElement ? document.documentElement.scrollLeft : 0,
-			document.body ? document.body.scrollLeft : 0
-		);
-	}
-
-	f_scrollTop() {
-		return this.f_filterResults(
-			window.pageYOffset ? window.pageYOffset : 0,
-			document.documentElement ? document.documentElement.scrollTop : 0,
-			document.body ? document.body.scrollTop : 0
-		);
-	}
-
-	f_filterResults(n_win, n_docel, n_body) {
-		let n_result = n_win ? n_win : 0;
-		if (n_docel && (!n_result || (n_result > n_docel)))
-			n_result = n_docel;
-		return n_body && (!n_result || (n_result > n_body)) ? n_body : n_result;
-	}
-
 	async SetPoint(iX, iY, iStatus, iPlayerId) {
 		if (await this.m_Points.has(iY * this.m_iGridWidth + iX))
 			return;
@@ -1229,12 +1190,12 @@ class InkBallGame {
 		return true;
 	}
 
-	CreateXMLWaitForPlayerRequest(/*...args*/) {
+	CreateWaitForPlayerRequest(/*...args*/) {
 		//let cmd = new WaitForPlayerCommand((args.length > 0 && args[0] === true) ? true : false);
 		//return cmd;
 	}
 
-	CreateXMLPutPointRequest(iX, iY) {
+	CreatePutPointRequest(iX, iY) {
 		const cmd = new InkBallPointViewModel(0, this.g_iGameID, this.g_iPlayerID, iX, iY,
 			this.m_bIsPlayingWithRed ? StatusEnum.POINT_FREE_RED : StatusEnum.POINT_FREE_BLUE,
 			0);
@@ -1246,7 +1207,7 @@ class InkBallGame {
 	 * @param {object} dto with path, owned
 	 * @returns {object} command
 	 */
-	CreateXMLPutPathRequest(dto) {
+	CreatePutPathRequest(dto) {
 		const cmd = new InkBallPathViewModel(0, this.g_iGameID, this.g_iPlayerID, dto.path, dto.owned
 			/*, this.m_Timer !== null*/);
 		return cmd;
@@ -1257,7 +1218,7 @@ class InkBallGame {
 	 * @param {object} payload transferrableObject (DTO)
 	 * @param {function} revertFunction on-error revert/rollback function
 	 */
-	async SendAsyncData(payload, revertFunction = undefined) {
+	async SendData(payload, revertFunction = undefined) {
 
 		switch (payload.GetKind()) {
 			case CommandKindEnum.POINT:
@@ -1348,7 +1309,7 @@ class InkBallGame {
 
 		if (this.g_iPlayerID !== point.iPlayerId) {
 			this.m_bIsPlayerActive = true;
-			this.ShowMobileStatus('Oponent has moved, your turn');
+			this.ShowStatus('Oponent has moved, your turn');
 			this.m_Screen.style.cursor = "crosshair";
 
 			if (this.m_Line !== null)
@@ -1366,7 +1327,7 @@ class InkBallGame {
 		}
 		else {
 			this.m_bIsPlayerActive = false;
-			this.ShowMobileStatus('Waiting for oponent move');
+			this.ShowStatus('Waiting for oponent move');
 			this.m_Screen.style.cursor = "wait";
 			this.m_MouseCursorOval.Hide();
 			this.m_CancelPath.disabled = 'disabled';
@@ -1414,7 +1375,7 @@ class InkBallGame {
 
 
 			this.m_bIsPlayerActive = true;
-			this.ShowMobileStatus('Oponent has moved, your turn');
+			this.ShowStatus('Oponent has moved, your turn');
 			this.m_Screen.style.cursor = "crosshair";
 			this.m_MouseCursorOval.Hide();
 
@@ -1454,7 +1415,7 @@ class InkBallGame {
 
 
 			this.m_bIsPlayerActive = false;
-			this.ShowMobileStatus('Waiting for oponent move');
+			this.ShowStatus('Waiting for oponent move');
 			this.m_Screen.style.cursor = "wait";
 			this.m_MouseCursorOval.Hide();
 
@@ -1476,7 +1437,7 @@ class InkBallGame {
 	}
 
 	ReceivedWinProcessing(win) {
-		this.ShowMobileStatus('Win situation');
+		this.ShowStatus('Win situation');
 		this.m_bHandlingEvent = false;
 
 		const encodedMsg = WinCommand.Format(win);
@@ -1570,7 +1531,7 @@ class InkBallGame {
 		}
 	}
 
-	ShowMobileStatus(sMessage = '') {
+	ShowStatus(sMessage = '') {
 		if (this.m_Player2Name.textContent === '???') {
 			if (this.m_bIsPlayerActive)
 				this.m_GameStatus.style.color = this.COLOR_RED;
@@ -1654,7 +1615,7 @@ class InkBallGame {
 								if (val.owned.length > 0) {
 									this.Debug('Closing path', 0);
 									this.rAF_FrameID = null;
-									await this.SendAsyncData(this.CreateXMLPutPathRequest(val), async () => {
+									await this.SendData(this.CreatePutPathRequest(val), async () => {
 										await this.OnCancelClick();
 										val.OwnedPoints.forEach(revData => {
 											const p = revData.point;
@@ -1741,7 +1702,7 @@ class InkBallGame {
 			}
 
 			this.rAF_FrameID = null;
-			await this.SendAsyncData(this.CreateXMLPutPointRequest(loc_x, loc_y), () => {
+			await this.SendData(this.CreatePutPointRequest(loc_x, loc_y), () => {
 				this.m_bMouseDown = false;
 				this.m_bHandlingEvent = false;
 			});
@@ -1774,7 +1735,7 @@ class InkBallGame {
 							if (val.owned.length > 0) {
 								this.Debug('Closing path', 0);
 								this.rAF_FrameID = null;
-								await this.SendAsyncData(this.CreateXMLPutPathRequest(val), async () => {
+								await this.SendData(this.CreatePutPathRequest(val), async () => {
 									await this.OnCancelClick();
 									val.OwnedPoints.forEach(revData => {
 										const p = revData.point;
@@ -1857,7 +1818,7 @@ class InkBallGame {
 			this.m_Line = null;
 		} else if (this.m_Line === null) {
 			//send On-Stop-And-Draw notification
-			await this.SendAsyncData(new StopAndDrawCommand());
+			await this.SendData(new StopAndDrawCommand());
 		}
 	}
 
@@ -2397,19 +2358,19 @@ class InkBallGame {
 			this.m_SurrenderButton.disabled = '';
 
 			if (this.m_Player2Name.textContent === '???') {
-				this.ShowMobileStatus('Waiting for other player to connect');
+				this.ShowStatus('Waiting for other player to connect');
 				this.m_Screen.style.cursor = "wait";
 			}
 			else {
 				this.m_SurrenderButton.value = 'surrender';
 
 				if (this.m_bIsPlayerActive) {
-					this.ShowMobileStatus('Your move');
+					this.ShowStatus('Your move');
 					this.m_Screen.style.cursor = "crosshair";
 					this.m_StopAndDraw.disabled = '';
 				}
 				else {
-					this.ShowMobileStatus('Waiting for oponent move');
+					this.ShowStatus('Waiting for oponent move');
 					this.m_Screen.style.cursor = "wait";
 				}
 				if (!this.m_bDrawLines)
@@ -3055,7 +3016,7 @@ class InkBallGame {
 			//this.rAF_FrameID = null;
 			//}
 
-			await this.SendAsyncData(point, () => {
+			await this.SendData(point, () => {
 				this.m_bMouseDown = false;
 				this.m_bHandlingEvent = false;
 			});
