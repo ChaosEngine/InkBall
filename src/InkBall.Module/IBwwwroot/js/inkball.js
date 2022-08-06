@@ -2571,7 +2571,7 @@ class InkBallGame {
 	 */
 	async BuildGraph({
 		freePointStatus = StatusEnum.POINT_FREE_BLUE,
-		cpufillCol: cpuFillColor = 'var(--bluish)'
+		cpufillCol: cpuFillColor = this.COLOR_BLUE
 		//, visuals: presentVisually = false
 	} = {}) {
 		const graph_points = [], graph_edges = new Map();
