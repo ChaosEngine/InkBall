@@ -806,7 +806,7 @@ class InkBallGame {
 
 				let ping = new PingCommand(encodedMsg);
 
-				await this.SendAsyncData(ping);
+				await this.SendData(ping);
 
 			}.bind(this), false);
 
