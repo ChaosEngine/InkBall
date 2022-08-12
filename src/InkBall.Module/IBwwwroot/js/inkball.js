@@ -3094,4 +3094,4 @@ window.addEventListener('beforeunload', function () {
 });
 /******** /run code and events ********/
 
-//export { InkBallGame };
+export { InkBallGame };
