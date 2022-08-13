@@ -374,8 +374,9 @@ class InkBallGame {
 	 * @param {number} pathAfterPointDrawAllowanceSecAmount is number of seconds, a player is allowed to start drawing path after putting point
 	 * @param {number} iTooLong2Duration too long wait duration
 	 */
-	constructor(iGameID, iPlayerID, iOtherPlayerID, sHubName, loggingLevel, hubProtocol, transportType, serverTimeoutInMilliseconds, gameType,
-		bIsPlayingWithRed = true, bIsPlayerActive = true, bViewOnly = false, pathAfterPointDrawAllowanceSecAmount = 60, iTooLong2Duration = 125) {
+	constructor(iGameID, iPlayerID, iOtherPlayerID, sHubName, loggingLevel, hubProtocol, transportType,
+		serverTimeoutInMilliseconds, gameType, bIsPlayingWithRed = true, bIsPlayerActive = true, bViewOnly = false,
+		pathAfterPointDrawAllowanceSecAmount = 60, iTooLong2Duration = 125) {
 		this.g_iGameID = iGameID;
 		this.g_iPlayerID = iPlayerID;
 		this.m_iOtherPlayerId = iOtherPlayerID;
