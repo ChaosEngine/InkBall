@@ -310,8 +310,7 @@ class CountdownTimer {
  * @param {object} gameOptions is an entry starter object definint game parameters
  */
 async function importAllModulesAsync(gameOptions) {
-	const selfFileName = Array.prototype.slice.call(document.getElementsByTagName('script'))
-		.map(x => x.src).find(s => s.indexOf('inkball') !== -1).split('/').pop();
+	const selfFileName = import.meta.url.split('/').at(-1);
 	const isMinified = selfFileName.indexOf("min") !== -1;
 
 	if (isMinified)
@@ -2390,6 +2389,58 @@ class InkBallGame {
 		}
 	}
 
+	static async OnLoad(gameOptions) {
+		const isMsgpackDefined = window.msgpack5 !== undefined;
+		// const gameOptions = window.gameOptions;
+
+		const inkBallHubName = gameOptions.inkBallHubName;
+		const iGameID = gameOptions.iGameID;
+		document.getElementById('gameID').textContent = iGameID;
+		document.querySelector(".container.inkgame form > input[type='hidden'][name='GameID']").value = iGameID;
+		const iPlayerID = gameOptions.iPlayerID;
+		const iOtherPlayerID = parseInt(document.querySelector('.msgchat').dataset.otherplayerid) || null;
+		gameOptions.iOtherPlayerID = iOtherPlayerID;
+		document.getElementById('playerID').textContent = iPlayerID;
+		const bPlayingWithRed = gameOptions.bPlayingWithRed;
+		const bPlayerActive = gameOptions.bPlayerActive;
+		const gameType = gameOptions.gameType;
+		const protocol = isMsgpackDefined && gameOptions.isMessagePackProtocol === true ? new signalR.protocols.msgpack.MessagePackHubProtocol() : new signalR.JsonHubProtocol();
+		const servTimeoutMillis = gameOptions.servTimeoutMillis;
+		const isReadonly = gameOptions.isReadonly;
+		const pathAfterPointDrawAllowanceSecAmount = gameOptions.pathAfterPointDrawAllowanceSecAmount;
+		const sLastMoveTimeStampUtcIso = new Date(gameOptions.sLastMoveGameTimeStamp).toISOString();
+		const version = gameOptions.version;
+
+		await importAllModulesAsync(gameOptions);
+
+		const game = new InkBallGame(iGameID, iPlayerID, iOtherPlayerID, inkBallHubName, signalR.LogLevel.Warning, protocol,
+			signalR.HttpTransportType.None, servTimeoutMillis,
+			gameType, bPlayingWithRed, bPlayerActive, isReadonly, pathAfterPointDrawAllowanceSecAmount
+		);
+		await game.PrepareDrawing('#screen', '#Player1Name', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw',
+			'#messageInput', '#messagesList', '#sendButton', sLastMoveTimeStampUtcIso, gameOptions.PointsAsJavaScriptArray === null, version,
+			['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints', '#TestFindSurroundablePoints', '#TestDFS2']);
+
+		if (gameOptions.PointsAsJavaScriptArray !== null) {
+			await game.StartSignalRConnection(false);
+			await game.SetAllPoints(gameOptions.PointsAsJavaScriptArray);
+			await game.SetAllPaths(gameOptions.PathsAsJavaScriptArray);
+		}
+		else {
+			await game.StartSignalRConnection(true);
+		}
+		//alert('a QQ');
+		document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
+		game.CountPointsDebug("#debug2");
+
+		//delete window.gameOptions;
+		window.game = game;
+	}
+
+	static OnBeforeUnload() {
+		if (window.game)
+			window.game.StopSignalRConnection();
+	}
 
 
 
@@ -3037,62 +3088,5 @@ class InkBallGame {
 }
 /******** /funcs-n-classes ********/
 
-
-
-
-/******** run code and events ********/
-window.addEventListener('load', async function () {
-	const isMsgpackDefined = window.msgpack5 !== undefined;
-	const gameOptions = window.gameOptions;
-
-	const inkBallHubName = gameOptions.inkBallHubName;
-	const iGameID = gameOptions.iGameID;
-	document.getElementById('gameID').textContent = iGameID;
-	document.querySelector(".container.inkgame form > input[type='hidden'][name='GameID']").value = iGameID;
-	const iPlayerID = gameOptions.iPlayerID;
-	const iOtherPlayerID = parseInt(document.querySelector('.msgchat').dataset.otherplayerid) || null;
-	gameOptions.iOtherPlayerID = iOtherPlayerID;
-	document.getElementById('playerID').textContent = iPlayerID;
-	const bPlayingWithRed = gameOptions.bPlayingWithRed;
-	const bPlayerActive = gameOptions.bPlayerActive;
-	const gameType = gameOptions.gameType;
-	const protocol = isMsgpackDefined && gameOptions.isMessagePackProtocol === true ? new signalR.protocols.msgpack.MessagePackHubProtocol() : new signalR.JsonHubProtocol();
-	const servTimeoutMillis = gameOptions.servTimeoutMillis;
-	const isReadonly = gameOptions.isReadonly;
-	const pathAfterPointDrawAllowanceSecAmount = gameOptions.pathAfterPointDrawAllowanceSecAmount;
-	const sLastMoveTimeStampUtcIso = new Date(gameOptions.sLastMoveGameTimeStamp).toISOString();
-	const version = gameOptions.version;
-
-	await importAllModulesAsync(gameOptions);
-
-	const game = new InkBallGame(iGameID, iPlayerID, iOtherPlayerID, inkBallHubName, signalR.LogLevel.Warning, protocol,
-		signalR.HttpTransportType.None, servTimeoutMillis,
-		gameType, bPlayingWithRed, bPlayerActive, isReadonly, pathAfterPointDrawAllowanceSecAmount
-	);
-	await game.PrepareDrawing('#screen', '#Player1Name', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw',
-		'#messageInput', '#messagesList', '#sendButton', sLastMoveTimeStampUtcIso, gameOptions.PointsAsJavaScriptArray === null, version,
-		['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints', '#TestFindSurroundablePoints', '#TestDFS2']);
-
-	if (gameOptions.PointsAsJavaScriptArray !== null) {
-		await game.StartSignalRConnection(false);
-		await game.SetAllPoints(gameOptions.PointsAsJavaScriptArray);
-		await game.SetAllPaths(gameOptions.PathsAsJavaScriptArray);
-	}
-	else {
-		await game.StartSignalRConnection(true);
-	}
-	//alert('a QQ');
-	document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
-	game.CountPointsDebug("#debug2");
-
-	delete window.gameOptions;
-	window.game = game;
-});
-
-window.addEventListener('beforeunload', function () {
-	if (window.game)
-		window.game.StopSignalRConnection();
-});
-/******** /run code and events ********/
 
 export { InkBallGame };

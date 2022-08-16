@@ -581,7 +581,7 @@ class GameStateStore {
 	constructor(useIndexedDb, pointCreationCallbackFn = null, pathCreationCallbackFn = null, getGameStateFn = null, version = "") {
 		if (useIndexedDb) {
 			if (!('indexedDB' in self)) {
-				LocalError("This browser doesn't support IndexedDB");
+				LocalLog("This browser doesn't support IndexedDB");
 				useIndexedDb = false;
 			}
 			else

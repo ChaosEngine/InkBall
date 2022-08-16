@@ -108,32 +108,38 @@
         @:<script type='module' src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr-protocol-msgpack@6.0.10/dist/browser/signalr-protocol-msgpack.min.js" integrity="sha256-mD/IaCjeVoreEC0wIN81gRmi08ydnZWbr1yeuS+EKGg=" crossorigin="anonymous"></script>
     }
 </environment>
-<script type='text/javascript'>
-"use strict";
-    window.gameOptions = {
-	    inkBallHubName: '@hubName',
-	    iGameID: @Model.Game.iId,
-	    iPlayerID: @Model.Player.iId,
-	    bPlayingWithRed: JSON.parse('@Model.Game.IsThisPlayerPlayingWithRed()'.toLowerCase()),
-	    bPlayerActive: JSON.parse('@isThisPlayerActive'.toLowerCase()),
-	    gameType: '@Model.Game.GameType',
-	    isMessagePackProtocol: JSON.parse('@useMessagePackBinaryTransport'.toLowerCase()),
-	    servTimeoutMillis: @Model.ClientTimeoutInterval.TotalMilliseconds,
-	    isReadonly: JSON.parse('@Model.IsReadonly'.toLowerCase()),
-        pathAfterPointDrawAllowanceSecAmount: @Constants.PathAfterPointDrawAllowanceSecAmount,
-        sLastMoveGameTimeStamp: '@lastTimeStampISO',
-        version: '@IBversion',
+<script type='module'>
+    import { InkBallGame } from "@Url.Content(Constants.WwwIncludeInkballJS)";
 
-	    @if(Model.PlayerPointsAndPaths.Points != null)
-	    {
-            @:PointsAsJavaScriptArray: @Model.PointsAsJavaScriptArray,
-            @:PathsAsJavaScriptArray: @Model.PathsAsJavaScriptArray,
-	    }
-        else
-        {
-            @:PointsAsJavaScriptArray: null,
-            @:PathsAsJavaScriptArray: null
-        }
-    };
+    window.addEventListener('load', async () => {
+        const gameOptions = {
+            inkBallHubName: '@hubName',
+            iGameID: @Model.Game.iId,
+            iPlayerID: @Model.Player.iId,
+            bPlayingWithRed: JSON.parse('@Model.Game.IsThisPlayerPlayingWithRed()'.toLowerCase()),
+            bPlayerActive: JSON.parse('@isThisPlayerActive'.toLowerCase()),
+            gameType: '@Model.Game.GameType',
+            isMessagePackProtocol: JSON.parse('@useMessagePackBinaryTransport'.toLowerCase()),
+            servTimeoutMillis: @Model.ClientTimeoutInterval.TotalMilliseconds,
+            isReadonly: JSON.parse('@Model.IsReadonly'.toLowerCase()),
+            pathAfterPointDrawAllowanceSecAmount: @Constants.PathAfterPointDrawAllowanceSecAmount,
+            sLastMoveGameTimeStamp: '@lastTimeStampISO',
+            version: '@IBversion',
+
+            @if(Model.PlayerPointsAndPaths.Points != null)
+            {
+                @:PointsAsJavaScriptArray: @Model.PointsAsJavaScriptArray,
+                @:PathsAsJavaScriptArray: @Model.PathsAsJavaScriptArray,
+            }
+            else
+            {
+                @:PointsAsJavaScriptArray: null,
+                @:PathsAsJavaScriptArray: null
+            }
+        };
+
+        await InkBallGame.OnLoad(gameOptions);
+    });
+
+    window.addEventListener('beforeunload', InkBallGame.OnBeforeUnload);
 </script>
-<script type='module' src='@Url.Content(Constants.WwwIncludeInkballJS)'></script>
