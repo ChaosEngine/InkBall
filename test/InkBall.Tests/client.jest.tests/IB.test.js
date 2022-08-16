@@ -6,98 +6,120 @@ import { InkBallGame } from "../../../src/InkBall.Module/IBwwwroot/js/inkball";
 
 describe('InkBallGame tests', () => {
 
-	beforeAll(() => {
-		window.signalR = {
-			HubConnectionBuilder: function () {
-				this.withUrl = function (param0, param1) {
-					return this;
-				};
-				this.withHubProtocol = function (param0, param1) {
-					return this;
-				};
-				this.configureLogging = function (param) {
-					return this;
-				};
-				this.build = function (param) {
-					return this;
-				};
-				this.onclose = function (param) {
-					return this;
-				};
-				this.on = function (param0) {
-				};
-				this.start = function (param0) {
-				};
-				this.invoke = function (param0) {
-					return { DesktopNotifications: {} };
-				};
-			},
-			protocols: {
-				msgpack: {
-					MessagePackHubProtocol: function (param0) {
-						return this;
-					}
-				}
-			},
-			JsonHubProtocol: function (param0) {
-			},
-			LogLevel: {
-				Warning: "Warning"
-			},
-			HttpTransportType: {
-				None: "None"
-			}
-		};
-		Object.defineProperty(global.SVGSVGElement.prototype, 'createSVGPoint', {
-			writable: true,
-			value: jest.fn().mockImplementation(() => ({
-				x: 0,
-				y: 0,
-				matrixTransform: jest.fn().mockImplementation(() => ({
-					x: 0,
-					y: 0,
-				})),
-			})),
-		});
-		Object.defineProperty(global.SVGElement.prototype, 'SetFillColor', {
-			writable: true,
-			value: jest.fn().mockImplementation(() => ({})),
-		});
-		Object.defineProperty(global.SVGElement.prototype, 'SetZIndex', {
-			writable: true,
-			value: jest.fn().mockImplementation(() => ({
-			})),
-		});
-		Object.defineProperty(global.SVGElement.prototype, 'Hide', {
-			writable: true,
-			value: jest.fn().mockImplementation(() => ({
-			})),
-		});
-		window.SVGCircleElement = function () {
-			this.setAttribute = (key, x) => { };
-			this.SetFillColor = function () { return {}; };
-		};
-		window.SVGLineElement = function () {
-			this.setAttribute = function (key, x) {
-			};
-			this.move = function (x1, y1, x2, y2) {
-			};
-		};
-		window.SVGPolylineElement = function () {
-			this.AppendPoints = function () {
-			};
-		};
-	});
+    beforeAll(() => {
+        window.signalR = {
+            HubConnectionBuilder: function () {
+                this.withUrl = function (param0, param1) {
+                    return this;
+                };
+                this.withHubProtocol = function (param0, param1) {
+                    return this;
+                };
+                this.configureLogging = function (param) {
+                    return this;
+                };
+                this.build = function (param) {
+                    return this;
+                };
+                this.onclose = function (param) {
+                    return this;
+                };
+                this.on = function (param0) {
+                };
+                this.start = function (param0) {
+                };
+                this.invoke = function (action) {
+                    switch (action) {
+                        case "GetUserSettings":
+                            return '{"DesktopNotifications":false}';
 
-	test('inkball constructable', async () => {
-		expect(InkBallGame).toBeTruthy();
+                        case "GetPlayerPointsAndPaths":
+                            return {
+                                Paths: "[]",
+                                Points: "[[21,11,0,5],[22,10,1,0],[23,11,0,5],[22,12,1,0],[21,12,0,5],[21,13,1,0],[22,11,0,5],[23,10,1,0],[22,13,0,5],[23,13,1,0],[23,12,0,5],[24,11,1,0],[24,12,0,5],[25,13,1,0],[22,14,0,5],[23,14,1,0],[21,14,0,5],[20,13,1,0],[20,12,0,5],[20,11,1,0],[12,12,0,5],[11,11,1,0],[12,11,0,5],[11,12,1,0],[25,11,0,5],[26,11,1,0],[25,10,0,5],[24,9,1,0],[25,9,0,5],[26,8,1,0],[24,8,0,5],[23,9,1,0],[22,9,0,5],[23,8,1,0],[21,10,0,5],[20,10,1,0],[22,8,0,5],[23,7,1,0],[21,9,0,5],[21,8,1,0],[20,9,0,5],[19,9,1,0],[19,11,0,5],[19,12,1,0],[19,10,0,5],[18,9,1,0],[18,10,0,5],[17,9,1,0],[16,10,0,5],[15,10,1,0],[17,10,0,5],[18,11,1,0],[16,9,0,5],[15,9,1,0],[17,8,0,5],[17,7,1,0],[18,8,0,5],[18,7,1,0],[19,8,0,5],[20,7,1,0],[20,8,0,5],[21,7,1,0],[22,7,0,5],[22,6,1,0],[25,8,0,5],[26,7,1,0],[24,7,0,5],[23,6,1,0],[25,7,0,5],[24,6,1,0],[24,10,0,5],[20,3,1,0],[18,12,0,5],[17,12,1,0],[19,13,0,5],[20,14,1,0],[17,11,0,5],[16,11,1,0],[24,13,0,5],[24,14,1,0],[25,12,0,5],[26,13,1,0],[25,6,0,5],[24,5,1,0],[23,5,0,5],[24,4,1,0],[25,5,0,5],[26,4,1,0],[20,6,0,5],[20,5,1,0],[21,6,0,5],[21,5,1,0],[19,7,0,5],[19,6,1,0],[16,8,0,5],[15,7,1,0],[22,5,0,5],[21,4,1,0],[11,10,0,5],[10,9,1,0],[10,11,0,5],[9,11,1,0]]"
+                            };
 
-		// const game = new InkBallGame();
-		// console.log(game);
+                        default:
+                            break;
+                    }
+                };
+            },
+            protocols: {
+                msgpack: {
+                    MessagePackHubProtocol: function (param0) {
+                        return this;
+                    }
+                }
+            },
+            JsonHubProtocol: function (param0) {
+            },
+            LogLevel: {
+                Warning: "Warning"
+            },
+            HttpTransportType: {
+                None: "None"
+            }
+        };
+        Object.defineProperty(global.SVGSVGElement.prototype, 'createSVGPoint', {
+            writable: true,
+            value: jest.fn().mockImplementation(() => ({
+                x: 0,
+                y: 0,
+                matrixTransform: jest.fn().mockImplementation(() => ({
+                    x: 0,
+                    y: 0,
+                })),
+            })),
+        });
+        Object.defineProperty(global.SVGElement.prototype, 'SetFillColor', {
+            writable: true,
+            value: jest.fn().mockImplementation(() => ({})),
+        });
+        Object.defineProperty(global.SVGElement.prototype, 'SetZIndex', {
+            writable: true,
+            value: jest.fn().mockImplementation(() => ({
+            })),
+        });
+        Object.defineProperty(global.SVGElement.prototype, 'Hide', {
+            writable: true,
+            value: jest.fn().mockImplementation(() => ({
+            })),
+        });
+        Object.defineProperty(global.SVGElement.prototype, 'move', {
+            writable: true,
+            value: jest.fn().mockImplementation((x, y) => ({
+            })),
+        });
+        Object.defineProperty(global.SVGElement.prototype, 'SetStatus', {
+            writable: true,
+            value: jest.fn().mockImplementation((s) => ({
+            })),
+        });
+        window.SVGCircleElement = function () {
+            this.setAttribute = (key, x) => { };
+            this.SetFillColor = function () { return {}; };
+        };
+        window.SVGLineElement = function () {
+            this.setAttribute = function (key, x) {
+            };
+            this.move = function (x1, y1, x2, y2) {
+            };
+        };
+        window.SVGPolylineElement = function () {
+            this.AppendPoints = function () {
+            };
+        };
+    });
 
-		// expect(game).toBeTruthy();
+    test('inkball constructable', async () => {
+        expect(InkBallGame).toBeTruthy();
 
-		document.body.innerHTML = `
+        // const game = new InkBallGame();
+        // console.log(game);
+
+        // expect(game).toBeTruthy();
+
+        document.body.innerHTML = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -318,26 +340,26 @@ describe('InkBallGame tests', () => {
 </html>
 `;
 
-		const gameOptions = {
-			inkBallHubName: '/dotnet/gameHub',
-			iGameID: 221,
-			iPlayerID: 4,
-			bPlayingWithRed: JSON.parse('True'.toLowerCase()),
-			bPlayerActive: JSON.parse('True'.toLowerCase()),
-			gameType: 'FIRST_5_ADVANTAGE_PATHS',
-			isMessagePackProtocol: JSON.parse('True'.toLowerCase()),
-			servTimeoutMillis: 60000,
-			isReadonly: JSON.parse('False'.toLowerCase()),
-			pathAfterPointDrawAllowanceSecAmount: 120,
-			sLastMoveGameTimeStamp: '2022-08-05T23:18:54.0000000',
-			version: '1.0.1.19',
+        const gameOptions = {
+            inkBallHubName: '/dotnet/gameHub',
+            iGameID: 221,
+            iPlayerID: 4,
+            bPlayingWithRed: JSON.parse('True'.toLowerCase()),
+            bPlayerActive: JSON.parse('True'.toLowerCase()),
+            gameType: 'FIRST_5_ADVANTAGE_PATHS',
+            isMessagePackProtocol: JSON.parse('True'.toLowerCase()),
+            servTimeoutMillis: 60000,
+            isReadonly: JSON.parse('False'.toLowerCase()),
+            pathAfterPointDrawAllowanceSecAmount: 120,
+            sLastMoveGameTimeStamp: '2022-08-05T23:18:54.0000000',
+            version: '1.0.1.19',
 
-			PointsAsJavaScriptArray: null,
-			PathsAsJavaScriptArray: null
-		};
+            PointsAsJavaScriptArray: null,
+            PathsAsJavaScriptArray: null
+        };
 
-		await InkBallGame.OnLoad(gameOptions);
+        await InkBallGame.OnLoad(gameOptions);
 
-		expect(window.game).toBeTruthy();
-	});
+        expect(window.game).toBeTruthy();
+    });
 });
