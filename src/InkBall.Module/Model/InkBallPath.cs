@@ -139,14 +139,7 @@ namespace InkBall.Module.Model
 			string comma = "";
 			foreach (var path in paths)
 			{
-				builder.AppendFormat("{0}{1}", comma
-#if DEBUG
-				, $"/*ID={path.iId}*/"
-#else
- 				, ""
-#endif
-				)
-			   .Append(path.PointsAsString);
+				builder.Append(comma).Append(path.PointsAsString);
 
 				comma = ",\r";
 			}
