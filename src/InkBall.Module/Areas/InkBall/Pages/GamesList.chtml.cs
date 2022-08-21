@@ -39,9 +39,10 @@ namespace InkBall.Module.Pages
 
 		public async Task OnGet()
 		{
-			await base.LoadUserPlayerAndGameAsync();
+			var token = HttpContext.RequestAborted;
+			await base.LoadUserPlayerAndGameAsync(token);
 
-			GamesList = await GetGameList(HttpContext.RequestAborted);
+			GamesList = await GetGameList(token);
 
 			//Message = $"ExternalId = [{GameUser.sExternalId}] PlayerID = [{GameUser.InkBallPlayer.FirstOrDefault()?.iId}]";
 		}
@@ -49,11 +50,12 @@ namespace InkBall.Module.Pages
 		public async Task<IActionResult> OnPostAsync(string action, int gameID, string gameType, InkBallGame.BoardSizeEnum boardSize,
 			string cpuOponent)
 		{
-			await base.LoadUserPlayerAndGameAsync();
+			var token = HttpContext.RequestAborted;
+
+			await base.LoadUserPlayerAndGameAsync(token);
 
 			string sExternalUserID = GameUser.sExternalId;
 			string msg = "";
-			var token = HttpContext.RequestAborted;
 
 			if (Game == null)
 				InkBallGame.DeactivateDeadGamezFromExternalUserID(sExternalUserID);
