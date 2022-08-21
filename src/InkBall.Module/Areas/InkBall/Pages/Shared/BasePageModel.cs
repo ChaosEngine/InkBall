@@ -139,12 +139,10 @@ namespace InkBall.Module.Pages
 			return player;
 		}
 
-		public virtual async Task LoadUserPlayerAndGameAsync()
+		public virtual async Task LoadUserPlayerAndGameAsync(CancellationToken token)
 		{
-			InkBallUser user = await GetUserAsync();
+			InkBallUser user = await GetUserAsync(token);
 			GameUser = user;
-
-			var token = HttpContext.RequestAborted;
 
 			InkBallPlayer player = await GetPlayerAsync(user, token);
 			Player = player;

@@ -61,7 +61,7 @@ namespace InkBall.Module.Pages
 
 			var token = HttpContext.RequestAborted;
 
-			await base.LoadUserPlayerAndGameAsync();
+			await base.LoadUserPlayerAndGameAsync(token);
 
 			if (Game == null)
 			{

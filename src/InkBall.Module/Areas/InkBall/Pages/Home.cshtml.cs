@@ -29,7 +29,7 @@ namespace InkBall.Module.Pages
 
 		public async Task OnGet()
 		{
-			await LoadUserPlayerAndGameAsync();
+			await LoadUserPlayerAndGameAsync(HttpContext.RequestAborted);
 
 			// Message = "start1ng info end0";
 		}
@@ -37,11 +37,12 @@ namespace InkBall.Module.Pages
 		public async Task<IActionResult> OnPostAsync(string action, string gameType, InkBallGame.BoardSizeEnum boardSize,
 			string cpuOponent)
 		{
-			await LoadUserPlayerAndGameAsync();
+			var token = HttpContext.RequestAborted;
+
+			await LoadUserPlayerAndGameAsync(token);
 
 			var bIsLoggedIn = (Player != null && !string.IsNullOrEmpty(GameUser.sExternalId)) ? true : false;
 			string msg = string.Empty;
-			var token = HttpContext.RequestAborted;
 			action = !string.IsNullOrEmpty(action) ? action : string.Empty;
 
 			try
