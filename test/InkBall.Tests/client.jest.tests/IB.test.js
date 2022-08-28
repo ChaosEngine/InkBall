@@ -241,7 +241,7 @@ describe('InkBallGame tests', () => {
     iGameID=<span id="gameID"></span>
     iPlayerID=<span id="playerID"></span>
     Player=P1
-    <span class="whichColor">Play color</span>
+    <span id="whichColor">Play color</span>
 </p>
 <p class="inkgame">
     Dupa Krzak vs <span id='Player2Name'>Multi CPU Oponent UserPlayer</span>

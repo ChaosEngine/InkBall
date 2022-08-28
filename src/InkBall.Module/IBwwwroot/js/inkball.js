@@ -2430,7 +2430,7 @@ class InkBallGame {
 			await game.StartSignalRConnection(true);
 		}
 		//alert('a QQ');
-		document.getElementsByClassName('whichColor')[0].style.color = bPlayingWithRed ? "red" : "blue";
+		document.getElementById('whichColor').style.color = bPlayingWithRed ? "red" : "blue";
 		game.CountPointsDebug("#debug2");
 
 		//delete window.gameOptions;
