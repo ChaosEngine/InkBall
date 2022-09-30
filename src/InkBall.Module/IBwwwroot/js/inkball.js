@@ -680,7 +680,7 @@ class InkBallGame {
 				if (join.OtherPlayerName !== '') {
 					this.m_Player2Name.textContent = join.OtherPlayerName || join.otherPlayerName;
 					this.m_SurrenderButton.value = 'surrender';
-					this.ShowMobileStatus('Your move');
+					this.ShowStatus('Your move');
 				}
 			}
 
@@ -704,8 +704,9 @@ class InkBallGame {
 			this.m_bHandlingEvent = false;
 			encodedMsg = encodedMsg === '' ? 'Game interrupted!' : encodedMsg;
 			this.NotifyBrowser('Game interruption', encodedMsg);
-			alert(encodedMsg);
-			window.location.href = "GamesList";
+			SHRD.LocalAlert(encodedMsg, 'Game interruption', () => {
+				window.location.href = "GamesList";
+			});
 		}.bind(this));
 
 		this.g_SignalRConnection.on("ServerToClientPlayerWin", function (win) {
@@ -1447,8 +1448,9 @@ class InkBallGame {
 		if (((status === WinStatusEnum.RED_WINS || status === WinStatusEnum.GREEN_WINS) && winningPlayerId > 0) ||
 			status === WinStatusEnum.DRAW_WIN) {
 
-			alert(encodedMsg === '' ? 'Game won!' : encodedMsg);
-			window.location.href = "GamesList";
+			SHRD.LocalAlert(encodedMsg === '' ? 'Game won!' : encodedMsg, 'Win situation', () => {
+				window.location.href = "GamesList";
+			});
 		}
 	}
 

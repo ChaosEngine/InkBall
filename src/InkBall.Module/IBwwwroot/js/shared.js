@@ -1,4 +1,5 @@
 /*eslint no-unused-vars: ["error", { "varsIgnorePattern": "$" }]*/
+/*global myAlert*/
 "use strict";
 
 /**
@@ -36,6 +37,18 @@ function LocalError(...args) {
 	}
 	// eslint-disable-next-line no-console
 	console.error(msg);
+}
+
+let LocalAlert;
+if (typeof myAlert !== "undefined")
+	LocalAlert = myAlert;
+else {
+	// eslint-disable-next-line no-unused-vars
+	LocalAlert = function (msg, title = 'Alert', onCloseCallback = undefined) {
+		window.alert(msg);
+		if (onCloseCallback)
+			onCloseCallback();
+	};
 }
 
 /**
@@ -1255,7 +1268,7 @@ class GameStateStore {
 
 
 export {
-	SvgVml, StatusEnum, pnpoly2, LocalLog, LocalError,
+	SvgVml, StatusEnum, pnpoly2, LocalLog, LocalError, LocalAlert,
 	hasDuplicates, sortPointsClockwise, Sleep,
 	GameStateStore
 };
