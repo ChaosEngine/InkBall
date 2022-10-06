@@ -41,7 +41,7 @@
     <span class="whichColor">Play color</span>
 </p>
 <p class="inkgame">
-    @Model.Game.Player1?.User?.UserName vs <span id='Player2Name'>@P2Name</span>
+    <span id='Player1Name'>@Model.Game.Player1?.User?.UserName</span> vs <span id='Player2Name'>@P2Name</span>
 </p>
 <div class="container inkgame">
     <form action="GamesList" method="post" asp-antiforgery="true" class="row">

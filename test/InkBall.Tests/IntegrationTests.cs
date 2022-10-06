@@ -353,7 +353,7 @@ namespace InkBall.IntegrationTests
 
 							var responseString = await response.Content.ReadAsStringAsync();
 							Assert.Contains("This is Inball Game page", responseString);
-							Assert.Contains("Alice Testing vs <span id='Player2Name'>???</span>", responseString);
+							Assert.Contains("<span id='Player1Name'>Alice Testing</span> vs <span id='Player2Name'>???</span>", responseString);
 						}
 					}
 				}//end using (var get_response

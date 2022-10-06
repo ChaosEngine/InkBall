@@ -416,6 +416,7 @@ class InkBallGame {
 		this.m_iPosY = 0;
 		this.m_Screen = null;
 		this.m_Debug = null;
+		this.m_Player1Name = null;
 		this.m_Player2Name = null;
 		this.m_SurrenderButton = null;
 		this.m_sMsgInputSel = null;
@@ -618,7 +619,7 @@ class InkBallGame {
 
 		this.g_SignalRConnection.on("ServerToClientPoint", async function (point) {
 			if (this.g_iPlayerID !== point.iPlayerId) {
-				const user = this.m_Player2Name.textContent;
+				const user = this.m_bIsPlayingWithRed ? this.m_Player2Name.textContent : this.m_Player1Name.textContent;
 				let encodedMsg = InkBallPointViewModel.Format(user, point);
 
 				const li = document.createElement("li");
@@ -635,7 +636,7 @@ class InkBallGame {
 			if (Object.prototype.hasOwnProperty.call(dto, 'PointsAsString') || Object.prototype.hasOwnProperty.call(dto, 'pointsAsString')) {
 				let path = dto;
 				if (this.g_iPlayerID !== path.iPlayerId) {
-					const user = this.m_Player2Name.textContent;
+					const user = this.m_bIsPlayingWithRed ? this.m_Player2Name.textContent : this.m_Player1Name.textContent;
 					const encodedMsg = InkBallPathViewModel.Format(user, path);
 
 					const li = document.createElement("li");
@@ -728,8 +729,7 @@ class InkBallGame {
 		}.bind(this));
 
 		this.g_SignalRConnection.on("ServerToClientPing", function (ping) {
-
-			const user = this.m_Player2Name.textContent;
+			const user = this.m_bIsPlayingWithRed ? this.m_Player2Name.textContent : this.m_Player1Name.textContent;
 			const encodedMsg = PingCommand.Format(user, ping);
 
 			let li = document.createElement("li");
@@ -785,7 +785,7 @@ class InkBallGame {
 		this.g_SignalRConnection.on("ServerToClientStopAndDraw", function (cmd) {
 			if (!cmd) return;
 
-			const user = this.m_Player2Name.textContent;
+			const user = this.m_bIsPlayingWithRed ? this.m_Player2Name.textContent : this.m_Player1Name.textContent;
 			const encodedMsg = StopAndDrawCommand.Format(user);
 
 			const li = document.createElement("li");
@@ -2215,6 +2215,7 @@ class InkBallGame {
 	/**
 	 * Start drawing routines
 	 * @param {HTMLElement} sScreen screen dontainer selector
+	 * @param {HTMLElement} sPlayer1Name displaying element selector
 	 * @param {HTMLElement} sPlayer2Name displaying element selector
 	 * @param {HTMLElement} sGameStatus game stat element selector
 	 * @param {HTMLElement} sSurrenderButton surrender button element selector
@@ -2230,8 +2231,9 @@ class InkBallGame {
 	 * @param {Array} ddlTestActions array of test actions button ids
 	 * @param {number} iTooLong2Duration how long waiting is too long
 	 */
-	async PrepareDrawing(sScreen, sPlayer2Name, sGameStatus, sSurrenderButton, sCancelPath, sPause, sStopAndDraw, sMsgInputSel,
-		sMsgListSel, sMsgSendButtonSel, sLastMoveGameTimeStamp, useIndexedDbStore, version, ddlTestActions, iTooLong2Duration = 125) {
+	async PrepareDrawing(sScreen, sPlayer1Name, sPlayer2Name, sGameStatus, sSurrenderButton, sCancelPath, sPause, sStopAndDraw,
+		sMsgInputSel, sMsgListSel, sMsgSendButtonSel, sLastMoveGameTimeStamp, useIndexedDbStore, version, ddlTestActions,
+		iTooLong2Duration = 125) {
 		this.m_bIsWon = false;
 		this.m_iDelayBetweenMultiCaptures = 4000;
 		this.m_iTooLong2Duration = iTooLong2Duration/*125*/;
@@ -2251,6 +2253,7 @@ class InkBallGame {
 		this.m_sDotColor = this.m_bIsPlayingWithRed ? this.COLOR_RED : this.COLOR_BLUE;
 		this.m_Line = null;
 		this.m_Debug = document.getElementById('debug0');
+		this.m_Player1Name = document.querySelector(sPlayer1Name);
 		this.m_Player2Name = document.querySelector(sPlayer2Name);
 		this.m_GameStatus = document.querySelector(sGameStatus);
 		this.m_SurrenderButton = document.querySelector(sSurrenderButton);
@@ -3065,7 +3068,7 @@ window.addEventListener('load', async function () {
 		signalR.HttpTransportType.None, servTimeoutMillis,
 		gameType, bPlayingWithRed, bPlayerActive, isReadonly, pathAfterPointDrawAllowanceSecAmount
 	);
-	await game.PrepareDrawing('#screen', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw',
+	await game.PrepareDrawing('#screen', '#Player1Name', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw',
 		'#messageInput', '#messagesList', '#sendButton', sLastMoveTimeStampUtcIso, gameOptions.PointsAsJavaScriptArray === null, version,
 		['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints', '#TestFindSurroundablePoints', '#TestDFS2']);
 
