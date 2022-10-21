@@ -24,6 +24,8 @@ namespace InkBall.Module.Pages
 
 	public abstract class BasePageModel : PageModel
 	{
+		private static SemaphoreSlim _playerCreationSemaphore = new SemaphoreSlim(1, 1);
+
 		protected readonly GamesContext _dbContext;
 
 		protected readonly ILogger<BasePageModel> _logger;
@@ -108,35 +110,45 @@ namespace InkBall.Module.Pages
 			{
 				return user.InkBallPlayer.FirstOrDefault();
 			}
-
-			var query = from p in _dbContext.InkBallPlayer.Include(x => x.User)
-						where p.iUserId == user.iId
-						select p;
-			InkBallPlayer dbPlayer = await query.FirstOrDefaultAsync(token);
-
-			if (dbPlayer == null)
+			else
 			{
-				dbPlayer = new InkBallPlayer
+				//exclusively accessed and semaphore sync section creating matching InkBallPlayer for InkBalluser (??).
+				await _playerCreationSemaphore.WaitAsync(token);
+				try
 				{
-					// User = user,
-					iUserId = user.iId,
-					iDrawCount = 0,
-					iWinCount = 0,
-					iLossCount = 0,
-					//TimeStamp = DateTime.Now,
-				};
+					var query = from p in _dbContext.InkBallPlayer.Include(x => x.User)
+								where p.iUserId == user.iId
+								select p;
+					InkBallPlayer dbPlayer = await query.FirstOrDefaultAsync(token);
+					//checking if player already created in DB
+					if (dbPlayer == null)
+					{
+						//no player exists - create one
+						dbPlayer = new InkBallPlayer
+						{
+							iUserId = user.iId,
+							iDrawCount = 0,
+							iWinCount = 0,
+							iLossCount = 0,
+						};
 
-				await _dbContext.InkBallPlayer.AddAsync(dbPlayer, token);
-				await _dbContext.SaveChangesAsync(token);
+						await _dbContext.InkBallPlayer.AddAsync(dbPlayer, token);
+						await _dbContext.SaveChangesAsync(token);
+					}
+
+					var player = dbPlayer;
+
+					//refresh user in session
+					user.InkBallPlayer = new[] { player };
+					//HttpContext.Session.Set<InkBallUserViewModel>(nameof(InkBallUserViewModel), user);
+
+					return player;
+				}
+				finally
+				{
+					_playerCreationSemaphore.Release();
+				}
 			}
-
-			var player = dbPlayer;
-
-			//refresh user in session
-			user.InkBallPlayer = new[] { player };
-			//HttpContext.Session.Set<InkBallUserViewModel>(nameof(InkBallUserViewModel), user);
-
-			return player;
 		}
 
 		public virtual async Task LoadUserPlayerAndGameAsync(CancellationToken token)
