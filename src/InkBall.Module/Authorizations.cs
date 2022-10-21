@@ -20,49 +20,67 @@ namespace InkBall.Module
 		static async Task InkBallCreateUserPrincipalAsync(INamedAgedUser user,
 			ClaimsPrincipal principal, GamesContext inkBallContext, CancellationToken token = default)
 		{
-			// use this.UserManager if needed
-			var identity = (ClaimsIdentity)principal.Identity;
 			var name_identifer = principal.FindFirstValue(ClaimTypes.NameIdentifier);
 
-			if (!string.IsNullOrEmpty(name_identifer)/* && user.Age >= MinimumAgeRequirement.MinimumAge.Value*/)//conditions for InkBallUser to create
+			//conditions for InkBallUser to create
+			if (string.IsNullOrEmpty(name_identifer)) return;
+
+			var identity = (ClaimsIdentity)principal.Identity;
+
+			InkBallUser found_user = await inkBallContext.InkBallUsers
+				.FirstOrDefaultAsync(i => i.sExternalId == name_identifer, token);
+			if (found_user != null)
 			{
-				InkBallUser found_user = inkBallContext.InkBallUsers.FirstOrDefault(i => i.sExternalId == name_identifer);
-				if (found_user != null)
+				//user already created and existing in InkBallUsers, awesome.
+				//just update user name if differs
+				if (found_user.UserName != user.Name)
+					found_user.UserName = user.Name;
+			}
+			else
+			{
+				found_user = new InkBallUser
 				{
-					//user already created and existing in InkBallUsers, awesome.
-					//just update user name if differs
-					if (found_user.UserName != user.Name)
-					{
-						found_user.UserName = user.Name;
-						await inkBallContext.SaveChangesAsync(token);
-					}
-				}
-				else
+					sExternalId = name_identifer,
+					iPrivileges = 0,
+					UserName = user.Name
+				};
+				await inkBallContext.InkBallUsers.AddAsync(found_user, token);
+			}
+			//checking if player already created in DB
+			InkBallPlayer dbPlayer = await inkBallContext.InkBallPlayer.Include(x => x.User)
+				.FirstOrDefaultAsync(p => p.iUserId == found_user.iId, token);
+			if (dbPlayer == null)
+			{
+				//no player exists - create one
+				dbPlayer = new InkBallPlayer
 				{
-					found_user = new InkBallUser
-					{
-						sExternalId = name_identifer,
-						iPrivileges = 0,
-						UserName = user.Name
-					};
-					await inkBallContext.InkBallUsers.AddAsync(found_user, token);
-					await inkBallContext.SaveChangesAsync(token);
-				}
+					User = found_user,
+					iDrawCount = 0,
+					iWinCount = 0,
+					iLossCount = 0,
+				};
 
-				if (!identity.HasClaim(x => x.Type == nameof(Pages.HomeModel.InkBallUserId)))
-				{
-					identity.AddClaim(new Claim(nameof(Pages.HomeModel.InkBallUserId), found_user.iId.ToString(),
-						nameof(InkBallUser)));
-				}
+				await inkBallContext.InkBallPlayer.AddAsync(dbPlayer, token);
+			}
 
-				//if (!identity.HasClaim(x => x.Type == ClaimTypes.DateOfBirth))
-				//	identity.AddClaim(new Claim(ClaimTypes.DateOfBirth, DateTime.UtcNow.AddYears(-user.Age).ToString("O")));
+			await inkBallContext.SaveChangesAsync(token);
 
-				if (!identity.HasClaim(x => x.Type == ClaimTypes.UserData))
-				{
-					var user_settings = new Claim(ClaimTypes.UserData, user.UserSettingsJSON ?? "", nameof(user.UserSettings));
-					identity.AddClaim(user_settings);
-				}
+
+
+
+
+
+
+			if (!identity.HasClaim(x => x.Type == nameof(Pages.HomeModel.InkBallUserId)))
+			{
+				identity.AddClaim(new Claim(nameof(Pages.HomeModel.InkBallUserId), found_user.iId.ToString(),
+					nameof(InkBallUser)));
+			}
+
+			if (!identity.HasClaim(x => x.Type == ClaimTypes.UserData))
+			{
+				var user_settings = new Claim(ClaimTypes.UserData, user.UserSettingsJSON ?? "", nameof(user.UserSettings));
+				identity.AddClaim(user_settings);
 			}
 		}
 
