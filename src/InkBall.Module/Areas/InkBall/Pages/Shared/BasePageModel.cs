@@ -24,8 +24,6 @@ namespace InkBall.Module.Pages
 
 	public abstract class BasePageModel : PageModel
 	{
-		private static SemaphoreSlim _playerCreationSemaphore = new SemaphoreSlim(1, 1);
-
 		protected readonly GamesContext _dbContext;
 
 		protected readonly ILogger<BasePageModel> _logger;
@@ -101,54 +99,16 @@ namespace InkBall.Module.Pages
 			return game;
 		}
 
-		protected virtual async Task<InkBallPlayer> GetPlayerAsync(InkBallUser user, CancellationToken token)
+		protected virtual InkBallPlayer GetPlayer(InkBallUser user, CancellationToken token)
 		{
 			if (user == null)
 				return null;
 
-			if (user.InkBallPlayer?.Count > 0)
-			{
-				return user.InkBallPlayer.FirstOrDefault();
-			}
+			var player = user.InkBallPlayer.FirstOrDefault();
+			if (player != null)
+				return player;
 			else
-			{
-				//exclusively accessed and semaphore sync section creating matching InkBallPlayer for InkBalluser (??).
-				await _playerCreationSemaphore.WaitAsync(token);
-				try
-				{
-					var query = from p in _dbContext.InkBallPlayer.Include(x => x.User)
-								where p.iUserId == user.iId
-								select p;
-					InkBallPlayer dbPlayer = await query.FirstOrDefaultAsync(token);
-					//checking if player already created in DB
-					if (dbPlayer == null)
-					{
-						//no player exists - create one
-						dbPlayer = new InkBallPlayer
-						{
-							iUserId = user.iId,
-							iDrawCount = 0,
-							iWinCount = 0,
-							iLossCount = 0,
-						};
-
-						await _dbContext.InkBallPlayer.AddAsync(dbPlayer, token);
-						await _dbContext.SaveChangesAsync(token);
-					}
-
-					var player = dbPlayer;
-
-					//refresh user in session
-					user.InkBallPlayer = new[] { player };
-					//HttpContext.Session.Set<InkBallUserViewModel>(nameof(InkBallUserViewModel), user);
-
-					return player;
-				}
-				finally
-				{
-					_playerCreationSemaphore.Release();
-				}
-			}
+				throw new ArgumentNullException(nameof(player), "player not found");
 		}
 
 		public virtual async Task LoadUserPlayerAndGameAsync(CancellationToken token)
@@ -156,7 +116,7 @@ namespace InkBall.Module.Pages
 			InkBallUser user = await GetUserAsync(token);
 			GameUser = user;
 
-			InkBallPlayer player = await GetPlayerAsync(user, token);
+			InkBallPlayer player = GetPlayer(user, token);
 			Player = player;
 
 			InkBallGame game = await GetGameAsync(player, token);
