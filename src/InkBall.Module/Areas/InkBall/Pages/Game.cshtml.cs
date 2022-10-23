@@ -18,6 +18,8 @@ namespace InkBall.Module.Pages
 	[Authorize(Policy = Constants.InkBallPolicyName)]
 	public class GameModel : BasePageModel
 	{
+		public const string ASPX = "Game";
+
 		private readonly IOptions<HubOptions> _signalRHubOptions;
 
 		public (IEnumerable<InkBallPath> Paths, IEnumerable<InkBallPoint> Points) PlayerPointsAndPaths { get; protected set; }
@@ -67,7 +69,7 @@ namespace InkBall.Module.Pages
 			{
 				Message = "No active game for you";
 
-				return RedirectToPage("Home");
+				return RedirectToPage(HomeModel.ASPX);
 			}
 
 			this.IsReadonly = false;
@@ -99,7 +101,7 @@ namespace InkBall.Module.Pages
 			{
 				Message = "View only: Bad GameID";
 
-				return RedirectToPage("Home");
+				return RedirectToPage(HomeModel.ASPX);
 			}
 
 			var token = HttpContext.RequestAborted;
@@ -112,7 +114,7 @@ namespace InkBall.Module.Pages
 			{
 				Message = "View only: It is your game, or bad GameID";
 
-				return RedirectToPage("Home");
+				return RedirectToPage(HomeModel.ASPX);
 			}
 			if (Player == null)
 				Player = Game.Player1;

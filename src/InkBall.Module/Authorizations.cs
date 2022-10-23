@@ -1,17 +1,15 @@
-using System;
-using System.Globalization;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading;
-using System.Threading.Tasks;
 using InkBall.Module.Hubs;
 using InkBall.Module.Model;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace InkBall.Module
 {
@@ -62,13 +60,7 @@ namespace InkBall.Module
 
 				await inkBallContext.InkBallPlayer.AddAsync(dbPlayer, token);
 			}
-
 			await inkBallContext.SaveChangesAsync(token);
-
-
-
-
-
 
 
 			if (!identity.HasClaim(x => x.Type == nameof(Pages.HomeModel.InkBallUserId)))

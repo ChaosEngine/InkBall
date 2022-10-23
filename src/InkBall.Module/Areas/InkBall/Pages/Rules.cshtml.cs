@@ -13,6 +13,8 @@ namespace InkBall.Module.Pages
 	//[Authorize(Policy = Constants.InkBallPolicyName)]
 	public class RulesModel : BasePageModel
 	{
+		public const string ASPX = "Rules";
+
 		public RulesModel(GamesContext dbContext, ILogger<RulesModel> logger) : base(dbContext, logger)
 		{
 		}
