@@ -32,7 +32,7 @@
 				</tr>
 			</thead>
 			<tbody>
-			@if(Model.GamesList != null)
+			@if(Model.GamesList?.Count() > 0)
 			{
 				foreach (var game in Model.GamesList)
 				{
@@ -117,6 +117,14 @@
 					</tr>
 				}
 			}
+			else
+			{
+				<tr>
+					<td colspan="6" class="h4 p-3 text-center gtd-nogame">
+						<span>↓↓↓</span> No games, create below
+					</td>
+				</tr>
+			}
 			</tbody>
 		</table>
 	</div>
@@ -124,8 +132,8 @@
 		@if (!bIsCurrentGameOk)
 		{
 			<fieldset class="g-3">
+				<legend class="col-sm-12 col-md-4 col-lg-4 col-xl-3">New game creation</legend>
 				<div class="row" role="group" aria-label="New game options">
-					<legend class="col-sm-12 col-md-4 col-lg-4 col-xl-3">New game creation</legend>
 					<div class="col-sm-12 col-md-4 col-lg-4 col-xl-3">
 						<select name='GameType' id='GameType' class="form-select" required>
 							<option value='' selected='selected'>Choose game type</option>
