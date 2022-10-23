@@ -11,6 +11,8 @@ namespace InkBall.Module.Pages
 	[Authorize(Policy = Constants.InkBallPolicyName)]
 	public class HighscoresModel : BasePageModel
 	{
+		public const string ASPX = "Highscores";
+
 		public IEnumerable<(int PlayerId, int? UserId, string UserName, int WinCount, int LossCount, int DrawCount, int GameCount)> Stats { get; set; }
 
 		public HighscoresModel(GamesContext dbContext, ILogger<RulesModel> logger) : base(dbContext, logger)

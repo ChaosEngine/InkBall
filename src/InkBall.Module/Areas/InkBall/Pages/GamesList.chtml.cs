@@ -17,6 +17,8 @@ namespace InkBall.Module.Pages
 	[Authorize(Policy = Constants.InkBallPolicyName)]
 	public class GamesListModel : BasePageModel
 	{
+		public const string ASPX = "GamesList";
+
 		private readonly IOptions<InkBallOptions> _commonUIConfigureOptions;
 		private readonly IHubContext<GameHub, IGameClient> _inkballHubContext;
 
@@ -43,12 +45,10 @@ namespace InkBall.Module.Pages
 			await base.LoadUserPlayerAndGameAsync(token);
 
 			GamesList = await GetGameList(token);
-
-			//Message = $"ExternalId = [{GameUser.sExternalId}] PlayerID = [{GameUser.InkBallPlayer.FirstOrDefault()?.iId}]";
 		}
 
-		public async Task<IActionResult> OnPostAsync(string action, int gameID, string gameType, InkBallGame.BoardSizeEnum boardSize,
-			string cpuOponent)
+		public async Task<IActionResult> OnPostAsync(string action, int gameID, string gameType,
+			InkBallGame.BoardSizeEnum boardSize, string cpuOponent)
 		{
 			var token = HttpContext.RequestAborted;
 
@@ -120,7 +120,7 @@ namespace InkBall.Module.Pages
 									}
 
 									await trans.CommitAsync(token);
-									return RedirectToPage("Game");
+									return RedirectToPage(GameModel.ASPX);
 								}
 								catch (Exception ex)
 								{
@@ -136,7 +136,7 @@ namespace InkBall.Module.Pages
 					case "Continue":
 						if (Game != null)
 						{
-							return RedirectToPage("Game");
+							return RedirectToPage(GameModel.ASPX);
 						}
 						else
 						{
@@ -204,7 +204,7 @@ namespace InkBall.Module.Pages
 									selectedGameType, grid_size, width, height, bCpuOponent, token);
 
 								await trans.CommitAsync(token);
-								return RedirectToPage("Game");
+								return RedirectToPage(GameModel.ASPX);
 							}
 							catch (Exception ex)
 							{
@@ -217,7 +217,7 @@ namespace InkBall.Module.Pages
 
 					case "pause":
 					case "Pause":
-						return RedirectToPage("GamesList");
+						return RedirectToPage();
 
 					case "surrender":
 					case "cancel":
@@ -259,7 +259,7 @@ namespace InkBall.Module.Pages
 								}
 
 								await trans.CommitAsync(token);
-								return RedirectToPage("GamesList");
+								return RedirectToPage();
 							}
 							catch (Exception ex)
 							{
@@ -270,7 +270,7 @@ namespace InkBall.Module.Pages
 						break;
 
 					case "Home":
-						return RedirectToPage("Home");
+						return RedirectToPage(HomeModel.ASPX);
 
 					default:
 						break;

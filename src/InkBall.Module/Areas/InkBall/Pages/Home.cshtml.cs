@@ -15,6 +15,8 @@ namespace InkBall.Module.Pages
 	[AllowAnonymous]
 	public class HomeModel : BasePageModel
 	{
+		public const string ASPX = "Home";
+
 		private readonly IHubContext<GameHub, IGameClient> _inkballHubContext;
 		private readonly IOptions<InkBallOptions> _commonUIConfigureOptions;
 
@@ -53,7 +55,7 @@ namespace InkBall.Module.Pages
 					case "Continue":
 						if (Game != null)
 						{
-							return RedirectToPage("Game");
+							return RedirectToPage(GameModel.ASPX);
 						}
 						else
 						{
@@ -125,7 +127,7 @@ namespace InkBall.Module.Pages
 									selectedGameType, grid_size, width, height, bCpuOponent, token);
 
 								await trans.CommitAsync(token);
-								return RedirectToPage("Game");
+								return RedirectToPage(GameModel.ASPX);
 							}
 							catch (Exception ex)
 							{
@@ -137,25 +139,33 @@ namespace InkBall.Module.Pages
 						break;
 
 					case "Game list":
+					case "Gamelist":
+					case "GameList":
+					case GamesListModel.ASPX:
 						if (bIsLoggedIn)
 						{
-							return RedirectToPage("GamesList");
+							return RedirectToPage(GamesListModel.ASPX);
 						}
 						else
 							msg = "You have to be logged in";
 						break;
 
+					case "best":
 					case "Best":
+					case HighscoresModel.ASPX:
 						if (bIsLoggedIn)
 						{
-							return RedirectToPage("Highscores");
+							return RedirectToPage(HighscoresModel.ASPX);
 						}
 						else
 							msg = "You have to be logged in";
 						break;
 
 					case "Game rules":
-						return RedirectToPage("Rules");
+					case "Gamerules":
+					case "GameRules":
+					case RulesModel.ASPX:
+						return RedirectToPage(RulesModel.ASPX);
 
 					case "Login":
 						return Redirect(_commonUIConfigureOptions.Value.LoginPath);
