@@ -139,8 +139,6 @@ namespace InkBall.Module.Pages
 						break;
 
 					case "Game list":
-					case "Gamelist":
-					case "GameList":
 					case GamesListModel.ASPX:
 						if (bIsLoggedIn)
 						{
@@ -150,7 +148,6 @@ namespace InkBall.Module.Pages
 							msg = "You have to be logged in";
 						break;
 
-					case "best":
 					case "Best":
 					case HighscoresModel.ASPX:
 						if (bIsLoggedIn)
@@ -162,8 +159,6 @@ namespace InkBall.Module.Pages
 						break;
 
 					case "Game rules":
-					case "Gamerules":
-					case "GameRules":
 					case RulesModel.ASPX:
 						return RedirectToPage(RulesModel.ASPX);
 
