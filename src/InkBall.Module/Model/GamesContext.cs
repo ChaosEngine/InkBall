@@ -111,28 +111,17 @@ namespace InkBall.Module.Model
 			}
 		}
 
-		internal static string JsonColumnTypeFromProvider(string activeProvider)
+		public static string JsonColumnTypeFromProvider(string activeProvider)
 		{
-			switch (activeProvider)
+			return activeProvider switch
 			{
-				case "Microsoft.EntityFrameworkCore.SqlServer":
-					return "nvarchar(1000)";
-
-				case "Pomelo.EntityFrameworkCore.MySql":
-					return "json";
-
-				case "Microsoft.EntityFrameworkCore.Sqlite":
-					return "TEXT";
-
-				case "Npgsql.EntityFrameworkCore.PostgreSQL":
-					return "jsonb";
-
-				case "Oracle.EntityFrameworkCore":
-					return "CLOB";
-
-				default:
-					throw new NotSupportedException($"Bad DBKind name {activeProvider}");
-			}
+				"Microsoft.EntityFrameworkCore.SqlServer" => "nvarchar(1000)",
+				"Pomelo.EntityFrameworkCore.MySql" => "json",
+				"Microsoft.EntityFrameworkCore.Sqlite" => "TEXT",
+				"Npgsql.EntityFrameworkCore.PostgreSQL" => "jsonb",
+				"Oracle.EntityFrameworkCore" => "VARCHAR2(4000)",
+				_ => throw new NotSupportedException($"Bad DBKind name {activeProvider}"),
+			};
 		}
 
 		/*protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
