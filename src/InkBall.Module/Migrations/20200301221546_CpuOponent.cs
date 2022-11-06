@@ -29,6 +29,18 @@ namespace InkBall.Module.Migrations
             // migrationBuilder.DropColumn(
             //     name: "CpuOponent",
             //     table: "InkBallGame");
+
+            migrationBuilder.DeleteData(
+                table: "InkBallPlayer",
+                keyColumn: "iId" ,
+                keyValue: -1
+            );
+
+            migrationBuilder.DeleteData(
+                table: "InkBallUsers",
+                keyColumn: "iId",
+                keyValue: -1
+            );
         }
     }
 }
