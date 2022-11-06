@@ -88,12 +88,12 @@ namespace InkBall.Module.Model
 		internal static MigrationBuilder CreateTimestampTrigger(this MigrationBuilder migrationBuilder, IEntityType entityType,
 			string timeStampColumnName, string primaryKey)
 		{
+			var tableName = entityType.GetTableName();
+			//var primaryKey = entityType.FindPrimaryKey();
+
 			switch (migrationBuilder.ActiveProvider)
 			{
 				case "Microsoft.EntityFrameworkCore.Sqlite":
-					var tableName = entityType.GetTableName();
-					//var primaryKey = entityType.FindPrimaryKey();
-
 					string command =
 $@"CREATE TRIGGER {tableName}_update_{timeStampColumnName}_Trigger
 AFTER UPDATE ON {tableName}
@@ -105,9 +105,6 @@ END;";
 					break;
 
 				case "Microsoft.EntityFrameworkCore.SqlServer":
-					tableName = entityType.GetTableName();
-					//var primaryKey = entityType.FindPrimaryKey();
-
 					command =
 $@"CREATE TRIGGER [dbo].[{tableName}_update_{timeStampColumnName}_Trigger] ON [dbo].[{tableName}]
 	AFTER UPDATE
@@ -127,9 +124,6 @@ END";
 					break;
 
 				case "Oracle.EntityFrameworkCore":
-					tableName = entityType.GetTableName();
-					//var primaryKey = entityType.FindPrimaryKey();
-
 					command =
 $@"CREATE OR REPLACE TRIGGER ""{tableName}_update_{timeStampColumnName}_Trigger""
 	BEFORE UPDATE ON ""{tableName}""
@@ -141,8 +135,23 @@ END;";
 					migrationBuilder.Sql(command);
 					break;
 
-				case "Pomelo.EntityFrameworkCore.MySql":
 				case "Npgsql.EntityFrameworkCore.PostgreSQL":
+					command =
+$@"CREATE FUNCTION ""{tableName}_update_{timeStampColumnName}_TrigFunc""() RETURNS trigger AS $$
+    BEGIN
+        NEW.""{timeStampColumnName}"" := CURRENT_TIMESTAMP;
+        RETURN NEW;
+    END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER ""{tableName}_update_{timeStampColumnName}_Trigger"" BEFORE UPDATE ON ""{tableName}""
+    FOR EACH ROW EXECUTE FUNCTION ""{tableName}_update_{timeStampColumnName}_TrigFunc""();
+";
+					//Console.Error.WriteLine($"executing '{command}'");
+					migrationBuilder.Sql(command);
+					break;
+
+				case "Pomelo.EntityFrameworkCore.MySql":
 				default:
 					break;
 			}
@@ -152,11 +161,11 @@ END;";
 
 		internal static MigrationBuilder DropTimestampTrigger(this MigrationBuilder migrationBuilder, IEntityType entityType, string timeStampColumnName)
 		{
+			var tableName = entityType.GetTableName();
+
 			switch (migrationBuilder.ActiveProvider)
 			{
 				case "Microsoft.EntityFrameworkCore.Sqlite":
-					var tableName = entityType.GetTableName();
-
 					string command = $@"DROP TRIGGER IF EXISTS {tableName}_update_{timeStampColumnName}_Trigger;";
 
 					//Console.Error.WriteLine($"executing '{command}'");
@@ -164,8 +173,6 @@ END;";
 					break;
 
 				case "Microsoft.EntityFrameworkCore.SqlServer":
-					tableName = entityType.GetTableName();
-
 					command = $@"DROP TRIGGER [dbo].[{tableName}_update_{timeStampColumnName}_Trigger];";
 
 					//Console.Error.WriteLine($"executing '{command}'");
@@ -173,8 +180,6 @@ END;";
 					break;
 
 				case "Oracle.EntityFrameworkCore":
-					tableName = entityType.GetTableName();
-
 					command = $@"
 DECLARE
   l_count integer;
@@ -190,8 +195,14 @@ END;";
 					migrationBuilder.Sql(command);
 					break;
 
-				case "Pomelo.EntityFrameworkCore.MySql":
 				case "Npgsql.EntityFrameworkCore.PostgreSQL":
+					command = $@"DROP TRIGGER IF EXISTS ""{tableName}_update_{timeStampColumnName}_Trigger"" ON ""{tableName}"";";
+
+					//Console.Error.WriteLine($"executing '{command}'");
+					migrationBuilder.Sql(command);
+					break;
+
+				case "Pomelo.EntityFrameworkCore.MySql":
 				default:
 					break;
 			}
