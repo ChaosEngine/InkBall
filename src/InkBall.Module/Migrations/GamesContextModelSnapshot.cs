@@ -30,7 +30,7 @@ namespace InkBall.Module.Migrations
                         .HasColumnName("iId")
                         .HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
 #if INCLUDE_POSTGRES
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
 #endif
                         .HasAnnotation("Sqlite:Autoincrement", true)
 #if INCLUDE_ORACLE
@@ -104,7 +104,7 @@ namespace InkBall.Module.Migrations
                         .HasColumnName("iId")
                         .HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
 #if INCLUDE_POSTGRES
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
 #endif
                         .HasAnnotation("Sqlite:Autoincrement", true)
 #if INCLUDE_ORACLE
@@ -143,7 +143,7 @@ namespace InkBall.Module.Migrations
                         .HasColumnName("iId")
                         .HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
 #if INCLUDE_POSTGRES
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
 #endif
                         .HasAnnotation("Sqlite:Autoincrement", true)
 #if INCLUDE_ORACLE
@@ -247,7 +247,7 @@ namespace InkBall.Module.Migrations
                         .HasColumnName("iId")
                         .HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
 #if INCLUDE_POSTGRES
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
 #endif
                         .HasAnnotation("Sqlite:Autoincrement", true)
 #if INCLUDE_ORACLE
