@@ -510,7 +510,7 @@ namespace InkBall.Module.Model
 						GameType = gameType,
 						GameState = gameState,
 						//TimeStamp = DateTime.Now,
-						CreateTime = DateTime.Now
+						CreateTime = DateTime.UtcNow
 					};
 					await InkBallGame.AddAsync(gm, token);
 

@@ -19,7 +19,7 @@ namespace InkBall.Tests
 			var game0 = new InkBallGame
 			{
 				//iId = 1,
-				CreateTime = DateTime.Now,
+				CreateTime = DateTime.UtcNow,
 				GameState = InkBallGame.GameStateEnum.ACTIVE,
 				Player1 = new InkBallPlayer
 				{

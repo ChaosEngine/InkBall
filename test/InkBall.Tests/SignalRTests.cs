@@ -1195,7 +1195,7 @@ namespace InkBall.Tests
 			var game = new InkBallGame
 			{
 				iId = 35,
-				CreateTime = DateTime.Now,
+				CreateTime = DateTime.UtcNow,
 				GameState = InkBallGame.GameStateEnum.ACTIVE,
 				GameType = InkBallGame.GameTypeEnum.FIRST_5_ADVANTAGE_PATHS,
 				Player1 = new InkBallPlayer
@@ -1467,7 +1467,7 @@ new InkBallPathViewModel{ iId = 86, iGameId = 35, iPlayerId = 3, PointsAsString 
 			var game = new InkBallGame
 			{
 				iId = 85,
-				CreateTime = DateTime.Now,
+				CreateTime = DateTime.UtcNow,
 				GameState = InkBallGame.GameStateEnum.ACTIVE,
 				GameType = InkBallGame.GameTypeEnum.FIRST_5_ADVANTAGE_PATHS,
 				Player1 = new InkBallPlayer
