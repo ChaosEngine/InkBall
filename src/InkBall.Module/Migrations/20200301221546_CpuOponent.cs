@@ -1,46 +1,38 @@
 ﻿using System;
+using InkBall.Module.Model;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace InkBall.Module.Migrations
 {
-    public partial class CpuOponent : Migration
-    {
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
-            // migrationBuilder.AddColumn<bool>(
-            //     name: "CpuOponent",
-            //     table: "InkBallGame",
-            //     nullable: false,
-            //     defaultValue: false);
+	public partial class CpuOponent : Migration
+	{
+		protected override void Up(MigrationBuilder migrationBuilder)
+		{
+			migrationBuilder.InsertData(
+				table: nameof(GamesContext.InkBallUsers),
+				columns: new[] { nameof(InkBallUser.iId), nameof(InkBallUser.UserName), nameof(InkBallUser.iPrivileges),
+					nameof(InkBallUser.sExternalId) },
+				values: new object[] { -1, InkBallPlayer.CPUOponentPlayerName, 1, null });
 
-            migrationBuilder.InsertData(
-                table: "InkBallUsers",
-                columns: new[] { "iId", "UserName", "iPrivileges", "sExternalId" },
-                values: new object[] { -1, "Multi CPU Oponent UserPlayer", 1, null });
+			migrationBuilder.InsertData(
+				table: nameof(GamesContext.InkBallPlayer),
+				columns: new[] { nameof(InkBallPlayer.iId), "iUserID", nameof(InkBallPlayer.sLastMoveCode) },
+				values: new object[] { -1, -1, "{}" });
+		}
 
-            migrationBuilder.InsertData(
-                table: "InkBallPlayer",
-                columns: new[] { "iId", "iUserID", "sLastMoveCode" },
-                values: new object[] { -1, -1, "{}" });
-        }
+		protected override void Down(MigrationBuilder migrationBuilder)
+		{
+			migrationBuilder.DeleteData(
+				table: nameof(GamesContext.InkBallPlayer),
+				keyColumn: nameof(InkBallPlayer.iId),
+				keyValue: -1
+			);
 
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-            // migrationBuilder.DropColumn(
-            //     name: "CpuOponent",
-            //     table: "InkBallGame");
-
-            migrationBuilder.DeleteData(
-                table: "InkBallPlayer",
-                keyColumn: "iId" ,
-                keyValue: -1
-            );
-
-            migrationBuilder.DeleteData(
-                table: "InkBallUsers",
-                keyColumn: "iId",
-                keyValue: -1
-            );
-        }
-    }
+			migrationBuilder.DeleteData(
+				table: nameof(GamesContext.InkBallUsers),
+				keyColumn: nameof(InkBallUser.iId),
+				keyValue: -1
+			);
+		}
+	}
 }

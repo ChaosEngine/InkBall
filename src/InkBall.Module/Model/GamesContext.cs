@@ -429,7 +429,7 @@ namespace InkBall.Module.Model
 					iId = -1,
 					sExternalId = null,
 					iPrivileges = 1,
-					UserName = "Multi CPU Oponent UserPlayer"
+					UserName = Module.Model.InkBallPlayer.CPUOponentPlayerName
 				});
 			});
 		}

@@ -280,7 +280,7 @@ namespace InkBall.Module.Migrations
                         new
                         {
                             iId = -1,
-                            UserName = "Multi CPU Oponent UserPlayer",
+                            UserName = InkBallPlayer.CPUOponentPlayerName,
                             iPrivileges = 1
                         });
                 });

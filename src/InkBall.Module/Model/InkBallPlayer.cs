@@ -112,6 +112,8 @@ namespace InkBall.Module.Model
 
 	public partial class InkBallPlayer : CommonPlayer<InkBallPoint, InkBallPath>
 	{
+		internal const string CPUOponentPlayerName = "Multi CPU Oponent UserPlayer";
+
 		public InkBallUser User { get; set; }
 		public ICollection<InkBallGame> InkBallGameIPlayer1 { get; set; }
 		public ICollection<InkBallGame> InkBallGameIPlayer2 { get; set; }
