@@ -21,16 +21,16 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="6.0.10" />
-    <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="6.0.10" />
-    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="6.0.10" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="6.0.11" />
+    <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="6.0.11" />
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="6.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.11" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.7" Condition="$(DefineConstants.Contains('INCLUDE_POSTGRES'))" />
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="6.0.2" Condition="$(DefineConstants.Contains('INCLUDE_MYSQL'))" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.10" Condition="$(DefineConstants.Contains('INCLUDE_SQLSERVER'))" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.11" Condition="$(DefineConstants.Contains('INCLUDE_SQLSERVER'))" />
     <PackageReference Include="Oracle.EntityFrameworkCore" Version="6.21.61" Condition="$(DefineConstants.Contains('INCLUDE_ORACLE'))" />
     <!--<PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />-->
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="6.0.10" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="6.0.11" />
     <PackageReference Include="MessagePack" Version="2.4.35" />
   </ItemGroup>
 <!--
