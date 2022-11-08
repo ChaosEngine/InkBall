@@ -10,10 +10,13 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>TRACE;INCLUDE_ORACLE;INCLUDE_SQLSERVER;INCLUDE_POSTGRES</DefineConstants>
+    <DefineConstants>TRACE;INCLUDE_ORACLE;INCLUDE_SQLSERVER;INCLUDE_POSTGRES;INCLUDE_MYSQL</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Oracle|AnyCPU'">
     <DefineConstants>INCLUDE_ORACLE</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants>INCLUDE_MYSQL</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,7 +26,7 @@
     <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="6.0.10" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.10" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.7" Condition="$(DefineConstants.Contains('INCLUDE_POSTGRES'))" />
-    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="6.0.2" />
+    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="6.0.2" Condition="$(DefineConstants.Contains('INCLUDE_MYSQL'))" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.10" Condition="$(DefineConstants.Contains('INCLUDE_SQLSERVER'))" />
     <PackageReference Include="Oracle.EntityFrameworkCore" Version="6.21.61" Condition="$(DefineConstants.Contains('INCLUDE_ORACLE'))" />
     <!--<PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />-->

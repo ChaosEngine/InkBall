@@ -30,7 +30,9 @@ namespace InkBall.Module.Migrations
 				b.Property<int>("iId")
 					.ValueGeneratedOnAdd()
 					.HasColumnName("iId")
+#if INCLUDE_MYSQL
 					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+#endif
 #if INCLUDE_POSTGRES
 					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
 #endif
@@ -100,7 +102,9 @@ namespace InkBall.Module.Migrations
 				b.Property<int>("iId")
 					.ValueGeneratedOnAdd()
 					.HasColumnName("iId")
+#if INCLUDE_MYSQL
 					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+#endif
 #if INCLUDE_POSTGRES
 					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
 #endif
@@ -139,7 +143,9 @@ namespace InkBall.Module.Migrations
 				b.Property<int>("iId")
 					.ValueGeneratedOnAdd()
 					.HasColumnName("iId")
+#if INCLUDE_MYSQL
 					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+#endif
 #if INCLUDE_POSTGRES
 					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
 #endif
@@ -230,7 +236,9 @@ namespace InkBall.Module.Migrations
 				b.Property<int>("iId")
 					.ValueGeneratedOnAdd()
 					.HasColumnName("iId")
+#if INCLUDE_MYSQL
 					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+#endif
 #if INCLUDE_POSTGRES
 					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
 #endif

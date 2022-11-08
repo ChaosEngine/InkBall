@@ -150,7 +150,9 @@ namespace InkBall.Module.Model
 				entity.Property(e => e.iId).HasColumnName("iId")
 					.ValueGeneratedOnAdd()
 					.HasAnnotation("Sqlite:Autoincrement", true)
+#if INCLUDE_MYSQL
 					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+#endif
 #if INCLUDE_SQLSERVER
 					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
 #endif
@@ -233,7 +235,9 @@ namespace InkBall.Module.Model
 				entity.Property(e => e.iId).HasColumnName("iId")
 					.ValueGeneratedOnAdd()
 					.HasAnnotation("Sqlite:Autoincrement", true)
+#if INCLUDE_MYSQL
 					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+#endif
 #if INCLUDE_SQLSERVER
 					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
 #endif
@@ -276,7 +280,9 @@ namespace InkBall.Module.Model
 				entity.Property(e => e.iId).HasColumnName("iId")
 					.ValueGeneratedOnAdd()
 					.HasAnnotation("Sqlite:Autoincrement", true)
+#if INCLUDE_MYSQL
 					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+#endif
 #if INCLUDE_SQLSERVER
 					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
 #endif
@@ -349,7 +355,9 @@ namespace InkBall.Module.Model
 				entity.Property(e => e.iId).HasColumnName("iId")
 					.ValueGeneratedOnAdd()
 					.HasAnnotation("Sqlite:Autoincrement", true)
+#if INCLUDE_MYSQL
 					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+#endif
 #if INCLUDE_SQLSERVER
 					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
 #endif
@@ -405,7 +413,9 @@ namespace InkBall.Module.Model
 					.HasColumnName("iId")
 					.ValueGeneratedOnAdd()
 					.HasAnnotation("Sqlite:Autoincrement", true)
+#if INCLUDE_MYSQL
 					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+#endif
 #if INCLUDE_SQLSERVER
 					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
 #endif
