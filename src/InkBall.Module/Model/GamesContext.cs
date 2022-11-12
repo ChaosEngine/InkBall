@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -216,6 +216,9 @@ namespace InkBall.Module.Model
 					.WithMany(p => p.InkBallGameIPlayer2)
 					.HasForeignKey(d => d.iPlayer2Id)
 					.HasConstraintName("InkBallGame_ibfk_2");
+
+				if (Database.ProviderName == "Microsoft.EntityFrameworkCore.SqlServer")
+					entity.ToTable(t => t.HasTrigger("InkBallGame_update_TimeStamp_Trigger"));
 			});
 
 			modelBuilder.Entity<InkBallPath>(entity =>
@@ -311,6 +314,10 @@ namespace InkBall.Module.Model
 					.ValueGeneratedOnAddOrUpdate()
 					.HasDefaultValueSql(TimeStampDefaultValueFromProvider(Database.ProviderName))
 					.HasConversion(TimeStampValueConverterFromProvider(Database.ProviderName));
+
+
+				if (Database.ProviderName == "Microsoft.EntityFrameworkCore.SqlServer")
+					entity.ToTable(t => t.HasTrigger("InkBallPlayer_update_TimeStamp_Trigger"));
 
 				entity.HasData(new InkBallPlayer
 				{
