@@ -217,9 +217,11 @@ namespace InkBall.Module.Model
 					.HasForeignKey(d => d.iPlayer2Id)
 					.HasConstraintName("InkBallGame_ibfk_2");
 
-				if (Database.ProviderName == "Microsoft.EntityFrameworkCore.SqlServer")
-					entity.ToTable(t => t.HasTrigger("InkBallGame_update_TimeStamp_Trigger"));
-			});
+                if (Database.ProviderName == "Microsoft.EntityFrameworkCore.SqlServer")
+                    entity.ToTable(t => t.HasTrigger(
+                        $"{nameof(Module.Model.InkBallGame)}_update_{nameof(Module.Model.InkBallGame.TimeStamp)}_Trigger")
+                    );
+            });
 
 			modelBuilder.Entity<InkBallPath>(entity =>
 			{
@@ -316,8 +318,10 @@ namespace InkBall.Module.Model
 					.HasConversion(TimeStampValueConverterFromProvider(Database.ProviderName));
 
 
-				if (Database.ProviderName == "Microsoft.EntityFrameworkCore.SqlServer")
-					entity.ToTable(t => t.HasTrigger("InkBallPlayer_update_TimeStamp_Trigger"));
+                if (Database.ProviderName == "Microsoft.EntityFrameworkCore.SqlServer")
+                    entity.ToTable(t => t.HasTrigger(
+                        $"{nameof(Module.Model.InkBallPlayer)}_update_{nameof(Module.Model.InkBallPlayer.TimeStamp)}_Trigger")
+                    );
 
 				entity.HasData(new InkBallPlayer
 				{
