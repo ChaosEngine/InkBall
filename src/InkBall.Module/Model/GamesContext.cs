@@ -341,33 +341,33 @@ namespace InkBall.Module.Model
 
 			modelBuilder.Entity<InkBallPoint>(entity =>
 			{
-				entity.HasKey(e => e.iId);
+                entity.HasKey(e => new { e.iGameId, e.iX, e.iY });
 
 				entity.HasIndex(e => e.iEnclosingPathId)
 					.HasDatabaseName("ByEnclosingPath");
 
-				entity.HasIndex(e => e.iGameId)
-					.HasDatabaseName("IDX_InkBallPoint_ByGame");
+				//entity.HasIndex(e => e.iGameId)
+				//	.HasDatabaseName("IDX_InkBallPoint_ByGame");
 
 				entity.HasIndex(e => e.iPlayerId)
 					.HasDatabaseName("IDX_InkBallPoint_ByPlayer");
 
-				entity.Property(e => e.iId).HasColumnName("iId")
-					.ValueGeneratedOnAdd()
-					.HasAnnotation("Sqlite:Autoincrement", true)
-#if INCLUDE_MYSQL
-					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
-#endif
-#if INCLUDE_SQLSERVER
-					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
-#endif
-#if INCLUDE_ORACLE
-					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
-#endif
-#if INCLUDE_POSTGRES
-					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
-#endif
-					;
+// 				entity.Property(e => e.iId).HasColumnName("iId")
+// 					.ValueGeneratedOnAdd()
+// 					.HasAnnotation("Sqlite:Autoincrement", true)
+// #if INCLUDE_MYSQL
+// 					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+// #endif
+// #if INCLUDE_SQLSERVER
+// 					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
+// #endif
+// #if INCLUDE_ORACLE
+// 					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
+// #endif
+// #if INCLUDE_POSTGRES
+// 					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
+// #endif
+// 					;
 
 				entity.Property(e => e.iEnclosingPathId).HasColumnName("iEnclosingPathId");
 

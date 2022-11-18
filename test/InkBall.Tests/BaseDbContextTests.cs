@@ -159,7 +159,7 @@ namespace InkBall.Tests
 				},
 				iPlayer2Id = 2
 			};
-			var points0 = new List<InkBallPoint>(100);
+			var points0 = new Dictionary<string,InkBallPoint>(100);
 			var paths0 = new List<InkBallPath>(5);
 			bool is_player_turn = true;
 			foreach (var source in UnitTest1.CorrectPathAndOwnedPointsData)
@@ -169,20 +169,25 @@ namespace InkBall.Tests
 
 				foreach ((int x, int y) pt in parameters.coords.Union(parameters.ownedPoints))
 				{
-					points0.Add(new InkBallPoint
+					if (!points0.ContainsKey($"{pt.x},{pt.y}"))
 					{
-						//iId = 1,
-						iX = pt.x,
-						iY = pt.y,
-						Game = game0,
-						iGameId = game0.iId,
-						Status = InkBallPoint.StatusEnum.POINT_IN_PATH,
-						iEnclosingPathId = null,
-						Player = game0.Player1
-					});
-				}
+						points0.Add(
+							$"{pt.x},{pt.y}",
+							new InkBallPoint
+							{
+								iX = pt.x,
+								iY = pt.y,
+								Game = game0,
+								iGameId = game0.iId,
+								Status = InkBallPoint.StatusEnum.POINT_IN_PATH,
+								iEnclosingPathId = null,
+								Player = game0.Player1
+							}
+						);
+                    }
+                }
 
-				var db_path = new InkBallPath
+                var db_path = new InkBallPath
 				{
 					Game = game0,
 					iGameId = game0.iId,
@@ -201,12 +206,12 @@ namespace InkBall.Tests
 				paths0.Add(db_path);
 				foreach (var owned in parameters.ownedPoints)
 				{
-					points0.Where(p => p.iX == owned.x && p.iY == owned.y).ToList().ForEach((pt) =>
+					if(points0.TryGetValue($"{owned.x},{owned.y}", out var pt))
 					{
 						pt.EnclosingPath = db_path;
 						pt.Status = db_path.Game.Player1 == db_path.Player ?
 							InkBallPoint.StatusEnum.POINT_OWNED_BY_BLUE : InkBallPoint.StatusEnum.POINT_OWNED_BY_RED;
-					});
+					}
 				}
 				path_vm.OwnedPointsAsString = parameters.ownedPoints.Select(o => $"{o.x},{o.y}").Aggregate((me, me1) => me + " " + me1);
 				db_path.PointsAsString = JsonSerializer.Serialize(path_vm, new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull });
@@ -219,7 +224,7 @@ namespace InkBall.Tests
 			{
 				await context.AddAsync(game0, token);
 
-				foreach (var pt in points0)
+				foreach (var pt in points0.Values)
 					await context.AddAsync(pt, token);
 
 				foreach (var pa in paths0)

@@ -46,7 +46,6 @@ namespace InkBall.Tests
 			};
 			var point = new InkBallPoint
 			{
-				iId = 1,
 				iX = 1,
 				iY = 1,
 				iGameId = game.iId,
@@ -71,7 +70,6 @@ namespace InkBall.Tests
 			//Arrange
 			var point = new InkBallPoint
 			{
-				iId = 1,
 				iX = pointsTab[0],
 				iY = pointsTab[1],
 				iGameId = -1,
@@ -99,7 +97,6 @@ namespace InkBall.Tests
 				//Arrange
 				var db = new InkBallPoint
 				{
-					iId = 1,
 					iX = pointsTab[0],
 					iY = pointsTab[1],
 					iGameId = -1,
@@ -123,7 +120,6 @@ namespace InkBall.Tests
 				//Arrange
 				var view = new InkBallPointViewModel
 				{
-					iId = 1,
 					iX = pointsTab[0],
 					iY = pointsTab[1],
 					iGameId = -1,
@@ -169,7 +165,7 @@ namespace InkBall.Tests
 					iGameId = -1,
 					iPlayerId = 1,
 					InkBallPoint = new[] { new InkBallPointViewModel { iX = pointsTab[0], iY = pointsTab[1], iGameId = 1, iPlayerId = 1,
-						Status = InkBallPoint.StatusEnum.POINT_FREE_BLUE , iEnclosingPathId = null, TimeStamp = null, iId = 1 } },
+						Status = InkBallPoint.StatusEnum.POINT_FREE_BLUE , iEnclosingPathId = null, TimeStamp = null } },
 					PointsAsString = expectedCoords,
 				};
 				//Act
