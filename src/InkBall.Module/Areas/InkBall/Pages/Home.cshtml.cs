@@ -43,7 +43,7 @@ namespace InkBall.Module.Pages
 
 			await LoadUserPlayerAndGameAsync(token);
 
-			var bIsLoggedIn = (Player != null && !string.IsNullOrEmpty(GameUser.sExternalId)) ? true : false;
+			var bIsLoggedIn = (Player != null && !string.IsNullOrEmpty(Player.sExternalId)) ? true : false;
 			string msg = string.Empty;
 			action = !string.IsNullOrEmpty(action) ? action : string.Empty;
 
@@ -123,7 +123,7 @@ namespace InkBall.Module.Pages
 						{
 							try
 							{
-								var dbGame = await _dbContext.CreateNewGameFromExternalUserIDAsync(GameUser.sExternalId,
+								var dbGame = await _dbContext.CreateNewGameFromExternalUserIDAsync(Player.sExternalId,
 									selectedGameType, grid_size, width, height, bCpuOponent, token);
 
 								await trans.CommitAsync(token);
@@ -193,7 +193,7 @@ namespace InkBall.Module.Pages
 												_logger.LogError(ex.Message);
 											}
 										},
-										Tuple.Create(Game.GetOtherPlayer()?.User?.sExternalId, Game.GetOtherPlayer()?.iId, this.GameUser.UserName),
+										Tuple.Create(Game.GetOtherPlayer()?.sExternalId, Game.GetOtherPlayer()?.iId, this.Player.UserName),
 										token);
 									}
 

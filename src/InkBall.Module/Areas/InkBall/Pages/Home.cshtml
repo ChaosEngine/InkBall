@@ -51,7 +51,7 @@
 		alert.parentNode.removeChild(alert);
 
 
-	const userName = '@Model.GameUser?.UserName';
+	const userName = '@Model.Player?.UserName';
 	const bIsLoggedIn = userName !== '' ? true : false;
     const bIsCurrentGameOk = JSON.parse('@(Model.Game != null ? true : false)'.toLowerCase());
 

@@ -181,7 +181,7 @@ namespace InkBall.Module.Hubs
 				ThisPlayer = this_Player;
 			}
 
-			ThisUserName = ThisPlayer.User.UserName;
+			ThisUserName = ThisPlayer.UserName;
 
 			// if (OtherPlayer == null || OtherUserIdentifier == null)
 			{
@@ -202,16 +202,16 @@ namespace InkBall.Module.Hubs
 			//	)
 			{
 				//obtain another player; co-player
-				InkBallPlayer otherDbPlayer = game.Player1.User.sExternalId == thisUserIdentifier ? game.Player2 : game.Player1;
+				InkBallPlayer otherDbPlayer = game.Player1.sExternalId == thisUserIdentifier ? game.Player2 : game.Player1;
 				if (otherDbPlayer != null)
 				{
 					if (otherDbPlayer.iId == this_Player.iId || OtherUserIdentifier == thisUserIdentifier)
 						throw new ArgumentException("both game players ar the same");
 					other_Player = otherDbPlayer;
-					other_UserIdentifier = otherDbPlayer.User.sExternalId;
+					other_UserIdentifier = otherDbPlayer.sExternalId;
 
 					//Check for other player being CPU player which is treated specially.
-					if (string.IsNullOrEmpty(other_UserIdentifier) && otherDbPlayer.iId == -1 && otherDbPlayer.iUserId == -1)
+					if (string.IsNullOrEmpty(other_UserIdentifier) && otherDbPlayer.iId == -1)
 					{
 						other_UserIdentifier = thisUserIdentifier;
 					}
@@ -238,13 +238,13 @@ namespace InkBall.Module.Hubs
 				//get game from db
 				InkBallGame dbGame = await _dbContext.InkBallGame
 				.Include(gp1 => gp1.Player1)
-					.ThenInclude(p1 => p1.User)
+					//.ThenInclude(p1 => p1.User)
 				.Include(gp2 => gp2.Player2)
-					.ThenInclude(p2 => p2.User)
+					//.ThenInclude(p2 => p2.User)
 				.FirstOrDefaultAsync(
 					w => w.iId == gameID
 					&& (w.iPlayer1Id == playerID || w.iPlayer2Id == playerID)
-					&& (w.Player1.User.sExternalId == thisUserIdentifier || w.Player2.User.sExternalId == thisUserIdentifier)
+					&& (w.Player1.sExternalId == thisUserIdentifier || w.Player2.sExternalId == thisUserIdentifier)
 					&& (GamesContext.ActiveVisibleGameStates.Contains(w.GameState))
 				, token);
 				if (dbGame == null)
@@ -253,12 +253,12 @@ namespace InkBall.Module.Hubs
 					throw new ArgumentException("no player exist in that game");
 
 				bool bIsPlayer1;
-				if (thisUserIdentifier == dbGame.Player1.User.sExternalId)
+				if (thisUserIdentifier == dbGame.Player1.sExternalId)
 				{
 					this_Player = dbGame.Player1;
 					bIsPlayer1 = true;
 				}
-				else if (thisUserIdentifier == dbGame.Player2.User.sExternalId)
+				else if (thisUserIdentifier == dbGame.Player2.sExternalId)
 				{
 					this_Player = dbGame.Player2;
 					bIsPlayer1 = false;
@@ -268,10 +268,10 @@ namespace InkBall.Module.Hubs
 				dbGame.bIsPlayer1 = bIsPlayer1;
 
 				//additional validation
-				string value = claimsPrincipal.FindFirstValue(nameof(Pages.BasePageModel.InkBallUserId));
-				int.TryParse(value, out int this_UserId);
-				if (this_UserId != this_Player.iUserId)
-					throw new ArgumentException("this_UserId != this_Player.iUserId", nameof(this_Player.iUserId));
+				string value = claimsPrincipal.FindFirstValue(nameof(Pages.BasePageModel.InkBalPlayerId));
+				int.TryParse(value, out int this_PlayerId);
+				if (this_PlayerId != this_Player.iId)
+					throw new ArgumentException("this_PlayerId != this_Player.iId", nameof(this_Player.iId));
 
 				game = dbGame;
 				//this.Context.Items[nameof(ThisGame)] = game;
@@ -287,16 +287,16 @@ namespace InkBall.Module.Hubs
 			//if (!(this.Context.Items.TryGetValue(nameof(ThisPlayer), out object pobj) && pobj is IPlayer<InkBallPointViewModel, InkBallPathViewModel> this_Player))
 			{
 				//get player from db
-				InkBallPlayer dbPlayer = await _dbContext.InkBallPlayer.Include(u => u.User)
-					.FirstOrDefaultAsync(p => p.User.sExternalId == thisUserIdentifier, token);
+				InkBallPlayer dbPlayer = await _dbContext.InkBallPlayer//.Include(u => u.User)
+					.FirstOrDefaultAsync(p => p.sExternalId == thisUserIdentifier, token);
 				if (dbPlayer == null)
 					throw new ArgumentNullException(nameof(dbPlayer), "no player");
 
 				//additional validation
-				string value = claimsPrincipal.FindFirstValue(nameof(Pages.BasePageModel.InkBallUserId));
+				string value = claimsPrincipal.FindFirstValue(nameof(Pages.BasePageModel.InkBalPlayerId));
 				int.TryParse(value, out int this_UserId);
-				if (this_UserId != dbPlayer.iUserId)
-					throw new ArgumentException("this_UserId != this_Player.iUserId", nameof(dbPlayer.iUserId));
+				if (this_UserId != dbPlayer.iId)
+					throw new ArgumentException("this_UserId != dbPlayer.iId", nameof(dbPlayer.iId));
 
 				this_Player = dbPlayer;
 				//this.Context.Items[nameof(ThisPlayer)] = this_Player;
@@ -314,7 +314,7 @@ namespace InkBall.Module.Hubs
 					|| string.IsNullOrEmpty(ThisUserName) || ThisGame.CpuOponent == true)
 					return;
 
-				var msg = $"Other player {ThisPlayer?.User?.UserName} connected 😁";
+				var msg = $"Other player {ThisPlayer?.UserName} connected 😁";
 				await Clients.User(OtherUserIdentifier).ServerToClientOtherPlayerConnected(msg);
 			}
 			catch (Exception ex)
@@ -336,7 +336,7 @@ namespace InkBall.Module.Hubs
 					|| string.IsNullOrEmpty(ThisUserName) || ThisGame.CpuOponent == true)
 					return;
 
-				var msg = $"Other player {ThisPlayer?.User?.UserName} disconnected 😢";
+				var msg = $"Other player {ThisPlayer?.UserName} disconnected 😢";
 				await Clients.User(OtherUserIdentifier).ServerToClientOtherPlayerDisconnected(msg);
 			}
 			catch (NoGameArgumentNullException ex)

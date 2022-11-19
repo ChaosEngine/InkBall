@@ -26,7 +26,7 @@ namespace InkBall.Module.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "6.0.401")
+                .HasAnnotation("ProductVersion", "6.0.11")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
 #if INCLUDE_POSTGRES
@@ -239,8 +239,6 @@ namespace InkBall.Module.Migrations
 
                     b.HasIndex("iEnclosingPathId")
                         .HasDatabaseName("ByEnclosingPath");
-
-                    b.HasIndex("iPlayerId");
 
                     b.HasIndex("iPlayerId")
                         .HasDatabaseName("IDX_InkBallPoint_ByPlayer");

@@ -28,13 +28,13 @@ namespace InkBall.Module.Pages
 
 		protected readonly ILogger<BasePageModel> _logger;
 
-		public int InkBallUserId { get; protected set; }
+		public int InkBalPlayerId { get; protected set; }
 
-		public InkBallUser GameUser { get; protected set; }
+		//public InkBallUser GameUser { get; protected set; }
 
 		public InkBallPlayer Player { get; protected set; }
 
-		public virtual string UserName => GameUser.UserName;
+		public virtual string UserName => Player.UserName;
 
 		public InkBallGame Game { get; protected set; }
 
@@ -47,35 +47,38 @@ namespace InkBall.Module.Pages
 			_logger = logger;
 		}
 
-		protected virtual async Task<InkBallUser> GetUserAsync(CancellationToken token = default)
-		{
-			InkBallUser user = null;
-			if (int.TryParse(User.FindFirstValue(nameof(InkBallUserId)), out var inkBallUserId) && inkBallUserId > 0)
-			{
-				InkBallUserId = inkBallUserId;
-				//user = HttpContext.Session.Get<InkBallUserViewModel>(nameof(InkBallUserViewModel));
-				if (user == null)
-				{
-					InkBallUser dbuser = await _dbContext.InkBallUsers.Include(x => x.InkBallPlayer)
-						.FirstOrDefaultAsync(f => f.iId == InkBallUserId, token);
-					user = dbuser;
-					//HttpContext.Session.Set<InkBallUserViewModel>(nameof(InkBallUserViewModel), user);
-				}
-			}
-			return user;
-		}
+		//protected virtual async Task<InkBallUser> GetUserAsync(CancellationToken token = default)
+		//{
+		//	InkBallUser user = null;
+		//	if (int.TryParse(User.FindFirstValue(nameof(InkBallUserId)), out var inkBallUserId) && inkBallUserId > 0)
+		//	{
+		//		InkBallUserId = inkBallUserId;
+		//		//user = HttpContext.Session.Get<InkBallUserViewModel>(nameof(InkBallUserViewModel));
+		//		if (user == null)
+		//		{
+		//			InkBallUser dbuser = await _dbContext.InkBallUsers.Include(x => x.InkBallPlayer)
+		//				.FirstOrDefaultAsync(f => f.iId == InkBallUserId, token);
+		//			user = dbuser;
+		//			//HttpContext.Session.Set<InkBallUserViewModel>(nameof(InkBallUserViewModel), user);
+		//		}
+		//	}
+		//	return user;
+		//}
 
 		protected virtual async Task<InkBallGame> GetGameAsync(InkBallPlayer player, CancellationToken token = default)
 		{
 			InkBallGame game = null;// base.HttpContext.Session.Get<InkBallGameViewModel>(nameof(InkBallGameViewModel));
-			if (game != null)
-			{
-			}
-			else if (player != null)
+			// if (game != null)
+			// {
+			// }
+			// else 
+			if (player != null)
 			{
 				var query = from g in _dbContext.InkBallGame
-								.Include(p1 => p1.Player1).ThenInclude(x => x.User)
-								.Include(p2 => p2.Player2).ThenInclude(x => x.User)
+								.Include(p1 => p1.Player1)
+									//.ThenInclude(x => x.User)
+								.Include(p2 => p2.Player2)
+									//.ThenInclude(x => x.User)
 							where (g.iPlayer1Id == player.iId || g.iPlayer2Id == player.iId)
 							&& GamesContext.ActiveVisibleGameStates.Contains(g.GameState)
 							select g;
@@ -99,24 +102,34 @@ namespace InkBall.Module.Pages
 			return game;
 		}
 
-		protected virtual InkBallPlayer GetPlayer(InkBallUser user, CancellationToken token)
+		protected async virtual Task<InkBallPlayer> GetPlayer(CancellationToken token)
 		{
-			if (user == null)
-				return null;
-
-			var player = user.InkBallPlayer.FirstOrDefault();
-			if (player != null)
+			InkBallPlayer player = null;
+			if (int.TryParse(User.FindFirstValue(nameof(InkBalPlayerId)), out var inkBalPlayerId) && inkBalPlayerId > 0)
+			{
+				InkBalPlayerId = inkBalPlayerId;
+				//player = HttpContext.Session.Get<InkBallPlayerViewModel>(nameof(InkBallPlayerViewModel));
+				//if (player == null)
+				{
+					InkBallPlayer dbplayer = await _dbContext.InkBallPlayer//.Include(x => x.InkBallPlayer)
+						.FirstOrDefaultAsync(f => f.iId == InkBalPlayerId, token);
+					player = dbplayer;
+					//HttpContext.Session.Set<InkBallUserViewModel>(nameof(InkBallUserViewModel), user);
+				}
+			}
+			
+			//if (player != null)
 				return player;
-			else
-				throw new ArgumentNullException(nameof(player), "player not found");
+			//else
+			//	throw new ArgumentNullException(nameof(player), "player not found");
 		}
 
 		public virtual async Task LoadUserPlayerAndGameAsync(CancellationToken token)
 		{
-			InkBallUser user = await GetUserAsync(token);
-			GameUser = user;
+			//InkBallUser user = await GetUserAsync(token);
+			//GameUser = user;
 
-			InkBallPlayer player = GetPlayer(user, token);
+			InkBallPlayer player = await GetPlayer(token);
 			Player = player;
 
 			InkBallGame game = await GetGameAsync(player, token);

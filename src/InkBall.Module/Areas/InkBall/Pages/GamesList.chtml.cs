@@ -54,7 +54,7 @@ namespace InkBall.Module.Pages
 
 			await base.LoadUserPlayerAndGameAsync(token);
 
-			string sExternalUserID = GameUser.sExternalId;
+			string sExternalUserID = Player.sExternalId;
 			string msg = "";
 
 			if (Game == null)
@@ -80,7 +80,7 @@ namespace InkBall.Module.Pages
 						}
 						var new_game = await _dbContext.GetGameFromDatabaseAsync(gameID, false, token);
 						if (new_game == null
-							|| new_game?.Player1?.User?.sExternalId == sExternalUserID || new_game?.Player2?.User?.sExternalId == sExternalUserID)
+							|| new_game?.Player1?.sExternalId == sExternalUserID || new_game?.Player2?.sExternalId == sExternalUserID)
 						{
 							msg = "This user cannot join to the game";
 						}
@@ -115,7 +115,7 @@ namespace InkBall.Module.Pages
 												_logger.LogError(ex.Message);
 											}
 										},
-										Tuple.Create(new_game.GetOtherPlayer()?.User?.sExternalId, new_game.GetPlayer()?.iId, this.GameUser.UserName),
+										Tuple.Create(new_game.GetOtherPlayer()?.sExternalId, new_game.GetPlayer()?.iId, this.Player.UserName),
 										token);
 									}
 
@@ -254,7 +254,7 @@ namespace InkBall.Module.Pages
 											_logger.LogError(ex, ex.Message);
 										}
 									},
-									Tuple.Create(Game.GetOtherPlayer()?.User?.sExternalId, Game.GetOtherPlayer()?.iId, this.GameUser.UserName),
+									Tuple.Create(Game.GetOtherPlayer()?.sExternalId, Game.GetOtherPlayer()?.iId, this.Player.UserName),
 									token);
 								}
 

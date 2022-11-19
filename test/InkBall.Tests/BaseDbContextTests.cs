@@ -136,30 +136,28 @@ namespace InkBall.Tests
 				{
 					iId = 1,
 					sLastMoveCode = "{}",
-					User = new InkBallUser
-					{
-						//iId = 1,
-						UserName = "test_p1",
-						iPrivileges = 0,
-						sExternalId = "xxxxx",
-					}
+					//User = new InkBallUser
+					//{
+					UserName = "test_p1",
+					iPrivileges = 0,
+					sExternalId = "xxxxx",
+					//}
 				},
 				iPlayer1Id = 1,
 				Player2 = new InkBallPlayer
 				{
 					iId = 2,
 					sLastMoveCode = "{}",
-					User = new InkBallUser
-					{
-						//iId = 2,
-						UserName = "test_p2",
-						iPrivileges = 0,
-						sExternalId = "yyyyy",
-					}
+					//User = new InkBallUser
+					//{
+					UserName = "test_p2",
+					iPrivileges = 0,
+					sExternalId = "yyyyy",
+					//}
 				},
 				iPlayer2Id = 2
 			};
-			var points0 = new Dictionary<string,InkBallPoint>(100);
+			var points0 = new Dictionary<string, InkBallPoint>(100);
 			var paths0 = new List<InkBallPath>(5);
 			bool is_player_turn = true;
 			foreach (var source in UnitTest1.CorrectPathAndOwnedPointsData)
@@ -184,10 +182,10 @@ namespace InkBall.Tests
 								Player = game0.Player1
 							}
 						);
-                    }
-                }
+					}
+				}
 
-                var db_path = new InkBallPath
+				var db_path = new InkBallPath
 				{
 					Game = game0,
 					iGameId = game0.iId,
@@ -206,7 +204,7 @@ namespace InkBall.Tests
 				paths0.Add(db_path);
 				foreach (var owned in parameters.ownedPoints)
 				{
-					if(points0.TryGetValue($"{owned.x},{owned.y}", out var pt))
+					if (points0.TryGetValue($"{owned.x},{owned.y}", out var pt))
 					{
 						pt.EnclosingPath = db_path;
 						pt.Status = db_path.Game.Player1 == db_path.Player ?
@@ -234,35 +232,21 @@ namespace InkBall.Tests
 			}
 		}
 
-		protected async Task CreateInitialUsers(string[] userIDs, int[] playerIDs, CancellationToken token = default)
+		protected async Task CreateInitialUsers(string[] userIDs, CancellationToken token = default)
 		{
-			if (playerIDs != null && userIDs?.Length != playerIDs?.Length)
-				throw new ArgumentException("userIDs?.Length != playerIDs?.Length");
-
 			using (var context = new GamesContext(Setup.DbOpts))
 			{
 				int i = 1;
 				foreach (var uid in userIDs)
 				{
-					var user = new InkBallUser
+					var player = new InkBallPlayer
 					{
-						//iId = 1,
 						UserName = $"test_p{i}",
 						iPrivileges = 0,
 						sExternalId = uid,
+						iId = i,
 					};
-					await context.AddAsync(user, token);
-
-					if (playerIDs != null)
-					{
-						var player = new InkBallPlayer
-						{
-							User = user,
-							iUserId = user.iId,
-							iId = playerIDs[i - 1],
-						};
-						await context.AddAsync(player, token);
-					}
+					await context.AddAsync(player, token);
 					i++;
 				}
 

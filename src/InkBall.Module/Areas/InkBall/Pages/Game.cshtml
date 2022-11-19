@@ -7,7 +7,7 @@
     HtmlHelpers.RenderHeaderSection(this, Url, commonUIConfigureOptions);
 
 
-    string P2Name = Model.Game.Player2 != null ? Model.Game.Player2?.User?.UserName : "???";
+    string P2Name = Model.Game.Player2 != null ? Model.Game.Player2?.UserName : "???";
     string surrender_win_cancel_name;
     bool isThisPlayerActive = Model.Game.IsThisPlayerActive();
     bool useMessagePackBinaryTransport = commonUIConfigureOptions.Value.UseMessagePackBinaryTransport;
@@ -41,7 +41,7 @@
     <span id="whichColor">Play color</span>
 </p>
 <p class="inkgame">
-    <span id='Player1Name'>@Model.Game.Player1?.User?.UserName</span> vs <span id='Player2Name'>@P2Name</span>
+    <span id='Player1Name'>@Model.Game.Player1?.UserName</span> vs <span id='Player2Name'>@P2Name</span>
 </p>
 <div class="container inkgame">
     <form action="GamesList" method="post" asp-antiforgery="true" class="row">

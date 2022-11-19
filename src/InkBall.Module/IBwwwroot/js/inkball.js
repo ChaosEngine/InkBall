@@ -37,10 +37,9 @@ class DtoMsg {
 }
 
 class InkBallPointViewModel extends DtoMsg {
-	constructor(iId = 0, iGameId = 0, iPlayerId = 0, iX = 0, iY = 0, Status = StatusEnum.POINT_FREE, iEnclosingPathId = 0) {
+	constructor(iGameId = 0, iPlayerId = 0, iX = 0, iY = 0, Status = StatusEnum.POINT_FREE, iEnclosingPathId = 0) {
 		super();
 
-		this.iId = iId;
 		this.iGameId = iGameId;
 		this.iPlayerId = iPlayerId;
 		this.iX = iX;
@@ -1197,7 +1196,7 @@ class InkBallGame {
 	}
 
 	CreatePutPointRequest(iX, iY) {
-		const cmd = new InkBallPointViewModel(0, this.g_iGameID, this.g_iPlayerID, iX, iY,
+		const cmd = new InkBallPointViewModel(this.g_iGameID, this.g_iPlayerID, iX, iY,
 			this.m_bIsPlayingWithRed ? StatusEnum.POINT_FREE_RED : StatusEnum.POINT_FREE_BLUE,
 			0);
 		return cmd;
@@ -2473,7 +2472,7 @@ class InkBallGame {
 			}
 		}
 
-		const cmd = new InkBallPointViewModel(0, this.g_iGameID, -1/*player*/, x, y, StatusEnum.POINT_FREE_BLUE, 0);
+		const cmd = new InkBallPointViewModel(this.g_iGameID, -1/*player*/, x, y, StatusEnum.POINT_FREE_BLUE, 0);
 		return cmd;
 	}
 
@@ -2526,7 +2525,7 @@ class InkBallGame {
 		else
 			LocalLog(log_str);
 
-		const pt = new InkBallPointViewModel(0, this.g_iGameID, -1/*player*/, x, y, StatusEnum.POINT_FREE_BLUE, 0);
+		const pt = new InkBallPointViewModel(this.g_iGameID, -1/*player*/, x, y, StatusEnum.POINT_FREE_BLUE, 0);
 		return pt;
 	}
 
@@ -2564,7 +2563,7 @@ class InkBallGame {
 			else
 				LocalLog(log_str);
 
-			const pt = new InkBallPointViewModel(0, this.g_iGameID, -1/*player*/, x, y, StatusEnum.POINT_FREE_BLUE, 0);
+			const pt = new InkBallPointViewModel(this.g_iGameID, -1/*player*/, x, y, StatusEnum.POINT_FREE_BLUE, 0);
 			return pt;
 		}
 

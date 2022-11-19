@@ -369,33 +369,33 @@ namespace InkBall.IntegrationTests
 			});
 			await usersDb.SaveChangesAsync();
 
-			gameDb.InkBallUsers.AddRange(new InkBallUser
+			gameDb.InkBallPlayer.AddRange(new InkBallPlayer
 			{
 				iId = 1,
 				iPrivileges = 0,
 				sExternalId = "1",
 				UserName = "Test user1",
-				InkBallPlayer = new[] {
-					new InkBallPlayer
-					{
-						iId = 1,
-						iUserId = 1,
-					}
-				}
+				//InkBallPlayer = new[] {
+				//	new InkBallPlayer
+				//	{
+				//		iId = 1,
+				//		iUserId = 1,
+				//	}
+				//}
 			},
-			new InkBallUser
+			new InkBallPlayer
 			{
 				iId = 2,
 				iPrivileges = 0,
 				sExternalId = "2",
 				UserName = "Test user2",
-				InkBallPlayer = new[] {
-					new InkBallPlayer
-					{
-						iId = 2,
-						iUserId = 2,
-					}
-				}
+				//InkBallPlayer = new[] {
+				//	new InkBallPlayer
+				//	{
+				//		iId = 2,
+				//		iUserId = 2,
+				//	}
+				//}
 			});
 			await gameDb.SaveChangesAsync();
 		}

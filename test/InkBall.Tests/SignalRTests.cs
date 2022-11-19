@@ -62,7 +62,7 @@ namespace InkBall.Tests
 		{
 		}
 
-		Mock<HubCallerContext> GetMockHubCallerContext(int gameID, int playerID, int userID, string externalUserIdentifier)
+		Mock<HubCallerContext> GetMockHubCallerContext(int gameID, int playerID, /*int userID, */string externalUserIdentifier)
 		{
 			var httpContextMock = new Moq.Mock<HttpContext>();
 			var moqRequest = new Mock<HttpRequest>();
@@ -87,7 +87,7 @@ namespace InkBall.Tests
 			mockHubCallerContext.SetupGet(foo => foo.Items).Returns(items);
 			mockHubCallerContext.SetupGet(foo => foo.User).Returns(
 				new ClaimsPrincipal(new[] { new ClaimsIdentity(new [] {
-						new Claim(nameof(InkBall.Module.Pages.HomeModel.InkBallUserId), userID.ToString(), nameof(InkBall.Module.Model.InkBallUser)),
+						new Claim(nameof(Module.Pages.HomeModel.InkBalPlayerId), playerID.ToString(), nameof(InkBallPlayer)),
 						new Claim("role", "InkBallViewOtherPlayerGames")
 				}) }));
 			mockHubCallerContext.Setup(foo => foo.Features).Returns(features);
@@ -165,8 +165,8 @@ namespace InkBall.Tests
 				mockHubCallerClients.Setup(c => c.Client(It.IsAny<string>())).Returns(mockGameClient.Object);
 				mockHubCallerClients.Setup(c => c.User(It.IsAny<string>())).Returns(mockGameClient.Object);
 
-				var mockHubCallerContext_P1 = GetMockHubCallerContext(gameID: 1, playerID: 1, userID: 1, externalUserIdentifier: "xxxxx");
-				var mockHubCallerContext_P2 = GetMockHubCallerContext(gameID: 1, playerID: 2, userID: 2, externalUserIdentifier: "yyyyy");
+				var mockHubCallerContext_P1 = GetMockHubCallerContext(gameID: 1, playerID: 1, externalUserIdentifier: "xxxxx");
+				var mockHubCallerContext_P2 = GetMockHubCallerContext(gameID: 1, playerID: 2, externalUserIdentifier: "yyyyy");
 
 				using var hub_P1 = new GameHub(db, Setup.Logger)
 				{
@@ -324,8 +324,8 @@ namespace InkBall.Tests
 				mockHubCallerClients.Setup(c => c.Client(It.IsAny<string>())).Returns(mockGameClient.Object);
 				mockHubCallerClients.Setup(c => c.User(It.IsAny<string>())).Returns(mockGameClient.Object);
 
-				var mockHubCallerContext_P1 = GetMockHubCallerContext(gameID: 1, playerID: 1, userID: 1, externalUserIdentifier: "xxxxx");
-				var mockHubCallerContext_P2 = GetMockHubCallerContext(gameID: 1, playerID: 2, userID: 2, externalUserIdentifier: "yyyyy");
+				var mockHubCallerContext_P1 = GetMockHubCallerContext(gameID: 1, playerID: 1, externalUserIdentifier: "xxxxx");
+				var mockHubCallerContext_P2 = GetMockHubCallerContext(gameID: 1, playerID: 2, externalUserIdentifier: "yyyyy");
 
 				using var hub_P1 = new GameHub(db, Setup.Logger)
 				{
@@ -488,9 +488,9 @@ namespace InkBall.Tests
 				mockHubCallerClients.Setup(c => c.User(It.IsAny<string>())).Returns(mockGameClient.Object);
 
 				//corect player context
-				var mockHubCallerContext_P1 = GetMockHubCallerContext(gameID: 1, playerID: 1, userID: 1, externalUserIdentifier: "xxxxx");
+				var mockHubCallerContext_P1 = GetMockHubCallerContext(gameID: 1, playerID: 1, externalUserIdentifier: "xxxxx");
 				//wrong player context
-				var mockHubCallerContext_P2 = GetMockHubCallerContext(gameID: 1, playerID: 2, userID: 2, externalUserIdentifier: "yyyyy");
+				var mockHubCallerContext_P2 = GetMockHubCallerContext(gameID: 1, playerID: 2, externalUserIdentifier: "yyyyy");
 
 				using var hub_P1 = new GameHub(db, Setup.Logger)
 				{
@@ -625,8 +625,8 @@ namespace InkBall.Tests
 				mockHubCallerClients.Setup(c => c.Client(It.IsAny<string>())).Returns(mockGameClient.Object);
 				mockHubCallerClients.Setup(c => c.User(It.IsAny<string>())).Returns(mockGameClient.Object);
 
-				var mockHubCallerContext_P1 = GetMockHubCallerContext(gameID: 1, playerID: 1, userID: 1, externalUserIdentifier: "xxxxx");
-				var mockHubCallerContext_P2 = GetMockHubCallerContext(gameID: 1, playerID: 2, userID: 2, externalUserIdentifier: "yyyyy");
+				var mockHubCallerContext_P1 = GetMockHubCallerContext(gameID: 1, playerID: 1, externalUserIdentifier: "xxxxx");
+				var mockHubCallerContext_P2 = GetMockHubCallerContext(gameID: 1, playerID: 2, externalUserIdentifier: "yyyyy");
 
 				using var hub_P1 = new GameHub(db, Setup.Logger)
 				{
@@ -738,8 +738,8 @@ namespace InkBall.Tests
 				mockHubCallerClients.Setup(c => c.Client(It.IsAny<string>())).Returns(mockGameClient.Object);
 				mockHubCallerClients.Setup(c => c.User(It.IsAny<string>())).Returns(mockGameClient.Object);
 
-				var mockHubCallerContext_P1 = GetMockHubCallerContext(gameID: 1, playerID: 1, userID: 1, externalUserIdentifier: "xxxxx");
-				var mockHubCallerContext_P2 = GetMockHubCallerContext(gameID: 1, playerID: 2, userID: 2, externalUserIdentifier: "yyyyy");
+				var mockHubCallerContext_P1 = GetMockHubCallerContext(gameID: 1, playerID: 1, externalUserIdentifier: "xxxxx");
+				var mockHubCallerContext_P2 = GetMockHubCallerContext(gameID: 1, playerID: 2, externalUserIdentifier: "yyyyy");
 
 				using var hub_P1 = new GameHub(db, Setup.Logger)
 				{
@@ -758,14 +758,14 @@ namespace InkBall.Tests
 
 				//Assert
 				mockGameClient.Verify(client => client.ServerToClientOtherPlayerConnected(It.Is<string>(msg =>
-				   msg == $"Other player {hub_P1.ThisPlayer.User.UserName} connected 😁"
+				   msg == $"Other player {hub_P1.ThisPlayer.UserName} connected 😁"
 				   )), Times.Once);
 
 				//Act 
 				await hub_P1.OnDisconnectedAsync(null);
 				//Assert
 				mockGameClient.Verify(client => client.ServerToClientOtherPlayerDisconnected(It.Is<string>(msg =>
-				   msg == $"Other player {hub_P1.ThisPlayer.User.UserName} disconnected 😢"
+				   msg == $"Other player {hub_P1.ThisPlayer.UserName} disconnected 😢"
 				   )), Times.Once);
 
 				//Act
@@ -773,7 +773,7 @@ namespace InkBall.Tests
 				await hub_P2.OnDisconnectedAsync(null);
 				//Assert
 				mockGameClient.Verify(client => client.ServerToClientOtherPlayerDisconnected(It.Is<string>(msg =>
-				   msg == $"Other player {hub_P2.ThisPlayer.User.UserName} disconnected 😢"
+				   msg == $"Other player {hub_P2.ThisPlayer.UserName} disconnected 😢"
 				   )), Times.Once);
 			}
 		}
@@ -786,7 +786,7 @@ namespace InkBall.Tests
 
 			//Start from creating a user
 			//Arrange
-			await CreateInitialUsers(new[] { "xxxxx", "yyyyy" }, null, token);
+			await CreateInitialUsers(new[] { "xxxxx", "yyyyy" }, token);
 
 			using (var db = new GamesContext(Setup.DbOpts))
 			{
@@ -798,8 +798,7 @@ namespace InkBall.Tests
 				//Assert
 				Assert.NotNull(new_game);
 				Assert.NotNull(new_game.Player1);
-				Assert.NotNull(new_game.Player1.User);
-				Assert.Equal("xxxxx", new_game.Player1.User.sExternalId);
+				Assert.Equal("xxxxx", new_game.Player1.sExternalId);
 
 				//Get active games for ALL the users and check if there is game for our user
 				//Act
@@ -807,9 +806,9 @@ namespace InkBall.Tests
 				//Assert
 				Assert.NotNull(games_from_db);
 				Assert.NotEmpty(games_from_db);
-				Assert.NotNull(games_from_db.FirstOrDefault(p => p.Player1?.User.sExternalId == "xxxxx"));
+				Assert.NotNull(games_from_db.FirstOrDefault(p => p.Player1?.sExternalId == "xxxxx"));
 				Assert.NotNull(games_from_db.First().GetPlayer());
-				Assert.Equal("xxxxx", games_from_db.First().GetPlayer().User.sExternalId);
+				Assert.Equal("xxxxx", games_from_db.First().GetPlayer().sExternalId);
 				Assert.True(games_from_db.First().IsThisPlayerActive());
 				Assert.Equal(InkBallGame.GameStateEnum.AWAITING, games_from_db.First().GameState);
 				Assert.True(games_from_db.First().iId > 0);
@@ -829,7 +828,7 @@ namespace InkBall.Tests
 				mockHubCallerClients.Setup(c => c.Client(It.IsAny<string>())).Returns(mockGameClient.Object);
 				mockHubCallerClients.Setup(c => c.User(It.IsAny<string>())).Returns(mockGameClient.Object);
 
-				var mockHubCallerContext_P1 = GetMockHubCallerContext(gameID: 1, playerID: 1, userID: 1, externalUserIdentifier: "xxxxx");
+				var mockHubCallerContext_P1 = GetMockHubCallerContext(gameID: 1, playerID: 1, externalUserIdentifier: "xxxxx");
 				using var hub_P1 = new GameHub(db, Setup.Logger)
 				{
 					Clients = mockHubCallerClients.Object,
@@ -859,15 +858,14 @@ namespace InkBall.Tests
 				//Assert
 				Assert.NotNull(game_2_join);
 				Assert.NotNull(game_2_join.Player2);
-				Assert.NotNull(game_2_join.Player2.User);
 				Assert.NotNull(game_2_join.GetOtherPlayer());
-				Assert.NotNull(game_2_join.GetOtherPlayer().User.sExternalId);
-				Assert.Equal("yyyyy", game_2_join.Player2.User.sExternalId);
+				Assert.NotNull(game_2_join.GetOtherPlayer().sExternalId);
+				Assert.Equal("yyyyy", game_2_join.Player2.sExternalId);
 				Assert.Equal(InkBallGame.GameStateEnum.ACTIVE, game_2_join.GameState);
 
 
 				//Arrange
-				var mockHubCallerContext_P2 = GetMockHubCallerContext(gameID: 1, playerID: 2, userID: 2, externalUserIdentifier: "yyyyy");
+				var mockHubCallerContext_P2 = GetMockHubCallerContext(gameID: 1, playerID: 2, externalUserIdentifier: "yyyyy");
 				using var hub_P2 = new GameHub(db, Setup.Logger)
 				{
 					Clients = mockHubCallerClients.Object,
@@ -880,10 +878,10 @@ namespace InkBall.Tests
 				await hub_P1.OnConnectedAsync();
 
 				//Notify P1 that P2 is joining
-				await hub_P2.Clients.User(game_2_join.GetOtherPlayer().User.sExternalId).ServerToClientPlayerJoin(
+				await hub_P2.Clients.User(game_2_join.GetOtherPlayer().sExternalId).ServerToClientPlayerJoin(
 					new PlayerJoiningCommand(game_2_join.GetOtherPlayer().iId,
-					game_2_join.GetPlayer().User.UserName,
-					$"Player {game_2_join.GetPlayer().User.UserName ?? ""} joining"));
+					game_2_join.GetPlayer().UserName,
+					$"Player {game_2_join.GetPlayer().UserName ?? ""} joining"));
 
 				//Assert
 				mockGameClient.Verify(client => client.ServerToClientPlayerJoin(It.Is<PlayerJoiningCommand>(pjc =>
@@ -918,8 +916,8 @@ namespace InkBall.Tests
 				mockHubCallerClients.Setup(c => c.Client(It.IsAny<string>())).Returns(mockGameClient.Object);
 				mockHubCallerClients.Setup(c => c.User(It.IsAny<string>())).Returns(mockGameClient.Object);
 
-				var mockHubCallerContext_P1 = GetMockHubCallerContext(gameID: 1, playerID: 1, userID: 1, externalUserIdentifier: "xxxxx");
-				var mockHubCallerContext_P2 = GetMockHubCallerContext(gameID: 1, playerID: 2, userID: 2, externalUserIdentifier: "yyyyy");
+				var mockHubCallerContext_P1 = GetMockHubCallerContext(gameID: 1, playerID: 1, externalUserIdentifier: "xxxxx");
+				var mockHubCallerContext_P2 = GetMockHubCallerContext(gameID: 1, playerID: 2, externalUserIdentifier: "yyyyy");
 
 				using var hub_P1 = new GameHub(db, Setup.Logger)
 				{
@@ -1094,8 +1092,8 @@ namespace InkBall.Tests
 				mockHubCallerClients.Setup(c => c.Client(It.IsAny<string>())).Returns(mockGameClient.Object);
 				mockHubCallerClients.Setup(c => c.User(It.IsAny<string>())).Returns(mockGameClient.Object);
 
-				var mockHubCallerContext_P1 = GetMockHubCallerContext(gameID: 1, playerID: 1, userID: 1, externalUserIdentifier: "xxxxx");
-				var mockHubCallerContext_P2 = GetMockHubCallerContext(gameID: 1, playerID: 2, userID: 2, externalUserIdentifier: "yyyyy");
+				var mockHubCallerContext_P1 = GetMockHubCallerContext(gameID: 1, playerID: 1, externalUserIdentifier: "xxxxx");
+				var mockHubCallerContext_P2 = GetMockHubCallerContext(gameID: 1, playerID: 2, externalUserIdentifier: "yyyyy");
 
 				using var hub_P1 = new GameHub(db, Setup.Logger)
 				{
@@ -1202,26 +1200,24 @@ namespace InkBall.Tests
 				{
 					iId = 1,
 					sLastMoveCode = "{}",
-					User = new InkBallUser
-					{
-						//iId = 1,
-						UserName = "test_p1",
-						iPrivileges = 0,
-						sExternalId = "xxxxx",
-					}
+					//User = new InkBallUser
+					//{
+					UserName = "test_p1",
+					iPrivileges = 0,
+					sExternalId = "xxxxx",
+					//}
 				},
 				iPlayer1Id = 1,
 				Player2 = new InkBallPlayer
 				{
 					iId = 3,
 					sLastMoveCode = "{}",
-					User = new InkBallUser
-					{
-						//iId = 3,
-						UserName = "test_p2",
-						iPrivileges = 0,
-						sExternalId = "yyyyy",
-					}
+					//User = new InkBallUser
+					//{
+					UserName = "test_p2",
+					iPrivileges = 0,
+					sExternalId = "yyyyy",
+					//}
 				},
 				iPlayer2Id = 3,
 				iBoardWidth = 40,
@@ -1249,13 +1245,13 @@ namespace InkBall.Tests
 				var mockHubCallerContext_P1 = GetMockHubCallerContext(
 					gameID: game.iId,
 					playerID: game.Player1.iId,
-					userID: game.Player1.iUserId.GetValueOrDefault(0),
-					externalUserIdentifier: game.Player1.User.sExternalId);
+					//userID: game.Player1.GetValueOrDefault(0),
+					externalUserIdentifier: game.Player1.sExternalId);
 				var mockHubCallerContext_P2 = GetMockHubCallerContext(
 					gameID: game.iId,
 					playerID: game.Player2.iId,
-					userID: game.Player2.iUserId.GetValueOrDefault(0),
-					externalUserIdentifier: game.Player2.User.sExternalId);
+					//userID: game.Player2.GetValueOrDefault(0),
+					externalUserIdentifier: game.Player2.sExternalId);
 
 				using var hub_P1 = new GameHub(db, Setup.Logger)
 				{
@@ -1474,26 +1470,24 @@ new InkBallPathViewModel{ iId = 86, iGameId = 35, iPlayerId = 3, PointsAsString 
 				{
 					iId = 4,
 					sLastMoveCode = "{}",
-					User = new InkBallUser
-					{
-						iId = 4,
-						UserName = "test_p1",
-						iPrivileges = 0,
-						sExternalId = "xxxxx",
-					}
+					//User = new InkBallUser
+					//{
+					UserName = "test_p1",
+					iPrivileges = 0,
+					sExternalId = "xxxxx",
+					//}
 				},
 				iPlayer1Id = 4,
 				Player2 = new InkBallPlayer
 				{
 					iId = 1,
 					sLastMoveCode = "{}",
-					User = new InkBallUser
-					{
-						iId = 1,
-						UserName = "test_p2",
-						iPrivileges = 0,
-						sExternalId = "yyyyy",
-					}
+					//User = new InkBallUser
+					//{
+					UserName = "test_p2",
+					iPrivileges = 0,
+					sExternalId = "yyyyy",
+					//}
 				},
 				iPlayer2Id = 1,
 				iBoardWidth = 20,
@@ -1521,13 +1515,13 @@ new InkBallPathViewModel{ iId = 86, iGameId = 35, iPlayerId = 3, PointsAsString 
 				var mockHubCallerContext_P1 = GetMockHubCallerContext(
 					gameID: game.iId,
 					playerID: game.Player1.iId,
-					userID: game.Player1.iUserId.GetValueOrDefault(0),
-					externalUserIdentifier: game.Player1.User.sExternalId);
+					//userID: game.Player1.iUserId.GetValueOrDefault(0),
+					externalUserIdentifier: game.Player1.sExternalId);
 				var mockHubCallerContext_P2 = GetMockHubCallerContext(
 					gameID: game.iId,
 					playerID: game.Player2.iId,
-					userID: game.Player2.iUserId.GetValueOrDefault(0),
-					externalUserIdentifier: game.Player2.User.sExternalId);
+					//userID: game.Player2.iUserId.GetValueOrDefault(0),
+					externalUserIdentifier: game.Player2.sExternalId);
 
 				using var hub_P1 = new GameHub(db, Setup.Logger)
 				{

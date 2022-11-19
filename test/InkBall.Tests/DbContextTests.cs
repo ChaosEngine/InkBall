@@ -25,13 +25,12 @@ namespace InkBall.Tests
 				{
 					//iId = 1,
 					sLastMoveCode = "{}",
-					User = new InkBallUser
-					{
-						//iId = 1,
-						UserName = "test",
-						iPrivileges = 0,
-						sExternalId = "xxxxx",
-					}
+					//User = new InkBallUser
+					//{
+					UserName = "test",
+					iPrivileges = 0,
+					sExternalId = "xxxxx",
+					//}
 				}
 			};
 			var points0 = new[] {
