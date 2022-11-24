@@ -95,7 +95,7 @@ namespace InkBall.Module.Model
 			{
 				case "Microsoft.EntityFrameworkCore.Sqlite":
 					string command =
-$@"CREATE TRIGGER {tableName}_update_{timeStampColumnName}_Trigger
+$@"CREATE TRIGGER IF NOT EXISTS {tableName}_update_{timeStampColumnName}_Trigger
 AFTER UPDATE ON {tableName}
 BEGIN
 	UPDATE {tableName} SET {timeStampColumnName} = datetime(CURRENT_TIMESTAMP, 'localtime') WHERE {primaryKey} = NEW.{primaryKey};
