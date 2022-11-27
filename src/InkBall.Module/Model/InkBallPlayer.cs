@@ -13,7 +13,6 @@ namespace InkBall.Module.Model
 		where Path : IPath<Point>
 	{
 		int iId { get; set; }
-		//int? iUserId { get; set; }
 		string sLastMoveCode { get; set; }
 		int iWinCount { get; set; }
 		int iLossCount { get; set; }
@@ -27,12 +26,6 @@ namespace InkBall.Module.Model
 		ICollection<Path> InkBallPath { get; set; }
 		ICollection<Point> InkBallPoint { get; set; }
 
-		int GetWinCount();
-		void SetWinCount(int value);
-		int GetLossCount();
-		void SetLossCount(int value);
-		int GetDrawCount();
-		void SetDrawCount(int value);
 		bool IsLastMoveOverdue();
 	}
 
@@ -41,7 +34,6 @@ namespace InkBall.Module.Model
 		where Path : IPath<Point>
 	{
 		public int iId { get; set; }
-		//public int? iUserId { get; set; }
 		public string sLastMoveCode { get; set; }
 		public int iWinCount { get; set; }
 		public int iLossCount { get; set; }
@@ -59,31 +51,10 @@ namespace InkBall.Module.Model
 		public abstract ICollection<Path> InkBallPath { get; set; }
 		public abstract ICollection<Point> InkBallPoint { get; set; }
 
-		public int GetWinCount() => iWinCount;
-
-		public void SetWinCount(int value)
-		{
-			iWinCount = value;
-		}
-
-		public int GetLossCount() => iLossCount;
-
-		public void SetLossCount(int value)
-		{
-			iLossCount = value;
-		}
-
-		public int GetDrawCount() => iDrawCount;
-
-		public void SetDrawCount(int value)
-		{
-			iDrawCount = value;
-		}
-
 		public bool IsLastMoveOverdue()
 		{
-			TimeSpan last_move = DateTime.Now - this.TimeStamp;
-			if (last_move > InkBallGame.GetDeactivationDelayInSeconds())
+			TimeSpan last_move = TimeStampInitialValue - this.TimeStamp;
+			if (last_move > InkBallGame.DeactivationDelayInSeconds)
 				return true;
 			return false;
 		}
@@ -91,17 +62,18 @@ namespace InkBall.Module.Model
 		public bool IsDelayedPathDrawPossible()
 		{
 			bool last_move_was_point = sLastMoveCode.Contains(nameof(IPoint.iX), StringComparison.InvariantCultureIgnoreCase);
-			return last_move_was_point && TimeStamp.AddSeconds(Constants.PathAfterPointDrawAllowanceSecAmount) > DateTime.Now;
+			return last_move_was_point && TimeStamp.AddSeconds(Constants.PathAfterPointDrawAllowanceSecAmount) > TimeStampInitialValue;
 		}
 
 		public bool IsCpuPlayer => this.iId == -1;
+
+		internal static DateTime TimeStampInitialValue => DateTime.Now;
 	}
 
 	public partial class InkBallPlayer : CommonPlayer<InkBallPoint, InkBallPath>
 	{
 		internal const string CPUOponentPlayerName = "Multi CPU Oponent UserPlayer";
 
-		//public InkBallUser User { get; set; }
 		public ICollection<InkBallGame> InkBallGameIPlayer1 { get; set; }
 		public ICollection<InkBallGame> InkBallGameIPlayer2 { get; set; }
 		public override ICollection<InkBallPath> InkBallPath { get; set; }
@@ -115,7 +87,6 @@ namespace InkBall.Module.Model
 	//[Serializable]
 	public class InkBallPlayerViewModel : CommonPlayer<InkBallPointViewModel, InkBallPathViewModel>
 	{
-		//public InkBallUserViewModel User { get; set; }
 		public override ICollection<InkBallPathViewModel> InkBallPath { get; set; }
 		public override ICollection<InkBallPointViewModel> InkBallPoint { get; set; }
 
@@ -123,10 +94,9 @@ namespace InkBall.Module.Model
 		{
 		}
 
-		public InkBallPlayerViewModel(InkBallPlayer player/*, bool loadUser = true*/)
+		public InkBallPlayerViewModel(InkBallPlayer player)
 		{
 			iId = player.iId;
-			//iUserId = player.iUserId;
 			sLastMoveCode = player.sLastMoveCode;
 			iWinCount = player.iWinCount;
 			iLossCount = player.iLossCount;
@@ -137,11 +107,7 @@ namespace InkBall.Module.Model
 			sExternalId = player.sExternalId;
 			UserName = player.UserName;
 
-            //if (loadUser && player.User != null)
-            //{
-            //	User = new InkBallUserViewModel(player.User);
-            //}
-            if (player?.InkBallPath?.Count > 0)
+			if (player?.InkBallPath?.Count > 0)
 			{
 				InkBallPath = player.InkBallPath.Select(p => new InkBallPathViewModel(p)).ToArray();
 			}
@@ -154,7 +120,6 @@ namespace InkBall.Module.Model
 		public InkBallPlayerViewModel(InkBallPlayerViewModel player)
 		{
 			iId = player.iId;
-			//iUserId = player.iUserId;
 			sLastMoveCode = player.sLastMoveCode;
 			iWinCount = player.iWinCount;
 			iLossCount = player.iLossCount;
@@ -165,10 +130,6 @@ namespace InkBall.Module.Model
 			sExternalId = player.sExternalId;
 			UserName = player.UserName;
 
-			//if (player.User != null)
-			//{
-			//	User = player.User;
-			//}
 			if (player?.InkBallPath?.Count > 0)
 			{
 				InkBallPath = player.InkBallPath;

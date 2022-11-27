@@ -238,9 +238,7 @@ namespace InkBall.Module.Hubs
 				//get game from db
 				InkBallGame dbGame = await _dbContext.InkBallGame
 				.Include(gp1 => gp1.Player1)
-					//.ThenInclude(p1 => p1.User)
 				.Include(gp2 => gp2.Player2)
-					//.ThenInclude(p2 => p2.User)
 				.FirstOrDefaultAsync(
 					w => w.iId == gameID
 					&& (w.iPlayer1Id == playerID || w.iPlayer2Id == playerID)
@@ -287,7 +285,7 @@ namespace InkBall.Module.Hubs
 			//if (!(this.Context.Items.TryGetValue(nameof(ThisPlayer), out object pobj) && pobj is IPlayer<InkBallPointViewModel, InkBallPathViewModel> this_Player))
 			{
 				//get player from db
-				InkBallPlayer dbPlayer = await _dbContext.InkBallPlayer//.Include(u => u.User)
+				InkBallPlayer dbPlayer = await _dbContext.InkBallPlayer
 					.FirstOrDefaultAsync(p => p.sExternalId == thisUserIdentifier, token);
 				if (dbPlayer == null)
 					throw new ArgumentNullException(nameof(dbPlayer), "no player");

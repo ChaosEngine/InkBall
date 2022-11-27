@@ -42,8 +42,6 @@ namespace InkBall.Module.Model
 		where Point : IPoint
 		where Path : IPath<Point>
 	{
-		protected internal readonly static TimeSpan _deactivationDelayInSeconds = TimeSpan.FromSeconds(120);
-
 		[NotMapped]//Hide it from EF Core
 		[JsonPropertyName("bIsPlayer1")]//allow to serialize it
 		protected internal bool bIsPlayer1 { get; set; }
@@ -63,7 +61,7 @@ namespace InkBall.Module.Model
 		public DateTime TimeStamp { get; set; }
 		public DateTime CreateTime { get; set; }
 
-		public static TimeSpan GetDeactivationDelayInSeconds() => InkBallGame._deactivationDelayInSeconds;
+		public static TimeSpan DeactivationDelayInSeconds => TimeSpan.FromSeconds(120);
 
 		public bool IsThisPlayer1() => this.bIsPlayer1;
 
@@ -279,6 +277,10 @@ namespace InkBall.Module.Model
 					throw new ArgumentException("Wrong game type", nameof(this.GameType));
 			}
 		}
+
+		internal static DateTime TimeStampInitialValue => DateTime.Now;
+
+		internal static DateTime CreateTimeInitialValue => DateTime.UtcNow;
 	}
 
 	public partial class InkBallGame : CommonGame<InkBallPlayer, InkBallPoint, InkBallPath>

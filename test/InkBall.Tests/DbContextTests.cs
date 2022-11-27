@@ -20,7 +20,7 @@ namespace InkBall.Tests
 			var game0 = new InkBallGame
 			{
 				//iId = 1,
-				CreateTime = DateTime.UtcNow,
+				CreateTime = InkBallGame.CreateTimeInitialValue,
 				//TimeStamp = DateTime.Now,//trigger or automation
 				GameState = InkBallGame.GameStateEnum.ACTIVE,
 				Player1 = new InkBallPlayer
@@ -182,9 +182,9 @@ namespace InkBall.Tests
 				Assert.NotNull(g.Player1);
 				Assert.NotNull(g.Player2);
 
-				Assert.Equal(g.TimeStamp, DateTime.Now, TimeSpan.FromMinutes(20));
-				Assert.Equal(g.Player1.TimeStamp, DateTime.Now, TimeSpan.FromMinutes(20));
-				Assert.Equal(g.Player2.TimeStamp, DateTime.Now, TimeSpan.FromMinutes(20));
+				Assert.Equal(g.TimeStamp, InkBallPlayer.TimeStampInitialValue, TimeSpan.FromMinutes(20));
+				Assert.Equal(g.Player1.TimeStamp, InkBallPlayer.TimeStampInitialValue, TimeSpan.FromMinutes(20));
+				Assert.Equal(g.Player2.TimeStamp, InkBallPlayer.TimeStampInitialValue, TimeSpan.FromMinutes(20));
 			}
 		}
 
@@ -207,7 +207,7 @@ namespace InkBall.Tests
 				Assert.NotNull(g.Player1);
 				Assert.NotNull(g.Player2);
 
-				Assert.Equal(g.CreateTime, DateTime.UtcNow, TimeSpan.FromMinutes(20));
+				Assert.Equal(g.CreateTime, InkBallGame.CreateTimeInitialValue, TimeSpan.FromMinutes(20));
 			}
 		}
 	}

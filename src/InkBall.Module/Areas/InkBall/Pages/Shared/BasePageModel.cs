@@ -30,8 +30,6 @@ namespace InkBall.Module.Pages
 
 		public int InkBalPlayerId { get; protected set; }
 
-		//public InkBallUser GameUser { get; protected set; }
-
 		public InkBallPlayer Player { get; protected set; }
 
 		public virtual string UserName => Player.UserName;
@@ -47,24 +45,6 @@ namespace InkBall.Module.Pages
 			_logger = logger;
 		}
 
-		//protected virtual async Task<InkBallUser> GetUserAsync(CancellationToken token = default)
-		//{
-		//	InkBallUser user = null;
-		//	if (int.TryParse(User.FindFirstValue(nameof(InkBallUserId)), out var inkBallUserId) && inkBallUserId > 0)
-		//	{
-		//		InkBallUserId = inkBallUserId;
-		//		//user = HttpContext.Session.Get<InkBallUserViewModel>(nameof(InkBallUserViewModel));
-		//		if (user == null)
-		//		{
-		//			InkBallUser dbuser = await _dbContext.InkBallUsers.Include(x => x.InkBallPlayer)
-		//				.FirstOrDefaultAsync(f => f.iId == InkBallUserId, token);
-		//			user = dbuser;
-		//			//HttpContext.Session.Set<InkBallUserViewModel>(nameof(InkBallUserViewModel), user);
-		//		}
-		//	}
-		//	return user;
-		//}
-
 		protected virtual async Task<InkBallGame> GetGameAsync(InkBallPlayer player, CancellationToken token = default)
 		{
 			InkBallGame game = null;// base.HttpContext.Session.Get<InkBallGameViewModel>(nameof(InkBallGameViewModel));
@@ -75,10 +55,8 @@ namespace InkBall.Module.Pages
 			if (player != null)
 			{
 				var query = from g in _dbContext.InkBallGame
-								.Include(p1 => p1.Player1)
-									//.ThenInclude(x => x.User)
-								.Include(p2 => p2.Player2)
-									//.ThenInclude(x => x.User)
+							.Include(p1 => p1.Player1)
+							.Include(p2 => p2.Player2)
 							where (g.iPlayer1Id == player.iId || g.iPlayer2Id == player.iId)
 							&& GamesContext.ActiveVisibleGameStates.Contains(g.GameState)
 							select g;
@@ -111,10 +89,10 @@ namespace InkBall.Module.Pages
 				//player = HttpContext.Session.Get<InkBallPlayerViewModel>(nameof(InkBallPlayerViewModel));
 				//if (player == null)
 				{
-					InkBallPlayer dbplayer = await _dbContext.InkBallPlayer//.Include(x => x.InkBallPlayer)
+					InkBallPlayer dbplayer = await _dbContext.InkBallPlayer
 						.FirstOrDefaultAsync(f => f.iId == InkBalPlayerId, token);
 					player = dbplayer;
-					//HttpContext.Session.Set<InkBallUserViewModel>(nameof(InkBallUserViewModel), user);
+					//HttpContext.Session.Set<InkBallPlayerViewModel>(nameof(InkBallPlayerViewModel), player);
 				}
 			}
 			
@@ -126,9 +104,6 @@ namespace InkBall.Module.Pages
 
 		public virtual async Task LoadUserPlayerAndGameAsync(CancellationToken token)
 		{
-			//InkBallUser user = await GetUserAsync(token);
-			//GameUser = user;
-
 			InkBallPlayer player = await GetPlayer(token);
 			Player = player;
 

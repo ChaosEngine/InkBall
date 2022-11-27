@@ -29,19 +29,15 @@ namespace InkBall.Tests
 			var game = new InkBallGame
 			{
 				iId = 1,
-				CreateTime = DateTime.UtcNow,
+				CreateTime = InkBallGame.CreateTimeInitialValue,
 				GameState = InkBallGame.GameStateEnum.AWAITING,
 				Player1 = new InkBallPlayer
 				{
 					iId = 1,
 					sLastMoveCode = "{}",
-					//User = new InkBallUser
-					//{
-					//iId = 1,
 					UserName = "test",
 					iPrivileges = 0,
 					sExternalId = "xxxxx",
-					//}
 				}
 			};
 			var point = new InkBallPoint

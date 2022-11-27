@@ -122,7 +122,7 @@ namespace InkBall.Tests
 			var game0 = new InkBallGame
 			{
 				iId = 1,
-				CreateTime = DateTime.UtcNow,
+				CreateTime = InkBallGame.CreateTimeInitialValue,
 				//TimeStamp = DateTime.Now,//trigger or automation
 				GameState = InkBallGame.GameStateEnum.ACTIVE,
 				GameType = gameType2Create,

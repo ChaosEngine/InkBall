@@ -7,6 +7,9 @@ using System.Linq;
 
 namespace InkBall.Module.Model
 {
+	#region Old code
+
+	/*
 	/// <summary>
 	///     Converts <see cref="DateTime" /> using <see cref="DateTime.ToBinary" />. This
 	///     will preserve the <see cref="DateTimeKind" />.
@@ -51,7 +54,7 @@ namespace InkBall.Module.Model
 
 				bytes.AsSpan().Reverse();
 				var num = BitConverter.ToInt64(bytes, 0);
-				var res = /*UnixTime*/DateTime.MinValue + TimeSpan.FromTicks(num);
+				var res = DateTime.MinValue + TimeSpan.FromTicks(num);
 
 				return res;
 			}
@@ -80,6 +83,9 @@ namespace InkBall.Module.Model
 			}
 		}
 	}
+	*/
+
+	#endregion Old code
 
 	internal static class MigrationExtensions
 	{

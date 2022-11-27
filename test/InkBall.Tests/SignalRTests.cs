@@ -127,7 +127,7 @@ namespace InkBall.Tests
 
 		async Task SetAllPaths2(GameHub p1, GameHub p2, IEnumerable<InkBallPathViewModel> allPaths)
 		{
-			var allowed_time_limit_datetime = DateTime.Now.Subtract(TimeSpan.FromSeconds(0.5));
+			var allowed_time_limit_datetime = InkBallPlayer.TimeStampInitialValue.Subtract(TimeSpan.FromSeconds(0.5));
 			foreach (InkBallPathViewModel path in allPaths)
 			{
 				if (p1.ThisPlayerID == path.iPlayerId)
@@ -1129,7 +1129,7 @@ namespace InkBall.Tests
 						iY = p1_pts[i, 1],
 						Status = InkBallPoint.StatusEnum.POINT_FREE_RED,
 					});
-					hub_P1.ThisPlayer.TimeStamp = DateTime.Now.Subtract(TimeSpan.FromSeconds(delayTimeInSecs.GetValueOrDefault(0)));
+					hub_P1.ThisPlayer.TimeStamp = InkBallPlayer.TimeStampInitialValue.Subtract(TimeSpan.FromSeconds(delayTimeInSecs.GetValueOrDefault(0)));
 					await hub_P2.ClientToServerPoint(new InkBallPointViewModel
 					{
 						iGameId = 1,
@@ -1138,7 +1138,7 @@ namespace InkBall.Tests
 						iY = p2_pts[i, 1],
 						Status = InkBallPoint.StatusEnum.POINT_FREE_BLUE,
 					});
-					hub_P2.ThisPlayer.TimeStamp = DateTime.Now.Subtract(TimeSpan.FromSeconds(delayTimeInSecs.GetValueOrDefault(0)));
+					hub_P2.ThisPlayer.TimeStamp = InkBallPlayer.TimeStampInitialValue.Subtract(TimeSpan.FromSeconds(delayTimeInSecs.GetValueOrDefault(0)));
 				}
 				await hub_P1.ClientToServerPoint(new InkBallPointViewModel
 				{
@@ -1148,7 +1148,7 @@ namespace InkBall.Tests
 					iY = p2_owned[0, 1],
 					Status = InkBallPoint.StatusEnum.POINT_FREE_RED,
 				});
-				hub_P1.ThisPlayer.TimeStamp = DateTime.Now.Subtract(TimeSpan.FromSeconds(delayTimeInSecs.GetValueOrDefault(0)));
+				hub_P1.ThisPlayer.TimeStamp = InkBallPlayer.TimeStampInitialValue.Subtract(TimeSpan.FromSeconds(delayTimeInSecs.GetValueOrDefault(0)));
 				await hub_P2.ClientToServerPoint(new InkBallPointViewModel
 				{
 					iGameId = 1,
@@ -1157,7 +1157,7 @@ namespace InkBall.Tests
 					iY = p1_owned[0, 1],
 					Status = InkBallPoint.StatusEnum.POINT_FREE_BLUE,
 				});
-				hub_P2.ThisPlayer.TimeStamp = DateTime.Now.Subtract(TimeSpan.FromSeconds(delayTimeInSecs.GetValueOrDefault(0)));
+				hub_P2.ThisPlayer.TimeStamp = InkBallPlayer.TimeStampInitialValue.Subtract(TimeSpan.FromSeconds(delayTimeInSecs.GetValueOrDefault(0)));
 
 
 				//Assert
@@ -1193,7 +1193,7 @@ namespace InkBall.Tests
 			var game = new InkBallGame
 			{
 				iId = 35,
-				CreateTime = DateTime.UtcNow,
+				CreateTime = InkBallGame.CreateTimeInitialValue,
 				GameState = InkBallGame.GameStateEnum.ACTIVE,
 				GameType = InkBallGame.GameTypeEnum.FIRST_5_ADVANTAGE_PATHS,
 				Player1 = new InkBallPlayer
@@ -1457,7 +1457,7 @@ new InkBallPathViewModel{ iId = 86, iGameId = 35, iPlayerId = 3, PointsAsString 
 			var game = new InkBallGame
 			{
 				iId = 85,
-				CreateTime = DateTime.UtcNow,
+				CreateTime = InkBallGame.CreateTimeInitialValue,
 				GameState = InkBallGame.GameStateEnum.ACTIVE,
 				GameType = InkBallGame.GameTypeEnum.FIRST_5_ADVANTAGE_PATHS,
 				Player1 = new InkBallPlayer

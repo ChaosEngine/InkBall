@@ -20,17 +20,17 @@ namespace InkBall.Module
 		{
 			var name_identifer = principal.FindFirstValue(ClaimTypes.NameIdentifier);
 
-			//conditions for InkBallUser to create
+			//conditions for InkBallPlayer to create
 			if (string.IsNullOrEmpty(name_identifer)) return;
 
 			var identity = (ClaimsIdentity)principal.Identity;
 
 			//checking if player already created in DB
-			InkBallPlayer found_player = await inkBallContext.InkBallPlayer//.Include(x => x.User)
+			InkBallPlayer found_player = await inkBallContext.InkBallPlayer
 				.FirstOrDefaultAsync(p => p.sExternalId == name_identifer, token);
 			if (found_player != null)
 			{
-				//user already created and existing in InkBallUsers, awesome.
+				//InkBallPlayer already created, awesome.
 				//just update user name if differs
 				if (found_player.UserName != user.Name)
 					found_player.UserName = user.Name;
@@ -83,9 +83,7 @@ namespace InkBall.Module
 		{
 			var games_to_surrender = await inkBallContext.InkBallGame
 				.Include(gp1 => gp1.Player1)
-					//.ThenInclude(p1 => p1.User)
 				.Include(gp2 => gp2.Player2)
-					//.ThenInclude(p2 => p2.User)
 				.Where(w =>
 				   (w.Player1.sExternalId == nameIdentifer || w.Player2.sExternalId == nameIdentifer)
 				   && (GamesContext.ActiveVisibleGameStates.Contains(w.GameState))
