@@ -19,11 +19,9 @@ namespace InkBall.Module.Model
 		public static ValueConverterInfo DefaultInfo { get; }
 			= new ValueConverterInfo(typeof(DateTime), typeof(byte[]), i => new DateTimeToBytesConverter(i.MappingHints));
 
-		static DateTime UnixTime => new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
-
 		static double DateTimeToUnixTimestamp(DateTime dateTime)
 		{
-			return (TimeZoneInfo.ConvertTimeToUtc(dateTime) - UnixTime).TotalSeconds;
+			return (TimeZoneInfo.ConvertTimeToUtc(dateTime) - DateTime.UnixEpoch).TotalSeconds;
 		}
 
 		/// <summary>

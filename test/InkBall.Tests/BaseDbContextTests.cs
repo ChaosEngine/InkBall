@@ -27,14 +27,7 @@ namespace InkBall.Tests
 			get; set;
 		}
 
-		protected CancellationToken CancellationToken
-		{
-			get
-			{
-				CancellationToken token = _cancellationSource.Token;
-				return token;
-			}
-		}
+		protected CancellationToken CancellationToken => _cancellationSource.Token;
 
 		protected async Task<(SqliteConnection, DbContextOptions<GamesContext>,
 							IConfiguration, IMemoryCache, ILogger<GameHub>)>
@@ -130,30 +123,27 @@ namespace InkBall.Tests
 			{
 				iId = 1,
 				CreateTime = DateTime.UtcNow,
+				//TimeStamp = DateTime.Now,//trigger or automation
 				GameState = InkBallGame.GameStateEnum.ACTIVE,
 				GameType = gameType2Create,
 				Player1 = new InkBallPlayer
 				{
 					iId = 1,
 					sLastMoveCode = "{}",
-					//User = new InkBallUser
-					//{
 					UserName = "test_p1",
 					iPrivileges = 0,
 					sExternalId = "xxxxx",
-					//}
+					//TimeStamp = DateTime.Now,//trigger or automation
 				},
 				iPlayer1Id = 1,
 				Player2 = new InkBallPlayer
 				{
 					iId = 2,
 					sLastMoveCode = "{}",
-					//User = new InkBallUser
-					//{
 					UserName = "test_p2",
 					iPrivileges = 0,
 					sExternalId = "yyyyy",
-					//}
+					//TimeStamp = DateTime.Now,//trigger or automation
 				},
 				iPlayer2Id = 2
 			};
@@ -191,7 +181,6 @@ namespace InkBall.Tests
 					iGameId = game0.iId,
 					Player = is_player_turn ? game0.Player1 : game0.Player2,
 					iPlayerId = is_player_turn ? game0.iPlayer1Id : game0.iPlayer2Id.GetValueOrDefault(0)
-
 				};
 				// int order = 1;
 				var path_vm = new InkBallPathViewModel

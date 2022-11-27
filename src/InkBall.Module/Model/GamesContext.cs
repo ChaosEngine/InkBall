@@ -63,6 +63,8 @@ namespace InkBall.Module.Model
 					return "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP";
 
 				case "Microsoft.EntityFrameworkCore.Sqlite":
+					return "datetime('now','localtime')";
+
 				case "Npgsql.EntityFrameworkCore.PostgreSQL":
 				case "Oracle.EntityFrameworkCore":
 					return "CURRENT_TIMESTAMP";

@@ -321,8 +321,6 @@ namespace InkBall.Module.Model
 
 		public InkBallGame()
 		{
-			// InkBallPath = new HashSet<InkBallPath>();
-			// InkBallPoint = new HashSet<InkBallPoint>();
 		}
 
 		internal static void DeactivateDeadGamezFromExternalUserID(string sExternalUserID)

@@ -19,7 +19,7 @@ using Xunit;
 
 namespace InkBall.Tests
 {
-	public class SignalRTests : DbContextTests
+	public class SignalRTests : BaseDbContextTests
 	{
 		#region Helpers
 
@@ -1200,24 +1200,18 @@ namespace InkBall.Tests
 				{
 					iId = 1,
 					sLastMoveCode = "{}",
-					//User = new InkBallUser
-					//{
 					UserName = "test_p1",
 					iPrivileges = 0,
 					sExternalId = "xxxxx",
-					//}
 				},
 				iPlayer1Id = 1,
 				Player2 = new InkBallPlayer
 				{
 					iId = 3,
 					sLastMoveCode = "{}",
-					//User = new InkBallUser
-					//{
 					UserName = "test_p2",
 					iPrivileges = 0,
 					sExternalId = "yyyyy",
-					//}
 				},
 				iPlayer2Id = 3,
 				iBoardWidth = 40,
@@ -1470,24 +1464,18 @@ new InkBallPathViewModel{ iId = 86, iGameId = 35, iPlayerId = 3, PointsAsString 
 				{
 					iId = 4,
 					sLastMoveCode = "{}",
-					//User = new InkBallUser
-					//{
 					UserName = "test_p1",
 					iPrivileges = 0,
 					sExternalId = "xxxxx",
-					//}
 				},
 				iPlayer1Id = 4,
 				Player2 = new InkBallPlayer
 				{
 					iId = 1,
 					sLastMoveCode = "{}",
-					//User = new InkBallUser
-					//{
 					UserName = "test_p2",
 					iPrivileges = 0,
 					sExternalId = "yyyyy",
-					//}
 				},
 				iPlayer2Id = 1,
 				iBoardWidth = 20,
