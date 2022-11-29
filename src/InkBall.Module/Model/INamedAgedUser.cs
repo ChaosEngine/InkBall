@@ -14,6 +14,8 @@ namespace InkBall.Module.Model
 		[PersonalData]
 		//[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
 		bool DesktopNotifications { get; set; }
+		
+		bool ShowChatNotifications { get; set; }
 	}
 
 	[MessagePackObject(true)]
@@ -22,6 +24,8 @@ namespace InkBall.Module.Model
 		[PersonalData]
 		//[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
 		public bool DesktopNotifications { get; set; }
+
+		public bool ShowChatNotifications { get; set; }
 
 		public CommandKindEnum GetKind()
 		{

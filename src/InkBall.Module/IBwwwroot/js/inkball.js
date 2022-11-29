@@ -215,9 +215,10 @@ class PlayerPointsAndPathsDTO extends DtoMsg {
 }
 
 class ApplicationUserSettings extends DtoMsg {
-	constructor(desktopNotifications = false) {
+	constructor({ DesktopNotifications = false, ShowChatNotifications = false }) {
 		super();
-		this.DesktopNotifications = desktopNotifications;
+		this.DesktopNotifications = DesktopNotifications;
+		this.ShowChatNotifications = ShowChatNotifications;
 	}
 
 	GetKind() { return CommandKindEnum.USER_SETTINGS; }
@@ -505,7 +506,7 @@ class InkBallGame {
 
 						sessionStorage.setItem("ApplicationUserSettings", to_store);
 					}
-					this.m_ApplicationUserSettings = new ApplicationUserSettings(settings.DesktopNotifications);
+					this.m_ApplicationUserSettings = new ApplicationUserSettings(settings);
 
 					await this.GetPlayerPointsAndPaths();
 				}
@@ -513,7 +514,7 @@ class InkBallGame {
 					const json = sessionStorage.getItem("ApplicationUserSettings");
 					const settings = ApplicationUserSettings.Deserialize(json);
 
-					this.m_ApplicationUserSettings = new ApplicationUserSettings(settings.DesktopNotifications);
+					this.m_ApplicationUserSettings = new ApplicationUserSettings(settings);
 				}
 			}
 			if (this.m_bPointsAndPathsLoaded === false) {
@@ -621,9 +622,11 @@ class InkBallGame {
 				const user = this.m_bIsPlayingWithRed ? this.m_Player2Name.textContent : this.m_Player1Name.textContent;
 				let encodedMsg = InkBallPointViewModel.Format(user, point);
 
-				const li = document.createElement("li");
-				li.textContent = encodedMsg;
-				document.querySelector(this.m_sMsgListSel).appendChild(li);
+				if (this?.m_ApplicationUserSettings?.ShowChatNotifications === true) {
+					const li = document.createElement("li");
+					li.textContent = encodedMsg;
+					document.querySelector(this.m_sMsgListSel).appendChild(li);
+				}
 
 				this.NotifyBrowser('New Point', encodedMsg);
 			}
@@ -638,9 +641,11 @@ class InkBallGame {
 					const user = this.m_bIsPlayingWithRed ? this.m_Player2Name.textContent : this.m_Player1Name.textContent;
 					const encodedMsg = InkBallPathViewModel.Format(user, path);
 
-					const li = document.createElement("li");
-					li.textContent = encodedMsg;
-					document.querySelector(this.m_sMsgListSel).appendChild(li);
+					if (this?.m_ApplicationUserSettings?.ShowChatNotifications === true) {
+						const li = document.createElement("li");
+						li.textContent = encodedMsg;
+						document.querySelector(this.m_sMsgListSel).appendChild(li);
+					}
 
 					this.NotifyBrowser('New Path', encodedMsg);
 				}
