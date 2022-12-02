@@ -710,15 +710,7 @@ namespace InkBall.Module.Hubs
 			}
 			catch (Exception ex)
 			{
-				//string str = string.Empty;
-				//if (this.Context.Items.Count > 1)
-				//{
-				//	System.Type t = typeof(System.Net.WebSockets.WebSocketProtocol);
-				//	str = "more than 1 " + t.ToString();
-				//}
-				_logger.LogError(ex.Message 
-					//+ str
-					);
+				_logger.LogError(ex.Message);
 				throw;
 			}
 		}

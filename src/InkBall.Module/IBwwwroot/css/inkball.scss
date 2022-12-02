@@ -83,6 +83,16 @@ p.inkgame {
 	ul#messagesList {
 		overflow: auto;
 		height: calc(26em * 1);
+
+		li {
+			list-style-type: none;
+			& span.blue {
+				background-color: #6495ed4f;
+			}
+			& span.red {
+				background-color: #ff45004d;
+			}
+		}
 	}
 }
 

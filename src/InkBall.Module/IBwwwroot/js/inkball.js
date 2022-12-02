@@ -51,7 +51,7 @@ class InkBallPointViewModel extends DtoMsg {
 	GetKind() { return CommandKindEnum.POINT; }
 
 	static Format(sUser, point) {
-		let msg = '(' + point.iX + ',' + point.iY + ' - ';
+		let msg = `(${point.iX},${point.iY} - `;
 		const status = point.Status !== undefined ? point.Status : point.status;
 
 		switch (status) {
@@ -81,7 +81,7 @@ class InkBallPointViewModel extends DtoMsg {
 				throw new Error("Bad point type!");
 		}
 
-		return sUser + ' places ' + msg + ')' + ' point';
+		return `${sUser} places ${msg}) point`;
 	}
 }
 
@@ -147,9 +147,9 @@ class PingCommand extends DtoMsg {
 	GetKind() { return CommandKindEnum.PING; }
 
 	static Format(sUser, ping) {
-		let txt = ping.Message || ping.message;
+		const txt = ping.Message || ping.message;
 
-		return sUser + " says '" + txt + "'";
+		return /*sUser + " says '" + */txt/* + "'"*/;
 	}
 }
 
@@ -301,6 +301,101 @@ class CountdownTimer {
 
 		if (initialStart)
 			this.Start();
+	}
+}
+
+class MessagesRingBufferStore {
+	constructor(store, gameObject) {
+		this.storeKeyName = "IB_MessagesBuffer";
+		this.store = store;
+		this.size = 10;
+		this.conversasionHash = null;
+		this.gameObject = gameObject;
+	}
+
+	//private mewthod
+	#deserializeStoreToMessages() {
+		const raw = this.store.getItem(this.storeKeyName);
+		if (!raw)
+			return [];
+		else {
+			const struct = JSON.parse(raw);
+			if (!struct.conversasionHash || struct.conversasionHash !== this.conversasionHash)
+				return [];
+			return struct.msgs || [];
+		}
+	}
+
+	//private mewthod
+	#serializeMessagesToStore(msgArr) {
+		const struct = {
+			conversasionHash: this.conversasionHash,
+			msgs: msgArr
+		};
+		const raw = JSON.stringify(struct);
+		this.store.setItem(this.storeKeyName, raw);
+	}
+
+	//private mewthod
+	#createMessageEntry(control, message, isMine) {
+		let userName, colorClass;
+		const li = document.createElement("li");
+		const span = document.createElement("span");
+		if (isMine) {
+			if (this.gameObject.m_bIsPlayingWithRed) {
+				userName = this.gameObject.m_Player1Name.textContent;
+				colorClass = 'red';
+			}
+			else {
+				userName = this.gameObject.m_Player2Name.textContent;
+				colorClass = 'blue';
+			}
+			li.className = "text-end py-1";
+		}
+		else {
+			if (this.gameObject.m_bIsPlayingWithRed) {
+				userName = this.gameObject.m_Player2Name.textContent;
+				colorClass = 'blue';
+			}
+			else {
+				userName = this.gameObject.m_Player1Name.textContent;
+				colorClass = 'red';
+			}
+			li.className = "text-start py-1";
+		}
+		li.textContent = `${userName}:`;
+		span.textContent = message;
+		span.classList = `p-1 rounded ${colorClass}`;
+
+		li.appendChild(span);
+		control.appendChild(li);
+	}
+
+	Append(message, isMineMessage) {
+		const msgs = this.#deserializeStoreToMessages();
+		msgs.push({
+			msg: message, mine: isMineMessage
+		});
+		if (msgs.length > this.size)
+			msgs.shift();
+
+		this.#serializeMessagesToStore(msgs);
+
+		const control = document.querySelector(this.gameObject.m_sMsgListSel);
+		this.#createMessageEntry(control, message, isMineMessage);
+	}
+
+	RestoreMessages() {
+		if (this.gameObject.g_iPlayerID && this.gameObject.m_iOtherPlayerId)
+			this.conversasionHash = `${this.gameObject.g_iPlayerID}_${this.gameObject.m_iOtherPlayerId}`;
+		else
+			this.conversasionHash = null;
+
+		const msgs = this.#deserializeStoreToMessages();
+		const control = document.querySelector(this.gameObject.m_sMsgListSel);
+		if (control) {
+			msgs.forEach(({ msg, mine }) => this.#createMessageEntry(control, msg, mine));
+		}
 	}
 }
 
@@ -625,6 +720,7 @@ class InkBallGame {
 				if (this?.m_ApplicationUserSettings?.ShowChatNotifications === true) {
 					const li = document.createElement("li");
 					li.textContent = encodedMsg;
+					li.style = "font-style:italic";
 					document.querySelector(this.m_sMsgListSel).appendChild(li);
 				}
 
@@ -644,6 +740,7 @@ class InkBallGame {
 					if (this?.m_ApplicationUserSettings?.ShowChatNotifications === true) {
 						const li = document.createElement("li");
 						li.textContent = encodedMsg;
+						li.style = "font-style:italic";
 						document.querySelector(this.m_sMsgListSel).appendChild(li);
 					}
 
@@ -672,7 +769,7 @@ class InkBallGame {
 			this.m_iOtherPlayerId = iOtherPlayerId;
 			const encodedMsg = PlayerJoiningCommand.Format(join);
 
-			document.querySelector('.msgchat').dataset.otherplayerid = iOtherPlayerId;
+			document.querySelector('.msgchat').dataset.otherplayerid = this.m_iOtherPlayerId;
 
 			const li = document.createElement("li");
 			const strong = document.createElement("strong");
@@ -688,6 +785,8 @@ class InkBallGame {
 					this.ShowStatus('Your move');
 				}
 			}
+
+			this.m_MessagesRingBufferStore.RestoreMessages();
 
 			this.NotifyBrowser('Player joininig', encodedMsg);
 
@@ -733,12 +832,11 @@ class InkBallGame {
 		}.bind(this));
 
 		this.g_SignalRConnection.on("ServerToClientPing", function (ping) {
-			const user = this.m_bIsPlayingWithRed ? this.m_Player2Name.textContent : this.m_Player1Name.textContent;
-			const encodedMsg = PingCommand.Format(user, ping);
+			const userName = this.m_bIsPlayingWithRed ? this.m_Player2Name.textContent : this.m_Player1Name.textContent;
+			const encodedMsg = PingCommand.Format(userName, ping);
 
-			let li = document.createElement("li");
-			li.textContent = encodedMsg;
-			document.querySelector(this.m_sMsgListSel).appendChild(li);
+			this.m_MessagesRingBufferStore.Append(encodedMsg, false);
+
 			this.NotifyBrowser('User Message', encodedMsg);
 
 		}.bind(this));
@@ -1269,6 +1367,11 @@ class InkBallGame {
 					await this.g_SignalRConnection.invoke("ClientToServerPing", payload);
 					document.querySelector(this.m_sMsgInputSel).value = '';
 					document.querySelector(this.m_sMsgSendButtonSel).disabled = 'disabled';
+
+					const msg = payload.Message;
+					this.m_MessagesRingBufferStore.Append(msg, true);
+
+					// this.NotifyBrowser('User Message', encodedMsg);
 				} catch (err) {
 					LocalError(err.toString());
 				}
@@ -2335,6 +2438,9 @@ class InkBallGame {
 			if (false === this.m_bIsCPUGame) {
 				document.querySelector(this.m_sMsgInputSel).disabled = '';
 				document.getElementById('testArea').textContent = '';
+
+				this.m_MessagesRingBufferStore = new MessagesRingBufferStore(window.localStorage, this);
+				this.m_MessagesRingBufferStore.RestoreMessages();
 			}
 			else {
 				let i = 0;

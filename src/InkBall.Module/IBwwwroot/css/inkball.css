@@ -53,6 +53,15 @@ p.inkgame {
   overflow: auto;
   height: 26em;
 }
+.inkgame ul#messagesList li {
+  list-style-type: none;
+}
+.inkgame ul#messagesList li span.blue {
+  background-color: rgba(100, 149, 237, 0.3098039216);
+}
+.inkgame ul#messagesList li span.red {
+  background-color: rgba(255, 69, 0, 0.3019607843);
+}
 
 svg > circle[data-status=POINT_FREE_RED] {
   fill: var(--redish);
