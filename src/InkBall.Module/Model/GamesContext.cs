@@ -508,10 +508,10 @@ namespace InkBall.Module.Model
 			return player;
 		}
 
-		public async Task<bool> JoinGameFromExternalUserIdAsync(InkBallGame game, string sPlayer2ExternaUserID, CancellationToken token = default)
+		public async Task<bool> JoinGameFromExternalUserIdAsync(InkBallGame game, string sPlayer2ExternalUserID, CancellationToken token = default)
 		{
 			if (game.GameState != GameStateEnum.AWAITING || game.Player2 != null ||
-				game.Player1 == null || game.Player1.sExternalId == sPlayer2ExternaUserID)
+				game.Player1 == null || game.Player1.sExternalId == sPlayer2ExternalUserID)
 			{
 				throw new ArgumentException("Wrong game state 2 join", nameof(game));
 			}
@@ -519,7 +519,7 @@ namespace InkBall.Module.Model
 			InkBallPlayer player2;
 			try
 			{
-				player2 = await CreateNewPlayerFromExternalUserIdAsync(sPlayer2ExternaUserID, "{}", token);
+				player2 = await CreateNewPlayerFromExternalUserIdAsync(sPlayer2ExternalUserID, "{}", token);
 			}
 			catch (Exception ex)
 			{
@@ -703,7 +703,7 @@ namespace InkBall.Module.Model
 		{
 			///Detect type of operation to pre-perform on paths:
 			/// - reconstruct full JSON path or not
-			/// - construct points collection form string point represetation or not
+			/// - construct points collection form string point representation or not
 			Action<InkBallPath, InkBallPathViewModel> jsonPath_Handler = reserializeJsonPath ?
 				jsonPath_HandlerImpl : (_, _) => { /* dummy empty body*/ };
 			Action<InkBallPath, InkBallPathViewModel> createPathPointCollection_Handler = createPathPointCollection ?
@@ -732,7 +732,7 @@ namespace InkBall.Module.Model
 				path.PointsAsString = reserialized;
 			}
 
-			///Construct points collection form string point represetation
+			///Construct points collection form string point representation
 			static void createPathPointCollection_HandlerImpl(InkBallPath path, InkBallPathViewModel fromJson)
 			{
 				path.InkBallPoint = fromJson

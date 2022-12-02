@@ -25,7 +25,7 @@ function LocalLog(msg) {
 }
 
 /**
- * Shared error log functoin
+ * Shared error log function
  * @param {...any} args - objects to log
  */
 function LocalError(...args) {
@@ -100,8 +100,8 @@ function pnpoly2(pathPoints, x, y) {
 }
 
 /**
- * Test for array uniquness using default object comparator
- * @param {array} array of objects that are tested againstn uniqenes
+ * Test for array uniqueness using default object comparator
+ * @param {array} array of objects that are tested against uniqueness
  * @returns {boolean} true - has duplicates
  */
 function hasDuplicates(array) {
@@ -144,7 +144,7 @@ function sortPointsClockwise(points) {
 // ==========================================
 // written by Gerard Ferrandez
 // initial version - June 28, 2006
-// modified - 2020 - Andrzej Pauli dropping vml - obsoleet and no support so why bother
+// modified - 2020 - Andrzej Pauli dropping vml - obsolete and no support so why bother
 // modified - 2018-2020 - Andrzej Pauli polyline and oval functions & extensions
 // modified - July 21 - use object functions
 // modified - July 24 - debug
@@ -169,18 +169,18 @@ class SvgVml {
 			documentCreateElementNS_SVG = function (contextElement) {
 				return contextElement;
 			}.bind(this);
-			documentCreateElementNS_Element = function (elemeName) {
-				switch (elemeName) {
+			documentCreateElementNS_Element = function (elementName) {
+				switch (elementName) {
 					case "circle":
 					case "line":
 					case "polyline":
 						{
-							const o = document.createElementNS(svgNS, elemeName);
+							const o = document.createElementNS(svgNS, elementName);
 							return o;
 						}
 
 					default:
-						throw new Error(`unknwn type ${elemeName}`);
+						throw new Error(`unknown type ${elementName}`);
 				}
 			};
 		} else {
@@ -243,8 +243,8 @@ class SvgVml {
 			};
 			/////////////// Pollyfills end ///////////////
 
-			documentCreateElementNS_Element = function (elemeName) {
-				switch (elemeName) {
+			documentCreateElementNS_Element = function (elementName) {
+				switch (elementName) {
 					case "circle":
 						return new SVGCircleElement();
 					case "line":
@@ -253,7 +253,7 @@ class SvgVml {
 						return new SVGPolylineElement();
 
 					default:
-						throw new Error(`unknwn type ${elemeName}`);
+						throw new Error(`unknown type ${elementName}`);
 				}
 			};
 		}
@@ -944,7 +944,7 @@ class GameStateStore {
 	}
 
 	/**
-	  * @param {number} key is calculated inxed of point y * width + x, probably not usefull
+	  * @param {number} key is calculated index of point y * width + x, probably not useful
 	  */
 	async GetPoint(key) {
 		return new Promise((resolve, reject) => {
@@ -1029,7 +1029,7 @@ class GameStateStore {
 	}
 
 	/**
-	  * @param {number} key is calculated inxed of point y * width + x, probably not usefull
+	  * @param {number} key is calculated index of point y * width + x, probably not useful
 	  * @param {object} val is serialized, thin circle
 	  */
 	async StorePoint(key, val) {

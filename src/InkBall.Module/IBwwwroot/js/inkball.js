@@ -309,34 +309,45 @@ class MessagesRingBufferStore {
 		this.storeKeyName = "IB_MessagesBuffer";
 		this.store = store;
 		this.size = 10;
-		this.conversasionHash = null;
+		this.conversationHash = null;
 		this.gameObject = gameObject;
 	}
 
-	//private mewthod
+	/**
+	 * Deserialize arrays of string messages from store
+	 * @returns {array} array of string messages
+	 */
 	#deserializeStoreToMessages() {
 		const raw = this.store.getItem(this.storeKeyName);
 		if (!raw)
 			return [];
 		else {
 			const struct = JSON.parse(raw);
-			if (!struct.conversasionHash || struct.conversasionHash !== this.conversasionHash)
+			if (!struct.conversationHash || struct.conversationHash !== this.conversationHash)
 				return [];
 			return struct.msgs || [];
 		}
 	}
 
-	//private mewthod
+	/**
+	 * Serialize string messages array to store
+	 * @param {array} msgArr array of messages
+	 */
 	#serializeMessagesToStore(msgArr) {
 		const struct = {
-			conversasionHash: this.conversasionHash,
+			conversationHash: this.conversationHash,
 			msgs: msgArr
 		};
 		const raw = JSON.stringify(struct);
 		this.store.setItem(this.storeKeyName, raw);
 	}
 
-	//private mewthod
+	/**
+	 * Create new message entry and displays it in parent control
+	 * @param {string} control html element of parent list for messages
+	 * @param {string} message body/content
+	 * @param {boolean} isMine is the message mine or opponent
+	 */
 	#createMessageEntry(control, message, isMine) {
 		let userName, colorClass;
 		const li = document.createElement("li");
@@ -371,6 +382,11 @@ class MessagesRingBufferStore {
 		control.appendChild(li);
 	}
 
+	/**
+	 * Append message to ring buffer and display it regularly on list
+	 * @param {*} message text of user massage to add
+	 * @param {*} isMineMessage is message from me or opponent
+	 */
 	Append(message, isMineMessage) {
 		const msgs = this.#deserializeStoreToMessages();
 		msgs.push({
@@ -385,11 +401,14 @@ class MessagesRingBufferStore {
 		this.#createMessageEntry(control, message, isMineMessage);
 	}
 
+	/**
+	 * Restores messages from ring buffer in storage (if any) and displays it on screen
+	 */
 	RestoreMessages() {
 		if (this.gameObject.g_iPlayerID && this.gameObject.m_iOtherPlayerId)
-			this.conversasionHash = `${this.gameObject.g_iPlayerID}_${this.gameObject.m_iOtherPlayerId}`;
+			this.conversationHash = `${this.gameObject.g_iPlayerID}_${this.gameObject.m_iOtherPlayerId}`;
 		else
-			this.conversasionHash = null;
+			this.conversationHash = null;
 
 		const msgs = this.#deserializeStoreToMessages();
 		const control = document.querySelector(this.gameObject.m_sMsgListSel);
@@ -402,7 +421,7 @@ class MessagesRingBufferStore {
 /**
  * Loads modules dynamically
  * don't break webpack logic here! https://webpack.js.org/guides/code-splitting/
- * @param {object} gameOptions is an entry starter object definint game parameters
+ * @param {object} gameOptions is an entry starter object defining game parameters
  */
 async function importAllModulesAsync(gameOptions) {
 	const selfFileName = import.meta.url.split('/').at(-1);
@@ -452,7 +471,7 @@ self.onmessage = async function (e) {
 class InkBallGame {
 
 	/**
-	 * InkBallGame contructor
+	 * InkBallGame constructor
 	 * @param {number} iGameID ID of a game
 	 * @param {number} iPlayerID player ID
 	 * @param {number} iOtherPlayerID player ID
@@ -463,7 +482,7 @@ class InkBallGame {
 	 * @param {number} serverTimeoutInMilliseconds If the server hasn't sent a message in this interval, the client considers the server disconnected
 	 * @param {enum} gameType of game enum as string
 	 * @param {boolean} bIsPlayingWithRed true - red, false - blue
-	 * @param {boolean} bIsPlayerActive is this player acive now
+	 * @param {boolean} bIsPlayerActive is this player active now
 	 * @param {boolean} bViewOnly only viewing the game no interaction
 	 * @param {number} pathAfterPointDrawAllowanceSecAmount is number of seconds, a player is allowed to start drawing path after putting point
 	 * @param {number} iTooLong2Duration too long wait duration
@@ -704,7 +723,7 @@ class InkBallGame {
 
 	/**
 	 * Start connection to SignalR
-	 * @param {boolean} loadPointsAndPathsFromSignalR load points and path thriugh SignalR
+	 * @param {boolean} loadPointsAndPathsFromSignalR load points and path through SignalR
 	 */
 	async StartSignalRConnection(loadPointsAndPathsFromSignalR) {
 		if (this.g_SignalRConnection === null) return Promise.reject(new Error("signalr conn is null"));
@@ -788,7 +807,7 @@ class InkBallGame {
 
 			this.m_MessagesRingBufferStore.RestoreMessages();
 
-			this.NotifyBrowser('Player joininig', encodedMsg);
+			this.NotifyBrowser('Player joining', encodedMsg);
 
 			this.m_bHandlingEvent = false;
 		}.bind(this));
@@ -1039,7 +1058,7 @@ class InkBallGame {
 	 * @param {any} iY point y taken from IndexedDb
 	 * @param {any} iStatus status taken from IndexedDb
 	 * @param {any} sColor color taken from IndexedDb
-	 * @returns {object} created oval/cirle
+	 * @returns {object} created oval/circle
 	 */
 	CreateScreenPointFromIndexedDb(iX, iY, iStatus, sColor) {
 		const x = iX;
@@ -1211,10 +1230,10 @@ class InkBallGame {
 		return false;
 	}
 
-	async SurroundOponentPoints() {
+	async SurroundOpponentPoints() {
 		const points = this.m_Line.GetPointsArray();
 
-		//uniqe point path test (no duplicates except starting-ending point)
+		//unique point path test (no duplicates except starting-ending point)
 		const pts_not_unique = hasDuplicates(points.slice(0, -1).map(pt => pt.x + '_' + pt.y));
 
 		if (pts_not_unique ||
@@ -1417,7 +1436,7 @@ class InkBallGame {
 
 		if (this.g_iPlayerID !== point.iPlayerId) {
 			this.m_bIsPlayerActive = true;
-			this.ShowStatus('Oponent has moved, your turn');
+			this.ShowStatus('Opponent has moved, your turn');
 			this.m_Screen.style.cursor = "crosshair";
 
 			if (this.m_Line !== null)
@@ -1435,7 +1454,7 @@ class InkBallGame {
 		}
 		else {
 			this.m_bIsPlayerActive = false;
-			this.ShowStatus('Waiting for oponent move');
+			this.ShowStatus('Waiting for opponent move');
 			this.m_Screen.style.cursor = "wait";
 			this.m_MouseCursorOval.Hide();
 			this.m_CancelPath.disabled = 'disabled';
@@ -1483,7 +1502,7 @@ class InkBallGame {
 
 
 			this.m_bIsPlayerActive = true;
-			this.ShowStatus('Oponent has moved, your turn');
+			this.ShowStatus('Opponent has moved, your turn');
 			this.m_Screen.style.cursor = "crosshair";
 			this.m_MouseCursorOval.Hide();
 
@@ -1523,7 +1542,7 @@ class InkBallGame {
 
 
 			this.m_bIsPlayerActive = false;
-			this.ShowStatus('Waiting for oponent move');
+			this.ShowStatus('Waiting for opponent move');
 			this.m_Screen.style.cursor = "wait";
 			this.m_MouseCursorOval.Hide();
 
@@ -1720,7 +1739,7 @@ class InkBallGame {
 							}
 							else if (line_contains_point === 1 && p1.GetStatus() === StatusEnum.POINT_STARTING &&
 								true === this.m_Line.AppendPoints(tox, toy)) {
-								const val = await this.SurroundOponentPoints();
+								const val = await this.SurroundOpponentPoints();
 								if (val.owned.length > 0) {
 									this.Debug('Closing path', 0);
 									this.rAF_FrameID = null;
@@ -1840,7 +1859,7 @@ class InkBallGame {
 						}
 						else if (line_contains_point === 1 && p1.GetStatus() === StatusEnum.POINT_STARTING &&
 							true === this.m_Line.AppendPoints(tox, toy)) {
-							const val = await this.SurroundOponentPoints();
+							const val = await this.SurroundOpponentPoints();
 							if (val.owned.length > 0) {
 								this.Debug('Closing path', 0);
 								this.rAF_FrameID = null;
@@ -1857,7 +1876,7 @@ class InkBallGame {
 								});
 							}
 							else
-								this.Debug(`${val.errorDesc ? val.errorDesc : 'Wrong path'}, cancell it or refresh page`, 0);
+								this.Debug(`${val.errorDesc ? val.errorDesc : 'Wrong path'}, cancel it or refresh page`, 0);
 							this.m_iLastX = x;
 							this.m_iLastY = y;
 						}
@@ -1989,7 +2008,7 @@ class InkBallGame {
 	}
 
 	/**
-	 * Worker entry point - asynced version
+	 * Worker entry point - async version
 	 * @param {any} setupFunction - init params callback to be given a worker as 1st param
 	 */
 	async RunAIWorker(setupFunction) {
@@ -2023,7 +2042,7 @@ class InkBallGame {
 
 			if (setupFunction)
 				setupFunction(this.m_Worker);
-		});//primise end
+		});//promise end
 	}
 
 	async OnTestBuildCurrentGraph(event) {
@@ -2159,7 +2178,7 @@ class InkBallGame {
 		// 				await Sleep(50);
 		// 			}
 
-		// 			//find for all free_human_player_points which cycle might interepct it (surrounds)
+		// 			//find for all free_human_player_points which cycle might intercept it (surrounds)
 		// 			//only convex, NOT concave :-(
 		// 			let tmp = '', comma = '';
 		// 			for (const possible_intercept of free_human_player_points) {
@@ -2175,7 +2194,7 @@ class InkBallGame {
 		// 					comma = ',';
 		// 				}
 		// 			}
-		// 			//gaterhing of some data and console printing
+		// 			//gathering of some data and console printing
 		// 			trailing_points.unshift(str);
 		// 			tab.push(trailing_points);
 		// 			//log...
@@ -2267,7 +2286,7 @@ class InkBallGame {
 				if (possible.length > 2) {
 					let cw_sorted_verts = sortPointsClockwise(possible);
 					let last = undefined;
-					//check if points are aligne  one-by-one next to each other no more than 1 point apart
+					//check if points are aligned one-by-one next to each other no more than 1 point apart
 					for (const it of cw_sorted_verts) {
 						if (last !== undefined) {
 							if (!(Math.abs(last.x - it.x) <= 1 && Math.abs(last.y - it.y) <= 1)) {
@@ -2321,7 +2340,7 @@ class InkBallGame {
 
 	/**
 	 * Start drawing routines
-	 * @param {HTMLElement} sScreen screen dontainer selector
+	 * @param {HTMLElement} sScreen screen container selector
 	 * @param {HTMLElement} sPlayer1Name displaying element selector
 	 * @param {HTMLElement} sPlayer2Name displaying element selector
 	 * @param {HTMLElement} sGameStatus game stat element selector
@@ -2485,7 +2504,7 @@ class InkBallGame {
 					this.m_StopAndDraw.disabled = '';
 				}
 				else {
-					this.ShowStatus('Waiting for oponent move');
+					this.ShowStatus('Waiting for opponent move');
 					this.m_Screen.style.cursor = "wait";
 				}
 				if (!this.m_bDrawLines)
@@ -2560,7 +2579,7 @@ class InkBallGame {
 	 * Gets random number in range: min(inclusive) - max (exclusive)
 	 * @param {any} min - from(inclusive)
 	 * @param {any} max - to (exclusive)
-	 * @returns {integer} random numba
+	 * @returns {integer} random number
 	 */
 	GetRandomInt(min, max) {
 		min = Math.max(0, Math.min(min, this.m_iGridWidth));
@@ -2935,7 +2954,7 @@ class InkBallGame {
 			// traverse through all the vertices with same cycle
 			for (let i = 0; i <= cyclenumber; i++) {
 				const cycl = cycles[i];//get cycle
-				if (cycl && cycl.length > 0) {	//somr checks
+				if (cycl && cycl.length > 0) {	//some checks
 					// Print the i-th cycle
 					let str = (`Cycle Number ${i}: `), trailing_points = [];
 					const rand_color = 'var(--bs-teal)';
@@ -2962,7 +2981,7 @@ class InkBallGame {
 						await Sleep(50);
 					}
 
-					//find for all free_human_player_points which cycle might interepct it (surrounds)
+					//find for all free_human_player_points which cycle might intercept it (surrounds)
 					//only convex, NOT concave :-(
 					let tmp = '', comma = '';
 					for (const possible_intercept of free_human_player_points) {
@@ -2979,7 +2998,7 @@ class InkBallGame {
 							comma = ',';
 						}
 					}
-					//gaterhing of some data and console printing
+					//gathering of some data and console printing
 					trailing_points.unshift(str);
 					tab.push(trailing_points);
 					//log...
@@ -3125,7 +3144,7 @@ class InkBallGame {
 			}
 		}
 		//all is lost. nothing found. record this path and make sure
-		//no other traversal nver repeat those blind travers again
+		//no other traversal ever repeat those blind traversals again
 		return currPointsArr;
 	}
 
