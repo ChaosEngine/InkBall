@@ -289,7 +289,7 @@ namespace InkBall.Module.Model
 			set { _inkBallPoint = value; }
 		}
 
-		///Oponent points enclosed within this users path
+		///Opponent points enclosed within this users path
 		public ICollection<InkBallPointViewModel> GetOwnedPoints(InkBallPoint.StatusEnum ownedStatus, int otherPlayerID)
 		{
 			if (!(_ownedPoints?.Count > 0) && !string.IsNullOrEmpty(OwnedPointsAsString))

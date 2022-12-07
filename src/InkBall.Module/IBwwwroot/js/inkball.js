@@ -305,12 +305,18 @@ class CountdownTimer {
 }
 
 class MessagesRingBufferStore {
+	#storeKeyName;
+	#store;
+	#size;
+	#conversationHash;
+	#gameObject;
+
 	constructor(store, gameObject) {
-		this.storeKeyName = "IB_MessagesBuffer";
-		this.store = store;
-		this.size = 10;
-		this.conversationHash = null;
-		this.gameObject = gameObject;
+		this.#storeKeyName = "IB_MessagesBuffer";
+		this.#store = store;
+		this.#size = 16;
+		this.#conversationHash = null;
+		this.#gameObject = gameObject;
 	}
 
 	/**
@@ -318,12 +324,12 @@ class MessagesRingBufferStore {
 	 * @returns {array} array of string messages
 	 */
 	#deserializeStoreToMessages() {
-		const raw = this.store.getItem(this.storeKeyName);
+		const raw = this.#store.getItem(this.#storeKeyName);
 		if (!raw)
 			return [];
 		else {
 			const struct = JSON.parse(raw);
-			if (!struct.conversationHash || struct.conversationHash !== this.conversationHash)
+			if (!struct.conversationHash || struct.conversationHash !== this.#conversationHash)
 				return [];
 			return struct.msgs || [];
 		}
@@ -335,11 +341,11 @@ class MessagesRingBufferStore {
 	 */
 	#serializeMessagesToStore(msgArr) {
 		const struct = {
-			conversationHash: this.conversationHash,
+			conversationHash: this.#conversationHash,
 			msgs: msgArr
 		};
 		const raw = JSON.stringify(struct);
-		this.store.setItem(this.storeKeyName, raw);
+		this.#store.setItem(this.#storeKeyName, raw);
 	}
 
 	/**
@@ -347,39 +353,41 @@ class MessagesRingBufferStore {
 	 * @param {string} control html element of parent list for messages
 	 * @param {string} message body/content
 	 * @param {boolean} isMine is the message mine or opponent
+	 * @returns {Element} last added list item
 	 */
 	#createMessageEntry(control, message, isMine) {
 		let userName, colorClass;
 		const li = document.createElement("li");
 		const span = document.createElement("span");
 		if (isMine) {
-			if (this.gameObject.m_bIsPlayingWithRed) {
-				userName = this.gameObject.m_Player1Name.textContent;
+			if (this.#gameObject.m_bIsPlayingWithRed) {
+				userName = this.#gameObject.m_Player1Name.textContent;
 				colorClass = 'red';
 			}
 			else {
-				userName = this.gameObject.m_Player2Name.textContent;
+				userName = this.#gameObject.m_Player2Name.textContent;
 				colorClass = 'blue';
 			}
 			li.className = "text-end py-1";
 		}
 		else {
-			if (this.gameObject.m_bIsPlayingWithRed) {
-				userName = this.gameObject.m_Player2Name.textContent;
+			if (this.#gameObject.m_bIsPlayingWithRed) {
+				userName = this.#gameObject.m_Player2Name.textContent;
 				colorClass = 'blue';
 			}
 			else {
-				userName = this.gameObject.m_Player1Name.textContent;
+				userName = this.#gameObject.m_Player1Name.textContent;
 				colorClass = 'red';
 			}
 			li.className = "text-start py-1";
 		}
 		li.textContent = `${userName}:`;
 		span.textContent = message;
-		span.classList = `p-1 rounded ${colorClass}`;
+		span.classList = `px-1 rounded ${colorClass}`;
 
 		li.appendChild(span);
 		control.appendChild(li);
+		return li;
 	}
 
 	/**
@@ -392,26 +400,27 @@ class MessagesRingBufferStore {
 		msgs.push({
 			msg: message, mine: isMineMessage
 		});
-		if (msgs.length > this.size)
+		if (msgs.length > this.#size)
 			msgs.shift();
 
 		this.#serializeMessagesToStore(msgs);
 
-		const control = document.querySelector(this.gameObject.m_sMsgListSel);
-		this.#createMessageEntry(control, message, isMineMessage);
+		const control = document.querySelector(this.#gameObject.m_sMsgListSel);
+		const last_li = this.#createMessageEntry(control, message, isMineMessage);
+		last_li.scrollIntoView();
 	}
 
 	/**
 	 * Restores messages from ring buffer in storage (if any) and displays it on screen
 	 */
 	RestoreMessages() {
-		if (this.gameObject.g_iPlayerID && this.gameObject.m_iOtherPlayerId)
-			this.conversationHash = `${this.gameObject.g_iPlayerID}_${this.gameObject.m_iOtherPlayerId}`;
+		if (this.#gameObject.g_iPlayerID && this.#gameObject.m_iOtherPlayerId)
+			this.#conversationHash = `${this.#gameObject.g_iPlayerID}_${this.#gameObject.m_iOtherPlayerId}`;
 		else
-			this.conversationHash = null;
+			this.#conversationHash = null;
 
 		const msgs = this.#deserializeStoreToMessages();
-		const control = document.querySelector(this.gameObject.m_sMsgListSel);
+		const control = document.querySelector(this.#gameObject.m_sMsgListSel);
 		if (control) {
 			msgs.forEach(({ msg, mine }) => this.#createMessageEntry(control, msg, mine));
 		}

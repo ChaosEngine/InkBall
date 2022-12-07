@@ -196,10 +196,6 @@ namespace InkBall.Module.Model
 					.HasColumnName("iGridSize")
 					.HasDefaultValue(16);
 
-				// entity.Property(e => e.CpuOponent)
-				// 	.HasColumnName("CpuOponent")
-				// 	.HasDefaultValue(false);
-
 				entity.Property(e => e.iPlayer1Id).HasColumnName("iPlayer1ID");
 
 				entity.Property(e => e.iPlayer2Id).HasColumnName("iPlayer2ID");
@@ -377,14 +373,14 @@ namespace InkBall.Module.Model
 
 		#region Business logic methods
 
-		public async Task<InkBallGame> CreateNewGameFromExternalUserIDAsync(string sPlayer1ExternaUserID, GameTypeEnum gameType,
-			int gridSize, int width, int height, bool cpuOponent = false, CancellationToken token = default)
+		public async Task<InkBallGame> CreateNewGameFromExternalUserIDAsync(string sPlayer1ExternalUserID, GameTypeEnum gameType,
+			int gridSize, int width, int height, bool cpuOpponent = false, CancellationToken token = default)
 		{
 			try
 			{
-				if (!string.IsNullOrEmpty(sPlayer1ExternaUserID))
+				if (!string.IsNullOrEmpty(sPlayer1ExternalUserID))
 				{
-					var dbPlayer1 = await CreateNewPlayerFromExternalUserIdAsync(sPlayer1ExternaUserID, "{}", token);
+					var dbPlayer1 = await CreateNewPlayerFromExternalUserIdAsync(sPlayer1ExternalUserID, "{}", token);
 				}
 			}
 			catch (Exception ex)
@@ -393,10 +389,10 @@ namespace InkBall.Module.Model
 			}
 
 
-			bool bIsPlayer1Active = cpuOponent;
-			GameStateEnum gameState = cpuOponent ? GameStateEnum.ACTIVE : GameStateEnum.AWAITING;
-			int game_id = await PrivInkBallGameInsertAsync(null, sPlayer1ExternaUserID, gridSize, width, height, bIsPlayer1Active,
-				cpuOponent);
+			bool bIsPlayer1Active = cpuOpponent;
+			GameStateEnum gameState = cpuOpponent ? GameStateEnum.ACTIVE : GameStateEnum.AWAITING;
+			int game_id = await PrivInkBallGameInsertAsync(null, sPlayer1ExternalUserID, gridSize, width, height, bIsPlayer1Active,
+				cpuOpponent);
 
 			if (game_id <= -1)
 				throw new ArgumentNullException(nameof(game_id), "Could not create new game");
@@ -408,7 +404,7 @@ namespace InkBall.Module.Model
 			// private functions
 			//
 			async Task<int> PrivInkBallGameInsertAsync(int? iPlayer1ID, string player1ExternalUserID,
-				int iGridSize, int iBoardWidth, int iBoardHeight, bool bIsPlayer1ActiveHere, bool cpuOponent)
+				int iGridSize, int iBoardWidth, int iBoardHeight, bool bIsPlayer1ActiveHere, bool cpuOpponent)
 			{
 				var cp1_query = from cp1 in this.InkBallPlayer
 								where ((!iPlayer1ID.HasValue || cp1.iId == iPlayer1ID.Value)
@@ -421,7 +417,7 @@ namespace InkBall.Module.Model
 				int? p1 = await cp1_query.FirstOrDefaultAsync(token);
 
 				int? p2;
-				if (cpuOponent == true)
+				if (cpuOpponent == true)
 				{
 					var cp2_query = from cp2 in this.InkBallPlayer
 									where cp2.iId == -1
