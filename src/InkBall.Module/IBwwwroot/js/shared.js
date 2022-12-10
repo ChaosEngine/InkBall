@@ -216,18 +216,18 @@ class SvgVml {
 				this.attributes.delete(key);
 			};
 
-			self.SVGLineElement = function () {
-				this.attributes = new Map();
-			};
-			SVGLineElement.prototype.setAttribute = function (key, val) {
-				this.attributes.set(key, val);
-			};
-			SVGLineElement.prototype.getAttribute = function (key) {
-				return this.attributes.get(key);
-			};
-			SVGLineElement.prototype.removeAttribute = function (key) {
-				this.attributes.delete(key);
-			};
+			// self.SVGLineElement = function () {
+			// 	this.attributes = new Map();
+			// };
+			// SVGLineElement.prototype.setAttribute = function (key, val) {
+			// 	this.attributes.set(key, val);
+			// };
+			// SVGLineElement.prototype.getAttribute = function (key) {
+			// 	return this.attributes.get(key);
+			// };
+			// SVGLineElement.prototype.removeAttribute = function (key) {
+			// 	this.attributes.delete(key);
+			// };
 
 			self.SVGPolylineElement = function () {
 				this.attributes = new Map();
@@ -247,8 +247,8 @@ class SvgVml {
 				switch (elementName) {
 					case "circle":
 						return new SVGCircleElement();
-					case "line":
-						return new SVGLineElement();
+					// case "line":
+					// 	return new SVGLineElement();
 					case "polyline":
 						return new SVGPolylineElement();
 
@@ -323,17 +323,17 @@ class SvgVml {
 			return { x, y, Status, Color };
 		};
 
-		SVGLineElement.prototype.move = function (x1, y1, x2, y2) {
-			this.setAttribute("x1", x1);
-			this.setAttribute("y1", y1);
-			this.setAttribute("x2", x2);
-			this.setAttribute("y2", y2);
-		};
-		SVGLineElement.prototype.RGBcolor = function (r, g, b) {
-			this.setAttribute("stroke", `rgb(${Math.round(r)},${Math.round(g)},${Math.round(b)})`);
-		};
-		SVGLineElement.prototype.SetColor = function (color) { this.setAttribute("stroke", color); };
-		SVGLineElement.prototype.strokeWidth = function (sw) { this.setAttribute("stroke-width", sw + "px"); };
+		// SVGLineElement.prototype.move = function (x1, y1, x2, y2) {
+		// 	this.setAttribute("x1", x1);
+		// 	this.setAttribute("y1", y1);
+		// 	this.setAttribute("x2", x2);
+		// 	this.setAttribute("y2", y2);
+		// };
+		// SVGLineElement.prototype.RGBcolor = function (r, g, b) {
+		// 	this.setAttribute("stroke", `rgb(${Math.round(r)},${Math.round(g)},${Math.round(b)})`);
+		// };
+		// SVGLineElement.prototype.SetColor = function (color) { this.setAttribute("stroke", color); };
+		// SVGLineElement.prototype.strokeWidth = function (sw) { this.setAttribute("stroke-width", sw + "px"); };
 
 		SVGPolylineElement.prototype.AppendPoints = function (x, y, diff = 1) {
 			const pts_str = this.getAttribute("points");

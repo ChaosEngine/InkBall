@@ -315,14 +315,12 @@ class MessagesRingBufferStore {
 	#store;
 	#size;
 	#conversationHash;
-	// #gameObject;
 
-	constructor(store/* , gameObject */) {
+	constructor(store) {
 		this.#storeKeyName = "IB_MessagesBuffer";
 		this.#store = store;
 		this.#size = 16;
 		this.#conversationHash = null;
-		// this.#gameObject = gameObject;
 	}
 
 	#deserializeStoreToMessages() {
@@ -2782,7 +2780,7 @@ class InkBallGame {
 	}
 
 	// Returns true if the graph contains a cycle, else false. 
-	IsGraphCyclic(graph) {
+	#IsGraphCyclic(graph) {
 		const vertices = graph.vertices;
 
 		const isCyclicUtil = function (v, parent) {
@@ -3250,7 +3248,7 @@ class InkBallGame {
 		return cycles;
 	}
 
-	async rAFCallBack(timeStamp) {
+	async #rAFCallBack(timeStamp) {
 		if (this.#rAF_StartTimeStamp === null) this.#rAF_StartTimeStamp = timeStamp;
 		const elapsed = timeStamp - this.#rAF_StartTimeStamp;
 
@@ -3275,7 +3273,7 @@ class InkBallGame {
 
 		if (point === null) {
 			if (elapsed < 2000)
-				this.#rAF_FrameID = window.requestAnimationFrame(this.rAFCallBack.bind(this));
+				this.#rAF_FrameID = window.requestAnimationFrame(this.#rAFCallBack.bind(this));
 		}
 		else {
 			//if (this.rAF_FrameID !== null) {
@@ -3292,7 +3290,7 @@ class InkBallGame {
 
 	#StartCPUCalculation() {
 		if (this.#rAF_FrameID === null)
-			this.#rAF_FrameID = window.requestAnimationFrame(this.rAFCallBack.bind(this));
+			this.#rAF_FrameID = window.requestAnimationFrame(this.#rAFCallBack.bind(this));
 	}
 	///////CpuGame variables methods end//////
 }
