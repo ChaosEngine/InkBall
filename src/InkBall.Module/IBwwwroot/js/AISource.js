@@ -7,12 +7,18 @@ import { StatusEnum, LocalLog, sortPointsClockwise, /*Sleep,*/ pnpoly2 } from ".
  * AI operations class
  * */
 class GraphAI {
+	#iGridWidth;
+	#iGridHeight;
+	#Points;
+	#POINT_STARTING;
+	#POINT_IN_PATH;
+	
 	constructor(iGridWidth, iGridHeight, pointStore) {
-		this.m_iGridWidth = iGridWidth;
-		this.m_iGridHeight = iGridHeight;
-		this.m_Points = pointStore;
-		this.POINT_STARTING = StatusEnum.POINT_STARTING;
-		this.POINT_IN_PATH = StatusEnum.POINT_IN_PATH;
+		this.#iGridWidth = iGridWidth;
+		this.#iGridHeight = iGridHeight;
+		this.#Points = pointStore;
+		this.#POINT_STARTING = StatusEnum.POINT_STARTING;
+		this.#POINT_IN_PATH = StatusEnum.POINT_IN_PATH;
 	}
 
 	/**
@@ -37,8 +43,8 @@ class GraphAI {
 		};
 
 		const addPointsAndEdgesToGraph = async function (point, to_x, to_y, x, y) {
-			if (to_x >= 0 && to_x < this.m_iGridWidth && to_y >= 0 && to_y < this.m_iGridHeight) {
-				const next = await this.m_Points.get(to_y * this.m_iGridWidth + to_x);
+			if (to_x >= 0 && to_x < this.#iGridWidth && to_y >= 0 && to_y < this.#iGridHeight) {
+				const next = await this.#Points.get(to_y * this.#iGridWidth + to_x);
 				if (next && isPointOKForPath([freePointStatus], next) === true) {
 
 					if (graph_edges.has(`${x},${y}_${to_x},${to_y}`) === false && graph_edges.has(`${to_x},${to_y}_${x},${y}`) === false) {
@@ -74,8 +80,8 @@ class GraphAI {
 			}
 		}.bind(this);
 
-		for (const point of await this.m_Points.values()) {
-			if (point && isPointOKForPath([freePointStatus, this.POINT_STARTING, this.POINT_IN_PATH], point) === true) {
+		for (const point of await this.#Points.values()) {
+			if (point && isPointOKForPath([freePointStatus, this.#POINT_STARTING, this.#POINT_IN_PATH], point) === true) {
 				const { x, y } = point.GetPosition();
 				//TODO: await all below promises
 				//east
@@ -159,7 +165,7 @@ class GraphAI {
 			color[u] = 1;
 			const vertex = vertices[u];
 			if (vertex) {
-				
+
 				//const x = vertex.attributes.get('cx'), y = vertex.attributes.get('cy');
 				//vertex.SetStrokeColor('black');
 				//vertex.SetFillColor('black');
@@ -201,7 +207,7 @@ class GraphAI {
 
 			//gather free human player points that could be intercepted.
 			const free_human_player_points = [];
-			for (const pt of await this.m_Points.values()) {
+			for (const pt of await this.#Points.values()) {
 				if (pt !== undefined && pt.GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.GetStatus()) {
 					const { x, y } = pt.GetPosition();
 					if (false === await this.IsPointOutsideAllPaths(x, y, lines))

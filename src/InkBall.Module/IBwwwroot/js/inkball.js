@@ -235,37 +235,43 @@ class ApplicationUserSettings extends DtoMsg {
 }
 
 class CountdownTimer {
-	constructor({
+	#countdownSeconds;
+	#totalSeconds;
+	#id;
+	#label;
+	#countdownReachedHandler;
+
+	constructor(
 		countdownSeconds = 60,
 		labelSelector = null,
 		initialStart = false,
 		countdownReachedHandler = undefined
-	} = {}) {
-		this.countdownSeconds = countdownSeconds;
-		this.totalSeconds = this.countdownSeconds;
-		this.timerID = -1;
-		this.label = null;
-		this.countdownReachedHandler = countdownReachedHandler;
+	) {
+		this.#countdownSeconds = countdownSeconds;
+		this.#totalSeconds = this.#countdownSeconds;
+		this.#id = -1;
+		this.#label = null;
+		this.#countdownReachedHandler = countdownReachedHandler;
 		if (labelSelector)
-			this.label = document.querySelector(labelSelector);
+			this.#label = document.querySelector(labelSelector);
 
 		if (initialStart)
 			this.Start();
 	}
 
-	setTimeFunc() {
-		if ((--this.totalSeconds) <= 0) {
+	#setTimeFunc() {
+		if ((--this.#totalSeconds) <= 0) {
 			this.Stop();
-			if (this.countdownReachedHandler)
-				this.countdownReachedHandler(this.label);
+			if (this.#countdownReachedHandler)
+				this.#countdownReachedHandler(this.#label);
 		}
-		else if (this.label) {
-			this.label.textContent = this.pad(parseInt(this.totalSeconds / 60)) +
-				':' + this.pad(this.totalSeconds % 60);
+		else if (this.#label) {
+			this.#label.textContent = this.#pad(parseInt(this.#totalSeconds / 60)) +
+				':' + this.#pad(this.#totalSeconds % 60);
 		}
 	}
 
-	pad(val) {
+	#pad(val) {
 		const valString = val + "";
 		if (valString.length < 2) {
 			return "0" + valString;
@@ -276,28 +282,28 @@ class CountdownTimer {
 
 	Start() {
 		this.Stop();
-		this.timerID = setInterval(this.setTimeFunc.bind(this), 1000);
+		this.#id = setInterval(this.#setTimeFunc.bind(this), 1000);
 	}
 
 	Stop() {
-		if (this.timerID > 0)
-			clearInterval(this.timerID);
-		if (this.label)
-			this.label.textContent = '';
+		if (this.#id > 0)
+			clearInterval(this.#id);
+		if (this.#label)
+			this.#label.textContent = '';
 	}
 
-	Reset({
+	Reset(
 		countdownSeconds = 60,
 		labelSelector = null,
 		initialStart = false,
 		countdownReachedHandler = undefined
-	} = {}) {
-		this.countdownSeconds = countdownSeconds;
-		this.totalSeconds = this.countdownSeconds;
-		this.label = null;
-		this.countdownReachedHandler = countdownReachedHandler;
+	) {
+		this.#countdownSeconds = countdownSeconds;
+		this.#totalSeconds = this.#countdownSeconds;
+		this.#label = null;
+		this.#countdownReachedHandler = countdownReachedHandler;
 		if (labelSelector)
-			this.label = document.querySelector(labelSelector);
+			this.#label = document.querySelector(labelSelector);
 
 		if (initialStart)
 			this.Start();
@@ -309,20 +315,16 @@ class MessagesRingBufferStore {
 	#store;
 	#size;
 	#conversationHash;
-	#gameObject;
+	// #gameObject;
 
-	constructor(store, gameObject) {
+	constructor(store/* , gameObject */) {
 		this.#storeKeyName = "IB_MessagesBuffer";
 		this.#store = store;
 		this.#size = 16;
 		this.#conversationHash = null;
-		this.#gameObject = gameObject;
+		// this.#gameObject = gameObject;
 	}
 
-	/**
-	 * Deserialize arrays of string messages from store
-	 * @returns {array} array of string messages
-	 */
 	#deserializeStoreToMessages() {
 		const raw = this.#store.getItem(this.#storeKeyName);
 		if (!raw)
@@ -335,10 +337,6 @@ class MessagesRingBufferStore {
 		}
 	}
 
-	/**
-	 * Serialize string messages array to store
-	 * @param {array} msgArr array of messages
-	 */
 	#serializeMessagesToStore(msgArr) {
 		const struct = {
 			conversationHash: this.#conversationHash,
@@ -348,35 +346,28 @@ class MessagesRingBufferStore {
 		this.#store.setItem(this.#storeKeyName, raw);
 	}
 
-	/**
-	 * Create new message entry and displays it in parent control
-	 * @param {string} control html element of parent list for messages
-	 * @param {string} message body/content
-	 * @param {boolean} isMine is the message mine or opponent
-	 * @returns {Element} last added list item
-	 */
-	#createMessageEntry(control, message, isMine) {
+	#createMessageEntry(control, message, isMine, bIsPlayingWithRed, elPlayer1Name, elPlayer2Name) {
 		let userName, colorClass;
 		const li = document.createElement("li");
 		const span = document.createElement("span");
 		if (isMine) {
-			if (this.#gameObject.m_bIsPlayingWithRed) {
-				userName = this.#gameObject.m_Player1Name.textContent;
+			if (bIsPlayingWithRed) {
+				userName = elPlayer1Name.textContent;
 				colorClass = 'red';
 			}
 			else {
-				userName = this.#gameObject.m_Player2Name.textContent;
+				userName = elPlayer2Name.textContent;
 				colorClass = 'blue';
 			}
 			li.className = "text-end py-1";
 		}
 		else {
-			if (this.#gameObject.m_bIsPlayingWithRed) {
-				userName = this.#gameObject.m_Player2Name.textContent;
+			if (bIsPlayingWithRed) {
+				userName = elPlayer2Name.textContent;
 				colorClass = 'blue';
 			}
 			else {
-				userName = this.#gameObject.m_Player1Name.textContent;
+				userName = elPlayer1Name.textContent;
 				colorClass = 'red';
 			}
 			li.className = "text-start py-1";
@@ -392,10 +383,14 @@ class MessagesRingBufferStore {
 
 	/**
 	 * Append message to ring buffer and display it regularly on list
-	 * @param {*} message text of user massage to add
-	 * @param {*} isMineMessage is message from me or opponent
+	 * @param {string} message text of user massage to add
+	 * @param {boolean} isMineMessage is message from me or opponent
+	 * @param {string} sMsgListSel name of parent list element to add messages to
+	 * @param {boolean} bIsPlayingWithRed playing color of player
+	 * @param {Element} elPlayer1Name P1 element holding name
+	 * @param {Element} elPlayer2Name P2 element holding name
 	 */
-	Append(message, isMineMessage) {
+	Append(message, isMineMessage, sMsgListSel, bIsPlayingWithRed, elPlayer1Name, elPlayer2Name) {
 		const msgs = this.#deserializeStoreToMessages();
 		msgs.push({
 			msg: message, mine: isMineMessage
@@ -405,24 +400,33 @@ class MessagesRingBufferStore {
 
 		this.#serializeMessagesToStore(msgs);
 
-		const control = document.querySelector(this.#gameObject.m_sMsgListSel);
-		const last_li = this.#createMessageEntry(control, message, isMineMessage);
+		const control = document.querySelector(sMsgListSel);
+		const last_li = this.#createMessageEntry(control, message, isMineMessage,
+			bIsPlayingWithRed, elPlayer1Name, elPlayer2Name);
 		last_li.scrollIntoView();
 	}
 
 	/**
 	 * Restores messages from ring buffer in storage (if any) and displays it on screen
+	 * @param {string} sMsgListSel name of parent list element to add messages to
+	 * @param {integer} iPlayerID this player id
+	 * @param {integer} iOtherPlayerId other player id
+	 * @param {boolean} bIsPlayingWithRed playing color of player
+	 * @param {Element} elPlayer1Name P1 element holding name
+	 * @param {Element} elPlayer2Name P2 element holding name
 	 */
-	RestoreMessages() {
-		if (this.#gameObject.g_iPlayerID && this.#gameObject.m_iOtherPlayerId)
-			this.#conversationHash = `${this.#gameObject.g_iPlayerID}_${this.#gameObject.m_iOtherPlayerId}`;
+	RestoreMessages(sMsgListSel, iPlayerID, iOtherPlayerId, bIsPlayingWithRed, elPlayer1Name, elPlayer2Name) {
+		if (iPlayerID && iOtherPlayerId)
+			this.#conversationHash = `${iPlayerID}_${iOtherPlayerId}`;
 		else
 			this.#conversationHash = null;
 
 		const msgs = this.#deserializeStoreToMessages();
-		const control = document.querySelector(this.#gameObject.m_sMsgListSel);
+		const control = document.querySelector(sMsgListSel);
 		if (control) {
-			msgs.forEach(({ msg, mine }) => this.#createMessageEntry(control, msg, mine));
+			msgs.forEach(({ msg, mine }) =>
+				this.#createMessageEntry(control, msg, mine, bIsPlayingWithRed, elPlayer1Name, elPlayer2Name)
+			);
 		}
 	}
 }
@@ -459,6 +463,7 @@ function RandomColor() {
 	return '#' + Math.floor(Math.random() * 16777215).toString(16);
 }
 
+/* Old code
 Function.prototype.callAsWorker = function (context, args) {
 	return new Promise((resolve, reject) => {
 		const code = `
@@ -476,8 +481,77 @@ self.onmessage = async function (e) {
 		worker.postMessage(args);
 	});
 };
+*/
 
 class InkBallGame {
+	#SignalRConnection;
+	#MessagesRingBufferStore;
+	#iGameID;
+	#iPlayerID;
+	#iOtherPlayerId;
+	#iDelayBetweenMultiCaptures;
+	#iTooLong2Duration;
+	#iSlowdownLevel;
+	#iGridWidth;
+	#iGridHeight;
+	#iGridSpacingX;
+	#iGridSpacingY;
+	#iLastX;
+	#iLastY;
+	#iMouseX;
+	#iMouseY;
+	#iPosX;
+	#iPosY;
+	#bIsCPUGame;
+	#bIsWon;
+	#bPointsAndPathsLoaded;
+	#Timer;
+	#ReconnectTimer;
+	#WaitStartTime;
+	#TimerOpts;
+	#LineStrokeWidth;
+	#Screen;
+	#spDebug;
+	#Player1Name;
+	#Player2Name;
+	#SurrenderButton;
+	#sMsgInputSel;
+	#sMsgSendButtonSel;
+	#sMsgListSel;
+	#CancelPath;
+	#StopAndDraw;
+	#bMouseDown;
+	#bHandlingEvent;
+	#bDrawLines;
+	#sMessage;
+	#bIsPlayingWithRed;
+	#bIsPlayerActive;
+	#GameStatus;
+	#sDotColor;
+	#Line;
+	#Lines;
+	#Points;
+	#bViewOnly;
+	#MouseCursorOval;
+	#ApplicationUserSettings;
+	#sLastMoveGameTimeStamp;
+	#sVersion;
+	#Worker;
+	#rAF_StartTimeStamp;
+	#rAF_FrameID;
+	#workingCyclePolyLine;
+	#lastCycle;
+	#AIMethod;
+	#COLOR_RED;
+	#COLOR_BLUE;
+	#COLOR_OWNED_RED;
+	#COLOR_OWNED_BLUE;
+	#DRAWING_PATH_COLOR;
+	#iConnErrCount;
+	#iExponentialBackOffMillis;
+	#GameType;
+	#CursorPos;
+	#SvgVml;
 
 	/**
 	 * InkBallGame constructor
@@ -499,113 +573,113 @@ class InkBallGame {
 	constructor(iGameID, iPlayerID, iOtherPlayerID, sHubName, loggingLevel, hubProtocol, transportType,
 		serverTimeoutInMilliseconds, gameType, bIsPlayingWithRed = true, bIsPlayerActive = true, bViewOnly = false,
 		pathAfterPointDrawAllowanceSecAmount = 60, iTooLong2Duration = 125) {
-		this.g_iGameID = iGameID;
-		this.g_iPlayerID = iPlayerID;
-		this.m_iOtherPlayerId = iOtherPlayerID;
-		this.m_bIsCPUGame = this.m_iOtherPlayerId === -1;
-		this.GameType = GameTypeEnum[gameType];
-		this.iConnErrCount = 0;
-		this.iExponentialBackOffMillis = 2000;
-		this.COLOR_RED = 'var(--redish)';
-		this.COLOR_BLUE = 'var(--bluish)';
-		this.COLOR_OWNED_RED = 'var(--owned_by_red)';
-		this.COLOR_OWNED_BLUE = 'var(--owned_by_blue)';
-		this.DRAWING_PATH_COLOR = "var(--path_draw)";
-		this.m_bIsWon = false;
-		this.m_bPointsAndPathsLoaded = false;
-		this.m_iDelayBetweenMultiCaptures = 4000;
-		this.m_iTooLong2Duration = iTooLong2Duration/*125*/;
-		this.m_Timer = null;
-		this.m_ReconnectTimer = null;
-		this.m_WaitStartTime = null;
-		this.m_TimerOpts = {
+		this.#iGameID = iGameID;
+		this.#iPlayerID = iPlayerID;
+		this.#iOtherPlayerId = iOtherPlayerID;
+		this.#bIsCPUGame = this.#iOtherPlayerId === -1;
+		this.#GameType = GameTypeEnum[gameType];
+		this.#iConnErrCount = 0;
+		this.#iExponentialBackOffMillis = 2000;
+		this.#COLOR_RED = 'var(--redish)';
+		this.#COLOR_BLUE = 'var(--bluish)';
+		this.#COLOR_OWNED_RED = 'var(--owned_by_red)';
+		this.#COLOR_OWNED_BLUE = 'var(--owned_by_blue)';
+		this.#DRAWING_PATH_COLOR = "var(--path_draw)";
+		this.#bIsWon = false;
+		this.#bPointsAndPathsLoaded = false;
+		this.#iDelayBetweenMultiCaptures = 4000;
+		this.#iTooLong2Duration = iTooLong2Duration/*125*/;
+		this.#Timer = null;
+		this.#ReconnectTimer = null;
+		this.#WaitStartTime = null;
+		this.#TimerOpts = {
 			countdownSeconds: pathAfterPointDrawAllowanceSecAmount,
 			labelSelector: "#debug2",
 			initialStart: true,
 			countdownReachedHandler: this.CountDownReachedHandler.bind(this)
 		};
-		this.m_iSlowdownLevel = 0;
-		this.m_iGridWidth = 0;
-		this.m_iGridHeight = 0;
-		this.m_iGridSpacingX = 0;
-		this.m_iGridSpacingY = 0;
-		// this.m_PointRadius = "var(--point_radius)";
-		this.m_LineStrokeWidth = 0;
-		this.m_iLastX = -1;
-		this.m_iLastY = -1;
-		this.m_iMouseX = 0;
-		this.m_iMouseY = 0;
-		this.m_iPosX = 0;
-		this.m_iPosY = 0;
-		this.m_Screen = null;
-		this.m_Debug = null;
-		this.m_Player1Name = null;
-		this.m_Player2Name = null;
-		this.m_SurrenderButton = null;
-		this.m_sMsgInputSel = null;
-		this.m_sMsgSendButtonSel = null;
-		this.m_sMsgListSel = null;
-		this.m_CancelPath = null;
-		this.m_StopAndDraw = null;
-		this.m_bMouseDown = false;
-		this.m_bHandlingEvent = false;
-		this.m_bDrawLines = !true;
-		this.m_sMessage = '';
-		this.m_bIsPlayingWithRed = bIsPlayingWithRed;
-		this.m_bIsPlayerActive = bIsPlayerActive;
-		this.m_sDotColor = this.m_bIsPlayingWithRed ? this.COLOR_RED : this.COLOR_BLUE;
-		this.SvgVml = null;
-		this.m_Line = null;
-		this.m_Lines = null;
-		this.m_Points = null;
-		this.m_bViewOnly = bViewOnly;
-		this.m_MouseCursorOval = null;
-		this.CursorPos = { x: -1, y: -1 };
-		this.m_ApplicationUserSettings = null;
-		this.m_sLastMoveGameTimeStamp = null;
-		this.m_sVersion = null;
-		this.m_Worker = null;
+		this.#iSlowdownLevel = 0;
+		this.#iGridWidth = 0;
+		this.#iGridHeight = 0;
+		this.#iGridSpacingX = 0;
+		this.#iGridSpacingY = 0;
+		// this.#PointRadius = "var(--point_radius)";
+		this.#LineStrokeWidth = 0;
+		this.#iLastX = -1;
+		this.#iLastY = -1;
+		this.#iMouseX = 0;
+		this.#iMouseY = 0;
+		this.#iPosX = 0;
+		this.#iPosY = 0;
+		this.#Screen = null;
+		this.#spDebug = null;
+		this.#Player1Name = null;
+		this.#Player2Name = null;
+		this.#SurrenderButton = null;
+		this.#sMsgInputSel = null;
+		this.#sMsgSendButtonSel = null;
+		this.#sMsgListSel = null;
+		this.#CancelPath = null;
+		this.#StopAndDraw = null;
+		this.#bMouseDown = false;
+		this.#bHandlingEvent = false;
+		this.#bDrawLines = !true;
+		this.#sMessage = '';
+		this.#bIsPlayingWithRed = bIsPlayingWithRed;
+		this.#bIsPlayerActive = bIsPlayerActive;
+		this.#sDotColor = this.#bIsPlayingWithRed ? this.#COLOR_RED : this.#COLOR_BLUE;
+		this.#SvgVml = null;
+		this.#Line = null;
+		this.#Lines = null;
+		this.#Points = null;
+		this.#bViewOnly = bViewOnly;
+		this.#MouseCursorOval = null;
+		this.#CursorPos = { x: -1, y: -1 };
+		this.#ApplicationUserSettings = null;
+		this.#sLastMoveGameTimeStamp = null;
+		this.#sVersion = null;
+		this.#Worker = null;
 
 		if (sHubName === null || sHubName === "") return;
 
-		this.g_SignalRConnection = new signalR.HubConnectionBuilder()
+		this.#SignalRConnection = new signalR.HubConnectionBuilder()
 			.withUrl(sHubName, {
 				transport: transportType,
 				accessTokenFactory: function () {
-					return `iGameID=${this.g_iGameID}&iPlayerID=${this.g_iPlayerID}`;
+					return `iGameID=${this.#iGameID}&iPlayerID=${this.#iPlayerID}`;
 				}.bind(this)
 			})
 			.withHubProtocol(hubProtocol)
 			.configureLogging(loggingLevel)
 			.build();
-		this.g_SignalRConnection.serverTimeoutInMilliseconds = serverTimeoutInMilliseconds;
+		this.#SignalRConnection.serverTimeoutInMilliseconds = serverTimeoutInMilliseconds;
 
 
-		this.g_SignalRConnection.onclose(async (err) => {
+		this.#SignalRConnection.onclose(async (err) => {
 			if (err !== null && err !== undefined) {
 				LocalError(err);
 
-				this.m_Screen.style.cursor = "not-allowed";
-				this.iConnErrCount++;
-				setTimeout(() => this.Connect(), 4000 +
-					(this.iExponentialBackOffMillis * Math.max(this.iConnErrCount, 5))//exponential back-off
+				this.#Screen.style.cursor = "not-allowed";
+				this.#iConnErrCount++;
+				setTimeout(() => this.#Connect(), 4000 +
+					(this.#iExponentialBackOffMillis * Math.max(this.#iConnErrCount, 5))//exponential back-off
 				);
 			}
 		});
 	}
 
-	async GetPlayerPointsAndPaths() {
-		if (this.m_bPointsAndPathsLoaded === false) {
-			const ppDTO = await this.g_SignalRConnection.invoke("GetPlayerPointsAndPaths", this.m_bViewOnly, this.g_iGameID);
+	async #GetPlayerPointsAndPaths() {
+		if (this.#bPointsAndPathsLoaded === false) {
+			const ppDTO = await this.#SignalRConnection.invoke("GetPlayerPointsAndPaths", this.#bViewOnly, this.#iGameID);
 			//LocalLog(ppDTO);
 
 			const path_and_point = PlayerPointsAndPathsDTO.Deserialize(ppDTO);
 			if (path_and_point.Points !== undefined)
-				await this.SetAllPoints(path_and_point.Points);
+				await this.#SetAllPoints(path_and_point.Points);
 			if (path_and_point.Paths !== undefined)
-				await this.SetAllPaths(path_and_point.Paths);
+				await this.#SetAllPaths(path_and_point.Paths);
 
-			this.m_bPointsAndPathsLoaded = true;
+			this.#bPointsAndPathsLoaded = true;
 
 			return true;
 		}
@@ -613,15 +687,15 @@ class InkBallGame {
 			return false;
 	}
 
-	async Connect() {
+	async #Connect() {
 		try {
-			await this.g_SignalRConnection.start();
-			this.iConnErrCount = 0;
-			LocalLog('connected; iConnErrCount = ' + this.iConnErrCount);
+			await this.#SignalRConnection.start();
+			this.#iConnErrCount = 0;
+			LocalLog('connected; iConnErrCount = ' + this.#iConnErrCount);
 
-			if (this.m_bViewOnly === false) {
+			if (this.#bViewOnly === false) {
 				if (sessionStorage.getItem("ApplicationUserSettings") === null) {
-					let settings = await this.g_SignalRConnection.invoke("GetUserSettings");
+					let settings = await this.#SignalRConnection.invoke("GetUserSettings");
 					if (settings) {
 						LocalLog(settings);
 						settings = ApplicationUserSettings.Deserialize(settings);
@@ -629,39 +703,39 @@ class InkBallGame {
 
 						sessionStorage.setItem("ApplicationUserSettings", to_store);
 					}
-					this.m_ApplicationUserSettings = new ApplicationUserSettings(settings);
+					this.#ApplicationUserSettings = new ApplicationUserSettings(settings);
 
-					await this.GetPlayerPointsAndPaths();
+					await this.#GetPlayerPointsAndPaths();
 				}
 				else {
 					const json = sessionStorage.getItem("ApplicationUserSettings");
 					const settings = ApplicationUserSettings.Deserialize(json);
 
-					this.m_ApplicationUserSettings = new ApplicationUserSettings(settings);
+					this.#ApplicationUserSettings = new ApplicationUserSettings(settings);
 				}
 			}
-			if (this.m_bPointsAndPathsLoaded === false) {
-				await this.GetPlayerPointsAndPaths();
+			if (this.#bPointsAndPathsLoaded === false) {
+				await this.#GetPlayerPointsAndPaths();
 			}
-			if (this.m_ApplicationUserSettings !== null && this.m_ApplicationUserSettings.DesktopNotifications === true) {
-				this.SetupNotifications();
+			if (this.#ApplicationUserSettings !== null && this.#ApplicationUserSettings.DesktopNotifications === true) {
+				this.#SetupNotifications();
 			}
 
-			if (true === this.m_bIsCPUGame && !this.m_bIsPlayerActive)
-				this.StartCPUCalculation();
+			if (true === this.#bIsCPUGame && !this.#bIsPlayerActive)
+				this.#StartCPUCalculation();
 		}
 		catch (err) {
-			LocalError(err + '; iConnErrCount = ' + this.iConnErrCount);
+			LocalError(err + '; iConnErrCount = ' + this.#iConnErrCount);
 
-			this.m_Screen.style.cursor = "not-allowed";
-			this.iConnErrCount++;
-			setTimeout(() => this.Connect(), 4000 +
-				(this.iExponentialBackOffMillis * Math.max(this.iConnErrCount, 5))//exponential back-off
+			this.#Screen.style.cursor = "not-allowed";
+			this.#iConnErrCount++;
+			setTimeout(() => this.#Connect(), 4000 +
+				(this.#iExponentialBackOffMillis * Math.max(this.#iConnErrCount, 5))//exponential back-off
 			);
 		}
 	}
 
-	SetupNotifications() {
+	#SetupNotifications() {
 		if (!window.Notification) {
 			LocalLog('Browser does not support notifications.');
 			return false;
@@ -689,8 +763,8 @@ class InkBallGame {
 		}
 	}
 
-	NotifyBrowser(title = 'Hi there!', body = 'How are you doing?') {
-		if (!document.hidden || this?.m_ApplicationUserSettings?.DesktopNotifications !== true)
+	#NotifyBrowser(title = 'Hi there!', body = 'How are you doing?') {
+		if (!document.hidden || this.#ApplicationUserSettings === null || this.#ApplicationUserSettings?.DesktopNotifications !== true)
 			return false;
 
 		if (!window.Notification) {
@@ -735,46 +809,46 @@ class InkBallGame {
 	 * @param {boolean} loadPointsAndPathsFromSignalR load points and path through SignalR
 	 */
 	async StartSignalRConnection(loadPointsAndPathsFromSignalR) {
-		if (this.g_SignalRConnection === null) return Promise.reject(new Error("signalr conn is null"));
-		//this.m_bIsCPUGame = this.m_iOtherPlayerId === -1;
-		if (false === this.m_bPointsAndPathsLoaded)
-			this.m_bPointsAndPathsLoaded = !loadPointsAndPathsFromSignalR;
+		if (this.#SignalRConnection === null) return Promise.reject(new Error("signalr conn is null"));
+		//this.#bIsCPUGame = this.#iOtherPlayerId === -1;
+		if (false === this.#bPointsAndPathsLoaded)
+			this.#bPointsAndPathsLoaded = !loadPointsAndPathsFromSignalR;
 
-		this.g_SignalRConnection.on("ServerToClientPoint", async function (point) {
-			if (this.g_iPlayerID !== point.iPlayerId) {
-				const user = this.m_bIsPlayingWithRed ? this.m_Player2Name.textContent : this.m_Player1Name.textContent;
+		this.#SignalRConnection.on("ServerToClientPoint", async function (point) {
+			if (this.#iPlayerID !== point.iPlayerId) {
+				const user = this.#bIsPlayingWithRed ? this.#Player2Name.textContent : this.#Player1Name.textContent;
 				let encodedMsg = InkBallPointViewModel.Format(user, point);
 
-				if (this?.m_ApplicationUserSettings?.ShowChatNotifications === true) {
+				if (this.#ApplicationUserSettings !== null && this.#ApplicationUserSettings?.ShowChatNotifications === true) {
 					const li = document.createElement("li");
 					li.textContent = encodedMsg;
 					li.style = "font-style:italic";
-					document.querySelector(this.m_sMsgListSel).appendChild(li);
+					document.querySelector(this.#sMsgListSel).appendChild(li);
 				}
 
-				this.NotifyBrowser('New Point', encodedMsg);
+				this.#NotifyBrowser('New Point', encodedMsg);
 			}
-			await this.ReceivedPointProcessing(point);
+			await this.#ReceivedPointProcessing(point);
 
 		}.bind(this));
 
-		this.g_SignalRConnection.on("ServerToClientPath", function (dto) {
+		this.#SignalRConnection.on("ServerToClientPath", function (dto) {
 			if (Object.prototype.hasOwnProperty.call(dto, 'PointsAsString') || Object.prototype.hasOwnProperty.call(dto, 'pointsAsString')) {
 				let path = dto;
-				if (this.g_iPlayerID !== path.iPlayerId) {
-					const user = this.m_bIsPlayingWithRed ? this.m_Player2Name.textContent : this.m_Player1Name.textContent;
+				if (this.#iPlayerID !== path.iPlayerId) {
+					const user = this.#bIsPlayingWithRed ? this.#Player2Name.textContent : this.#Player1Name.textContent;
 					const encodedMsg = InkBallPathViewModel.Format(user, path);
 
-					if (this?.m_ApplicationUserSettings?.ShowChatNotifications === true) {
+					if (this.#ApplicationUserSettings !== null && this.#ApplicationUserSettings?.ShowChatNotifications === true) {
 						const li = document.createElement("li");
 						li.textContent = encodedMsg;
 						li.style = "font-style:italic";
-						document.querySelector(this.m_sMsgListSel).appendChild(li);
+						document.querySelector(this.#sMsgListSel).appendChild(li);
 					}
 
-					this.NotifyBrowser('New Path', encodedMsg);
+					this.#NotifyBrowser('New Path', encodedMsg);
 				}
-				this.ReceivedPathProcessing(path);
+				this.#ReceivedPathProcessing(path);
 			}
 			else if (Object.prototype.hasOwnProperty.call(dto, 'WinningPlayerId') || Object.prototype.hasOwnProperty.call(dto, 'winningPlayerId')) {
 				let win = dto;
@@ -782,46 +856,46 @@ class InkBallGame {
 
 				let li = document.createElement("li");
 				li.textContent = encodedMsg;
-				document.querySelector(this.m_sMsgListSel).appendChild(li);
+				document.querySelector(this.#sMsgListSel).appendChild(li);
 
-				this.ReceivedWinProcessing(win);
-				this.NotifyBrowser('We have a winner', encodedMsg);
+				this.#ReceivedWinProcessing(win);
+				this.#NotifyBrowser('We have a winner', encodedMsg);
 			}
 			else
 				throw new Error("ServerToClientPath bad GetKind!");
 
 		}.bind(this));
 
-		this.g_SignalRConnection.on("ServerToClientPlayerJoin", function (join) {
+		this.#SignalRConnection.on("ServerToClientPlayerJoin", function (join) {
 			const iOtherPlayerId = join.OtherPlayerId || join.otherPlayerId;
-			this.m_iOtherPlayerId = iOtherPlayerId;
+			this.#iOtherPlayerId = iOtherPlayerId;
 			const encodedMsg = PlayerJoiningCommand.Format(join);
 
-			document.querySelector('.msgchat').dataset.otherplayerid = this.m_iOtherPlayerId;
+			document.querySelector('.msgchat').dataset.otherplayerid = this.#iOtherPlayerId;
 
 			const li = document.createElement("li");
 			const strong = document.createElement("strong");
 			strong.classList.add('text-primary');
 			strong.textContent = encodedMsg;
 			li.appendChild(strong);
-			document.querySelector(this.m_sMsgListSel).appendChild(li);
+			document.querySelector(this.#sMsgListSel).appendChild(li);
 
-			if (this.m_SurrenderButton !== null) {
+			if (this.#SurrenderButton !== null) {
 				if (join.OtherPlayerName !== '') {
-					this.m_Player2Name.textContent = join.OtherPlayerName || join.otherPlayerName;
-					this.m_SurrenderButton.value = 'surrender';
-					this.ShowStatus('Your move');
+					this.#Player2Name.textContent = join.OtherPlayerName || join.otherPlayerName;
+					this.#SurrenderButton.value = 'surrender';
+					this.#ShowStatus('Your move');
 				}
 			}
 
-			this.m_MessagesRingBufferStore.RestoreMessages();
+			this.#MessagesRingBufferStore.RestoreMessages(this.#sMsgListSel, this.#iPlayerID, this.#iOtherPlayerId, this.#bIsPlayingWithRed, this.#Player1Name, this.#Player2Name);
 
-			this.NotifyBrowser('Player joining', encodedMsg);
+			this.#NotifyBrowser('Player joining', encodedMsg);
 
-			this.m_bHandlingEvent = false;
+			this.#bHandlingEvent = false;
 		}.bind(this));
 
-		this.g_SignalRConnection.on("ServerToClientPlayerSurrender", function (surrender) {
+		this.#SignalRConnection.on("ServerToClientPlayerSurrender", function (surrender) {
 
 			let encodedMsg = PlayerSurrenderingCommand.Format(surrender);
 
@@ -830,21 +904,21 @@ class InkBallGame {
 			strong.classList.add('text-warning');
 			strong.textContent = encodedMsg;
 			li.appendChild(strong);
-			document.querySelector(this.m_sMsgListSel).appendChild(li);
+			document.querySelector(this.#sMsgListSel).appendChild(li);
 
 
-			this.m_bHandlingEvent = false;
+			this.#bHandlingEvent = false;
 			encodedMsg = encodedMsg === '' ? 'Game interrupted!' : encodedMsg;
-			this.NotifyBrowser('Game interruption', encodedMsg);
+			this.#NotifyBrowser('Game interruption', encodedMsg);
 			SHRD.LocalAlert(encodedMsg, 'Game interruption', () => {
 				window.location.href = "GamesList";
 			});
 		}.bind(this));
 
-		this.g_SignalRConnection.on("ServerToClientPlayerWin", function (win) {
+		this.#SignalRConnection.on("ServerToClientPlayerWin", function (win) {
 			const encodedMsg = WinCommand.Format(win);
 
-			const msg_lst = document.querySelector(this.m_sMsgListSel);
+			const msg_lst = document.querySelector(this.#sMsgListSel);
 			if (msg_lst !== null) {
 				const li = document.createElement("li");
 				const strong = document.createElement("strong");
@@ -854,25 +928,26 @@ class InkBallGame {
 				msg_lst.appendChild(li);
 			}
 
-			this.ReceivedWinProcessing(win);
-			this.NotifyBrowser('We have a winner', encodedMsg);
+			this.#ReceivedWinProcessing(win);
+			this.#NotifyBrowser('We have a winner', encodedMsg);
 
 		}.bind(this));
 
-		this.g_SignalRConnection.on("ServerToClientPing", function (ping) {
-			const userName = this.m_bIsPlayingWithRed ? this.m_Player2Name.textContent : this.m_Player1Name.textContent;
+		this.#SignalRConnection.on("ServerToClientPing", function (ping) {
+			const userName = this.#bIsPlayingWithRed ? this.#Player2Name.textContent : this.#Player1Name.textContent;
 			const encodedMsg = PingCommand.Format(userName, ping);
 
-			this.m_MessagesRingBufferStore.Append(encodedMsg, false);
+			this.#MessagesRingBufferStore.Append(encodedMsg, false, this.#sMsgListSel, this.#bIsPlayingWithRed,
+				this.#Player1Name, this.#Player2Name);
 
-			this.NotifyBrowser('User Message', encodedMsg);
+			this.#NotifyBrowser('User Message', encodedMsg);
 
 		}.bind(this));
 
-		this.g_SignalRConnection.on("ServerToClientOtherPlayerDisconnected", function (sMsg) {
+		this.#SignalRConnection.on("ServerToClientOtherPlayerDisconnected", function (sMsg) {
 			const opts = {
 				countdownSeconds: 5,
-				//labelSelector: "#debug2",
+				labelSelector: null,
 				initialStart: true,
 				countdownReachedHandler: function () {
 					const encodedMsg = sMsg;
@@ -881,22 +956,22 @@ class InkBallGame {
 					strong.classList.add('text-warning');
 					strong.textContent = encodedMsg;
 					li.appendChild(strong);
-					document.querySelector(this.m_sMsgListSel).appendChild(li);
+					document.querySelector(this.#sMsgListSel).appendChild(li);
 
-					this.NotifyBrowser('User disconnected', encodedMsg);
-					this.m_ReconnectTimer = null;
+					this.#NotifyBrowser('User disconnected', encodedMsg);
+					this.#ReconnectTimer = null;
 				}.bind(this)
 			};
-			if (this.m_ReconnectTimer)
-				this.m_ReconnectTimer.Reset(opts);
+			if (this.#ReconnectTimer)
+				this.#ReconnectTimer.Reset(opts);
 			else
-				this.m_ReconnectTimer = new CountdownTimer(opts);
+				this.#ReconnectTimer = new CountdownTimer(opts);
 		}.bind(this));
 
-		this.g_SignalRConnection.on("ServerToClientOtherPlayerConnected", function (sMsg) {
-			if (this.m_ReconnectTimer) {
-				this.m_ReconnectTimer.Stop();
-				this.m_ReconnectTimer = null;
+		this.#SignalRConnection.on("ServerToClientOtherPlayerConnected", function (sMsg) {
+			if (this.#ReconnectTimer) {
+				this.#ReconnectTimer.Stop();
+				this.#ReconnectTimer = null;
 			}
 			else {
 				const encodedMsg = sMsg;
@@ -905,17 +980,17 @@ class InkBallGame {
 				strong.classList.add('text-primary');
 				strong.textContent = encodedMsg;
 				li.appendChild(strong);
-				document.querySelector(this.m_sMsgListSel).appendChild(li);
+				document.querySelector(this.#sMsgListSel).appendChild(li);
 
-				this.NotifyBrowser('User connected', encodedMsg);
-				this.m_ReconnectTimer = null;
+				this.#NotifyBrowser('User connected', encodedMsg);
+				this.#ReconnectTimer = null;
 			}
 		}.bind(this));
 
-		this.g_SignalRConnection.on("ServerToClientStopAndDraw", function (cmd) {
+		this.#SignalRConnection.on("ServerToClientStopAndDraw", function (cmd) {
 			if (!cmd) return;
 
-			const user = this.m_bIsPlayingWithRed ? this.m_Player2Name.textContent : this.m_Player1Name.textContent;
+			const user = this.#bIsPlayingWithRed ? this.#Player2Name.textContent : this.#Player1Name.textContent;
 			const encodedMsg = StopAndDrawCommand.Format(user);
 
 			const li = document.createElement("li");
@@ -923,56 +998,56 @@ class InkBallGame {
 			strong.classList.add('text-info');
 			strong.textContent = encodedMsg;
 			li.appendChild(strong);
-			document.querySelector(this.m_sMsgListSel).appendChild(li);
+			document.querySelector(this.#sMsgListSel).appendChild(li);
 
-			this.NotifyBrowser('User ' + user + ' started drawing new path', encodedMsg);
+			this.#NotifyBrowser('User ' + user + ' started drawing new path', encodedMsg);
 		}.bind(this));
 
-		if (false === this.m_bIsCPUGame) {
-			document.querySelector(this.m_sMsgSendButtonSel).addEventListener("click", async function (event) {
+		if (false === this.#bIsCPUGame) {
+			document.querySelector(this.#sMsgSendButtonSel).addEventListener("click", async function (event) {
 				event.preventDefault();
 
-				const encodedMsg = document.querySelector(this.m_sMsgInputSel).value.trim();
+				const encodedMsg = document.querySelector(this.#sMsgInputSel).value.trim();
 				if (encodedMsg === '') return;
 
 				let ping = new PingCommand(encodedMsg);
 
-				await this.SendData(ping);
+				await this.#SendData(ping);
 
 			}.bind(this), false);
 
 			// Execute a function when the user releases a key on the keyboard
-			document.querySelector(this.m_sMsgInputSel).addEventListener("keyup", function (event) {
+			document.querySelector(this.#sMsgInputSel).addEventListener("keyup", function (event) {
 				event.preventDefault();// Cancel the default action, if needed
 
 				if (event.keyCode === 13) {// Number 13 is the "Enter" key on the keyboard
 					// Trigger the button element with a click
-					document.querySelector(this.m_sMsgSendButtonSel).click();
+					document.querySelector(this.#sMsgSendButtonSel).click();
 				}
 			}.bind(this), false);
 		}
 
-		return this.Connect();
+		return this.#Connect();
 	}
 
 	StopSignalRConnection() {
-		if (this.g_SignalRConnection !== null) {
-			this.g_SignalRConnection.stop();
+		if (this.#SignalRConnection !== null) {
+			this.#SignalRConnection.stop();
 
 			//cleanup
-			if (this.m_ReconnectTimer)
-				this.m_ReconnectTimer.Stop();
-			if (this.m_Timer)
-				this.m_Timer.Stop();
+			if (this.#ReconnectTimer)
+				this.#ReconnectTimer.Stop();
+			if (this.#Timer)
+				this.#Timer.Stop();
 
 			LocalLog('Stopped SignalR connection');
 		}
 	}
 
-	Debug(...args) {
+	#Debug(...args) {
 		switch (args.length) {
 			case 1:
-				this.m_Debug.textContent = args[0];
+				this.#spDebug.textContent = args[0];
 				break;
 			case 2:
 				{
@@ -993,49 +1068,49 @@ class InkBallGame {
 		}
 	}
 
-	async SetPoint(iX, iY, iStatus, iPlayerId) {
-		if (await this.m_Points.has(iY * this.m_iGridWidth + iX))
+	async #SetPoint(iX, iY, iStatus, iPlayerId) {
+		if (await this.#Points.has(iY * this.#iGridWidth + iX))
 			return;
 
 		const x = iX;
 		const y = iY;
 
-		const oval = this.SvgVml.CreateOval(/* this.m_PointRadius */);
+		const oval = this.#SvgVml.CreateOval(/* this.#PointRadius */);
 		oval.move(x, y);
 
 		let color;
 		switch (iStatus) {
 			case StatusEnum.POINT_FREE_RED:
-				color = this.COLOR_RED;
+				color = this.#COLOR_RED;
 				oval.SetStatus(iStatus/*StatusEnum.POINT_FREE*/);
 				break;
 			case StatusEnum.POINT_FREE_BLUE:
-				color = this.COLOR_BLUE;
+				color = this.#COLOR_BLUE;
 				oval.SetStatus(iStatus/*StatusEnum.POINT_FREE*/);
 				break;
 			case StatusEnum.POINT_FREE:
-				color = this.m_sDotColor;
+				color = this.#sDotColor;
 				oval.SetStatus(iStatus/*StatusEnum.POINT_FREE*/);
 				//console.warn('TODO: generic FREE point, really? change it!');
 				break;
 			case StatusEnum.POINT_STARTING:
-				color = this.m_sDotColor;
+				color = this.#sDotColor;
 				oval.SetStatus(iStatus);
 				break;
 			case StatusEnum.POINT_IN_PATH:
-				if (this.g_iPlayerID === iPlayerId)//is this point mine?
-					color = this.m_bIsPlayingWithRed === true ? this.COLOR_RED : this.COLOR_BLUE;
+				if (this.#iPlayerID === iPlayerId)//is this point mine?
+					color = this.#bIsPlayingWithRed === true ? this.#COLOR_RED : this.#COLOR_BLUE;
 				else
-					color = this.m_bIsPlayingWithRed === true ? this.COLOR_BLUE : this.COLOR_RED;
+					color = this.#bIsPlayingWithRed === true ? this.#COLOR_BLUE : this.#COLOR_RED;
 				// oval.SetFillColor(color);
 				oval.SetStatus(iStatus);
 				break;
 			case StatusEnum.POINT_OWNED_BY_RED:
-				color = this.COLOR_OWNED_RED;
+				color = this.#COLOR_OWNED_RED;
 				oval.SetStatus(iStatus);
 				break;
 			case StatusEnum.POINT_OWNED_BY_BLUE:
-				color = this.COLOR_OWNED_BLUE;
+				color = this.#COLOR_OWNED_BLUE;
 				oval.SetStatus(iStatus);
 				break;
 			default:
@@ -1046,18 +1121,18 @@ class InkBallGame {
 		oval.SetFillColor(color);
 		// oval.SetStrokeColor(color);
 
-		await this.m_Points.set(iY * this.m_iGridWidth + iX, oval);
+		await this.#Points.set(iY * this.#iGridWidth + iX, oval);
 	}
 
-	GetGameStateForIndexedDb() {
+	#GetGameStateForIndexedDb() {
 		return {
-			iGameID: this.g_iGameID,
-			iPlayerID: this.g_iPlayerID,
-			iOtherPlayerId: this.m_iOtherPlayerId,
-			sLastMoveGameTimeStamp: this.m_sLastMoveGameTimeStamp,
-			bPointsAndPathsLoaded: this.m_bPointsAndPathsLoaded,
-			iGridWidth: this.m_iGridWidth,
-			iGridHeight: this.m_iGridHeight
+			iGameID: this.#iGameID,
+			iPlayerID: this.#iPlayerID,
+			iOtherPlayerId: this.#iOtherPlayerId,
+			sLastMoveGameTimeStamp: this.#sLastMoveGameTimeStamp,
+			bPointsAndPathsLoaded: this.#bPointsAndPathsLoaded,
+			iGridWidth: this.#iGridWidth,
+			iGridHeight: this.#iGridHeight
 		};
 	}
 
@@ -1069,46 +1144,42 @@ class InkBallGame {
 	 * @param {any} sColor color taken from IndexedDb
 	 * @returns {object} created oval/circle
 	 */
-	CreateScreenPointFromIndexedDb(iX, iY, iStatus, sColor) {
+	#CreateScreenPointFromIndexedDb(iX, iY, iStatus, sColor) {
 		const x = iX;
 		const y = iY;
 
-		const oval = this.SvgVml.CreateOval(/* this.m_PointRadius */);
+		const oval = this.#SvgVml.CreateOval(/* this.#PointRadius */);
 		oval.move(x, y);
 
 		let color;
 		switch (iStatus) {
 			case StatusEnum.POINT_FREE_RED:
-				color = this.COLOR_RED;
+				color = this.#COLOR_RED;
 				oval.SetStatus(iStatus/*StatusEnum.POINT_FREE*/);
 				break;
 			case StatusEnum.POINT_FREE_BLUE:
-				color = this.COLOR_BLUE;
+				color = this.#COLOR_BLUE;
 				oval.SetStatus(iStatus/*StatusEnum.POINT_FREE*/);
 				break;
 			case StatusEnum.POINT_FREE:
-				color = this.m_sDotColor;
+				color = this.#sDotColor;
 				oval.SetStatus(iStatus/*StatusEnum.POINT_FREE*/);
 				//console.warn('TODO: generic FREE point, really? change it!');
 				break;
 			case StatusEnum.POINT_STARTING:
-				color = this.m_sDotColor;
+				color = this.#sDotColor;
 				oval.SetStatus(iStatus);
 				break;
 			case StatusEnum.POINT_IN_PATH:
-				//if (this.g_iPlayerID === iPlayerId)//bPlayingWithRed
-				//	color = this.m_bIsPlayingWithRed === true ? this.COLOR_RED : this.COLOR_BLUE;
-				//else
-				//	color = this.m_bIsPlayingWithRed === true ? this.COLOR_BLUE : this.COLOR_RED;
 				color = sColor;
 				oval.SetStatus(iStatus);
 				break;
 			case StatusEnum.POINT_OWNED_BY_RED:
-				color = this.COLOR_OWNED_RED;
+				color = this.#COLOR_OWNED_RED;
 				oval.SetStatus(iStatus);
 				break;
 			case StatusEnum.POINT_OWNED_BY_BLUE:
-				color = this.COLOR_OWNED_BLUE;
+				color = this.#COLOR_OWNED_BLUE;
 				oval.SetStatus(iStatus);
 				break;
 			default:
@@ -1122,7 +1193,7 @@ class InkBallGame {
 		return oval;
 	}
 
-	async SetAllPoints(points) {
+	async #SetAllPoints(points) {
 		//Un-Minimize amount of data transported on the wire through SignalR or on the page: status field
 		function DataUnMinimizerStatus(status) { return status - 3; }
 
@@ -1130,18 +1201,18 @@ class InkBallGame {
 		function DataUnMinimizerPlayerId(playerId) { return playerId - 1; }
 
 		try {
-			await this.m_Points.BeginBulkStorage();
+			await this.#Points.BeginBulkStorage();
 
 			for (const [x, y, Status, iPlayerId] of points) {
-				await this.SetPoint(x, y, DataUnMinimizerStatus(Status), DataUnMinimizerPlayerId(iPlayerId));
+				await this.#SetPoint(x, y, DataUnMinimizerStatus(Status), DataUnMinimizerPlayerId(iPlayerId));
 			}
 		}
 		finally {
-			await this.m_Points.EndBulkStorage();
+			await this.#Points.EndBulkStorage();
 		}
 	}
 
-	async SetPath(packed, bIsRed, bBelong2ThisPlayer, iPathId = 0) {
+	async #SetPath(packed, bIsRed, bBelong2ThisPlayer, iPathId = 0) {
 		const sPoints = packed.split(" ");
 		let sDelimiter = "", sPathPoints = "", p = null, x, y,
 			status = StatusEnum.POINT_STARTING;
@@ -1149,7 +1220,7 @@ class InkBallGame {
 			p = pair.split(",");
 			x = parseInt(p[0]); y = parseInt(p[1]);
 
-			p = await this.m_Points.get(y * this.m_iGridWidth + x);
+			p = await this.#Points.get(y * this.#iGridWidth + x);
 			if (p !== null && p !== undefined) {
 				p.SetStatus(status);
 				status = StatusEnum.POINT_IN_PATH;
@@ -1161,7 +1232,7 @@ class InkBallGame {
 		p = sPoints[0].split(",");
 		x = parseInt(p[0]); y = parseInt(p[1]);
 
-		p = await this.m_Points.get(y * this.m_iGridWidth + x);
+		p = await this.#Points.get(y * this.#iGridWidth + x);
 		if (p !== null && p !== undefined) {
 			p.SetStatus(status);
 		}
@@ -1170,14 +1241,14 @@ class InkBallGame {
 			sPathPoints += `${sDelimiter}${x},${y}`;
 		}
 
-		const line = this.SvgVml.CreatePolyline(sPathPoints,
-			(bBelong2ThisPlayer ? this.m_sDotColor : (bIsRed ? this.COLOR_BLUE : this.COLOR_RED))
-			/* ,this.m_LineStrokeWidth */);
+		const line = this.#SvgVml.CreatePolyline(sPathPoints,
+			(bBelong2ThisPlayer ? this.#sDotColor : (bIsRed ? this.#COLOR_BLUE : this.#COLOR_RED))
+			/* ,this.#LineStrokeWidth */);
 		line.SetID(iPathId);
-		await this.m_Lines.push(line);
+		await this.#Lines.push(line);
 	}
 
-	async CreateScreenPathFromIndexedDb(packed, sColor, iPathId) {
+	async #CreateScreenPathFromIndexedDb(packed, sColor, iPathId) {
 		const sPoints = packed.split(" ");
 		let sDelimiter = "", sPathPoints = "", p = null, x, y,
 			status = StatusEnum.POINT_STARTING;
@@ -1185,7 +1256,7 @@ class InkBallGame {
 			p = pair.split(",");
 			x = parseInt(p[0]); y = parseInt(p[1]);
 
-			p = await this.m_Points.get(y * this.m_iGridWidth + x);
+			p = await this.#Points.get(y * this.#iGridWidth + x);
 			if (p !== null && p !== undefined) {
 				p.SetStatus(status);
 				status = StatusEnum.POINT_IN_PATH;
@@ -1197,7 +1268,7 @@ class InkBallGame {
 		p = sPoints[0].split(",");
 		x = parseInt(p[0]); y = parseInt(p[1]);
 
-		p = await this.m_Points.get(y * this.m_iGridWidth + x);
+		p = await this.#Points.get(y * this.#iGridWidth + x);
 		if (p !== null && p !== undefined) {
 			p.SetStatus(status);
 		}
@@ -1206,31 +1277,31 @@ class InkBallGame {
 			sPathPoints += `${sDelimiter}${x},${y}`;
 		}
 
-		const line = this.SvgVml.CreatePolyline(sPathPoints, sColor/* , this.m_LineStrokeWidth */);
+		const line = this.#SvgVml.CreatePolyline(sPathPoints, sColor/* , this.#LineStrokeWidth */);
 		line.SetID(iPathId);
 
 		return line;
 	}
 
-	async SetAllPaths(packedPaths) {
+	async #SetAllPaths(packedPaths) {
 		try {
-			await this.m_Lines.BeginBulkStorage();
+			await this.#Lines.BeginBulkStorage();
 
 			for (const unpacked of packedPaths) {
 				//const unpacked = JSON.parse(packed.Serialized);
-				//if (unpacked.iGameId !== this.g_iGameID)
+				//if (unpacked.iGameId !== this.#iGameID)
 				//	throw new Error("Bad game from path!");
 
-				await this.SetPath(unpacked.PointsAsString/*points*/, this.m_bIsPlayingWithRed,
-					unpacked.iPlayerId === this.g_iPlayerID/*isMainPlayerPoints*/, unpacked.iId/*real DB id*/);
+				await this.#SetPath(unpacked.PointsAsString/*points*/, this.#bIsPlayingWithRed,
+					unpacked.iPlayerId === this.#iPlayerID/*isMainPlayerPoints*/, unpacked.iId/*real DB id*/);
 			}
 		}
 		finally {
-			await this.m_Lines.EndBulkStorage();
+			await this.#Lines.EndBulkStorage();
 		}
 	}
 
-	IsPointBelongingToLine(sPoints, iX, iY) {
+	#IsPointBelongingToLine(sPoints, iX, iY) {
 		for (const packed of sPoints) {
 			const [x, y] = packed.split(",");
 			if (x === iX && y === iY)
@@ -1239,8 +1310,8 @@ class InkBallGame {
 		return false;
 	}
 
-	async SurroundOpponentPoints() {
-		const points = this.m_Line.GetPointsArray();
+	async #SurroundOpponentPoints() {
+		const points = this.#Line.GetPointsArray();
 
 		//unique point path test (no duplicates except starting-ending point)
 		const pts_not_unique = hasDuplicates(points.slice(0, -1).map(pt => pt.x + '_' + pt.y));
@@ -1256,20 +1327,20 @@ class InkBallGame {
 		}
 		let sColor, owned_by, sOwnedCol;
 		//pick right color, status and owned by status
-		if (this.m_sDotColor === this.COLOR_RED) {
-			sColor = this.COLOR_BLUE;
+		if (this.#sDotColor === this.#COLOR_RED) {
+			sColor = this.#COLOR_BLUE;
 			owned_by = StatusEnum.POINT_OWNED_BY_RED;
-			sOwnedCol = this.COLOR_OWNED_RED;
+			sOwnedCol = this.#COLOR_OWNED_RED;
 		}
 		else {
-			sColor = this.COLOR_RED;
+			sColor = this.#COLOR_RED;
 			owned_by = StatusEnum.POINT_OWNED_BY_BLUE;
-			sOwnedCol = this.COLOR_OWNED_BLUE;
+			sOwnedCol = this.#COLOR_OWNED_BLUE;
 		}
 		let sPathPoints = "", sOwnedPoints = "", sDelimiter = "", ownedPoints = [];
 
 		//make the test!
-		for (const pt of await this.m_Points.values()) {
+		for (const pt of await this.#Points.values()) {
 			if (pt !== undefined && pt.GetFillColor() === sColor &&
 				([StatusEnum.POINT_FREE_BLUE, StatusEnum.POINT_FREE_RED].includes(pt.GetStatus()))) {
 				const { x, y } = pt.GetPosition();
@@ -1308,9 +1379,9 @@ class InkBallGame {
 		};
 	}
 
-	async IsPointOutsideAllPaths(x, y, allLines = undefined) {
+	async #IsPointOutsideAllPaths(x, y, allLines = undefined) {
 		if (allLines === undefined)
-			allLines = await this.m_Lines.all();//TODO: async for
+			allLines = await this.#Lines.all();//TODO: async for
 		for (const line of allLines) {
 			const points = line.GetPointsArray();
 
@@ -1321,14 +1392,14 @@ class InkBallGame {
 		return true;
 	}
 
-	CreateWaitForPlayerRequest(/*...args*/) {
+	#CreateWaitForPlayerRequest(/*...args*/) {
 		//let cmd = new WaitForPlayerCommand((args.length > 0 && args[0] === true) ? true : false);
 		//return cmd;
 	}
 
-	CreatePutPointRequest(iX, iY) {
-		const cmd = new InkBallPointViewModel(this.g_iGameID, this.g_iPlayerID, iX, iY,
-			this.m_bIsPlayingWithRed ? StatusEnum.POINT_FREE_RED : StatusEnum.POINT_FREE_BLUE,
+	#CreatePutPointRequest(iX, iY) {
+		const cmd = new InkBallPointViewModel(this.#iGameID, this.#iPlayerID, iX, iY,
+			this.#bIsPlayingWithRed ? StatusEnum.POINT_FREE_RED : StatusEnum.POINT_FREE_BLUE,
 			0);
 		return cmd;
 	}
@@ -1338,9 +1409,9 @@ class InkBallGame {
 	 * @param {object} dto with path, owned
 	 * @returns {object} command
 	 */
-	CreatePutPathRequest(dto) {
-		const cmd = new InkBallPathViewModel(0, this.g_iGameID, this.g_iPlayerID, dto.path, dto.owned
-			/*, this.m_Timer !== null*/);
+	#CreatePutPathRequest(dto) {
+		const cmd = new InkBallPathViewModel(0, this.#iGameID, this.#iPlayerID, dto.path, dto.owned
+			/*, this.#Timer !== null*/);
 		return cmd;
 	}
 
@@ -1349,16 +1420,16 @@ class InkBallGame {
 	 * @param {object} payload transferrableObject (DTO)
 	 * @param {function} revertFunction on-error revert/rollback function
 	 */
-	async SendData(payload, revertFunction = undefined) {
+	async #SendData(payload, revertFunction = undefined) {
 
 		switch (payload.GetKind()) {
 			case CommandKindEnum.POINT:
 				LocalLog(InkBallPointViewModel.Format('some player', payload));
-				this.m_bHandlingEvent = true;
+				this.#bHandlingEvent = true;
 
 				try {
-					const point = await this.g_SignalRConnection.invoke("ClientToServerPoint", payload);
-					await this.ReceivedPointProcessing(point);
+					const point = await this.#SignalRConnection.invoke("ClientToServerPoint", payload);
+					await this.#ReceivedPointProcessing(point);
 				} catch (err) {
 					LocalError(err.toString());
 					if (revertFunction !== undefined)
@@ -1368,18 +1439,18 @@ class InkBallGame {
 
 			case CommandKindEnum.PATH:
 				LocalLog(InkBallPathViewModel.Format('some player', payload));
-				this.m_bHandlingEvent = true;
+				this.#bHandlingEvent = true;
 
 				try {
-					const dto = await this.g_SignalRConnection.invoke("ClientToServerPath", payload);
+					const dto = await this.#SignalRConnection.invoke("ClientToServerPath", payload);
 
 					if (Object.prototype.hasOwnProperty.call(dto, 'WinningPlayerId') || Object.prototype.hasOwnProperty.call(dto, 'winningPlayerId')) {
 						let win = dto;
-						this.ReceivedWinProcessing(win);
+						this.#ReceivedWinProcessing(win);
 					}
 					else if (Object.prototype.hasOwnProperty.call(dto, 'PointsAsString') || Object.prototype.hasOwnProperty.call(dto, 'pointsAsString')) {
 						let path = dto;
-						await this.ReceivedPathProcessing(path);
+						await this.#ReceivedPathProcessing(path);
 					}
 					else
 						throw new Error("ClientToServerPath bad GetKind!");
@@ -1392,14 +1463,15 @@ class InkBallGame {
 
 			case CommandKindEnum.PING:
 				try {
-					await this.g_SignalRConnection.invoke("ClientToServerPing", payload);
-					document.querySelector(this.m_sMsgInputSel).value = '';
-					document.querySelector(this.m_sMsgSendButtonSel).disabled = 'disabled';
+					await this.#SignalRConnection.invoke("ClientToServerPing", payload);
+					document.querySelector(this.#sMsgInputSel).value = '';
+					document.querySelector(this.#sMsgSendButtonSel).disabled = 'disabled';
 
 					const msg = payload.Message;
-					this.m_MessagesRingBufferStore.Append(msg, true);
+					this.#MessagesRingBufferStore.Append(msg, true, this.#sMsgListSel, this.#bIsPlayingWithRed,
+						this.#Player1Name, this.#Player2Name);
 
-					// this.NotifyBrowser('User Message', encodedMsg);
+					// this.#NotifyBrowser('User Message', encodedMsg);
 				} catch (err) {
 					LocalError(err.toString());
 				}
@@ -1407,12 +1479,12 @@ class InkBallGame {
 
 			case CommandKindEnum.STOP_AND_DRAW:
 				try {
-					await this.g_SignalRConnection.invoke("ClientToServerStopAndDraw", payload);
-					this.m_bDrawLines = true;
-					this.m_iLastX = this.m_iLastY = -1;
-					this.m_Line = null;
-					this.m_bIsPlayerActive = true;
-					this.m_StopAndDraw.disabled = 'disabled';
+					await this.#SignalRConnection.invoke("ClientToServerStopAndDraw", payload);
+					this.#bDrawLines = true;
+					this.#iLastX = this.#iLastY = -1;
+					this.#Line = null;
+					this.#bIsPlayerActive = true;
+					this.#StopAndDraw.disabled = 'disabled';
 
 				} catch (err) {
 					LocalError(err.toString());
@@ -1428,153 +1500,153 @@ class InkBallGame {
 	CountDownReachedHandler(label) {
 		if (label)
 			label.textContent = '';
-		//this.NotifyBrowser('Time is running out', 'make a move');
-		this.m_StopAndDraw.disabled = this.m_CancelPath.disabled = 'disabled';
-		this.m_Timer = null;
-		this.m_bIsPlayerActive = false;
+		//this.#NotifyBrowser('Time is running out', 'make a move');
+		this.#StopAndDraw.disabled = this.#CancelPath.disabled = 'disabled';
+		this.#Timer = null;
+		this.#bIsPlayerActive = false;
 	}
 
-	async ReceivedPointProcessing(point) {
+	async #ReceivedPointProcessing(point) {
 		const x = point.iX, y = point.iY, iStatus = point.Status !== undefined ? point.Status : point.status;
 
-		this.m_sLastMoveGameTimeStamp = (point.TimeStamp !== undefined ?
+		this.#sLastMoveGameTimeStamp = (point.TimeStamp !== undefined ?
 			point.TimeStamp : new Date(point.timeStamp)
 		).toISOString();
 
-		await this.SetPoint(x, y, iStatus, point.iPlayerId);
+		await this.#SetPoint(x, y, iStatus, point.iPlayerId);
 
-		if (this.g_iPlayerID !== point.iPlayerId) {
-			this.m_bIsPlayerActive = true;
-			this.ShowStatus('Opponent has moved, your turn');
-			this.m_Screen.style.cursor = "crosshair";
+		if (this.#iPlayerID !== point.iPlayerId) {
+			this.#bIsPlayerActive = true;
+			this.#ShowStatus('Opponent has moved, your turn');
+			this.#Screen.style.cursor = "crosshair";
 
-			if (this.m_Line !== null)
-				await this.OnCancelClick();
-			this.m_StopAndDraw.disabled = '';
-			if (!this.m_bDrawLines)
-				this.m_StopAndDraw.value = 'Draw line';
+			if (this.#Line !== null)
+				await this.#OnCancelClick();
+			this.#StopAndDraw.disabled = '';
+			if (!this.#bDrawLines)
+				this.#StopAndDraw.value = 'Draw line';
 			else
-				this.m_StopAndDraw.value = 'Draw dot';
+				this.#StopAndDraw.value = 'Draw dot';
 
-			if (this.m_Timer) {
-				this.m_Timer.Stop();
-				this.m_Timer = null;
+			if (this.#Timer) {
+				this.#Timer.Stop();
+				this.#Timer = null;
 			}
 		}
 		else {
-			this.m_bIsPlayerActive = false;
-			this.ShowStatus('Waiting for opponent move');
-			this.m_Screen.style.cursor = "wait";
-			this.m_MouseCursorOval.Hide();
-			this.m_CancelPath.disabled = 'disabled';
-			this.m_StopAndDraw.disabled = '';
-			this.m_StopAndDraw.value = 'Stop and Draw';
+			this.#bIsPlayerActive = false;
+			this.#ShowStatus('Waiting for opponent move');
+			this.#Screen.style.cursor = "wait";
+			this.#MouseCursorOval.Hide();
+			this.#CancelPath.disabled = 'disabled';
+			this.#StopAndDraw.disabled = '';
+			this.#StopAndDraw.value = 'Stop and Draw';
 
-			if (this.m_Timer)
-				this.m_Timer.Reset(this.m_TimerOpts);
+			if (this.#Timer)
+				this.#Timer.Reset(this.#TimerOpts);
 			else
-				this.m_Timer = new CountdownTimer(this.m_TimerOpts);
+				this.#Timer = new CountdownTimer(this.#TimerOpts);
 
-			if (true === this.m_bIsCPUGame && !this.m_bIsPlayerActive)
-				this.StartCPUCalculation();
+			if (true === this.#bIsCPUGame && !this.#bIsPlayerActive)
+				this.#StartCPUCalculation();
 		}
-		this.m_bHandlingEvent = false;
+		this.#bHandlingEvent = false;
 	}
 
-	async ReceivedPathProcessing(path) {
+	async #ReceivedPathProcessing(path) {
 
-		this.m_sLastMoveGameTimeStamp = (path.TimeStamp !== undefined ?
+		this.#sLastMoveGameTimeStamp = (path.TimeStamp !== undefined ?
 			path.TimeStamp : new Date(path.timeStamp)
 		).toISOString();
 
-		if (this.g_iPlayerID !== path.iPlayerId) {
+		if (this.#iPlayerID !== path.iPlayerId) {
 
 			const str_path = path.PointsAsString || path.pointsAsString, owned = path.OwnedPointsAsString || path.ownedPointsAsString;
 
-			await this.SetPath(str_path,
-				(this.m_sDotColor === this.COLOR_RED ? true : false), false, path.iId/*real DB id*/);
+			await this.#SetPath(str_path,
+				(this.#sDotColor === this.#COLOR_RED ? true : false), false, path.iId/*real DB id*/);
 
 			const points = owned.split(" ");
-			const point_status = (this.m_sDotColor === this.COLOR_RED ? StatusEnum.POINT_OWNED_BY_RED : StatusEnum.POINT_OWNED_BY_BLUE);
-			const sOwnedCol = (this.m_sDotColor === this.COLOR_RED ? this.COLOR_OWNED_RED : this.COLOR_OWNED_BLUE);
+			const point_status = (this.#sDotColor === this.#COLOR_RED ? StatusEnum.POINT_OWNED_BY_RED : StatusEnum.POINT_OWNED_BY_BLUE);
+			const sOwnedCol = (this.#sDotColor === this.#COLOR_RED ? this.#COLOR_OWNED_RED : this.#COLOR_OWNED_BLUE);
 			for (const packed of points) {
 				let [x, y] = packed.split(",");
 				x = parseInt(x), y = parseInt(y);
-				const p = await this.m_Points.get(y * this.m_iGridWidth + x);
+				const p = await this.#Points.get(y * this.#iGridWidth + x);
 				if (p !== undefined) {
 					p.SetStatus(point_status);
 					p.SetFillColor(sOwnedCol);
 					// p.SetStrokeColor(sOwnedCol);
-					await this.m_Points.set(y * this.m_iGridWidth + x, p);//update the point with new state,col etc.
+					await this.#Points.set(y * this.#iGridWidth + x, p);//update the point with new state,col etc.
 				}
 			}
 
 
-			this.m_bIsPlayerActive = true;
-			this.ShowStatus('Opponent has moved, your turn');
-			this.m_Screen.style.cursor = "crosshair";
-			this.m_MouseCursorOval.Hide();
+			this.#bIsPlayerActive = true;
+			this.#ShowStatus('Opponent has moved, your turn');
+			this.#Screen.style.cursor = "crosshair";
+			this.#MouseCursorOval.Hide();
 
-			if (this.m_Line !== null)
-				await this.OnCancelClick();
-			this.m_StopAndDraw.disabled = '';
+			if (this.#Line !== null)
+				await this.#OnCancelClick();
+			this.#StopAndDraw.disabled = '';
 		}
 		else {
 			//set starting point to POINT_IN_PATH to block further path closing with it
-			let points = this.m_Line.GetPointsArray();
+			let points = this.#Line.GetPointsArray();
 			let x = points[0].x, y = points[0].y;
-			const p0 = await this.m_Points.get(y * this.m_iGridWidth + x);
+			const p0 = await this.#Points.get(y * this.#iGridWidth + x);
 			if (p0 !== undefined)
 				p0.SetStatus(StatusEnum.POINT_IN_PATH);
 
-			this.m_Line.SetWidthAndColor(this.m_LineStrokeWidth, this.m_sDotColor);
-			this.m_Line.SetID(path.iId);
-			await this.m_Lines.push(this.m_Line);
-			this.m_iLastX = this.m_iLastY = -1;
-			this.m_Line = null;
+			this.#Line.SetWidthAndColor(this.#LineStrokeWidth, this.#sDotColor);
+			this.#Line.SetID(path.iId);
+			await this.#Lines.push(this.#Line);
+			this.#iLastX = this.#iLastY = -1;
+			this.#Line = null;
 
 			const owned = path.OwnedPointsAsString || path.ownedPointsAsString;
 			points = owned.split(" ");
-			const point_status = (this.m_sDotColor === this.COLOR_RED ? StatusEnum.POINT_OWNED_BY_RED : StatusEnum.POINT_OWNED_BY_BLUE);
-			const sOwnedCol = (this.m_sDotColor === this.COLOR_RED ? this.COLOR_OWNED_RED : this.COLOR_OWNED_BLUE);
+			const point_status = (this.#sDotColor === this.#COLOR_RED ? StatusEnum.POINT_OWNED_BY_RED : StatusEnum.POINT_OWNED_BY_BLUE);
+			const sOwnedCol = (this.#sDotColor === this.#COLOR_RED ? this.#COLOR_OWNED_RED : this.#COLOR_OWNED_BLUE);
 			for (const packed of points) {
 				let [x, y] = packed.split(",");
 				x = parseInt(x), y = parseInt(y);
-				const p = await this.m_Points.get(y * this.m_iGridWidth + x);
+				const p = await this.#Points.get(y * this.#iGridWidth + x);
 				if (p !== undefined) {
 					p.SetStatus(point_status);
 					p.SetFillColor(sOwnedCol);
 					// p.SetStrokeColor(sOwnedCol);
-					await this.m_Points.set(y * this.m_iGridWidth + x, p);//update the point with new state,col etc.
+					await this.#Points.set(y * this.#iGridWidth + x, p);//update the point with new state,col etc.
 				}
 			}
 
 
-			this.m_bIsPlayerActive = false;
-			this.ShowStatus('Waiting for opponent move');
-			this.m_Screen.style.cursor = "wait";
-			this.m_MouseCursorOval.Hide();
+			this.#bIsPlayerActive = false;
+			this.#ShowStatus('Waiting for opponent move');
+			this.#Screen.style.cursor = "wait";
+			this.#MouseCursorOval.Hide();
 
-			this.m_StopAndDraw.disabled = this.m_CancelPath.disabled = 'disabled';
+			this.#StopAndDraw.disabled = this.#CancelPath.disabled = 'disabled';
 
-			if (true === this.m_bIsCPUGame && !this.m_bIsPlayerActive)
-				this.StartCPUCalculation();
+			if (true === this.#bIsCPUGame && !this.#bIsPlayerActive)
+				this.#StartCPUCalculation();
 		}
-		if (!this.m_bDrawLines)
-			this.m_StopAndDraw.value = 'Draw line';
+		if (!this.#bDrawLines)
+			this.#StopAndDraw.value = 'Draw line';
 		else
-			this.m_StopAndDraw.value = 'Draw dot';
-		this.m_bHandlingEvent = false;
+			this.#StopAndDraw.value = 'Draw dot';
+		this.#bHandlingEvent = false;
 
-		if (this.m_Timer) {
-			this.m_Timer.Stop();
-			this.m_Timer = null;
+		if (this.#Timer) {
+			this.#Timer.Stop();
+			this.#Timer = null;
 		}
 	}
 
-	ReceivedWinProcessing(win) {
-		this.ShowStatus('Win situation');
-		this.m_bHandlingEvent = false;
+	#ReceivedWinProcessing(win) {
+		this.#ShowStatus('Win situation');
+		this.#bHandlingEvent = false;
 
 		const encodedMsg = WinCommand.Format(win);
 		const status = win.Status !== undefined ? win.Status : win.status;
@@ -1589,18 +1661,18 @@ class InkBallGame {
 		}
 	}
 
-	Check4Win(playerPaths, otherPlayerPaths, playerPoints, otherPlayerPoints) {
+	#Check4Win(playerPaths, otherPlayerPaths, playerPoints, otherPlayerPoints) {
 		let owned_status, count;
-		switch (this.GameType) {
+		switch (this.#GameType) {
 			case GameTypeEnum.FIRST_CAPTURE:
 				if (playerPaths.length > 0) {
-					if (this.m_bIsPlayingWithRed)
+					if (this.#bIsPlayingWithRed)
 						return WinStatusEnum.RED_WINS;
 					else
 						return WinStatusEnum.GREEN_WINS;
 				}
 				if (otherPlayerPaths.length > 0) {
-					if (this.m_bIsPlayingWithRed)
+					if (this.#bIsPlayingWithRed)
 						return WinStatusEnum.GREEN_WINS;
 					else
 						return WinStatusEnum.RED_WINS;
@@ -1608,22 +1680,22 @@ class InkBallGame {
 				return WinStatusEnum.NO_WIN;//continue game
 
 			case GameTypeEnum.FIRST_5_CAPTURES:
-				owned_status = this.m_bIsPlayingWithRed ? StatusEnum.POINT_OWNED_BY_BLUE : StatusEnum.POINT_OWNED_BY_RED;
+				owned_status = this.#bIsPlayingWithRed ? StatusEnum.POINT_OWNED_BY_BLUE : StatusEnum.POINT_OWNED_BY_RED;
 				count = otherPlayerPoints.filter(function (p) {
 					return p.iEnclosingPathId !== null && p.GetStatus() === owned_status;
 				}).length;
 				if (count >= 5) {
-					if (this.m_bIsPlayingWithRed)
+					if (this.#bIsPlayingWithRed)
 						return WinStatusEnum.GREEN_WINS;
 					else
 						return WinStatusEnum.RED_WINS;
 				}
-				owned_status = this.m_bIsPlayingWithRed ? StatusEnum.POINT_OWNED_BY_RED : StatusEnum.POINT_OWNED_BY_BLUE;
+				owned_status = this.#bIsPlayingWithRed ? StatusEnum.POINT_OWNED_BY_RED : StatusEnum.POINT_OWNED_BY_BLUE;
 				count = playerPoints.filter(function (p) {
 					return p.iEnclosingPathId !== null && p.GetStatus() === owned_status;
 				}).length;
 				if (count >= 5) {
-					if (this.m_bIsPlayingWithRed)
+					if (this.#bIsPlayingWithRed)
 						return WinStatusEnum.RED_WINS;
 					else
 						return WinStatusEnum.GREEN_WINS;
@@ -1632,13 +1704,13 @@ class InkBallGame {
 
 			case GameTypeEnum.FIRST_5_PATHS:
 				if (otherPlayerPaths.length >= 5) {
-					if (this.m_bIsPlayingWithRed)
+					if (this.#bIsPlayingWithRed)
 						return WinStatusEnum.GREEN_WINS;
 					else
 						return WinStatusEnum.RED_WINS;
 				}
 				if (playerPaths.length >= 5) {
-					if (this.m_bIsPlayingWithRed)
+					if (this.#bIsPlayingWithRed)
 						return WinStatusEnum.RED_WINS;
 					else
 						return WinStatusEnum.GREEN_WINS;
@@ -1649,13 +1721,13 @@ class InkBallGame {
 				{
 					const diff = playerPaths.length - otherPlayerPaths.length;
 					if (diff >= 5) {
-						if (this.m_bIsPlayingWithRed)
+						if (this.#bIsPlayingWithRed)
 							return WinStatusEnum.RED_WINS;
 						else
 							return WinStatusEnum.GREEN_WINS;
 					}
 					else if (diff <= -5) {
-						if (this.m_bIsPlayingWithRed)
+						if (this.#bIsPlayingWithRed)
 							return WinStatusEnum.GREEN_WINS;
 						else
 							return WinStatusEnum.RED_WINS;
@@ -1668,42 +1740,42 @@ class InkBallGame {
 		}
 	}
 
-	ShowStatus(sMessage = '') {
-		if (this.m_Player2Name.textContent === '???') {
-			if (this.m_bIsPlayerActive)
-				this.m_GameStatus.style.color = this.COLOR_RED;
+	#ShowStatus(sMessage = '') {
+		if (this.#Player2Name.textContent === '???') {
+			if (this.#bIsPlayerActive)
+				this.#GameStatus.style.color = this.#COLOR_RED;
 			else
-				this.m_GameStatus.style.color = this.COLOR_BLUE;
+				this.#GameStatus.style.color = this.#COLOR_BLUE;
 		}
-		else if (this.m_bIsPlayerActive) {
-			if (this.m_bIsPlayingWithRed)
-				this.m_GameStatus.style.color = this.COLOR_RED;
+		else if (this.#bIsPlayerActive) {
+			if (this.#bIsPlayingWithRed)
+				this.#GameStatus.style.color = this.#COLOR_RED;
 			else
-				this.m_GameStatus.style.color = this.COLOR_BLUE;
+				this.#GameStatus.style.color = this.#COLOR_BLUE;
 		}
 		else {
-			if (this.m_bIsPlayingWithRed)
-				this.m_GameStatus.style.color = this.COLOR_BLUE;
+			if (this.#bIsPlayingWithRed)
+				this.#GameStatus.style.color = this.#COLOR_BLUE;
 			else
-				this.m_GameStatus.style.color = this.COLOR_RED;
+				this.#GameStatus.style.color = this.#COLOR_RED;
 		}
 		if (sMessage !== null && sMessage !== '')
-			this.Debug(sMessage, 0);
+			this.#Debug(sMessage, 0);
 		else
-			this.Debug('', 0);
+			this.#Debug('', 0);
 	}
 
-	async OnMouseMove(event) {
-		if (!this.m_bIsPlayerActive || this.m_Player2Name.textContent === '???' || this.m_bHandlingEvent === true
-			|| this.iConnErrCount > 0) {
+	async #OnMouseMove(event) {
+		if (!this.#bIsPlayerActive || this.#Player2Name.textContent === '???' || this.#bHandlingEvent === true
+			|| this.#iConnErrCount > 0) {
 
-			if (this.iConnErrCount <= 0 && !this.m_bIsPlayerActive) {
-				this.m_Screen.style.cursor = "wait";
+			if (this.#iConnErrCount <= 0 && !this.#bIsPlayerActive) {
+				this.#Screen.style.cursor = "wait";
 			}
 			return;
 		}
 
-		const cursor = this.SvgVml.ToCursorPoint(event.clientX, event.clientY);
+		const cursor = this.#SvgVml.ToCursorPoint(event.clientX, event.clientY);
 		let x = cursor.x + 0.5;
 		let y = cursor.y + 0.5;
 
@@ -1713,274 +1785,274 @@ class InkBallGame {
 		let tox = x;
 		let toy = y;
 
-		if (this.CursorPos.x !== tox || this.CursorPos.y !== toy) {
-			this.m_MouseCursorOval.move(tox, toy);
-			this.m_MouseCursorOval.Show();
-			this.Debug(`[${x},${y}]`, 1);
-			this.CursorPos.x = tox; this.CursorPos.y = toy;
+		if (this.#CursorPos.x !== tox || this.#CursorPos.y !== toy) {
+			this.#MouseCursorOval.move(tox, toy);
+			this.#MouseCursorOval.Show();
+			this.#Debug(`[${x},${y}]`, 1);
+			this.#CursorPos.x = tox; this.#CursorPos.y = toy;
 		}
 
 
-		if (this.m_bDrawLines) {
-			if (this.m_Line !== null)
-				this.m_Screen.style.cursor = "move";
+		if (this.#bDrawLines) {
+			if (this.#Line !== null)
+				this.#Screen.style.cursor = "move";
 			else
-				this.m_Screen.style.cursor = "crosshair";
+				this.#Screen.style.cursor = "crosshair";
 
-			if (this.m_bMouseDown === true) {
+			if (this.#bMouseDown === true) {
 				//lines
-				if ((this.m_iLastX !== x || this.m_iLastY !== y) &&
-					(Math.abs(parseInt(this.m_iLastX - x)) <= 1 && Math.abs(parseInt(this.m_iLastY - y)) <= 1) &&
-					this.m_iLastX >= 0 && this.m_iLastY >= 0) {
-					if (this.m_Line !== null) {
-						let p0 = await this.m_Points.get(this.m_iLastY * this.m_iGridWidth + this.m_iLastX);
-						let p1 = await this.m_Points.get(y * this.m_iGridWidth + x);
-						this.m_CancelPath.disabled = this.m_Line.GetLength() >= 2 ? '' : 'disabled';
+				if ((this.#iLastX !== x || this.#iLastY !== y) &&
+					(Math.abs(parseInt(this.#iLastX - x)) <= 1 && Math.abs(parseInt(this.#iLastY - y)) <= 1) &&
+					this.#iLastX >= 0 && this.#iLastY >= 0) {
+					if (this.#Line !== null) {
+						let p0 = await this.#Points.get(this.#iLastY * this.#iGridWidth + this.#iLastX);
+						let p1 = await this.#Points.get(y * this.#iGridWidth + x);
+						this.#CancelPath.disabled = this.#Line.GetLength() >= 2 ? '' : 'disabled';
 
 						if (p0 !== undefined && p1 !== undefined &&
-							p0.GetFillColor() === this.m_sDotColor && p1.GetFillColor() === this.m_sDotColor) {
-							const line_contains_point = this.m_Line.ContainsPoint(tox, toy);
+							p0.GetFillColor() === this.#sDotColor && p1.GetFillColor() === this.#sDotColor) {
+							const line_contains_point = this.#Line.ContainsPoint(tox, toy);
 							if (line_contains_point < 1 && p1.GetStatus() !== StatusEnum.POINT_STARTING &&
-								true === this.m_Line.AppendPoints(tox, toy)) {
+								true === this.#Line.AppendPoints(tox, toy)) {
 								p1.SetStatus(StatusEnum.POINT_IN_PATH, true);
-								this.m_iLastX = x;
-								this.m_iLastY = y;
+								this.#iLastX = x;
+								this.#iLastY = y;
 							}
 							else if (line_contains_point === 1 && p1.GetStatus() === StatusEnum.POINT_STARTING &&
-								true === this.m_Line.AppendPoints(tox, toy)) {
-								const val = await this.SurroundOpponentPoints();
+								true === this.#Line.AppendPoints(tox, toy)) {
+								const val = await this.#SurroundOpponentPoints();
 								if (val.owned.length > 0) {
-									this.Debug('Closing path', 0);
-									this.rAF_FrameID = null;
-									await this.SendData(this.CreatePutPathRequest(val), async () => {
-										await this.OnCancelClick();
+									this.#Debug('Closing path', 0);
+									this.#rAF_FrameID = null;
+									await this.#SendData(this.#CreatePutPathRequest(val), async () => {
+										await this.#OnCancelClick();
 										val.OwnedPoints.forEach(revData => {
 											const p = revData.point;
 											p.RevertOldStatus();
 											p.SetFillColor(revData.revertFillColor);
 											// p.SetStrokeColor(revData.revertStrokeColor);
 										});
-										this.m_bHandlingEvent = false;
+										this.#bHandlingEvent = false;
 									});
 								}
 								else
-									this.Debug(`${val.errorDesc ? val.errorDesc : 'Wrong path'}, cancell it or refresh page`, 0);
-								this.m_iLastX = x;
-								this.m_iLastY = y;
+									this.#Debug(`${val.errorDesc ? val.errorDesc : 'Wrong path'}, cancel it or refresh page`, 0);
+								this.#iLastX = x;
+								this.#iLastY = y;
 							}
 							else if (line_contains_point >= 1 && p0.GetStatus() === StatusEnum.POINT_IN_PATH &&
-								this.m_Line.GetPointsString().endsWith(`${this.m_iLastX},${this.m_iLastY}`)) {
+								this.#Line.GetPointsString().endsWith(`${this.#iLastX},${this.#iLastY}`)) {
 
-								if (this.m_Line.GetLength() > 2) {
+								if (this.#Line.GetLength() > 2) {
 									p0.RevertOldStatus();
-									this.m_Line.RemoveLastPoint();
-									this.m_iLastX = x;
-									this.m_iLastY = y;
+									this.#Line.RemoveLastPoint();
+									this.#iLastX = x;
+									this.#iLastY = y;
 								}
 								else
-									await this.OnCancelClick();
+									await this.#OnCancelClick();
 							}
 						}
 					}
 					else {
-						let p0 = await this.m_Points.get(this.m_iLastY * this.m_iGridWidth + this.m_iLastX);
-						let p1 = await this.m_Points.get(y * this.m_iGridWidth + x);
+						let p0 = await this.#Points.get(this.#iLastY * this.#iGridWidth + this.#iLastX);
+						let p1 = await this.#Points.get(y * this.#iGridWidth + x);
 
 						if (p0 !== undefined && p1 !== undefined &&
-							p0.GetFillColor() === this.m_sDotColor && p1.GetFillColor() === this.m_sDotColor) {
-							const fromx = this.m_iLastX;
-							const fromy = this.m_iLastY;
-							this.m_Line = this.SvgVml.CreatePolyline(`${fromx},${fromy} ${tox},${toy}`, this.DRAWING_PATH_COLOR
-								/* , this.m_LineStrokeWidth * 2 */);
-							this.m_CancelPath.disabled = '';
+							p0.GetFillColor() === this.#sDotColor && p1.GetFillColor() === this.#sDotColor) {
+							const fromx = this.#iLastX;
+							const fromy = this.#iLastY;
+							this.#Line = this.#SvgVml.CreatePolyline(`${fromx},${fromy} ${tox},${toy}`, this.#DRAWING_PATH_COLOR
+								/* , this.#LineStrokeWidth * 2 */);
+							this.#CancelPath.disabled = '';
 							p0.SetStatus(StatusEnum.POINT_STARTING, true);
 							p1.SetStatus(StatusEnum.POINT_IN_PATH, true);
 
-							this.m_iLastX = x;
-							this.m_iLastY = y;
+							this.#iLastX = x;
+							this.#iLastY = y;
 						}
 					}
 				}
 			}
 		}
 		else {
-			this.m_Screen.style.cursor = "crosshair";
+			this.#Screen.style.cursor = "crosshair";
 		}
 	}
 
-	async OnMouseDown(event) {
-		if (!this.m_bIsPlayerActive || this.m_Player2Name.textContent === '???' || this.m_bHandlingEvent === true
-			|| this.iConnErrCount > 0)
+	async #OnMouseDown(event) {
+		if (!this.#bIsPlayerActive || this.#Player2Name.textContent === '???' || this.#bHandlingEvent === true
+			|| this.#iConnErrCount > 0)
 			return;
 
-		const cursor = this.SvgVml.ToCursorPoint(event.clientX, event.clientY);
+		const cursor = this.#SvgVml.ToCursorPoint(event.clientX, event.clientY);
 		let x = cursor.x + 0.5;
 		let y = cursor.y + 0.5;
 
-		x = this.m_iMouseX = parseInt(x);
-		y = this.m_iMouseY = parseInt(y);
+		x = this.#iMouseX = parseInt(x);
+		y = this.#iMouseY = parseInt(y);
 
-		this.m_bMouseDown = true;
-		if (!this.m_bDrawLines) {
+		this.#bMouseDown = true;
+		if (!this.#bDrawLines) {
 			//points
-			this.m_iLastX = x;
-			this.m_iLastY = y;
+			this.#iLastX = x;
+			this.#iLastY = y;
 
 			const loc_x = x;
 			const loc_y = y;
 
-			if (await this.m_Points.get(loc_y * this.m_iGridWidth + loc_x) !== undefined) {
-				this.Debug('Wrong point - already existing', 0);
+			if (await this.#Points.get(loc_y * this.#iGridWidth + loc_x) !== undefined) {
+				this.#Debug('Wrong point - already existing', 0);
 				return;
 			}
-			if (!(await this.IsPointOutsideAllPaths(loc_x, loc_y))) {
-				this.Debug('Wrong point, Point is not outside all paths', 0);
+			if (!(await this.#IsPointOutsideAllPaths(loc_x, loc_y))) {
+				this.#Debug('Wrong point, Point is not outside all paths', 0);
 				return;
 			}
 
-			this.rAF_FrameID = null;
-			await this.SendData(this.CreatePutPointRequest(loc_x, loc_y), () => {
-				this.m_bMouseDown = false;
-				this.m_bHandlingEvent = false;
+			this.#rAF_FrameID = null;
+			await this.#SendData(this.#CreatePutPointRequest(loc_x, loc_y), () => {
+				this.#bMouseDown = false;
+				this.#bHandlingEvent = false;
 			});
 		}
 		else {
 			//lines
-			//this.Debug('m_iMouseX = '+this.m_iMouseX+' m_iMouseY = '+this.m_iMouseY, 1);
-			if ( /*this.m_bMouseDown === true && */(this.m_iLastX !== x || this.m_iLastY !== y) &&
-				(Math.abs(parseInt(this.m_iLastX - x)) <= 1 && Math.abs(parseInt(this.m_iLastY - y)) <= 1) &&
-				this.m_iLastX >= 0 && this.m_iLastY >= 0) {
-				if (this.m_Line !== null) {
-					let p0 = await this.m_Points.get(this.m_iLastY * this.m_iGridWidth + this.m_iLastX);
-					let p1 = await this.m_Points.get(y * this.m_iGridWidth + x);
-					this.m_CancelPath.disabled = this.m_Line.GetLength() >= 2 ? '' : 'disabled';
+			//this.#Debug('m_iMouseX = '+this.#iMouseX+' m_iMouseY = '+this.#iMouseY, 1);
+			if ( /*this.#bMouseDown === true && */(this.#iLastX !== x || this.#iLastY !== y) &&
+				(Math.abs(parseInt(this.#iLastX - x)) <= 1 && Math.abs(parseInt(this.#iLastY - y)) <= 1) &&
+				this.#iLastX >= 0 && this.#iLastY >= 0) {
+				if (this.#Line !== null) {
+					let p0 = await this.#Points.get(this.#iLastY * this.#iGridWidth + this.#iLastX);
+					let p1 = await this.#Points.get(y * this.#iGridWidth + x);
+					this.#CancelPath.disabled = this.#Line.GetLength() >= 2 ? '' : 'disabled';
 
 					if (p0 !== undefined && p1 !== undefined &&
-						p0.GetFillColor() === this.m_sDotColor && p1.GetFillColor() === this.m_sDotColor) {
+						p0.GetFillColor() === this.#sDotColor && p1.GetFillColor() === this.#sDotColor) {
 						const tox = x;
 						const toy = y;
-						const line_contains_point = this.m_Line.ContainsPoint(tox, toy);
+						const line_contains_point = this.#Line.ContainsPoint(tox, toy);
 						if (line_contains_point < 1 && p1.GetStatus() !== StatusEnum.POINT_STARTING &&
-							true === this.m_Line.AppendPoints(tox, toy)) {
+							true === this.#Line.AppendPoints(tox, toy)) {
 							p1.SetStatus(StatusEnum.POINT_IN_PATH, true);
-							this.m_iLastX = x;
-							this.m_iLastY = y;
+							this.#iLastX = x;
+							this.#iLastY = y;
 						}
 						else if (line_contains_point === 1 && p1.GetStatus() === StatusEnum.POINT_STARTING &&
-							true === this.m_Line.AppendPoints(tox, toy)) {
-							const val = await this.SurroundOpponentPoints();
+							true === this.#Line.AppendPoints(tox, toy)) {
+							const val = await this.#SurroundOpponentPoints();
 							if (val.owned.length > 0) {
-								this.Debug('Closing path', 0);
-								this.rAF_FrameID = null;
-								await this.SendData(this.CreatePutPathRequest(val), async () => {
-									await this.OnCancelClick();
+								this.#Debug('Closing path', 0);
+								this.#rAF_FrameID = null;
+								await this.#SendData(this.#CreatePutPathRequest(val), async () => {
+									await this.#OnCancelClick();
 									val.OwnedPoints.forEach(revData => {
 										const p = revData.point;
 										p.RevertOldStatus();
 										p.SetFillColor(revData.revertFillColor);
 										// p.SetStrokeColor(revData.revertStrokeColor);
 									});
-									this.m_bMouseDown = false;
-									this.m_bHandlingEvent = false;
+									this.#bMouseDown = false;
+									this.#bHandlingEvent = false;
 								});
 							}
 							else
-								this.Debug(`${val.errorDesc ? val.errorDesc : 'Wrong path'}, cancel it or refresh page`, 0);
-							this.m_iLastX = x;
-							this.m_iLastY = y;
+								this.#Debug(`${val.errorDesc ? val.errorDesc : 'Wrong path'}, cancel it or refresh page`, 0);
+							this.#iLastX = x;
+							this.#iLastY = y;
 						}
 						else if (line_contains_point >= 1 && p0.GetStatus() === StatusEnum.POINT_IN_PATH &&
-							this.m_Line.GetPointsString().endsWith(`${this.m_iLastX},${this.m_iLastY}`)) {
+							this.#Line.GetPointsString().endsWith(`${this.#iLastX},${this.#iLastY}`)) {
 
-							if (this.m_Line.GetLength() > 2) {
+							if (this.#Line.GetLength() > 2) {
 								p0.RevertOldStatus();
-								this.m_Line.RemoveLastPoint();
-								this.m_iLastX = x;
-								this.m_iLastY = y;
+								this.#Line.RemoveLastPoint();
+								this.#iLastX = x;
+								this.#iLastY = y;
 							}
 							else
-								await this.OnCancelClick();
+								await this.#OnCancelClick();
 						}
 					}
 				}
 				else {
-					let p0 = await this.m_Points.get(this.m_iLastY * this.m_iGridWidth + this.m_iLastX);
-					let p1 = await this.m_Points.get(y * this.m_iGridWidth + x);
+					let p0 = await this.#Points.get(this.#iLastY * this.#iGridWidth + this.#iLastX);
+					let p1 = await this.#Points.get(y * this.#iGridWidth + x);
 
 					if (p0 !== undefined && p1 !== undefined &&
-						p0.GetFillColor() === this.m_sDotColor && p1.GetFillColor() === this.m_sDotColor) {
-						const fromx = this.m_iLastX;
-						const fromy = this.m_iLastY;
+						p0.GetFillColor() === this.#sDotColor && p1.GetFillColor() === this.#sDotColor) {
+						const fromx = this.#iLastX;
+						const fromy = this.#iLastY;
 						const tox = x;
 						const toy = y;
-						this.m_Line = this.SvgVml.CreatePolyline(`${fromx},${fromy} ${tox},${toy}`, this.DRAWING_PATH_COLOR
-							/* , this.m_LineStrokeWidth * 2 */);
-						this.m_CancelPath.disabled = '';
+						this.#Line = this.#SvgVml.CreatePolyline(`${fromx},${fromy} ${tox},${toy}`, this.#DRAWING_PATH_COLOR
+							/* , this.#LineStrokeWidth * 2 */);
+						this.#CancelPath.disabled = '';
 						p0.SetStatus(StatusEnum.POINT_STARTING, true);
 						p1.SetStatus(StatusEnum.POINT_IN_PATH, true);
 					}
-					this.m_iLastX = x;
-					this.m_iLastY = y;
+					this.#iLastX = x;
+					this.#iLastY = y;
 				}
 			}
-			else if (this.m_iLastX < 0 || this.m_iLastY < 0) {
-				let p1 = await this.m_Points.get(y * this.m_iGridWidth + x);
-				if (p1 !== undefined && p1.GetFillColor() === this.m_sDotColor) {
-					this.m_iLastX = x;
-					this.m_iLastY = y;
+			else if (this.#iLastX < 0 || this.#iLastY < 0) {
+				let p1 = await this.#Points.get(y * this.#iGridWidth + x);
+				if (p1 !== undefined && p1.GetFillColor() === this.#sDotColor) {
+					this.#iLastX = x;
+					this.#iLastY = y;
 				}
 			}
 		}
 	}
 
-	OnMouseUp() {
-		this.m_bMouseDown = false;
+	#OnMouseUp() {
+		this.#bMouseDown = false;
 	}
 
-	OnMouseLeave() {
-		this.m_MouseCursorOval.Hide();
+	#OnMouseLeave() {
+		this.#MouseCursorOval.Hide();
 	}
 
-	async OnStopAndDraw(event) {
-		if (!this.m_Timer) {
-			if (this.m_Line !== null)
-				await this.OnCancelClick();
-			this.m_bDrawLines = !this.m_bDrawLines;
+	async #OnStopAndDraw(event) {
+		if (!this.#Timer) {
+			if (this.#Line !== null)
+				await this.#OnCancelClick();
+			this.#bDrawLines = !this.#bDrawLines;
 			const btn = event.target;
-			if (!this.m_bDrawLines)
+			if (!this.#bDrawLines)
 				btn.value = 'Draw line';
 			else
 				btn.value = 'Draw dot';
-			this.m_iLastX = this.m_iLastY = -1;
-			this.m_Line = null;
-		} else if (this.m_Line === null) {
+			this.#iLastX = this.#iLastY = -1;
+			this.#Line = null;
+		} else if (this.#Line === null) {
 			//send On-Stop-And-Draw notification
-			await this.SendData(new StopAndDrawCommand());
+			await this.#SendData(new StopAndDrawCommand());
 		}
 	}
 
-	async OnCancelClick() {
-		if (this.m_bDrawLines) {
-			if (this.m_Line !== null) {
-				const points = this.m_Line.GetPointsArray();
-				this.m_CancelPath.disabled = 'disabled';
+	async #OnCancelClick() {
+		if (this.#bDrawLines) {
+			if (this.#Line !== null) {
+				const points = this.#Line.GetPointsArray();
+				this.#CancelPath.disabled = 'disabled';
 				for (const point of points) {
 					const { x, y } = point;
 					if (x === null || y === null) continue;
-					const p0 = await this.m_Points.get(y * this.m_iGridWidth + x);
+					const p0 = await this.#Points.get(y * this.#iGridWidth + x);
 					if (p0 !== undefined) {
 						p0.RevertOldStatus();
 					}
 				}
-				this.SvgVml.RemovePolyline(this.m_Line);
-				this.m_Line = null;
+				this.#SvgVml.RemovePolyline(this.#Line);
+				this.#Line = null;
 			}
-			this.m_iLastX = this.m_iLastY = -1;
+			this.#iLastX = this.#iLastY = -1;
 
-			if (this.m_Timer)
-				this.m_StopAndDraw.disabled = 'disabled';
+			if (this.#Timer)
+				this.#StopAndDraw.disabled = 'disabled';
 
-			this.Debug('', 0);
+			this.#Debug('', 0);
 		}
 	}
 
@@ -2020,19 +2092,19 @@ class InkBallGame {
 	 * Worker entry point - async version
 	 * @param {any} setupFunction - init params callback to be given a worker as 1st param
 	 */
-	async RunAIWorker(setupFunction) {
+	async #RunAIWorker(setupFunction) {
 		return new Promise((resolve, reject) => {
-			this.m_Worker = this.m_Worker ?? new Worker('../js/AIWorker.Bundle.js'
+			this.#Worker = this.#Worker ?? new Worker('../js/AIWorker.Bundle.js'
 				//, { type: 'module' }
 			);
 
-			this.m_Worker.onerror = function () {
-				this.m_Worker.terminate();
-				this.m_Worker = null;
+			this.#Worker.onerror = function () {
+				this.#Worker.terminate();
+				this.#Worker = null;
 				reject(new Error('no data'));
 			};
 
-			this.m_Worker.onmessage = function (e) {
+			this.#Worker.onmessage = function (e) {
 				const data = e.data;
 				switch (data.operation) {
 					case "BUILD_GRAPH":
@@ -2050,21 +2122,21 @@ class InkBallGame {
 			};
 
 			if (setupFunction)
-				setupFunction(this.m_Worker);
+				setupFunction(this.#Worker);
 		});//promise end
 	}
 
-	async OnTestBuildCurrentGraph(event) {
+	async #OnTestBuildCurrentGraph(event) {
 		event.preventDefault();
-		//LocalLog(await this.BuildGraph());
-		const data = await this.RunAIWorker((worker) => {
-			const serialized_points = Array.from(this.m_Points.store.entries()).map(([key, value]) => ({ key, value: value.Serialize() }));
-			const serialized_paths = this.m_Lines.store.map(pa => pa.Serialize());
+		//LocalLog(await this.#BuildGraph());
+		const data = await this.#RunAIWorker((worker) => {
+			const serialized_points = Array.from(this.#Points.store.entries()).map(([key, value]) => ({ key, value: value.Serialize() }));
+			const serialized_paths = this.#Lines.store.map(pa => pa.Serialize());
 
 			worker.postMessage({
 				operation: "BUILD_GRAPH",
-				boardSize: { iGridWidth: this.m_iGridWidth, iGridHeight: this.m_iGridHeight },
-				state: this.GetGameStateForIndexedDb(),
+				boardSize: { iGridWidth: this.#iGridWidth, iGridHeight: this.#iGridHeight },
+				state: this.#GetGameStateForIndexedDb(),
 				points: serialized_points,
 				paths: serialized_paths
 			});
@@ -2073,25 +2145,25 @@ class InkBallGame {
 		LocalLog(data);
 	}
 
-	async OnTestConcaveman(event) {
+	async #OnTestConcaveman(event) {
 		event.preventDefault();
 
-		const data = await this.RunAIWorker((worker) => {
-			const serialized_points = Array.from(this.m_Points.store.entries()).map(([key, value]) => ({ key, value: value.Serialize() }));
-			//const serialized_paths = this.m_Lines.store.map(pa => pa.Serialize());
+		const data = await this.#RunAIWorker((worker) => {
+			const serialized_points = Array.from(this.#Points.store.entries()).map(([key, value]) => ({ key, value: value.Serialize() }));
+			//const serialized_paths = this.#Lines.store.map(pa => pa.Serialize());
 
 			worker.postMessage({
 				operation: "CONCAVEMAN",
-				boardSize: { iGridWidth: this.m_iGridWidth, iGridHeight: this.m_iGridHeight },
-				state: this.GetGameStateForIndexedDb(),
+				boardSize: { iGridWidth: this.#iGridWidth, iGridHeight: this.#iGridHeight },
+				state: this.#GetGameStateForIndexedDb(),
 				points: serialized_points
 			});
 		});
 		if (data.convex_hull && data.convex_hull.length > 0) {
 			const convex_hull = data.convex_hull;
-			this.SvgVml.CreatePolyline(convex_hull.map(([x, y]) =>
+			this.#SvgVml.CreatePolyline(convex_hull.map(([x, y]) =>
 				parseInt(x) + ',' + parseInt(y))
-				.join(' '), 'green'/* , this.m_LineStrokeWidth * 2 */);
+				.join(' '), 'green'/* , this.#LineStrokeWidth * 2 */);
 			LocalLog(`convex_hull = ${convex_hull}`);
 
 			const cw_sorted_verts = data.cw_sorted_verts;
@@ -2104,54 +2176,54 @@ class InkBallGame {
 					pt.SetStrokeColor(rand_color);
 					pt.SetFillColor(rand_color);
 					pt.SetZIndex(100);
-					pt.setAttribute("r", 6 / this.m_iGridSpacingX);
+					pt.setAttribute("r", 6 / this.#iGridSpacingX);
 				}
 				await Sleep(50);
 			}
 		}
 	}
 
-	async OnTestMarkAllCycles(event) {
+	async #OnTestMarkAllCycles(event) {
 		event.preventDefault();
-		// const data = await this.RunAIWorker((worker) => {
-		// 	const serialized_points = Array.from(this.m_Points.store.entries()).map(([key, value]) => ({ key, value: value.Serialize() }));
-		// 	const serialized_paths = this.m_Lines.store.map(pa => pa.Serialize());
+		// const data = await this.#RunAIWorker((worker) => {
+		// 	const serialized_points = Array.from(this.#Points.store.entries()).map(([key, value]) => ({ key, value: value.Serialize() }));
+		// 	const serialized_paths = this.#Lines.store.map(pa => pa.Serialize());
 
 		// 	worker.postMessage({
 		// 		operation: "BUILD_GRAPH",
-		// 		boardSize: { iGridWidth: this.m_iGridWidth, iGridHeight: this.m_iGridHeight },
-		// 		state: this.GetGameStateForIndexedDb(),
+		// 		boardSize: { iGridWidth: this.#iGridWidth, iGridHeight: this.#iGridHeight },
+		// 		state: this.#GetGameStateForIndexedDb(),
 		// 		points: serialized_points,
 		// 		paths: serialized_paths
 		// 	});
 		// });
 
-		LocalLog(await this.MarkAllCycles(await this.BuildGraph(), this.COLOR_RED));
+		LocalLog(await this.#MarkAllCycles(await this.#BuildGraph(), this.#COLOR_RED));
 
-		// const data = await this.RunAIWorker((worker) => {
-		// 	const serialized_points = Array.from(this.m_Points.store.entries()).map(([key, value]) =>
+		// const data = await this.#RunAIWorker((worker) => {
+		// 	const serialized_points = Array.from(this.#Points.store.entries()).map(([key, value]) =>
 		// 		({ key, value: value.Serialize() }));
-		// 	const serialized_paths = this.m_Lines.store.map(pa => pa.Serialize());
+		// 	const serialized_paths = this.#Lines.store.map(pa => pa.Serialize());
 
 		// 	worker.postMessage({
 		// 		operation: "MARK_ALL_CYCLES",
-		// 		boardSize: { iGridWidth: this.m_iGridWidth, iGridHeight: this.m_iGridHeight },
-		// 		state: this.GetGameStateForIndexedDb(),
+		// 		boardSize: { iGridWidth: this.#iGridWidth, iGridHeight: this.#iGridHeight },
+		// 		state: this.#GetGameStateForIndexedDb(),
 		// 		points: serialized_points,
 		// 		paths: serialized_paths,
-		// 		colorRed: this.COLOR_RED,
-		// 		colorBlue: this.COLOR_BLUE
+		// 		colorRed: this.#COLOR_RED,
+		// 		colorBlue: this.#COLOR_BLUE
 		// 	});
 		// });
 
 		// if (data.cycles && data.free_human_player_points && data.free_human_player_points.length > 0) {
 		// 	//gather free human player points that could be intercepted.
 		// 	const free_human_player_points = [];
-		// 	//const sHumanColor = this.COLOR_RED;
+		// 	//const sHumanColor = this.#COLOR_RED;
 		// 	for (const pt of data.free_human_player_points) {
 		// 		//if (pt !== undefined && pt.GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.GetStatus()) {
 		// 		const { x, y } = pt;
-		// 		//	if (false === await this.IsPointOutsideAllPaths(x, y))
+		// 		//	if (false === await this.#IsPointOutsideAllPaths(x, y))
 		// 		//		continue;
 
 		// 		//check if really exists
@@ -2182,7 +2254,7 @@ class InkBallGame {
 
 		// 					pt.SetStrokeColor(rand_color);
 		// 					pt.SetFillColor(rand_color);
-		// 					pt.setAttribute("r", 6 / this.m_iGridSpacingX);
+		// 					pt.setAttribute("r", 6 / this.#iGridSpacingX);
 		// 				}
 		// 				await Sleep(50);
 		// 			}
@@ -2198,7 +2270,7 @@ class InkBallGame {
 		// 					if (pt1) {
 		// 						pt1.SetStrokeColor('var(--bs-yellow)');
 		// 						pt1.SetFillColor('var(--bs-yellow)');
-		// 						pt1.setAttribute("r", 6 / this.m_iGridSpacingX);
+		// 						pt1.setAttribute("r", 6 / this.#iGridSpacingX);
 		// 					}
 		// 					comma = ',';
 		// 				}
@@ -2209,67 +2281,67 @@ class InkBallGame {
 		// 			//log...
 		// 			LocalLog(str + (tmp !== '' ? ` possible intercepts: ${tmp}` : ''));
 		// 			//...and clear
-		// 			const pts2reset = Array.from(document.querySelectorAll(`svg > circle[fill="${rand_color}"][r="${this.m_LineStrokeWidth * 2}"]`));
+		// 			const pts2reset = Array.from(document.querySelectorAll(`svg > circle[fill="${rand_color}"][r="${this.#LineStrokeWidth * 2}"]`));
 		// 			pts2reset.forEach(pt => {
-		// 				pt.SetStrokeColor(this.COLOR_BLUE);
-		// 				pt.SetFillColor(this.COLOR_BLUE);
-		// 				pt.setAttribute("r", 6 / this.m_iGridSpacingX);
+		// 				pt.SetStrokeColor(this.#COLOR_BLUE);
+		// 				pt.SetFillColor(this.#COLOR_BLUE);
+		// 				pt.setAttribute("r", 6 / this.#iGridSpacingX);
 		// 			});
 		// 		}
 		// 	}
 		// }
 	}
 
-	async OnTestGroupPoints(event) {
+	async #OnTestGroupPoints(event) {
 		event.preventDefault();
 		//LocalLog('OnTestGroupPoints');
-		const starting_point = await this.m_Points.get(this.m_iMouseY * this.m_iGridWidth + this.m_iMouseX);
+		const starting_point = await this.#Points.get(this.#iMouseY * this.#iGridWidth + this.#iMouseX);
 		if (starting_point === undefined) {
 			LocalLog("!!!You need to click first 'blue' starting point with mouse!!!");
 			return;
 		}
-		await this.GroupPointsRecurse([], starting_point);
-		if (this.workingCyclePolyLine) {
-			this.SvgVml.RemovePolyline(this.workingCyclePolyLine);
-			this.workingCyclePolyLine = null;
+		await this.#GroupPointsRecurse([], starting_point);
+		if (this.#workingCyclePolyLine) {
+			this.#SvgVml.RemovePolyline(this.#workingCyclePolyLine);
+			this.#workingCyclePolyLine = null;
 		}
-		this.lastCycle.forEach(cycle => {
-			this.SvgVml.CreatePolyline(cycle.map(function (fnd) {
+		this.#lastCycle.forEach(cycle => {
+			this.#SvgVml.CreatePolyline(cycle.map(function (fnd) {
 				const pt = fnd.GetPosition();
 				return `${pt.x},${pt.y}`;
-			}).join(' '), RandomColor()/* , this.m_LineStrokeWidth * 2 */);
+			}).join(' '), RandomColor()/* , this.#LineStrokeWidth * 2 */);
 		});
 		LocalLog('game.lastCycle = ');
-		LocalLog(this.lastCycle);
-		this.lastCycle = [];
+		LocalLog(this.#lastCycle);
+		this.#lastCycle = [];
 	}
 
-	async OnTestFindSurroundablePoints(event) {
+	async #OnTestFindSurroundablePoints(event) {
 		event.preventDefault();
 
-		const sHumanColor = this.COLOR_RED, sCPUColor = this.COLOR_BLUE;
+		const sHumanColor = this.#COLOR_RED, sCPUColor = this.#COLOR_BLUE;
 		let working_points;
-		const pt = await this.m_Points.get(this.m_iMouseY * this.m_iGridWidth + this.m_iMouseX);
-		const all_points = [...await this.m_Points.values()];
+		const pt = await this.#Points.get(this.#iMouseY * this.#iGridWidth + this.#iMouseX);
+		const all_points = [...await this.#Points.values()];
 		if (pt !== undefined)
 			working_points = [pt];
 		else
 			working_points = all_points;
 
 		//loading all line up front and pass into below "looped" function calls
-		const allLines = await this.m_Lines.all();//TODO: async for
+		const allLines = await this.#Lines.all();//TODO: async for
 		for (const pt of working_points) {
 			if (pt !== undefined && pt.GetFillColor() === sHumanColor
 				&& [StatusEnum.POINT_FREE_RED, StatusEnum.POINT_IN_PATH].includes(pt.GetStatus())) {
 				const { x, y } = pt.GetPosition();
-				if (false === await this.IsPointOutsideAllPaths(x, y, allLines)) {
+				if (false === await this.#IsPointOutsideAllPaths(x, y, allLines)) {
 					LocalLog("!!!Point inside path!!!");
 					continue;
 				}
 				const rand_color = RandomColor();
 				const r = 2;
 
-				const enclosing_circle = this.SvgVml.CreateOval(r);
+				const enclosing_circle = this.#SvgVml.CreateOval(r);
 				enclosing_circle.move(x, y);
 				enclosing_circle.SetStrokeColor(rand_color);
 				enclosing_circle.StrokeWeight(0.1);
@@ -2282,10 +2354,10 @@ class InkBallGame {
 					if (cpu_pt !== undefined && cpu_pt.GetFillColor() === sCPUColor
 						&& [StatusEnum.POINT_FREE_BLUE, StatusEnum.POINT_IN_PATH].includes(cpu_pt.GetStatus())) {
 						const { x: cpu_x, y: cpu_y } = cpu_pt.GetPosition();
-						if (false === await this.IsPointOutsideAllPaths(cpu_x, cpu_y, allLines))
+						if (false === await this.#IsPointOutsideAllPaths(cpu_x, cpu_y, allLines))
 							continue;
 
-						if (0 <= this.SvgVml.IsPointInCircle({ x: cpu_x, y: cpu_y }, { x, y }, r)) {
+						if (0 <= this.#SvgVml.IsPointInCircle({ x: cpu_x, y: cpu_y }, { x, y }, r)) {
 							cpu_pt.x = cpu_x;
 							cpu_pt.y = cpu_y;
 							possible.push(cpu_pt);
@@ -2328,10 +2400,10 @@ class InkBallGame {
 								pt1.SetStrokeColor(rand_color);
 								pt1.StrokeWeight('0.020em');
 								pt1.SetFillColor(rand_color);
-								pt1.setAttribute("r", 6 / this.m_iGridSpacingX);
+								pt1.setAttribute("r", 6 / this.#iGridSpacingX);
 							}
 						}
-						await this.DisplayPointsProgressWithDelay(cw_sorted_verts, 250);
+						await this.#DisplayPointsProgressWithDelay(cw_sorted_verts, 250);
 					}
 
 					LocalLog('circle sorted possible path points: ');
@@ -2342,9 +2414,9 @@ class InkBallGame {
 		}
 	}
 
-	async OnTestDFS2(event) {
+	async #OnTestDFS2(event) {
 		event.preventDefault();
-		await this.DFS2(await this.BuildGraph(), this.COLOR_RED);
+		await this.#DFS2(await this.#BuildGraph(), this.#COLOR_RED);
 	}
 
 	/**
@@ -2369,157 +2441,157 @@ class InkBallGame {
 	async PrepareDrawing(sScreen, sPlayer1Name, sPlayer2Name, sGameStatus, sSurrenderButton, sCancelPath, sPause, sStopAndDraw,
 		sMsgInputSel, sMsgListSel, sMsgSendButtonSel, sLastMoveGameTimeStamp, useIndexedDbStore, version, ddlTestActions,
 		iTooLong2Duration = 125) {
-		this.m_bIsWon = false;
-		this.m_iDelayBetweenMultiCaptures = 4000;
-		this.m_iTooLong2Duration = iTooLong2Duration/*125*/;
-		this.m_Timer = null;
-		this.m_WaitStartTime = null;
-		this.m_iSlowdownLevel = 0;
-		this.m_iLastX = -1;
-		this.m_iLastY = -1;
-		this.m_iMouseX = 0;
-		this.m_iMouseY = 0;
-		this.m_iPosX = 0;
-		this.m_iPosY = 0;
-		this.m_bMouseDown = false;
-		this.m_bHandlingEvent = false;
-		this.m_bDrawLines = !true;
-		this.m_sMessage = '';
-		this.m_sDotColor = this.m_bIsPlayingWithRed ? this.COLOR_RED : this.COLOR_BLUE;
-		this.m_Line = null;
-		this.m_Debug = document.getElementById('debug0');
-		this.m_Player1Name = document.querySelector(sPlayer1Name);
-		this.m_Player2Name = document.querySelector(sPlayer2Name);
-		this.m_GameStatus = document.querySelector(sGameStatus);
-		this.m_SurrenderButton = document.querySelector(sSurrenderButton);
-		this.m_CancelPath = document.querySelector(sCancelPath);
-		this.m_StopAndDraw = document.querySelector(sStopAndDraw);
-		this.m_sMsgInputSel = sMsgInputSel;
-		this.m_sMsgListSel = sMsgListSel;
-		this.m_sMsgSendButtonSel = sMsgSendButtonSel;
-		this.m_Screen = document.querySelector(sScreen);
-		if (!this.m_Screen) {
+		this.#bIsWon = false;
+		this.#iDelayBetweenMultiCaptures = 4000;
+		this.#iTooLong2Duration = iTooLong2Duration/*125*/;
+		this.#Timer = null;
+		this.#WaitStartTime = null;
+		this.#iSlowdownLevel = 0;
+		this.#iLastX = -1;
+		this.#iLastY = -1;
+		this.#iMouseX = 0;
+		this.#iMouseY = 0;
+		this.#iPosX = 0;
+		this.#iPosY = 0;
+		this.#bMouseDown = false;
+		this.#bHandlingEvent = false;
+		this.#bDrawLines = !true;
+		this.#sMessage = '';
+		this.#sDotColor = this.#bIsPlayingWithRed ? this.#COLOR_RED : this.#COLOR_BLUE;
+		this.#Line = null;
+		this.#spDebug = document.getElementById('debug0');
+		this.#Player1Name = document.querySelector(sPlayer1Name);
+		this.#Player2Name = document.querySelector(sPlayer2Name);
+		this.#GameStatus = document.querySelector(sGameStatus);
+		this.#SurrenderButton = document.querySelector(sSurrenderButton);
+		this.#CancelPath = document.querySelector(sCancelPath);
+		this.#StopAndDraw = document.querySelector(sStopAndDraw);
+		this.#sMsgInputSel = sMsgInputSel;
+		this.#sMsgListSel = sMsgListSel;
+		this.#sMsgSendButtonSel = sMsgSendButtonSel;
+		this.#Screen = document.querySelector(sScreen);
+		if (!this.#Screen) {
 			alert("no board");
 			return;
 		}
-		this.m_iPosX = this.m_Screen.offsetLeft;
-		this.m_iPosY = this.m_Screen.offsetTop;
+		this.#iPosX = this.#Screen.offsetLeft;
+		this.#iPosY = this.#Screen.offsetTop;
 
-		let [iGridWidth, iGridHeight] = [...this.m_Screen.classList].find(x => x.startsWith('boardsize')).split('-')[1].split('x');
-		this.m_iGridWidth = parseInt(iGridWidth);
-		this.m_iGridHeight = parseInt(iGridHeight);
-		let iClientWidth = this.m_Screen.clientWidth;
-		let iClientHeight = this.m_Screen.clientHeight;
+		let [iGridWidth, iGridHeight] = [...this.#Screen.classList].find(x => x.startsWith('boardsize')).split('-')[1].split('x');
+		this.#iGridWidth = parseInt(iGridWidth);
+		this.#iGridHeight = parseInt(iGridHeight);
+		let iClientWidth = this.#Screen.clientWidth;
+		let iClientHeight = this.#Screen.clientHeight;
 		let svg_width_x_height = null;
 		if (iClientHeight <= 0) { //no styles loaded case, emulating calculation with 16px font size
-			iClientHeight = 16 * this.m_iGridHeight;
-			this.m_Screen.style.height = iClientHeight + 'px';
+			iClientHeight = 16 * this.#iGridHeight;
+			this.#Screen.style.height = iClientHeight + 'px';
 			svg_width_x_height = "100%";
 		}
-		this.m_iGridSpacingX = Math.ceil(iClientWidth / this.m_iGridWidth);
-		this.m_iGridSpacingY = Math.ceil(iClientHeight / this.m_iGridHeight);
-		//this.m_PointRadius = (4 / this.m_iGridSpacingX);
-		this.m_LineStrokeWidth = (3 / this.m_iGridSpacingX);
+		this.#iGridSpacingX = Math.ceil(iClientWidth / this.#iGridWidth);
+		this.#iGridSpacingY = Math.ceil(iClientHeight / this.#iGridHeight);
+		//this.#PointRadius = (4 / this.#iGridSpacingX);
+		this.#LineStrokeWidth = (3 / this.#iGridSpacingX);
 
-		this.m_sLastMoveGameTimeStamp = sLastMoveGameTimeStamp;
-		this.m_sVersion = version;
+		this.#sLastMoveGameTimeStamp = sLastMoveGameTimeStamp;
+		this.#sVersion = version;
 		///////CpuGame variables start//////
-		this.rAF_StartTimeStamp = null;
-		this.rAF_FrameID = null;
-		this.workingCyclePolyLine = null;
-		this.lastCycle = [];
-		this.m_AIMethod = null;
+		this.#rAF_StartTimeStamp = null;
+		this.#rAF_FrameID = null;
+		this.#workingCyclePolyLine = null;
+		this.#lastCycle = [];
+		this.#AIMethod = null;
 		///////CpuGame variables end//////
 
-		this.SvgVml = new SHRD.SvgVml();
-		if (this.SvgVml.CreateSVGVML(this.m_Screen, svg_width_x_height, svg_width_x_height,
-			{ iGridWidth: this.m_iGridWidth, iGridHeight: this.m_iGridHeight }) === null)
+		this.#SvgVml = new SHRD.SvgVml();
+		if (this.#SvgVml.CreateSVGVML(this.#Screen, svg_width_x_height, svg_width_x_height,
+			{ iGridWidth: this.#iGridWidth, iGridHeight: this.#iGridHeight }) === null)
 			alert('SVG is not supported!');
 
 		const stateStore = new SHRD.GameStateStore(useIndexedDbStore,
-			this.CreateScreenPointFromIndexedDb.bind(this),
-			this.CreateScreenPathFromIndexedDb.bind(this),
-			this.GetGameStateForIndexedDb.bind(this),
-			this.m_sVersion);
-		this.m_Lines = stateStore.GetPathStore();
-		this.m_Points = stateStore.GetPointStore();
-		this.m_bPointsAndPathsLoaded = await stateStore.PrepareStore();
+			this.#CreateScreenPointFromIndexedDb.bind(this),
+			this.#CreateScreenPathFromIndexedDb.bind(this),
+			this.#GetGameStateForIndexedDb.bind(this),
+			this.#sVersion);
+		this.#Lines = stateStore.GetPathStore();
+		this.#Points = stateStore.GetPointStore();
+		this.#bPointsAndPathsLoaded = await stateStore.PrepareStore();
 
-		if (this.m_bViewOnly === false) {
+		if (this.#bViewOnly === false) {
 
-			if (this.m_MouseCursorOval === null) {
-				this.m_MouseCursorOval = this.SvgVml.CreateOval(/* this.m_PointRadius */);
-				this.m_MouseCursorOval.SetFillColor(this.m_sDotColor);
-				// this.m_MouseCursorOval.SetStrokeColor(this.m_sDotColor);
-				this.m_MouseCursorOval.SetZIndex(-1);
-				this.m_MouseCursorOval.Hide();
-				this.m_MouseCursorOval.setAttribute("data-status", "MOUSE_POINTER");
+			if (this.#MouseCursorOval === null) {
+				this.#MouseCursorOval = this.#SvgVml.CreateOval(/* this.#PointRadius */);
+				this.#MouseCursorOval.SetFillColor(this.#sDotColor);
+				// this.#MouseCursorOval.SetStrokeColor(this.#sDotColor);
+				this.#MouseCursorOval.SetZIndex(-1);
+				this.#MouseCursorOval.Hide();
+				this.#MouseCursorOval.setAttribute("data-status", "MOUSE_POINTER");
 			}
 
-			this.m_Screen.onmousedown = this.OnMouseDown.bind(this);
-			this.m_Screen.onmousemove = this.OnMouseMove.bind(this);
-			this.m_Screen.onmouseup = this.OnMouseUp.bind(this);
-			this.m_Screen.onmouseleave = this.OnMouseLeave.bind(this);
+			this.#Screen.onmousedown = this.#OnMouseDown.bind(this);
+			this.#Screen.onmousemove = this.#OnMouseMove.bind(this);
+			this.#Screen.onmouseup = this.#OnMouseUp.bind(this);
+			this.#Screen.onmouseleave = this.#OnMouseLeave.bind(this);
 
-			this.m_CancelPath.onclick = this.OnCancelClick.bind(this);
-			this.m_StopAndDraw.onclick = this.OnStopAndDraw.bind(this);
-			if (false === this.m_bIsCPUGame) {
-				document.querySelector(this.m_sMsgInputSel).disabled = '';
+			this.#CancelPath.onclick = this.#OnCancelClick.bind(this);
+			this.#StopAndDraw.onclick = this.#OnStopAndDraw.bind(this);
+			if (false === this.#bIsCPUGame) {
+				document.querySelector(this.#sMsgInputSel).disabled = '';
 				document.getElementById('testArea').textContent = '';
 
-				this.m_MessagesRingBufferStore = new MessagesRingBufferStore(window.localStorage, this);
-				this.m_MessagesRingBufferStore.RestoreMessages();
+				this.#MessagesRingBufferStore = new MessagesRingBufferStore(window.localStorage, this);
+				this.#MessagesRingBufferStore.RestoreMessages(this.#sMsgListSel, this.#iPlayerID, this.#iOtherPlayerId, this.#bIsPlayingWithRed, this.#Player1Name, this.#Player2Name);
 			}
 			else {
 				let i = 0;
 				if (ddlTestActions.length > i)
-					document.querySelector(ddlTestActions[i++]).onclick = this.OnTestBuildCurrentGraph.bind(this);
+					document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestBuildCurrentGraph.bind(this);
 				if (ddlTestActions.length > i)
-					document.querySelector(ddlTestActions[i++]).onclick = this.OnTestConcaveman.bind(this);
+					document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestConcaveman.bind(this);
 				if (ddlTestActions.length > i)
-					document.querySelector(ddlTestActions[i++]).onclick = this.OnTestMarkAllCycles.bind(this);
+					document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestMarkAllCycles.bind(this);
 				if (ddlTestActions.length > i)
-					document.querySelector(ddlTestActions[i++]).onclick = this.OnTestGroupPoints.bind(this);
+					document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestGroupPoints.bind(this);
 				if (ddlTestActions.length > i)
-					document.querySelector(ddlTestActions[i++]).onclick = this.OnTestFindSurroundablePoints.bind(this);
+					document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestFindSurroundablePoints.bind(this);
 				if (ddlTestActions.length > i)
-					document.querySelector(ddlTestActions[i++]).onclick = this.OnTestDFS2.bind(this);
+					document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestDFS2.bind(this);
 
 				//disable or even delete chat functionality, coz we're not going to chat with CPU bot
-				//const chatSection = document.querySelector(this.m_sMsgListSel).parentElement;
+				//const chatSection = document.querySelector(this.#sMsgListSel).parentElement;
 				//chatSection.parentElement.removeChild(chatSection);
 
-				//if (!this.m_bIsPlayerActive)
-				//	this.StartCPUCalculation();
-				this.m_AIMethod = localStorage.getItem('AIMethod');
-				if (!this.m_AIMethod) {
-					this.m_AIMethod = 'centroid';
-					localStorage.setItem('AIMethod', this.m_AIMethod);
+				//if (!this.#bIsPlayerActive)
+				//	this.#StartCPUCalculation();
+				this.#AIMethod = localStorage.getItem('AIMethod');
+				if (!this.#AIMethod) {
+					this.#AIMethod = 'centroid';
+					localStorage.setItem('AIMethod', this.#AIMethod);
 				}
 			}
 
-			this.m_SurrenderButton.disabled = '';
+			this.#SurrenderButton.disabled = '';
 
-			if (this.m_Player2Name.textContent === '???') {
-				this.ShowStatus('Waiting for other player to connect');
-				this.m_Screen.style.cursor = "wait";
+			if (this.#Player2Name.textContent === '???') {
+				this.#ShowStatus('Waiting for other player to connect');
+				this.#Screen.style.cursor = "wait";
 			}
 			else {
-				this.m_SurrenderButton.value = 'surrender';
+				this.#SurrenderButton.value = 'surrender';
 
-				if (this.m_bIsPlayerActive) {
-					this.ShowStatus('Your move');
-					this.m_Screen.style.cursor = "crosshair";
-					this.m_StopAndDraw.disabled = '';
+				if (this.#bIsPlayerActive) {
+					this.#ShowStatus('Your move');
+					this.#Screen.style.cursor = "crosshair";
+					this.#StopAndDraw.disabled = '';
 				}
 				else {
-					this.ShowStatus('Waiting for opponent move');
-					this.m_Screen.style.cursor = "wait";
+					this.#ShowStatus('Waiting for opponent move');
+					this.#Screen.style.cursor = "wait";
 				}
-				if (!this.m_bDrawLines)
-					this.m_StopAndDraw.value = 'Draw line';
+				if (!this.#bDrawLines)
+					this.#StopAndDraw.value = 'Draw line';
 				else
-					this.m_StopAndDraw.value = 'Draw dot';
+					this.#StopAndDraw.value = 'Draw dot';
 			}
 		}
 		else {
@@ -2561,8 +2633,8 @@ class InkBallGame {
 
 		if (gameOptions.PointsAsJavaScriptArray !== null) {
 			await game.StartSignalRConnection(false);
-			await game.SetAllPoints(gameOptions.PointsAsJavaScriptArray);
-			await game.SetAllPaths(gameOptions.PathsAsJavaScriptArray);
+			await game.#SetAllPoints(gameOptions.PointsAsJavaScriptArray);
+			await game.#SetAllPaths(gameOptions.PathsAsJavaScriptArray);
 		}
 		else {
 			await game.StartSignalRConnection(true);
@@ -2590,36 +2662,36 @@ class InkBallGame {
 	 * @param {any} max - to (exclusive)
 	 * @returns {integer} random number
 	 */
-	GetRandomInt(min, max) {
-		min = Math.max(0, Math.min(min, this.m_iGridWidth));
-		max = Math.max(0, Math.min(max, this.m_iGridWidth));
+	#GetRandomInt(min, max) {
+		min = Math.max(0, Math.min(min, this.#iGridWidth));
+		max = Math.max(0, Math.min(max, this.#iGridWidth));
 		min = Math.ceil(min);
 		max = Math.floor(max);
 		return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
 	}
 
-	async FindRandomCPUPoint() {
+	async #FindRandomCPUPoint() {
 		let max_random_pick_amount = 100, x, y;
 		//loading all line up front and pass into below "looped" function calls
-		const allLines = await this.m_Lines.all();//TODO: async for
+		const allLines = await this.#Lines.all();//TODO: async for
 		while (--max_random_pick_amount > 0) {
-			x = this.GetRandomInt(0, this.m_iGridWidth);
-			y = this.GetRandomInt(0, this.m_iGridHeight);
+			x = this.#GetRandomInt(0, this.#iGridWidth);
+			y = this.#GetRandomInt(0, this.#iGridHeight);
 
-			if (!(await this.m_Points.has(y * this.m_iGridWidth + x)) && await this.IsPointOutsideAllPaths(x, y, allLines)) {
+			if (!(await this.#Points.has(y * this.#iGridWidth + x)) && await this.#IsPointOutsideAllPaths(x, y, allLines)) {
 				break;
 			}
 		}
 
-		const cmd = new InkBallPointViewModel(this.g_iGameID, -1/*player*/, x, y, StatusEnum.POINT_FREE_BLUE, 0);
+		const cmd = new InkBallPointViewModel(this.#iGameID, -1/*player*/, x, y, StatusEnum.POINT_FREE_BLUE, 0);
 		return cmd;
 	}
 
-	async CalculateCPUCentroid() {
+	async #CalculateCPUCentroid() {
 		let centroidX = 0, centroidY = 0, count = 0, x, y;
-		const sHumanColor = this.COLOR_RED;
+		const sHumanColor = this.#COLOR_RED;
 
-		for (const pt of await this.m_Points.values()) {
+		for (const pt of await this.#Points.values()) {
 			if (pt !== undefined && pt.GetFillColor() === sHumanColor && pt.GetStatus() === StatusEnum.POINT_FREE_RED) {
 				const { x, y } = pt.GetPosition();
 
@@ -2638,11 +2710,11 @@ class InkBallGame {
 
 		let random_pick_amount_cnter = 0, spread = 2;
 		//loading all line up front and pass into below "looped" function calls
-		const allLines = await this.m_Lines.all();//TODO: async for
+		const allLines = await this.#Lines.all();//TODO: async for
 		while (++random_pick_amount_cnter <= 50) {
 			random_picked_points.add(`${x}_${y}`);
-			if (false === (await this.m_Points.has(y * this.m_iGridWidth + x)) &&
-				true === (await this.IsPointOutsideAllPaths(x, y, allLines))) {
+			if (false === (await this.#Points.has(y * this.#iGridWidth + x)) &&
+				true === (await this.#IsPointOutsideAllPaths(x, y, allLines))) {
 				log_str += (`checking centroid coords ${x}_${y} succeed\n`);
 				break;
 			}
@@ -2652,8 +2724,8 @@ class InkBallGame {
 
 			let spread_cnter = 50;
 			do {
-				x = this.GetRandomInt(centroidX - spread, centroidX + spread + 1);
-				y = this.GetRandomInt(centroidY - spread, centroidY + spread + 1);
+				x = this.#GetRandomInt(centroidX - spread, centroidX + spread + 1);
+				y = this.#GetRandomInt(centroidY - spread, centroidY + spread + 1);
 			} while (--spread_cnter > 0 && random_picked_points.has(`${x}_${y}`));
 		}
 		if (random_pick_amount_cnter >= 50) {
@@ -2664,23 +2736,23 @@ class InkBallGame {
 		else
 			LocalLog(log_str);
 
-		const pt = new InkBallPointViewModel(this.g_iGameID, -1/*player*/, x, y, StatusEnum.POINT_FREE_BLUE, 0);
+		const pt = new InkBallPointViewModel(this.#iGameID, -1/*player*/, x, y, StatusEnum.POINT_FREE_BLUE, 0);
 		return pt;
 	}
 
-	async FindNearestCPUPoint() {
-		if (this.m_iLastX >= 0 && this.m_iLastY >= 0) {
-			let x = this.m_iLastX, y = this.m_iLastY;
+	async #FindNearestCPUPoint() {
+		if (this.#iLastX >= 0 && this.#iLastY >= 0) {
+			let x = this.#iLastX, y = this.#iLastY;
 			let log_str = "";
 			const random_picked_points = new Set();
 
 			let random_pick_amount_cnter = 0, spread = 1;
 			//loading all line up front and pass into below "looped" function calls
-			const allLines = await this.m_Lines.all();//TODO: async for
+			const allLines = await this.#Lines.all();//TODO: async for
 			while (++random_pick_amount_cnter <= 50) {
 				random_picked_points.add(`${x}_${y}`);
-				if (false === (await this.m_Points.has(y * this.m_iGridWidth + x)) &&
-					true === (await this.IsPointOutsideAllPaths(x, y, allLines))) {
+				if (false === (await this.#Points.has(y * this.#iGridWidth + x)) &&
+					true === (await this.#IsPointOutsideAllPaths(x, y, allLines))) {
 					log_str += (`checking nearest coords ${x}_${y} succeed\n`);
 					break;
 				}
@@ -2690,8 +2762,8 @@ class InkBallGame {
 
 				let spread_cnter = 20;
 				do {
-					x = this.GetRandomInt(this.m_iLastX - spread, this.m_iLastX + spread + 1);
-					y = this.GetRandomInt(this.m_iLastY - spread, this.m_iLastY + spread + 1);
+					x = this.#GetRandomInt(this.#iLastX - spread, this.#iLastX + spread + 1);
+					y = this.#GetRandomInt(this.#iLastY - spread, this.#iLastY + spread + 1);
 				} while (--spread_cnter > 0 && random_picked_points.has(`${x}_${y}`));
 			}
 			if (random_pick_amount_cnter >= 50) {
@@ -2702,7 +2774,7 @@ class InkBallGame {
 			else
 				LocalLog(log_str);
 
-			const pt = new InkBallPointViewModel(this.g_iGameID, -1/*player*/, x, y, StatusEnum.POINT_FREE_BLUE, 0);
+			const pt = new InkBallPointViewModel(this.#iGameID, -1/*player*/, x, y, StatusEnum.POINT_FREE_BLUE, 0);
 			return pt;
 		}
 
@@ -2764,9 +2836,9 @@ class InkBallGame {
 	 *	freePointStatus - status of free point
 	 *	cpuFillColor - CPU point color
 	 */
-	async BuildGraph({
+	async #BuildGraph({
 		freePointStatus = StatusEnum.POINT_FREE_BLUE,
-		cpufillCol: cpuFillColor = this.COLOR_BLUE
+		cpufillCol: cpuFillColor = this.#COLOR_BLUE
 		//, visuals: presentVisually = false
 	} = {}) {
 		const graph_points = [], graph_edges = new Map();
@@ -2780,8 +2852,8 @@ class InkBallGame {
 		};
 
 		const addPointsAndEdgesToGraph = async function (point, to_x, to_y, x, y) {
-			if (to_x >= 0 && to_x < this.m_iGridWidth && to_y >= 0 && to_y < this.m_iGridHeight) {
-				const next = await this.m_Points.get(to_y * this.m_iGridWidth + to_x);
+			if (to_x >= 0 && to_x < this.#iGridWidth && to_y >= 0 && to_y < this.#iGridHeight) {
+				const next = await this.#Points.get(to_y * this.#iGridWidth + to_x);
 				if (next && isPointOKForPath([freePointStatus], next) === true) {
 
 					if (graph_edges.has(`${x},${y}_${to_x},${to_y}`) === false && graph_edges.has(`${to_x},${to_y}_${x},${y}`) === false) {
@@ -2817,7 +2889,7 @@ class InkBallGame {
 			}
 		}.bind(this);
 
-		for (const point of await this.m_Points.values()) {
+		for (const point of await this.#Points.values()) {
 			if (point && isPointOKForPath([freePointStatus, this.POINT_STARTING, this.POINT_IN_PATH], point) === true) {
 				const { x, y } = point.GetPosition();
 				//TODO: await all below promises
@@ -2858,7 +2930,7 @@ class InkBallGame {
 	 * @param {string} sHumanColor - human red playing color
 	 * @returns {array} of cycles
 	 */
-	async MarkAllCycles(graph, sHumanColor) {
+	async #MarkAllCycles(graph, sHumanColor) {
 		const vertices = graph.vertices;
 		const N = vertices.length;
 		let cycles = new Array(N);
@@ -2901,7 +2973,7 @@ class InkBallGame {
 
 
 				const { x, y } = vertex.GetPosition();
-				const vis_v = await this.m_Points.get(y * this.m_iGridWidth + x);
+				const vis_v = await this.#Points.get(y * this.#iGridWidth + x);
 				vis_v.SetStrokeColor('black');
 				vis_v.SetFillColor('black');
 				vis_v.StrokeWeight(0.2);
@@ -2944,15 +3016,15 @@ class InkBallGame {
 			//gather free human player points that could be intercepted.
 			const free_human_player_points = [];
 			//loading all line up front and pass into below "looped" function calls
-			const allLines = await this.m_Lines.all();//TODO: async for
-			for (const pt of await this.m_Points.values()) {
+			const allLines = await this.#Lines.all();//TODO: async for
+			for (const pt of await this.#Points.values()) {
 				if (pt !== undefined && pt.GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.GetStatus()) {
 					const { x, y } = pt.GetPosition();
-					if (false === await this.IsPointOutsideAllPaths(x, y, allLines))
+					if (false === await this.#IsPointOutsideAllPaths(x, y, allLines))
 						continue;
 
 					//check if really exists
-					const pt1 = await this.m_Points.get(y * this.m_iGridWidth + x);
+					const pt1 = await this.#Points.get(y * this.#iGridWidth + x);
 					if (pt1)
 						free_human_player_points.push({ x, y });
 				}
@@ -2978,14 +3050,14 @@ class InkBallGame {
 					//display which cycle we are dealing with
 					for (const vert of cw_sorted_verts) {
 						const { x, y } = vert;
-						const pt = await this.m_Points.get(y * this.m_iGridWidth + x);
+						const pt = await this.#Points.get(y * this.#iGridWidth + x);
 						if (pt) {//again some basic checks
 							str += (`(${x},${y})`);
 
 							pt.SetStrokeColor(rand_color);
 							pt.SetFillColor(rand_color);
 							pt.StrokeWeight(0.2);
-							pt.setAttribute("r", 6 / this.m_iGridSpacingX);
+							pt.setAttribute("r", 6 / this.#iGridSpacingX);
 						}
 						await Sleep(50);
 					}
@@ -2997,12 +3069,12 @@ class InkBallGame {
 						if (false !== pnpoly2(cw_sorted_verts, possible_intercept.x, possible_intercept.y)) {
 							tmp += `${comma}(${possible_intercept.x},${possible_intercept.y})`;
 
-							const pt1 = await this.m_Points.get(possible_intercept.y * this.m_iGridWidth + possible_intercept.x);
+							const pt1 = await this.#Points.get(possible_intercept.y * this.#iGridWidth + possible_intercept.x);
 							if (pt1) {
 								pt1.SetStrokeColor('var(--bs-yellow)');
 								pt1.StrokeWeight(0.2);
 								pt1.SetFillColor('var(--bs-yellow)');
-								pt1.setAttribute("r", 6 / this.m_iGridSpacingX);
+								pt1.setAttribute("r", 6 / this.#iGridSpacingX);
 							}
 							comma = ',';
 						}
@@ -3013,12 +3085,12 @@ class InkBallGame {
 					//log...
 					LocalLog(str + (tmp !== '' ? ` possible intercepts: ${tmp}` : ''));
 					//...and clear
-					const pts2reset = Array.from(document.querySelectorAll(`svg > circle[fill="${rand_color}"][r="${6 / this.m_iGridSpacingX}"]`));
+					const pts2reset = Array.from(document.querySelectorAll(`svg > circle[fill="${rand_color}"][r="${6 / this.#iGridSpacingX}"]`));
 					pts2reset.forEach(pt => {
-						pt.SetStrokeColor(this.COLOR_BLUE);
+						pt.SetStrokeColor(this.#COLOR_BLUE);
 						pt.StrokeWeight(0.2);
-						pt.SetFillColor(this.COLOR_BLUE);
-						pt.setAttribute("r", 6 / this.m_iGridSpacingX);
+						pt.SetFillColor(this.#COLOR_BLUE);
+						pt.setAttribute("r", 6 / this.#iGridSpacingX);
 					});
 				}
 			}
@@ -3038,7 +3110,7 @@ class InkBallGame {
 	}
 
 	// eslint-disable-next-line no-unused-vars
-	async DFS2(graph, sHumanColor) {
+	async #DFS2(graph, sHumanColor) {
 		const enterVertex = () => {
 		};
 		const leaveVertex = () => {
@@ -3052,33 +3124,33 @@ class InkBallGame {
 			});
 			const cw_sorted_verts = sortPointsClockwise(lastSeen);
 
-			await this.DisplayPointsProgressWithDelay(cw_sorted_verts, 250);
+			await this.#DisplayPointsProgressWithDelay(cw_sorted_verts, 250);
 		};
 
 		await depthFirstSearch(graph, graph.vertices[0], { enterVertex, leaveVertex, showCycle });
 	}
 
-	async DisplayPointsProgressWithDelay(ptsArr, sleepMillisecs = 25) {
+	async #DisplayPointsProgressWithDelay(ptsArr, sleepMillisecs = 25) {
 		const pts = ptsArr.map((fnd) => {
 			const pt = fnd.GetPosition();
 			return `${pt.x},${pt.y}`;
 		}).join(' ');
-		if (!this.workingCyclePolyLine)
-			this.workingCyclePolyLine = this.SvgVml.CreatePolyline(pts, 'black'/* , this.m_LineStrokeWidth */);
+		if (!this.#workingCyclePolyLine)
+			this.#workingCyclePolyLine = this.#SvgVml.CreatePolyline(pts, 'black'/* , this.#LineStrokeWidth */);
 		else
-			this.workingCyclePolyLine.SetPoints(pts);
+			this.#workingCyclePolyLine.SetPoints(pts);
 
 		await Sleep(sleepMillisecs);
 	}
 
-	async GroupPointsRecurse(currPointsArr, point) {
+	async #GroupPointsRecurse(currPointsArr, point) {
 		if (point === undefined || currPointsArr.includes(point)
-			|| currPointsArr.length > 60 || this.lastCycle.length > 3
+			|| currPointsArr.length > 60 || this.#lastCycle.length > 3
 		) {
 			return currPointsArr;
 		}
 		if ([StatusEnum.POINT_FREE_BLUE, StatusEnum.POINT_STARTING, StatusEnum.POINT_IN_PATH].includes(point.GetStatus()) === false ||
-			point.GetFillColor() !== this.COLOR_BLUE) {
+			point.GetFillColor() !== this.#COLOR_BLUE) {
 			return currPointsArr;
 		}
 
@@ -3100,7 +3172,7 @@ class InkBallGame {
 
 		if (currPointsArr.length > 2) {
 			//draw currently constructed cycle path
-			await this.DisplayPointsProgressWithDelay(currPointsArr);
+			await this.#DisplayPointsProgressWithDelay(currPointsArr);
 
 			if (currPointsArr.length >= 4) {
 				const first_pos = currPointsArr[0].GetPosition();
@@ -3110,38 +3182,38 @@ class InkBallGame {
 				if (Math.abs(last_x - first_pos.x) <= 1 && Math.abs(last_y - first_pos.y) <= 1) {
 					const tmp = currPointsArr.slice(); //copy array in current state
 					tmp.push(currPointsArr[0]);
-					this.lastCycle.push(tmp);
+					this.#lastCycle.push(tmp);
 				}
 			}
 		}
 
 		const [east, west, north, south, north_west, north_east, south_west, south_east] = await Promise.all([
-			this.m_Points.get(y * this.m_iGridWidth + x + 1),
-			this.m_Points.get(y * this.m_iGridWidth + x - 1),
-			this.m_Points.get((y - 1) * this.m_iGridWidth + x),
-			this.m_Points.get((y + 1) * this.m_iGridWidth + x),
-			this.m_Points.get((y - 1) * this.m_iGridWidth + x - 1),
-			this.m_Points.get((y - 1) * this.m_iGridWidth + x + 1),
-			this.m_Points.get((y + 1) * this.m_iGridWidth + x - 1),
-			this.m_Points.get((y + 1) * this.m_iGridWidth + x + 1)
+			this.#Points.get(y * this.#iGridWidth + x + 1),
+			this.#Points.get(y * this.#iGridWidth + x - 1),
+			this.#Points.get((y - 1) * this.#iGridWidth + x),
+			this.#Points.get((y + 1) * this.#iGridWidth + x),
+			this.#Points.get((y - 1) * this.#iGridWidth + x - 1),
+			this.#Points.get((y - 1) * this.#iGridWidth + x + 1),
+			this.#Points.get((y + 1) * this.#iGridWidth + x - 1),
+			this.#Points.get((y + 1) * this.#iGridWidth + x + 1)
 		]);
 
 		if (east)
-			await this.GroupPointsRecurse(currPointsArr, east);
+			await this.#GroupPointsRecurse(currPointsArr, east);
 		if (west)
-			await this.GroupPointsRecurse(currPointsArr, west);
+			await this.#GroupPointsRecurse(currPointsArr, west);
 		if (north)
-			await this.GroupPointsRecurse(currPointsArr, north);
+			await this.#GroupPointsRecurse(currPointsArr, north);
 		if (south)
-			await this.GroupPointsRecurse(currPointsArr, south);
+			await this.#GroupPointsRecurse(currPointsArr, south);
 		if (north_west)
-			await this.GroupPointsRecurse(currPointsArr, north_west);
+			await this.#GroupPointsRecurse(currPointsArr, north_west);
 		if (north_east)
-			await this.GroupPointsRecurse(currPointsArr, north_east);
+			await this.#GroupPointsRecurse(currPointsArr, north_east);
 		if (south_west)
-			await this.GroupPointsRecurse(currPointsArr, south_west);
+			await this.#GroupPointsRecurse(currPointsArr, south_west);
 		if (south_east)
-			await this.GroupPointsRecurse(currPointsArr, south_east);
+			await this.#GroupPointsRecurse(currPointsArr, south_east);
 
 		const ind = currPointsArr.lastIndexOf(point);
 		if (ind !== -1) {
@@ -3149,7 +3221,7 @@ class InkBallGame {
 
 			if (currPointsArr.length >= 2) {
 				//draw currently constructed cycle path
-				await this.DisplayPointsProgressWithDelay(currPointsArr);
+				await this.#DisplayPointsProgressWithDelay(currPointsArr);
 			}
 		}
 		//all is lost. nothing found. record this path and make sure
@@ -3157,7 +3229,7 @@ class InkBallGame {
 		return currPointsArr;
 	}
 
-	async GroupPointsIterative({
+	async #GroupPointsIterative({
 		g: graph = null
 	} = {}) {
 		if (!graph) return;
@@ -3168,10 +3240,10 @@ class InkBallGame {
 			point = start;
 			const currPointsArr = [];
 
-			const traversed_path = await this.GroupPointsRecurse(currPointsArr, point);
-			if (traversed_path.length > 0 && this.lastCycle.length > 0) {
-				cycles.push(this.lastCycle);
-				this.lastCycle = [];
+			const traversed_path = await this.#GroupPointsRecurse(currPointsArr, point);
+			if (traversed_path.length > 0 && this.#lastCycle.length > 0) {
+				cycles.push(this.#lastCycle);
+				this.#lastCycle = [];
 			}
 		}
 
@@ -3179,31 +3251,31 @@ class InkBallGame {
 	}
 
 	async rAFCallBack(timeStamp) {
-		if (this.rAF_StartTimeStamp === null) this.rAF_StartTimeStamp = timeStamp;
-		const elapsed = timeStamp - this.rAF_StartTimeStamp;
+		if (this.#rAF_StartTimeStamp === null) this.#rAF_StartTimeStamp = timeStamp;
+		const elapsed = timeStamp - this.#rAF_StartTimeStamp;
 
 
 		let point = null;
-		switch (this.m_AIMethod) {
+		switch (this.#AIMethod) {
 			case 'centroid':
 				{
-					point = await this.CalculateCPUCentroid();
+					point = await this.#CalculateCPUCentroid();
 					if (point === null)
-						point = await this.FindRandomCPUPoint();
+						point = await this.#FindRandomCPUPoint();
 				}
 				break;
 			case 'nearest':
 				{
-					point = await this.FindNearestCPUPoint();
+					point = await this.#FindNearestCPUPoint();
 					if (point === null)
-						point = await this.FindRandomCPUPoint();
+						point = await this.#FindRandomCPUPoint();
 				}
 				break;
 		}
 
 		if (point === null) {
 			if (elapsed < 2000)
-				this.rAF_FrameID = window.requestAnimationFrame(this.rAFCallBack.bind(this));
+				this.#rAF_FrameID = window.requestAnimationFrame(this.rAFCallBack.bind(this));
 		}
 		else {
 			//if (this.rAF_FrameID !== null) {
@@ -3211,16 +3283,16 @@ class InkBallGame {
 			//this.rAF_FrameID = null;
 			//}
 
-			await this.SendData(point, () => {
-				this.m_bMouseDown = false;
-				this.m_bHandlingEvent = false;
+			await this.#SendData(point, () => {
+				this.#bMouseDown = false;
+				this.#bHandlingEvent = false;
 			});
 		}
 	}
 
-	StartCPUCalculation() {
-		if (this.rAF_FrameID === null)
-			this.rAF_FrameID = window.requestAnimationFrame(this.rAFCallBack.bind(this));
+	#StartCPUCalculation() {
+		if (this.#rAF_FrameID === null)
+			this.#rAF_FrameID = window.requestAnimationFrame(this.rAFCallBack.bind(this));
 	}
 	///////CpuGame variables methods end//////
 }
