@@ -39,17 +39,13 @@ function LocalError(...args) {
 	console.error(msg);
 }
 
-let LocalAlert;
-if (typeof myAlert !== "undefined")
-	LocalAlert = myAlert;
-else {
-	// eslint-disable-next-line no-unused-vars
-	LocalAlert = function (msg, title = 'Alert', onCloseCallback = undefined) {
+const LocalAlert = (typeof myAlert !== "undefined") ?
+	myAlert :
+	(msg, onCloseCallback = undefined) => {
 		window.alert(msg);
 		if (onCloseCallback)
 			onCloseCallback();
 	};
-}
 
 /**
  * Based on http://www.faqs.org/faqs/graphics/algorithms-faq/
@@ -578,6 +574,8 @@ class SvgVml {
 }
 
 class GameStateStore {
+	#DB;
+
 	constructor(useIndexedDb, pointCreationCallbackFn = null, pathCreationCallbackFn = null, getGameStateFn = null, version = "") {
 		if (useIndexedDb) {
 			if (!('indexedDB' in self)) {
@@ -666,6 +664,7 @@ class GameStateStore {
 				this.MainGameStateStore = mainGameStateStore;
 				this.GetPoint = mainGameStateStore.GetPoint.bind(this.MainGameStateStore);
 				this.StorePoint = mainGameStateStore.StorePoint.bind(this.MainGameStateStore);
+				this.UpdatePoint = mainGameStateStore.UpdatePoint.bind(this.MainGameStateStore);
 				this.GetAllPoints = mainGameStateStore.GetAllPoints.bind(this.MainGameStateStore);
 				this.UpdateState = mainGameStateStore.UpdateState.bind(this.MainGameStateStore);
 				this.PointCreationCallback = pointCreationCallbackFn;
@@ -677,7 +676,7 @@ class GameStateStore {
 					const points = await this.GetAllPoints();
 					const game_state = this.GetGameStateCallback();
 
-					//loading points from indexeddb
+					//loading points from IndexedDB
 					for (const idb_pt of points) {
 						const pt = await this.PointCreationCallback(idb_pt.x, idb_pt.y, idb_pt.Status, idb_pt.Color);
 						const index = idb_pt.y * game_state.iGridWidth + idb_pt.x;
@@ -720,7 +719,10 @@ class GameStateStore {
 				if (color)
 					idb_pt.Color = color;
 
-				await this.StorePoint(key, idb_pt);
+				if (await this.has(key))
+					await this.UpdatePoint(key, idb_pt);
+				else
+					await this.StorePoint(key, idb_pt);
 
 				if (this.UpdateState) {
 					if (game_state.bPointsAndPathsLoaded === true)
@@ -768,7 +770,7 @@ class GameStateStore {
 			async PrepareStore() {
 				if (this.PathCreationCallback) {
 					const paths = await this.GetAllPaths();
-					//loading paths from indexeddb
+					//loading paths from IndexedDB
 					for (const idb_pa of paths) {
 						const pa = await this.PathCreationCallback(idb_pa.PointsAsString, idb_pa.Color, idb_pa.iId);
 						this.store.push(pa);
@@ -829,7 +831,7 @@ class GameStateStore {
 			this.DB_POINT_STORE = 'points';
 			this.DB_PATH_STORE = 'paths';
 			this.DB_STATE_STORE = 'state';
-			this.g_DB = null;//main DB object
+			this.#DB = null;//main DB object
 			this.bulkStores = null;
 			this.pointBulkBuffer = null;
 			this.pathBulkBuffer = null;
@@ -872,37 +874,40 @@ class GameStateStore {
 
 			req.onsuccess = function (evt) {
 				// Equal to: db = req.result;
-				this.g_DB = evt.currentTarget.result;
+				this.#DB = evt.currentTarget.result;
 
 				LocalLog("OpenDb DONE");
 				resolve(evt.currentTarget.result);
 			}.bind(this);
+
 			req.onerror = function (evt) {
 				LocalError("OpenDb:", evt.target.errorCode || evt.target.error);
 				reject();
 			}.bind(this);
+
 			req.onupgradeneeded = function (evt) {
 				LocalLog(`OpenDb.onupgradeneeded(version: ${this.DB_VERSION})`);
+				const loc_db = evt.currentTarget.result;
 
-				const store_list = Array.from(evt.currentTarget.result.objectStoreNames);
+				const store_list = Array.from(loc_db.objectStoreNames);
 				if (store_list.includes(this.DB_POINT_STORE))
-					evt.currentTarget.result.deleteObjectStore(this.DB_POINT_STORE);
+					loc_db.deleteObjectStore(this.DB_POINT_STORE);
 				if (store_list.includes(this.DB_PATH_STORE))
-					evt.currentTarget.result.deleteObjectStore(this.DB_PATH_STORE);
+					loc_db.deleteObjectStore(this.DB_PATH_STORE);
 				if (store_list.includes(this.DB_STATE_STORE))
-					evt.currentTarget.result.deleteObjectStore(this.DB_STATE_STORE);
+					loc_db.deleteObjectStore(this.DB_STATE_STORE);
 
-				evt.currentTarget.result.createObjectStore(
-					this.DB_POINT_STORE, { /*keyPath: 'pos',*/ autoIncrement: false });
+				const point_store = loc_db.createObjectStore(
+					this.DB_POINT_STORE, { keyPath: 'Idx', autoIncrement: false });
 				//point_store.createIndex('Status', 'Status', { unique: false });
 				//point_store.createIndex('Color', 'Color', { unique: false });
+				//point_store.createIndex('Key', 'Key', { unique: true });
 
-
-				evt.currentTarget.result.createObjectStore(
-					this.DB_PATH_STORE, { /*keyPath: 'iId',*/ autoIncrement: false });
+				loc_db.createObjectStore(
+					this.DB_PATH_STORE, { keyPath: 'iId', autoIncrement: false });
 				//path_store.createIndex('Color', 'Color', { unique: false });
 
-				evt.currentTarget.result.createObjectStore(
+				loc_db.createObjectStore(
 					this.DB_STATE_STORE, { /*keyPath: 'gameId',*/ autoIncrement: false });
 			}.bind(this);
 		});
@@ -917,7 +922,7 @@ class GameStateStore {
 		if (this.bulkStores !== null && this.bulkStores.has(storeName))
 			return this.bulkStores.get(storeName);
 
-		const tx = this.g_DB.transaction(storeName, mode);
+		const tx = this.#DB.transaction(storeName, mode);
 		return tx.objectStore(storeName);
 	}
 
@@ -1044,7 +1049,15 @@ class GameStateStore {
 			const store = this.GetObjectStore(this.DB_POINT_STORE, 'readwrite');
 			let req;
 			try {
-				req = store.put(val, key);//earlier was 'add'
+				/////breaking start///////
+				// key = 38;
+				// val.x = 2;
+				// val.y = 2;
+				/////breaking end///////
+
+				if (typeof (val.Idx) === 'undefined')
+					val.Idx = key;
+				req = store.add(val/* , key */);//earlier was 'add'
 			} catch (e) {
 				if (e.name === 'DataCloneError')
 					LocalError("This engine doesn't know how to clone a Blob, use Firefox");
@@ -1060,6 +1073,40 @@ class GameStateStore {
 		});
 	}
 
+	/**
+	  * @param {number} key is calculated index of point y * width + x, probably not useful
+	  * @param {object} val is serialized, thin circle
+	  */
+	async UpdatePoint(key, val) {
+		if (this.bulkStores !== null && this.bulkStores.has(this.DB_POINT_STORE)) {
+			if (this.pointBulkBuffer === null)
+				this.pointBulkBuffer = new Map();
+			this.pointBulkBuffer.set(key, val);
+			return Promise.resolve();
+		}
+
+		return new Promise((resolve, reject) => {
+			const store = this.GetObjectStore(this.DB_POINT_STORE, 'readwrite');
+			let req;
+			try {
+				if (typeof (val.Idx) === 'undefined')
+					val.Idx = key;
+				req = store.put(val/* , key */);//earlier was 'add'
+			} catch (e) {
+				if (e.name === 'DataCloneError')
+					LocalError("This engine doesn't know how to clone a Blob, use Firefox");
+				throw e;
+			}
+			req.onsuccess = function () {
+				resolve();
+			};
+			req.onerror = function () {
+				LocalError("UpdatePoint error", this.error);
+				reject();
+			};
+		});
+	}
+
 	async StoreAllPoints(values = null) {
 		if (!values)
 			values = this.pointBulkBuffer;
@@ -1070,8 +1117,10 @@ class GameStateStore {
 		return new Promise((resolve, reject) => {
 			const store = this.GetObjectStore(this.DB_POINT_STORE, 'readwrite');
 			try {
-				values.forEach(function (v, key) {
-					store.add(v, key);
+				values.forEach(function (val, key) {
+					if (typeof (val.Idx) === 'undefined')
+						val.Idx = key;
+					store.add(val/* , key */);
 				});
 
 				this.pointBulkBuffer = null;
@@ -1145,7 +1194,7 @@ class GameStateStore {
 			const store = this.GetObjectStore(this.DB_PATH_STORE, 'readwrite');
 			let req;
 			try {
-				req = store.add(val, key);
+				req = store.add(val/*, key*/);
 			} catch (e) {
 				if (e.name === 'DataCloneError')
 					LocalError("This engine doesn't know how to clone a Blob, use Firefox");
@@ -1172,7 +1221,7 @@ class GameStateStore {
 			const store = this.GetObjectStore(this.DB_PATH_STORE, 'readwrite');
 			try {
 				values.forEach(function (v, key) {
-					store.add(v, key);
+					store.add(v/*, key*/);
 				});
 
 				this.pathBulkBuffer = null;
@@ -1188,7 +1237,7 @@ class GameStateStore {
 		//detecting if we have IndexedDb advanced store (only checking point-store); otherwise, there is no point in going further
 		if (!this.PointStore.GetAllPoints) return false;
 
-		if (this.g_DB === null)
+		if (this.#DB === null)
 			await this.OpenDb();
 		else
 			return false;//all initiated, just exit
@@ -1245,7 +1294,7 @@ class GameStateStore {
 		for (const key of keys) {
 			if (!this.bulkStores.has(key)) {
 				if (tx === null)
-					tx = this.g_DB.transaction(keys, mode);
+					tx = this.#DB.transaction(keys, mode);
 				this.bulkStores.set(key, tx.objectStore(key));
 			}
 		}
