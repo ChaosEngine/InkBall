@@ -50,10 +50,11 @@ namespace InkBall.Tests
 			// Create the schema in the database
 			using (var context = new GamesContext(options))
 			{
-				await context.Database.EnsureCreatedAsync(CancellationToken);
+				//await context.Database.EnsureCreatedAsync(CancellationToken);
+				await context.Database.MigrateAsync(CancellationToken);
 			}
 
-			var serviceCollection = new ServiceCollection()
+            var serviceCollection = new ServiceCollection()
 				.AddMemoryCache()
 				.AddLogging();
 			serviceCollection.AddDataProtection();

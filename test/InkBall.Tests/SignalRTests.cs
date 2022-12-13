@@ -144,7 +144,7 @@ namespace InkBall.Tests
 		}
 
 		[Fact]
-		public async Task SignalR_ClientToServer_ValidBehavior()
+        public async Task ClientToServer_ValidBehavior()
 		{
 			//Arrange
 			var token = base.CancellationToken;
@@ -303,7 +303,7 @@ namespace InkBall.Tests
 		}
 
 		[Fact]
-		public async Task SignalR_EFCore3_MultipleInsertsOfSamePoint()
+        public async Task EFCore3_MultipleInsertsOfSamePoint()
 		{
 			//Arrange
 			var token = base.CancellationToken;
@@ -466,7 +466,7 @@ namespace InkBall.Tests
 		}
 
 		[Fact]
-		public async Task SignalR_ClientToServer_InvalidBehavior()
+        public async Task ClientToServer_InvalidBehavior()
 		{
 			//Arrange
 			var token = base.CancellationToken;
@@ -604,7 +604,7 @@ namespace InkBall.Tests
 		}
 
 		[Fact]
-		public async Task SignalR_ClientToServer_WinSituationDetection()
+        public async Task ClientToServer_WinSituationDetection()
 		{
 			//Arrange
 			var token = base.CancellationToken;
@@ -716,7 +716,7 @@ namespace InkBall.Tests
 
 
 		[Fact]
-		public async Task SignalR_ClientDisconnect()
+        public async Task ClientDisconnect()
 		{
 			//Arrange
 			var token = base.CancellationToken;
@@ -779,7 +779,7 @@ namespace InkBall.Tests
 		}
 
 		[Fact]
-		public async Task SignalR_ClientToServer_PlayerJoin()
+        public async Task ClientToServer_PlayerJoin()
 		{
 			//Arrange
 			var token = base.CancellationToken;
@@ -895,7 +895,7 @@ namespace InkBall.Tests
 		[Theory]
 		[InlineData(false)]
 		[InlineData(true)]
-		public async Task SignalR_GetPlayerPointsAndPaths(bool viewOnly)
+        public async Task GetPlayerPointsAndPaths(bool viewOnly)
 		{
 			//Arrange
 			var token = base.CancellationToken;
@@ -1071,7 +1071,7 @@ namespace InkBall.Tests
 		[InlineData(false, null)]
 		[InlineData(true, 2.0 * InkBall.Module.Constants.PathAfterPointDrawAllowanceSecAmount)]
 		[InlineData(false, 0.5 * InkBall.Module.Constants.PathAfterPointDrawAllowanceSecAmount)]
-		public async Task SignalR_ClientToServer_OnStopAndDraw_PossibleTooLate(bool isDelayed, double? delayTimeInSecs)
+        public async Task ClientToServer_OnStopAndDraw_PossibleTooLate(bool isDelayed, double? delayTimeInSecs)
 		{
 			//Arrange
 			var token = base.CancellationToken;
@@ -1186,7 +1186,7 @@ namespace InkBall.Tests
 		[InlineData(true, false)]
 		[InlineData(false, true)]
 		[InlineData(true, true)]
-		public async Task SignalR_ClientToServer_AdjacentPaths_Interleaved(bool properlyInterleavedPoints, bool properlyInterleavedPaths)
+        public async Task ClientToServer_AdjacentPaths_Interleaved(bool properlyInterleavedPoints, bool properlyInterleavedPaths)
 		{
 			//Arrange
 			var token = base.CancellationToken;
@@ -1450,7 +1450,7 @@ new InkBallPathViewModel{ iId = 86, iGameId = 35, iPlayerId = 3, PointsAsString 
 
 
 		[Fact]
-		public async Task SignalR_ClientToServer_AdjacentPaths_SimpleTest()
+        public async Task ClientToServer_AdjacentPaths_SimpleTest()
 		{
 			//Arrange
 			var token = base.CancellationToken;
@@ -1583,11 +1583,11 @@ new []{/*id=714*/4/*x*/, 8/*y*/, 3/*val*/, 4/*playerID*/},
 			}//end using
 		}//end method
 
-		[Fact]
-		public void SignalR_ClientToServer_CPUOponent()
-		{
-			//TODO: implement this someday :-)
-		}
+        //[Fact]
+        //public void SignalR_ClientToServer_CPUOponent()
+        //{
+        //    //TODO: implement this someday :-)
+        //}
 
 	}//end class
 }
