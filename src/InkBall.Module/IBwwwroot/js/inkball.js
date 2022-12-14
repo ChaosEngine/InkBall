@@ -2,7 +2,7 @@
 /*global signalR*/
 "use strict";
 
-let SHRD, LocalLog, LocalError, StatusEnum, hasDuplicates, pnpoly2, sortPointsClockwise, Sleep, depthFirstSearch;
+let SHRD, LocalLog, LocalError, StatusEnum, hasDuplicates, pnpoly, sortPointsClockwise, Sleep, depthFirstSearch;
 
 /******** funcs-n-classes ********/
 const CommandKindEnum = Object.freeze({
@@ -443,7 +443,7 @@ async function importAllModulesAsync(gameOptions) {
 	else
 		SHRD = await import(/* webpackChunkName: "shared" */'./shared.js');
 	LocalLog = SHRD.LocalLog, LocalError = SHRD.LocalError, StatusEnum = SHRD.StatusEnum,
-		hasDuplicates = SHRD.hasDuplicates, pnpoly2 = SHRD.pnpoly2, sortPointsClockwise = SHRD.sortPointsClockwise,
+		hasDuplicates = SHRD.hasDuplicates, pnpoly = SHRD.pnpoly, sortPointsClockwise = SHRD.sortPointsClockwise,
 		Sleep = SHRD.Sleep;
 
 	//for CPU game enable AI libs and calculations
@@ -1342,7 +1342,7 @@ class InkBallGame {
 			if (pt !== undefined && pt.GetFillColor() === sColor &&
 				([StatusEnum.POINT_FREE_BLUE, StatusEnum.POINT_FREE_RED].includes(pt.GetStatus()))) {
 				const { x, y } = pt.GetPosition();
-				if (false !== pnpoly2(points, x, y)) {
+				if (false !== pnpoly(points, x, y)) {
 					sOwnedPoints += `${sDelimiter}${x},${y}`;
 					sDelimiter = " ";
 					ownedPoints.push({
@@ -1383,7 +1383,7 @@ class InkBallGame {
 		for (const line of allLines) {
 			const points = line.GetPointsArray();
 
-			if (false !== pnpoly2(points, x, y))
+			if (false !== pnpoly(points, x, y))
 				return false;
 		}
 
@@ -2261,7 +2261,7 @@ class InkBallGame {
 		// 			//only convex, NOT concave :-(
 		// 			let tmp = '', comma = '';
 		// 			for (const possible_intercept of free_human_player_points) {
-		// 				if (false !== pnpoly2(cw_sorted_verts, possible_intercept.x, possible_intercept.y)) {
+		// 				if (false !== pnpoly(cw_sorted_verts, possible_intercept.x, possible_intercept.y)) {
 		// 					tmp += `${comma}(${possible_intercept.x},${possible_intercept.y})`;
 
 		// 					const pt1 = document.querySelector(`svg > circle[cx="${possible_intercept.x}"][cy="${possible_intercept.y}"]`);
@@ -2386,7 +2386,7 @@ class InkBallGame {
 						) ||
 
 						//check if "points-created-path" actually contains selected single point inside its boundaries
-						false === pnpoly2(cw_sorted_verts, x, y)
+						false === pnpoly(cw_sorted_verts, x, y)
 					) {
 						continue;
 					}
@@ -3064,7 +3064,7 @@ class InkBallGame {
 					//only convex, NOT concave :-(
 					let tmp = '', comma = '';
 					for (const possible_intercept of free_human_player_points) {
-						if (false !== pnpoly2(cw_sorted_verts, possible_intercept.x, possible_intercept.y)) {
+						if (false !== pnpoly(cw_sorted_verts, possible_intercept.x, possible_intercept.y)) {
 							tmp += `${comma}(${possible_intercept.x},${possible_intercept.y})`;
 
 							const pt1 = await this.#Points.get(possible_intercept.y * this.#iGridWidth + possible_intercept.x);

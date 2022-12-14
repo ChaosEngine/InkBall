@@ -51,39 +51,16 @@ const LocalAlert = (typeof myAlert !== "undefined") ?
  * Based on http://www.faqs.org/faqs/graphics/algorithms-faq/
  * but mainly on http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
  * returns != 0 if point is inside path
- * @param {number} npol points count
- * @param {number} xp x point coordinates
- * @param {number} yp y point coordinates
- * @param {number} x point to check x coordinate
- * @param {number} y point to check y coordinate
- * @returns {boolean} if point lies inside the polygon
- */
-// function pnpoly(npol, xp, yp, x, y) {
-// 	let i, j, c = false;
-// 	for (i = 0, j = npol - 1; i < npol; j = i++) {
-// 		if ((((yp[i] <= y) && (y < yp[j])) ||
-// 			((yp[j] <= y) && (y < yp[i]))) &&
-// 			(x < (xp[j] - xp[i]) * (y - yp[i]) / (yp[j] - yp[i]) + xp[i]))
-
-// 			c = !c;
-// 	}
-// 	return c;
-// }
-
-/**
- * Based on http://www.faqs.org/faqs/graphics/algorithms-faq/
- * but mainly on http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
- * returns != 0 if point is inside path
  * @param {array} pathPoints points as array of {x,y}
  * @param {number} x point to check x coordinate
  * @param {number} y point to check y coordinate
  * @returns {boolean} if point lies inside the polygon
  */
-function pnpoly2(pathPoints, x, y) {
-	const npol = pathPoints.length;
+function pnpoly(pathPoints, x, y) {
+	const size = pathPoints.length;
 	let i, j, c = false;
 
-	for (i = 0, j = npol - 1; i < npol; j = i++) {
+	for (i = 0, j = size - 1; i < size; j = i++) {
 		const pi = pathPoints[i], pj = pathPoints[j];
 
 		if ((((pi.y <= y) && (y < pj.y)) ||
@@ -147,13 +124,16 @@ function sortPointsClockwise(points) {
 // www.dhteumeuleu.com
 //////////////////////////////////////////////////////
 class SvgVml {
+	#mathSVGPoint;
+	#cont;
+
 	constructor() {
 		const svgNS = "http://www.w3.org/2000/svg";
 		let svgAvailable = false, svgAntialias = undefined;
 		let documentCreateElementNS_SVG, documentCreateElementNS_Element;
-		this.cont = null;
+		this.#cont = null;
 		// Create an SVGPoint for future math
-		this.mathSVGPoint = null;
+		this.#mathSVGPoint = null;
 
 		if (self && self.document && self.document.createElementNS) {
 			const some_cont = document.createElementNS(svgNS, "svg");
@@ -352,13 +332,13 @@ class SvgVml {
 			return true;
 		};
 		SVGPolylineElement.prototype.RemoveLastPoint = function () {
-			const newpts = this.getAttribute("points").replace(/(\s\d+,\d+)$/, "");
-			this.setAttribute("points", newpts);
-			return newpts;
+			const new_points = this.getAttribute("points").replace(/(\s\d+,\d+)$/, "");
+			this.setAttribute("points", new_points);
+			return new_points;
 		};
 		SVGPolylineElement.prototype.ContainsPoint = function (x, y) {
-			const regexstr = new RegExp(`${x},${y}`, 'g');
-			const cnt = (this.getAttribute("points").match(regexstr) || []).length;
+			const regex = new RegExp(`${x},${y}`, 'g');
+			const cnt = (this.getAttribute("points").match(regex) || []).length;
 			return cnt;
 		};
 		SVGPolylineElement.prototype.GetPointsString = function () {
@@ -402,32 +382,32 @@ class SvgVml {
 		};
 
 		this.CreateSVGVML = function (contextElement, iWidth, iHeight, { iGridWidth, iGridHeight }, antialias) {
-			this.cont = documentCreateElementNS_SVG(contextElement);
+			this.#cont = documentCreateElementNS_SVG(contextElement);
 			if (iWidth)
-				this.cont.setAttributeNS(null, 'width', iWidth);
+				this.#cont.setAttributeNS(null, 'width', iWidth);
 			if (iHeight)
-				this.cont.setAttributeNS(null, 'height', iHeight);
+				this.#cont.setAttributeNS(null, 'height', iHeight);
 			if (contextElement) {
 				if (iGridWidth !== undefined && iGridHeight !== undefined)
-					this.cont.setAttribute("viewBox", `0 0 ${iGridWidth} ${iGridHeight}`);
+					this.#cont.setAttribute("viewBox", `0 0 ${iGridWidth} ${iGridHeight}`);
 
-				this.mathSVGPoint = this.cont.createSVGPoint();
+				this.#mathSVGPoint = this.#cont.createSVGPoint();
 			}
 			svgAntialias = antialias;
 
-			return svgAvailable ? this.cont : null;
+			return svgAvailable ? this.#cont : null;
 		};
-		this.CreateLine = function (w, col, linecap) {
-			const o = documentCreateElementNS_Element("line");
-			if (svgAntialias !== undefined)
-				o.setAttribute("shape-rendering", svgAntialias === true ? "auto" : "optimizeSpeed");
-			o.setAttribute("stroke-width", w + "px");
-			if (col) o.setAttribute("stroke", col);
-			if (linecap) o.setAttribute("stroke-linecap", linecap);
+		// this.CreateLine = function (w, col, linecap) {
+		// 	const o = documentCreateElementNS_Element("line");
+		// 	if (svgAntialias !== undefined)
+		// 		o.setAttribute("shape-rendering", svgAntialias === true ? "auto" : "optimizeSpeed");
+		// 	o.setAttribute("stroke-width", w + "px");
+		// 	if (col) o.setAttribute("stroke", col);
+		// 	if (linecap) o.setAttribute("stroke-linecap", linecap);
 
-			this.cont.appendChild(o);
-			return o;
-		};
+		// 	this.#cont.appendChild(o);
+		// 	return o;
+		// };
 		this.CreatePolyline = function (points, col, width = undefined) {
 			const o = documentCreateElementNS_Element("polyline");
 			if (svgAntialias !== undefined)
@@ -444,7 +424,7 @@ class SvgVml {
 			// o.setAttribute("stroke-linejoin", "round");
 			o.setAttribute("data-id", 0);
 
-			this.cont.appendChild(o);
+			this.#cont.appendChild(o);
 			return o;
 		};
 		this.CreateOval = function (radius = undefined) {
@@ -457,7 +437,7 @@ class SvgVml {
 			o.setAttribute("data-status", StatusEnumToString(StatusEnum.POINT_FREE));
 			//o.setAttribute("data-old-status", StatusEnumToString(StatusEnum.POINT_FREE));
 
-			this.cont.appendChild(o);
+			this.#cont.appendChild(o);
 			return o;
 		};
 
@@ -505,11 +485,11 @@ class SvgVml {
 	}
 
 	RemoveOval(oval) {
-		this.cont.removeChild(oval);
+		this.#cont.removeChild(oval);
 	}
 
 	RemovePolyline(polyline) {
-		this.cont.removeChild(polyline);
+		this.#cont.removeChild(polyline);
 	}
 
 	DeserializeOval(packed, radius = undefined) {
@@ -541,8 +521,8 @@ class SvgVml {
 	 */
 	ToCursorPoint(clientX, clientY) {
 		// Get point in global SVG space
-		this.mathSVGPoint.x = clientX; this.mathSVGPoint.y = clientY;
-		const loc = this.mathSVGPoint.matrixTransform(this.cont.getScreenCTM().inverse());
+		this.#mathSVGPoint.x = clientX; this.#mathSVGPoint.y = clientY;
+		const loc = this.#mathSVGPoint.matrixTransform(this.#cont.getScreenCTM().inverse());
 
 		return loc;
 	}
@@ -575,7 +555,10 @@ class SvgVml {
 
 class GameStateStore {
 	#DB;
-
+	#DB_NAME;
+	#DB_VERSION;
+	#bulkStores;
+	
 	constructor(useIndexedDb, pointCreationCallbackFn = null, pathCreationCallbackFn = null, getGameStateFn = null, version = "") {
 		if (useIndexedDb) {
 			if (!('indexedDB' in self)) {
@@ -659,26 +642,35 @@ class GameStateStore {
 		};
 
 		const IDBPointStoreDefinition = class IDBPointStore extends SimplePointStoreDefinition {
+			#MainGameStateStore;
+			#GetPoint;
+			#StorePoint;
+			#UpdatePoint;
+			// GetAllPoints;
+			#UpdateState;
+			#PointCreationCallback;
+			// GetGameStateCallback;
+
 			constructor(mainGameStateStore, pointCreationCallbackFn, getGameStateFn) {
 				super();
-				this.MainGameStateStore = mainGameStateStore;
-				this.GetPoint = mainGameStateStore.GetPoint.bind(this.MainGameStateStore);
-				this.StorePoint = mainGameStateStore.StorePoint.bind(this.MainGameStateStore);
-				this.UpdatePoint = mainGameStateStore.UpdatePoint.bind(this.MainGameStateStore);
-				this.GetAllPoints = mainGameStateStore.GetAllPoints.bind(this.MainGameStateStore);
-				this.UpdateState = mainGameStateStore.UpdateState.bind(this.MainGameStateStore);
-				this.PointCreationCallback = pointCreationCallbackFn;
+				this.#MainGameStateStore = mainGameStateStore;
+				this.#GetPoint = mainGameStateStore.GetPoint.bind(this.#MainGameStateStore);
+				this.#StorePoint = mainGameStateStore.StorePoint.bind(this.#MainGameStateStore);
+				this.#UpdatePoint = mainGameStateStore.UpdatePoint.bind(this.#MainGameStateStore);
+				this.GetAllPoints = mainGameStateStore.GetAllPoints.bind(this.#MainGameStateStore);
+				this.#UpdateState = mainGameStateStore.UpdateState.bind(this.#MainGameStateStore);
+				this.#PointCreationCallback = pointCreationCallbackFn;
 				this.GetGameStateCallback = getGameStateFn;
 			}
 
 			async PrepareStore() {
-				if (this.PointCreationCallback && this.GetGameStateCallback) {
+				if (this.#PointCreationCallback && this.GetGameStateCallback) {
 					const points = await this.GetAllPoints();
 					const game_state = this.GetGameStateCallback();
 
 					//loading points from IndexedDB
 					for (const idb_pt of points) {
-						const pt = await this.PointCreationCallback(idb_pt.x, idb_pt.y, idb_pt.Status, idb_pt.Color);
+						const pt = await this.#PointCreationCallback(idb_pt.x, idb_pt.y, idb_pt.Status, idb_pt.Color);
 						const index = idb_pt.y * game_state.iGridWidth + idb_pt.x;
 						this.store.set(index, pt);
 					}
@@ -688,16 +680,16 @@ class GameStateStore {
 			}
 
 			async BeginBulkStorage() {
-				await this.MainGameStateStore.BeginBulkStorage(this.MainGameStateStore.DB_POINT_STORE, 'readwrite');
+				await this.#MainGameStateStore.BeginBulkStorage(this.#MainGameStateStore.DB_POINT_STORE, 'readwrite');
 
-				if (this.MainGameStateStore.pointBulkBuffer === null)
-					this.MainGameStateStore.pointBulkBuffer = new Map();
+				if (this.#MainGameStateStore.pointBulkBuffer === null)
+					this.#MainGameStateStore.pointBulkBuffer = new Map();
 			}
 
 			async EndBulkStorage() {
-				await this.MainGameStateStore.StoreAllPoints();
+				await this.#MainGameStateStore.StoreAllPoints();
 
-				await this.MainGameStateStore.EndBulkStorage(this.MainGameStateStore.DB_POINT_STORE);
+				await this.#MainGameStateStore.EndBulkStorage(this.#MainGameStateStore.DB_POINT_STORE);
 			}
 
 			async has(key) {
@@ -720,13 +712,13 @@ class GameStateStore {
 					idb_pt.Color = color;
 
 				if (await this.has(key))
-					await this.UpdatePoint(key, idb_pt);
+					await this.#UpdatePoint(key, idb_pt);
 				else
-					await this.StorePoint(key, idb_pt);
+					await this.#StorePoint(key, idb_pt);
 
-				if (this.UpdateState) {
+				if (this.#UpdateState) {
 					if (game_state.bPointsAndPathsLoaded === true)
-						await this.UpdateState(game_state.iGameID, game_state);
+						await this.#UpdateState(game_state.iGameID, game_state);
 				}
 
 				return this.store.set(key, oval);
@@ -757,22 +749,29 @@ class GameStateStore {
 		};
 
 		const IDBPathStoreDefinition = class IDBPathStore extends SimplePathStoreDefinition {
+			#MainGameStateStore;
+			#GetAllPaths;
+			#StorePath;
+			#UpdateState;
+			#PathCreationCallback;
+			#GetGameStateCallback;
+
 			constructor(mainGameStateStore, pathCreationCallbackFn, getGameStateFn) {
 				super();
-				this.MainGameStateStore = mainGameStateStore;
-				this.GetAllPaths = mainGameStateStore.GetAllPaths.bind(this.MainGameStateStore);
-				this.StorePath = mainGameStateStore.StorePath.bind(this.MainGameStateStore);
-				this.UpdateState = mainGameStateStore.UpdateState.bind(this.MainGameStateStore);
-				this.PathCreationCallback = pathCreationCallbackFn;
-				this.GetGameStateCallback = getGameStateFn;
+				this.#MainGameStateStore = mainGameStateStore;
+				this.#GetAllPaths = mainGameStateStore.GetAllPaths.bind(this.#MainGameStateStore);
+				this.#StorePath = mainGameStateStore.StorePath.bind(this.#MainGameStateStore);
+				this.#UpdateState = mainGameStateStore.UpdateState.bind(this.#MainGameStateStore);
+				this.#PathCreationCallback = pathCreationCallbackFn;
+				this.#GetGameStateCallback = getGameStateFn;
 			}
 
 			async PrepareStore() {
-				if (this.PathCreationCallback) {
-					const paths = await this.GetAllPaths();
+				if (this.#PathCreationCallback) {
+					const paths = await this.#GetAllPaths();
 					//loading paths from IndexedDB
 					for (const idb_pa of paths) {
-						const pa = await this.PathCreationCallback(idb_pa.PointsAsString, idb_pa.Color, idb_pa.iId);
+						const pa = await this.#PathCreationCallback(idb_pa.PointsAsString, idb_pa.Color, idb_pa.iId);
 						this.store.push(pa);
 					}
 				}
@@ -780,20 +779,20 @@ class GameStateStore {
 			}
 
 			async BeginBulkStorage() {
-				await this.MainGameStateStore.BeginBulkStorage([this.MainGameStateStore.DB_POINT_STORE, this.MainGameStateStore.DB_PATH_STORE], 'readwrite');
+				await this.#MainGameStateStore.BeginBulkStorage([this.#MainGameStateStore.DB_POINT_STORE, this.#MainGameStateStore.DB_PATH_STORE], 'readwrite');
 
-				if (this.MainGameStateStore.pathBulkBuffer === null)
-					this.MainGameStateStore.pathBulkBuffer = new Map();
+				if (this.#MainGameStateStore.pathBulkBuffer === null)
+					this.#MainGameStateStore.pathBulkBuffer = new Map();
 			}
 
 			async EndBulkStorage() {
-				await this.MainGameStateStore.StoreAllPaths();
+				await this.#MainGameStateStore.StoreAllPaths();
 
-				await this.MainGameStateStore.EndBulkStorage([this.MainGameStateStore.DB_POINT_STORE, this.MainGameStateStore.DB_PATH_STORE]);
+				await this.#MainGameStateStore.EndBulkStorage([this.#MainGameStateStore.DB_POINT_STORE, this.#MainGameStateStore.DB_PATH_STORE]);
 			}
 
 			async push(val) {
-				const game_state = this.GetGameStateCallback();
+				const game_state = this.#GetGameStateCallback();
 
 				const id_key = val.GetID();
 				const idb_path = {
@@ -806,11 +805,11 @@ class GameStateStore {
 					}).join(" ")
 				};
 
-				await this.StorePath(id_key, idb_path);
+				await this.#StorePath(id_key, idb_path);
 
-				if (this.UpdateState) {
+				if (this.#UpdateState) {
 					if (game_state.bPointsAndPathsLoaded === true)
-						await this.UpdateState(game_state.iGameID, game_state);
+						await this.#UpdateState(game_state.iGameID, game_state);
 				}
 
 				return this.store.push(val);
@@ -820,27 +819,27 @@ class GameStateStore {
 				let values = this.store;
 				if (values)
 					return values;
-				values = await this.GetAllPaths();
+				values = await this.#GetAllPaths();
 				return values;
 			}
 		};
 		/////////inner class definitions end/////////
 
 		if (useIndexedDb === true) {
-			this.DB_NAME = 'InkballGame';
+			this.#DB_NAME = 'InkballGame';
 			this.DB_POINT_STORE = 'points';
 			this.DB_PATH_STORE = 'paths';
 			this.DB_STATE_STORE = 'state';
 			this.#DB = null;//main DB object
-			this.bulkStores = null;
+			this.#bulkStores = null;
 			this.pointBulkBuffer = null;
 			this.pathBulkBuffer = null;
 
 			// Use a long long for this value (don't use a float)
 			if (!version || version === "" || version.length <= 0)
-				this.DB_VERSION = null;
+				this.#DB_VERSION = null;
 			else {
-				this.DB_VERSION = parseInt(version.split('.').reduce((acc, val) => {
+				this.#DB_VERSION = parseInt(version.split('.').reduce((acc, val) => {
 					val = parseInt(val);
 					return acc * 10 + (isNaN(val) ? 0 : val);
 				}, 0)) - 1010/*initial module versioning start number*/ + 4/*initial indexDB start number*/;
@@ -867,10 +866,10 @@ class GameStateStore {
 		LocalLog("OpenDb ...");
 		return new Promise((resolve, reject) => {
 			let req;
-			if (this.DB_VERSION !== null)
-				req = indexedDB.open(this.DB_NAME, this.DB_VERSION);
+			if (this.#DB_VERSION !== null)
+				req = indexedDB.open(this.#DB_NAME, this.#DB_VERSION);
 			else
-				req = indexedDB.open(this.DB_NAME);
+				req = indexedDB.open(this.#DB_NAME);
 
 			req.onsuccess = function (evt) {
 				// Equal to: db = req.result;
@@ -886,7 +885,7 @@ class GameStateStore {
 			}.bind(this);
 
 			req.onupgradeneeded = function (evt) {
-				LocalLog(`OpenDb.onupgradeneeded(version: ${this.DB_VERSION})`);
+				LocalLog(`OpenDb.onupgradeneeded(version: ${this.#DB_VERSION})`);
 				const loc_db = evt.currentTarget.result;
 
 				const store_list = Array.from(loc_db.objectStoreNames);
@@ -919,14 +918,14 @@ class GameStateStore {
 	  * @returns {object} store
 	  */
 	GetObjectStore(storeName, mode) {
-		if (this.bulkStores !== null && this.bulkStores.has(storeName))
-			return this.bulkStores.get(storeName);
+		if (this.#bulkStores !== null && this.#bulkStores.has(storeName))
+			return this.#bulkStores.get(storeName);
 
 		const tx = this.#DB.transaction(storeName, mode);
 		return tx.objectStore(storeName);
 	}
 
-	async ClearAllStores() {
+	async #ClearAllStores() {
 		const clearObjectStore = async function (storeName) {
 			return new Promise((resolve, reject) => {
 				const store = this.GetObjectStore(storeName, 'readwrite');
@@ -1038,7 +1037,7 @@ class GameStateStore {
 	  * @param {object} val is serialized, thin circle
 	  */
 	async StorePoint(key, val) {
-		if (this.bulkStores !== null && this.bulkStores.has(this.DB_POINT_STORE)) {
+		if (this.#bulkStores !== null && this.#bulkStores.has(this.DB_POINT_STORE)) {
 			if (this.pointBulkBuffer === null)
 				this.pointBulkBuffer = new Map();
 			this.pointBulkBuffer.set(key, val);
@@ -1078,7 +1077,7 @@ class GameStateStore {
 	  * @param {object} val is serialized, thin circle
 	  */
 	async UpdatePoint(key, val) {
-		if (this.bulkStores !== null && this.bulkStores.has(this.DB_POINT_STORE)) {
+		if (this.#bulkStores !== null && this.#bulkStores.has(this.DB_POINT_STORE)) {
 			if (this.pointBulkBuffer === null)
 				this.pointBulkBuffer = new Map();
 			this.pointBulkBuffer.set(key, val);
@@ -1111,7 +1110,7 @@ class GameStateStore {
 		if (!values)
 			values = this.pointBulkBuffer;
 
-		if (!values || this.bulkStores === null)
+		if (!values || this.#bulkStores === null)
 			return Promise.reject();
 
 		return new Promise((resolve, reject) => {
@@ -1136,7 +1135,7 @@ class GameStateStore {
 	  * @param {number} key is GameID
 	  * @param {object} gameState is InkBallGame state object
 	  */
-	async StoreState(key, gameState) {
+	async #StoreState(key, gameState) {
 		return new Promise((resolve, reject) => {
 			const store = this.GetObjectStore(this.DB_STATE_STORE, 'readwrite');
 			let req;
@@ -1183,7 +1182,7 @@ class GameStateStore {
 	  * @param {object} val is serialized thin path
 	  */
 	async StorePath(key, val) {
-		if (this.bulkStores !== null && this.bulkStores.has(this.DB_PATH_STORE)) {
+		if (this.#bulkStores !== null && this.#bulkStores.has(this.DB_PATH_STORE)) {
 			if (this.pathBulkBuffer === null)
 				this.pathBulkBuffer = new Map();
 			this.pathBulkBuffer.set(key, val);
@@ -1214,12 +1213,13 @@ class GameStateStore {
 		if (!values)
 			values = this.pathBulkBuffer;
 
-		if (!values || this.bulkStores === null)
+		if (!values || this.#bulkStores === null)
 			return Promise.reject();
 
 		return new Promise((resolve, reject) => {
 			const store = this.GetObjectStore(this.DB_PATH_STORE, 'readwrite');
 			try {
+				// eslint-disable-next-line no-unused-vars
 				values.forEach(function (v, key) {
 					store.add(v/*, key*/);
 				});
@@ -1246,9 +1246,9 @@ class GameStateStore {
 		const idb_state = await this.GetState(game_state.iGameID);
 		if (!idb_state) {
 			//no state entry in db
-			await this.ClearAllStores();
+			await this.#ClearAllStores();
 
-			await this.StoreState(game_state.iGameID, game_state);
+			await this.#StoreState(game_state.iGameID, game_state);
 
 			return false;
 		}
@@ -1257,7 +1257,7 @@ class GameStateStore {
 			//Both datetimes should be ISO UTC
 			if (idb_state.sLastMoveGameTimeStamp !== game_state.sLastMoveGameTimeStamp) {
 
-				await this.ClearAllStores();
+				await this.#ClearAllStores();
 				return false;
 			}
 			else if (game_state.bPointsAndPathsLoaded === false) {
@@ -1267,7 +1267,7 @@ class GameStateStore {
 
 					if ((await this.PointStore.PrepareStore()) !== true || (await this.PathStore.PrepareStore()) !== true) {
 
-						await this.ClearAllStores();
+						await this.#ClearAllStores();
 
 						return false;
 					}
@@ -1286,38 +1286,38 @@ class GameStateStore {
 	 * @param {any} mode - readonly/readwrite
 	 */
 	async BeginBulkStorage(storeName, mode) {
-		if (this.bulkStores === null)
-			this.bulkStores = new Map();
+		if (this.#bulkStores === null)
+			this.#bulkStores = new Map();
 
 		const keys = Array.isArray(storeName) ? storeName : [storeName];
 		let tx = null;
 		for (const key of keys) {
-			if (!this.bulkStores.has(key)) {
+			if (!this.#bulkStores.has(key)) {
 				if (tx === null)
 					tx = this.#DB.transaction(keys, mode);
-				this.bulkStores.set(key, tx.objectStore(key));
+				this.#bulkStores.set(key, tx.objectStore(key));
 			}
 		}
 	}
 
 	async EndBulkStorage(storeName) {
-		if (this.bulkStores !== null) {
+		if (this.#bulkStores !== null) {
 			const keys = Array.isArray(storeName) ? storeName : [storeName];
 			for (const key of keys) {
-				if (this.bulkStores.has(key)) {
-					this.bulkStores.delete(key);
+				if (this.#bulkStores.has(key)) {
+					this.#bulkStores.delete(key);
 				}
 			}
 
-			if (this.bulkStores.size <= 0)
-				this.bulkStores = null;
+			if (this.#bulkStores.size <= 0)
+				this.#bulkStores = null;
 		}
 	}
 }
 
 
 export {
-	SvgVml, StatusEnum, pnpoly2, LocalLog, LocalError, LocalAlert,
+	SvgVml, StatusEnum, pnpoly, LocalLog, LocalError, LocalAlert,
 	hasDuplicates, sortPointsClockwise, Sleep,
 	GameStateStore
 };

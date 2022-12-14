@@ -1,6 +1,6 @@
 import concaveman from "concaveman";
 import decomp from "poly-decomp";
-import { StatusEnum, LocalLog, sortPointsClockwise, /*Sleep,*/ pnpoly2 } from "./shared.js";
+import { StatusEnum, LocalLog, sortPointsClockwise, /*Sleep,*/ pnpoly } from "./shared.js";
 
 
 /**
@@ -110,7 +110,7 @@ class GraphAI {
 		for (const line of allLines) {
 			const points = line.GetPointsArray();
 
-			if (false !== pnpoly2(points, x, y))
+			if (false !== pnpoly(points, x, y))
 				return false;
 		}
 
@@ -255,7 +255,7 @@ class GraphAI {
 					//only convex, NOT concave :-(
 					//let tmp = '', comma = '';
 					//for (const possible_intercept of free_human_player_points) {
-					//	if (false !== pnpoly2(cw_sorted_verts, possible_intercept.x, possible_intercept.y)) {
+					//	if (false !== pnpoly(cw_sorted_verts, possible_intercept.x, possible_intercept.y)) {
 					//		tmp += `${comma}(${possible_intercept.x},${possible_intercept.y})`;
 
 					//		const pt1 = document.querySelector(`svg > circle[cx="${possible_intercept.x}"][cy="${possible_intercept.y}"]`);
