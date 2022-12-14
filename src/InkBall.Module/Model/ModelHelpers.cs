@@ -98,9 +98,12 @@ namespace InkBall.Module.Model
 			switch (migrationBuilder.ActiveProvider)
 			{
 				case "Microsoft.EntityFrameworkCore.Sqlite":
-					string command =
+                    //SQLite: RETURNING clause doesn't work with AFTER triggers #gh-29811
+                    //https://github.com/dotnet/efcore/issues/29811
+                    //
+                    string command =
 $@"CREATE TRIGGER IF NOT EXISTS {tableName}_update_{timeStampColumnName}_Trigger
-AFTER UPDATE ON {tableName}
+BEFORE UPDATE ON {tableName}
 BEGIN
 	UPDATE {tableName} SET {timeStampColumnName} = datetime(CURRENT_TIMESTAMP, 'localtime') WHERE {primaryKey} = NEW.{primaryKey};
 END;";
@@ -110,7 +113,7 @@ END;";
 
 				case "Microsoft.EntityFrameworkCore.SqlServer":
 					command =
-$@"CREATE TRIGGER [dbo].[{tableName}_update_{timeStampColumnName}_Trigger] ON [dbo].[{tableName}]
+$@"CREATE OR ALTER TRIGGER [dbo].[{tableName}_update_{timeStampColumnName}_Trigger] ON [dbo].[{tableName}]
 	AFTER UPDATE
 AS
 BEGIN
@@ -141,14 +144,14 @@ END;";
 
 				case "Npgsql.EntityFrameworkCore.PostgreSQL":
 					command =
-$@"CREATE FUNCTION ""{tableName}_update_{timeStampColumnName}_TrigFunc""() RETURNS trigger AS $$
+$@"CREATE OR REPLACE FUNCTION ""{tableName}_update_{timeStampColumnName}_TrigFunc""() RETURNS trigger AS $$
     BEGIN
         NEW.""{timeStampColumnName}"" := CURRENT_TIMESTAMP;
         RETURN NEW;
     END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER ""{tableName}_update_{timeStampColumnName}_Trigger"" BEFORE UPDATE ON ""{tableName}""
+CREATE OR REPLACE TRIGGER ""{tableName}_update_{timeStampColumnName}_Trigger"" BEFORE UPDATE ON ""{tableName}""
     FOR EACH ROW EXECUTE FUNCTION ""{tableName}_update_{timeStampColumnName}_TrigFunc""();
 ";
 					//Console.Error.WriteLine($"executing '{command}'");
@@ -177,7 +180,7 @@ CREATE TRIGGER ""{tableName}_update_{timeStampColumnName}_Trigger"" BEFORE UPDAT
 					break;
 
 				case "Microsoft.EntityFrameworkCore.SqlServer":
-					command = $@"DROP TRIGGER [dbo].[{tableName}_update_{timeStampColumnName}_Trigger];";
+					command = $@"DROP TRIGGER IF EXISTS [dbo].[{tableName}_update_{timeStampColumnName}_Trigger];";
 
 					//Console.Error.WriteLine($"executing '{command}'");
 					migrationBuilder.Sql(command);
