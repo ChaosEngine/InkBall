@@ -251,7 +251,7 @@ class GraphAI {
 					//	await Sleep(50);
 					//}
 
-					//find for all free_human_player_points which cycle might interepct it (surrounds)
+					//find for all free_human_player_points which cycle might intercept it (surrounds)
 					//only convex, NOT concave :-(
 					//let tmp = '', comma = '';
 					//for (const possible_intercept of free_human_player_points) {
@@ -267,7 +267,7 @@ class GraphAI {
 					//		comma = ',';
 					//	}
 					//}
-					////gaterhing of some data and console printing
+					////gathering of some data and console printing
 					//trailing_points.unshift(str);
 					//tab.push(trailing_points);
 					////log...

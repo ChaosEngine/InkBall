@@ -523,6 +523,7 @@ class InkBallGame {
 	#bDrawLines;
 	#sMessage;
 	#bIsPlayingWithRed;
+	#bIsThisPlayer1;
 	#bIsPlayerActive;
 	#GameStatus;
 	#sDotColor;
@@ -563,13 +564,14 @@ class InkBallGame {
 	 * @param {number} serverTimeoutInMilliseconds If the server hasn't sent a message in this interval, the client considers the server disconnected
 	 * @param {enum} gameType of game enum as string
 	 * @param {boolean} bIsPlayingWithRed true - red, false - blue
+	 * @param {boolean} bIsThisPlayer1 - if this player is P1 or P2
 	 * @param {boolean} bIsPlayerActive is this player active now
 	 * @param {boolean} bViewOnly only viewing the game no interaction
 	 * @param {number} pathAfterPointDrawAllowanceSecAmount is number of seconds, a player is allowed to start drawing path after putting point
 	 * @param {number} iTooLong2Duration too long wait duration
 	 */
-	constructor(iGameID, iPlayerID, iOtherPlayerID, sHubName, loggingLevel, hubProtocol, transportType,
-		serverTimeoutInMilliseconds, gameType, bIsPlayingWithRed = true, bIsPlayerActive = true, bViewOnly = false,
+	constructor(iGameID, iPlayerID, iOtherPlayerID, sHubName, loggingLevel, hubProtocol, transportType, serverTimeoutInMilliseconds,
+		gameType, bIsPlayingWithRed = true, bIsThisPlayer1 = true, bIsPlayerActive = true, bViewOnly = false,
 		pathAfterPointDrawAllowanceSecAmount = 60, iTooLong2Duration = 125) {
 		this.#iGameID = iGameID;
 		this.#iPlayerID = iPlayerID;
@@ -624,6 +626,7 @@ class InkBallGame {
 		this.#bDrawLines = !true;
 		this.#sMessage = '';
 		this.#bIsPlayingWithRed = bIsPlayingWithRed;
+		this.#bIsThisPlayer1 = bIsThisPlayer1;
 		this.#bIsPlayerActive = bIsPlayerActive;
 		this.#sDotColor = this.#bIsPlayingWithRed ? this.#COLOR_RED : this.#COLOR_BLUE;
 		this.#SvgVml = null;
@@ -808,7 +811,6 @@ class InkBallGame {
 	 */
 	async StartSignalRConnection(loadPointsAndPathsFromSignalR) {
 		if (this.#SignalRConnection === null) return Promise.reject(new Error("signalr conn is null"));
-		//this.#bIsCPUGame = this.#iOtherPlayerId === -1;
 		if (false === this.#bPointsAndPathsLoaded)
 			this.#bPointsAndPathsLoaded = !loadPointsAndPathsFromSignalR;
 
@@ -2595,6 +2597,36 @@ class InkBallGame {
 		else {
 			document.querySelector(sPause).textContent = 'back to Game List';
 		}
+
+		//set status info for player, color, "who is who" stuff.
+		const whichColor = document.getElementById('whichColor');
+		const whichPlayer = document.getElementById('whichPlayer');
+		whichColor.style.color = this.#sDotColor;
+		if (this.#bIsPlayingWithRed) {
+			whichColor.textContent = "red";
+			if (this.#bIsThisPlayer1) {
+				this.#Player1Name.style.color = this.#COLOR_RED;
+				this.#Player2Name.style.color = this.#COLOR_BLUE;
+				whichPlayer.textContent = "Player1";
+			}
+			else {
+				this.#Player1Name.style.color = this.#COLOR_BLUE;
+				this.#Player2Name.style.color = this.#COLOR_RED;
+				whichPlayer.textContent = "Player2";
+			}
+		} else {
+			whichColor.textContent = "blue";
+			if (this.#bIsThisPlayer1) {
+				this.#Player1Name.style.color = this.#COLOR_BLUE;
+				this.#Player2Name.style.color = this.#COLOR_RED;
+				whichPlayer.textContent = "Player1";
+			}
+			else {
+				this.#Player1Name.style.color = this.#COLOR_RED;
+				this.#Player2Name.style.color = this.#COLOR_BLUE;
+				whichPlayer.textContent = "Player2";
+			}
+		}
 	}
 
 	static async OnLoad(gameOptions) {
@@ -2610,6 +2642,7 @@ class InkBallGame {
 		gameOptions.iOtherPlayerID = iOtherPlayerID;
 		document.getElementById('playerID').textContent = iPlayerID;
 		const bPlayingWithRed = gameOptions.bPlayingWithRed;
+		const bIsThisPlayer1 = gameOptions.bIsThisPlayer1;
 		const bPlayerActive = gameOptions.bPlayerActive;
 		const gameType = gameOptions.gameType;
 		const protocol = isMsgpackDefined && gameOptions.isMessagePackProtocol === true ? new signalR.protocols.msgpack.MessagePackHubProtocol() : new signalR.JsonHubProtocol();
@@ -2623,7 +2656,7 @@ class InkBallGame {
 
 		const game = new InkBallGame(iGameID, iPlayerID, iOtherPlayerID, inkBallHubName, signalR.LogLevel.Warning, protocol,
 			signalR.HttpTransportType.None, servTimeoutMillis,
-			gameType, bPlayingWithRed, bPlayerActive, isReadonly, pathAfterPointDrawAllowanceSecAmount
+			gameType, bPlayingWithRed, bIsThisPlayer1, bPlayerActive, isReadonly, pathAfterPointDrawAllowanceSecAmount
 		);
 		await game.PrepareDrawing('#screen', '#Player1Name', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw',
 			'#messageInput', '#messagesList', '#sendButton', sLastMoveTimeStampUtcIso, gameOptions.PointsAsJavaScriptArray === null, version,
@@ -2638,7 +2671,6 @@ class InkBallGame {
 			await game.StartSignalRConnection(true);
 		}
 		//alert('a QQ');
-		document.getElementById('whichColor').style.color = bPlayingWithRed ? "red" : "blue";
 		game.CountPointsDebug("#debug2");
 
 		//delete window.gameOptions;

@@ -31,17 +31,14 @@
     }
 }
 <h3 class="inkgame">
-    This is Inball Game page
+    Inball Game
 </h3>
 <p class="inkgame">
     <!-- Debug State -->
-    iGameID=<span id="gameID"></span>
-    iPlayerID=<span id="playerID"></span>
-    Player=@(Model.Game.IsThisPlayer1() ? "P1" : "P2")
-    <span id="whichColor">Play color</span>
-</p>
-<p class="inkgame">
-    <span id='Player1Name'>@Model.Game.Player1?.UserName</span> vs <span id='Player2Name'>@P2Name</span>
+    iGameID=<span id="gameID"></span>,
+    iPlayerID=<span id="playerID"></span>,
+    <span id="whichPlayer"></span> playing with <span id="whichColor"></span>
+    (<span id='Player1Name'>@Model.Game.Player1?.UserName</span> vs <span id='Player2Name'>@P2Name</span>)
 </p>
 <div class="container inkgame">
     <form action="GamesList" method="post" asp-antiforgery="true" class="row">
@@ -117,6 +114,7 @@
             iGameID: @Model.Game.iId,
             iPlayerID: @Model.Player.iId,
             bPlayingWithRed: JSON.parse('@Model.Game.IsThisPlayerPlayingWithRed()'.toLowerCase()),
+            bIsThisPlayer1: JSON.parse('@Model.Game.IsThisPlayer1()'.toLowerCase()),
             bPlayerActive: JSON.parse('@isThisPlayerActive'.toLowerCase()),
             gameType: '@Model.Game.GameType',
             isMessagePackProtocol: JSON.parse('@useMessagePackBinaryTransport'.toLowerCase()),
