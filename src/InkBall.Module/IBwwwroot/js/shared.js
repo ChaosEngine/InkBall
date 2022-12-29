@@ -557,8 +557,13 @@ class GameStateStore {
 	#DB;
 	#DB_NAME;
 	#DB_VERSION;
+	#DB_POINT_STORE;
+	#DB_PATH_STORE;
+	#DB_STATE_STORE;
 	#bulkStores;
-	
+	#PointStore;
+	#PathStore;
+
 	constructor(useIndexedDb, pointCreationCallbackFn = null, pathCreationCallbackFn = null, getGameStateFn = null, version = "") {
 		if (useIndexedDb) {
 			if (!('indexedDB' in self)) {
@@ -680,7 +685,7 @@ class GameStateStore {
 			}
 
 			async BeginBulkStorage() {
-				await this.#MainGameStateStore.BeginBulkStorage(this.#MainGameStateStore.DB_POINT_STORE, 'readwrite');
+				await this.#MainGameStateStore.BeginPointBulkStorage('readwrite');
 
 				if (this.#MainGameStateStore.pointBulkBuffer === null)
 					this.#MainGameStateStore.pointBulkBuffer = new Map();
@@ -689,7 +694,7 @@ class GameStateStore {
 			async EndBulkStorage() {
 				await this.#MainGameStateStore.StoreAllPoints();
 
-				await this.#MainGameStateStore.EndBulkStorage(this.#MainGameStateStore.DB_POINT_STORE);
+				await this.#MainGameStateStore.EndPointBulkStorage();
 			}
 
 			async has(key) {
@@ -779,7 +784,7 @@ class GameStateStore {
 			}
 
 			async BeginBulkStorage() {
-				await this.#MainGameStateStore.BeginBulkStorage([this.#MainGameStateStore.DB_POINT_STORE, this.#MainGameStateStore.DB_PATH_STORE], 'readwrite');
+				await this.#MainGameStateStore.BeginPathBulkStorage('readwrite');
 
 				if (this.#MainGameStateStore.pathBulkBuffer === null)
 					this.#MainGameStateStore.pathBulkBuffer = new Map();
@@ -788,7 +793,7 @@ class GameStateStore {
 			async EndBulkStorage() {
 				await this.#MainGameStateStore.StoreAllPaths();
 
-				await this.#MainGameStateStore.EndBulkStorage([this.#MainGameStateStore.DB_POINT_STORE, this.#MainGameStateStore.DB_PATH_STORE]);
+				await this.#MainGameStateStore.EndPathBulkStorage();
 			}
 
 			async push(val) {
@@ -827,9 +832,9 @@ class GameStateStore {
 
 		if (useIndexedDb === true) {
 			this.#DB_NAME = 'InkballGame';
-			this.DB_POINT_STORE = 'points';
-			this.DB_PATH_STORE = 'paths';
-			this.DB_STATE_STORE = 'state';
+			this.#DB_POINT_STORE = 'points';
+			this.#DB_PATH_STORE = 'paths';
+			this.#DB_STATE_STORE = 'state';
 			this.#DB = null;//main DB object
 			this.#bulkStores = null;
 			this.pointBulkBuffer = null;
@@ -845,24 +850,24 @@ class GameStateStore {
 				}, 0)) - 1010/*initial module versioning start number*/ + 4/*initial indexDB start number*/;
 			}
 
-			this.PointStore = new IDBPointStoreDefinition(this, pointCreationCallbackFn, getGameStateFn);
-			this.PathStore = new IDBPathStoreDefinition(this, pathCreationCallbackFn, getGameStateFn);
+			this.#PointStore = new IDBPointStoreDefinition(this, pointCreationCallbackFn, getGameStateFn);
+			this.#PathStore = new IDBPathStoreDefinition(this, pathCreationCallbackFn, getGameStateFn);
 		}
 		else {
-			this.PointStore = new SimplePointStoreDefinition();
-			this.PathStore = new SimplePathStoreDefinition();
+			this.#PointStore = new SimplePointStoreDefinition();
+			this.#PathStore = new SimplePathStoreDefinition();
 		}
 	}
 
 	GetPointStore() {
-		return this.PointStore;
+		return this.#PointStore;
 	}
 
 	GetPathStore() {
-		return this.PathStore;
+		return this.#PathStore;
 	}
 
-	async OpenDb() {
+	async #OpenDb() {
 		LocalLog("OpenDb ...");
 		return new Promise((resolve, reject) => {
 			let req;
@@ -889,25 +894,25 @@ class GameStateStore {
 				const loc_db = evt.currentTarget.result;
 
 				const store_list = Array.from(loc_db.objectStoreNames);
-				if (store_list.includes(this.DB_POINT_STORE))
-					loc_db.deleteObjectStore(this.DB_POINT_STORE);
-				if (store_list.includes(this.DB_PATH_STORE))
-					loc_db.deleteObjectStore(this.DB_PATH_STORE);
-				if (store_list.includes(this.DB_STATE_STORE))
-					loc_db.deleteObjectStore(this.DB_STATE_STORE);
+				if (store_list.includes(this.#DB_POINT_STORE))
+					loc_db.deleteObjectStore(this.#DB_POINT_STORE);
+				if (store_list.includes(this.#DB_PATH_STORE))
+					loc_db.deleteObjectStore(this.#DB_PATH_STORE);
+				if (store_list.includes(this.#DB_STATE_STORE))
+					loc_db.deleteObjectStore(this.#DB_STATE_STORE);
 
 				const point_store = loc_db.createObjectStore(
-					this.DB_POINT_STORE, { keyPath: 'Idx', autoIncrement: false });
+					this.#DB_POINT_STORE, { keyPath: 'Idx', autoIncrement: false });
 				//point_store.createIndex('Status', 'Status', { unique: false });
 				//point_store.createIndex('Color', 'Color', { unique: false });
 				//point_store.createIndex('Key', 'Key', { unique: true });
 
 				loc_db.createObjectStore(
-					this.DB_PATH_STORE, { keyPath: 'iId', autoIncrement: false });
+					this.#DB_PATH_STORE, { keyPath: 'iId', autoIncrement: false });
 				//path_store.createIndex('Color', 'Color', { unique: false });
 
 				loc_db.createObjectStore(
-					this.DB_STATE_STORE, { /*keyPath: 'gameId',*/ autoIncrement: false });
+					this.#DB_STATE_STORE, { /*keyPath: 'gameId',*/ autoIncrement: false });
 			}.bind(this);
 		});
 	}
@@ -917,7 +922,7 @@ class GameStateStore {
 	  * @param {string} mode either "readonly" or "readwrite"
 	  * @returns {object} store
 	  */
-	GetObjectStore(storeName, mode) {
+	#GetObjectStore(storeName, mode) {
 		if (this.#bulkStores !== null && this.#bulkStores.has(storeName))
 			return this.#bulkStores.get(storeName);
 
@@ -928,7 +933,7 @@ class GameStateStore {
 	async #ClearAllStores() {
 		const clearObjectStore = async function (storeName) {
 			return new Promise((resolve, reject) => {
-				const store = this.GetObjectStore(storeName, 'readwrite');
+				const store = this.#GetObjectStore(storeName, 'readwrite');
 				const req = store.clear();
 				req.onsuccess = function () {
 					resolve();
@@ -941,9 +946,9 @@ class GameStateStore {
 		}.bind(this);
 
 		await Promise.all([
-			clearObjectStore(this.DB_POINT_STORE),
-			clearObjectStore(this.DB_PATH_STORE),
-			clearObjectStore(this.DB_STATE_STORE)
+			clearObjectStore(this.#DB_POINT_STORE),
+			clearObjectStore(this.#DB_PATH_STORE),
+			clearObjectStore(this.#DB_STATE_STORE)
 		]);
 	}
 
@@ -952,7 +957,7 @@ class GameStateStore {
 	  */
 	async GetPoint(key) {
 		return new Promise((resolve, reject) => {
-			const store = this.GetObjectStore(this.DB_POINT_STORE, 'readonly');
+			const store = this.#GetObjectStore(this.#DB_POINT_STORE, 'readonly');
 			const req = store.get(key);
 			req.onerror = function (event) {
 				reject(new Error('GetPoint => ' + event));
@@ -965,7 +970,7 @@ class GameStateStore {
 
 	async GetAllPoints() {
 		return new Promise((resolve, reject) => {
-			const store = this.GetObjectStore(this.DB_POINT_STORE, 'readonly');
+			const store = this.#GetObjectStore(this.#DB_POINT_STORE, 'readonly');
 			const bucket = [];
 			const req = store.openCursor();
 			req.onsuccess = function (event) {
@@ -985,7 +990,7 @@ class GameStateStore {
 
 	async GetState(key) {
 		return new Promise((resolve, reject) => {
-			const store = this.GetObjectStore(this.DB_STATE_STORE, 'readonly');
+			const store = this.#GetObjectStore(this.#DB_STATE_STORE, 'readonly');
 			const req = store.get(key);
 			req.onerror = function (event) {
 				reject(new Error('GetState => ' + event));
@@ -1001,7 +1006,7 @@ class GameStateStore {
 	  */
 	async GetPath(key) {
 		return new Promise((resolve, reject) => {
-			const store = this.GetObjectStore(this.DB_PATH_STORE, 'readonly');
+			const store = this.#GetObjectStore(this.#DB_PATH_STORE, 'readonly');
 			const req = store.get(key);
 			req.onerror = function (event) {
 				reject(new Error('GetPath => ' + event));
@@ -1014,7 +1019,7 @@ class GameStateStore {
 
 	async GetAllPaths() {
 		return new Promise((resolve, reject) => {
-			const store = this.GetObjectStore(this.DB_PATH_STORE, 'readonly');
+			const store = this.#GetObjectStore(this.#DB_PATH_STORE, 'readonly');
 			const bucket = [];
 			const req = store.openCursor();
 			req.onsuccess = function (event) {
@@ -1037,7 +1042,7 @@ class GameStateStore {
 	  * @param {object} val is serialized, thin circle
 	  */
 	async StorePoint(key, val) {
-		if (this.#bulkStores !== null && this.#bulkStores.has(this.DB_POINT_STORE)) {
+		if (this.#bulkStores !== null && this.#bulkStores.has(this.#DB_POINT_STORE)) {
 			if (this.pointBulkBuffer === null)
 				this.pointBulkBuffer = new Map();
 			this.pointBulkBuffer.set(key, val);
@@ -1045,7 +1050,7 @@ class GameStateStore {
 		}
 
 		return new Promise((resolve, reject) => {
-			const store = this.GetObjectStore(this.DB_POINT_STORE, 'readwrite');
+			const store = this.#GetObjectStore(this.#DB_POINT_STORE, 'readwrite');
 			let req;
 			try {
 				/////breaking start///////
@@ -1077,7 +1082,7 @@ class GameStateStore {
 	  * @param {object} val is serialized, thin circle
 	  */
 	async UpdatePoint(key, val) {
-		if (this.#bulkStores !== null && this.#bulkStores.has(this.DB_POINT_STORE)) {
+		if (this.#bulkStores !== null && this.#bulkStores.has(this.#DB_POINT_STORE)) {
 			if (this.pointBulkBuffer === null)
 				this.pointBulkBuffer = new Map();
 			this.pointBulkBuffer.set(key, val);
@@ -1085,7 +1090,7 @@ class GameStateStore {
 		}
 
 		return new Promise((resolve, reject) => {
-			const store = this.GetObjectStore(this.DB_POINT_STORE, 'readwrite');
+			const store = this.#GetObjectStore(this.#DB_POINT_STORE, 'readwrite');
 			let req;
 			try {
 				if (typeof (val.Idx) === 'undefined')
@@ -1114,7 +1119,7 @@ class GameStateStore {
 			return Promise.reject();
 
 		return new Promise((resolve, reject) => {
-			const store = this.GetObjectStore(this.DB_POINT_STORE, 'readwrite');
+			const store = this.#GetObjectStore(this.#DB_POINT_STORE, 'readwrite');
 			try {
 				values.forEach(function (val, key) {
 					if (typeof (val.Idx) === 'undefined')
@@ -1137,7 +1142,7 @@ class GameStateStore {
 	  */
 	async #StoreState(key, gameState) {
 		return new Promise((resolve, reject) => {
-			const store = this.GetObjectStore(this.DB_STATE_STORE, 'readwrite');
+			const store = this.#GetObjectStore(this.#DB_STATE_STORE, 'readwrite');
 			let req;
 			try {
 				req = store.add(gameState, key);
@@ -1158,7 +1163,7 @@ class GameStateStore {
 
 	async UpdateState(key, gameState) {
 		return new Promise((resolve, reject) => {
-			const store = this.GetObjectStore(this.DB_STATE_STORE, 'readwrite');
+			const store = this.#GetObjectStore(this.#DB_STATE_STORE, 'readwrite');
 			let req;
 			try {
 				req = store.put(gameState, key);
@@ -1182,7 +1187,7 @@ class GameStateStore {
 	  * @param {object} val is serialized thin path
 	  */
 	async StorePath(key, val) {
-		if (this.#bulkStores !== null && this.#bulkStores.has(this.DB_PATH_STORE)) {
+		if (this.#bulkStores !== null && this.#bulkStores.has(this.#DB_PATH_STORE)) {
 			if (this.pathBulkBuffer === null)
 				this.pathBulkBuffer = new Map();
 			this.pathBulkBuffer.set(key, val);
@@ -1190,7 +1195,7 @@ class GameStateStore {
 		}
 
 		return new Promise((resolve, reject) => {
-			const store = this.GetObjectStore(this.DB_PATH_STORE, 'readwrite');
+			const store = this.#GetObjectStore(this.#DB_PATH_STORE, 'readwrite');
 			let req;
 			try {
 				req = store.add(val/*, key*/);
@@ -1217,7 +1222,7 @@ class GameStateStore {
 			return Promise.reject();
 
 		return new Promise((resolve, reject) => {
-			const store = this.GetObjectStore(this.DB_PATH_STORE, 'readwrite');
+			const store = this.#GetObjectStore(this.#DB_PATH_STORE, 'readwrite');
 			try {
 				// eslint-disable-next-line no-unused-vars
 				values.forEach(function (v, key) {
@@ -1235,14 +1240,14 @@ class GameStateStore {
 
 	async PrepareStore() {
 		//detecting if we have IndexedDb advanced store (only checking point-store); otherwise, there is no point in going further
-		if (!this.PointStore.GetAllPoints) return false;
+		if (!this.#PointStore.GetAllPoints) return false;
 
 		if (this.#DB === null)
-			await this.OpenDb();
+			await this.#OpenDb();
 		else
 			return false;//all initiated, just exit
 
-		const game_state = this.PointStore.GetGameStateCallback();
+		const game_state = this.#PointStore.GetGameStateCallback();
 		const idb_state = await this.GetState(game_state.iGameID);
 		if (!idb_state) {
 			//no state entry in db
@@ -1263,9 +1268,9 @@ class GameStateStore {
 			else if (game_state.bPointsAndPathsLoaded === false) {
 				//db entry ok and ready for read
 				try {
-					await this.BeginBulkStorage([this.DB_POINT_STORE, this.DB_PATH_STORE], 'readonly');
+					await this.#BeginBulkStorage([this.#DB_POINT_STORE, this.#DB_PATH_STORE], 'readonly');
 
-					if ((await this.PointStore.PrepareStore()) !== true || (await this.PathStore.PrepareStore()) !== true) {
+					if ((await this.#PointStore.PrepareStore()) !== true || (await this.#PathStore.PrepareStore()) !== true) {
 
 						await this.#ClearAllStores();
 
@@ -1274,7 +1279,7 @@ class GameStateStore {
 
 					return true;
 				} finally {
-					await this.EndBulkStorage([this.DB_POINT_STORE, this.DB_PATH_STORE]);
+					await this.#EndBulkStorage([this.#DB_POINT_STORE, this.#DB_PATH_STORE]);
 				}
 			}
 		}
@@ -1285,7 +1290,7 @@ class GameStateStore {
 	 * @param {any} storeName array or string of store to load
 	 * @param {any} mode - readonly/readwrite
 	 */
-	async BeginBulkStorage(storeName, mode) {
+	async #BeginBulkStorage(storeName, mode) {
 		if (this.#bulkStores === null)
 			this.#bulkStores = new Map();
 
@@ -1300,7 +1305,15 @@ class GameStateStore {
 		}
 	}
 
-	async EndBulkStorage(storeName) {
+	async BeginPointBulkStorage(mode) {
+		return await this.#BeginBulkStorage(this.#DB_POINT_STORE, mode);
+	}
+
+	async BeginPathBulkStorage(mode) {
+		return await this.#BeginBulkStorage([this.#DB_POINT_STORE, this.#DB_PATH_STORE], mode);
+	}
+
+	async #EndBulkStorage(storeName) {
 		if (this.#bulkStores !== null) {
 			const keys = Array.isArray(storeName) ? storeName : [storeName];
 			for (const key of keys) {
@@ -1312,6 +1325,14 @@ class GameStateStore {
 			if (this.#bulkStores.size <= 0)
 				this.#bulkStores = null;
 		}
+	}
+
+	async EndPointBulkStorage() {
+		return await this.#EndBulkStorage(this.#DB_POINT_STORE);
+	}
+
+	async EndPathBulkStorage() {
+		return await this.#EndBulkStorage([this.#DB_POINT_STORE, this.#DB_PATH_STORE]);
 	}
 }
 
