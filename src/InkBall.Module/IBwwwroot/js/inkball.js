@@ -2419,6 +2419,30 @@ class InkBallGame {
 		await this.#DFS2(await this.#BuildGraph(), this.#COLOR_RED);
 	}
 
+	async #OnFloodFill(event) {
+		event.preventDefault();
+
+		const sHumanColor = this.#COLOR_RED, sCPUColor = this.#COLOR_BLUE;
+		const pt = await this.#Points.get(this.#iMouseY * this.#iGridWidth + this.#iMouseX);
+		if (!pt) return;
+		const { x, y } = pt.GetPosition();
+		const start_color = pt.GetFillColor();
+
+		LocalLog(`FloodFill start point (${x},${y}), color = '${start_color === sHumanColor ? 'HUMAN' : 'CPU'}'`);
+
+
+		//
+		//recursive version
+		//
+		// await this.#FloodFill_Recursive(x, y, start_color === sHumanColor ? sCPUColor : sHumanColor );
+
+
+		//
+		//iterative version
+		//
+		await this.#FloodFill(pt, [start_color === sHumanColor ? sCPUColor : sHumanColor], 'green');
+	}
+
 	/**
 	 * Start drawing routines
 	 * @param {HTMLElement} sScreen screen container selector
@@ -2556,6 +2580,8 @@ class InkBallGame {
 					document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestFindSurroundablePoints.bind(this);
 				if (ddlTestActions.length > i)
 					document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestDFS2.bind(this);
+				if (ddlTestActions.length > i)
+					document.querySelector(ddlTestActions[i++]).onclick = this.#OnFloodFill.bind(this);
 
 				//disable or even delete chat functionality, coz we're not going to chat with CPU bot
 				//const chatSection = document.querySelector(this.#sMsgListSel).parentElement;
@@ -2660,7 +2686,7 @@ class InkBallGame {
 		);
 		await game.PrepareDrawing('#screen', '#Player1Name', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw',
 			'#messageInput', '#messagesList', '#sendButton', sLastMoveTimeStampUtcIso, gameOptions.PointsAsJavaScriptArray === null, version,
-			['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints', '#TestFindSurroundablePoints', '#TestDFS2']);
+			['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints', '#TestFindSurroundablePoints', '#TestDFS2', '#FloodFill']);
 
 		if (gameOptions.PointsAsJavaScriptArray !== null) {
 			await game.StartSignalRConnection(false);
@@ -3278,6 +3304,66 @@ class InkBallGame {
 		}
 
 		return cycles;
+	}
+
+	//Calling iterative method
+	async #FloodFill(point, searchValueArr, replacementValue) {
+
+		const pos = point.GetPosition();
+		const queue = [pos];
+
+		while (queue.length > 0) {
+			const nodePos = queue.shift();
+			const directions = [
+				{ x: nodePos.x, y: nodePos.y },
+				{ x: nodePos.x - 1, y: nodePos.y },
+				{ x: nodePos.x + 1, y: nodePos.y },
+				{ x: nodePos.x, y: nodePos.y - 1 },
+				{ x: nodePos.x, y: nodePos.y + 1 },
+				{ x: nodePos.x - 1, y: nodePos.y + 1 },
+				{ x: nodePos.x + 1, y: nodePos.y - 1 },
+				{ x: nodePos.x + 1, y: nodePos.y + 1 },
+				{ x: nodePos.x - 1, y: nodePos.y - 1 }
+			];
+
+			for (const newPos of directions) {
+				if (false === (newPos.x < 0 || newPos.y < 0 || newPos.x >= this.#iGridWidth || newPos.y >= this.#iGridHeight)) {
+					point = await this.#Points.get(newPos.y * this.#iGridWidth + newPos.x);
+					if (!point) continue;
+
+					const newNodeValue = point.GetFillColor();
+					if (searchValueArr.includes(newNodeValue)) {
+						point.SetFillColor(replacementValue); point.SetStrokeColor(replacementValue);
+						queue.push(newPos);
+					}
+				}
+			}
+		}
+
+	}
+
+	//Calling recursive method
+	async #FloodFill_Recursive(x, y, fillColor) {
+		if (x < 0 || y < 0 || x >= this.#iGridWidth || y >= this.#iGridHeight) return;
+
+		const point = await this.#Points.get(y * this.#iGridWidth + x);
+		if (!point) return;
+
+		const color = point.GetFillColor();
+
+		if (fillColor !== color) {
+			point.SetFillColor(fillColor); point.SetStrokeColor('green');
+
+			await this.#FloodFill_Recursive(x, y, fillColor);
+			await this.#FloodFill_Recursive(x - 1, y, fillColor);
+			await this.#FloodFill_Recursive(x + 1, y, fillColor);
+			await this.#FloodFill_Recursive(x, y - 1, fillColor);
+			await this.#FloodFill_Recursive(x, y + 1, fillColor);
+			await this.#FloodFill_Recursive(x - 1, y + 1, fillColor);
+			await this.#FloodFill_Recursive(x + 1, y - 1, fillColor);
+			await this.#FloodFill_Recursive(x + 1, y + 1, fillColor);
+			await this.#FloodFill_Recursive(x - 1, y - 1, fillColor);
+		}
 	}
 
 	async #rAFCallBack(timeStamp) {

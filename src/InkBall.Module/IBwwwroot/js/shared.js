@@ -257,6 +257,7 @@ class SvgVml {
 		SVGCircleElement.prototype.SetFillColor = function (col) {
 			this.cachedFillColor = col;
 			this.setAttribute("fill", col);
+			// this.setAttribute("style", `fill: ${col}`);
 		};
 		SVGCircleElement.prototype.GetStatus = function () {
 			if (typeof (this.cachedStatus) === 'undefined') {
