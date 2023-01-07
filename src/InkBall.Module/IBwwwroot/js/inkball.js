@@ -1242,8 +1242,7 @@ class InkBallGame {
 		}
 
 		const line = this.#SvgVml.CreatePolyline(sPathPoints,
-			(bBelong2ThisPlayer ? this.#sDotColor : (bIsRed ? this.#COLOR_BLUE : this.#COLOR_RED))
-			/* ,this.#LineStrokeWidth */);
+			(bBelong2ThisPlayer ? this.#sDotColor : (bIsRed ? this.#COLOR_BLUE : this.#COLOR_RED)));
 		line.SetID(iPathId);
 		await this.#Lines.push(line);
 	}
@@ -1277,7 +1276,7 @@ class InkBallGame {
 			sPathPoints += `${sDelimiter}${x},${y}`;
 		}
 
-		const line = this.#SvgVml.CreatePolyline(sPathPoints, sColor/* , this.#LineStrokeWidth */);
+		const line = this.#SvgVml.CreatePolyline(sPathPoints, sColor);
 		line.SetID(iPathId);
 
 		return line;
@@ -1862,8 +1861,7 @@ class InkBallGame {
 							p0.GetFillColor() === this.#sDotColor && p1.GetFillColor() === this.#sDotColor) {
 							const fromx = this.#iLastX;
 							const fromy = this.#iLastY;
-							this.#Line = this.#SvgVml.CreatePolyline(`${fromx},${fromy} ${tox},${toy}`, this.#DRAWING_PATH_COLOR
-								/* , this.#LineStrokeWidth * 2 */);
+							this.#Line = this.#SvgVml.CreatePolyline(`${fromx},${fromy} ${tox},${toy}`, this.#DRAWING_PATH_COLOR);
 							this.#CancelPath.disabled = '';
 							p0.SetStatus(StatusEnum.POINT_STARTING, true);
 							p1.SetStatus(StatusEnum.POINT_IN_PATH, true);
@@ -1985,8 +1983,7 @@ class InkBallGame {
 						const fromy = this.#iLastY;
 						const tox = x;
 						const toy = y;
-						this.#Line = this.#SvgVml.CreatePolyline(`${fromx},${fromy} ${tox},${toy}`, this.#DRAWING_PATH_COLOR
-							/* , this.#LineStrokeWidth * 2 */);
+						this.#Line = this.#SvgVml.CreatePolyline(`${fromx},${fromy} ${tox},${toy}`, this.#DRAWING_PATH_COLOR);
 						this.#CancelPath.disabled = '';
 						p0.SetStatus(StatusEnum.POINT_STARTING, true);
 						p1.SetStatus(StatusEnum.POINT_IN_PATH, true);
@@ -2161,9 +2158,12 @@ class InkBallGame {
 		});
 		if (data.convex_hull && data.convex_hull.length > 0) {
 			const convex_hull = data.convex_hull;
-			this.#SvgVml.CreatePolyline(convex_hull.map(([x, y]) =>
+
+			const line = this.#SvgVml.CreatePolyline(convex_hull.map(([x, y]) =>
 				parseInt(x) + ',' + parseInt(y))
-				.join(' '), 'green'/* , this.#LineStrokeWidth * 2 */);
+				.join(' '), 'green');
+			line.SetID(-1);
+
 			LocalLog(`convex_hull = ${convex_hull}`);
 
 			const cw_sorted_verts = data.cw_sorted_verts;
@@ -2297,7 +2297,7 @@ class InkBallGame {
 		//LocalLog('OnTestGroupPoints');
 		const starting_point = await this.#Points.get(this.#iMouseY * this.#iGridWidth + this.#iMouseX);
 		if (starting_point === undefined) {
-			LocalLog("!!!You need to click first 'blue' starting point with mouse!!!");
+			LocalLog("!!!First you need to click 'blue' starting point with mouse!!!");
 			return;
 		}
 		await this.#GroupPointsRecurse([], starting_point);
@@ -2306,10 +2306,11 @@ class InkBallGame {
 			this.#workingCyclePolyLine = null;
 		}
 		this.#lastCycle.forEach(cycle => {
-			this.#SvgVml.CreatePolyline(cycle.map(function (fnd) {
+			const line = this.#SvgVml.CreatePolyline(cycle.map(function (fnd) {
 				const pt = fnd.GetPosition();
 				return `${pt.x},${pt.y}`;
-			}).join(' '), RandomColor()/* , this.#LineStrokeWidth * 2 */);
+			}).join(' '), RandomColor());
+			line.SetID(-1);
 		});
 		LocalLog('game.lastCycle = ');
 		LocalLog(this.#lastCycle);
@@ -2424,7 +2425,10 @@ class InkBallGame {
 
 		const sHumanColor = this.#COLOR_RED, sCPUColor = this.#COLOR_BLUE;
 		const pt = await this.#Points.get(this.#iMouseY * this.#iGridWidth + this.#iMouseX);
-		if (!pt) return;
+		if (!pt) {
+			LocalLog("!!!First you need to click starting point with mouse!!!");
+			return;
+		}
 		const { x, y } = pt.GetPosition();
 		const start_color = pt.GetFillColor();
 
@@ -2440,7 +2444,7 @@ class InkBallGame {
 		//
 		//iterative version
 		//
-		await this.#FloodFill(pt, [start_color === sHumanColor ? sCPUColor : sHumanColor], 'green');
+		await this.#FloodFill(pt, [start_color === sHumanColor ? sHumanColor : sCPUColor], 'green');
 	}
 
 	/**
@@ -3191,8 +3195,10 @@ class InkBallGame {
 			const pt = fnd.GetPosition();
 			return `${pt.x},${pt.y}`;
 		}).join(' ');
-		if (!this.#workingCyclePolyLine)
-			this.#workingCyclePolyLine = this.#SvgVml.CreatePolyline(pts, 'black'/* , this.#LineStrokeWidth */);
+		if (!this.#workingCyclePolyLine) {
+			this.#workingCyclePolyLine = this.#SvgVml.CreatePolyline(pts, 'black');
+			this.#workingCyclePolyLine.SetID(-1);
+		}
 		else
 			this.#workingCyclePolyLine.SetPoints(pts);
 

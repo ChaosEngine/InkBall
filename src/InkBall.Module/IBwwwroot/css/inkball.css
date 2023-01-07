@@ -98,6 +98,17 @@ svg > polyline {
   stroke-linecap: round;
   stroke-linejoin: round;
 }
+@media (prefers-reduced-motion: no-preference) {
+  svg > polyline[data-id="0"] {
+    stroke-dasharray: 0.7;
+    animation: dash 5s infinite linear reverse;
+  }
+  @keyframes dash {
+    to {
+      stroke-dashoffset: 10;
+    }
+  }
+}
 
 .boardsize-20x26 {
   width: calc(1em * 20 * 1);

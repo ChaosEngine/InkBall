@@ -158,6 +158,18 @@ svg {
 		fill-opacity: 0.1;
 		stroke-linecap: round;
 		stroke-linejoin: round;
+
+		@media (prefers-reduced-motion: no-preference) {
+			&[data-id="0"] {
+				stroke-dasharray: 0.7;
+				animation: dash 5s infinite linear reverse;
+			}
+			@keyframes dash {
+				to {
+					stroke-dashoffset: 10;
+				}
+			}
+		}
 	}
 }
 
