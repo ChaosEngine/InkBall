@@ -149,9 +149,9 @@ namespace InkBall.Module.Model
 		{
 		}
 
-		public CommandKindEnum GetKind()
+		public CommandKindEnum Kind
 		{
-			return CommandKindEnum.POINT;
+			get { return CommandKindEnum.POINT; }
 		}
 
 		#endregion Overrides

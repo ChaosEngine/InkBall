@@ -108,9 +108,9 @@ namespace InkBall.Module.Model
 		{
 		}
 
-		public CommandKindEnum GetKind()
+		public CommandKindEnum Kind
 		{
-			return CommandKindEnum.PATH;
+			get { return CommandKindEnum.PATH; }
 		}
 
 		#endregion Overrides

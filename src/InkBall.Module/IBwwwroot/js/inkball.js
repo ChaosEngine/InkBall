@@ -33,7 +33,7 @@ const WinStatusEnum = Object.freeze({
 });
 
 class DtoMsg {
-	GetKind() { throw new Error("missing GetKind implementation!"); }
+	get Kind() { throw new Error("missing Kind implementation!"); }
 }
 
 class InkBallPointViewModel extends DtoMsg {
@@ -48,7 +48,7 @@ class InkBallPointViewModel extends DtoMsg {
 		this.iEnclosingPathId = iEnclosingPathId;
 	}
 
-	GetKind() { return CommandKindEnum.POINT; }
+	get Kind() { return CommandKindEnum.POINT; }
 
 	static Format(sUser, point) {
 		let msg = `(${point.iX},${point.iY} - `;
@@ -96,7 +96,7 @@ class InkBallPathViewModel extends DtoMsg {
 		this.OwnedPointsAsString = OwnedPointsAsString;
 	}
 
-	GetKind() { return CommandKindEnum.PATH; }
+	get Kind() { return CommandKindEnum.PATH; }
 
 	static Format(sUser, path) {
 		let msg = `(${path.PointsAsString || path.pointsAsString}) [${path.OwnedPointsAsString || path.ownedPointsAsString}]`;
@@ -114,7 +114,7 @@ class PlayerJoiningCommand extends DtoMsg {
 		this.Message = message;
 	}
 
-	GetKind() { return CommandKindEnum.PLAYER_JOINING; }
+	get Kind() { return CommandKindEnum.PLAYER_JOINING; }
 
 	static Format(join) {
 		return join.Message || join.message;
@@ -130,7 +130,7 @@ class PlayerSurrenderingCommand extends DtoMsg {
 		this.Message = message;
 	}
 
-	GetKind() { return CommandKindEnum.PLAYER_SURRENDER; }
+	get Kind() { return CommandKindEnum.PLAYER_SURRENDER; }
 
 	static Format(surrender) {
 		return surrender.Message || surrender.message;
@@ -144,7 +144,7 @@ class PingCommand extends DtoMsg {
 		this.Message = message;
 	}
 
-	GetKind() { return CommandKindEnum.PING; }
+	get Kind() { return CommandKindEnum.PING; }
 
 	static Format(sUser, ping) {
 		const txt = ping.Message || ping.message;
@@ -162,7 +162,7 @@ class WinCommand extends DtoMsg {
 		this.Message = message;
 	}
 
-	GetKind() { return CommandKindEnum.WIN; }
+	get Kind() { return CommandKindEnum.WIN; }
 
 	static Format(win) {
 		let msg = '';
@@ -191,7 +191,7 @@ class StopAndDrawCommand extends DtoMsg {
 		super();
 	}
 
-	GetKind() { return CommandKindEnum.STOP_AND_DRAW; }
+	get Kind() { return CommandKindEnum.STOP_AND_DRAW; }
 
 	static Format(otherUser) {
 		return 'User ' + otherUser + ' started to draw path';
@@ -205,7 +205,7 @@ class PlayerPointsAndPathsDTO extends DtoMsg {
 		this.Paths = paths;
 	}
 
-	GetKind() { return CommandKindEnum.POINTS_AND_PATHS; }
+	get Kind() { return CommandKindEnum.POINTS_AND_PATHS; }
 
 	static Deserialize(ppDTO) {
 		const serialized = `{ "Points": ${ppDTO.Points || ppDTO.points}, "Paths": ${ppDTO.Paths || ppDTO.paths} }`;
@@ -221,7 +221,7 @@ class ApplicationUserSettings extends DtoMsg {
 		this.ShowChatNotifications = ShowChatNotifications;
 	}
 
-	GetKind() { return CommandKindEnum.USER_SETTINGS; }
+	get Kind() { return CommandKindEnum.USER_SETTINGS; }
 
 	static Serialize(settings) {
 		const jsonStr = JSON.stringify(settings);
@@ -862,7 +862,7 @@ class InkBallGame {
 				this.#NotifyBrowser('We have a winner', encodedMsg);
 			}
 			else
-				throw new Error("ServerToClientPath bad GetKind!");
+				throw new Error("ServerToClientPath bad Kind!");
 
 		}.bind(this));
 
@@ -1421,7 +1421,7 @@ class InkBallGame {
 	 */
 	async #SendData(payload, revertFunction = undefined) {
 
-		switch (payload.GetKind()) {
+		switch (payload.Kind) {
 			case CommandKindEnum.POINT:
 				LocalLog(InkBallPointViewModel.Format('some player', payload));
 				this.#bHandlingEvent = true;
@@ -1452,7 +1452,7 @@ class InkBallGame {
 						await this.#ReceivedPathProcessing(path);
 					}
 					else
-						throw new Error("ClientToServerPath bad GetKind!");
+						throw new Error("ClientToServerPath bad Kind!");
 				} catch (err) {
 					LocalError(err.toString());
 					if (revertFunction !== undefined)
@@ -2301,14 +2301,14 @@ class InkBallGame {
 			return;
 		}
 		await this.#GroupPointsRecurse([], starting_point);
-		if (this.#workingCyclePolyLine) {
+		if (this.#workingCyclePolyLine !== null) {
 			this.#SvgVml.RemovePolyline(this.#workingCyclePolyLine);
 			this.#workingCyclePolyLine = null;
 		}
 		this.#lastCycle.forEach(cycle => {
-			const line = this.#SvgVml.CreatePolyline(cycle.map(function (fnd) {
-				const pt = fnd.GetPosition();
-				return `${pt.x},${pt.y}`;
+			const line = this.#SvgVml.CreatePolyline(cycle.map(function (pt) {
+				const pos = pt.GetPosition();
+				return `${pos.x},${pos.y}`;
 			}).join(' '), RandomColor());
 			line.SetID(-1);
 		});
@@ -3190,21 +3190,89 @@ class InkBallGame {
 		await depthFirstSearch(graph, graph.vertices[0], { enterVertex, leaveVertex, showCycle });
 	}
 
-	async #DisplayPointsProgressWithDelay(ptsArr, sleepMillisecs = 25) {
-		const pts = ptsArr.map((fnd) => {
-			const pt = fnd.GetPosition();
-			return `${pt.x},${pt.y}`;
+	/**
+	 * Display path line for diagnostics
+	 * @param {Array<InkBallPointViewModel>} pointsArr array of points
+	 * @param {number} sleepMillisecs millisecs to delay
+	 */
+	async #DisplayPointsProgressWithDelay(pointsArr, sleepMillisecs = 25) {
+		//
+		//serialize points as string: "x0,y0 x1,y1 x2,y2"
+		//
+		const pts = pointsArr.map((pt) => {
+			const pos = pt.GetPosition();
+			return `${pos.x},${pos.y}`;
 		}).join(' ');
-		if (!this.#workingCyclePolyLine) {
+
+		//if not existing, create new...
+		if (this.#workingCyclePolyLine === null) {
 			this.#workingCyclePolyLine = this.#SvgVml.CreatePolyline(pts, 'black');
 			this.#workingCyclePolyLine.SetID(-1);
 		}
-		else
+		else//...else replace last create path
 			this.#workingCyclePolyLine.SetPoints(pts);
 
-		await Sleep(sleepMillisecs);
+		if (sleepMillisecs > 0)
+			await Sleep(sleepMillisecs);
 	}
 
+	/**
+	 * Floyd's tortoise and hare
+	 * https://en.wikipedia.org/wiki/Cycle_detection
+	 * @param {function} f function where f(x0) is the element/node next yto x0
+	 * @param {Object} x0 index of element
+	 * @returns {Object} length of the shortest cycle and starting point
+	 */
+	#floyd(f, x0) {
+		// Main phase of algorithm: finding a repetition x_i = x_2i.
+		// The hare moves twice as quickly as the tortoise and
+		// the distance between them increases by 1 at each step.
+		// Eventually they will both be inside the cycle and then,
+		// at some point, the distance between them will be
+		// divisible by the period λ.
+		let tortoise = f(x0); // f(x0) is the element/node next to x0.
+		let hare = f(f(x0));
+		while (tortoise !== hare) {
+			tortoise = f(tortoise);
+			hare = f(f(hare));
+		}
+
+		// At this point the tortoise position, ν, which is also equal
+		// to the distance between hare and tortoise, is divisible by
+		// the period λ. So hare moving in circle one step at a time, 
+		// and tortoise (reset to x0) moving towards the circle, will 
+		// intersect at the beginning of the circle. Because the 
+		// distance between them is constant at 2ν, a multiple of λ,
+		// they will agree as soon as the tortoise reaches index μ.
+
+		// Find the position μ of first repetition.    
+		let mu = 0;
+		tortoise = x0;
+		while (tortoise !== hare) {
+			tortoise = f(tortoise);
+			hare = f(hare);   // Hare and tortoise move at same speed
+			mu += 1;
+		}
+
+		// Find the length of the shortest cycle starting from x_μ
+		// The hare moves one step at a time while tortoise is still.
+		// lam is incremented until λ is found.
+		let lam = 1;
+		hare = f(tortoise);
+		while (tortoise !== hare) {
+			hare = f(hare);
+			lam += 1;
+		}
+
+		return { lam, mu };
+	}
+
+	/**
+	 * Find cycles in connected points
+	 * @param {Array} currPointsArr is array of points
+	 * @param {InkBallPointViewModel} point to test
+	 * @returns {Promise<Array>} of found candidates
+	 */
 	async #GroupPointsRecurse(currPointsArr, point) {
 		if (point === undefined || currPointsArr.includes(point)
 			|| currPointsArr.length > 60 || this.#lastCycle.length > 3
@@ -3217,9 +3285,8 @@ class InkBallGame {
 		}
 
 		const { x, y } = point.GetPosition();
-		let last = null;
 		if (currPointsArr.length > 0) {
-			last = currPointsArr.at(-1);
+			const last = currPointsArr.at(-1);
 			const { x: last_x, y: last_y } = last.GetPosition();
 			if (Math.abs(last_x - x) <= 1 && Math.abs(last_y - y) <= 1) {
 				currPointsArr.push(point);//nearby point 1 jump away
@@ -3238,13 +3305,15 @@ class InkBallGame {
 
 			if (currPointsArr.length >= 4) {
 				const first_pos = currPointsArr[0].GetPosition();
-				last = currPointsArr.at(-1);
+				const last = currPointsArr.at(-1);
 				const { x: last_x, y: last_y } = last.GetPosition();
 
 				if (Math.abs(last_x - first_pos.x) <= 1 && Math.abs(last_y - first_pos.y) <= 1) {
 					const tmp = currPointsArr.slice(); //copy array in current state
 					tmp.push(currPointsArr[0]);
 					this.#lastCycle.push(tmp);
+
+					this.#floyd(x => Number.isInteger(x) ? tmp[x] : tmp[tmp.indexOf(x) + 1], 0);
 				}
 			}
 		}
@@ -3260,22 +3329,14 @@ class InkBallGame {
 			this.#Points.get((y + 1) * this.#iGridWidth + x + 1)
 		]);
 
-		if (east)
-			await this.#GroupPointsRecurse(currPointsArr, east);
-		if (west)
-			await this.#GroupPointsRecurse(currPointsArr, west);
-		if (north)
-			await this.#GroupPointsRecurse(currPointsArr, north);
-		if (south)
-			await this.#GroupPointsRecurse(currPointsArr, south);
-		if (north_west)
-			await this.#GroupPointsRecurse(currPointsArr, north_west);
-		if (north_east)
-			await this.#GroupPointsRecurse(currPointsArr, north_east);
-		if (south_west)
-			await this.#GroupPointsRecurse(currPointsArr, south_west);
-		if (south_east)
-			await this.#GroupPointsRecurse(currPointsArr, south_east);
+		await this.#GroupPointsRecurse(currPointsArr, east);
+		await this.#GroupPointsRecurse(currPointsArr, west);
+		await this.#GroupPointsRecurse(currPointsArr, north);
+		await this.#GroupPointsRecurse(currPointsArr, south);
+		await this.#GroupPointsRecurse(currPointsArr, north_west);
+		await this.#GroupPointsRecurse(currPointsArr, north_east);
+		await this.#GroupPointsRecurse(currPointsArr, south_west);
+		await this.#GroupPointsRecurse(currPointsArr, south_east);
 
 		const ind = currPointsArr.lastIndexOf(point);
 		if (ind !== -1) {
@@ -3291,28 +3352,12 @@ class InkBallGame {
 		return currPointsArr;
 	}
 
-	async #GroupPointsIterative({
-		g: graph = null
-	} = {}) {
-		if (!graph) return;
-		const vertices = graph.vertices, cycles = [];
-		let point;
-
-		for (const start of vertices) {
-			point = start;
-			const currPointsArr = [];
-
-			const traversed_path = await this.#GroupPointsRecurse(currPointsArr, point);
-			if (traversed_path.length > 0 && this.#lastCycle.length > 0) {
-				cycles.push(this.#lastCycle);
-				this.#lastCycle = [];
-			}
-		}
-
-		return cycles;
-	}
-
-	//Calling iterative method
+	/**
+	 * Calling iterative method
+	 * @param {InkBallPointViewModel} point to start from
+	 * @param {Array} searchValueArr color values to search for
+	 * @param {string} replacementValue replacement color
+	 */
 	async #FloodFill(point, searchValueArr, replacementValue) {
 
 		const pos = point.GetPosition();

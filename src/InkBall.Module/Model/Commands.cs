@@ -19,7 +19,7 @@ namespace InkBall.Module.Model
 
 	public interface IDtoMsg
 	{
-		CommandKindEnum GetKind();
+		CommandKindEnum Kind { get; }
 	}
 
 	[MessagePackObject(true)]
@@ -40,9 +40,9 @@ namespace InkBall.Module.Model
 			this.Message = parent.Message;
 		}
 
-		public CommandKindEnum GetKind()
+		public CommandKindEnum Kind
 		{
-			return CommandKindEnum.PING;
+			get { return CommandKindEnum.PING; }
 		}
 	}
 
@@ -62,9 +62,9 @@ namespace InkBall.Module.Model
 			Message = message;
 		}
 
-		public CommandKindEnum GetKind()
+		public CommandKindEnum Kind
 		{
-			return CommandKindEnum.PLAYER_JOINING;
+			get { return CommandKindEnum.PLAYER_JOINING; }
 		}
 	}
 
@@ -84,9 +84,9 @@ namespace InkBall.Module.Model
 			Message = message;
 		}
 
-		public CommandKindEnum GetKind()
+		public CommandKindEnum Kind
 		{
-			return CommandKindEnum.PLAYER_SURRENDER;
+			get { return CommandKindEnum.PLAYER_SURRENDER; }
 		}
 	}
 
@@ -106,9 +106,9 @@ namespace InkBall.Module.Model
 			this.Message = message;
 		}
 
-		public CommandKindEnum GetKind()
+		public CommandKindEnum Kind
 		{
-			return CommandKindEnum.WIN;
+			get { return CommandKindEnum.WIN; }
 		}
 	}
 
@@ -119,9 +119,9 @@ namespace InkBall.Module.Model
 		{
 		}
 
-		public CommandKindEnum GetKind()
+		public CommandKindEnum Kind
 		{
-			return CommandKindEnum.STOP_AND_DRAW;
+			get { return CommandKindEnum.STOP_AND_DRAW; }
 		}
 	}
 
@@ -138,9 +138,9 @@ namespace InkBall.Module.Model
 			this.Paths = paths;
 		}
 
-		public CommandKindEnum GetKind()
+		public CommandKindEnum Kind
 		{
-			return CommandKindEnum.POINTS_AND_PATHS;
+			get { return CommandKindEnum.POINTS_AND_PATHS; }
 		}
 	}
 }
