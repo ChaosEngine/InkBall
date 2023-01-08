@@ -3359,9 +3359,8 @@ class InkBallGame {
 	 * @param {string} replacementValue replacement color
 	 */
 	async #FloodFill(point, searchValueArr, replacementValue) {
-
-		const pos = point.GetPosition();
-		const queue = [pos];
+		const queue = [point.GetPosition()];
+		const visited = new Map();
 
 		while (queue.length > 0) {
 			const nodePos = queue.shift();
@@ -3370,11 +3369,11 @@ class InkBallGame {
 				{ x: nodePos.x - 1, y: nodePos.y },
 				{ x: nodePos.x + 1, y: nodePos.y },
 				{ x: nodePos.x, y: nodePos.y - 1 },
-				{ x: nodePos.x, y: nodePos.y + 1 },
-				{ x: nodePos.x - 1, y: nodePos.y + 1 },
-				{ x: nodePos.x + 1, y: nodePos.y - 1 },
-				{ x: nodePos.x + 1, y: nodePos.y + 1 },
-				{ x: nodePos.x - 1, y: nodePos.y - 1 }
+				{ x: nodePos.x, y: nodePos.y + 1 }
+				// { x: nodePos.x - 1, y: nodePos.y + 1 },
+				// { x: nodePos.x + 1, y: nodePos.y - 1 },
+				// { x: nodePos.x + 1, y: nodePos.y + 1 },
+				// { x: nodePos.x - 1, y: nodePos.y - 1 }
 			];
 
 			for (const newPos of directions) {
@@ -3384,13 +3383,29 @@ class InkBallGame {
 
 					const newNodeValue = point.GetFillColor();
 					if (searchValueArr.includes(newNodeValue)) {
-						point.SetFillColor(replacementValue); point.SetStrokeColor(replacementValue);
+						point.SetFillColor(replacementValue); point.SetStrokeColor(replacementValue); point.StrokeWeight(0.3);
 						queue.push(newPos);
+
+						// await Sleep(25);
+					}
+					else if (newNodeValue !== replacementValue && !visited.has({ x: newPos.x, y: newPos.y })) {
+						// point.SetStrokeColor('orange');
+						visited.set({ x: newPos.x, y: newPos.y }, point);
+						LocalLog(`(${nodePos.x},${nodePos.y}) -> (${newPos.x},${newPos.y})`);
 					}
 				}
 			}
 		}
 
+		const with_points = [...visited].map(([pos, pt]) => {
+			// const { x, y } = p.GetPosition();
+			pt.x = pos.x; pt.y = pos.y;
+			return pt;
+		});
+		const cw_sorted_verts = sortPointsClockwise(with_points);
+		LocalLog(cw_sorted_verts);
+		// this.#workingCyclePolyLine = null;
+		await this.#DisplayPointsProgressWithDelay(cw_sorted_verts, 0);
 	}
 
 	//Calling recursive method
