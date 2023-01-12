@@ -3219,7 +3219,7 @@ class InkBallGame {
 	/**
 	 * Floyd's tortoise and hare
 	 * https://en.wikipedia.org/wiki/Cycle_detection
-	 * @param {function} f function where f(x0) is the element/node next yto x0
+	 * @param {Function} f function where f(x0) is the element/node next yto x0
 	 * @param {Object} x0 index of element
 	 * @returns {Object} length of the shortest cycle and starting point
 	 */
@@ -3269,7 +3269,7 @@ class InkBallGame {
 
 	/**
 	 * Find cycles in connected points
-	 * @param {Array} currPointsArr is array of points
+	 * @param {Array<InkBallPointViewModel>} currPointsArr is array of points
 	 * @param {InkBallPointViewModel} point to test
 	 * @returns {Promise<Array>} of found candidates
 	 */
