@@ -2367,14 +2367,13 @@ class InkBallGame {
 				}
 				if (possible.length > 2) {
 					let cw_sorted_verts = sortPointsClockwise(possible);
-					let last = undefined;
+					let last = cw_sorted_verts.at(-1);
 					//check if points are aligned one-by-one next to each other no more than 1 point apart
-					for (const it of cw_sorted_verts) {
-						if (last !== undefined) {
-							if (!(Math.abs(last.x - it.x) <= 1 && Math.abs(last.y - it.y) <= 1)) {
-								cw_sorted_verts = null;
-								break;
-							}
+					for (let i = cw_sorted_verts.length - 2; i > 0; i--) {
+						const it = cw_sorted_verts[i];
+						if (!(Math.abs(last.x - it.x) <= 1 && Math.abs(last.y - it.y) <= 1)) {
+							cw_sorted_verts = null;
+							break;
 						}
 						last = it;
 					}
@@ -3354,31 +3353,31 @@ class InkBallGame {
 
 	/**
 	 * Calling iterative method
-	 * @param {InkBallPointViewModel} point to start from
+	 * @param {InkBallPointViewModel} startingPoint  point to start from
 	 * @param {Array} searchValueArr color values to search for
 	 * @param {string} replacementValue replacement color
 	 */
-	async #FloodFill(point, searchValueArr, replacementValue) {
-		const queue = [point.GetPosition()];
+	async #FloodFill(startingPoint, searchValueArr, replacementValue) {
+		const queue = [startingPoint.GetPosition()];
 		const visited = new Map();
 
 		while (queue.length > 0) {
-			const nodePos = queue.shift();
+			const { x, y } = queue.shift();
 			const directions = [
-				{ x: nodePos.x, y: nodePos.y },
-				{ x: nodePos.x - 1, y: nodePos.y },
-				{ x: nodePos.x + 1, y: nodePos.y },
-				{ x: nodePos.x, y: nodePos.y - 1 },
-				{ x: nodePos.x, y: nodePos.y + 1 }
-				// { x: nodePos.x - 1, y: nodePos.y + 1 },
-				// { x: nodePos.x + 1, y: nodePos.y - 1 },
-				// { x: nodePos.x + 1, y: nodePos.y + 1 },
-				// { x: nodePos.x - 1, y: nodePos.y - 1 }
+				{ x: x, y: y },
+				{ x: x - 1, y: y },
+				{ x: x + 1, y: y },
+				{ x: x, y: y - 1 },
+				{ x: x, y: y + 1 }
+				// { x: x - 1, y: y + 1 },
+				// { x: x + 1, y: y - 1 },
+				// { x: x + 1, y: y + 1 },
+				// { x: x - 1, y: y - 1 }
 			];
 
 			for (const newPos of directions) {
 				if (false === (newPos.x < 0 || newPos.y < 0 || newPos.x >= this.#iGridWidth || newPos.y >= this.#iGridHeight)) {
-					point = await this.#Points.get(newPos.y * this.#iGridWidth + newPos.x);
+					const point = await this.#Points.get(newPos.y * this.#iGridWidth + newPos.x);
 					if (!point) continue;
 
 					const newNodeValue = point.GetFillColor();
@@ -3388,24 +3387,53 @@ class InkBallGame {
 
 						// await Sleep(25);
 					}
-					else if (newNodeValue !== replacementValue && !visited.has({ x: newPos.x, y: newPos.y })) {
+					else if (newNodeValue !== replacementValue && !visited.has(`${newPos.x},${newPos.y}`)) {
 						// point.SetStrokeColor('orange');
-						visited.set({ x: newPos.x, y: newPos.y }, point);
-						LocalLog(`(${nodePos.x},${nodePos.y}) -> (${newPos.x},${newPos.y})`);
+						visited.set(`${newPos.x},${newPos.y}`, point);
+						LocalLog(`(${x},${y}) -> (${newPos.x},${newPos.y})`);
 					}
 				}
 			}
 		}
 
-		const with_points = [...visited].map(([pos, pt]) => {
-			// const { x, y } = p.GetPosition();
-			pt.x = pos.x; pt.y = pos.y;
-			return pt;
+		const possible = [...visited].map(([, point]) => {
+			const { x, y } = point.GetPosition();
+			point.x = x; point.y = y;
+			return point;
 		});
-		const cw_sorted_verts = sortPointsClockwise(with_points);
-		LocalLog(cw_sorted_verts);
-		// this.#workingCyclePolyLine = null;
-		await this.#DisplayPointsProgressWithDelay(cw_sorted_verts, 0);
+		if (possible.length > 2) {
+			let cw_sorted_verts = sortPointsClockwise(possible);
+			let last = cw_sorted_verts.at(-1);
+			//check if points are aligned one-by-one next to each other no more than 1 point apart
+			for (let i = cw_sorted_verts.length - 2; i > 0; i--) {
+				const it = cw_sorted_verts[i];
+				if (!(Math.abs(last.x - it.x) <= 1 && Math.abs(last.y - it.y) <= 1)) {
+					cw_sorted_verts = null;
+					break;
+				}
+				last = it;
+			}
+
+			const { x, y } = startingPoint.GetPosition();
+			if (
+				//check if above loop exited with not consecutive points
+				cw_sorted_verts === null ||
+
+				//check last and first path points that they close up nicely
+				!(Math.abs(cw_sorted_verts.at(-1).x - cw_sorted_verts[0].x) <= 1 &&
+					Math.abs(cw_sorted_verts.at(-1).y - cw_sorted_verts[0].y) <= 1
+				) ||
+
+				//check if "points-created-path" actually contains selected single point inside its boundaries
+				false === pnpoly(cw_sorted_verts, x, y)
+			) {
+				return;
+			}
+
+			LocalLog(cw_sorted_verts);
+			// this.#workingCyclePolyLine = null;
+			await this.#DisplayPointsProgressWithDelay(cw_sorted_verts, 0);
+		}
 	}
 
 	//Calling recursive method

@@ -92,9 +92,9 @@ async function Sleep(ms) {
  */
 function sortPointsClockwise(points) {
 	// Get the center (mean value) using reduce
-	const center = points.reduce((acc, { x, y }) => {
-		acc.x += x;
-		acc.y += y;
+	const center = points.reduce((acc, pt) => {
+		acc.x += pt.x;
+		acc.y += pt.y;
 		return acc;
 	}, { x: 0, y: 0 });
 	center.x /= points.length;
