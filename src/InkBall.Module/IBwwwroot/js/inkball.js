@@ -3354,22 +3354,24 @@ class InkBallGame {
 	/**
 	 * Calling iterative method
 	 * @param {InkBallPointViewModel} startingPoint  point to start from
-	 * @param {Array} searchValueArr color values to search for
-	 * @param {string} replacementValue replacement color
+	 * @param {Array} clickedColorArr color values to search for
+	 * @param {string} replacementColor replacement color
 	 */
-	async #FloodFill(startingPoint, searchValueArr, replacementValue) {
+	async #FloodFill(startingPoint, clickedColorArr, replacementColor) {
 		const queue = [startingPoint.GetPosition()];
-		const visited = new Map();
+		const edges = new Map();
+		let stopAll = false;
+		// let failed_tries = 5;
 
-		while (queue.length > 0) {
+		while (stopAll === false && queue.length > 0) {
 			const { x, y } = queue.shift();
 			const directions = [
-				{ x: x, y: y },
+				// { x: x, y: y },
 				{ x: x - 1, y: y },
 				{ x: x + 1, y: y },
 				{ x: x, y: y - 1 },
 				{ x: x, y: y + 1 }
-				// { x: x - 1, y: y + 1 },
+				// ,{ x: x - 1, y: y + 1 },
 				// { x: x + 1, y: y - 1 },
 				// { x: x + 1, y: y + 1 },
 				// { x: x - 1, y: y - 1 }
@@ -3378,25 +3380,33 @@ class InkBallGame {
 			for (const newPos of directions) {
 				if (false === (newPos.x < 0 || newPos.y < 0 || newPos.x >= this.#iGridWidth || newPos.y >= this.#iGridHeight)) {
 					const point = await this.#Points.get(newPos.y * this.#iGridWidth + newPos.x);
-					if (!point) continue;
+					const color = point !== undefined ? point.GetFillColor() : null;
 
-					const newNodeValue = point.GetFillColor();
-					if (searchValueArr.includes(newNodeValue)) {
-						point.SetFillColor(replacementValue); point.SetStrokeColor(replacementValue); point.StrokeWeight(0.3);
+					const vis = edges.get(`${newPos.x},${newPos.y}`);
+					if (vis !== undefined)
+						vis.visited_count++;
+					if (clickedColorArr.includes(color) || color === null) {
+						if (point) {
+							point.SetFillColor(replacementColor); point.SetStrokeColor(replacementColor); point.StrokeWeight(0.3);
+						}
 						queue.push(newPos);
-
-						// await Sleep(25);
 					}
-					else if (newNodeValue !== replacementValue && !visited.has(`${newPos.x},${newPos.y}`)) {
-						// point.SetStrokeColor('orange');
-						visited.set(`${newPos.x},${newPos.y}`, point);
+					else if (color !== replacementColor && vis === undefined) {
+						edges.set(`${newPos.x},${newPos.y}`, { point, visited_count: 0 });
 						LocalLog(`(${x},${y}) -> (${newPos.x},${newPos.y})`);
 					}
 				}
 			}
+			
+			for (const v of edges.values()) {
+				if (v.visited_count > (8 * 2)) {
+					stopAll = true;
+					break;
+				}
+			}
 		}
 
-		const possible = [...visited].map(([, point]) => {
+		const possible = [...edges].filter(([, v]) => v !== undefined).map(([, { point }]) => {
 			const { x, y } = point.GetPosition();
 			point.x = x; point.y = y;
 			return point;
