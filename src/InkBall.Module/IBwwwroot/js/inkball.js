@@ -3359,9 +3359,8 @@ class InkBallGame {
 	 */
 	async #FloodFill(startingPoint, clickedColorArr, replacementColor) {
 		const queue = [startingPoint.GetPosition()];
-		const edges = new Map();
+		const edge_points = new Map();
 		let stopAll = false;
-		// let failed_tries = 5;
 
 		while (stopAll === false && queue.length > 0) {
 			const { x, y } = queue.shift();
@@ -3382,7 +3381,7 @@ class InkBallGame {
 					const point = await this.#Points.get(newPos.y * this.#iGridWidth + newPos.x);
 					const color = point !== undefined ? point.GetFillColor() : null;
 
-					const vis = edges.get(`${newPos.x},${newPos.y}`);
+					const vis = edge_points.get(`${newPos.x},${newPos.y}`);
 					if (vis !== undefined)
 						vis.visited_count++;
 					if (clickedColorArr.includes(color) || color === null) {
@@ -3392,13 +3391,13 @@ class InkBallGame {
 						queue.push(newPos);
 					}
 					else if (color !== replacementColor && vis === undefined) {
-						edges.set(`${newPos.x},${newPos.y}`, { point, visited_count: 0 });
+						edge_points.set(`${newPos.x},${newPos.y}`, { point, visited_count: 0, x: newPos.x, y: newPos.y });
 						LocalLog(`(${x},${y}) -> (${newPos.x},${newPos.y})`);
 					}
 				}
 			}
-			
-			for (const v of edges.values()) {
+
+			for (const v of edge_points.values()) {
 				if (v.visited_count > (8 * 2)) {
 					stopAll = true;
 					break;
@@ -3406,47 +3405,45 @@ class InkBallGame {
 			}
 		}
 
-		const possible = [...edges].filter(([, v]) => v !== undefined).map(([, { point }]) => {
-			const { x, y } = point.GetPosition();
-			point.x = x; point.y = y;
-			return point;
-		});
-		if (possible.length > 2) {
-			let cw_sorted_verts = sortPointsClockwise(possible);
-			let last = cw_sorted_verts.at(-1);
-			//check if points are aligned one-by-one next to each other no more than 1 point apart
-			for (let i = cw_sorted_verts.length - 2; i > 0; i--) {
-				const it = cw_sorted_verts[i];
-				if (!(Math.abs(last.x - it.x) <= 1 && Math.abs(last.y - it.y) <= 1)) {
-					cw_sorted_verts = null;
-					break;
+		if (edge_points.size > 3) {
+			//verification and constructing of surrounding path from edge_points
+			const verts = [...edge_points.values()];
+			const gathered = verts.splice(-1, 1);
+			
+			let last = gathered[0];
+			for (let counter = verts.length; counter > 0; counter--) {
+				const ind_or_negative_one = verts.findIndex(v => Math.abs(v.x - last.x) <= 1 && Math.abs(v.y - last.y) <= 1);
+				if (ind_or_negative_one !== -1) {
+					//setting new last from moved vert
+					last = verts.splice(ind_or_negative_one, 1)[0];
+					gathered.push(last);//add to found path points
 				}
-				last = it;
+				else
+					break;
 			}
 
 			const { x, y } = startingPoint.GetPosition();
 			if (
 				//check if above loop exited with not consecutive points
-				cw_sorted_verts === null ||
+				gathered.length <= 3 ||
 
 				//check last and first path points that they close up nicely
-				!(Math.abs(cw_sorted_verts.at(-1).x - cw_sorted_verts[0].x) <= 1 &&
-					Math.abs(cw_sorted_verts.at(-1).y - cw_sorted_verts[0].y) <= 1
+				!(Math.abs(gathered.at(-1).x - gathered[0].x) <= 1 &&
+					Math.abs(gathered.at(-1).y - gathered[0].y) <= 1
 				) ||
 
 				//check if "points-created-path" actually contains selected single point inside its boundaries
-				false === pnpoly(cw_sorted_verts, x, y)
+				false === pnpoly(gathered, x, y)
 			) {
 				return;
 			}
 
-			LocalLog(cw_sorted_verts);
-			// this.#workingCyclePolyLine = null;
-			await this.#DisplayPointsProgressWithDelay(cw_sorted_verts, 0);
+			LocalLog(gathered);
+			await this.#DisplayPointsProgressWithDelay(gathered.map(({ point }) => point), 0);
 		}
 	}
 
-	//Calling recursive method
+/* 	//Calling recursive method
 	async #FloodFill_Recursive(x, y, fillColor) {
 		if (x < 0 || y < 0 || x >= this.#iGridWidth || y >= this.#iGridHeight) return;
 
@@ -3468,7 +3465,7 @@ class InkBallGame {
 			await this.#FloodFill_Recursive(x + 1, y + 1, fillColor);
 			await this.#FloodFill_Recursive(x - 1, y - 1, fillColor);
 		}
-	}
+	} */
 
 	async #rAFCallBack(timeStamp) {
 		if (this.#rAF_StartTimeStamp === null) this.#rAF_StartTimeStamp = timeStamp;
