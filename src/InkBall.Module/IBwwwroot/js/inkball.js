@@ -241,12 +241,12 @@ class CountdownTimer {
 	#label;
 	#countdownReachedHandler;
 
-	constructor(
+	constructor({
 		countdownSeconds = 60,
 		labelSelector = null,
 		initialStart = false,
 		countdownReachedHandler = undefined
-	) {
+	} = {}) {
 		this.#countdownSeconds = countdownSeconds;
 		this.#totalSeconds = this.#countdownSeconds;
 		this.#id = -1;
@@ -292,12 +292,12 @@ class CountdownTimer {
 			this.#label.textContent = '';
 	}
 
-	Reset(
+	Reset({
 		countdownSeconds = 60,
 		labelSelector = null,
 		initialStart = false,
 		countdownReachedHandler = undefined
-	) {
+	} = {}) {
 		this.#countdownSeconds = countdownSeconds;
 		this.#totalSeconds = this.#countdownSeconds;
 		this.#label = null;
@@ -3384,10 +3384,12 @@ class InkBallGame {
 					const vis = edge_points.get(`${newPos.x},${newPos.y}`);
 					if (vis !== undefined)
 						vis.visited_count++;
-					if (clickedColorArr.includes(color) || color === null) {
-						if (point) {
-							point.SetFillColor(replacementColor); point.SetStrokeColor(replacementColor); point.StrokeWeight(0.3);
-						}
+
+					if (clickedColorArr.includes(color)) {
+						point.SetFillColor(replacementColor); point.SetStrokeColor(replacementColor); point.StrokeWeight(0.3);
+						queue.push(newPos);
+					}
+					else if (color === null) {
 						queue.push(newPos);
 					}
 					else if (color !== replacementColor && vis === undefined) {
@@ -3409,7 +3411,7 @@ class InkBallGame {
 			//verification and constructing of surrounding path from edge_points
 			const verts = [...edge_points.values()];
 			const gathered = verts.splice(-1, 1);
-			
+
 			let last = gathered[0];
 			for (let counter = verts.length; counter > 0; counter--) {
 				const ind_or_negative_one = verts.findIndex(v => Math.abs(v.x - last.x) <= 1 && Math.abs(v.y - last.y) <= 1);
@@ -3442,30 +3444,6 @@ class InkBallGame {
 			await this.#DisplayPointsProgressWithDelay(gathered.map(({ point }) => point), 0);
 		}
 	}
-
-/* 	//Calling recursive method
-	async #FloodFill_Recursive(x, y, fillColor) {
-		if (x < 0 || y < 0 || x >= this.#iGridWidth || y >= this.#iGridHeight) return;
-
-		const point = await this.#Points.get(y * this.#iGridWidth + x);
-		if (!point) return;
-
-		const color = point.GetFillColor();
-
-		if (fillColor !== color) {
-			point.SetFillColor(fillColor); point.SetStrokeColor('green');
-
-			await this.#FloodFill_Recursive(x, y, fillColor);
-			await this.#FloodFill_Recursive(x - 1, y, fillColor);
-			await this.#FloodFill_Recursive(x + 1, y, fillColor);
-			await this.#FloodFill_Recursive(x, y - 1, fillColor);
-			await this.#FloodFill_Recursive(x, y + 1, fillColor);
-			await this.#FloodFill_Recursive(x - 1, y + 1, fillColor);
-			await this.#FloodFill_Recursive(x + 1, y - 1, fillColor);
-			await this.#FloodFill_Recursive(x + 1, y + 1, fillColor);
-			await this.#FloodFill_Recursive(x - 1, y - 1, fillColor);
-		}
-	} */
 
 	async #rAFCallBack(timeStamp) {
 		if (this.#rAF_StartTimeStamp === null) this.#rAF_StartTimeStamp = timeStamp;

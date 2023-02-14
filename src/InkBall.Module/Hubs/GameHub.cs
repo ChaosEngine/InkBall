@@ -228,8 +228,7 @@ namespace InkBall.Module.Hubs
 			return (other_Player, other_UserIdentifier);
 		}
 
-		private async Task<(InkBallGame, InkBallPlayer)> GetGameAndThisPlayer(ClaimsPrincipal claimsPrincipal, string thisUserIdentifier,
-			int gameID, int playerID, CancellationToken token)
+		private async Task<(InkBallGame, InkBallPlayer)> GetGameAndThisPlayer(ClaimsPrincipal claimsPrincipal, string thisUserIdentifier, int gameID, int playerID, CancellationToken token)
 		{
 			InkBallGame game;
 			InkBallPlayer this_Player;
@@ -339,7 +338,7 @@ namespace InkBall.Module.Hubs
 			}
 			catch (NoGameArgumentNullException ex)
 			{
-				_logger.LogError(ex, ex.Message);
+				_logger.LogWarning(ex, ex.Message);
 			}
 			catch (Exception ex)
 			{
