@@ -934,8 +934,8 @@ class InkBallGame {
 		}.bind(this));
 
 		this.#SignalRConnection.on("ServerToClientPing", function (ping) {
-			const userName = this.#bIsPlayingWithRed ? this.#Player2Name.textContent : this.#Player1Name.textContent;
-			const encodedMsg = PingCommand.Format(userName, ping);
+			// const userName = this.#bIsPlayingWithRed ? this.#Player2Name.textContent : this.#Player1Name.textContent;
+			const encodedMsg = PingCommand.Format(/* userName,  */ping);
 
 			this.#MessagesRingBufferStore.Append(encodedMsg, false, this.#sMsgListSel, this.#bIsPlayingWithRed,
 				this.#Player1Name, this.#Player2Name);
