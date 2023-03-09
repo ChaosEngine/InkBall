@@ -146,7 +146,7 @@ class PingCommand extends DtoMsg {
 
 	get Kind() { return CommandKindEnum.PING; }
 
-	static Format(sUser, ping) {
+	static Format(/* sUser,  */ping) {
 		const txt = ping.Message || ping.message;
 
 		return /*sUser + " says '" + */txt/* + "'"*/;
@@ -1195,10 +1195,10 @@ class InkBallGame {
 
 	async #SetAllPoints(points) {
 		//Un-Minimize amount of data transported on the wire through SignalR or on the page: status field
-		function DataUnMinimizerStatus(status) { return status - 3; }
+		const DataUnMinimizerStatus = (status) => status - 3;
 
 		//Un-Minimize amount of data transported on the wire through SignalR or on the page: player id field
-		function DataUnMinimizerPlayerId(playerId) { return playerId - 1; }
+		const DataUnMinimizerPlayerId = (playerId) => playerId - 1;
 
 		try {
 			await this.#Points.BeginBulkStorage();
@@ -1217,8 +1217,8 @@ class InkBallGame {
 		let sDelimiter = "", sPathPoints = "", p = null, x, y,
 			status = StatusEnum.POINT_STARTING;
 		for (const pair of sPoints) {
-			p = pair.split(",");
-			x = parseInt(p[0]); y = parseInt(p[1]);
+			[x, y] = pair.split(",");
+			x = parseInt(x); y = parseInt(y);
 
 			p = await this.#Points.get(y * this.#iGridWidth + x);
 			if (p !== null && p !== undefined) {
@@ -1229,8 +1229,8 @@ class InkBallGame {
 			sPathPoints += `${sDelimiter}${x},${y}`;
 			sDelimiter = " ";
 		}
-		p = sPoints[0].split(",");
-		x = parseInt(p[0]); y = parseInt(p[1]);
+		[x, y] = sPoints[0].split(",");
+		x = parseInt(x); y = parseInt(y);
 
 		p = await this.#Points.get(y * this.#iGridWidth + x);
 		if (p !== null && p !== undefined) {
@@ -1252,8 +1252,8 @@ class InkBallGame {
 		let sDelimiter = "", sPathPoints = "", p = null, x, y,
 			status = StatusEnum.POINT_STARTING;
 		for (const pair of sPoints) {
-			p = pair.split(",");
-			x = parseInt(p[0]); y = parseInt(p[1]);
+			[x, y] = pair.split(",");
+			x = parseInt(x); y = parseInt(y);
 
 			p = await this.#Points.get(y * this.#iGridWidth + x);
 			if (p !== null && p !== undefined) {
@@ -1264,8 +1264,8 @@ class InkBallGame {
 			sPathPoints += `${sDelimiter}${x},${y}`;
 			sDelimiter = " ";
 		}
-		p = sPoints[0].split(",");
-		x = parseInt(p[0]); y = parseInt(p[1]);
+		[x, y] = sPoints[0].split(",");
+		x = parseInt(x); y = parseInt(y);
 
 		p = await this.#Points.get(y * this.#iGridWidth + x);
 		if (p !== null && p !== undefined) {
@@ -3218,8 +3218,8 @@ class InkBallGame {
 	/**
 	 * Floyd's tortoise and hare
 	 * https://en.wikipedia.org/wiki/Cycle_detection
-	 * @param {Function} f function where f(x0) is the element/node next yto x0
-	 * @param {Object} x0 index of element
+	 * @param {Function} f function where f(x0) is the element/node next to x0
+	 * @param {Number} x0 index of element
 	 * @returns {Object} length of the shortest cycle and starting point
 	 */
 	#floyd(f, x0) {
