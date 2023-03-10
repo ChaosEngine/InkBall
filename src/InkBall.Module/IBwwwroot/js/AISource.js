@@ -42,7 +42,7 @@ class GraphAI {
 			return false;
 		};
 
-		const addPointsAndEdgesToGraph = async function (point, to_x, to_y, x, y) {
+		const addPointsAndEdgesToGraph = async (point, to_x, to_y, x, y) => {
 			if (to_x >= 0 && to_x < this.#iGridWidth && to_y >= 0 && to_y < this.#iGridHeight) {
 				const next = await this.#Points.get(to_y * this.#iGridWidth + to_x);
 				if (next && isPointOKForPath([freePointStatus], next) === true) {
@@ -78,7 +78,7 @@ class GraphAI {
 					}
 				}
 			}
-		}.bind(this);
+		};
 
 		for (const point of await this.#Points.values()) {
 			if (point && isPointOKForPath([freePointStatus, this.#POINT_STARTING, this.#POINT_IN_PATH], point) === true) {
@@ -188,7 +188,7 @@ class GraphAI {
 			color[u] = 2;
 		};
 
-		const printCycles = async function (edges, mark) {
+		const printCycles = async (edges, mark) => {
 			// push the edges that into the 
 			// cycle adjacency list 
 			for (let e = 0; e < edges; e++) {
@@ -231,9 +231,7 @@ class GraphAI {
 					//const rand_color = 'var(--indigo)';
 
 					//convert to logical space
-					const mapped_verts = cycl.map(function (c) {
-						return vertices[c].GetPosition();
-					}.bind(this));
+					const mapped_verts = cycl.map(c => vertices[c].GetPosition());
 					//sort clockwise (https://stackoverflow.com/questions/45660743/sort-points-in-counter-clockwise-in-javascript)
 					const cw_sorted_verts = sortPointsClockwise(mapped_verts);
 					cycles[i] = { cycl, cw_sorted_verts };
@@ -282,7 +280,7 @@ class GraphAI {
 				}
 			}
 			/*return tab;*/return { cycles, free_human_player_points, cyclenumber };
-		}.bind(this);
+		};
 
 		// store the numbers of cycle
 		let cyclenumber = 0, edges = N;

@@ -646,9 +646,7 @@ class InkBallGame {
 		this.#SignalRConnection = new signalR.HubConnectionBuilder()
 			.withUrl(sHubName, {
 				transport: transportType,
-				accessTokenFactory: function () {
-					return `iGameID=${this.#iGameID}&iPlayerID=${this.#iPlayerID}`;
-				}.bind(this)
+				accessTokenFactory: () => `iGameID=${this.#iGameID}&iPlayerID=${this.#iPlayerID}`
 			})
 			.withHubProtocol(hubProtocol)
 			.configureLogging(loggingLevel)
@@ -814,7 +812,7 @@ class InkBallGame {
 		if (false === this.#bPointsAndPathsLoaded)
 			this.#bPointsAndPathsLoaded = !loadPointsAndPathsFromSignalR;
 
-		this.#SignalRConnection.on("ServerToClientPoint", async function (point) {
+		this.#SignalRConnection.on("ServerToClientPoint", async (point) => {
 			if (this.#iPlayerID !== point.iPlayerId) {
 				const user = this.#bIsPlayingWithRed ? this.#Player2Name.textContent : this.#Player1Name.textContent;
 				let encodedMsg = InkBallPointViewModel.Format(user, point);
@@ -830,9 +828,9 @@ class InkBallGame {
 			}
 			await this.#ReceivedPointProcessing(point);
 
-		}.bind(this));
+		});
 
-		this.#SignalRConnection.on("ServerToClientPath", function (dto) {
+		this.#SignalRConnection.on("ServerToClientPath", (dto) => {
 			if (Object.prototype.hasOwnProperty.call(dto, 'PointsAsString') || Object.prototype.hasOwnProperty.call(dto, 'pointsAsString')) {
 				let path = dto;
 				if (this.#iPlayerID !== path.iPlayerId) {
@@ -864,9 +862,9 @@ class InkBallGame {
 			else
 				throw new Error("ServerToClientPath bad Kind!");
 
-		}.bind(this));
+		});
 
-		this.#SignalRConnection.on("ServerToClientPlayerJoin", function (join) {
+		this.#SignalRConnection.on("ServerToClientPlayerJoin", (join) => {
 			const iOtherPlayerId = join.OtherPlayerId || join.otherPlayerId;
 			this.#iOtherPlayerId = iOtherPlayerId;
 			const encodedMsg = PlayerJoiningCommand.Format(join);
@@ -893,9 +891,9 @@ class InkBallGame {
 			this.#NotifyBrowser('Player joining', encodedMsg);
 
 			this.#bHandlingEvent = false;
-		}.bind(this));
+		});
 
-		this.#SignalRConnection.on("ServerToClientPlayerSurrender", function (surrender) {
+		this.#SignalRConnection.on("ServerToClientPlayerSurrender", (surrender) => {
 
 			let encodedMsg = PlayerSurrenderingCommand.Format(surrender);
 
@@ -913,9 +911,9 @@ class InkBallGame {
 			SHRD.LocalAlert(encodedMsg, 'Game interruption', () => {
 				window.location.href = "GamesList";
 			});
-		}.bind(this));
+		});
 
-		this.#SignalRConnection.on("ServerToClientPlayerWin", function (win) {
+		this.#SignalRConnection.on("ServerToClientPlayerWin", (win) => {
 			const encodedMsg = WinCommand.Format(win);
 
 			const msg_lst = document.querySelector(this.#sMsgListSel);
@@ -931,9 +929,9 @@ class InkBallGame {
 			this.#ReceivedWinProcessing(win);
 			this.#NotifyBrowser('We have a winner', encodedMsg);
 
-		}.bind(this));
+		});
 
-		this.#SignalRConnection.on("ServerToClientPing", function (ping) {
+		this.#SignalRConnection.on("ServerToClientPing", (ping) => {
 			// const userName = this.#bIsPlayingWithRed ? this.#Player2Name.textContent : this.#Player1Name.textContent;
 			const encodedMsg = PingCommand.Format(/* userName,  */ping);
 
@@ -942,14 +940,14 @@ class InkBallGame {
 
 			this.#NotifyBrowser('User Message', encodedMsg);
 
-		}.bind(this));
+		});
 
-		this.#SignalRConnection.on("ServerToClientOtherPlayerDisconnected", function (sMsg) {
+		this.#SignalRConnection.on("ServerToClientOtherPlayerDisconnected", (sMsg) => {
 			const opts = {
 				countdownSeconds: 5,
 				labelSelector: null,
 				initialStart: true,
-				countdownReachedHandler: function () {
+				countdownReachedHandler: () => {
 					const encodedMsg = sMsg;
 					const li = document.createElement("li");
 					const strong = document.createElement("strong");
@@ -960,15 +958,15 @@ class InkBallGame {
 
 					this.#NotifyBrowser('User disconnected', encodedMsg);
 					this.#ReconnectTimer = null;
-				}.bind(this)
+				}
 			};
 			if (this.#ReconnectTimer)
 				this.#ReconnectTimer.Reset(opts);
 			else
 				this.#ReconnectTimer = new CountdownTimer(opts);
-		}.bind(this));
+		});
 
-		this.#SignalRConnection.on("ServerToClientOtherPlayerConnected", function (sMsg) {
+		this.#SignalRConnection.on("ServerToClientOtherPlayerConnected", (sMsg) => {
 			if (this.#ReconnectTimer) {
 				this.#ReconnectTimer.Stop();
 				this.#ReconnectTimer = null;
@@ -985,9 +983,9 @@ class InkBallGame {
 				this.#NotifyBrowser('User connected', encodedMsg);
 				this.#ReconnectTimer = null;
 			}
-		}.bind(this));
+		});
 
-		this.#SignalRConnection.on("ServerToClientStopAndDraw", function (cmd) {
+		this.#SignalRConnection.on("ServerToClientStopAndDraw", (cmd) => {
 			if (!cmd) return;
 
 			const user = this.#bIsPlayingWithRed ? this.#Player2Name.textContent : this.#Player1Name.textContent;
@@ -1001,10 +999,10 @@ class InkBallGame {
 			document.querySelector(this.#sMsgListSel).appendChild(li);
 
 			this.#NotifyBrowser('User ' + user + ' started drawing new path', encodedMsg);
-		}.bind(this));
+		});
 
 		if (false === this.#bIsCPUGame) {
-			document.querySelector(this.#sMsgSendButtonSel).addEventListener("click", async function (event) {
+			document.querySelector(this.#sMsgSendButtonSel).addEventListener("click", async (event) => {
 				event.preventDefault();
 
 				const encodedMsg = document.querySelector(this.#sMsgInputSel).value.trim();
@@ -1014,17 +1012,17 @@ class InkBallGame {
 
 				await this.#SendData(ping);
 
-			}.bind(this), false);
+			}, false);
 
 			// Execute a function when the user releases a key on the keyboard
-			document.querySelector(this.#sMsgInputSel).addEventListener("keyup", function (event) {
+			document.querySelector(this.#sMsgInputSel).addEventListener("keyup", (event) => {
 				event.preventDefault();// Cancel the default action, if needed
 
 				if (event.keyCode === 13) {// Number 13 is the "Enter" key on the keyboard
 					// Trigger the button element with a click
 					document.querySelector(this.#sMsgSendButtonSel).click();
 				}
-			}.bind(this), false);
+			}, false);
 		}
 
 		return this.#Connect();
@@ -1361,12 +1359,12 @@ class InkBallGame {
 		}
 
 		if (sOwnedPoints !== "") {
-			sPathPoints = points.map(function (pt) {
+			sPathPoints = points.map((pt) => {
 				const x = pt.x, y = pt.y;
 				if (x === null || y === null) return '';
 
 				return `${x},${y}`;
-			}.bind(this)).join(' ');
+			}).join(' ');
 		}
 
 		return {
@@ -2834,7 +2832,7 @@ class InkBallGame {
 	#IsGraphCyclic(graph) {
 		const vertices = graph.vertices;
 
-		const isCyclicUtil = function (v, parent) {
+		const isCyclicUtil = (v, parent) => {
 			// Mark the current node as visited 
 			v.visited = true;
 
@@ -2859,7 +2857,7 @@ class InkBallGame {
 				}
 			}
 			return false;
-		}.bind(this);
+		};
 
 		// Mark all the vertices as not visited  
 		// and not part of recursion stack 
@@ -2900,7 +2898,7 @@ class InkBallGame {
 			return false;
 		};
 
-		const addPointsAndEdgesToGraph = async function (point, to_x, to_y, x, y) {
+		const addPointsAndEdgesToGraph = async (point, to_x, to_y, x, y) => {
 			if (to_x >= 0 && to_x < this.#iGridWidth && to_y >= 0 && to_y < this.#iGridHeight) {
 				const next = await this.#Points.get(to_y * this.#iGridWidth + to_x);
 				if (next && isPointOKForPath([freePointStatus], next) === true) {
@@ -2936,7 +2934,7 @@ class InkBallGame {
 					}
 				}
 			}
-		}.bind(this);
+		};
 
 		for (const point of await this.#Points.values()) {
 			if (point && isPointOKForPath([freePointStatus, this.POINT_STARTING, this.POINT_IN_PATH], point) === true) {
@@ -2993,7 +2991,7 @@ class InkBallGame {
 			mark[i] = []; cycles[i] = [];
 		}
 
-		const dfs_cycle = async function (u, p) {
+		const dfs_cycle = async (u, p) => {
 			// already (completely) visited vertex. 
 			if (color[u] === 2)
 				return;
@@ -3043,9 +3041,9 @@ class InkBallGame {
 
 			// completely visited. 
 			color[u] = 2;
-		}.bind(this);
+		};
 
-		const printCycles = async function (edges, mark) {
+		const printCycles = async (edges, mark) => {
 			// push the edges that into the 
 			// cycle adjacency list 
 			for (let e = 0; e < edges; e++) {
@@ -3090,9 +3088,9 @@ class InkBallGame {
 					const rand_color = 'var(--bs-teal)';
 
 					//convert to logical space
-					const mapped_verts = cycl.map(function (c) {
+					const mapped_verts = cycl.map(c => {
 						return vertices[c].GetPosition();
-					}.bind(this));
+					});
 					//sort clockwise (https://stackoverflow.com/questions/45660743/sort-points-in-counter-clockwise-in-javascript)
 					const cw_sorted_verts = sortPointsClockwise(mapped_verts);
 
@@ -3144,7 +3142,7 @@ class InkBallGame {
 				}
 			}
 			return tab;
-		}.bind(this);
+		};
 
 		// store the numbers of cycle
 		let cyclenumber = 0, edges = N;

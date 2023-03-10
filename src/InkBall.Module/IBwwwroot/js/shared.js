@@ -142,9 +142,7 @@ class SvgVml {
 
 		if (svgAvailable) {
 			/* ============= displayable SVG ============== */
-			documentCreateElementNS_SVG = function (contextElement) {
-				return contextElement;
-			}.bind(this);
+			documentCreateElementNS_SVG = (contextElement) => contextElement;
 			documentCreateElementNS_Element = function (elementName) {
 				switch (elementName) {
 					case "circle":
@@ -877,20 +875,20 @@ class GameStateStore {
 			else
 				req = indexedDB.open(this.#DB_NAME);
 
-			req.onsuccess = function (evt) {
+			req.onsuccess = (evt) => {
 				// Equal to: db = req.result;
 				this.#DB = evt.currentTarget.result;
 
 				LocalLog("OpenDb DONE");
 				resolve(evt.currentTarget.result);
-			}.bind(this);
+			};
 
-			req.onerror = function (evt) {
+			req.onerror = (evt) => {
 				LocalError("OpenDb:", evt.target.errorCode || evt.target.error);
 				reject();
-			}.bind(this);
+			};
 
-			req.onupgradeneeded = function (evt) {
+			req.onupgradeneeded = (evt) => {
 				LocalLog(`OpenDb.onupgradeneeded(version: ${this.#DB_VERSION})`);
 				const loc_db = evt.currentTarget.result;
 
@@ -914,7 +912,7 @@ class GameStateStore {
 
 				loc_db.createObjectStore(
 					this.#DB_STATE_STORE, { /*keyPath: 'gameId',*/ autoIncrement: false });
-			}.bind(this);
+			};
 		});
 	}
 
@@ -932,7 +930,7 @@ class GameStateStore {
 	}
 
 	async #ClearAllStores() {
-		const clearObjectStore = async function (storeName) {
+		const clearObjectStore = async (storeName) => {
 			return new Promise((resolve, reject) => {
 				const store = this.#GetObjectStore(storeName, 'readwrite');
 				const req = store.clear();
@@ -944,7 +942,7 @@ class GameStateStore {
 					reject();
 				};
 			});
-		}.bind(this);
+		};
 
 		await Promise.all([
 			clearObjectStore(this.#DB_POINT_STORE),
