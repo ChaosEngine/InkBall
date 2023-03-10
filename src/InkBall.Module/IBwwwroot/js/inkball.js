@@ -2433,17 +2433,7 @@ class InkBallGame {
 
 		LocalLog(`FloodFill start point (${x},${y}), color = '${start_color === sHumanColor ? 'HUMAN' : 'CPU'}'`);
 
-
-		//
-		//recursive version
-		//
-		// await this.#FloodFill_Recursive(x, y, start_color === sHumanColor ? sCPUColor : sHumanColor );
-
-
-		//
-		//iterative version
-		//
-		await this.#FloodFill(pt, [start_color === sHumanColor ? sHumanColor : sCPUColor], 'green');
+		await this.#FloodFill(pt, start_color === sHumanColor ? sHumanColor : sCPUColor, 'green');
 	}
 
 	/**
@@ -3354,15 +3344,15 @@ class InkBallGame {
 	/**
 	 * Calling iterative method
 	 * @param {InkBallPointViewModel} startingPoint  point to start from
-	 * @param {Array} clickedColorArr color values to search for
+	 * @param {string} clickedColor color value to search for
 	 * @param {string} replacementColor replacement color
 	 */
-	async #FloodFill(startingPoint, clickedColorArr, replacementColor) {
+	async #FloodFill(startingPoint, clickedColor, replacementColor) {
 		const queue = [startingPoint.GetPosition()];
+		const blanks_changed = new Map();
 		const edge_points = new Map();
-		let stopAll = false;
 
-		while (stopAll === false && queue.length > 0) {
+		while (queue.length > 0) {
 			const { x, y } = queue.shift();
 			const directions = [
 				// { x: x, y: y },
@@ -3378,52 +3368,56 @@ class InkBallGame {
 
 			for (const newPos of directions) {
 				if (false === (newPos.x < 0 || newPos.y < 0 || newPos.x >= this.#iGridWidth || newPos.y >= this.#iGridHeight)) {
-					const point = await this.#Points.get(newPos.y * this.#iGridWidth + newPos.x);
-					const color = point !== undefined ? point.GetFillColor() : null;
+					const point_hash = `${newPos.x},${newPos.y}`;
+					let color;
+					let point = blanks_changed.get(point_hash);
+					if (point !== undefined) {
+						color = replacementColor;
+					}
+					else {
+						point = await this.#Points.get(newPos.y * this.#iGridWidth + newPos.x);
+						color = point !== undefined ? point.GetFillColor() : null;
+					}
 
-					const vis = edge_points.get(`${newPos.x},${newPos.y}`);
-					if (vis !== undefined)
-						vis.visited_count++;
 
-					if (clickedColorArr.includes(color)) {
-						point.SetFillColor(replacementColor); point.SetStrokeColor(replacementColor); point.StrokeWeight(0.3);
+					if (color === clickedColor) {
+						if (point.SetFillColor) {
+							point.SetFillColor(replacementColor); point.SetStrokeColor(replacementColor); point.StrokeWeight(0.3);
+						}
+
 						queue.push(newPos);
 					}
 					else if (color === null) {
+						blanks_changed.set(point_hash, { x: newPos.x, y: newPos.y });
+
 						queue.push(newPos);
 					}
-					else if (color !== replacementColor && vis === undefined) {
-						edge_points.set(`${newPos.x},${newPos.y}`, { point, visited_count: 0, x: newPos.x, y: newPos.y });
-						LocalLog(`(${x},${y}) -> (${newPos.x},${newPos.y})`);
+					else if (color !== replacementColor) {
+						edge_points.set(point_hash, { point, x: newPos.x, y: newPos.y });
+						LocalLog(`(${x},${y}) -> (${point_hash})`);
 					}
-				}
-			}
-
-			for (const v of edge_points.values()) {
-				if (v.visited_count > (8 * 2)) {
-					stopAll = true;
-					break;
 				}
 			}
 		}
 
 		if (edge_points.size > 3) {
 			//verification and constructing of surrounding path from edge_points
-			const verts = [...edge_points.values()];
-			const gathered = verts.splice(-1, 1);
+			const verts = [...edge_points.values()];//convert map values to array
+			const gathered = verts.splice(-1, 1);//drop last vert from verts and create new array out of it
 
-			let last = gathered[0];
-			for (let counter = verts.length; counter > 0; counter--) {
+			let last = gathered[0];//take single vert as starting last value
+			for (let counter = verts.length; counter > 0; counter--) {//go in reverse order over every vertices
 				const ind_or_negative_one = verts.findIndex(v => Math.abs(v.x - last.x) <= 1 && Math.abs(v.y - last.y) <= 1);
-				if (ind_or_negative_one !== -1) {
-					//setting new last from moved vert
+				if (ind_or_negative_one !== -1) {//new neighboring vertex found
+					//move found vertex from verts into gathered array...
+					//...and set new last from this moved vert
 					last = verts.splice(ind_or_negative_one, 1)[0];
 					gathered.push(last);//add to found path points
 				}
-				else
+				else//neighboring vertex not found, break, we fail
 					break;
 			}
-
+			//verification
 			const { x, y } = startingPoint.GetPosition();
 			if (
 				//check if above loop exited with not consecutive points
