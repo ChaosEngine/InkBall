@@ -435,7 +435,8 @@ class MessagesRingBufferStore {
  * @param {object} gameOptions is an entry starter object defining game parameters
  */
 async function importAllModulesAsync(gameOptions) {
-	const selfFileName = import.meta.url.split('/').at(-1);
+	const importMetaUrl = import.meta.url;
+	const selfFileName = importMetaUrl.split('/').at(-1);
 	const isMinified = selfFileName.indexOf("min") !== -1;
 
 	if (isMinified)
