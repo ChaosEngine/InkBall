@@ -435,7 +435,7 @@ class MessagesRingBufferStore {
  * @param {object} gameOptions is an entry starter object defining game parameters
  */
 async function importAllModulesAsync(gameOptions) {
-	const importMetaUrl = import.meta.url;
+	const importMetaUrl = import.meta.url;//do not optimize, take into separate variable, miss..feature of terser-5.16.6
 	const selfFileName = importMetaUrl.split('/').at(-1);
 	const isMinified = selfFileName.indexOf("min") !== -1;
 
@@ -3348,7 +3348,7 @@ class InkBallGame {
 	 */
 	async #FloodFill(startingPoint, clickedColor, replacementColor) {
 		const queue = [startingPoint.GetPosition()];
-		const blanks_changed = new Map();
+		const blanks_changed = new Set();
 		const edge_points = new Map();
 
 		while (queue.length > 0) {
@@ -3367,33 +3367,30 @@ class InkBallGame {
 
 			for (const newPos of directions) {
 				if (false === (newPos.x < 0 || newPos.y < 0 || newPos.x >= this.#iGridWidth || newPos.y >= this.#iGridHeight)) {
-					const point_hash = `${newPos.x},${newPos.y}`;
-					let color;
-					let point = blanks_changed.get(point_hash);
-					if (point !== undefined) {
+					const point_position_hashed = newPos.y * this.#iGridWidth + newPos.x;
+					let color, point;
+					if (blanks_changed.has(point_position_hashed)) {
+						point = null;
 						color = replacementColor;
 					}
 					else {
-						point = await this.#Points.get(newPos.y * this.#iGridWidth + newPos.x);
+						point = await this.#Points.get(point_position_hashed);
 						color = point !== undefined ? point.GetFillColor() : null;
 					}
 
 
 					if (color === clickedColor) {
-						if (point.SetFillColor) {
-							point.SetFillColor(replacementColor); point.SetStrokeColor(replacementColor); point.StrokeWeight(0.3);
-						}
+						point.SetFillColor(replacementColor); point.SetStrokeColor(replacementColor); point.StrokeWeight(0.3);
 
 						queue.push(newPos);
 					}
 					else if (color === null) {
-						blanks_changed.set(point_hash, { x: newPos.x, y: newPos.y });
+						blanks_changed.add(point_position_hashed);
 
 						queue.push(newPos);
 					}
 					else if (color !== replacementColor) {
-						edge_points.set(point_hash, { point, x: newPos.x, y: newPos.y });
-						LocalLog(`(${x},${y}) -> (${point_hash})`);
+						edge_points.set(point_position_hashed, { point, x: newPos.x, y: newPos.y });
 					}
 				}
 			}

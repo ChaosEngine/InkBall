@@ -336,9 +336,20 @@ class SvgVml {
 			return new_points;
 		};
 		SVGPolylineElement.prototype.ContainsPoint = function (x, y) {
-			const regex = new RegExp(`${x},${y}`, 'g');
-			const cnt = (this.getAttribute("points").match(regex) || []).length;
-			return cnt;
+			// const regex = new RegExp(`${x},${y}`, 'g');
+			// const cnt = (this.getAttribute("points").match(regex) || []).length;
+			// return cnt;
+
+			const str_ = this.getAttribute("points");
+			const subStr = `${x},${y}`;
+
+			//https://stackoverflow.com/a/74282605/4429828
+			let occurrence_count = 0;
+			let pos = -subStr.length;
+			while ((pos = str_.indexOf(subStr, pos + subStr.length)) > -1) {
+				occurrence_count++;
+			}
+			return occurrence_count;
 		};
 		SVGPolylineElement.prototype.GetPointsString = function () {
 			return this.getAttribute("points");
@@ -803,8 +814,8 @@ class GameStateStore {
 					iId: id_key,
 					Color: val.GetFillColor(),
 					PointsAsString: val.GetPointsString().split(" ").map((pt) => {
-						const tab = pt.split(',');
-						const x = parseInt(tab[0]), y = parseInt(tab[1]);
+						let [x, y] = pt.split(',');
+						x = parseInt(x); y = parseInt(y);
 						return `${x},${y}`;
 					}).join(" ")
 				};
