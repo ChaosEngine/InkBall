@@ -13,7 +13,7 @@ namespace InkBall.Module.Pages
 	{
 		public const string ASPX = "Highscores";
 
-		public IEnumerable<(int PlayerId, int? UserId, string UserName, int WinCount, int LossCount, int DrawCount, int GameCount)> Stats { get; set; }
+		public IEnumerable<(int PlayerId, string UserName, int WinCount, int LossCount, int DrawCount, int GameCount)> Stats { get; set; }
 
 		public HighscoresModel(GamesContext dbContext, ILogger<RulesModel> logger) : base(dbContext, logger)
 		{

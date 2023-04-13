@@ -13,22 +13,19 @@ namespace InkBall.Module.Model
 		where Path : IPath<Point>
 	{
 		int iId { get; set; }
-		int? iUserId { get; set; }
 		string sLastMoveCode { get; set; }
 		int iWinCount { get; set; }
 		int iLossCount { get; set; }
 		int iDrawCount { get; set; }
 		DateTime TimeStamp { get; set; }
 
+		int iPrivileges { get; set; }
+		string sExternalId { get; set; }
+		string UserName { get; set; }
+
 		ICollection<Path> InkBallPath { get; set; }
 		ICollection<Point> InkBallPoint { get; set; }
 
-		int GetWinCount();
-		void SetWinCount(int value);
-		int GetLossCount();
-		void SetLossCount(int value);
-		int GetDrawCount();
-		void SetDrawCount(int value);
 		bool IsLastMoveOverdue();
 	}
 
@@ -37,7 +34,6 @@ namespace InkBall.Module.Model
 		where Path : IPath<Point>
 	{
 		public int iId { get; set; }
-		public int? iUserId { get; set; }
 		public string sLastMoveCode { get; set; }
 		public int iWinCount { get; set; }
 		public int iLossCount { get; set; }
@@ -48,55 +44,17 @@ namespace InkBall.Module.Model
 		/// </summary>
 		public DateTime TimeStamp { get; set; }
 
-		#region Old code
-
-		//protected internal Dictionary<string, string> _lastMoveDict;
-		//[NotMapped]//Hide it from EF Core
-		//[JsonIgnore]//disallow to serialize it with Newtonsoft.Json
-		//[IgnoreMember]//hide from serializer in MessagePack
-		//public Dictionary<string, string> LastMoveDict
-		//{
-		//	get
-		//	{
-		//		if (!(_lastMoveDict?.Count > 0) && !string.IsNullOrEmpty(sLastMoveCode))
-		//		{
-		//			_lastMoveDict = JsonSerializer.Deserialize<Dictionary<string, string>>(sLastMoveCode);
-		//		}
-		//		return _lastMoveDict;
-		//	}
-		//	//set { _lastMoveDict = value; }
-		//}
-
-		#endregion Old code
+		public int iPrivileges { get; set; }
+		public string sExternalId { get; set; }
+		public string UserName { get; set; }
 
 		public abstract ICollection<Path> InkBallPath { get; set; }
 		public abstract ICollection<Point> InkBallPoint { get; set; }
 
-		public int GetWinCount() => iWinCount;
-
-		public void SetWinCount(int value)
-		{
-			iWinCount = value;
-		}
-
-		public int GetLossCount() => iLossCount;
-
-		public void SetLossCount(int value)
-		{
-			iLossCount = value;
-		}
-
-		public int GetDrawCount() => iDrawCount;
-
-		public void SetDrawCount(int value)
-		{
-			iDrawCount = value;
-		}
-
 		public bool IsLastMoveOverdue()
 		{
-			TimeSpan last_move = DateTime.Now - this.TimeStamp;
-			if (last_move > InkBallGame.GetDeactivationDelayInSeconds())
+			TimeSpan last_move = TimeStampInitialValue - this.TimeStamp;
+			if (last_move > InkBallGame.DeactivationDelayInSeconds)
 				return true;
 			return false;
 		}
@@ -104,15 +62,18 @@ namespace InkBall.Module.Model
 		public bool IsDelayedPathDrawPossible()
 		{
 			bool last_move_was_point = sLastMoveCode.Contains(nameof(IPoint.iX), StringComparison.InvariantCultureIgnoreCase);
-			return last_move_was_point && TimeStamp.AddSeconds(Constants.PathAfterPointDrawAllowanceSecAmount) > DateTime.Now;
+			return last_move_was_point && TimeStamp.AddSeconds(Constants.PathAfterPointDrawAllowanceSecAmount) > TimeStampInitialValue;
 		}
 
 		public bool IsCpuPlayer => this.iId == -1;
+
+		internal static DateTime TimeStampInitialValue => DateTime.Now;
 	}
 
 	public partial class InkBallPlayer : CommonPlayer<InkBallPoint, InkBallPath>
 	{
-		public InkBallUser User { get; set; }
+		internal const string CPUOponentPlayerName = "Multi CPU Oponent UserPlayer";
+
 		public ICollection<InkBallGame> InkBallGameIPlayer1 { get; set; }
 		public ICollection<InkBallGame> InkBallGameIPlayer2 { get; set; }
 		public override ICollection<InkBallPath> InkBallPath { get; set; }
@@ -120,17 +81,12 @@ namespace InkBall.Module.Model
 
 		public InkBallPlayer()
 		{
-			// InkBallGameIPlayer1 = new HashSet<InkBallGame>();
-			// InkBallGameIPlayer2 = new HashSet<InkBallGame>();
-			// InkBallPath = new HashSet<InkBallPath>();
-			// InkBallPoint = new HashSet<InkBallPoint>();
 		}
 	}
 
 	//[Serializable]
 	public class InkBallPlayerViewModel : CommonPlayer<InkBallPointViewModel, InkBallPathViewModel>
 	{
-		public InkBallUserViewModel User { get; set; }
 		public override ICollection<InkBallPathViewModel> InkBallPath { get; set; }
 		public override ICollection<InkBallPointViewModel> InkBallPoint { get; set; }
 
@@ -138,21 +94,19 @@ namespace InkBall.Module.Model
 		{
 		}
 
-		public InkBallPlayerViewModel(InkBallPlayer player, bool loadUser = true)
+		public InkBallPlayerViewModel(InkBallPlayer player)
 		{
 			iId = player.iId;
-			iUserId = player.iUserId;
 			sLastMoveCode = player.sLastMoveCode;
-			//_lastMoveDict = player._lastMoveDict;
 			iWinCount = player.iWinCount;
 			iLossCount = player.iLossCount;
 			iDrawCount = player.iDrawCount;
 			TimeStamp = player.TimeStamp;
 
-			if (loadUser && player.User != null)
-			{
-				User = new InkBallUserViewModel(player.User);
-			}
+			iPrivileges = player.iPrivileges;
+			sExternalId = player.sExternalId;
+			UserName = player.UserName;
+
 			if (player?.InkBallPath?.Count > 0)
 			{
 				InkBallPath = player.InkBallPath.Select(p => new InkBallPathViewModel(p)).ToArray();
@@ -166,18 +120,16 @@ namespace InkBall.Module.Model
 		public InkBallPlayerViewModel(InkBallPlayerViewModel player)
 		{
 			iId = player.iId;
-			iUserId = player.iUserId;
 			sLastMoveCode = player.sLastMoveCode;
-			//_lastMoveDict = player._lastMoveDict;
 			iWinCount = player.iWinCount;
 			iLossCount = player.iLossCount;
 			iDrawCount = player.iDrawCount;
 			TimeStamp = player.TimeStamp;
 
-			if (player.User != null)
-			{
-				User = player.User;
-			}
+			iPrivileges = player.iPrivileges;
+			sExternalId = player.sExternalId;
+			UserName = player.UserName;
+
 			if (player?.InkBallPath?.Count > 0)
 			{
 				InkBallPath = player.InkBallPath;

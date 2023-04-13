@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -25,7 +25,6 @@ namespace InkBall.Module.Model
 		DbSet<InkBallPath> InkBallPath { get; set; }
 		DbSet<InkBallPlayer> InkBallPlayer { get; set; }
 		DbSet<InkBallPoint> InkBallPoint { get; set; }
-		DbSet<InkBallUser> InkBallUsers { get; set; }
 	}
 
 	public partial class GamesContext : DbContext, IGamesContext
@@ -36,7 +35,6 @@ namespace InkBall.Module.Model
 		public virtual DbSet<InkBallPath> InkBallPath { get; set; }
 		public virtual DbSet<InkBallPlayer> InkBallPlayer { get; set; }
 		public virtual DbSet<InkBallPoint> InkBallPoint { get; set; }
-		public virtual DbSet<InkBallUser> InkBallUsers { get; set; }
 
 		public GamesContext(DbContextOptions<GamesContext> options) : base(options)
 		{
@@ -63,6 +61,8 @@ namespace InkBall.Module.Model
 					return "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP";
 
 				case "Microsoft.EntityFrameworkCore.Sqlite":
+					return "datetime('now','localtime')";
+
 				case "Npgsql.EntityFrameworkCore.PostgreSQL":
 				case "Oracle.EntityFrameworkCore":
 					return "CURRENT_TIMESTAMP";
@@ -111,28 +111,17 @@ namespace InkBall.Module.Model
 			}
 		}
 
-		internal static string JsonColumnTypeFromProvider(string activeProvider)
+		public static string JsonColumnTypeFromProvider(string activeProvider)
 		{
-			switch (activeProvider)
+			return activeProvider switch
 			{
-				case "Microsoft.EntityFrameworkCore.SqlServer":
-					return "nvarchar(1000)";
-
-				case "Pomelo.EntityFrameworkCore.MySql":
-					return "json";
-
-				case "Microsoft.EntityFrameworkCore.Sqlite":
-					return "TEXT";
-
-				case "Npgsql.EntityFrameworkCore.PostgreSQL":
-					return "jsonb";
-
-				case "Oracle.EntityFrameworkCore":
-					return "CLOB";
-
-				default:
-					throw new NotSupportedException($"Bad DBKind name {activeProvider}");
-			}
+				"Microsoft.EntityFrameworkCore.SqlServer" => "nvarchar(1000)",
+				"Pomelo.EntityFrameworkCore.MySql" => "json",
+				"Microsoft.EntityFrameworkCore.Sqlite" => "TEXT",
+				"Npgsql.EntityFrameworkCore.PostgreSQL" => "jsonb",
+				"Oracle.EntityFrameworkCore" => "VARCHAR2(4000)",
+				_ => throw new NotSupportedException($"Bad DBKind name {activeProvider}"),
+			};
 		}
 
 		/*protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -161,7 +150,9 @@ namespace InkBall.Module.Model
 				entity.Property(e => e.iId).HasColumnName("iId")
 					.ValueGeneratedOnAdd()
 					.HasAnnotation("Sqlite:Autoincrement", true)
+#if INCLUDE_MYSQL
 					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+#endif
 #if INCLUDE_SQLSERVER
 					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
 #endif
@@ -169,7 +160,7 @@ namespace InkBall.Module.Model
 					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
 #endif
 #if INCLUDE_POSTGRES
-					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
+					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
 #endif
 					;
 
@@ -205,10 +196,6 @@ namespace InkBall.Module.Model
 					.HasColumnName("iGridSize")
 					.HasDefaultValue(16);
 
-				// entity.Property(e => e.CpuOponent)
-				// 	.HasColumnName("CpuOponent")
-				// 	.HasDefaultValue(false);
-
 				entity.Property(e => e.iPlayer1Id).HasColumnName("iPlayer1ID");
 
 				entity.Property(e => e.iPlayer2Id).HasColumnName("iPlayer2ID");
@@ -229,7 +216,12 @@ namespace InkBall.Module.Model
 					.WithMany(p => p.InkBallGameIPlayer2)
 					.HasForeignKey(d => d.iPlayer2Id)
 					.HasConstraintName("InkBallGame_ibfk_2");
-			});
+
+                if (Database.ProviderName == "Microsoft.EntityFrameworkCore.SqlServer")
+                    entity.ToTable(t => t.HasTrigger(
+                        $"{nameof(Module.Model.InkBallGame)}_update_{nameof(Module.Model.InkBallGame.TimeStamp)}_Trigger")
+                    );
+            });
 
 			modelBuilder.Entity<InkBallPath>(entity =>
 			{
@@ -244,7 +236,9 @@ namespace InkBall.Module.Model
 				entity.Property(e => e.iId).HasColumnName("iId")
 					.ValueGeneratedOnAdd()
 					.HasAnnotation("Sqlite:Autoincrement", true)
+#if INCLUDE_MYSQL
 					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+#endif
 #if INCLUDE_SQLSERVER
 					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
 #endif
@@ -252,7 +246,7 @@ namespace InkBall.Module.Model
 					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
 #endif
 #if INCLUDE_POSTGRES
-					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
+					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
 #endif
 					;
 
@@ -281,13 +275,12 @@ namespace InkBall.Module.Model
 			{
 				entity.HasKey(e => e.iId);
 
-				entity.HasIndex(e => e.iUserId)
-					.HasDatabaseName("ByUser");
-
 				entity.Property(e => e.iId).HasColumnName("iId")
 					.ValueGeneratedOnAdd()
 					.HasAnnotation("Sqlite:Autoincrement", true)
+#if INCLUDE_MYSQL
 					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+#endif
 #if INCLUDE_SQLSERVER
 					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
 #endif
@@ -295,12 +288,9 @@ namespace InkBall.Module.Model
 					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
 #endif
 #if INCLUDE_POSTGRES
-					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
+					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
 #endif
 					;
-
-				entity.Property(e => e.iUserId)
-					.HasColumnName("iUserID");
 
 				entity.Property(e => e.iDrawCount)
 					.HasColumnName("iDrawCount")
@@ -327,16 +317,17 @@ namespace InkBall.Module.Model
 					.HasDefaultValueSql(TimeStampDefaultValueFromProvider(Database.ProviderName))
 					.HasConversion(TimeStampValueConverterFromProvider(Database.ProviderName));
 
-				entity.HasOne(d => d.User)
-					.WithMany(p => p.InkBallPlayer)
-					.HasPrincipalKey(u => u.iId)
-					.HasForeignKey(pd => pd.iUserId)
-					.HasConstraintName("InkBallPlayer_ibfk_1");
+
+                if (Database.ProviderName == "Microsoft.EntityFrameworkCore.SqlServer")
+                    entity.ToTable(t => t.HasTrigger(
+                        $"{nameof(Module.Model.InkBallPlayer)}_update_{nameof(Module.Model.InkBallPlayer.TimeStamp)}_Trigger")
+                    );
 
 				entity.HasData(new InkBallPlayer
 				{
 					iId = -1,
-					iUserId = -1,
+					iPrivileges = 1,
+					UserName = Module.Model.InkBallPlayer.CPUOponentPlayerName,
 					sLastMoveCode = "{}",
 					iWinCount = 0,
 					iLossCount = 0,
@@ -346,31 +337,16 @@ namespace InkBall.Module.Model
 
 			modelBuilder.Entity<InkBallPoint>(entity =>
 			{
-				entity.HasKey(e => e.iId);
+				entity.HasKey(e => new { e.iGameId, e.iX, e.iY });
 
 				entity.HasIndex(e => e.iEnclosingPathId)
 					.HasDatabaseName("ByEnclosingPath");
 
-				entity.HasIndex(e => e.iGameId)
-					.HasDatabaseName("IDX_InkBallPoint_ByGame");
+				//entity.HasIndex(e => e.iGameId)
+				//	.HasDatabaseName("IDX_InkBallPoint_ByGame");
 
 				entity.HasIndex(e => e.iPlayerId)
 					.HasDatabaseName("IDX_InkBallPoint_ByPlayer");
-
-				entity.Property(e => e.iId).HasColumnName("iId")
-					.ValueGeneratedOnAdd()
-					.HasAnnotation("Sqlite:Autoincrement", true)
-					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
-#if INCLUDE_SQLSERVER
-					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
-#endif
-#if INCLUDE_ORACLE
-					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
-#endif
-#if INCLUDE_POSTGRES
-					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
-#endif
-					;
 
 				entity.Property(e => e.iEnclosingPathId).HasColumnName("iEnclosingPathId");
 
@@ -404,57 +380,18 @@ namespace InkBall.Module.Model
 					.HasConstraintName("InkBallPoint_ibfk_4");
 			});
 
-			modelBuilder.Entity<InkBallUser>(entity =>
-			{
-				entity.HasKey(e => e.iId);
-
-				entity.HasIndex(e => e.sExternalId)
-					.HasDatabaseName("sExternalId")
-					.IsUnique();
-
-				entity.Property(e => e.iId)
-					.HasColumnName("iId")
-					.ValueGeneratedOnAdd()
-					.HasAnnotation("Sqlite:Autoincrement", true)
-					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
-#if INCLUDE_SQLSERVER
-					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
-#endif
-#if INCLUDE_ORACLE
-					.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
-#endif
-#if INCLUDE_POSTGRES
-					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
-#endif
-					;
-
-				entity.Property(e => e.iPrivileges)
-					.HasColumnName("iPrivileges")
-					.HasDefaultValue(0);
-
-				entity.Property(e => e.UserName)
-					.HasColumnName("UserName");
-
-				entity.HasData(new InkBallUser
-				{
-					iId = -1,
-					sExternalId = null,
-					iPrivileges = 1,
-					UserName = "Multi CPU Oponent UserPlayer"
-				});
-			});
 		}
 
-#region Business logic methods
+		#region Business logic methods
 
-		public async Task<InkBallGame> CreateNewGameFromExternalUserIDAsync(string sPlayer1ExternaUserID, GameTypeEnum gameType,
-			int gridSize, int width, int height, bool cpuOponent = false, CancellationToken token = default)
+		public async Task<InkBallGame> CreateNewGameFromExternalUserIDAsync(string sPlayer1ExternalUserID, GameTypeEnum gameType,
+			int gridSize, int width, int height, bool cpuOpponent = false, CancellationToken token = default)
 		{
 			try
 			{
-				if (!string.IsNullOrEmpty(sPlayer1ExternaUserID))
+				if (!string.IsNullOrEmpty(sPlayer1ExternalUserID))
 				{
-					var dbPlayer1 = await CreateNewPlayerFromExternalUserIdAsync(sPlayer1ExternaUserID, "{}", token);
+					var dbPlayer1 = await CreateNewPlayerFromExternalUserIdAsync(sPlayer1ExternalUserID, "{}", token);
 				}
 			}
 			catch (Exception ex)
@@ -463,10 +400,10 @@ namespace InkBall.Module.Model
 			}
 
 
-			bool bIsPlayer1Active = cpuOponent;
-			GameStateEnum gameState = cpuOponent ? GameStateEnum.ACTIVE : GameStateEnum.AWAITING;
-			int game_id = await PrivInkBallGameInsertAsync(null, sPlayer1ExternaUserID, gridSize, width, height, bIsPlayer1Active,
-				cpuOponent);
+			bool bIsPlayer1Active = cpuOpponent;
+			GameStateEnum gameState = cpuOpponent ? GameStateEnum.ACTIVE : GameStateEnum.AWAITING;
+			int game_id = await PrivInkBallGameInsertAsync(null, sPlayer1ExternalUserID, gridSize, width, height, bIsPlayer1Active,
+				cpuOpponent);
 
 			if (game_id <= -1)
 				throw new ArgumentNullException(nameof(game_id), "Could not create new game");
@@ -477,13 +414,13 @@ namespace InkBall.Module.Model
 			//
 			// private functions
 			//
-			async Task<int> PrivInkBallGameInsertAsync(int? iPlayer1ID, string iPlayer1ExternalUserID,
-				int iGridSize, int iBoardWidth, int iBoardHeight, bool bIsPlayer1ActiveHere, bool cpuOponent)
+			async Task<int> PrivInkBallGameInsertAsync(int? iPlayer1ID, string player1ExternalUserID,
+				int iGridSize, int iBoardWidth, int iBoardHeight, bool bIsPlayer1ActiveHere, bool cpuOpponent)
 			{
 				var cp1_query = from cp1 in this.InkBallPlayer
 								where ((!iPlayer1ID.HasValue || cp1.iId == iPlayer1ID.Value)
-								&& (string.IsNullOrEmpty(iPlayer1ExternalUserID) || cp1.User.sExternalId == iPlayer1ExternalUserID)
-								&& (iPlayer1ID.HasValue || !string.IsNullOrEmpty(iPlayer1ExternalUserID)))
+								&& (string.IsNullOrEmpty(player1ExternalUserID) || cp1.sExternalId == player1ExternalUserID)
+								&& (iPlayer1ID.HasValue || !string.IsNullOrEmpty(player1ExternalUserID)))
 								&& !InkBallGame.Any(tmp => (tmp.iPlayer1Id == cp1.iId || tmp.iPlayer2Id == cp1.iId)
 									&& ActiveVisibleGameStates.Contains(tmp.GameState))
 
@@ -491,10 +428,10 @@ namespace InkBall.Module.Model
 				int? p1 = await cp1_query.FirstOrDefaultAsync(token);
 
 				int? p2;
-				if (cpuOponent == true)
+				if (cpuOpponent == true)
 				{
 					var cp2_query = from cp2 in this.InkBallPlayer
-									where cp2.iId == -1 && cp2.iUserId == -1
+									where cp2.iId == -1
 									select (int?)cp2.iId;
 					p2 = await cp2_query.FirstOrDefaultAsync(token);
 					if (p2 == null)
@@ -521,7 +458,7 @@ namespace InkBall.Module.Model
 						GameType = gameType,
 						GameState = gameState,
 						//TimeStamp = DateTime.Now,
-						CreateTime = DateTime.Now
+						CreateTime = Module.Model.InkBallGame.CreateTimeInitialValue
 					};
 					await InkBallGame.AddAsync(gm, token);
 
@@ -540,9 +477,7 @@ namespace InkBall.Module.Model
 		{
 			var query = from g in InkBallGame
 							.Include(gp1 => gp1.Player1)
-								.ThenInclude(p1 => p1.User)
 							.Include(gp2 => gp2.Player2)
-								.ThenInclude(p2 => p2.User)
 						where g.iId == iID
 						select g;
 
@@ -554,16 +489,14 @@ namespace InkBall.Module.Model
 
 		private async Task<InkBallPlayer> CreateNewPlayerFromExternalUserIdAsync(string sExternalId, string sLastMoveCode, CancellationToken token = default)
 		{
-			var query = from p in this.InkBallPlayer.Include(x => x.User)
-						where p.User.sExternalId == sExternalId
+			var query = from p in this.InkBallPlayer
+						where p.sExternalId == sExternalId
 						select p;
 			var player = await query.FirstOrDefaultAsync(token);
 			if (player == null)
 			{
-				var ib_user = await this.InkBallUsers.FirstOrDefaultAsync(x => x.sExternalId == sExternalId, token);
 				player = new InkBallPlayer
 				{
-					iUserId = ib_user.iId,
 					sLastMoveCode = sLastMoveCode,
 					iWinCount = 0,
 					iLossCount = 0,
@@ -582,10 +515,10 @@ namespace InkBall.Module.Model
 			return player;
 		}
 
-		public async Task<bool> JoinGameFromExternalUserIdAsync(InkBallGame game, string sPlayer2ExternaUserID, CancellationToken token = default)
+		public async Task<bool> JoinGameFromExternalUserIdAsync(InkBallGame game, string sPlayer2ExternalUserID, CancellationToken token = default)
 		{
 			if (game.GameState != GameStateEnum.AWAITING || game.Player2 != null ||
-				game.Player1 == null || game.Player1.User.sExternalId == sPlayer2ExternaUserID)
+				game.Player1 == null || game.Player1.sExternalId == sPlayer2ExternalUserID)
 			{
 				throw new ArgumentException("Wrong game state 2 join", nameof(game));
 			}
@@ -593,7 +526,7 @@ namespace InkBall.Module.Model
 			InkBallPlayer player2;
 			try
 			{
-				player2 = await CreateNewPlayerFromExternalUserIdAsync(sPlayer2ExternaUserID, "{}", token);
+				player2 = await CreateNewPlayerFromExternalUserIdAsync(sPlayer2ExternalUserID, "{}", token);
 			}
 			catch (Exception ex)
 			{
@@ -619,8 +552,8 @@ namespace InkBall.Module.Model
 					//update game(deactivate)...
 					game.GameState = GameStateEnum.FINISHED;
 
-					var last_move = DateTime.Now - game.GetOtherPlayer().TimeStamp;
-					if (!bForcePlayerLoose && game.IsThisPlayerActive() && last_move > InkBall.Module.Model.InkBallGame.GetDeactivationDelayInSeconds())
+					var last_move = Module.Model.InkBallPlayer.TimeStampInitialValue - game.GetOtherPlayer().TimeStamp;
+					if (!bForcePlayerLoose && game.IsThisPlayerActive() && last_move > Module.Model.InkBallGame.DeactivationDelayInSeconds)
 					{
 						//...and update players statistics(highscores)
 						//$sQuery = "call InkBallPlayerUpdate({$this->GetGameID()}, {$this->GetPlayer()->GetPlayerID()}, null, {$this->GetPlayer()->GetWinCount()}, null, null)";
@@ -646,7 +579,7 @@ namespace InkBall.Module.Model
 
 				case GameStateEnum.AWAITING:
 					//update game(deactivate)...
-					game.GameState = InkBall.Module.Model.InkBallGame.GameStateEnum.INACTIVE;
+					game.GameState = GameStateEnum.INACTIVE;
 
 					await this.SaveChangesAsync(token);
 
@@ -676,15 +609,15 @@ namespace InkBall.Module.Model
 					//...and update players statistics(highscores)
 					if (game.IsThisPlayerPlayingWithRed())
 					{
-						game.GetPlayer().SetWinCount(game.GetPlayer().GetWinCount() + 1);
-						game.GetOtherPlayer().SetLossCount(game.GetOtherPlayer().GetLossCount() + 1);
+						game.GetPlayer().iWinCount++;
+						game.GetOtherPlayer().iLossCount++;
 
 						winningPlayerID = game.GetPlayer().iId;
 					}
 					else
 					{
-						game.GetOtherPlayer().SetWinCount(game.GetOtherPlayer().GetWinCount() + 1);
-						game.GetPlayer().SetLossCount(game.GetPlayer().GetLossCount() + 1);
+						game.GetOtherPlayer().iWinCount++;
+						game.GetPlayer().iLossCount++;
 
 						winningPlayerID = game.GetOtherPlayer().iId;
 					}
@@ -699,15 +632,15 @@ namespace InkBall.Module.Model
 					//...and update players statistics(highscores)
 					if (!game.IsThisPlayerPlayingWithRed())
 					{
-						game.GetPlayer().SetWinCount(game.GetPlayer().GetWinCount() + 1);
-						game.GetOtherPlayer().SetLossCount(game.GetOtherPlayer().GetLossCount() + 1);
+						game.GetPlayer().iWinCount++;
+						game.GetOtherPlayer().iLossCount++;
 
 						winningPlayerID = game.GetPlayer().iId;
 					}
 					else
 					{
-						game.GetOtherPlayer().SetWinCount(game.GetOtherPlayer().GetWinCount() + 1);
-						game.GetPlayer().SetLossCount(game.GetPlayer().GetLossCount() + 1);
+						game.GetOtherPlayer().iWinCount++;
+						game.GetPlayer().iLossCount++;
 
 						winningPlayerID = game.GetOtherPlayer().iId;
 					}
@@ -720,8 +653,8 @@ namespace InkBall.Module.Model
 					game.SetState(GameStateEnum.FINISHED);
 
 					//...and update players statistics(highscores)
-					game.GetPlayer().SetDrawCount(game.GetPlayer().GetDrawCount() + 1);
-					game.GetOtherPlayer().SetDrawCount(game.GetOtherPlayer().GetDrawCount() + 1);
+					game.GetPlayer().iDrawCount++;
+					game.GetOtherPlayer().iDrawCount++;
 
 					await this.SaveChangesAsync(token);
 
@@ -742,9 +675,7 @@ namespace InkBall.Module.Model
 
 			var query = from ig in InkBallGame
 						.Include(ip1 => ip1.Player1)
-							.ThenInclude(u1 => u1.User)
 						.Include(ip2 => ip2.Player2)
-							.ThenInclude(u2 => u2.User)
 						where ActiveVisibleGameStates.Contains(ig.GameState)
 						orderby ig.iId
 						select ig;
@@ -779,7 +710,7 @@ namespace InkBall.Module.Model
 		{
 			///Detect type of operation to pre-perform on paths:
 			/// - reconstruct full JSON path or not
-			/// - construct points collection form string point represetation or not
+			/// - construct points collection form string point representation or not
 			Action<InkBallPath, InkBallPathViewModel> jsonPath_Handler = reserializeJsonPath ?
 				jsonPath_HandlerImpl : (_, _) => { /* dummy empty body*/ };
 			Action<InkBallPath, InkBallPathViewModel> createPathPointCollection_Handler = createPathPointCollection ?
@@ -808,7 +739,7 @@ namespace InkBall.Module.Model
 				path.PointsAsString = reserialized;
 			}
 
-			///Construct points collection form string point represetation
+			///Construct points collection form string point representation
 			static void createPathPointCollection_HandlerImpl(InkBallPath path, InkBallPathViewModel fromJson)
 			{
 				path.InkBallPoint = fromJson
@@ -834,13 +765,13 @@ namespace InkBall.Module.Model
 			return (paths, points);
 		}
 
-		public async Task<IEnumerable<(int, int?, string, int, int, int, int)>> GetPlayerStatisticTableAsync()
+		public async Task<IEnumerable<(int, string, int, int, int, int)>> GetPlayerStatisticTableAsync()
 		{
 			var query = this.InkBallPlayer
 				.Select(ip => ValueTuple.Create(
 							ip.iId,
-							ip.iUserId,
-							ip.User.UserName,
+							//ip.iUserId,
+							ip.UserName,
 							ip.iWinCount,
 							ip.iLossCount,
 							ip.iDrawCount,
@@ -850,10 +781,10 @@ namespace InkBall.Module.Model
 			return await query.ToArrayAsync();
 		}
 
-#endregion Business logic methods
+		#endregion Business logic methods
 	}
 
-#region Helpers
+	#region Helpers
 
 	public interface IPointAndPathCounter
 	{
@@ -950,5 +881,5 @@ namespace InkBall.Module.Model
 		}
 	}
 
-#endregion Helpers
+	#endregion Helpers
 }

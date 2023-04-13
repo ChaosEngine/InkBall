@@ -109,8 +109,8 @@ namespace InkBall.Module.Pages
 			Game = await _dbContext.GetGameFromDatabaseAsync(model.GameID, true, token);
 
 			if (Game == null ||
-				!int.TryParse(User.FindFirstValue(nameof(InkBallUserId)), out var inkBallUserId) || inkBallUserId <= 0 ||
-				Game?.Player1?.iUserId == inkBallUserId || Game?.Player2?.iUserId == inkBallUserId)
+				!int.TryParse(User.FindFirstValue(nameof(InkBalPlayerId)), out var inkBallPlayerId) || inkBallPlayerId <= 0 ||
+				Game?.iPlayer1Id == inkBallPlayerId || Game?.iPlayer2Id == inkBallPlayerId)
 			{
 				Message = "View only: It is your game, or bad GameID";
 

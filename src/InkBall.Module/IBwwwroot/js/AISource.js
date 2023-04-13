@@ -1,18 +1,24 @@
 import concaveman from "concaveman";
 import decomp from "poly-decomp";
-import { StatusEnum, LocalLog, sortPointsClockwise, /*Sleep,*/ pnpoly2 } from "./shared.js";
+import { StatusEnum, LocalLog, sortPointsClockwise, /*Sleep,*/ pnpoly } from "./shared.js";
 
 
 /**
  * AI operations class
  * */
 class GraphAI {
+	#iGridWidth;
+	#iGridHeight;
+	#Points;
+	#POINT_STARTING;
+	#POINT_IN_PATH;
+	
 	constructor(iGridWidth, iGridHeight, pointStore) {
-		this.m_iGridWidth = iGridWidth;
-		this.m_iGridHeight = iGridHeight;
-		this.m_Points = pointStore;
-		this.POINT_STARTING = StatusEnum.POINT_STARTING;
-		this.POINT_IN_PATH = StatusEnum.POINT_IN_PATH;
+		this.#iGridWidth = iGridWidth;
+		this.#iGridHeight = iGridHeight;
+		this.#Points = pointStore;
+		this.#POINT_STARTING = StatusEnum.POINT_STARTING;
+		this.#POINT_IN_PATH = StatusEnum.POINT_IN_PATH;
 	}
 
 	/**
@@ -36,9 +42,9 @@ class GraphAI {
 			return false;
 		};
 
-		const addPointsAndEdgesToGraph = async function (point, to_x, to_y, x, y) {
-			if (to_x >= 0 && to_x < this.m_iGridWidth && to_y >= 0 && to_y < this.m_iGridHeight) {
-				const next = await this.m_Points.get(to_y * this.m_iGridWidth + to_x);
+		const addPointsAndEdgesToGraph = async (point, to_x, to_y, x, y) => {
+			if (to_x >= 0 && to_x < this.#iGridWidth && to_y >= 0 && to_y < this.#iGridHeight) {
+				const next = await this.#Points.get(to_y * this.#iGridWidth + to_x);
 				if (next && isPointOKForPath([freePointStatus], next) === true) {
 
 					if (graph_edges.has(`${x},${y}_${to_x},${to_y}`) === false && graph_edges.has(`${to_x},${to_y}_${x},${y}`) === false) {
@@ -72,10 +78,10 @@ class GraphAI {
 					}
 				}
 			}
-		}.bind(this);
+		};
 
-		for (const point of await this.m_Points.values()) {
-			if (point && isPointOKForPath([freePointStatus, this.POINT_STARTING, this.POINT_IN_PATH], point) === true) {
+		for (const point of await this.#Points.values()) {
+			if (point && isPointOKForPath([freePointStatus, this.#POINT_STARTING, this.#POINT_IN_PATH], point) === true) {
 				const { x, y } = point.GetPosition();
 				//TODO: await all below promises
 				//east
@@ -100,11 +106,11 @@ class GraphAI {
 		return { vertices: graph_points, edges: Array.from(graph_edges.values()) };
 	}
 
-	async IsPointOutsideAllPaths(x, y, allLines) {
+	async #IsPointOutsideAllPaths(x, y, allLines) {
 		for (const line of allLines) {
 			const points = line.GetPointsArray();
 
-			if (false !== pnpoly2(points, x, y))
+			if (false !== pnpoly(points, x, y))
 				return false;
 		}
 
@@ -159,7 +165,7 @@ class GraphAI {
 			color[u] = 1;
 			const vertex = vertices[u];
 			if (vertex) {
-				
+
 				//const x = vertex.attributes.get('cx'), y = vertex.attributes.get('cy');
 				//vertex.SetStrokeColor('black');
 				//vertex.SetFillColor('black');
@@ -182,7 +188,7 @@ class GraphAI {
 			color[u] = 2;
 		};
 
-		const printCycles = async function (edges, mark) {
+		const printCycles = async (edges, mark) => {
 			// push the edges that into the 
 			// cycle adjacency list 
 			for (let e = 0; e < edges; e++) {
@@ -201,10 +207,10 @@ class GraphAI {
 
 			//gather free human player points that could be intercepted.
 			const free_human_player_points = [];
-			for (const pt of await this.m_Points.values()) {
+			for (const pt of await this.#Points.values()) {
 				if (pt !== undefined && pt.GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.GetStatus()) {
 					const { x, y } = pt.GetPosition();
-					if (false === await this.IsPointOutsideAllPaths(x, y, lines))
+					if (false === await this.#IsPointOutsideAllPaths(x, y, lines))
 						continue;
 
 					//check if really exists
@@ -225,9 +231,7 @@ class GraphAI {
 					//const rand_color = 'var(--indigo)';
 
 					//convert to logical space
-					const mapped_verts = cycl.map(function (c) {
-						return vertices[c].GetPosition();
-					}.bind(this));
+					const mapped_verts = cycl.map(c => vertices[c].GetPosition());
 					//sort clockwise (https://stackoverflow.com/questions/45660743/sort-points-in-counter-clockwise-in-javascript)
 					const cw_sorted_verts = sortPointsClockwise(mapped_verts);
 					cycles[i] = { cycl, cw_sorted_verts };
@@ -245,11 +249,11 @@ class GraphAI {
 					//	await Sleep(50);
 					//}
 
-					//find for all free_human_player_points which cycle might interepct it (surrounds)
+					//find for all free_human_player_points which cycle might intercept it (surrounds)
 					//only convex, NOT concave :-(
 					//let tmp = '', comma = '';
 					//for (const possible_intercept of free_human_player_points) {
-					//	if (false !== pnpoly2(cw_sorted_verts, possible_intercept.x, possible_intercept.y)) {
+					//	if (false !== pnpoly(cw_sorted_verts, possible_intercept.x, possible_intercept.y)) {
 					//		tmp += `${comma}(${possible_intercept.x},${possible_intercept.y})`;
 
 					//		const pt1 = document.querySelector(`svg > circle[cx="${possible_intercept.x}"][cy="${possible_intercept.y}"]`);
@@ -261,7 +265,7 @@ class GraphAI {
 					//		comma = ',';
 					//	}
 					//}
-					////gaterhing of some data and console printing
+					////gathering of some data and console printing
 					//trailing_points.unshift(str);
 					//tab.push(trailing_points);
 					////log...
@@ -276,7 +280,7 @@ class GraphAI {
 				}
 			}
 			/*return tab;*/return { cycles, free_human_player_points, cyclenumber };
-		}.bind(this);
+		};
 
 		// store the numbers of cycle
 		let cyclenumber = 0, edges = N;

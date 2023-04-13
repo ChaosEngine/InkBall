@@ -36,8 +36,6 @@ namespace InkBall.Module.Model
 
 	public interface IPoint : IBelongingToCPU
 	{
-		int iId { get; set; }
-
 		int iGameId { get; set; }
 
 		int iPlayerId { get; set; }
@@ -54,8 +52,6 @@ namespace InkBall.Module.Model
 	public abstract class CommonPoint : IPoint, IDtoMsg, IMessagePackSerializationCallbackReceiver,
 		IEquatable<IPoint>, IEqualityComparer<IPoint>, IComparable
 	{
-		public int iId { get; set; }
-
 		public int iGameId { get; set; }
 
 		public int iPlayerId { get; set; }
@@ -147,25 +143,18 @@ namespace InkBall.Module.Model
 
 		public void OnBeforeSerialize()
 		{
-			iId = Math.Max(0, iId);
 		}
 
 		public void OnAfterDeserialize()
 		{
 		}
 
-		public CommandKindEnum GetKind()
+		public CommandKindEnum Kind
 		{
-			return CommandKindEnum.POINT;
+			get { return CommandKindEnum.POINT; }
 		}
 
 		#endregion Overrides
-
-		public bool ShouldSerializeiId()
-		{
-			// don't serialize the iId property if <= 0
-			return (iId > 0);
-		}
 
 		public static bool operator ==(CommonPoint left, CommonPoint right)
 		{
@@ -189,8 +178,8 @@ namespace InkBall.Module.Model
 			foreach (var p in points)
 			{
 #if DEBUG
-				builder.AppendFormat("{4}[/*id={5}*/{0}/*x*/,{1}/*y*/,{2}/*val*/,{3}/*playerID*/]",
-					p.iX, p.iY, DataMinimizerStatus((int)p.Status), DataMinimizerPlayerId(p.iPlayerId), comma, p.iId);
+				builder.AppendFormat("{4}[{0}/*x*/,{1}/*y*/,{2}/*val*/,{3}/*playerID*/]",
+					p.iX, p.iY, DataMinimizerStatus((int)p.Status), DataMinimizerPlayerId(p.iPlayerId), comma);
 #else
 				builder.AppendFormat("{4}[{0},{1},{2},{3}]",
 					p.iX, p.iY, DataMinimizerStatus((int)p.Status), DataMinimizerPlayerId(p.iPlayerId), comma);
@@ -301,29 +290,23 @@ namespace InkBall.Module.Model
 
 		public InkBallPointViewModel(InkBallPoint point)
 		{
-			this.iId = point.iId;
 			this.iGameId = point.iGameId;
 			this.iPlayerId = point.iPlayerId;
 			this.iX = point.iX;
 			this.iY = point.iY;
 			this.Status = point.Status;
 			this.iEnclosingPathId = point.iEnclosingPathId;
-
-			Debug.Assert(this.iId >= 0);
 		}
 
 		//[JsonConstructor]
 		public InkBallPointViewModel(InkBallPointViewModel point)
 		{
-			this.iId = point.iId;
 			this.iGameId = point.iGameId;
 			this.iPlayerId = point.iPlayerId;
 			this.iX = point.iX;
 			this.iY = point.iY;
 			this.Status = point.Status;
 			this.iEnclosingPathId = point.iEnclosingPathId;
-
-			Debug.Assert(this.iId >= 0);
 		}
 
 		public string SerializeThin()

@@ -8,7 +8,7 @@
 
     HtmlHelpers.RenderHeaderSection(this, Url, commonUIConfigureOptions);
 
-    var sExternalUserID = Model.GameUser.sExternalId;
+    var sExternalUserID = Model.Player.sExternalId;
     var bIsCurrentGameOk = Model.Game != null;
     var bCanViewOtherPlayerGames = (await authorization.AuthorizeAsync(User, null, Constants.InkBallViewOtherGamesPolicyName)).Succeeded;
 }
@@ -38,13 +38,13 @@
 				{
 					<tr>
 						<th scope='row'>@game.iId</th>
-						<td class='gtd'>@game.Player1.User.UserName</td>
-						<td class='gtd'>@game?.Player2?.User?.UserName</td>
+						<td class='gtd'>@game.Player1.UserName</td>
+						<td class='gtd'>@game?.Player2?.UserName</td>
 						@{
 							bool bIsMyOwnGame;
 							if (bIsCurrentGameOk &&
-								(game.Player1.User.sExternalId == sExternalUserID ||
-								(game?.Player2?.User != null && game.Player2.User.sExternalId == sExternalUserID)))
+								(game.Player1.sExternalId == sExternalUserID ||
+								(game?.Player2 != null && game.Player2.sExternalId == sExternalUserID)))
 							{
 								bIsMyOwnGame = true;
 							}

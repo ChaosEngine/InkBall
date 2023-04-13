@@ -352,7 +352,7 @@ namespace InkBall.IntegrationTests
 							response.EnsureSuccessStatusCode();
 
 							var responseString = await response.Content.ReadAsStringAsync();
-							Assert.Contains("This is Inball Game page", responseString);
+							Assert.Contains("Inball Game", responseString);
 							Assert.Contains("<span id='Player1Name'>Alice Testing</span> vs <span id='Player2Name'>???</span>", responseString);
 						}
 					}
@@ -400,7 +400,7 @@ namespace InkBall.IntegrationTests
 
 							responseString = await create_game_response.Content.ReadAsStringAsync();
 							Assert.DoesNotContain("const msg = \"You are not logged in\";", responseString);
-							Assert.Contains("This is Inball Game page", responseString);
+							Assert.Contains("Inball Game", responseString);
 							//parse GameID from Game page
 							Match match = Regex.Match(responseString, @"iGameID\: ([0-9].*),");
 							Assert.True(match.Success);

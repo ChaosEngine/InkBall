@@ -30,9 +30,11 @@ namespace InkBall.Module.Migrations
 				b.Property<int>("iId")
 					.ValueGeneratedOnAdd()
 					.HasColumnName("iId")
+#if INCLUDE_MYSQL
 					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+#endif
 #if INCLUDE_POSTGRES
-					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
+					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
 #endif
 					.HasAnnotation("Sqlite:Autoincrement", true)
 #if INCLUDE_ORACLE
@@ -105,9 +107,11 @@ namespace InkBall.Module.Migrations
 				b.Property<int>("iId")
 					.ValueGeneratedOnAdd()
 					.HasColumnName("iId")
+#if INCLUDE_MYSQL
 					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+#endif
 #if INCLUDE_POSTGRES
-					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
+					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
 #endif
 					.HasAnnotation("Sqlite:Autoincrement", true)
 #if INCLUDE_ORACLE
@@ -144,9 +148,11 @@ namespace InkBall.Module.Migrations
 				b.Property<int>("iId")
 					.ValueGeneratedOnAdd()
 					.HasColumnName("iId")
+#if INCLUDE_MYSQL
 					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+#endif
 #if INCLUDE_POSTGRES
-					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
+					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
 #endif
 					.HasAnnotation("Sqlite:Autoincrement", true)
 #if INCLUDE_ORACLE
@@ -247,9 +253,11 @@ namespace InkBall.Module.Migrations
 				b.Property<int>("iId")
 					.ValueGeneratedOnAdd()
 					.HasColumnName("iId")
+#if INCLUDE_MYSQL
 					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+#endif
 #if INCLUDE_POSTGRES
-					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
+					.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
 #endif
 					.HasAnnotation("Sqlite:Autoincrement", true)
 #if INCLUDE_ORACLE
@@ -282,7 +290,7 @@ namespace InkBall.Module.Migrations
                     new
                     {
                         iId = -1,
-                        UserName = "Multi CPU Oponent UserPlayer",
+                        UserName = InkBallPlayer.CPUOponentPlayerName,
                         iPrivileges = 1
                     });
 			});

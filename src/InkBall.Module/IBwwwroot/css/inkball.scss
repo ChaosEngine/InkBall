@@ -83,6 +83,16 @@ p.inkgame {
 	ul#messagesList {
 		overflow: auto;
 		height: calc(26em * 1);
+
+		li {
+			list-style-type: none;
+			& span.blue {
+				background-color: #6495ed4f;
+			}
+			& span.red {
+				background-color: #ff45004f;
+			}
+		}
 	}
 }
 
@@ -148,6 +158,18 @@ svg {
 		fill-opacity: 0.1;
 		stroke-linecap: round;
 		stroke-linejoin: round;
+
+		@media (prefers-reduced-motion: no-preference) {
+			&[data-id="0"] {
+				stroke-dasharray: 0.7;
+				animation: dash 5s infinite linear reverse;
+			}
+			@keyframes dash {
+				to {
+					stroke-dashoffset: 10;
+				}
+			}
+		}
 	}
 }
 

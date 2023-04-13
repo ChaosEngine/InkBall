@@ -27,14 +27,7 @@ namespace InkBall.Tests
 			get; set;
 		}
 
-		protected CancellationToken CancellationToken
-		{
-			get
-			{
-				CancellationToken token = _cancellationSource.Token;
-				return token;
-			}
-		}
+		protected CancellationToken CancellationToken => _cancellationSource.Token;
 
 		protected async Task<(SqliteConnection, DbContextOptions<GamesContext>,
 							IConfiguration, IMemoryCache, ILogger<GameHub>)>
@@ -57,10 +50,11 @@ namespace InkBall.Tests
 			// Create the schema in the database
 			using (var context = new GamesContext(options))
 			{
-				await context.Database.EnsureCreatedAsync(CancellationToken);
+				//await context.Database.EnsureCreatedAsync(CancellationToken);
+				await context.Database.MigrateAsync(CancellationToken);
 			}
 
-			var serviceCollection = new ServiceCollection()
+            var serviceCollection = new ServiceCollection()
 				.AddMemoryCache()
 				.AddLogging();
 			serviceCollection.AddDataProtection();
@@ -129,37 +123,32 @@ namespace InkBall.Tests
 			var game0 = new InkBallGame
 			{
 				iId = 1,
-				CreateTime = DateTime.Now,
+				CreateTime = InkBallGame.CreateTimeInitialValue,
+				//TimeStamp = DateTime.Now,//trigger or automation
 				GameState = InkBallGame.GameStateEnum.ACTIVE,
 				GameType = gameType2Create,
 				Player1 = new InkBallPlayer
 				{
 					iId = 1,
 					sLastMoveCode = "{}",
-					User = new InkBallUser
-					{
-						//iId = 1,
-						UserName = "test_p1",
-						iPrivileges = 0,
-						sExternalId = "xxxxx",
-					}
+					UserName = "test_p1",
+					iPrivileges = 0,
+					sExternalId = "xxxxx",
+					//TimeStamp = DateTime.Now,//trigger or automation
 				},
 				iPlayer1Id = 1,
 				Player2 = new InkBallPlayer
 				{
 					iId = 2,
 					sLastMoveCode = "{}",
-					User = new InkBallUser
-					{
-						//iId = 2,
-						UserName = "test_p2",
-						iPrivileges = 0,
-						sExternalId = "yyyyy",
-					}
+					UserName = "test_p2",
+					iPrivileges = 0,
+					sExternalId = "yyyyy",
+					//TimeStamp = DateTime.Now,//trigger or automation
 				},
 				iPlayer2Id = 2
 			};
-			var points0 = new List<InkBallPoint>(100);
+			var points0 = new Dictionary<string, InkBallPoint>(100);
 			var paths0 = new List<InkBallPath>(5);
 			bool is_player_turn = true;
 			foreach (var source in UnitTest1.CorrectPathAndOwnedPointsData)
@@ -169,17 +158,22 @@ namespace InkBall.Tests
 
 				foreach ((int x, int y) pt in parameters.coords.Union(parameters.ownedPoints))
 				{
-					points0.Add(new InkBallPoint
+					if (!points0.ContainsKey($"{pt.x},{pt.y}"))
 					{
-						//iId = 1,
-						iX = pt.x,
-						iY = pt.y,
-						Game = game0,
-						iGameId = game0.iId,
-						Status = InkBallPoint.StatusEnum.POINT_IN_PATH,
-						iEnclosingPathId = null,
-						Player = game0.Player1
-					});
+						points0.Add(
+							$"{pt.x},{pt.y}",
+							new InkBallPoint
+							{
+								iX = pt.x,
+								iY = pt.y,
+								Game = game0,
+								iGameId = game0.iId,
+								Status = InkBallPoint.StatusEnum.POINT_IN_PATH,
+								iEnclosingPathId = null,
+								Player = game0.Player1
+							}
+						);
+					}
 				}
 
 				var db_path = new InkBallPath
@@ -188,7 +182,6 @@ namespace InkBall.Tests
 					iGameId = game0.iId,
 					Player = is_player_turn ? game0.Player1 : game0.Player2,
 					iPlayerId = is_player_turn ? game0.iPlayer1Id : game0.iPlayer2Id.GetValueOrDefault(0)
-
 				};
 				// int order = 1;
 				var path_vm = new InkBallPathViewModel
@@ -201,12 +194,12 @@ namespace InkBall.Tests
 				paths0.Add(db_path);
 				foreach (var owned in parameters.ownedPoints)
 				{
-					points0.Where(p => p.iX == owned.x && p.iY == owned.y).ToList().ForEach((pt) =>
+					if (points0.TryGetValue($"{owned.x},{owned.y}", out var pt))
 					{
 						pt.EnclosingPath = db_path;
 						pt.Status = db_path.Game.Player1 == db_path.Player ?
 							InkBallPoint.StatusEnum.POINT_OWNED_BY_BLUE : InkBallPoint.StatusEnum.POINT_OWNED_BY_RED;
-					});
+					}
 				}
 				path_vm.OwnedPointsAsString = parameters.ownedPoints.Select(o => $"{o.x},{o.y}").Aggregate((me, me1) => me + " " + me1);
 				db_path.PointsAsString = JsonSerializer.Serialize(path_vm, new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull });
@@ -219,7 +212,7 @@ namespace InkBall.Tests
 			{
 				await context.AddAsync(game0, token);
 
-				foreach (var pt in points0)
+				foreach (var pt in points0.Values)
 					await context.AddAsync(pt, token);
 
 				foreach (var pa in paths0)
@@ -229,35 +222,21 @@ namespace InkBall.Tests
 			}
 		}
 
-		protected async Task CreateInitialUsers(string[] userIDs, int[] playerIDs, CancellationToken token = default)
+		protected async Task CreateInitialUsers(string[] userIDs, CancellationToken token = default)
 		{
-			if (playerIDs != null && userIDs?.Length != playerIDs?.Length)
-				throw new ArgumentException("userIDs?.Length != playerIDs?.Length");
-
 			using (var context = new GamesContext(Setup.DbOpts))
 			{
 				int i = 1;
 				foreach (var uid in userIDs)
 				{
-					var user = new InkBallUser
+					var player = new InkBallPlayer
 					{
-						//iId = 1,
 						UserName = $"test_p{i}",
 						iPrivileges = 0,
 						sExternalId = uid,
+						iId = i,
 					};
-					await context.AddAsync(user, token);
-
-					if (playerIDs != null)
-					{
-						var player = new InkBallPlayer
-						{
-							User = user,
-							iUserId = user.iId,
-							iId = playerIDs[i - 1],
-						};
-						await context.AddAsync(player, token);
-					}
+					await context.AddAsync(player, token);
 					i++;
 				}
 

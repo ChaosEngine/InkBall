@@ -20,53 +20,43 @@ namespace InkBall.Module
 		{
 			var name_identifer = principal.FindFirstValue(ClaimTypes.NameIdentifier);
 
-			//conditions for InkBallUser to create
+			//conditions for InkBallPlayer to create
 			if (string.IsNullOrEmpty(name_identifer)) return;
 
 			var identity = (ClaimsIdentity)principal.Identity;
 
-			InkBallUser found_user = await inkBallContext.InkBallUsers
-				.FirstOrDefaultAsync(i => i.sExternalId == name_identifer, token);
-			if (found_user != null)
+			//checking if player already created in DB
+			InkBallPlayer found_player = await inkBallContext.InkBallPlayer
+				.FirstOrDefaultAsync(p => p.sExternalId == name_identifer, token);
+			if (found_player != null)
 			{
-				//user already created and existing in InkBallUsers, awesome.
+				//InkBallPlayer already created, awesome.
 				//just update user name if differs
-				if (found_user.UserName != user.Name)
-					found_user.UserName = user.Name;
+				if (found_player.UserName != user.Name)
+					found_player.UserName = user.Name;
 			}
 			else
 			{
-				found_user = new InkBallUser
+				//no player exists - create one
+				found_player = new InkBallPlayer
 				{
+					iDrawCount = 0,
+					iWinCount = 0,
+					iLossCount = 0,
 					sExternalId = name_identifer,
 					iPrivileges = 0,
 					UserName = user.Name
 				};
-				await inkBallContext.InkBallUsers.AddAsync(found_user, token);
-			}
-			//checking if player already created in DB
-			InkBallPlayer dbPlayer = await inkBallContext.InkBallPlayer.Include(x => x.User)
-				.FirstOrDefaultAsync(p => p.iUserId == found_user.iId, token);
-			if (dbPlayer == null)
-			{
-				//no player exists - create one
-				dbPlayer = new InkBallPlayer
-				{
-					User = found_user,
-					iDrawCount = 0,
-					iWinCount = 0,
-					iLossCount = 0,
-				};
 
-				await inkBallContext.InkBallPlayer.AddAsync(dbPlayer, token);
+				await inkBallContext.InkBallPlayer.AddAsync(found_player, token);
 			}
 			await inkBallContext.SaveChangesAsync(token);
 
 
-			if (!identity.HasClaim(x => x.Type == nameof(Pages.HomeModel.InkBallUserId)))
+			if (!identity.HasClaim(x => x.Type == nameof(Pages.HomeModel.InkBalPlayerId)))
 			{
-				identity.AddClaim(new Claim(nameof(Pages.HomeModel.InkBallUserId), found_user.iId.ToString(),
-					nameof(InkBallUser)));
+				identity.AddClaim(new Claim(nameof(Pages.HomeModel.InkBalPlayerId), found_player.iId.ToString(),
+					nameof(InkBallPlayer)));
 			}
 
 			if (!identity.HasClaim(x => x.Type == ClaimTypes.UserData))
@@ -92,10 +82,10 @@ namespace InkBall.Module
 			CancellationToken token = default)
 		{
 			var games_to_surrender = await inkBallContext.InkBallGame
-				.Include(gp1 => gp1.Player1).ThenInclude(p1 => p1.User)
-				.Include(gp2 => gp2.Player2).ThenInclude(p2 => p2.User)
+				.Include(gp1 => gp1.Player1)
+				.Include(gp2 => gp2.Player2)
 				.Where(w =>
-				   (w.Player1.User.sExternalId == nameIdentifer || w.Player2.User.sExternalId == nameIdentifer)
+				   (w.Player1.sExternalId == nameIdentifer || w.Player2.sExternalId == nameIdentifer)
 				   && (GamesContext.ActiveVisibleGameStates.Contains(w.GameState))
 				).ToArrayAsync(token);
 
@@ -112,7 +102,7 @@ namespace InkBall.Module
 							if (inkballHubContext != null)
 							{
 								InkBallPlayer player_not_signed_off, player_signed_off;
-								if (game.GetPlayer()?.User?.sExternalId == nameIdentifer)
+								if (game.GetPlayer()?.sExternalId == nameIdentifer)
 								{
 									player_signed_off = game.GetPlayer();
 									player_not_signed_off = game.GetOtherPlayer();
@@ -141,7 +131,7 @@ namespace InkBall.Module
 										logger.LogError(ex.Message);
 									}
 								},
-								Tuple.Create(player_not_signed_off?.User?.sExternalId, player_signed_off?.iId, player_signed_off?.User?.UserName),
+								Tuple.Create(player_not_signed_off?.sExternalId, player_signed_off?.iId, player_signed_off?.UserName),
 								token);
 							}
 						}
@@ -173,37 +163,4 @@ namespace InkBall.Module
 			}
 		}
 	}
-
-	/*public class MinimumAgeRequirement : AuthorizationHandler<MinimumAgeRequirement>, IAuthorizationRequirement
-	{
-		internal static readonly SynchronizedCache<int> MinimumAge = new SynchronizedCache<int>();
-
-		public MinimumAgeRequirement(int minimumAge)
-		{
-			MinimumAge.AddOrUpdate(minimumAge);
-		}
-
-		protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, MinimumAgeRequirement requirement)
-		{
-			var external_id = context.User.FindFirstValue(nameof(InkBall.Module.Pages.HomeModel.InkBallUserId));
-			if (string.IsNullOrEmpty(external_id))
-				return Task.CompletedTask;
-
-			var birth_str = context.User.FindFirstValue(ClaimTypes.DateOfBirth);
-			if (string.IsNullOrEmpty(birth_str))
-				return Task.CompletedTask;
-
-			if (DateTime.TryParse(birth_str, out var birth))
-			{
-				if ((DateTime.UtcNow.Year - birth.Year) < MinimumAge.Value)
-				{
-					return Task.CompletedTask;
-				}
-				else
-					context.Succeed(requirement);
-			}
-
-			return Task.CompletedTask;
-		}
-	}*/
 }

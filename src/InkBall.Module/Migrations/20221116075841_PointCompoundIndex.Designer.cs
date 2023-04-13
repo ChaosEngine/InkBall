@@ -4,6 +4,7 @@ using InkBall.Module.Model;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 #if INCLUDE_POSTGRES
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -17,9 +18,11 @@ using Oracle.EntityFrameworkCore.Metadata;
 namespace InkBall.Module.Migrations
 {
     [DbContext(typeof(GamesContext))]
-    partial class GamesContextModelSnapshot : ModelSnapshot
+    [Migration("20221116075841_PointCompoundIndex")]
+    partial class PointCompoundIndex
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -39,50 +42,51 @@ namespace InkBall.Module.Migrations
                         .HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
 #endif
 #if INCLUDE_POSTGRES
-						.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
 #endif
                         .HasAnnotation("Sqlite:Autoincrement", true)
 #if INCLUDE_ORACLE
-						.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
+                        .HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
 #endif
 #if INCLUDE_SQLSERVER
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
 #endif
-                        ;
+                    ;
 
-                    b.Property<DateTime>("CreateTime");
+                b.Property<DateTime>("CreateTime");
 
                     b.Property<string>("GameState")
-						.HasMaxLength(256)
+                        .HasMaxLength(256)
                         .IsRequired();
 
                     b.Property<string>("GameType")
-						.HasMaxLength(256)
+                        .HasMaxLength(256)
                         .IsRequired();
 
                     b.Property<DateTime>("TimeStamp")
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp");
+                        .HasColumnType(GamesContext.TimeStampColumnTypeFromProvider(this.ActiveProvider))
+                        .HasDefaultValueSql(GamesContext.TimeStampDefaultValueFromProvider(this.ActiveProvider));
 
                     b.Property<bool>("bIsPlayer1Active")
                         .ValueGeneratedOnAdd()
                         .HasColumnName("bIsPlayer1Active")
-                        .HasDefaultValueSql("1");
+                        .HasDefaultValue(1);
 
                     b.Property<int>("iBoardHeight")
                         .ValueGeneratedOnAdd()
                         .HasColumnName("iBoardHeight")
-                        .HasDefaultValueSql("'26'");
+                        .HasDefaultValue(26);
 
                     b.Property<int>("iBoardWidth")
                         .ValueGeneratedOnAdd()
                         .HasColumnName("iBoardWidth")
-                        .HasDefaultValueSql("'20'");
+                        .HasDefaultValue(20);
 
                     b.Property<int>("iGridSize")
                         .ValueGeneratedOnAdd()
                         .HasColumnName("iGridSize")
-                        .HasDefaultValueSql("'16'");
+                        .HasDefaultValue(16);
 
                     b.Property<int>("iPlayer1Id")
                         .HasColumnName("iPlayer1ID");
@@ -110,16 +114,16 @@ namespace InkBall.Module.Migrations
                         .HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
 #endif
 #if INCLUDE_POSTGRES
-						.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
 #endif
                         .HasAnnotation("Sqlite:Autoincrement", true)
 #if INCLUDE_ORACLE
-						.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
+                        .HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
 #endif
 #if INCLUDE_SQLSERVER
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
 #endif
-                        ;
+                    ;
 
                     b.Property<int>("iGameId")
                         .HasColumnName("iGameID");
@@ -127,11 +131,11 @@ namespace InkBall.Module.Migrations
                     b.Property<int>("iPlayerId")
                         .HasColumnName("iPlayerID");
 
-					b.Property<string>("PointsAsString")
-						.HasColumnName("PointsAsString")
-						.HasColumnType("varchar(1000)");
+                    b.Property<string>("PointsAsString")
+                        .HasColumnName("PointsAsString")
+                        .HasColumnType(GamesContext.JsonColumnTypeFromProvider(this.ActiveProvider));
 
-					b.HasKey("iId");
+                    b.HasKey("iId");
 
                     b.HasIndex("iGameId")
                         .HasDatabaseName("IDX_InkBallPath_ByGame");
@@ -151,68 +155,60 @@ namespace InkBall.Module.Migrations
                         .HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
 #endif
 #if INCLUDE_POSTGRES
-						.HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
 #endif
                         .HasAnnotation("Sqlite:Autoincrement", true)
 #if INCLUDE_ORACLE
-						.HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
+                        .HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
 #endif
 #if INCLUDE_SQLSERVER
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
 #endif
-                        ;
+                    ;
 
                     b.Property<DateTime>("TimeStamp")
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp");
+                        .HasColumnType(GamesContext.TimeStampColumnTypeFromProvider(this.ActiveProvider))
+                        .HasDefaultValueSql(GamesContext.TimeStampDefaultValueFromProvider(this.ActiveProvider));
 
                     b.Property<int>("iDrawCount")
                         .ValueGeneratedOnAdd()
                         .HasColumnName("iDrawCount")
-                        .HasDefaultValueSql("'0'");
+                        .HasDefaultValue(0);
 
                     b.Property<int>("iLossCount")
                         .ValueGeneratedOnAdd()
                         .HasColumnName("iLossCount")
-                        .HasDefaultValueSql("'0'");
+                        .HasDefaultValue(0);
 
-                    b.Property<int>("iPrivileges")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnName("iPrivileges")
-                        .HasDefaultValueSql("'0'");
-
-                    b.Property<string>("sExternalId");
-
-                    b.HasIndex("sExternalId")
-                        .IsUnique()
-                        .HasDatabaseName("sExternalId");
-
-                    b.Property<string>("UserName")
-                        .HasColumnName("UserName");
+                    b.Property<int?>("iUserId")
+                        .HasColumnName("iUserID");
 
                     b.Property<int>("iWinCount")
                         .ValueGeneratedOnAdd()
                         .HasColumnName("iWinCount")
-                        .HasDefaultValueSql("'0'");
+                        .HasDefaultValue(0);
 
                     b.Property<string>("sLastMoveCode")
                         .HasColumnName("sLastMoveCode")
-                        .HasColumnType("varchar(1000)");
+                        .HasColumnType(GamesContext.JsonColumnTypeFromProvider(this.ActiveProvider));
 
                     b.HasKey("iId");
 
+                    b.HasIndex("iUserId")
+                        .HasDatabaseName("ByUser");
+
                     b.ToTable("InkBallPlayer");
-                    
-					b.HasData(
+
+                    b.HasData(
                         new
                         {
                             iId = -1,
                             TimeStamp = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             iDrawCount = 0,
                             iLossCount = 0,
+                            iUserId = -1,
                             iWinCount = 0,
-							UserName = InkBallPlayer.CPUOponentPlayerName,
-                            iPrivileges = 1,
                             sLastMoveCode = "{}"
                         });
                 });
@@ -248,6 +244,53 @@ namespace InkBall.Module.Migrations
                         .HasDatabaseName("IDX_InkBallPoint_ByPlayer");
 
                     b.ToTable("InkBallPoint");
+                });
+
+            modelBuilder.Entity("InkBall.Module.Model.InkBallUser", b =>
+                {
+                    b.Property<int>("iId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnName("iId")
+#if INCLUDE_MYSQL
+                        .HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+#endif
+#if INCLUDE_POSTGRES
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
+#endif
+                        .HasAnnotation("Sqlite:Autoincrement", true)
+#if INCLUDE_ORACLE
+                        .HasAnnotation("Oracle:ValueGenerationStrategy", OracleValueGenerationStrategy.IdentityColumn)
+#endif
+#if INCLUDE_SQLSERVER
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
+#endif
+                    ;
+
+                    b.Property<int>("iPrivileges")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnName("iPrivileges")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("sExternalId");
+
+                    b.HasKey("iId");
+
+                    b.HasIndex("sExternalId")
+                        .IsUnique()
+                        .HasDatabaseName("sExternalId");
+
+                    b.Property<string>("UserName")
+                        .HasColumnName("UserName");
+
+                    b.ToTable("InkBallUsers");
+
+                    b.HasData(
+                        new
+                        {
+                            iId = -1,
+                            UserName = InkBallPlayer.CPUOponentPlayerName,
+                            iPrivileges = 1
+                        });
                 });
 
             modelBuilder.Entity("InkBall.Module.Model.InkBallGame", b =>
@@ -288,6 +331,16 @@ namespace InkBall.Module.Migrations
                     b.Navigation("Game");
 
                     b.Navigation("Player");
+                });
+
+            modelBuilder.Entity("InkBall.Module.Model.InkBallPlayer", b =>
+                {
+                    b.HasOne("InkBall.Module.Model.InkBallUser", "User")
+                        .WithMany("InkBallPlayer")
+                        .HasForeignKey("iUserId")
+                        .HasConstraintName("InkBallPlayer_ibfk_1");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("InkBall.Module.Model.InkBallPoint", b =>
@@ -339,6 +392,11 @@ namespace InkBall.Module.Migrations
                     b.Navigation("InkBallPath");
 
                     b.Navigation("InkBallPoint");
+                });
+
+            modelBuilder.Entity("InkBall.Module.Model.InkBallUser", b =>
+                {
+                    b.Navigation("InkBallPlayer");
                 });
 #pragma warning restore 612, 618
         }

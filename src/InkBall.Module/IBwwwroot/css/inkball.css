@@ -53,6 +53,15 @@ p.inkgame {
   overflow: auto;
   height: 26em;
 }
+.inkgame ul#messagesList li {
+  list-style-type: none;
+}
+.inkgame ul#messagesList li span.blue {
+  background-color: rgba(100, 149, 237, 0.3098039216);
+}
+.inkgame ul#messagesList li span.red {
+  background-color: rgba(255, 69, 0, 0.3098039216);
+}
 
 svg > circle[data-status=POINT_FREE_RED] {
   fill: var(--redish);
@@ -88,6 +97,17 @@ svg > polyline {
   fill-opacity: 0.1;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+@media (prefers-reduced-motion: no-preference) {
+  svg > polyline[data-id="0"] {
+    stroke-dasharray: 0.7;
+    animation: dash 5s infinite linear reverse;
+  }
+  @keyframes dash {
+    to {
+      stroke-dashoffset: 10;
+    }
+  }
 }
 
 .boardsize-20x26 {

@@ -7,7 +7,7 @@
     HtmlHelpers.RenderHeaderSection(this, Url, commonUIConfigureOptions);
 
 
-    string P2Name = Model.Game.Player2 != null ? Model.Game.Player2?.User?.UserName : "???";
+    string P2Name = Model.Game.Player2 != null ? Model.Game.Player2?.UserName : "???";
     string surrender_win_cancel_name;
     bool isThisPlayerActive = Model.Game.IsThisPlayerActive();
     bool useMessagePackBinaryTransport = commonUIConfigureOptions.Value.UseMessagePackBinaryTransport;
@@ -31,17 +31,14 @@
     }
 }
 <h3 class="inkgame">
-    This is Inball Game page
+    Inball Game
 </h3>
 <p class="inkgame">
     <!-- Debug State -->
-    iGameID=<span id="gameID"></span>
-    iPlayerID=<span id="playerID"></span>
-    Player=@(Model.Game.IsThisPlayer1() ? "P1" : "P2")
-    <span id="whichColor">Play color</span>
-</p>
-<p class="inkgame">
-    <span id='Player1Name'>@Model.Game.Player1?.User?.UserName</span> vs <span id='Player2Name'>@P2Name</span>
+    iGameID=<span id="gameID"></span>,
+    iPlayerID=<span id="playerID"></span>,
+    <span id="whichPlayer"></span> playing with <span id="whichColor"></span>
+    (<span id='Player1Name'>@Model.Game.Player1?.UserName</span> vs <span id='Player2Name'>@P2Name</span>)
 </p>
 <div class="container inkgame">
     <form action="GamesList" method="post" asp-antiforgery="true" class="row">
@@ -65,6 +62,7 @@
                 <a class="dropdown-item" href="#" id="TestGroupPoints">Group points recurse</a>
                 <a class="dropdown-item" href="#" id="TestFindSurroundablePoints">Find surroundable points</a>
                 <a class="dropdown-item" href="#" id="TestDFS2">DFS 2</a>
+                <a class="dropdown-item" href="#" id="FloodFill">Flood fill</a>
             </div>
         </div>
     </form>
@@ -87,7 +85,7 @@
                     <input id="sendButton" type="button" value="Send Message" class="btn btn-secondary" disabled />
                 </div>
             </div>
-            <ul id="messagesList" class="list-group list-group-flush"></ul>
+            <ul id="messagesList" class="list-group list-group-flush pt-1"></ul>
         </div>
     </div>
 </div>
@@ -101,11 +99,11 @@
     }
 </environment>
 <environment exclude="Development">
-    <script defer src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@6.0.10/dist/browser/signalr.min.js" integrity="sha256-adcEyHK7ejbGx4N8m902XetwmoozoqS5Mfjo2HmKdAk=" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@7.0.5/dist/browser/signalr.min.js" integrity="sha256-1e+6TJEfoToJT2aj1qODRSgYjNkWGgeIcAsZ2JA+jUI=" crossorigin="anonymous"></script>
     @if (useMessagePackBinaryTransport)
     {
         @:<script type='module' src="https://cdn.jsdelivr.net/npm/msgpack5@6.0.2/dist/msgpack5.min.js" integrity="sha256-AxiBUMElqJXwwKZro5eMMWVExjtxeZSUQ/4nC4oCU2E=" crossorigin="anonymous"></script>
-        @:<script type='module' src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr-protocol-msgpack@6.0.10/dist/browser/signalr-protocol-msgpack.min.js" integrity="sha256-mD/IaCjeVoreEC0wIN81gRmi08ydnZWbr1yeuS+EKGg=" crossorigin="anonymous"></script>
+        @:<script type='module' src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr-protocol-msgpack@7.0.5/dist/browser/signalr-protocol-msgpack.min.js" integrity="sha256-ZlZaWTumfYD7Vt3s28eRmu9OrFAgbl3Yr3wuW/hzudo=" crossorigin="anonymous"></script>
     }
 </environment>
 <script type='module'>
@@ -117,6 +115,7 @@
             iGameID: @Model.Game.iId,
             iPlayerID: @Model.Player.iId,
             bPlayingWithRed: JSON.parse('@Model.Game.IsThisPlayerPlayingWithRed()'.toLowerCase()),
+            bIsThisPlayer1: JSON.parse('@Model.Game.IsThisPlayer1()'.toLowerCase()),
             bPlayerActive: JSON.parse('@isThisPlayerActive'.toLowerCase()),
             gameType: '@Model.Game.GameType',
             isMessagePackProtocol: JSON.parse('@useMessagePackBinaryTransport'.toLowerCase()),

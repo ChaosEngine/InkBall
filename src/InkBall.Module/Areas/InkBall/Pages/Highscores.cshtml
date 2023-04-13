@@ -17,7 +17,7 @@
 			<div class="col fw-bold">Draws</div>
 			<div class="col fw-bold">Game count</div>
 		</div>
-		@foreach ((int PlayerId, int? UserId, string UserName, int WinCount, int LossCount, int DrawCount, int GameCount) plyr_stat in Model.Stats)
+		@foreach ((int PlayerId, string UserName, int WinCount, int LossCount, int DrawCount, int GameCount) plyr_stat in Model.Stats)
 		{
 			<div class="row">
 				<div class="col">@plyr_stat.UserName</div>

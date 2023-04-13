@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using InkBall.Module.Model;
 using Xunit;
@@ -19,19 +20,17 @@ namespace InkBall.Tests
 			var game0 = new InkBallGame
 			{
 				//iId = 1,
-				CreateTime = DateTime.Now,
+				CreateTime = InkBallGame.CreateTimeInitialValue,
+				//TimeStamp = DateTime.Now,//trigger or automation
 				GameState = InkBallGame.GameStateEnum.ACTIVE,
 				Player1 = new InkBallPlayer
 				{
 					//iId = 1,
 					sLastMoveCode = "{}",
-					User = new InkBallUser
-					{
-						//iId = 1,
-						UserName = "test",
-						iPrivileges = 0,
-						sExternalId = "xxxxx",
-					}
+					UserName = "test",
+					iPrivileges = 0,
+					sExternalId = "xxxxx",
+					//TimeStamp = DateTime.Now,//trigger or automation
 				}
 			};
 			var points0 = new[] {
@@ -62,7 +61,7 @@ namespace InkBall.Tests
 			//Assert
 			using (var context = new GamesContext(Setup.DbOpts))
 			{
-				var games = await context.GetGamesForRegistrationAsSelectTableRowsAsync(/*null, null, null, true, */token);
+				var games = await context.GetGamesForRegistrationAsSelectTableRowsAsync(token);
 				Assert.NotEmpty(games);
 
 				var points_n_paths = await context.LoadPointsAndPathsAsync(games.First().iId, token);
@@ -85,7 +84,7 @@ namespace InkBall.Tests
 			//Act
 			using (var context = new GamesContext(Setup.DbOpts))
 			{
-				var games = await context.GetGamesForRegistrationAsSelectTableRowsAsync(/*null, null, null, true, */token);
+				var games = await context.GetGamesForRegistrationAsSelectTableRowsAsync(token);
 
 				//Assert
 				Assert.NotEmpty(games);
@@ -114,7 +113,7 @@ namespace InkBall.Tests
 			{
 				using (var context = new GamesContext(Setup.DbOpts))
 				{
-					var games = await context.GetGamesForRegistrationAsSelectTableRowsAsync(/*null, null, null, true, */token);
+					var games = await context.GetGamesForRegistrationAsSelectTableRowsAsync(token);
 
 					//Assert
 					Assert.NotEmpty(games);
@@ -130,7 +129,6 @@ namespace InkBall.Tests
 			}
 		}
 
-
 		[Fact]
 		public async Task NoDummyEmptyOrNullFieldsSerializedToString()
 		{
@@ -142,7 +140,7 @@ namespace InkBall.Tests
 			//Act
 			using (var context = new GamesContext(Setup.DbOpts))
 			{
-				var games = await context.GetGamesForRegistrationAsSelectTableRowsAsync(/*null, null, null, true, */token);
+				var games = await context.GetGamesForRegistrationAsSelectTableRowsAsync(token);
 
 				//Assert
 				Assert.NotEmpty(games);
@@ -162,6 +160,54 @@ namespace InkBall.Tests
 					pl.sLastMoveCode.Contains(nameof(InkBallPath.InkBallPoint)) ||
 					pl.sLastMoveCode.Contains(nameof(InkBallPath.BelongsToCPU))
 					));
+			}
+		}
+
+		[Fact]
+		public async Task TimeStampsVerifyForLocalTime()
+		{
+			//Arrange
+			var token = CancellationToken;
+			await CreateComplexGameHierarchy(token);
+
+			//Act
+			using (var context = new GamesContext(Setup.DbOpts))
+			{
+				var games = await context.GetGamesForRegistrationAsSelectTableRowsAsync(token);
+
+				//Assert
+				Assert.NotEmpty(games);
+				var g = games.First();
+				Assert.NotNull(g);
+				Assert.NotNull(g.Player1);
+				Assert.NotNull(g.Player2);
+
+				Assert.Equal(g.TimeStamp, InkBallPlayer.TimeStampInitialValue, TimeSpan.FromMinutes(20));
+				Assert.Equal(g.Player1.TimeStamp, InkBallPlayer.TimeStampInitialValue, TimeSpan.FromMinutes(20));
+				Assert.Equal(g.Player2.TimeStamp, InkBallPlayer.TimeStampInitialValue, TimeSpan.FromMinutes(20));
+			}
+		}
+
+		[Fact]
+		public async Task CreateTimesVerifyForUTCTime()
+		{
+			//Arrange
+			var token = CancellationToken;
+			await CreateComplexGameHierarchy(token);
+
+			//Act
+			using (var context = new GamesContext(Setup.DbOpts))
+			{
+				var games = await context.GetGamesForRegistrationAsSelectTableRowsAsync(token);
+
+				//Assert
+				Assert.NotEmpty(games);
+				var g = games.First();
+				Assert.NotNull(g);
+				Assert.NotNull(g.Player1);
+				Assert.NotNull(g.Player2);
+
+				Assert.Equal(g.CreateTime, InkBallGame.CreateTimeInitialValue, TimeSpan.FromMinutes(20));
 			}
 		}
 	}
