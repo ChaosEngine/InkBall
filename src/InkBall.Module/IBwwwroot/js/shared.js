@@ -899,6 +899,10 @@ class GameStateStore {
 				reject();
 			};
 
+			/**
+			 * onupgradeneeded event handler
+			 * @param {IDBVersionChangeEvent} evt change event
+			 */
 			req.onupgradeneeded = (evt) => {
 				LocalLog(`OpenDb.onupgradeneeded(version: ${this.#DB_VERSION})`);
 				const loc_db = evt.currentTarget.result;
@@ -912,7 +916,7 @@ class GameStateStore {
 					loc_db.deleteObjectStore(this.#DB_STATE_STORE);
 
 				const point_store = loc_db.createObjectStore(
-					this.#DB_POINT_STORE, { keyPath: 'Idx', autoIncrement: false });
+					this.#DB_POINT_STORE, { keyPath: /* 'Idx' */['x', 'y'], autoIncrement: false });
 				//point_store.createIndex('Status', 'Status', { unique: false });
 				//point_store.createIndex('Color', 'Color', { unique: false });
 				//point_store.createIndex('Key', 'Key', { unique: true });
@@ -1063,14 +1067,8 @@ class GameStateStore {
 			const store = this.#GetObjectStore(this.#DB_POINT_STORE, 'readwrite');
 			let req;
 			try {
-				/////breaking start///////
-				// key = 38;
-				// val.x = 2;
-				// val.y = 2;
-				/////breaking end///////
-
-				if (typeof (val.Idx) === 'undefined')
-					val.Idx = key;
+				// if (typeof (val.Idx) === 'undefined')
+				// 	val.Idx = key;
 				req = store.add(val/* , key */);//earlier was 'add'
 			} catch (e) {
 				if (e.name === 'DataCloneError')
@@ -1103,8 +1101,8 @@ class GameStateStore {
 			const store = this.#GetObjectStore(this.#DB_POINT_STORE, 'readwrite');
 			let req;
 			try {
-				if (typeof (val.Idx) === 'undefined')
-					val.Idx = key;
+				// if (typeof (val.Idx) === 'undefined')
+				// 	val.Idx = key;
 				req = store.put(val/* , key */);//earlier was 'add'
 			} catch (e) {
 				if (e.name === 'DataCloneError')
@@ -1121,6 +1119,11 @@ class GameStateStore {
 		});
 	}
 
+	/**
+	 * Store all points array to IDBStore
+	 * @param {Array<object>} values of points
+	 * @returns {Promise} resolved promise
+	 */
 	async StoreAllPoints(values = null) {
 		if (!values)
 			values = this.pointBulkBuffer;
@@ -1131,9 +1134,9 @@ class GameStateStore {
 		return new Promise((resolve, reject) => {
 			const store = this.#GetObjectStore(this.#DB_POINT_STORE, 'readwrite');
 			try {
-				values.forEach(function (val, key) {
-					if (typeof (val.Idx) === 'undefined')
-						val.Idx = key;
+				values.forEach(function (val/* , key */) {
+					// if (typeof (val.Idx) === 'undefined')
+					// 	val.Idx = key;
 					store.add(val/* , key */);
 				});
 
