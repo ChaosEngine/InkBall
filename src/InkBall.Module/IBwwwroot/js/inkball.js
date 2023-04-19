@@ -2432,7 +2432,7 @@ class InkBallGame {
 
 		LocalLog(`FloodFill start point (${x},${y}), color = '${start_color === sHumanColor ? 'HUMAN' : 'CPU'}'`);
 
-		await this.#FloodFill(pt, start_color === sHumanColor ? sHumanColor : sCPUColor, 'green');
+		await this.#FloodFill(pt, start_color === sHumanColor ? sCPUColor : sHumanColor, 'green');
 	}
 
 	async #OnServiceModeRedClick(event) {
@@ -3398,17 +3398,27 @@ class InkBallGame {
 
 
 					if (color === clickedColor) {
-						point.SetFillColor(replacementColor); point.SetStrokeColor(replacementColor); point.StrokeWeight(0.3);
+						// point.SetFillColor(replacementColor); point.SetStrokeColor(replacementColor); point.StrokeWeight(0.3);
 
 						queue.push(newPos);
 					}
 					else if (color === null) {
-						blanks_changed.add(point_position_hashed);
+						// blanks_changed.add(point_position_hashed);
 
-						queue.push(newPos);
+						const oval = this.#SvgVml.CreateOval();
+						oval.move(newPos.x, newPos.y);
+						oval.SetStrokeColor(clickedColor);
+						oval.StrokeWeight(0.3);
+						oval.SetFillColor(clickedColor);
+						oval.SetStatus(StatusEnum.POINT_FREE_BLUE);
+
+						await this.#Points.set(point_position_hashed, oval);
+
+						// queue.push(newPos);
+						// edge_points.set(point_position_hashed, { point, x: newPos.x, y: newPos.y });
 					}
-					else if (color !== replacementColor) {
-						edge_points.set(point_position_hashed, { point, x: newPos.x, y: newPos.y });
+					else if (color !== clickedColor) {
+						// edge_points.set(point_position_hashed, { point, x: newPos.x, y: newPos.y });
 					}
 				}
 			}
