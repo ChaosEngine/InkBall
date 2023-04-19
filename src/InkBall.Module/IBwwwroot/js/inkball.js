@@ -2435,6 +2435,18 @@ class InkBallGame {
 		await this.#FloodFill(pt, start_color === sHumanColor ? sHumanColor : sCPUColor, 'green');
 	}
 
+	async #OnServiceModeRedClick(event) {
+		// event.preventDefault();
+
+		document.getElementById("cbSrvMnuBlue").checked = false;
+	}
+
+	async #OnServiceModeBlueClick(event) {
+		// event.preventDefault();
+
+		document.getElementById("cbSrvMnuRed").checked = false;
+	}
+
 	/**
 	 * Start drawing routines
 	 * @param {HTMLElement} sScreen screen container selector
@@ -2452,11 +2464,12 @@ class InkBallGame {
 	 * @param {boolean} useIndexedDbStore indicates whether to use IndexedDb point and path Store
 	 * @param {string} version is semVer string of main module (for IndexedDb DB version)
 	 * @param {Array} ddlTestActions array of test actions button ids
+	 * @param {Array<string>} arrServiceModeControls controls of service menu or null
 	 * @param {number} iTooLong2Duration how long waiting is too long
 	 */
 	async PrepareDrawing(sScreen, sPlayer1Name, sPlayer2Name, sGameStatus, sSurrenderButton, sCancelPath, sPause, sStopAndDraw,
 		sMsgInputSel, sMsgListSel, sMsgSendButtonSel, sLastMoveGameTimeStamp, useIndexedDbStore, version, ddlTestActions,
-		iTooLong2Duration = 125) {
+		arrServiceModeControls, iTooLong2Duration = 125) {
 		this.#bIsWon = false;
 		this.#iDelayBetweenMultiCaptures = 4000;
 		this.#iTooLong2Duration = iTooLong2Duration/*125*/;
@@ -2559,21 +2572,26 @@ class InkBallGame {
 				this.#MessagesRingBufferStore.RestoreMessages(this.#sMsgListSel, this.#iPlayerID, this.#iOtherPlayerId, this.#bIsPlayingWithRed, this.#Player1Name, this.#Player2Name);
 			}
 			else {
-				let i = 0;
-				if (ddlTestActions.length > i)
-					document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestBuildCurrentGraph.bind(this);
-				if (ddlTestActions.length > i)
-					document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestConcaveman.bind(this);
-				if (ddlTestActions.length > i)
-					document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestMarkAllCycles.bind(this);
-				if (ddlTestActions.length > i)
-					document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestGroupPoints.bind(this);
-				if (ddlTestActions.length > i)
-					document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestFindSurroundablePoints.bind(this);
-				if (ddlTestActions.length > i)
-					document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestDFS2.bind(this);
-				if (ddlTestActions.length > i)
-					document.querySelector(ddlTestActions[i++]).onclick = this.#OnFloodFill.bind(this);
+				if (JSON.parse(document.querySelector(arrServiceModeControls[0]).dataset.servicemode.toLowerCase()) === true) {
+					let i = 0;
+					if (ddlTestActions.length > i)
+						document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestBuildCurrentGraph.bind(this);
+					if (ddlTestActions.length > i)
+						document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestConcaveman.bind(this);
+					if (ddlTestActions.length > i)
+						document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestMarkAllCycles.bind(this);
+					if (ddlTestActions.length > i)
+						document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestGroupPoints.bind(this);
+					if (ddlTestActions.length > i)
+						document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestFindSurroundablePoints.bind(this);
+					if (ddlTestActions.length > i)
+						document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestDFS2.bind(this);
+					if (ddlTestActions.length > i)
+						document.querySelector(ddlTestActions[i++]).onclick = this.#OnFloodFill.bind(this);
+
+					document.querySelector(arrServiceModeControls[1]).onclick = this.#OnServiceModeRedClick.bind(this);
+					document.querySelector(arrServiceModeControls[2]).onclick = this.#OnServiceModeBlueClick.bind(this);
+				}
 
 				//disable or even delete chat functionality, coz we're not going to chat with CPU bot
 				//const chatSection = document.querySelector(this.#sMsgListSel).parentElement;
@@ -2678,7 +2696,7 @@ class InkBallGame {
 		);
 		await game.PrepareDrawing('#screen', '#Player1Name', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw',
 			'#messageInput', '#messagesList', '#sendButton', sLastMoveTimeStampUtcIso, gameOptions.PointsAsJavaScriptArray === null, version,
-			['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints', '#TestFindSurroundablePoints', '#TestDFS2', '#FloodFill']);
+			['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints', '#TestFindSurroundablePoints', '#TestDFS2', '#FloodFill'], ['#serviceMenu', '#cbSrvMnuRed', '#cbSrvMnuBlue']);
 
 		if (gameOptions.PointsAsJavaScriptArray !== null) {
 			await game.StartSignalRConnection(false);

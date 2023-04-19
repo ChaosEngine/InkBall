@@ -22,6 +22,8 @@ namespace InkBall.Module
 	{
 		public const string InkBallPolicyName = "InkBallPlayerPolicy";
 		public const string InkBallViewOtherGamesPolicyName = "InkBallViewOtherGamesPolicy";
+		public const string ServiceModePolicyName = "ServiceModeGamesPolicy";
+
 		/// <summary>
 		// When point is put, and user pushed StopAndraw button - one is allowed to close a path withing this much number of seconds
 		// which should be accepted
@@ -59,6 +61,8 @@ namespace InkBall.Module
 		public Action<AuthorizationPolicyBuilder> CustomMainAuthorizationPolicyBuilder { get; set; }
 
 		public Action<AuthorizationPolicyBuilder> CustomViewOtherGamesAuthorizationPolicyBuilder { get; set; }
+
+		public Action<AuthorizationPolicyBuilder> CustomServiceModeAuthorizationPolicyBuilder { get; set; }
 
 		public Action<StaticFileResponseContext> OnStaticFilePrepareResponse { get; set; }
 
@@ -154,6 +158,7 @@ namespace InkBall.Module
 							;
 					});
 				}
+
 				if (options.CustomViewOtherGamesAuthorizationPolicyBuilder != null)
 				{
 					auth_options.AddPolicy(Constants.InkBallViewOtherGamesPolicyName, options.CustomViewOtherGamesAuthorizationPolicyBuilder);
@@ -164,6 +169,19 @@ namespace InkBall.Module
 					{
 						policy.RequireAuthenticatedUser()
 							.RequireClaim("role", "InkBallViewOtherPlayerGames");
+					});
+				}
+
+				if (options.CustomServiceModeAuthorizationPolicyBuilder != null)
+				{
+					auth_options.AddPolicy(Constants.ServiceModePolicyName, options.CustomServiceModeAuthorizationPolicyBuilder);
+				}
+				else
+				{
+					auth_options.AddPolicy(Constants.ServiceModePolicyName, policy =>
+					{
+						policy.RequireAuthenticatedUser()
+							.RequireClaim("role", "InkBallServiceMode");
 					});
 				}
 			});

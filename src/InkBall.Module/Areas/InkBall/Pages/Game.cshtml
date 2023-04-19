@@ -1,5 +1,6 @@
 ﻿@page
 @inject Microsoft.Extensions.Options.IOptions<InkBallOptions> commonUIConfigureOptions
+@inject Microsoft.AspNetCore.Authorization.IAuthorizationService authorization
 @model GameModel
 @{
     ViewData["Title"] = "Game";
@@ -14,6 +15,7 @@
     string lastTimeStampISO = @Model.Game.TimeStamp.ToString("O");
     string hubName = commonUIConfigureOptions.Value.AppRootPath + InkBall.Module.Hubs.GameHub.HubName;
     string IBversion = this.GetType().Assembly.GetName().Version.ToString(4);
+    bool bServiceModeVisible = (await authorization.AuthorizeAsync(User, null, Constants.ServiceModePolicyName)).Succeeded;
     if (Model.Game.Player2 != null)
     {
         if (Model.Game.GetOtherPlayer().IsLastMoveOverdue() && isThisPlayerActive)
@@ -51,20 +53,29 @@
             <input id="StopAndDraw" type="button" value="Stop and Draw" class='btn btn-warning' disabled />
             <input id="CancelPath" type="button" value="Cancel path" class='btn btn-primary' disabled />
         </div>
-        <div id="testArea" class="col-xs-6 col-sm-auto ps-0 dropdown dropend">
-            <button class="btn btn-secondary dropdown-toggle" type="button" id="ddlTest" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                Test
-            </button>
-            <div class="dropdown-menu" aria-labelledby="ddlTest">
-                <a class="dropdown-item" href="#" id="TestBuildGraph">Build current graph</a>
-                <a class="dropdown-item" href="#" id="TestConcaveman">Concaveman</a>
-                <a class="dropdown-item" href="#" id="TestMarkAllCycles">Mark all cycles</a>
-                <a class="dropdown-item" href="#" id="TestGroupPoints">Group points recurse</a>
-                <a class="dropdown-item" href="#" id="TestFindSurroundablePoints">Find surroundable points</a>
-                <a class="dropdown-item" href="#" id="TestDFS2">DFS 2</a>
-                <a class="dropdown-item" href="#" id="FloodFill">Flood fill</a>
+        <fieldset id="serviceMenu" class="col-xs-6 col-sm-auto pb-1 border border-2 bg-light" data-servicemode="@(bServiceModeVisible)">
+            <legend class="mb-0 fs-6 w-auto float-none text-center">Service Menu</legend>
+
+            <div id="testArea" class="d-inline dropdown dropend">
+                <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="ddlTest" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Test
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="ddlTest">
+                    <li><a class="dropdown-item" href="#" id="TestBuildGraph">Build current graph</a></li>
+                    <li><a class="dropdown-item" href="#" id="TestConcaveman">Concaveman</a></li>
+                    <li><a class="dropdown-item" href="#" id="TestMarkAllCycles">Mark all cycles</a></li>
+                    <li><a class="dropdown-item" href="#" id="TestGroupPoints">Group points recurse</a></li>
+                    <li><a class="dropdown-item" href="#" id="TestFindSurroundablePoints">Find surroundable points</a></li>
+                    <li><a class="dropdown-item" href="#" id="TestDFS2">DFS 2</a></li>
+                    <li><a class="dropdown-item" href="#" id="FloodFill">Flood fill</a></li>
+                </ul>
             </div>
-        </div>
+            
+            <input id="cbSrvMnuRed" type="checkbox" class="btn-check" name="options" autocomplete="off">
+            <label class="btn btn-outline-primary btn-sm" for="cbSrvMnuRed">Place Red</label>
+            <input id="cbSrvMnuBlue" type="checkbox" class="btn-check" name="options" autocomplete="off">
+            <label class="btn btn-outline-danger btn-sm" for="cbSrvMnuBlue">Place Blue</label>
+        </fieldset>
     </form>
     <div id="status" class="row">
         <div class="col-auto px-0">
