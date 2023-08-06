@@ -190,7 +190,7 @@ namespace InkBall.Tests
 				Assert.DoesNotContain(nameof(InkBallPathViewModel.InkBallPoint), serialized);
 			}
 			else
-				Assert.True(false, "unknown type");
+				Assert.Fail("unknown type");
 		}
 
 		/**
