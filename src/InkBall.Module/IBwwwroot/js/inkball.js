@@ -540,7 +540,7 @@ class InkBallGame {
 	#rAF_StartTimeStamp;
 	#rAF_FrameID;
 	#workingCyclePolyLine;
-	#lastCycle;
+	#cyclesFound;
 	#AIMethod;
 	#COLOR_RED;
 	#COLOR_BLUE;
@@ -1898,7 +1898,7 @@ class InkBallGame {
 			const loc_x = x;
 			const loc_y = y;
 
-			if (await this.#Points.get(loc_y * this.#iGridWidth + loc_x) !== undefined) {
+			if (await this.#Points.has(loc_y * this.#iGridWidth + loc_x)) {
 				this.#Debug('Wrong point - already existing', 0);
 				return;
 			}
@@ -2304,16 +2304,16 @@ class InkBallGame {
 			this.#SvgVml.RemovePolyline(this.#workingCyclePolyLine);
 			this.#workingCyclePolyLine = null;
 		}
-		this.#lastCycle.forEach(cycle => {
+		this.#cyclesFound.forEach(cycle => {
 			const line = this.#SvgVml.CreatePolyline(cycle.map(function (pt) {
 				const pos = pt.GetPosition();
 				return `${pos.x},${pos.y}`;
 			}).join(' '), RandomColor());
 			line.SetID(-1);
 		});
-		LocalLog('game.lastCycle = ');
-		LocalLog(this.#lastCycle);
-		this.#lastCycle = [];
+		LocalLog('game.#cyclesFound = ');
+		LocalLog(this.#cyclesFound);
+		this.#cyclesFound = [];
 	}
 
 	async #OnTestFindSurroundablePoints(event) {
@@ -2528,7 +2528,7 @@ class InkBallGame {
 		this.#rAF_StartTimeStamp = null;
 		this.#rAF_FrameID = null;
 		this.#workingCyclePolyLine = null;
-		this.#lastCycle = [];
+		this.#cyclesFound = [];
 		this.#AIMethod = null;
 		///////CpuGame variables end//////
 
@@ -3225,23 +3225,37 @@ class InkBallGame {
 	/**
 	 * Floyd's tortoise and hare
 	 * https://en.wikipedia.org/wiki/Cycle_detection
-	 * @param {Function} f function where f(x0) is the element/node next to x0
-	 * @param {Number} x0 index of element
+	 * @param {Function} getNextFunc function where getNextFunc(x0) is the element/node next to x0
+	 * @param {Number} head index of element
 	 * @returns {Object} length of the shortest cycle and starting point
 	 */
-	#floyd(f, x0) {
+	#floyd(getNextFunc, head) {
 		// Main phase of algorithm: finding a repetition x_i = x_2i.
 		// The hare moves twice as quickly as the tortoise and
 		// the distance between them increases by 1 at each step.
 		// Eventually they will both be inside the cycle and then,
 		// at some point, the distance between them will be
 		// divisible by the period λ.
-		let tortoise = f(x0); // f(x0) is the element/node next to x0.
-		let hare = f(f(x0));
-		while (tortoise !== hare) {
-			tortoise = f(tortoise);
-			hare = f(f(hare));
+
+		// let tortoise = getNextFunc(head); // getNextFunc(x0) is the element/node next to x0.
+		// let hare = getNextFunc(getNextFunc(head));
+		// while (tortoise !== hare) {
+		// 	tortoise = getNextFunc(tortoise);
+		// 	hare = getNextFunc(getNextFunc(hare));
+		// }
+
+		let tortoise = getNextFunc(head); // getNextFunc(x0) is the element/node next to x0.
+		let hare = getNextFunc(getNextFunc(head));
+		while (tortoise !== undefined && hare !== undefined && tortoise !== hare) {
+			tortoise = getNextFunc(tortoise);
+			hare = getNextFunc(getNextFunc(hare));
 		}
+
+		// if there is no loop exit now
+		if (tortoise !== hare)
+			return false;
+
+		return true;
 
 		// At this point the tortoise position, ν, which is also equal
 		// to the distance between hare and tortoise, is divisible by
@@ -3252,11 +3266,12 @@ class InkBallGame {
 		// they will agree as soon as the tortoise reaches index μ.
 
 		// Find the position μ of first repetition.    
+		/*
 		let mu = 0;
-		tortoise = x0;
+		tortoise = head;
 		while (tortoise !== hare) {
-			tortoise = f(tortoise);
-			hare = f(hare);   // Hare and tortoise move at same speed
+			tortoise = getNextFunc(tortoise);
+			hare = getNextFunc(hare);   // Hare and tortoise move at same speed
 			mu += 1;
 		}
 
@@ -3264,13 +3279,14 @@ class InkBallGame {
 		// The hare moves one step at a time while tortoise is still.
 		// lam is incremented until λ is found.
 		let lam = 1;
-		hare = f(tortoise);
+		hare = getNextFunc(tortoise);
 		while (tortoise !== hare) {
-			hare = f(hare);
+			hare = getNextFunc(hare);
 			lam += 1;
 		}
 
 		return { lam, mu };
+		*/
 	}
 
 	/**
@@ -3280,11 +3296,13 @@ class InkBallGame {
 	 * @returns {Promise<Array>} of found candidates
 	 */
 	async #GroupPointsRecurse(currPointsArr, point) {
+		//stop conditions. simple
 		if (point === undefined || currPointsArr.includes(point)
-			|| currPointsArr.length > 60 || this.#lastCycle.length > 3
+			/* || currPointsArr.length > 60  */ || this.#cyclesFound.length > 3
 		) {
 			return currPointsArr;
 		}
+		//only opponent points, starting and not in path are allowed to be traversed
 		if ([StatusEnum.POINT_FREE_BLUE, StatusEnum.POINT_STARTING, StatusEnum.POINT_IN_PATH].includes(point.GetStatus()) === false ||
 			point.GetFillColor() !== this.#COLOR_BLUE) {
 			return currPointsArr;
@@ -3305,22 +3323,40 @@ class InkBallGame {
 		else
 			currPointsArr.push(point);//1st starting point
 
-		if (currPointsArr.length > 2) {
+		if (currPointsArr.length >= 4) {
 			//draw currently constructed cycle path
 			await this.#DisplayPointsProgressWithDelay(currPointsArr);
 
-			if (currPointsArr.length >= 4) {
-				const first_pos = currPointsArr[0].GetPosition();
-				const last = currPointsArr.at(-1);
-				const { x: last_x, y: last_y } = last.GetPosition();
+			const first_pos = currPointsArr[0].GetPosition();
+			const last_pos = currPointsArr.at(-1).GetPosition();
 
-				if (Math.abs(last_x - first_pos.x) <= 1 && Math.abs(last_y - first_pos.y) <= 1) {
-					const tmp = currPointsArr.slice(); //copy array in current state
-					tmp.push(currPointsArr[0]);
-					this.#lastCycle.push(tmp);
+			//check if first point is within 1 jump away from last point - indicating of cycle found
+			if (Math.abs(last_pos.x - first_pos.x) <= 1 && Math.abs(last_pos.y - first_pos.y) <= 1) {
+				const points = currPointsArr.slice(); //copy array in current state
+				points.push(currPointsArr[0]);//adding current checking point, 'coz it is forming a cycle
 
-					this.#floyd(x => Number.isInteger(x) ? tmp[x] : tmp[tmp.indexOf(x) + 1], 0);
-				}
+				const floyd_result = this.#floyd(ind_or_obj => {
+					if (ind_or_obj === undefined)
+						return undefined;
+
+					let ind;
+					if (Number.isInteger(ind_or_obj)) {
+						//ind_or_obj is integer so index array
+						ind = ind_or_obj;
+						if (ind >= points.length)
+							return undefined;
+					}
+					else {
+						//ind_or_obj is object so get index out of array
+						ind = points.indexOf(ind_or_obj) + 1;
+						if (ind >= points.length)
+							return undefined;
+					}
+
+					return points[ind];
+				}, 0);
+				if (floyd_result === true)
+					this.#cyclesFound.push(points);
 			}
 		}
 
@@ -3344,9 +3380,9 @@ class InkBallGame {
 		await this.#GroupPointsRecurse(currPointsArr, south_west);
 		await this.#GroupPointsRecurse(currPointsArr, south_east);
 
-		const ind = currPointsArr.lastIndexOf(point);
-		if (ind !== -1) {
-			currPointsArr.splice(ind/* + 1*/);
+		const index_of_last = currPointsArr.lastIndexOf(point);
+		if (index_of_last !== -1) {
+			currPointsArr.splice(index_of_last/* + 1*/);
 
 			if (currPointsArr.length >= 2) {
 				//draw currently constructed cycle path
@@ -3368,6 +3404,7 @@ class InkBallGame {
 		const queue = [startingPoint.GetPosition()];
 		const blanks_changed = new Set();
 		const edge_points = new Map();
+		const log_list = [];
 
 		while (queue.length > 0) {
 			const { x, y } = queue.shift();
@@ -3409,10 +3446,14 @@ class InkBallGame {
 					}
 					else if (color !== replacementColor) {
 						edge_points.set(point_position_hashed, { point, x: newPos.x, y: newPos.y });
+						log_list.push(point);
 					}
 				}
 			}
 		}
+		LocalLog('log_list: ');
+		LocalLog(log_list);
+
 
 		if (edge_points.size > 3) {
 			//verification and constructing of surrounding path from edge_points
@@ -3420,16 +3461,53 @@ class InkBallGame {
 			const gathered = verts.splice(-1, 1);//drop last vert from verts and create new array out of it
 
 			let last = gathered[0];//take single vert as starting last value
-			for (let counter = verts.length; counter > 0; counter--) {//go in reverse order over every vertices
-				const ind_or_negative_one = verts.findIndex(v => Math.abs(v.x - last.x) <= 1 && Math.abs(v.y - last.y) <= 1);
-				if (ind_or_negative_one !== -1) {//new neighboring vertex found
-					//move found vertex from verts into gathered array...
-					//...and set new last from this moved vert
-					last = verts.splice(ind_or_negative_one, 1)[0];
-					gathered.push(last);//add to found path points
+			let direction = null;
+			// eslint-disable-next-line no-unused-vars
+			const continuousTestFun = (v, index, arr) => {
+				const res = Math.abs(v.x - last.x) <= 1 && Math.abs(v.y - last.y) <= 1;
+				if (res === true && direction !== null) {
+					const dir = { x: (last.x - v.x), y: (last.y - v.y) };
+					v.direction = dir;
 				}
-				else//neighboring vertex not found, break, we fail
-					break;
+				return res;
+			};
+			// eslint-disable-next-line no-unused-vars
+			const continuousSortFun = (left, right) => {
+				if (!left.direction && !right.direction)
+					return 0;
+				if ((left.direction.x === direction.x && left.direction.y === direction.y) ||
+					(right.direction.x === direction.x && right.direction.y === direction.y))
+					return 0;
+				const square_dist = ((left.direction.x - direction.x) + (left.direction.y - direction.y) +
+					(right.direction.x - direction.x) + (right.direction.y - direction.y)) / 4;
+				return square_dist;
+			};
+			for (let counter = verts.length; counter > 0; counter--) {//go in reverse order over every vertices
+				let simple_counter = 0;
+				const filtered_objs = verts.filter(continuousTestFun)/* .sort(continuousSortFun) */;
+				do {
+					const obj = filtered_objs.at(simple_counter);
+					if (obj !== undefined) {
+						const ind_or_negative_one = verts.indexOf(obj);
+						if (ind_or_negative_one !== -1) {//new neighboring vertex found
+							//move found vertex from verts into gathered array...
+							//...and set new last from this moved vert
+							const candidate = verts.splice(ind_or_negative_one, 1)[0];
+							direction = { x: (last.x - candidate.x), y: (last.y - candidate.y) };
+							last = candidate;
+							gathered.push(last);//add to found path points
+							// LocalLog(`found direction: ${direction.x},${direction.y}, filtered_objs.cnt: ${filtered_objs.length}`);
+							break;
+						}
+						else {
+							//neighboring vertex not found, break, we fail
+							// break;
+							// gathered.pop();
+							// LocalLog(`missed direction: ${direction.x},${direction.y}, filtered_objs.cnt: ${filtered_objs.length}`);
+						}
+					}
+				}
+				while (++simple_counter < 4);
 			}
 			//verification
 			const { x, y } = startingPoint.GetPosition();
@@ -3445,6 +3523,7 @@ class InkBallGame {
 				//check if "points-created-path" actually contains selected single point inside its boundaries
 				false === pnpoly(gathered, x, y)
 			) {
+				await this.#DisplayPointsProgressWithDelay(gathered.map(({ point }) => point), 0);
 				return;
 			}
 
