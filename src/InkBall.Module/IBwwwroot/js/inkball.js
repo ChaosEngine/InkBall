@@ -2001,6 +2001,176 @@ class InkBallGame {
 		}
 	}
 
+	async #OnMouseMoveServiceMode(event) {
+		if (!this.#bIsPlayerActive || this.#Player2Name.textContent === '???' || this.#bHandlingEvent === true
+			|| this.#iConnErrCount > 0) {
+
+			if (this.#iConnErrCount <= 0 && !this.#bIsPlayerActive) {
+				this.#Screen.style.cursor = "wait";
+			}
+			return;
+		}
+
+		const cursor = this.#SvgVml.ToCursorPoint(event.clientX, event.clientY);
+		let x = cursor.x + 0.5;
+		let y = cursor.y + 0.5;
+
+		x = parseInt(x);
+		y = parseInt(y);
+
+		let tox = x;
+		let toy = y;
+
+		if (this.#CursorPos.x !== tox || this.#CursorPos.y !== toy) {
+			this.#MouseCursorOval.move(tox, toy);
+			this.#MouseCursorOval.Show();
+			this.#Debug(`[${x},${y}]`, 1);
+			this.#CursorPos.x = tox; this.#CursorPos.y = toy;
+		}
+
+
+		// if (this.#bDrawLines) {
+		if (this.#Line !== null)
+			this.#Screen.style.cursor = "move";
+		else
+			this.#Screen.style.cursor = "crosshair";
+
+		if (this.#bMouseDown === true) {
+			// //lines
+			// if ((this.#iLastX !== x || this.#iLastY !== y) &&
+			// 	(Math.abs(parseInt(this.#iLastX - x)) <= 1 && Math.abs(parseInt(this.#iLastY - y)) <= 1) &&
+			// 	this.#iLastX >= 0 && this.#iLastY >= 0) {
+			// 	if (this.#Line !== null) {
+			// 		let p0 = await this.#Points.get(this.#iLastY * this.#iGridWidth + this.#iLastX);
+			// 		let p1 = await this.#Points.get(y * this.#iGridWidth + x);
+			// 		this.#CancelPath.disabled = this.#Line.GetLength() >= 2 ? '' : 'disabled';
+
+			// 		if (p0 !== undefined && p1 !== undefined &&
+			// 			p0.GetFillColor() === this.#sDotColor && p1.GetFillColor() === this.#sDotColor) {
+			// 			const line_contains_point = this.#Line.ContainsPoint(tox, toy);
+			// 			if (line_contains_point < 1 && p1.GetStatus() !== StatusEnum.POINT_STARTING &&
+			// 				true === this.#Line.AppendPoints(tox, toy)) {
+			// 				p1.SetStatus(StatusEnum.POINT_IN_PATH, true);
+			// 				this.#iLastX = x;
+			// 				this.#iLastY = y;
+			// 			}
+			// 			else if (line_contains_point === 1 && p1.GetStatus() === StatusEnum.POINT_STARTING &&
+			// 				true === this.#Line.AppendPoints(tox, toy)) {
+			// 				const val = await this.#SurroundOpponentPoints();
+			// 				if (val.owned.length > 0) {
+			// 					this.#Debug('Closing path', 0);
+			// 					this.#rAF_FrameID = null;
+			// 					await this.#SendData(this.#CreatePutPathRequest(val), async () => {
+			// 						await this.#OnCancelClick();
+			// 						val.OwnedPoints.forEach(revData => {
+			// 							const p = revData.point;
+			// 							p.RevertOldStatus();
+			// 							p.SetFillColor(revData.revertFillColor);
+			// 							// p.SetStrokeColor(revData.revertStrokeColor);
+			// 						});
+			// 						this.#bHandlingEvent = false;
+			// 					});
+			// 				}
+			// 				else
+			// 					this.#Debug(`${val.errorDesc ? val.errorDesc : 'Wrong path'}, cancel it or refresh page`, 0);
+			// 				this.#iLastX = x;
+			// 				this.#iLastY = y;
+			// 			}
+			// 			else if (line_contains_point >= 1 && p0.GetStatus() === StatusEnum.POINT_IN_PATH &&
+			// 				this.#Line.GetPointsString().endsWith(`${this.#iLastX},${this.#iLastY}`)) {
+
+			// 				if (this.#Line.GetLength() > 2) {
+			// 					p0.RevertOldStatus();
+			// 					this.#Line.RemoveLastPoint();
+			// 					this.#iLastX = x;
+			// 					this.#iLastY = y;
+			// 				}
+			// 				else
+			// 					await this.#OnCancelClick();
+			// 			}
+			// 		}
+			// 	}
+			// 	else {
+			// 		let p0 = await this.#Points.get(this.#iLastY * this.#iGridWidth + this.#iLastX);
+			// 		let p1 = await this.#Points.get(y * this.#iGridWidth + x);
+
+			// 		if (p0 !== undefined && p1 !== undefined &&
+			// 			p0.GetFillColor() === this.#sDotColor && p1.GetFillColor() === this.#sDotColor) {
+			// 			const fromx = this.#iLastX;
+			// 			const fromy = this.#iLastY;
+			// 			this.#Line = this.#SvgVml.CreatePolyline(`${fromx},${fromy} ${tox},${toy}`, this.#DRAWING_PATH_COLOR);
+			// 			this.#CancelPath.disabled = '';
+			// 			p0.SetStatus(StatusEnum.POINT_STARTING, true);
+			// 			p1.SetStatus(StatusEnum.POINT_IN_PATH, true);
+
+			// 			this.#iLastX = x;
+			// 			this.#iLastY = y;
+			// 		}
+			// 	}
+			// }
+
+			if (await this.#Points.has(y * this.#iGridWidth + x) === false) {
+				let color, status;
+				if (document.getElementById("cbSrvMnuBlue").checked === true) {
+					status = StatusEnum.POINT_FREE_BLUE;
+					color = this.#COLOR_BLUE;
+				}
+				else {
+					status = StatusEnum.POINT_FREE_RED;
+					color = this.#COLOR_RED;
+				}
+				const oval = this.#SvgVml.CreateOval();
+				oval.move(x, y);
+				oval.SetStrokeColor(color);
+				oval.StrokeWeight(0.2);
+				oval.SetFillColor(color);
+				oval.SetStatus(status);
+
+				await this.#Points.set(y * this.#iGridWidth + x, oval);
+			}
+		}
+		// }
+		// else {
+		// 	this.#Screen.style.cursor = "crosshair";
+		// }
+	}
+
+	async #OnMouseDownServiceMode(event) {
+		if (!this.#bIsPlayerActive || this.#Player2Name.textContent === '???' || this.#bHandlingEvent === true
+			|| this.#iConnErrCount > 0)
+			return;
+
+		const cursor = this.#SvgVml.ToCursorPoint(event.clientX, event.clientY);
+		let x = cursor.x + 0.5;
+		let y = cursor.y + 0.5;
+
+		x = this.#iMouseX = parseInt(x);
+		y = this.#iMouseY = parseInt(y);
+
+		this.#bMouseDown = true;
+
+		if (await this.#Points.has(y * this.#iGridWidth + x) === false) {
+			let color, status;
+			if (document.getElementById("cbSrvMnuBlue").checked === true) {
+				status = StatusEnum.POINT_FREE_BLUE;
+				color = this.#COLOR_BLUE;
+			}
+			else {
+				status = StatusEnum.POINT_FREE_RED;
+				color = this.#COLOR_RED;
+			}
+			const oval = this.#SvgVml.CreateOval();
+			oval.move(x, y);
+			oval.SetStrokeColor(color);
+			oval.StrokeWeight(0.2);
+			oval.SetFillColor(color);
+			oval.SetStatus(status);
+
+			await this.#Points.set(y * this.#iGridWidth + x, oval);
+		}
+
+	}
+
 	#OnMouseUp() {
 		this.#bMouseDown = false;
 	}
@@ -2438,11 +2608,44 @@ class InkBallGame {
 	async #OnServiceModeRedClick(/* event */) {
 		// event.preventDefault();
 
+		if (document.getElementById("cbSrvMnuRed").checked === true) {
+			this.#Screen.onmousedown = this.#OnMouseDownServiceMode.bind(this);
+			this.#Screen.onmousemove = this.#OnMouseMoveServiceMode.bind(this);
+			// this.#Screen.onmouseup = this.#OnMouseUp.bind(this);
+			// this.#Screen.onmouseleave = this.#OnMouseLeave.bind(this);
+
+			LocalLog('red');
+		}
+		else {
+			this.#Screen.onmousedown = this.#OnMouseDown.bind(this);
+			this.#Screen.onmousemove = this.#OnMouseMove.bind(this);
+			// this.#Screen.onmouseup = this.#OnMouseUp.bind(this);
+			// this.#Screen.onmouseleave = this.#OnMouseLeave.bind(this);
+
+			LocalLog('red-off');
+		}
+
 		document.getElementById("cbSrvMnuBlue").checked = false;
 	}
 
 	async #OnServiceModeBlueClick(/* event */) {
 		// event.preventDefault();
+
+		if (document.getElementById("cbSrvMnuBlue").checked === true) {
+			this.#Screen.onmousedown = this.#OnMouseDownServiceMode.bind(this);
+			this.#Screen.onmousemove = this.#OnMouseMoveServiceMode.bind(this);
+			// this.#Screen.onmouseup = this.#OnMouseUp.bind(this);
+			// this.#Screen.onmouseleave = this.#OnMouseLeave.bind(this);
+
+			LocalLog('blue');
+		} else {
+			this.#Screen.onmousedown = this.#OnMouseDown.bind(this);
+			this.#Screen.onmousemove = this.#OnMouseMove.bind(this);
+			// this.#Screen.onmouseup = this.#OnMouseUp.bind(this);
+			// this.#Screen.onmouseleave = this.#OnMouseLeave.bind(this);
+
+			LocalLog('blue-off');
+		}
 
 		document.getElementById("cbSrvMnuRed").checked = false;
 	}
