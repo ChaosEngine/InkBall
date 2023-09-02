@@ -1,5 +1,5 @@
 /*eslint no-unused-vars: ["error", { "varsIgnorePattern": "InkBallGame" }]*/
-/*global signalR*/
+/*global signalR, Graph, astar*/
 "use strict";
 
 let SHRD, LocalLog, LocalError, StatusEnum, hasDuplicates, pnpoly, sortPointsClockwise, Sleep, depthFirstSearch;
@@ -497,6 +497,8 @@ class InkBallGame {
 	#iGridSpacingY;
 	#iLastX;
 	#iLastY;
+	#iLastLastX;
+	#iLastLastY;
 	#iMouseX;
 	#iMouseY;
 	#iPosX;
@@ -608,6 +610,8 @@ class InkBallGame {
 		this.#LineStrokeWidth = 0;
 		this.#iLastX = -1;
 		this.#iLastY = -1;
+		this.#iLastLastX = -1;
+		this.#iLastLastY = -1;
 		this.#iMouseX = 0;
 		this.#iMouseY = 0;
 		this.#iPosX = 0;
@@ -1888,6 +1892,8 @@ class InkBallGame {
 
 		x = this.#iMouseX = parseInt(x);
 		y = this.#iMouseY = parseInt(y);
+		this.#iLastLastX = this.#iLastX;
+		this.#iLastLastY = this.#iLastY;
 
 		this.#bMouseDown = true;
 		if (!this.#bDrawLines) {
@@ -2146,7 +2152,8 @@ class InkBallGame {
 
 		x = this.#iMouseX = parseInt(x);
 		y = this.#iMouseY = parseInt(y);
-
+		this.#iLastLastX = this.#iLastX;
+		this.#iLastLastY = this.#iLastY;
 		this.#bMouseDown = true;
 
 		if (await this.#Points.has(y * this.#iGridWidth + x) === false) {
@@ -2608,6 +2615,65 @@ class InkBallGame {
 		await this.#FloodFill(pt, start_color === sHumanColor ? sHumanColor : sCPUColor, 'green');
 	}
 
+	async #OnAStar(event) {
+		event.preventDefault();
+		//checks for valid points, color, states
+		if (!(this.#iLastY >= 0 && this.#iLastX >= 0 && this.#iLastLastY >= 0 && this.#iLastLastX >= 0 &&
+			(this.#iLastX !== this.#iLastLastX || this.#iLastY !== this.#iLastLastY))
+		) {
+			LocalLog("!!!First you need to click two (starting and ending) points with mouse!!!");
+			return;
+		}
+		const point_color = (await this.#Points.get(this.#iLastY * this.#iGridWidth + this.#iLastX))?.GetFillColor();
+		if (point_color !== (await this.#Points.get(this.#iLastLastY * this.#iGridWidth + this.#iLastLastX))?.GetFillColor()) {
+			LocalLog("!!!Clicked starting and ending point must be same color and not owned!!!");
+			return;
+		}
+		const point_status = point_color === this.#COLOR_RED ? StatusEnum.POINT_FREE_RED : StatusEnum.POINT_FREE_BLUE;
+
+		//helper func
+		const displayPointsHelper = async (pointsArr, sleepMillisecs = 25) => {
+			//
+			//serialize points as string: "y0,x0 y1,x1 y2,x2" but inverse order of coords: y,x
+			//
+			const pts = pointsArr.map((pt) => `${pt.y},${pt.x}`).join(' ');
+
+			//if not existing, create new...
+			if (this.#workingCyclePolyLine === null) {
+				this.#workingCyclePolyLine = this.#SvgVml.CreatePolyline(pts, 'black');
+				this.#workingCyclePolyLine.SetID(-1);
+			}
+			else//...else replace last create path
+				this.#workingCyclePolyLine.SetPoints(pts);
+
+			if (sleepMillisecs > 0)
+				await Sleep(sleepMillisecs);
+		};
+
+		const arr = new Array(this.#iGridHeight);
+		for (let y = 0; y < this.#iGridHeight; y++) {
+			arr[y] = new Array(this.#iGridWidth);
+
+			for (let x = 0; x < this.#iGridWidth; x++) {
+
+				const pt = await this.#Points.get(y * this.#iGridWidth + x);
+				if (pt !== undefined && pt.GetFillColor() === point_color && pt.GetStatus() === point_status)
+					arr[y][x] = 1;
+				else
+					arr[y][x] = 0;
+			}
+		}
+
+		const graphDiagonal = new Graph(arr, { diagonal: true });
+		const start = graphDiagonal.grid[this.#iLastY][this.#iLastX];
+		const end = graphDiagonal.grid[this.#iLastLastY][this.#iLastLastX];
+		const resultWithDiagonals = astar.search(graphDiagonal, start, end, { heuristic: astar.heuristics.diagonal });
+		if (resultWithDiagonals.length > 0)
+			await displayPointsHelper(resultWithDiagonals, 0);
+
+		LocalLog(resultWithDiagonals);
+	}
+
 	async #OnServiceModeRedClick(/* event */) {
 		// event.preventDefault();
 
@@ -2794,6 +2860,8 @@ class InkBallGame {
 						document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestDFS2.bind(this);
 					if (ddlTestActions.length > i)
 						document.querySelector(ddlTestActions[i++]).onclick = this.#OnFloodFill.bind(this);
+					if (ddlTestActions.length > i)
+						document.querySelector(ddlTestActions[i++]).onclick = this.#OnAStar.bind(this);
 
 					document.querySelector(arrServiceModeControls[1]).onclick = this.#OnServiceModeRedClick.bind(this);
 					document.querySelector(arrServiceModeControls[2]).onclick = this.#OnServiceModeBlueClick.bind(this);
@@ -2902,7 +2970,7 @@ class InkBallGame {
 		);
 		await game.PrepareDrawing('#screen', '#Player1Name', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw',
 			'#messageInput', '#messagesList', '#sendButton', sLastMoveTimeStampUtcIso, gameOptions.PointsAsJavaScriptArray === null, version,
-			['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints', '#TestFindSurroundablePoints', '#TestDFS2', '#FloodFill'], ['#serviceMenu', '#cbSrvMnuRed', '#cbSrvMnuBlue']);
+			['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints', '#TestFindSurroundablePoints', '#TestDFS2', '#FloodFill', '#AStar'], ['#serviceMenu', '#cbSrvMnuRed', '#cbSrvMnuBlue']);
 
 		if (gameOptions.PointsAsJavaScriptArray !== null) {
 			await game.StartSignalRConnection(false);
