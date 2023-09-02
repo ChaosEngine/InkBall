@@ -2294,21 +2294,24 @@ class InkBallGame {
 
 	async #OnTestBuildCurrentGraph(event) {
 		event.preventDefault();
-		//LocalLog(await this.#BuildGraph());
-		const data = await this.#RunAIWorker((worker) => {
-			const serialized_points = Array.from(this.#Points.store.entries()).map(([key, value]) => ({ key, value: value.Serialize() }));
-			const serialized_paths = this.#Lines.store.map(pa => pa.Serialize());
+		//// Main thread UI implementation
+		LocalLog(await this.#BuildGraph());
 
-			worker.postMessage({
-				operation: "BUILD_GRAPH",
-				boardSize: { iGridWidth: this.#iGridWidth, iGridHeight: this.#iGridHeight },
-				state: this.#GetGameStateForIndexedDb(),
-				points: serialized_points,
-				paths: serialized_paths
-			});
-		});
-		LocalLog('Message received from worker:');
-		LocalLog(data);
+		//// Web worker background implementation
+		// const data = await this.#RunAIWorker((worker) => {
+		// 	const serialized_points = Array.from(this.#Points.store.entries()).map(([key, value]) => ({ key, value: value.Serialize() }));
+		// 	const serialized_paths = this.#Lines.store.map(pa => pa.Serialize());
+
+		// 	worker.postMessage({
+		// 		operation: "BUILD_GRAPH",
+		// 		boardSize: { iGridWidth: this.#iGridWidth, iGridHeight: this.#iGridHeight },
+		// 		state: this.#GetGameStateForIndexedDb(),
+		// 		points: serialized_points,
+		// 		paths: serialized_paths
+		// 	});
+		// });
+		// LocalLog('Message received from worker:');
+		// LocalLog(data);
 	}
 
 	async #OnTestConcaveman(event) {
@@ -3110,7 +3113,7 @@ class InkBallGame {
 		cpufillCol: cpuFillColor = this.#COLOR_BLUE
 		//, visuals: presentVisually = false
 	} = {}) {
-		const graph_points = [], graph_edges = new Map();
+		const graph_points = new Map(), graph_edges = new Map();
 
 		const isPointOKForPath = function (freePointStatusArr, pt) {
 			const status = pt.GetStatus();
@@ -3125,32 +3128,29 @@ class InkBallGame {
 				const next = await this.#Points.get(to_y * this.#iGridWidth + to_x);
 				if (next && isPointOKForPath([freePointStatus], next) === true) {
 
-					if (graph_edges.has(`${x},${y}_${to_x},${to_y}`) === false && graph_edges.has(`${to_x},${to_y}_${x},${y}`) === false) {
-
-						const edge = {
-							from: point,
-							to: next
-						};
+					const point_hash = `${x},${y}`;
+					const next_hash = `${to_x},${to_y}`;
+					if (graph_edges.has(`${point_hash}_${next_hash}`) === false && graph_edges.has(`${next_hash}_${point_hash}`) === false) {
 						//if (presentVisually === true) {
 						//	const line = CreateLine(3, 'rgba(0, 255, 0, 0.3)');
 						//	line.move(x, y, next_pos.x, next_pos.y);
 						//	edge.line = line;
 						//}
-						graph_edges.set(`${x},${y}_${to_x},${to_y}`, edge);
+						graph_edges.set(`${point_hash}_${next_hash}`, { from: point, to: next });
 
 
-						if (graph_points.includes(point) === false) {
+						if (!graph_points.has(point_hash)) {
 							point.adjacents = [next];
-							graph_points.push(point);
+							graph_points.set(point_hash, point);
 						} else {
-							const pt = graph_points.find(x => x === point);
+							const pt = graph_points.get(point_hash);
 							pt.adjacents.push(next);
 						}
-						if (graph_points.includes(next) === false) {
+						if (!graph_points.has(next_hash)) {
 							next.adjacents = [point];
-							graph_points.push(next);
+							graph_points.set(next_hash, next);
 						} else {
-							const pt = graph_points.find(x => x === next);
+							const pt = graph_points.get(next_hash);
 							pt.adjacents.push(point);
 						}
 					}
@@ -3182,7 +3182,7 @@ class InkBallGame {
 		}
 		//return graph
 		return {
-			vertices: graph_points,
+			vertices: Array.from(graph_points.values()),
 			edges: Array.from(graph_edges.values()),
 			getNeighbors: function (vert) {
 				const found = this.vertices.find(v => v === vert);
@@ -3201,7 +3201,7 @@ class InkBallGame {
 	 */
 	async #MarkAllCycles(graph, sHumanColor) {
 		const vertices = graph.vertices;
-		const N = vertices.length;
+		const N = vertices.length, PARTIALLY_VISITED = 1, COMPLETELY_VISITED = 2;
 		let cycles = new Array(N);
 		// mark with unique numbers
 		const mark = new Array(N);
@@ -3213,14 +3213,26 @@ class InkBallGame {
 			mark[i] = []; cycles[i] = [];
 		}
 
+		const vertexImmediatePresenterFn = async (vertex, color = 'black', sleepTimeMs = 25) => {
+			const { x, y } = vertex.GetPosition();
+			const visible_vertex = await this.#Points.get(y * this.#iGridWidth + x);
+
+			visible_vertex.SetStrokeColor(color);
+			visible_vertex.SetFillColor(color);
+			visible_vertex.StrokeWeight(0.2);
+			visible_vertex.setAttribute("r", 6 / this.#iGridSpacingX);
+
+			await Sleep(sleepTimeMs);
+		};
+
 		const dfs_cycle = async (u, p) => {
 			// already (completely) visited vertex. 
-			if (color[u] === 2)
+			if (color[u] === COMPLETELY_VISITED)
 				return;
 
 			// seen vertex, but was not completely visited -> cycle detected. 
 			// backtrack based on parents to find the complete cycle. 
-			if (color[u] === 1) {
+			if (color[u] === PARTIALLY_VISITED) {
 				cyclenumber++;
 				let cur = p;
 				mark[cur].push(cyclenumber);
@@ -3236,19 +3248,11 @@ class InkBallGame {
 			par[u] = p;
 
 			// partially visited.
-			color[u] = 1;
+			color[u] = PARTIALLY_VISITED;
 			const vertex = vertices[u];
 			if (vertex) {
 
-
-				const { x, y } = vertex.GetPosition();
-				const vis_v = await this.#Points.get(y * this.#iGridWidth + x);
-				vis_v.SetStrokeColor('black');
-				vis_v.SetFillColor('black');
-				vis_v.StrokeWeight(0.2);
-				vis_v.setAttribute("r", 6 / 16);
-				await Sleep(25);
-
+				await vertexImmediatePresenterFn(vertex);
 
 				// simple dfs on graph
 				for (const adj of vertex.adjacents) {
@@ -3262,18 +3266,18 @@ class InkBallGame {
 			}
 
 			// completely visited. 
-			color[u] = 2;
+			color[u] = COMPLETELY_VISITED;
 		};
 
-		const printCycles = async (edges, mark) => {
+		const printCycles = async (edgesCount, mark) => {
 			// push the edges that into the 
 			// cycle adjacency list 
-			for (let e = 0; e < edges; e++) {
+			for (let e = 0; e < edgesCount; e++) {
 				const mark_e = mark[e];
 				if (mark_e !== undefined && mark_e.length > 0) {
 					for (let m = 0; m < mark_e.length; m++) {
 						const found_c = cycles[mark_e[m]];
-						if (found_c !== undefined)
+						if (found_c)
 							found_c.push(e);
 					}
 				}
@@ -3310,9 +3314,7 @@ class InkBallGame {
 					const rand_color = 'var(--bs-teal)';
 
 					//convert to logical space
-					const mapped_verts = cycl.map(c => {
-						return vertices[c].GetPosition();
-					});
+					const mapped_verts = cycl.map(c => vertices[c].GetPosition());
 					//sort clockwise (https://stackoverflow.com/questions/45660743/sort-points-in-counter-clockwise-in-javascript)
 					const cw_sorted_verts = sortPointsClockwise(mapped_verts);
 
@@ -3367,15 +3369,15 @@ class InkBallGame {
 		};
 
 		// store the numbers of cycle
-		let cyclenumber = 0, edges = N;
+		let cyclenumber = 0;
 
 		// call DFS to mark the cycles
 		for (let vind = 0; vind < N; vind++) {
-			await dfs_cycle(vind + 1, vind);//, color, mark, par);
+			await dfs_cycle(vind + 1, vind);
 		}
 
 		// function to print the cycles
-		return await printCycles(edges, mark);
+		return await printCycles(N, mark);
 	}
 
 	// eslint-disable-next-line no-unused-vars
