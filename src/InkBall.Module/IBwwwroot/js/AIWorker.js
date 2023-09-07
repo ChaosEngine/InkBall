@@ -1,17 +1,17 @@
 ﻿import { GraphAI, concaveman } from "./AISource.js";
 import { SvgVml, StatusEnum, LocalLog, LocalError, sortPointsClockwise } from "./shared.js";
-
+import { astar, Graph } from "javascript-astar";
 
 // This is the entry point for our worker
 addEventListener('message', async function (e) {
 	const params = e.data;
 
-	const svgVml = new SvgVml();
-	svgVml.CreateSVGVML(null, null, null, params.boardSize);
-
 	switch (params.operation) {
 		case "BUILD_GRAPH":
 			{
+				const svgVml = new SvgVml();
+				svgVml.CreateSVGVML(null, null, null, params.boardSize);
+
 				//debugger;
 				const lines = params.paths.map(pa => svgVml.DeserializePolyline(pa));
 				const points = new Map();
@@ -31,6 +31,9 @@ addEventListener('message', async function (e) {
 
 		case "CONCAVEMAN":
 			{
+				const svgVml = new SvgVml();
+				svgVml.CreateSVGVML(null, null, null, params.boardSize);
+
 				const points = new Map();
 				params.points.forEach((pt) => {
 					points.set(pt.key, svgVml.DeserializeOval(pt.value));
@@ -54,6 +57,9 @@ addEventListener('message', async function (e) {
 
 		case "MARK_ALL_CYCLES":
 			{
+				const svgVml = new SvgVml();
+				svgVml.CreateSVGVML(null, null, null, params.boardSize);
+
 				const lines = params.paths.map(pa => svgVml.DeserializePolyline(pa));
 				const points = new Map();
 				params.points.forEach((pt) => {
@@ -70,6 +76,20 @@ addEventListener('message', async function (e) {
 					free_human_player_points: result.free_human_player_points,
 					cyclenumber: result.cyclenumber
 				});
+			}
+			break;
+
+		case "ASTAR":
+			{
+				const { arr, start, end } = params;
+				const graphDiagonal = new Graph(arr, { diagonal: true });
+				const from = graphDiagonal.grid[start.y][start.x];
+				const to = graphDiagonal.grid[end.y][end.x];
+				const resultWithDiagonals = astar.search(graphDiagonal, from, to, { heuristic: astar.heuristics.diagonal });
+
+				LocalLog(resultWithDiagonals);
+
+				postMessage({ operation: params.operation, resultWithDiagonals });
 			}
 			break;
 

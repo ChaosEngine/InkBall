@@ -1,5 +1,5 @@
 import concaveman from "concaveman";
-import decomp from "poly-decomp";
+// import decomp from "poly-decomp";
 import { StatusEnum, LocalLog, sortPointsClockwise, /*Sleep,*/ pnpoly } from "./shared.js";
 
 
@@ -296,7 +296,7 @@ class GraphAI {
 }
 
 // eslint-disable-next-line no-unused-vars
-function concavemanTesting() {
+/* function concavemanTesting() {
 	const precision_points = [[484, 480], [676, 363], [944, 342], [678, 41], [286, 237], [758, 215], [752, 117], [282, 492], [609, 262], [129, 252]];
 	const concavity = 2.0, lengthThreshold = 0.0;
 	const concaveman_output = concaveman(precision_points, concavity, lengthThreshold);
@@ -317,6 +317,6 @@ function concavemanTesting() {
 		!convexPolygons || convexPolygons.length <= 0) {
 		LocalLog('decomp or concaveman error');
 	}
-}
+} */
 
 export { concaveman, GraphAI };

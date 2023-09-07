@@ -1,8 +1,8 @@
 /*eslint no-unused-vars: ["error", { "varsIgnorePattern": "InkBallGame" }]*/
-/*global signalR, Graph, astar*/
+/*global signalR*/
 "use strict";
 
-let SHRD, LocalLog, LocalError, StatusEnum, hasDuplicates, pnpoly, sortPointsClockwise, Sleep, depthFirstSearch;
+let SHRD, LocalLog, LocalError, StatusEnum, hasDuplicates, pnpoly, sortPointsClockwise, Sleep, depthFirstSearch/* , astarJS */;
 
 /******** funcs-n-classes ********/
 const CommandKindEnum = Object.freeze({
@@ -454,6 +454,9 @@ async function importAllModulesAsync(gameOptions) {
 		// import depthFirstSearch from "./depthFirstSearch.js";
 		const module = await import("./depthFirstSearch.js");
 		depthFirstSearch = module.default;
+
+		// const module1 = await import("../lib/javascript-astar/astar.js");
+		// astarJS = module1;
 	}
 }
 
@@ -2283,6 +2286,7 @@ class InkBallGame {
 					case "BUILD_GRAPH":
 					case "CONCAVEMAN":
 					case "MARK_ALL_CYCLES":
+					case "ASTAR":
 						//worker.terminate();
 						resolve(data);
 						break;
@@ -2664,14 +2668,32 @@ class InkBallGame {
 			}
 		}
 
-		const graphDiagonal = new Graph(arr, { diagonal: true });
+		// Main thread calc
+		/*
+		const graphDiagonal = new astarJS.Graph(arr, { diagonal: true });
 		const start = graphDiagonal.grid[this.#iLastY][this.#iLastX];
 		const end = graphDiagonal.grid[this.#iLastLastY][this.#iLastLastX];
-		const resultWithDiagonals = astar.search(graphDiagonal, start, end, { heuristic: astar.heuristics.diagonal });
+		const resultWithDiagonals = astarJS.astar.search(graphDiagonal, start, end, { heuristic: astarJS.astar.heuristics.diagonal });
 		if (resultWithDiagonals.length > 0)
 			await displayPointsHelper(resultWithDiagonals, 0);
 
 		LocalLog(resultWithDiagonals);
+		*/
+
+
+
+		//Web Worker calc
+		const data = await this.#RunAIWorker((worker) => {
+			worker.postMessage({
+				operation: "ASTAR",
+				arr,
+				start: { y: this.#iLastY, x: this.#iLastX },
+				end: { y: this.#iLastLastY, x: this.#iLastLastX }
+			});
+		});
+
+		if (data.resultWithDiagonals.length > 0)
+			await displayPointsHelper(data.resultWithDiagonals, 0);
 	}
 
 	async #OnServiceModeRedClick(/* event */) {
