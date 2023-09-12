@@ -21,15 +21,15 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="7.0.10" />
-    <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="7.0.10" />
-    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="7.0.10" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="7.0.11" />
+    <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="7.0.11" />
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="7.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.11" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.4" Condition="$(DefineConstants.Contains('INCLUDE_POSTGRES'))" />
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="7.0.0" Condition="$(DefineConstants.Contains('INCLUDE_MYSQL'))" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.10" Condition="$(DefineConstants.Contains('INCLUDE_SQLSERVER'))" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.11" Condition="$(DefineConstants.Contains('INCLUDE_SQLSERVER'))" />
     <PackageReference Include="Oracle.EntityFrameworkCore" Version="7.21.11" Condition="$(DefineConstants.Contains('INCLUDE_ORACLE'))" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="7.0.10" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="7.0.11" />
     <PackageReference Include="MessagePack" Version="2.5.124" />
   </ItemGroup>
 <!--
