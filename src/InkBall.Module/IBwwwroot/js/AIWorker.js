@@ -1,6 +1,7 @@
 ﻿import { GraphAI, concaveman } from "./AISource.js";
 import { SvgVml, StatusEnum, LocalLog, LocalError, sortPointsClockwise } from "./shared.js";
 import { astar, Graph } from "javascript-astar";
+import * as clustering from "density-clustering";
 
 // This is the entry point for our worker
 addEventListener('message', async function (e) {
@@ -90,6 +91,50 @@ addEventListener('message', async function (e) {
 				LocalLog(resultWithDiagonals);
 
 				postMessage({ operation: params.operation, resultWithDiagonals });
+			}
+			break;
+
+		case "CLUSTERING":
+			{
+				const { dataset, method, numberOfClusters, neighborhoodRadius, minPointsPerCluster } = params;
+				// LocalLog(dataset);
+				switch (method) {
+					case "KMEANS":
+						{
+							const kmeans = new clustering.KMEANS();
+							// parameters: 3 - number of clusters
+							const clusters = kmeans.run(dataset, numberOfClusters);
+
+							LocalLog({ method, clusters });
+							postMessage({ operation: params.operation, clusters });
+						}
+						break;
+					case "OPTICS":
+						{
+							const optics = new clustering.OPTICS();
+							// parameters: 2 - neighborhood radius, 2 - number of points in neighborhood to form a cluster
+							const clusters = optics.run(dataset, neighborhoodRadius, minPointsPerCluster);
+							const plot = optics.getReachabilityPlot();
+
+							LocalLog({ method, clusters, plot });
+							postMessage({ operation: params.operation, clusters, plot });
+						}
+						break;
+					case "DBSCAN":
+						{
+							const dbscan = new clustering.DBSCAN();
+							// parameters: 5 - neighborhood radius, 2 - number of points in neighborhood to form a cluster
+							const clusters = dbscan.run(dataset, neighborhoodRadius, minPointsPerCluster);
+							const noise = dbscan.noise;
+
+							LocalLog({ method, clusters, noise });
+							postMessage({ operation: params.operation, clusters, noise });
+						}
+						break;
+
+					default:
+						throw new Error("bad or no clustering method");
+				}
 			}
 			break;
 

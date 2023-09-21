@@ -2285,6 +2285,7 @@ class InkBallGame {
 					case "CONCAVEMAN":
 					case "MARK_ALL_CYCLES":
 					case "ASTAR":
+					case "CLUSTERING":
 						//worker.terminate();
 						resolve(data);
 						break;
@@ -2694,6 +2695,146 @@ class InkBallGame {
 			await displayPointsHelper(data.resultWithDiagonals, 0);
 	}
 
+	async #OnTestClustering(event) {
+		const loadParamsFromStore = (store) => {
+			const fromStore = JSON.parse(store.getItem("AIClustering"));
+			const obj2Return = {};
+
+			if (fromStore?.x !== undefined && this.#iLastX < 0) {
+				let x = parseInt(fromStore.x);
+				x = (isNaN(x) || x <= 0) ? this.#iLastX : x;
+				obj2Return.x = x;
+			}
+			else
+				obj2Return.x = this.#iLastX;
+
+			if (fromStore?.y !== undefined && this.#iLastY < 0) {
+				let y = parseInt(fromStore.y);
+				y = (isNaN(y) || y <= 0) ? this.#iLastY : y;
+				obj2Return.y = y;
+			}
+			else
+				obj2Return.y = this.#iLastY;
+
+			if (fromStore?.numberOfClusters !== undefined) {
+				let numberOfClusters = parseInt(fromStore.numberOfClusters);
+				numberOfClusters = (isNaN(numberOfClusters) || numberOfClusters <= 0) ? 5 : numberOfClusters;
+				obj2Return.numberOfClusters = numberOfClusters;
+			}
+			else
+				obj2Return.numberOfClusters = 5;
+
+			if (fromStore?.neighborhoodRadius !== undefined) {
+				let neighborhoodRadius = parseInt(fromStore.neighborhoodRadius);
+				neighborhoodRadius = (isNaN(neighborhoodRadius) || neighborhoodRadius <= 0) ? 2 : neighborhoodRadius;
+				obj2Return.neighborhoodRadius = neighborhoodRadius;
+			}
+			else
+				obj2Return.neighborhoodRadius = 2;
+
+			if (fromStore?.minPointsPerCluster !== undefined) {
+				let minPointsPerCluster = parseInt(fromStore.minPointsPerCluster);
+				minPointsPerCluster = (isNaN(minPointsPerCluster) || minPointsPerCluster <= 0) ? 2 : minPointsPerCluster;
+				obj2Return.minPointsPerCluster = minPointsPerCluster;
+			}
+			else
+				obj2Return.minPointsPerCluster = 2;
+
+			if (fromStore?.method !== undefined && ["KMEANS", "OPTICS", "DBSCAN"].includes(fromStore.method)) {
+				obj2Return.method = fromStore.method;
+			}
+			else
+				obj2Return.method = "KMEANS";
+
+			return obj2Return;
+		};
+		const saveParamsToStore = (params, store) => {
+			const toStore = JSON.parse(store.getItem("AIClustering")) || {};
+			let persist = false;
+			if (params.x !== toStore?.x) {
+				toStore.x = params.x;
+				persist = true;
+			}
+			if (params.y !== toStore?.y) {
+				toStore.y = params.y;
+				persist = true;
+			}
+			if (params.numberOfClusters !== toStore?.numberOfClusters) {
+				toStore.numberOfClusters = params.numberOfClusters;
+				persist = true;
+			}
+			if (params.neighborhoodRadius !== toStore?.neighborhoodRadius) {
+				toStore.neighborhoodRadius = params.neighborhoodRadius;
+				persist = true;
+			}
+			if (params.minPointsPerCluster !== toStore?.minPointsPerCluster) {
+				toStore.minPointsPerCluster = params.minPointsPerCluster;
+				persist = true;
+			}
+			if (params.method !== toStore?.method) {
+				toStore.method = params.method;
+				persist = true;
+			}
+
+
+			if (persist === true) {
+				store.setItem("AIClustering", JSON.stringify(toStore));
+			}
+		};
+
+		event.preventDefault();
+		//checks for valid points, color, states
+		//get from local_storage
+		const runParams = loadParamsFromStore(window.localStorage);
+		if (!(runParams.y >= 0 && runParams.x >= 0)) {
+			LocalLog("!!!First you need to click some point with mouse!!!");
+			return;
+		}
+		const point_color = (await this.#Points.get(runParams.y * this.#iGridWidth + runParams.x))?.GetFillColor();
+		const point_status = point_color === this.#COLOR_RED ? StatusEnum.POINT_FREE_RED : StatusEnum.POINT_FREE_BLUE;
+
+		const arr = [];
+		for (const pt of await this.#Points.values()) {
+			if (pt !== undefined && pt.GetFillColor() === point_color && pt.GetStatus() === point_status) {
+				const { x, y } = pt.GetPosition();
+				arr.push([x, y]);
+			}
+		}
+		saveParamsToStore(runParams, window.localStorage);
+
+		//Web Worker calc
+		const data = await this.#RunAIWorker((worker) => {
+			worker.postMessage({
+				operation: "CLUSTERING", dataset: arr,
+				method: runParams.method,
+
+				numberOfClusters: runParams.numberOfClusters,
+				neighborhoodRadius: runParams.neighborhoodRadius,
+				minPointsPerCluster: runParams.minPointsPerCluster
+			});
+		});
+
+		if (data.clusters?.length > 0) {
+			for (const cluster of data.clusters) {
+				const rand_color = RandomColor();
+
+				for (const index of cluster) {
+					const vert = arr[index];
+					const [x, y] = vert;
+					// const pt = document.querySelector(`svg > circle[cx="${x}"][cy="${y}"]`);
+					const pt = await this.#Points.get(y * this.#iGridWidth + x);
+					if (pt) {
+						// pt.setAttribute("data-status", 'test');
+						pt.SetStrokeColor(rand_color);
+						pt.SetFillColor(rand_color);
+						pt.SetZIndex(100);
+						pt.setAttribute("r", 2 / this.#iGridSpacingX);
+					}
+					// await Sleep(50);
+				}
+			}
+		}
+	}
 
 	async #OnTestServiceModeClick(event) {
 		// event.preventDefault();
@@ -2876,6 +3017,8 @@ class InkBallGame {
 						document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestFloodFill.bind(this);
 					if (ddlTestActions.length > i)
 						document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestAStar.bind(this);
+					if (ddlTestActions.length > i)
+						document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestClustering.bind(this);
 
 					document.querySelector(arrServiceModeControls[1]).onclick = this.#OnTestServiceModeClick.bind(this);
 					document.querySelector(arrServiceModeControls[2]).onclick = this.#OnTestServiceModeClick.bind(this);
@@ -2984,7 +3127,7 @@ class InkBallGame {
 		);
 		await game.PrepareDrawing('#screen', '#Player1Name', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw',
 			'#messageInput', '#messagesList', '#sendButton', sLastMoveTimeStampUtcIso, gameOptions.PointsAsJavaScriptArray === null, version,
-			['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints', '#TestFindSurroundablePoints', '#TestDFS2', '#FloodFill', '#AStar'], ['#serviceMenu', '#cbSrvMnuRed', '#cbSrvMnuBlue']);
+			['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints', '#TestFindSurroundablePoints', '#TestDFS2', '#FloodFill', '#AStar', '#Clustering'], ['#serviceMenu', '#cbSrvMnuRed', '#cbSrvMnuBlue']);
 
 		if (gameOptions.PointsAsJavaScriptArray !== null) {
 			await game.StartSignalRConnection(false);
