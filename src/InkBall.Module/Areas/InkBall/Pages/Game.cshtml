@@ -1,4 +1,4 @@
-﻿@page
+@page
 @inject Microsoft.Extensions.Options.IOptions<InkBallOptions> commonUIConfigureOptions
 @inject Microsoft.AspNetCore.Authorization.IAuthorizationService authorization
 @model GameModel
@@ -53,7 +53,9 @@
             <input id="StopAndDraw" type="button" value="Stop and Draw" class='btn btn-warning' disabled />
             <input id="CancelPath" type="button" value="Cancel path" class='btn btn-primary' disabled />
         </div>
-        <fieldset id="serviceMenu" class="col-xs-6 col-sm-auto pb-1 border border-2" data-servicemode="@(bServiceModeVisible)">
+        @if(bServiceModeVisible)
+        {
+        <fieldset id="serviceMenu" class="col-xs-6 col-sm-auto pb-1 border border-2">
             <legend class="mb-0 fs-6 w-auto float-none text-center">Service Menu</legend>
 
             <div id="testArea" class="d-inline dropdown dropend">
@@ -77,6 +79,7 @@
             <input id="cbSrvMnuBlue" type="checkbox" class="btn-check" name="options" autocomplete="off">
             <label class="btn btn-outline-primary btn-sm" for="cbSrvMnuBlue">Place Blue</label>
         </fieldset>
+        }
     </form>
     <div id="status" class="row">
         <div class="col-auto px-0">

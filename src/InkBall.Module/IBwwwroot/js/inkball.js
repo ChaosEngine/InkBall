@@ -2,7 +2,7 @@
 /*global signalR*/
 "use strict";
 
-let SHRD, LocalLog, LocalError, StatusEnum, hasDuplicates, pnpoly, sortPointsClockwise, Sleep, depthFirstSearch/* , astarJS */;
+let SHRD, LocalLog, LocalError, StatusEnum, hasDuplicates, pnpoly, sortPointsClockwise, Sleep, depthFirstSearch;
 
 /******** funcs-n-classes ********/
 const CommandKindEnum = Object.freeze({
@@ -454,15 +454,13 @@ async function importAllModulesAsync(gameOptions) {
 		// import depthFirstSearch from "./depthFirstSearch.js";
 		const module = await import("./depthFirstSearch.js");
 		depthFirstSearch = module.default;
-
-		// const module1 = await import("../lib/javascript-astar/astar.js");
-		// astarJS = module1;
 	}
 }
 
 function RandomColor() {
 	//return 'var(--bs-orange)';
-	return '#' + Math.floor(Math.random() * 16777215).toString(16);
+	// return '#' + Math.floor(Math.random() * 16777215).toString(16);
+	return '#' + ((1 << 24) * Math.random() | 0).toString(16).padStart(6, "0");
 }
 
 /* Old code
@@ -2602,7 +2600,7 @@ class InkBallGame {
 		await this.#DFS2(await this.#BuildGraph(), this.#COLOR_RED);
 	}
 
-	async #OnFloodFill(event) {
+	async #OnTestFloodFill(event) {
 		event.preventDefault();
 
 		const sHumanColor = this.#COLOR_RED, sCPUColor = this.#COLOR_BLUE;
@@ -2619,7 +2617,7 @@ class InkBallGame {
 		await this.#FloodFill(pt, start_color === sHumanColor ? sHumanColor : sCPUColor, 'green');
 	}
 
-	async #OnAStar(event) {
+	async #OnTestAStar(event) {
 		event.preventDefault();
 		//checks for valid points, color, states
 		if (!(this.#iLastY >= 0 && this.#iLastX >= 0 && this.#iLastLastY >= 0 && this.#iLastLastX >= 0 &&
@@ -2696,49 +2694,43 @@ class InkBallGame {
 			await displayPointsHelper(data.resultWithDiagonals, 0);
 	}
 
-	async #OnServiceModeRedClick(/* event */) {
+
+	async #OnTestServiceModeClick(event) {
 		// event.preventDefault();
 
-		if (document.getElementById("cbSrvMnuRed").checked === true) {
-			this.#Screen.onmousedown = this.#OnMouseDownServiceMode.bind(this);
-			this.#Screen.onmousemove = this.#OnMouseMoveServiceMode.bind(this);
-			// this.#Screen.onmouseup = this.#OnMouseUp.bind(this);
-			// this.#Screen.onmouseleave = this.#OnMouseLeave.bind(this);
+		if (event.target.id === "cbSrvMnuRed") {
+			//red service mode clicked
+			if (document.getElementById("cbSrvMnuRed").checked === true) {
+				this.#Screen.onmousedown = this.#OnMouseDownServiceMode.bind(this);
+				this.#Screen.onmousemove = this.#OnMouseMoveServiceMode.bind(this);
 
-			LocalLog('red');
+				LocalLog('red');
+			}
+			else {
+				this.#Screen.onmousedown = this.#OnMouseDown.bind(this);
+				this.#Screen.onmousemove = this.#OnMouseMove.bind(this);
+
+				LocalLog('red-off');
+			}
+
+			document.getElementById("cbSrvMnuBlue").checked = false;
 		}
-		else {
-			this.#Screen.onmousedown = this.#OnMouseDown.bind(this);
-			this.#Screen.onmousemove = this.#OnMouseMove.bind(this);
-			// this.#Screen.onmouseup = this.#OnMouseUp.bind(this);
-			// this.#Screen.onmouseleave = this.#OnMouseLeave.bind(this);
+		else if (event.target.id === "cbSrvMnuBlue") {
+			//blue service mode clicked
+			if (document.getElementById("cbSrvMnuBlue").checked === true) {
+				this.#Screen.onmousedown = this.#OnMouseDownServiceMode.bind(this);
+				this.#Screen.onmousemove = this.#OnMouseMoveServiceMode.bind(this);
 
-			LocalLog('red-off');
+				LocalLog('blue');
+			} else {
+				this.#Screen.onmousedown = this.#OnMouseDown.bind(this);
+				this.#Screen.onmousemove = this.#OnMouseMove.bind(this);
+
+				LocalLog('blue-off');
+			}
+
+			document.getElementById("cbSrvMnuRed").checked = false;
 		}
-
-		document.getElementById("cbSrvMnuBlue").checked = false;
-	}
-
-	async #OnServiceModeBlueClick(/* event */) {
-		// event.preventDefault();
-
-		if (document.getElementById("cbSrvMnuBlue").checked === true) {
-			this.#Screen.onmousedown = this.#OnMouseDownServiceMode.bind(this);
-			this.#Screen.onmousemove = this.#OnMouseMoveServiceMode.bind(this);
-			// this.#Screen.onmouseup = this.#OnMouseUp.bind(this);
-			// this.#Screen.onmouseleave = this.#OnMouseLeave.bind(this);
-
-			LocalLog('blue');
-		} else {
-			this.#Screen.onmousedown = this.#OnMouseDown.bind(this);
-			this.#Screen.onmousemove = this.#OnMouseMove.bind(this);
-			// this.#Screen.onmouseup = this.#OnMouseUp.bind(this);
-			// this.#Screen.onmouseleave = this.#OnMouseLeave.bind(this);
-
-			LocalLog('blue-off');
-		}
-
-		document.getElementById("cbSrvMnuRed").checked = false;
 	}
 
 	/**
@@ -2866,7 +2858,7 @@ class InkBallGame {
 				this.#MessagesRingBufferStore.RestoreMessages(this.#sMsgListSel, this.#iPlayerID, this.#iOtherPlayerId, this.#bIsPlayingWithRed, this.#Player1Name, this.#Player2Name);
 			}
 			else {
-				if (JSON.parse(document.querySelector(arrServiceModeControls[0]).dataset.servicemode.toLowerCase()) === true) {
+				if (document.querySelector(arrServiceModeControls[0]) !== null) {
 					let i = 0;
 					if (ddlTestActions.length > i)
 						document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestBuildCurrentGraph.bind(this);
@@ -2881,12 +2873,12 @@ class InkBallGame {
 					if (ddlTestActions.length > i)
 						document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestDFS2.bind(this);
 					if (ddlTestActions.length > i)
-						document.querySelector(ddlTestActions[i++]).onclick = this.#OnFloodFill.bind(this);
+						document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestFloodFill.bind(this);
 					if (ddlTestActions.length > i)
-						document.querySelector(ddlTestActions[i++]).onclick = this.#OnAStar.bind(this);
+						document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestAStar.bind(this);
 
-					document.querySelector(arrServiceModeControls[1]).onclick = this.#OnServiceModeRedClick.bind(this);
-					document.querySelector(arrServiceModeControls[2]).onclick = this.#OnServiceModeBlueClick.bind(this);
+					document.querySelector(arrServiceModeControls[1]).onclick = this.#OnTestServiceModeClick.bind(this);
+					document.querySelector(arrServiceModeControls[2]).onclick = this.#OnTestServiceModeClick.bind(this);
 				}
 
 				//disable or even delete chat functionality, coz we're not going to chat with CPU bot
@@ -2895,10 +2887,10 @@ class InkBallGame {
 
 				//if (!this.#bIsPlayerActive)
 				//	this.#StartCPUCalculation();
-				this.#AIMethod = localStorage.getItem('AIMethod');
+				this.#AIMethod = window.localStorage.getItem('AIMethod');
 				if (!this.#AIMethod) {
 					this.#AIMethod = 'centroid';
-					localStorage.setItem('AIMethod', this.#AIMethod);
+					window.localStorage.setItem('AIMethod', this.#AIMethod);
 				}
 			}
 

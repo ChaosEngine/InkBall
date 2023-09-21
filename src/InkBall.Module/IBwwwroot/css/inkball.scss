@@ -189,15 +189,6 @@ svg {
 	display: none;
 }
 
-// if data-servicemode just exists hide this element
-[data-servicemode] {
-  display: none;
-}
-// Insensitive comparison of data-servicemode with true/TrUe... and applying block display
-[data-servicemode="True" i] {
-  display: block;
-}
-
 /**********inkgames(list)*********/
 .inkgames {
 	.table-responsive {

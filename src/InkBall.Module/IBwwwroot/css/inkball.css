@@ -135,14 +135,6 @@ svg > polyline {
   display: none;
 }
 
-[data-servicemode] {
-  display: none;
-}
-
-[data-servicemode=True i] {
-  display: block;
-}
-
 /**********inkgames(list)*********/
 .inkgames .table-responsive {
   overflow-y: auto;
