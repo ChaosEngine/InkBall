@@ -2993,13 +2993,13 @@ class InkBallGame {
 			this.#StopAndDraw.onclick = this.#OnStopAndDraw.bind(this);
 			if (false === this.#bIsCPUGame) {
 				document.querySelector(this.#sMsgInputSel).disabled = '';
-				document.getElementById('testArea').textContent = '';
 
 				this.#MessagesRingBufferStore = new MessagesRingBufferStore(window.localStorage, this);
 				this.#MessagesRingBufferStore.RestoreMessages(this.#sMsgListSel, this.#iPlayerID, this.#iOtherPlayerId, this.#bIsPlayingWithRed, this.#Player1Name, this.#Player2Name);
 			}
 			else {
 				if (document.querySelector(arrServiceModeControls[0]) !== null) {
+					document.getElementById('testArea').classList.remove("d-none");
 					let i = 0;
 					if (ddlTestActions.length > i)
 						document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestBuildCurrentGraph.bind(this);
