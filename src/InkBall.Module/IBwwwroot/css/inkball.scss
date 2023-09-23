@@ -1,18 +1,30 @@
 ﻿@charset "UTF-8";
 @import "svg-url";
 
-/**********inkgame*********/
-h3.inkgame {
-	color: darkorange;
-}
-
-p.inkgame {
-	margin-bottom: 0.3em;
-}
-
-@mixin background($cellWidth, $cellHeight, $fill, $stroke) {
+//////////////////////Functions, mixins start//////////////////////
+@mixin generateBackgroundDataUrlSvg($cellWidth, $cellHeight, $strokePrefersLight, $strokePrefersDark) {
 	//https://codepen.io/jakob-e/pen/doMoML processed SVG
-	background-image: svg-url('<svg xmlns="http://www.w3.org/2000/svg"><defs><pattern id="grid" width="#{$cellWidth}" height="#{$cellHeight}" patternUnits="userSpaceOnUse"><rect width="#{$cellWidth}" height="#{$cellHeight}" fill="#{$fill}" stroke="#{$stroke}" stroke-width="0.25"/></pattern></defs><rect width="100%" height="100%" fill="url(#grid)" /></svg>');
+	background-image: svg-url(
+	'<svg xmlns="http://www.w3.org/2000/svg">' +
+		'<style>' +
+			'@media (prefers-color-scheme: light) {' +
+				'#grid rect {' +
+					'stroke: #{$strokePrefersLight}' +
+				'}' +
+			'}' +
+			'@media (prefers-color-scheme: dark) {' +
+				'#grid rect {' +
+					'stroke: #{$strokePrefersDark}' +
+				'}' +
+			'}' +
+		'</style>' +
+		'<defs>' +
+			'<pattern id="grid" width="#{$cellWidth}" height="#{$cellHeight}" patternUnits="userSpaceOnUse">' +
+				'<rect width="#{$cellWidth}" height="#{$cellHeight}" fill="none" stroke-width="0.25"/>' +
+			'</pattern>' +
+		'</defs>' +
+		'<rect width="100%" height="100%" fill="url(#grid)" />' +
+	'</svg>');
 }
 
 @mixin baseBoard($width, $height, $cellWidth, $cellHeight) {
@@ -28,12 +40,22 @@ p.inkgame {
 	}
 }
 
-@mixin irregularBoard($parent, $width, $height, $cellWidth: 15px, $cellHeight: 1em, $fill, $stroke) {
+@mixin irregularBoard($parent, $width, $height, $cellWidth: 15px, $cellHeight: 1em, $strokePrefersLight: gray, $strokePrefersDark: white) {
 	#{$parent}-#{$width}x#{$height} {
-		@include background(15, 16, $fill, $stroke);
+		@include generateBackgroundDataUrlSvg(15, 16, $strokePrefersLight, $strokePrefersDark);
 		background-size: calc(#{$cellWidth} * 5) calc(#{$cellHeight} * 5);
 		@include baseBoard(#{$width}, #{$height}, #{$cellWidth}, #{$cellHeight});
 	}
+}
+//////////////////////Functions, mixins end//////////////////////
+
+/**********inkgame*********/
+h3.inkgame {
+	color: darkorange;
+}
+
+p.inkgame {
+	margin-bottom: 0.3em;
 }
 
 .inkgame {
@@ -58,19 +80,14 @@ p.inkgame {
 
 	@media (prefers-color-scheme: light) {
 		--path_draw: black;
-
-		.boardsize-20x26, .boardsize-40x52, .boardsize-64x64 {
-			@include background(16, 16, 'none', 'gray');
-			background-size: 1em 1em;
-		}
 	}
 	@media (prefers-color-scheme: dark) {
 		--path_draw: white;
+	}
 
-		.boardsize-20x26, .boardsize-40x52, .boardsize-64x64 {
-			@include background(16, 16, 'black', 'white');
-			background-size: 1em 1em;
-		}
+	.boardsize-20x26, .boardsize-40x52, .boardsize-64x64 {
+		@include generateBackgroundDataUrlSvg(16, 16, gray, white);
+		background-size: 1em 1em;
 	}
 
 	& svg#screen {
@@ -177,12 +194,8 @@ svg {
 
 @include board('.boardsize', 40, 52);
 
-// @media (prefers-color-scheme: light) {
-// 	@include irregularBoard('.boardsize', 64, 64, 'none', 'gray');
-// }
-// @media (prefers-color-scheme: dark) {
-// 	@include irregularBoard('.boardsize', 64, 64, 'black', 'white');
-// }
+// 	@include irregularBoard('.boardsize', 64, 64, 'none', 'gray', 'white');
+
 @include board('.boardsize', 64, 64);
 
 [data-otherplayerid="-1"], [data-otherplayerid=""] {

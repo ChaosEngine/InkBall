@@ -97,7 +97,7 @@
             <div class="input-group">
                 <input id="messageInput" type="text" class="form-control" placeholder="Message..." aria-label="Message to send" aria-describedby="sendButton"
                        onkeyup="document.querySelector('#sendButton').disabled = this.value == ''" disabled />
-                <div class="input-group-append">
+                <div class="input-group-append ps-2">
                     <input id="sendButton" type="button" value="Send Message" class="btn btn-secondary" disabled />
                 </div>
             </div>
@@ -107,7 +107,7 @@
 </div>
 
 <environment include="Development">
-    <script defer src='@Url.Content("~/lib/signalr/browser/signalr.min.js")'></script>
+    <script src='@Url.Content("~/lib/signalr/browser/signalr.min.js")'></script>
     @if (useMessagePackBinaryTransport)
     {
         @:<script type='module' src='@Url.Content("~/lib/msgpack5/msgpack5.min.js")'></script>
@@ -115,7 +115,7 @@
     }
 </environment>
 <environment exclude="Development">
-    <script defer src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@7.0.11/dist/browser/signalr.min.js" integrity="sha256-H/DJ2WHsaiUoDASsSUtfz4g83Lg1AeIbM8XyKYdxs5A=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@7.0.11/dist/browser/signalr.min.js" integrity="sha256-H/DJ2WHsaiUoDASsSUtfz4g83Lg1AeIbM8XyKYdxs5A=" crossorigin="anonymous"></script>
     @if (useMessagePackBinaryTransport)
     {
         @:<script type='module' src="https://cdn.jsdelivr.net/npm/msgpack5@6.0.2/dist/msgpack5.min.js" integrity="sha256-AxiBUMElqJXwwKZro5eMMWVExjtxeZSUQ/4nC4oCU2E=" crossorigin="anonymous"></script>
