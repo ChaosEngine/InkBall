@@ -15,7 +15,7 @@
     string lastTimeStampISO = @Model.Game.TimeStamp.ToString("O");
     string hubName = commonUIConfigureOptions.Value.AppRootPath + InkBall.Module.Hubs.GameHub.HubName;
     string IBversion = this.GetType().Assembly.GetName().Version.ToString(4);
-    bool bServiceModeVisible = (await authorization.AuthorizeAsync(User, null, Constants.ServiceModePolicyName)).Succeeded;
+    bool bServiceModeVisible = (await authorization.AuthorizeAsync(User, Model.Game, Constants.ServiceModePolicyName)).Succeeded;
     if (Model.Game.Player2 != null)
     {
         if (Model.Game.GetOtherPlayer().IsLastMoveOverdue() && isThisPlayerActive)

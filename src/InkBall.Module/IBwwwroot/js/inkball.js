@@ -2998,6 +2998,7 @@ class InkBallGame {
 				this.#MessagesRingBufferStore.RestoreMessages(this.#sMsgListSel, this.#iPlayerID, this.#iOtherPlayerId, this.#bIsPlayingWithRed, this.#Player1Name, this.#Player2Name);
 			}
 			else {
+				//Service Menu
 				if (document.querySelector(arrServiceModeControls[0]) !== null) {
 					document.getElementById('testArea').classList.remove("d-none");
 					let i = 0;
