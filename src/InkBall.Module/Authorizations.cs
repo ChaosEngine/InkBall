@@ -165,10 +165,10 @@ namespace InkBall.Module
         }
     }
 
-    public sealed class ServiceMenuForGameAuthorizationHandler : AuthorizationHandler<ServieMenuForGameRequirement, InkBallGame>
+    public sealed class ServiceMenuForGameAuthorizationHandler : AuthorizationHandler<ServiceMenuForGameRequirement, InkBallGame>
     {
         protected override Task HandleRequirementAsync(AuthorizationHandlerContext context,
-                                                       ServieMenuForGameRequirement requirement,
+                                                       ServiceMenuForGameRequirement requirement,
                                                        InkBallGame resource)
         {
             if (resource.CpuOponent == true)
@@ -180,5 +180,5 @@ namespace InkBall.Module
         }
     }
 
-    public sealed class ServieMenuForGameRequirement : IAuthorizationRequirement { }
+    public sealed class ServiceMenuForGameRequirement : IAuthorizationRequirement { }
 }

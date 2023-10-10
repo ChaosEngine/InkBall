@@ -182,7 +182,7 @@ namespace InkBall.Module
                     {
                         policy.RequireAuthenticatedUser()
                             .RequireClaim("role", "InkBallServiceMode")
-                            .AddRequirements(new ServieMenuForGameRequirement());
+                            .AddRequirements(new ServiceMenuForGameRequirement());
                     });
                 }
             });
