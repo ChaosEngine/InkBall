@@ -828,7 +828,6 @@ namespace InkBall.Tests
                 Assert.Equal(InkBallGame.WinStatusEnum.RED_WINS, ((WinCommand)winMessagesgStatus).Status);
                 Assert.Equal(1, ((WinCommand)winMessagesgStatus).WinningPlayerId);
 
-
                 var exception = await Assert.ThrowsAsync<NoGameArgumentNullException>(async () =>
                 {
                     await hub_P2.ClientToServerPath(new InkBallPathViewModel
@@ -840,7 +839,7 @@ namespace InkBall.Tests
                     });
 
                 });
-                Assert.Equal("game == null (Parameter 'dbGame')", exception.Message);
+                Assert.Equal("bad game or player", exception.Message);
             }
         }
 
