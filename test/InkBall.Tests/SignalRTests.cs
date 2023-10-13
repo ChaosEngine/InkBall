@@ -817,16 +817,16 @@ namespace InkBall.Tests
                 });
 
                 //Assert
-                var winMessagesgStatus = await hub_P1.ClientToServerPath(new InkBallPathViewModel
+                var winMessagingStatus = await hub_P1.ClientToServerPath(new InkBallPathViewModel
                 {
                     iGameId = 1,
                     iPlayerId = 1,
                     PointsAsString = "8,24 9,25 8,26 7,25 8,24",
                     OwnedPointsAsString = "8,25"
                 });
-                Assert.IsType<WinCommand>(winMessagesgStatus);
-                Assert.Equal(InkBallGame.WinStatusEnum.RED_WINS, ((WinCommand)winMessagesgStatus).Status);
-                Assert.Equal(1, ((WinCommand)winMessagesgStatus).WinningPlayerId);
+                Assert.IsType<WinCommand>(winMessagingStatus);
+                Assert.Equal(InkBallGame.WinStatusEnum.RED_WINS, ((WinCommand)winMessagingStatus).Status);
+                Assert.Equal(1, ((WinCommand)winMessagingStatus).WinningPlayerId);
 
                 var exception = await Assert.ThrowsAsync<NoGameArgumentNullException>(async () =>
                 {
@@ -964,7 +964,7 @@ namespace InkBall.Tests
                     Context = mockHubCallerContext_P1.Object
                 };
 
-                //Assue all structures (game, user, player, connections, order of moves etc.) are ready and waiting for our user/playee
+                //Assure all structures (game, user, player, connections, order of moves etc.) are ready and waiting for our user/playee
                 //Act
                 //Assert
                 await hub_P1.OnConnectedAsync();
