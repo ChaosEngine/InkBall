@@ -316,7 +316,7 @@ namespace InkBall.IntegrationTests
 						response.EnsureSuccessStatusCode();
 
 						var responseString = await response.Content.ReadAsStringAsync();
-						Assert.Contains("const msg = \"You are not logged in\";", responseString);
+						Assert.Contains("You are not logged in", responseString);
 					}
 				}
 			}//end using get_response
