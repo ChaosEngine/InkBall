@@ -4011,5 +4011,102 @@ class InkBallGame {
 }
 /******** /funcs-n-classes ********/
 
+/**
+ * Home page OnLoad event
+ * @param {string} modelMessage
+ * @param {boolean} bIsCurrentGameOk
+ * @param {string} logoutPath
+ * @param {string} loginPath
+ * @param {string} registerPath
+ */
+function HomeOnLoad(
+	modelMessage,
+	bIsCurrentGameOk,
+	logoutPath,
+	loginPath,
+	registerPath
+) {
 
-export { InkBallGame };
+	const alert = document.querySelector(".alert.alert-dismissible.inkhome");
+	const msg = modelMessage;
+	if (msg !== "") {
+		let addendum;
+		if (msg.toLowerCase().indexOf('exception') !== -1)
+			addendum = 'danger';
+		else if (msg.toLowerCase().indexOf('error') !== -1)
+			addendum = 'danger';
+		else if (msg.toLowerCase().indexOf('warning') !== -1)
+			addendum = 'warning';
+		else
+			addendum = 'success';
+
+		const statusMessageClass = 'alert-' + addendum;
+		alert.classList.add(statusMessageClass);
+		const span = alert.querySelector("span");
+		span.textContent = msg;
+	}
+	else
+		alert.parentNode.removeChild(alert);
+
+
+	const userName = document.querySelector("p.inkhome span").textContent;
+	const bIsLoggedIn = userName !== '' ? true : false;
+
+	const form = document.querySelector(".inkhome form");
+	let innerForm = '';
+	if (bIsLoggedIn) {
+		if (bIsCurrentGameOk) {
+			//continue
+			innerForm += "<a href='Game' class='btn btn-primary btn-lg rounded-top'>Continue</a>";
+		}
+		else {
+			//new game
+			innerForm +=
+				"<input type='submit' name='action' value='New game' class='btn btn-primary btn-lg rounded-top' />" +
+				"<div class='w-100'><select name='GameType' id='GameType' class='form-select' required>" +
+				"<option value='' selected='selected'>Choose game type</option>" +
+				"<optgroup label='Game types'>" +
+				"<option value='0'>First capture wins</option>" +
+				"<option value='1'>First 5 captures wins</option>" +
+				"<option value='2'>First 5 paths wins</option>" +
+				"<option value='3'>Advantage of 5 paths wins</option>" +
+				"</optgroup>" +
+				"</select>" +
+				"<div class='invalid-feedback'>Invalid game type</div></div>" +
+
+				"<div class='w-100'><select name='BoardSize' id='BoardSize' class='form-select' required>" +
+				"<option value='' selected='selected'>Choose board size</option>" +
+				"<optgroup label='Board sizes'>" +
+				"<option value='20'>20 x 26</option>" +
+				"<option value='40'>40 x 52</option>" +
+				"<option value='64'>64 x 64</option>" +
+				"</optgroup>" +
+				"</select>" +
+				"<div class='invalid-feedback'>Invalid board size</div></div>" +
+
+				"<div class='form-check form-switch w-100'>" +
+				"<input type='checkbox' class='form-check-input form-control-input' name='CpuOponent' id='CpuOponent' />" +
+				"<label class='form-check-label' for='CpuOponent'>Play against CPU</label>" +
+				"</div>";
+		}
+
+		innerForm +=
+			"<a href='GamesList' class='btn btn-primary'>Games list</a>" +
+			"<a href='Highscores' class='btn btn-primary'>Best</a>" +
+			"<a href='Rules' class='btn btn-primary'>Game rules</a>" +
+			(logoutPath ? "<input type='submit' name='action' value='Logout' class='btn btn-warning rounded-bottom' formnovalidate='formnovalidate' />" : "");
+	}
+	else {
+		//not logged or bad
+
+		document.querySelector("p.inkhome").textContent = 'You are not logged in ... or allowed 😅';
+
+		innerForm +=
+			"<a href='Rules' class='btn btn-primary rounded-top'>Game rules</a>" +
+			(loginPath ? "<a href='" + loginPath + "' class='btn btn-primary'>Login</a>" : "") +
+			(registerPath ? "<a href='" + registerPath + "' class='btn btn-primary rounded-bottom'>Register</a>" : "");
+	}
+	form.innerHTML += innerForm;
+}
+
+export { InkBallGame, HomeOnLoad };
