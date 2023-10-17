@@ -4013,11 +4013,11 @@ class InkBallGame {
 
 /**
  * Home page OnLoad event
- * @param {string} modelMessage
- * @param {boolean} bIsCurrentGameOk
- * @param {string} logoutPath
- * @param {string} loginPath
- * @param {string} registerPath
+ * @param {string} modelMessage alert message
+ * @param {boolean} bIsCurrentGameOk game status flag
+ * @param {string} logoutPath logout url path
+ * @param {string} loginPath login url path
+ * @param {string} registerPath registerPath url path
  */
 function HomeOnLoad(
 	modelMessage,
