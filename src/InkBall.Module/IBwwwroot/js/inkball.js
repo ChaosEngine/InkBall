@@ -4109,4 +4109,24 @@ function HomeOnLoad(
 	form.innerHTML += innerForm;
 }
 
-export { InkBallGame, HomeOnLoad };
+function ListOnLoad() {
+	const alert = document.querySelector(".alert.inkgames");
+	let msg = document.querySelector(".alert.inkgames > span").textContent;
+	if (msg !== "") {
+		msg = msg.toLowerCase();
+		let addendum;
+		if (msg.indexOf('exception') !== -1 || msg.indexOf('error') !== -1)
+			addendum = 'danger';
+		else if (msg.indexOf('warning') !== -1)
+			addendum = 'warning';
+		else
+			addendum = 'success';
+
+		alert.classList.add('alert-' + addendum);
+		alert.classList.remove('d-none');
+	}
+	else
+		alert.parentNode.removeChild(alert);
+}
+
+export { InkBallGame, HomeOnLoad, ListOnLoad };
