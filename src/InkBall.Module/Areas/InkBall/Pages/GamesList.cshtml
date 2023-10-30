@@ -8,9 +8,7 @@
 
     HtmlHelpers.RenderHeaderSection(this, Url, commonUIConfigureOptions);
 
-    var sExternalUserID = Model.Player.sExternalId;
-    var bIsCurrentGameOk = Model.Game != null;
-    var bCanViewOtherPlayerGames = (await authorization.AuthorizeAsync(User, null, Constants.InkBallViewOtherGamesPolicyName)).Succeeded;
+	var bIsCurrentGameOk = Model.Game != null;
 }
 
 <div class="alert alert-dismissible fade show d-none inkgames" role="alert">
@@ -35,6 +33,8 @@
 			<tbody>
 			@if(Model.GamesList?.Count() > 0)
 			{
+				var sExternalUserID = Model.Player.sExternalId;
+    			var bCanViewOtherPlayerGames = (await authorization.AuthorizeAsync(User, null, Constants.InkBallViewOtherGamesPolicyName)).Succeeded;
 				foreach (var game in Model.GamesList)
 				{
 					<tr>
