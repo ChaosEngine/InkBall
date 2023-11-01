@@ -638,7 +638,7 @@ namespace InkBall.Tests
                 await hub_P2.OnConnectedAsync();
 
                 //Assert
-                var exception = await Assert.ThrowsAsync<ArgumentException>(async () =>
+                var exception = await Assert.ThrowsAsync<ArgumentException>((Func<ValueTask>)(async () =>
                 {
                     await hub_P2.ClientToServerPoint(new InkBallPointViewModel
                     {
@@ -648,10 +648,10 @@ namespace InkBall.Tests
                         iGameId = 1,
                         iPlayerId = 2
                     });
-                });
+                }));
                 Assert.StartsWith("not your turn", exception.Message);
 
-                exception = await Assert.ThrowsAsync<ArgumentException>(async () =>
+                exception = await Assert.ThrowsAsync<ArgumentException>((Func<ValueTask>)(async () =>
                 {
                     await hub_P1.ClientToServerPoint(new InkBallPointViewModel
                     {
@@ -661,14 +661,14 @@ namespace InkBall.Tests
                         iGameId = 1,
                         iPlayerId = 1
                     });
-                });
+                }));
                 Assert.Equal("point already placed (1,1)", exception.Message);
 
 
                 mockHubCallerContext_P1.Verify(clients => clients.Features, Times.AtLeastOnce);
                 mockHubCallerContext_P2.Verify(clients => clients.Features, Times.AtLeastOnce);
 
-                exception = await Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () =>
+                exception = await Assert.ThrowsAsync<ArgumentOutOfRangeException>((Func<ValueTask>)(async () =>
                 {
                     await hub_P1.ClientToServerPath(new InkBallPathViewModel
                     {
@@ -677,10 +677,10 @@ namespace InkBall.Tests
                         PointsAsString = "80,24 26,25 33,67 55,40 80,24",
                         OwnedPointsAsString = "100,100"
                     });
-                });
+                }));
                 Assert.Contains("points are not stacked one after the other", exception.Message);
 
-                exception = await Assert.ThrowsAsync<ArgumentException>(async () =>
+                exception = await Assert.ThrowsAsync<ArgumentException>((Func<ValueTask>)(async () =>
                 {
                     await hub_P1.ClientToServerPath(new InkBallPathViewModel
                     {
@@ -689,10 +689,10 @@ namespace InkBall.Tests
                         PointsAsString = "80,24 26,25 33,67 foo 55,40 bar, 80,24",
                         OwnedPointsAsString = "100,100"
                     });
-                });
+                }));
                 Assert.Contains("bad characters in path", exception.Message);
 
-                exception = await Assert.ThrowsAsync<ArgumentException>(async () =>
+                exception = await Assert.ThrowsAsync<ArgumentException>((Func<ValueTask>)(async () =>
                 {
                     //path comprising points
                     var p1_pts = new int[5, 2] { { 8, 24 }, { 9, 25 }, { 8, 26 }, { 7, 25 }, { 8, 24 } };
@@ -728,7 +728,7 @@ namespace InkBall.Tests
                         OwnedPointsAsString = "8,bad is bad25"
                     });
                     //failing test
-                });
+                }));
                 Assert.Contains("bad characters in path", exception.Message);
             }
         }
@@ -828,7 +828,7 @@ namespace InkBall.Tests
                 Assert.Equal(InkBallGame.WinStatusEnum.RED_WINS, ((WinCommand)winMessagingStatus).Status);
                 Assert.Equal(1, ((WinCommand)winMessagingStatus).WinningPlayerId);
 
-                var exception = await Assert.ThrowsAsync<NoGameArgumentNullException>(async () =>
+                var exception = await Assert.ThrowsAsync<NoGameArgumentNullException>((Func<ValueTask>)(async () =>
                 {
                     await hub_P2.ClientToServerPath(new InkBallPathViewModel
                     {
@@ -838,7 +838,7 @@ namespace InkBall.Tests
                         OwnedPointsAsString = "12,25"
                     });
 
-                });
+                }));
                 Assert.Equal("bad game or player", exception.Message);
             }
         }
