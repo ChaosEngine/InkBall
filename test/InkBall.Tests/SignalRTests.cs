@@ -394,7 +394,7 @@ namespace InkBall.Tests
                         Status = InkBallPoint.StatusEnum.POINT_FREE_BLUE,
                     });
                 }
-                await Task.Delay(TimeSpan.FromSeconds(4));//wait before next action
+                await Task.Delay(TimeSpan.FromMicroseconds(200));//wait before next action
                 var pt = await hub_P1.ClientToServerPoint(new InkBallPointViewModel
                 {
                     iGameId = 1,
@@ -405,7 +405,8 @@ namespace InkBall.Tests
                 });
                 Assert.NotNull(pt.TimeStamp);
                 //verify last action timestamp it not from previous action
-                Assert.Equal(DateTime.UtcNow, pt.TimeStamp.Value, TimeSpan.FromSeconds(2));
+                var utc_now = DateTime.UtcNow;
+				Assert.Equal(utc_now, pt.TimeStamp.Value, TimeSpan.FromSeconds(1));
                 pt = await hub_P2.ClientToServerPoint(new InkBallPointViewModel
                 {
                     iGameId = 1,
@@ -417,7 +418,7 @@ namespace InkBall.Tests
                 Assert.NotNull(pt.TimeStamp);
 
                 //Act
-                await Task.Delay(TimeSpan.FromSeconds(4));//wait before next action
+                await Task.Delay(TimeSpan.FromMilliseconds(200));//wait before next action
                 var dto = await hub_P1.ClientToServerPath(new InkBallPathViewModel
                 {
                     iGameId = 1,
@@ -428,7 +429,8 @@ namespace InkBall.Tests
                 //Assert
                 Assert.IsType<InkBallPathViewModel>(dto);
                 Assert.NotNull(((InkBallPathViewModel)dto).TimeStamp);
-                Assert.Equal(DateTime.UtcNow, ((InkBallPathViewModel)dto).TimeStamp.Value, TimeSpan.FromSeconds(2));
+                utc_now = DateTime.UtcNow;
+				Assert.Equal(utc_now, ((InkBallPathViewModel)dto).TimeStamp.Value, TimeSpan.FromSeconds(1));
             }
         }
 
