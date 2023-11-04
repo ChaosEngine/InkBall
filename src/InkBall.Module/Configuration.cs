@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.StaticFiles;
@@ -80,44 +81,44 @@ namespace InkBall.Module
 
         public void PostConfigure(string name, StaticFileOptions options)
         {
-            #region Old code
+			#region Old code
 
-            //name = name ?? throw new ArgumentNullException(nameof(name));
-            //options = options ?? throw new ArgumentNullException(nameof(options));
+			//name = name ?? throw new ArgumentNullException(nameof(name));
+			//options = options ?? throw new ArgumentNullException(nameof(options));
 
-            // Basic initialization in case the options weren't initialized by any other component
-            // options.ContentTypeProvider = options.ContentTypeProvider ?? new FileExtensionContentTypeProvider();
-            // if (options.FileProvider == null && WebRootFileProvider == null)
-            // {
-            // 	throw new InvalidOperationException("Missing FileProvider.");
-            // }
+			// Basic initialization in case the options weren't initialized by any other component
+			// options.ContentTypeProvider = options.ContentTypeProvider ?? new FileExtensionContentTypeProvider();
+			// if (options.FileProvider == null && WebRootFileProvider == null)
+			// {
+			// 	throw new InvalidOperationException("Missing FileProvider.");
+			// }
 
-            // options.FileProvider = options.FileProvider ?? WebRootFileProvider;
+			// options.FileProvider = options.FileProvider ?? WebRootFileProvider;
 
-            // if (OnStaticFilePrepareResponse != null)
-            // 	options.OnPrepareResponse = OnStaticFilePrepareResponse;
-            // else
-            // {
-            // 	options.OnPrepareResponse = (ctx) =>
-            // 	{
-            // 		var path = ctx.Context.Request.Path.Value;
-            // 		if (path.StartsWith("/IB/js/AIWorker"))
-            // 		{
-            // 			//https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Embedder-Policy
-            // 			//https://web.dev/coop-coep/
-            // 			ctx.Context.Response.Headers.Add("Cross-Origin-Embedder-Policy", "require-corp");
-            // 			ctx.Context.Response.Headers.Add("Cross-Origin-Opener-Policy", "same-origin");
-            // 		}
-            // 	};
-            // }
+			// if (OnStaticFilePrepareResponse != null)
+			// 	options.OnPrepareResponse = OnStaticFilePrepareResponse;
+			// else
+			// {
+			// 	options.OnPrepareResponse = (ctx) =>
+			// 	{
+			// 		var path = ctx.Context.Request.Path.Value;
+			// 		if (path.StartsWith("/IB/js/AIWorker"))
+			// 		{
+			// 			//https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Embedder-Policy
+			// 			//https://web.dev/coop-coep/
+			// 			ctx.Context.Response.Headers.Append("Cross-Origin-Embedder-Policy", "require-corp");
+			// 			ctx.Context.Response.Headers.Append("Cross-Origin-Opener-Policy", "same-origin");
+			// 		}
+			// 	};
+			// }
 
-            // Add our provider
-            // var filesProvider = new ManifestEmbeddedFileProvider(GetType().Assembly, WwwRoot);
-            // var filesProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(
+			// Add our provider
+			// var filesProvider = new ManifestEmbeddedFileProvider(GetType().Assembly, WwwRoot);
+			// var filesProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(
 
-            #endregion Old code
-        }
-    }
+			#endregion Old code
+		}
+	}
 
     public static class CommonUIServiceCollectionExtensions
     {
@@ -218,8 +219,8 @@ namespace InkBall.Module
                     {
                         //https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Embedder-Policy
                         //https://web.dev/coop-coep/
-                        ctx.Context.Response.Headers.Add("Cross-Origin-Embedder-Policy", "require-corp");
-                        ctx.Context.Response.Headers.Add("Cross-Origin-Opener-Policy", "same-origin");
+                        ctx.Context.Response.Headers.Append("Cross-Origin-Embedder-Policy", "require-corp");
+                        ctx.Context.Response.Headers.Append("Cross-Origin-Opener-Policy", "same-origin");
                     }
                 }
             });

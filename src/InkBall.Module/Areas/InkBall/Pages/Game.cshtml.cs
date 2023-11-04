@@ -4,6 +4,7 @@ using InkBall.Module.Hubs;
 using InkBall.Module.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Html;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -58,8 +59,8 @@ namespace InkBall.Module.Pages
 				GameHub.WebSocketAllowedOrigins.AddOrUpdate($"{Request.Scheme}://{Request.Host}");
 
 			//https://developer.chrome.com/blog/enabling-shared-array-buffer/
-			Response.Headers.Add("Cross-Origin-Embedder-Policy", "require-corp");
-			Response.Headers.Add("Cross-Origin-Opener-Policy", "same-origin");
+			Response.Headers.Append("Cross-Origin-Embedder-Policy", "require-corp");
+			Response.Headers.Append("Cross-Origin-Opener-Policy", "same-origin");
 
 			var token = HttpContext.RequestAborted;
 
@@ -93,8 +94,8 @@ namespace InkBall.Module.Pages
 				GameHub.WebSocketAllowedOrigins.AddOrUpdate($"{Request.Scheme}://{Request.Host}");
 
 			//https://developer.chrome.com/blog/enabling-shared-array-buffer/
-			Response.Headers.Add("Cross-Origin-Embedder-Policy", "require-corp");
-			Response.Headers.Add("Cross-Origin-Opener-Policy", "same-origin");
+			Response.Headers.Append("Cross-Origin-Embedder-Policy", "require-corp");
+			Response.Headers.Append("Cross-Origin-Opener-Policy", "same-origin");
 
 
 			if (!ModelState.IsValid)//model.GameID <= 0
