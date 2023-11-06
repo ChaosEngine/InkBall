@@ -166,7 +166,8 @@ namespace InkBall.Module.Model
 
 				entity.Property(e => e.bIsPlayer1Active)
 					.HasColumnName("bIsPlayer1Active")
-					.HasDefaultValue(true);
+					.HasDefaultValue(true)
+					.HasSentinel(false);
 
 				entity.Property(e => e.CreateTime).HasColumnType("datetime");
 
@@ -360,7 +361,8 @@ namespace InkBall.Module.Model
 
 				entity.Property(e => e.Status)
 					.HasDefaultValue(Module.Model.InkBallPoint.StatusEnum.POINT_FREE)
-					.HasConversion(new EnumToNumberConverter<InkBallPoint.StatusEnum, int>());
+					.HasConversion(new EnumToNumberConverter<InkBallPoint.StatusEnum, int>())
+					.HasSentinel(Module.Model.InkBallPoint.StatusEnum.POINT_FREE);
 
 				entity.HasOne(d => d.EnclosingPath)
 					.WithMany(p => p.InkBallPoint)
