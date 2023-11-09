@@ -7,6 +7,7 @@
     <LangVersion>latest</LangVersion>
     <Version>1.0.1.22</Version>
     <Configurations>Debug;Release;Oracle</Configurations>
+    <PublishTrimmed>true</PublishTrimmed>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
