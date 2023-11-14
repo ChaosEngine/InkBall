@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Http;
 using static InkBall.Module.Model.InkBallGame;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.Options;
 
 namespace InkBall.Module.Model
 {
@@ -44,11 +45,6 @@ namespace InkBall.Module.Model
 
 		internal static readonly GameStateEnum[] ActiveVisibleGameStates =
 			new GameStateEnum[] { GameStateEnum.ACTIVE, GameStateEnum.AWAITING };
-
-		static readonly JsonSerializerOptions _ignoreDefaultsSerializerOptions = new JsonSerializerOptions
-		{
-			DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault
-		};
 
 		internal static string TimeStampDefaultValueFromProvider(string activeProvider)
 		{
@@ -125,13 +121,13 @@ namespace InkBall.Module.Model
 		}
 
 		/*protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            if (!optionsBuilder.IsConfigured)
-            {
+		{
+			if (!optionsBuilder.IsConfigured)
+			{
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. See http://go.microsoft.com/fwlink/?LinkId=723263 for guidance on storing connection strings.
-                optionsBuilder.UseMySql("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", new MySqlServerVersion(new Version(8, 0, 21)));
-            }
-        }*/
+				optionsBuilder.UseMySql("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", new MySqlServerVersion(new Version(8, 0, 21)));
+			}
+		}*/
 
 		#endregion Helpers
 
@@ -218,11 +214,11 @@ namespace InkBall.Module.Model
 					.HasForeignKey(d => d.iPlayer2Id)
 					.HasConstraintName("InkBallGame_ibfk_2");
 
-                if (Database.ProviderName == "Microsoft.EntityFrameworkCore.SqlServer")
-                    entity.ToTable(t => t.HasTrigger(
-                        $"{nameof(Module.Model.InkBallGame)}_update_{nameof(Module.Model.InkBallGame.TimeStamp)}_Trigger")
-                    );
-            });
+				if (Database.ProviderName == "Microsoft.EntityFrameworkCore.SqlServer")
+					entity.ToTable(t => t.HasTrigger(
+						$"{nameof(Module.Model.InkBallGame)}_update_{nameof(Module.Model.InkBallGame.TimeStamp)}_Trigger")
+					);
+			});
 
 			modelBuilder.Entity<InkBallPath>(entity =>
 			{
@@ -319,10 +315,10 @@ namespace InkBall.Module.Model
 					.HasConversion(TimeStampValueConverterFromProvider(Database.ProviderName));
 
 
-                if (Database.ProviderName == "Microsoft.EntityFrameworkCore.SqlServer")
-                    entity.ToTable(t => t.HasTrigger(
-                        $"{nameof(Module.Model.InkBallPlayer)}_update_{nameof(Module.Model.InkBallPlayer.TimeStamp)}_Trigger")
-                    );
+				if (Database.ProviderName == "Microsoft.EntityFrameworkCore.SqlServer")
+					entity.ToTable(t => t.HasTrigger(
+						$"{nameof(Module.Model.InkBallPlayer)}_update_{nameof(Module.Model.InkBallPlayer.TimeStamp)}_Trigger")
+					);
 
 				entity.HasData(new InkBallPlayer
 				{
@@ -698,7 +694,7 @@ namespace InkBall.Module.Model
 			Action<InkBallPath, InkBallPathViewModel> jsonPathHandler,
 			Action<InkBallPath, InkBallPathViewModel> createPathPointCollectionHandler)
 		{
-			var from_json = JsonSerializer.Deserialize<InkBallPathViewModel>(path.PointsAsString);
+			var from_json = JsonSerializer.Deserialize(path.PointsAsString, InkBallPathViewModel_Context.Default.InkBallPathViewModel);
 
 			jsonPathHandler(path, from_json);
 
@@ -736,7 +732,7 @@ namespace InkBall.Module.Model
 				fromJson.iPlayerId = path.iPlayerId;
 
 				//var reserialized = JsonSerializer.Serialize(fromJson, new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull });
-				var reserialized = JsonSerializer.Serialize(fromJson, _ignoreDefaultsSerializerOptions);
+				var reserialized = JsonSerializer.Serialize(fromJson, InkBallPathViewModel_Context.Default.InkBallPathViewModel);
 
 				path.PointsAsString = reserialized;
 			}
