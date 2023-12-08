@@ -17,6 +17,7 @@ using static InkBall.Module.Model.InkBallGame;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Options;
+using System.Diagnostics.CodeAnalysis;
 
 namespace InkBall.Module.Model
 {
@@ -37,6 +38,7 @@ namespace InkBall.Module.Model
 		public virtual DbSet<InkBallPlayer> InkBallPlayer { get; set; }
 		public virtual DbSet<InkBallPoint> InkBallPoint { get; set; }
 
+        [RequiresUnreferencedCode("Contains trimming unsafe calls")]
 		public GamesContext(DbContextOptions<GamesContext> options) : base(options)
 		{
 		}

@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.SignalR;
 using InkBall.Module.Hubs;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Identity;
+using System.Diagnostics.CodeAnalysis;
 
 namespace InkBall.Module.Pages
 {
@@ -36,6 +37,7 @@ namespace InkBall.Module.Pages
 			// Message = "start1ng info end0";
 		}
 
+        [RequiresUnreferencedCode("Contains dynamic reflection savvy code")]
 		public async Task<IActionResult> OnPostAsync(string action, string gameType, InkBallGame.BoardSizeEnum boardSize,
 			string cpuOponent)
 		{
