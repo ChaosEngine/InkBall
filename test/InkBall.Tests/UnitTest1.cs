@@ -11,11 +11,11 @@ namespace InkBall.Tests
 {
 	public class UnitTest1
 	{
-		public class PathValidationTheoryData : TheoryData<ValueTuple<(int, int)[], string, (int, int)[]>>
+		public class PathValidationTheoryData : TheoryData<((int x, int y)[] coords, string expectedCoords, (int x, int y)[] ownedPoints)>
 		{
-			public PathValidationTheoryData(IEnumerable<ValueTuple<(int, int)[], string, (int, int)[]>> data)
+			public PathValidationTheoryData(IEnumerable<((int x, int y)[] coords, string expectedCoords, (int x, int y)[] ownedPoints)> data)
 			{
-				foreach (ValueTuple<(int, int)[], string, (int, int)[]> t1 in data)
+				foreach (((int x, int y)[] coords, string expectedCoords, (int x, int y)[] ownedPoints) t1 in data)
 				{
 					Add(t1);
 				}
@@ -210,33 +210,33 @@ namespace InkBall.Tests
 		* 4 
 		* 5
 		 */
-		public static PathValidationTheoryData CorrectPathAndOwnedPointsData => new PathValidationTheoryData(new ValueTuple<(int, int)[], string, (int, int)[]>[]
+		public static PathValidationTheoryData CorrectPathAndOwnedPointsData => new PathValidationTheoryData(new ((int x, int y)[] coords, string expectedCoords, (int x, int y)[] ownedPoints)[]
 		{
 			//path A
-			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(1,1),(1,2),(1,3),(1,4),(2,4),(3,4),(3,3),(3,2),(3,1),(2,1),(1,1)},"1,1 1,2 1,3 1,4 2,4 3,4 3,3 3,2 3,1 2,1 1,1",new[]{(2,2),(2,3)}),
+			new(new[]{(1,1),(1,2),(1,3),(1,4),(2,4),(3,4),(3,3),(3,2),(3,1),(2,1),(1,1)},"1,1 1,2 1,3 1,4 2,4 3,4 3,3 3,2 3,1 2,1 1,1",new[]{(2,2),(2,3)}),
 			//path B
-			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(1,1),(2,1),(3,1),(4,1),(4,2),(4,3),(3,3),(2,3),(1,3),(1,2),(1,1)},"1,1 2,1 3,1 4,1 4,2 4,3 3,3 2,3 1,3 1,2 1,1",new[]{(2,2),(3,2)}),
+			new(new[]{(1,1),(2,1),(3,1),(4,1),(4,2),(4,3),(3,3),(2,3),(1,3),(1,2),(1,1)},"1,1 2,1 3,1 4,1 4,2 4,3 3,3 2,3 1,3 1,2 1,1",new[]{(2,2),(3,2)}),
 			//others
-			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(10,14),(11,14),(12,15),(11,16),(10,16),(9,15),(10,14)},"10,14 11,14 12,15 11,16 10,16 9,15 10,14",new[]{(10,15),(11,15)}),
-			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(10,4),(9,5),(9,6),(10,7),(11,6),(11,5),(10,4)},"10,4 9,5 9,6 10,7 11,6 11,5 10,4",new[]{(10,5),(10,6)}),
+			new(new[]{(10,14),(11,14),(12,15),(11,16),(10,16),(9,15),(10,14)},"10,14 11,14 12,15 11,16 10,16 9,15 10,14",new[]{(10,15),(11,15)}),
+			new(new[]{(10,4),(9,5),(9,6),(10,7),(11,6),(11,5),(10,4)},"10,4 9,5 9,6 10,7 11,6 11,5 10,4",new[]{(10,5),(10,6)}),
 		});
-		public static PathValidationTheoryData IncorrectPathAndOwnedPointsData => new PathValidationTheoryData(new ValueTuple<(int, int)[], string, (int, int)[]>[]
+		public static PathValidationTheoryData IncorrectPathAndOwnedPointsData => new PathValidationTheoryData(new ((int x, int y)[] coords, string expectedCoords, (int x, int y)[] ownedPoints)[]
 		{
-			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(1,1),(1,2),(1,5)},"1,1 1,2 1,5",new[]{(1,2)}),
-			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(1,1),(3,1)},"1,1 3,1",new[]{(1,2)}),
-			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(1,1),(1,2),(1,3),(1,8)},"1,1 1,2 1,3 1,8",new[]{(1,2)}),
-			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(1,1),(2,1),(3,1),(4,1)},"1,1 2,1 3,1 4,1",new[]{(1,2)}),
-			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(-1,13),(332,51),(34,1)},"blablabla",new[]{(1,2)}),
-			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(-1,13),(332,51),(34,1)},"blablabla 43 ddfg rgfd",new[]{(1,2)}),
-			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(1,1),(2,1),(3,1),(4,1),(4,2),(4,3),(3,3),(2,3),(1,3),(1,2),(1,1)},"1,1 2,1 3,1 4,1 4,2 4,3 <script>alert(1)</script> 3,3 2,3 1,3 1,2 1,1",new[]{(4,2)}),
-			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(10,4),(9,5),(9,6),(10,7),(11,6),(11,5),(10,4)},"10,4 9,5 9,6 10,7 11,6 11,5 10,4a",new[]{(10,5),(10,6)}),
+			new(new[]{(1,1),(1,2),(1,5)},"1,1 1,2 1,5",new[]{(1,2)}),
+			new(new[]{(1,1),(3,1)},"1,1 3,1",new[]{(1,2)}),
+			new(new[]{(1,1),(1,2),(1,3),(1,8)},"1,1 1,2 1,3 1,8",new[]{(1,2)}),
+			new(new[]{(1,1),(2,1),(3,1),(4,1)},"1,1 2,1 3,1 4,1",new[]{(1,2)}),
+			new(new[]{(-1,13),(332,51),(34,1)},"blablabla",new[]{(1,2)}),
+			new(new[]{(-1,13),(332,51),(34,1)},"blablabla 43 ddfg rgfd",new[]{(1,2)}),
+			new(new[]{(1,1),(2,1),(3,1),(4,1),(4,2),(4,3),(3,3),(2,3),(1,3),(1,2),(1,1)},"1,1 2,1 3,1 4,1 4,2 4,3 <script>alert(1)</script> 3,3 2,3 1,3 1,2 1,1",new[]{(4,2)}),
+			new(new[]{(10,4),(9,5),(9,6),(10,7),(11,6),(11,5),(10,4)},"10,4 9,5 9,6 10,7 11,6 11,5 10,4a",new[]{(10,5),(10,6)}),
 		});
-		public static PathValidationTheoryData BadOwnedPointsData => new PathValidationTheoryData(new ValueTuple<(int, int)[], string, (int, int)[]>[]
+		public static PathValidationTheoryData BadOwnedPointsData => new PathValidationTheoryData(new ((int x, int y)[] coords, string expectedCoords, (int x, int y)[] ownedPoints)[]
 		{
-			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(1,1),(1,2),(1,3),(1,4),(2,4),(3,4),(3,3),(3,2),(3,1),(2,1),(1,1)},"1,1 1,2 1,3 1,4 2,4 3,4 3,3 3,2 3,1 2,1 1,1",new[]{(26,26)}),
-			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(1,1),(2,1),(3,1),(4,1),(4,2),(4,3),(3,3),(2,3),(1,3),(1,2),(1,1)},"1,1 2,1 3,1 4,1 4,2 4,3 3,3 2,3 1,3 1,2 1,1",new[]{(8,8)}),
-			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(1,1),(2,1),(3,1),(4,1),(4,2),(4,3),(3,3),(2,3),(1,3),(1,2),(1,1)},"1,1 2,1 3,1 4,1 4,2 4,3 3,3 2,3 1,3 1,2 1,1",new[]{(1,1)}),
-			new ValueTuple<(int, int)[], string,(int, int)[]>(new[]{(1,1),(2,1),(3,1),(4,1),(4,2),(4,3),(3,3),(2,3),(1,3),(1,2),(1,1)},"1,1 2,1 3,1 4,1 4,2 4,3 3,3 2,3 1,3 1,2 1,1",new[]{(4,2)}),
+			new(new[]{(1,1),(1,2),(1,3),(1,4),(2,4),(3,4),(3,3),(3,2),(3,1),(2,1),(1,1)},"1,1 1,2 1,3 1,4 2,4 3,4 3,3 3,2 3,1 2,1 1,1",new[]{(26,26)}),
+			new(new[]{(1,1),(2,1),(3,1),(4,1),(4,2),(4,3),(3,3),(2,3),(1,3),(1,2),(1,1)},"1,1 2,1 3,1 4,1 4,2 4,3 3,3 2,3 1,3 1,2 1,1",new[]{(8,8)}),
+			new(new[]{(1,1),(2,1),(3,1),(4,1),(4,2),(4,3),(3,3),(2,3),(1,3),(1,2),(1,1)},"1,1 2,1 3,1 4,1 4,2 4,3 3,3 2,3 1,3 1,2 1,1",new[]{(1,1)}),
+			new(new[]{(1,1),(2,1),(3,1),(4,1),(4,2),(4,3),(3,3),(2,3),(1,3),(1,2),(1,1)},"1,1 2,1 3,1 4,1 4,2 4,3 3,3 2,3 1,3 1,2 1,1",new[]{(4,2)}),
 		});
 
 		[Theory]
@@ -255,7 +255,7 @@ namespace InkBall.Tests
 			for (int i = 0; i < len; i++)
 			{
 				Assert.IsType<(int x, int y)>(parameters.coords[i]);
-				(int x, int y) coords = ((int, int))parameters.coords[i];
+				(int x, int y) coords = parameters.coords[i];
 
 				var ponit2verify = path.InkBallPoint.ElementAtOrDefault(i);
 				//Assert
