@@ -7,23 +7,18 @@
 	background-image: svg-url(
 	'<svg xmlns="http://www.w3.org/2000/svg">' +
 		'<style>' +
-			'@media (prefers-color-scheme: light) {' +
-				'#grid rect {' +
-					'stroke: #{$strokePrefersLight}' +
-				'}' +
-			'}' +
-			'@media (prefers-color-scheme: dark) {' +
-				'#grid rect {' +
-					'stroke: #{$strokePrefersDark}' +
+			'@media(prefers-color-scheme:dark){' +
+				'#grp{' +
+					'stroke:#{$strokePrefersDark}' +
 				'}' +
 			'}' +
 		'</style>' +
 		'<defs>' +
-			'<pattern id="grid" width="#{$cellWidth}" height="#{$cellHeight}" patternUnits="userSpaceOnUse">' +
+			'<pattern id="grp" width="#{$cellWidth}" height="#{$cellHeight}" stroke="#{$strokePrefersLight}" patternUnits="userSpaceOnUse">' +
 				'<rect width="#{$cellWidth}" height="#{$cellHeight}" fill="none" stroke-width="0.25"/>' +
 			'</pattern>' +
 		'</defs>' +
-		'<rect width="100%" height="100%" fill="url(#grid)" />' +
+		'<rect width="100%" height="100%" fill="url(#grp)"/>' +
 	'</svg>');
 }
 
@@ -113,78 +108,76 @@ p.inkgame {
 	}
 }
 
-svg {
-	&>circle {
-		///
-		/// Those r: XXX need to go along with package.json overrides for gulp-clean-css to use clean-css: >5* version
-		/// https://docs.npmjs.com/cli/v8/configuring-npm/package-json#overrides
-		/// "overrides": {
-		/// 	"clean-css": "5.3.1"
-		/// }
-		///
-		&[data-status="POINT_FREE_RED"] {
-			fill: var(--redish);
-			r: var(--point_radius);
-		}
-
-		&[data-status="POINT_FREE_BLUE"] {
-			fill: var(--bluish);
-			r: var(--point_radius);
-		}
-
-		&[data-status="POINT_OWNED_BY_RED"] {
-			// fill: lightskyblue;
-			fill: var(--owned_by_red);
-			r: var(--point_radius);
-		}
-
-		&[data-status="POINT_OWNED_BY_BLUE"] {
-			// fill: lightpink;
-			fill: var(--owned_by_blue);
-			r: var(--point_radius);
-		}
-
-		&[data-status="POINT_IN_PATH"] {
-			// fill: lightgray;
-			r: var(--point_radius);
-		}
-
-		&[data-status="POINT_STARTING"] {
-			fill: yellow;
-			r: 0.5px;
-		}
-		
-		//mouse pointer/cursor style
-		&[data-status="MOUSE_POINTER"] {
-			/* fill: transparent; */
-			stroke: rgba(128, 255, 0, 0.5);
-			stroke-width: 0.06em;
-			r: var(--point_radius);
-		}
-
-		//test points
-		// &[data-status="POINT_FREE"] {
-		// 	// fill: transparent;
-		// 	// stroke: gray;
-		// 	stroke-width: 0.1em;
-		// }
+circle {
+	///
+	/// Those r: XXX need to go along with package.json overrides for gulp-clean-css to use clean-css: >5* version
+	/// https://docs.npmjs.com/cli/v8/configuring-npm/package-json#overrides
+	/// "overrides": {
+	/// 	"clean-css": "5.3.1"
+	/// }
+	///
+	&[data-status="POINT_FREE_RED"] {
+		fill: var(--redish);
+		r: var(--point_radius);
 	}
 
-	&>polyline {
-		stroke-width: 0.1875px;
-		fill-opacity: 0.1;
-		stroke-linecap: round;
-		stroke-linejoin: round;
+	&[data-status="POINT_FREE_BLUE"] {
+		fill: var(--bluish);
+		r: var(--point_radius);
+	}
 
-		@media (prefers-reduced-motion: no-preference) {
-			&[data-id="0"] {
-				stroke-dasharray: 0.7;
-				animation: dash 5s infinite linear reverse;
-			}
-			@keyframes dash {
-				to {
-					stroke-dashoffset: 10;
-				}
+	&[data-status="POINT_OWNED_BY_RED"] {
+		// fill: lightskyblue;
+		fill: var(--owned_by_red);
+		r: var(--point_radius);
+	}
+
+	&[data-status="POINT_OWNED_BY_BLUE"] {
+		// fill: lightpink;
+		fill: var(--owned_by_blue);
+		r: var(--point_radius);
+	}
+
+	&[data-status="POINT_IN_PATH"] {
+		// fill: lightgray;
+		r: var(--point_radius);
+	}
+
+	&[data-status="POINT_STARTING"] {
+		fill: yellow;
+		r: 0.5px;
+	}
+	
+	//mouse pointer/cursor style
+	&[data-status="MOUSE_POINTER"] {
+		/* fill: transparent; */
+		stroke: rgba(128, 255, 0, 0.5);
+		stroke-width: 0.06em;
+		r: var(--point_radius);
+	}
+
+	//test points
+	// &[data-status="POINT_FREE"] {
+	// 	// fill: transparent;
+	// 	// stroke: gray;
+	// 	stroke-width: 0.1em;
+	// }
+}
+
+polyline {
+	stroke-width: 0.1875px;
+	fill-opacity: 0.1;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+
+	@media (prefers-reduced-motion: no-preference) {
+		&[data-id="0"] {
+			stroke-dasharray: 0.7;
+			animation: dash 5s infinite linear reverse;
+		}
+		@keyframes dash {
+			to {
+				stroke-dashoffset: 10;
 			}
 		}
 	}
