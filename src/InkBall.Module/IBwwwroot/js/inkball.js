@@ -459,7 +459,8 @@ async function importAllModulesAsync(gameOptions) {
 
 function RandomColor() {
 	//return 'var(--bs-orange)';
-	return '#' + Math.floor(Math.random() * 16777215).toString(16);
+	// return '#' + Math.floor(Math.random() * 16777215).toString(16);
+	return '#' + ((1 << 24) * Math.random() | 0).toString(16).padStart(6, "0");
 }
 
 /* Old code
@@ -497,6 +498,8 @@ class InkBallGame {
 	#iGridSpacingY;
 	#iLastX;
 	#iLastY;
+	#iLastLastX;
+	#iLastLastY;
 	#iMouseX;
 	#iMouseY;
 	#iPosX;
@@ -540,7 +543,7 @@ class InkBallGame {
 	#rAF_StartTimeStamp;
 	#rAF_FrameID;
 	#workingCyclePolyLine;
-	#lastCycle;
+	#cyclesFound;
 	#AIMethod;
 	#COLOR_RED;
 	#COLOR_BLUE;
@@ -608,6 +611,8 @@ class InkBallGame {
 		this.#LineStrokeWidth = 0;
 		this.#iLastX = -1;
 		this.#iLastY = -1;
+		this.#iLastLastX = -1;
+		this.#iLastLastY = -1;
 		this.#iMouseX = 0;
 		this.#iMouseY = 0;
 		this.#iPosX = 0;
@@ -1888,6 +1893,8 @@ class InkBallGame {
 
 		x = this.#iMouseX = parseInt(x);
 		y = this.#iMouseY = parseInt(y);
+		this.#iLastLastX = this.#iLastX;
+		this.#iLastLastY = this.#iLastY;
 
 		this.#bMouseDown = true;
 		if (!this.#bDrawLines) {
@@ -1898,7 +1905,7 @@ class InkBallGame {
 			const loc_x = x;
 			const loc_y = y;
 
-			if (await this.#Points.get(loc_y * this.#iGridWidth + loc_x) !== undefined) {
+			if (await this.#Points.has(loc_y * this.#iGridWidth + loc_x)) {
 				this.#Debug('Wrong point - already existing', 0);
 				return;
 			}
@@ -1999,6 +2006,177 @@ class InkBallGame {
 				}
 			}
 		}
+	}
+
+	async #OnMouseMoveServiceMode(event) {
+		if (!this.#bIsPlayerActive || this.#Player2Name.textContent === '???' || this.#bHandlingEvent === true
+			|| this.#iConnErrCount > 0) {
+
+			if (this.#iConnErrCount <= 0 && !this.#bIsPlayerActive) {
+				this.#Screen.style.cursor = "wait";
+			}
+			return;
+		}
+
+		const cursor = this.#SvgVml.ToCursorPoint(event.clientX, event.clientY);
+		let x = cursor.x + 0.5;
+		let y = cursor.y + 0.5;
+
+		x = parseInt(x);
+		y = parseInt(y);
+
+		let tox = x;
+		let toy = y;
+
+		if (this.#CursorPos.x !== tox || this.#CursorPos.y !== toy) {
+			this.#MouseCursorOval.move(tox, toy);
+			this.#MouseCursorOval.Show();
+			this.#Debug(`[${x},${y}]`, 1);
+			this.#CursorPos.x = tox; this.#CursorPos.y = toy;
+		}
+
+
+		// if (this.#bDrawLines) {
+		if (this.#Line !== null)
+			this.#Screen.style.cursor = "move";
+		else
+			this.#Screen.style.cursor = "crosshair";
+
+		if (this.#bMouseDown === true) {
+			// //lines
+			// if ((this.#iLastX !== x || this.#iLastY !== y) &&
+			// 	(Math.abs(parseInt(this.#iLastX - x)) <= 1 && Math.abs(parseInt(this.#iLastY - y)) <= 1) &&
+			// 	this.#iLastX >= 0 && this.#iLastY >= 0) {
+			// 	if (this.#Line !== null) {
+			// 		let p0 = await this.#Points.get(this.#iLastY * this.#iGridWidth + this.#iLastX);
+			// 		let p1 = await this.#Points.get(y * this.#iGridWidth + x);
+			// 		this.#CancelPath.disabled = this.#Line.GetLength() >= 2 ? '' : 'disabled';
+
+			// 		if (p0 !== undefined && p1 !== undefined &&
+			// 			p0.GetFillColor() === this.#sDotColor && p1.GetFillColor() === this.#sDotColor) {
+			// 			const line_contains_point = this.#Line.ContainsPoint(tox, toy);
+			// 			if (line_contains_point < 1 && p1.GetStatus() !== StatusEnum.POINT_STARTING &&
+			// 				true === this.#Line.AppendPoints(tox, toy)) {
+			// 				p1.SetStatus(StatusEnum.POINT_IN_PATH, true);
+			// 				this.#iLastX = x;
+			// 				this.#iLastY = y;
+			// 			}
+			// 			else if (line_contains_point === 1 && p1.GetStatus() === StatusEnum.POINT_STARTING &&
+			// 				true === this.#Line.AppendPoints(tox, toy)) {
+			// 				const val = await this.#SurroundOpponentPoints();
+			// 				if (val.owned.length > 0) {
+			// 					this.#Debug('Closing path', 0);
+			// 					this.#rAF_FrameID = null;
+			// 					await this.#SendData(this.#CreatePutPathRequest(val), async () => {
+			// 						await this.#OnCancelClick();
+			// 						val.OwnedPoints.forEach(revData => {
+			// 							const p = revData.point;
+			// 							p.RevertOldStatus();
+			// 							p.SetFillColor(revData.revertFillColor);
+			// 							// p.SetStrokeColor(revData.revertStrokeColor);
+			// 						});
+			// 						this.#bHandlingEvent = false;
+			// 					});
+			// 				}
+			// 				else
+			// 					this.#Debug(`${val.errorDesc ? val.errorDesc : 'Wrong path'}, cancel it or refresh page`, 0);
+			// 				this.#iLastX = x;
+			// 				this.#iLastY = y;
+			// 			}
+			// 			else if (line_contains_point >= 1 && p0.GetStatus() === StatusEnum.POINT_IN_PATH &&
+			// 				this.#Line.GetPointsString().endsWith(`${this.#iLastX},${this.#iLastY}`)) {
+
+			// 				if (this.#Line.GetLength() > 2) {
+			// 					p0.RevertOldStatus();
+			// 					this.#Line.RemoveLastPoint();
+			// 					this.#iLastX = x;
+			// 					this.#iLastY = y;
+			// 				}
+			// 				else
+			// 					await this.#OnCancelClick();
+			// 			}
+			// 		}
+			// 	}
+			// 	else {
+			// 		let p0 = await this.#Points.get(this.#iLastY * this.#iGridWidth + this.#iLastX);
+			// 		let p1 = await this.#Points.get(y * this.#iGridWidth + x);
+
+			// 		if (p0 !== undefined && p1 !== undefined &&
+			// 			p0.GetFillColor() === this.#sDotColor && p1.GetFillColor() === this.#sDotColor) {
+			// 			const fromx = this.#iLastX;
+			// 			const fromy = this.#iLastY;
+			// 			this.#Line = this.#SvgVml.CreatePolyline(`${fromx},${fromy} ${tox},${toy}`, this.#DRAWING_PATH_COLOR);
+			// 			this.#CancelPath.disabled = '';
+			// 			p0.SetStatus(StatusEnum.POINT_STARTING, true);
+			// 			p1.SetStatus(StatusEnum.POINT_IN_PATH, true);
+
+			// 			this.#iLastX = x;
+			// 			this.#iLastY = y;
+			// 		}
+			// 	}
+			// }
+
+			if (await this.#Points.has(y * this.#iGridWidth + x) === false) {
+				let color, status;
+				if (document.getElementById("cbSrvMnuBlue").checked === true) {
+					status = StatusEnum.POINT_FREE_BLUE;
+					color = this.#COLOR_BLUE;
+				}
+				else {
+					status = StatusEnum.POINT_FREE_RED;
+					color = this.#COLOR_RED;
+				}
+				const oval = this.#SvgVml.CreateOval();
+				oval.move(x, y);
+				oval.SetStrokeColor(color);
+				oval.StrokeWeight(0.2);
+				oval.SetFillColor(color);
+				oval.SetStatus(status);
+
+				await this.#Points.set(y * this.#iGridWidth + x, oval);
+			}
+		}
+		// }
+		// else {
+		// 	this.#Screen.style.cursor = "crosshair";
+		// }
+	}
+
+	async #OnMouseDownServiceMode(event) {
+		if (!this.#bIsPlayerActive || this.#Player2Name.textContent === '???' || this.#bHandlingEvent === true
+			|| this.#iConnErrCount > 0)
+			return;
+
+		const cursor = this.#SvgVml.ToCursorPoint(event.clientX, event.clientY);
+		let x = cursor.x + 0.5;
+		let y = cursor.y + 0.5;
+
+		x = this.#iMouseX = parseInt(x);
+		y = this.#iMouseY = parseInt(y);
+		this.#iLastLastX = this.#iLastX;
+		this.#iLastLastY = this.#iLastY;
+		this.#bMouseDown = true;
+
+		if (await this.#Points.has(y * this.#iGridWidth + x) === false) {
+			let color, status;
+			if (document.getElementById("cbSrvMnuBlue").checked === true) {
+				status = StatusEnum.POINT_FREE_BLUE;
+				color = this.#COLOR_BLUE;
+			}
+			else {
+				status = StatusEnum.POINT_FREE_RED;
+				color = this.#COLOR_RED;
+			}
+			const oval = this.#SvgVml.CreateOval();
+			oval.move(x, y);
+			oval.SetStrokeColor(color);
+			oval.StrokeWeight(0.2);
+			oval.SetFillColor(color);
+			oval.SetStatus(status);
+
+			await this.#Points.set(y * this.#iGridWidth + x, oval);
+		}
+
 	}
 
 	#OnMouseUp() {
@@ -2106,6 +2284,8 @@ class InkBallGame {
 					case "BUILD_GRAPH":
 					case "CONCAVEMAN":
 					case "MARK_ALL_CYCLES":
+					case "ASTAR":
+					case "CLUSTERING":
 						//worker.terminate();
 						resolve(data);
 						break;
@@ -2124,21 +2304,24 @@ class InkBallGame {
 
 	async #OnTestBuildCurrentGraph(event) {
 		event.preventDefault();
-		//LocalLog(await this.#BuildGraph());
-		const data = await this.#RunAIWorker((worker) => {
-			const serialized_points = Array.from(this.#Points.store.entries()).map(([key, value]) => ({ key, value: value.Serialize() }));
-			const serialized_paths = this.#Lines.store.map(pa => pa.Serialize());
+		//// Main thread UI implementation
+		LocalLog(await this.#BuildGraph());
 
-			worker.postMessage({
-				operation: "BUILD_GRAPH",
-				boardSize: { iGridWidth: this.#iGridWidth, iGridHeight: this.#iGridHeight },
-				state: this.#GetGameStateForIndexedDb(),
-				points: serialized_points,
-				paths: serialized_paths
-			});
-		});
-		LocalLog('Message received from worker:');
-		LocalLog(data);
+		//// Web worker background implementation
+		// const data = await this.#RunAIWorker((worker) => {
+		// 	const serialized_points = Array.from(this.#Points.store.entries()).map(([key, value]) => ({ key, value: value.Serialize() }));
+		// 	const serialized_paths = this.#Lines.store.map(pa => pa.Serialize());
+
+		// 	worker.postMessage({
+		// 		operation: "BUILD_GRAPH",
+		// 		boardSize: { iGridWidth: this.#iGridWidth, iGridHeight: this.#iGridHeight },
+		// 		state: this.#GetGameStateForIndexedDb(),
+		// 		points: serialized_points,
+		// 		paths: serialized_paths
+		// 	});
+		// });
+		// LocalLog('Message received from worker:');
+		// LocalLog(data);
 	}
 
 	async #OnTestConcaveman(event) {
@@ -2304,16 +2487,16 @@ class InkBallGame {
 			this.#SvgVml.RemovePolyline(this.#workingCyclePolyLine);
 			this.#workingCyclePolyLine = null;
 		}
-		this.#lastCycle.forEach(cycle => {
+		this.#cyclesFound.forEach(cycle => {
 			const line = this.#SvgVml.CreatePolyline(cycle.map(function (pt) {
 				const pos = pt.GetPosition();
 				return `${pos.x},${pos.y}`;
 			}).join(' '), RandomColor());
 			line.SetID(-1);
 		});
-		LocalLog('game.lastCycle = ');
-		LocalLog(this.#lastCycle);
-		this.#lastCycle = [];
+		LocalLog('game.#cyclesFound = ');
+		LocalLog(this.#cyclesFound);
+		this.#cyclesFound = [];
 	}
 
 	async #OnTestFindSurroundablePoints(event) {
@@ -2418,7 +2601,7 @@ class InkBallGame {
 		await this.#DFS2(await this.#BuildGraph(), this.#COLOR_RED);
 	}
 
-	async #OnFloodFill(event) {
+	async #OnTestFloodFill(event) {
 		event.preventDefault();
 
 		const sHumanColor = this.#COLOR_RED, sCPUColor = this.#COLOR_BLUE;
@@ -2433,6 +2616,262 @@ class InkBallGame {
 		LocalLog(`FloodFill start point (${x},${y}), color = '${start_color === sHumanColor ? 'HUMAN' : 'CPU'}'`);
 
 		await this.#FloodFill(pt, start_color === sHumanColor ? sHumanColor : sCPUColor, 'green');
+	}
+
+	async #OnTestAStar(event) {
+		event.preventDefault();
+		//checks for valid points, color, states
+		if (!(this.#iLastY >= 0 && this.#iLastX >= 0 && this.#iLastLastY >= 0 && this.#iLastLastX >= 0 &&
+			(this.#iLastX !== this.#iLastLastX || this.#iLastY !== this.#iLastLastY))
+		) {
+			LocalLog("!!!First you need to click two (starting and ending) points with mouse!!!");
+			return;
+		}
+		const point_color = (await this.#Points.get(this.#iLastY * this.#iGridWidth + this.#iLastX))?.GetFillColor();
+		if (point_color !== (await this.#Points.get(this.#iLastLastY * this.#iGridWidth + this.#iLastLastX))?.GetFillColor()) {
+			LocalLog("!!!Clicked starting and ending point must be same color and not owned!!!");
+			return;
+		}
+		const point_status = point_color === this.#COLOR_RED ? StatusEnum.POINT_FREE_RED : StatusEnum.POINT_FREE_BLUE;
+
+		//helper func
+		const displayPointsHelper = async (pointsArr, sleepMillisecs = 25) => {
+			//
+			//serialize points as string: "y0,x0 y1,x1 y2,x2" but inverse order of coords: y,x
+			//
+			const pts = pointsArr.map((pt) => `${pt.y},${pt.x}`).join(' ');
+
+			//if not existing, create new...
+			if (this.#workingCyclePolyLine === null) {
+				this.#workingCyclePolyLine = this.#SvgVml.CreatePolyline(pts, 'black');
+				this.#workingCyclePolyLine.SetID(-1);
+			}
+			else//...else replace last create path
+				this.#workingCyclePolyLine.SetPoints(pts);
+
+			if (sleepMillisecs > 0)
+				await Sleep(sleepMillisecs);
+		};
+
+		const arr = new Array(this.#iGridHeight);
+		for (let y = 0; y < this.#iGridHeight; y++) {
+			arr[y] = new Array(this.#iGridWidth);
+
+			for (let x = 0; x < this.#iGridWidth; x++) {
+
+				const pt = await this.#Points.get(y * this.#iGridWidth + x);
+				if (pt !== undefined && pt.GetFillColor() === point_color && pt.GetStatus() === point_status)
+					arr[y][x] = 1;
+				else
+					arr[y][x] = 0;
+			}
+		}
+
+		// Main thread calc
+		/*
+		const graphDiagonal = new astarJS.Graph(arr, { diagonal: true });
+		const start = graphDiagonal.grid[this.#iLastY][this.#iLastX];
+		const end = graphDiagonal.grid[this.#iLastLastY][this.#iLastLastX];
+		const resultWithDiagonals = astarJS.astar.search(graphDiagonal, start, end, { heuristic: astarJS.astar.heuristics.diagonal });
+		if (resultWithDiagonals.length > 0)
+			await displayPointsHelper(resultWithDiagonals, 0);
+
+		LocalLog(resultWithDiagonals);
+		*/
+
+
+
+		//Web Worker calc
+		const data = await this.#RunAIWorker((worker) => {
+			worker.postMessage({
+				operation: "ASTAR",
+				arr,
+				start: { y: this.#iLastY, x: this.#iLastX },
+				end: { y: this.#iLastLastY, x: this.#iLastLastX }
+			});
+		});
+
+		if (data.resultWithDiagonals.length > 0)
+			await displayPointsHelper(data.resultWithDiagonals, 0);
+	}
+
+	async #OnTestClustering(event) {
+		const loadParamsFromStore = (store) => {
+			const fromStore = JSON.parse(store.getItem("AIClustering"));
+			const obj2Return = {};
+
+			if (fromStore?.x !== undefined && this.#iLastX < 0) {
+				let x = parseInt(fromStore.x);
+				x = (isNaN(x) || x <= 0) ? this.#iLastX : x;
+				obj2Return.x = x;
+			}
+			else
+				obj2Return.x = this.#iLastX;
+
+			if (fromStore?.y !== undefined && this.#iLastY < 0) {
+				let y = parseInt(fromStore.y);
+				y = (isNaN(y) || y <= 0) ? this.#iLastY : y;
+				obj2Return.y = y;
+			}
+			else
+				obj2Return.y = this.#iLastY;
+
+			if (fromStore?.numberOfClusters !== undefined) {
+				let numberOfClusters = parseInt(fromStore.numberOfClusters);
+				numberOfClusters = (isNaN(numberOfClusters) || numberOfClusters <= 0) ? 5 : numberOfClusters;
+				obj2Return.numberOfClusters = numberOfClusters;
+			}
+			else
+				obj2Return.numberOfClusters = 5;
+
+			if (fromStore?.neighborhoodRadius !== undefined) {
+				let neighborhoodRadius = parseInt(fromStore.neighborhoodRadius);
+				neighborhoodRadius = (isNaN(neighborhoodRadius) || neighborhoodRadius <= 0) ? 2 : neighborhoodRadius;
+				obj2Return.neighborhoodRadius = neighborhoodRadius;
+			}
+			else
+				obj2Return.neighborhoodRadius = 2;
+
+			if (fromStore?.minPointsPerCluster !== undefined) {
+				let minPointsPerCluster = parseInt(fromStore.minPointsPerCluster);
+				minPointsPerCluster = (isNaN(minPointsPerCluster) || minPointsPerCluster <= 0) ? 2 : minPointsPerCluster;
+				obj2Return.minPointsPerCluster = minPointsPerCluster;
+			}
+			else
+				obj2Return.minPointsPerCluster = 2;
+
+			if (fromStore?.method !== undefined && ["KMEANS", "OPTICS", "DBSCAN"].includes(fromStore.method)) {
+				obj2Return.method = fromStore.method;
+			}
+			else
+				obj2Return.method = "KMEANS";
+
+			return obj2Return;
+		};
+		const saveParamsToStore = (params, store) => {
+			const toStore = JSON.parse(store.getItem("AIClustering")) || {};
+			let persist = false;
+			if (params.x !== toStore?.x) {
+				toStore.x = params.x;
+				persist = true;
+			}
+			if (params.y !== toStore?.y) {
+				toStore.y = params.y;
+				persist = true;
+			}
+			if (params.numberOfClusters !== toStore?.numberOfClusters) {
+				toStore.numberOfClusters = params.numberOfClusters;
+				persist = true;
+			}
+			if (params.neighborhoodRadius !== toStore?.neighborhoodRadius) {
+				toStore.neighborhoodRadius = params.neighborhoodRadius;
+				persist = true;
+			}
+			if (params.minPointsPerCluster !== toStore?.minPointsPerCluster) {
+				toStore.minPointsPerCluster = params.minPointsPerCluster;
+				persist = true;
+			}
+			if (params.method !== toStore?.method) {
+				toStore.method = params.method;
+				persist = true;
+			}
+
+
+			if (persist === true) {
+				store.setItem("AIClustering", JSON.stringify(toStore));
+			}
+		};
+
+		event.preventDefault();
+		//checks for valid points, color, states
+		//get from local_storage
+		const runParams = loadParamsFromStore(window.localStorage);
+		if (!(runParams.y >= 0 && runParams.x >= 0)) {
+			LocalLog("!!!First you need to click some point with mouse!!!");
+			return;
+		}
+		const point_color = (await this.#Points.get(runParams.y * this.#iGridWidth + runParams.x))?.GetFillColor();
+		const point_status = point_color === this.#COLOR_RED ? StatusEnum.POINT_FREE_RED : StatusEnum.POINT_FREE_BLUE;
+
+		const arr = [];
+		for (const pt of await this.#Points.values()) {
+			if (pt !== undefined && pt.GetFillColor() === point_color && pt.GetStatus() === point_status) {
+				const { x, y } = pt.GetPosition();
+				arr.push([x, y]);
+			}
+		}
+		saveParamsToStore(runParams, window.localStorage);
+
+		//Web Worker calc
+		const data = await this.#RunAIWorker((worker) => {
+			worker.postMessage({
+				operation: "CLUSTERING", dataset: arr,
+				method: runParams.method,
+
+				numberOfClusters: runParams.numberOfClusters,
+				neighborhoodRadius: runParams.neighborhoodRadius,
+				minPointsPerCluster: runParams.minPointsPerCluster
+			});
+		});
+
+		if (data.clusters?.length > 0) {
+			for (const cluster of data.clusters) {
+				const rand_color = RandomColor();
+
+				for (const index of cluster) {
+					const vert = arr[index];
+					const [x, y] = vert;
+					// const pt = document.querySelector(`svg > circle[cx="${x}"][cy="${y}"]`);
+					const pt = await this.#Points.get(y * this.#iGridWidth + x);
+					if (pt) {
+						// pt.setAttribute("data-status", 'test');
+						pt.SetStrokeColor(rand_color);
+						pt.SetFillColor(rand_color);
+						pt.SetZIndex(100);
+						pt.setAttribute("r", 2 / this.#iGridSpacingX);
+					}
+					// await Sleep(50);
+				}
+			}
+		}
+	}
+
+	async #OnTestServiceModeClick(event) {
+		// event.preventDefault();
+
+		if (event.target.id === "cbSrvMnuRed") {
+			//red service mode clicked
+			if (document.getElementById("cbSrvMnuRed").checked === true) {
+				this.#Screen.onmousedown = this.#OnMouseDownServiceMode.bind(this);
+				this.#Screen.onmousemove = this.#OnMouseMoveServiceMode.bind(this);
+
+				LocalLog('red');
+			}
+			else {
+				this.#Screen.onmousedown = this.#OnMouseDown.bind(this);
+				this.#Screen.onmousemove = this.#OnMouseMove.bind(this);
+
+				LocalLog('red-off');
+			}
+
+			document.getElementById("cbSrvMnuBlue").checked = false;
+		}
+		else if (event.target.id === "cbSrvMnuBlue") {
+			//blue service mode clicked
+			if (document.getElementById("cbSrvMnuBlue").checked === true) {
+				this.#Screen.onmousedown = this.#OnMouseDownServiceMode.bind(this);
+				this.#Screen.onmousemove = this.#OnMouseMoveServiceMode.bind(this);
+
+				LocalLog('blue');
+			} else {
+				this.#Screen.onmousedown = this.#OnMouseDown.bind(this);
+				this.#Screen.onmousemove = this.#OnMouseMove.bind(this);
+
+				LocalLog('blue-off');
+			}
+
+			document.getElementById("cbSrvMnuRed").checked = false;
+		}
 	}
 
 	/**
@@ -2452,11 +2891,12 @@ class InkBallGame {
 	 * @param {boolean} useIndexedDbStore indicates whether to use IndexedDb point and path Store
 	 * @param {string} version is semVer string of main module (for IndexedDb DB version)
 	 * @param {Array} ddlTestActions array of test actions button ids
+	 * @param {Array<string>} arrServiceModeControls controls of service menu or null
 	 * @param {number} iTooLong2Duration how long waiting is too long
 	 */
 	async PrepareDrawing(sScreen, sPlayer1Name, sPlayer2Name, sGameStatus, sSurrenderButton, sCancelPath, sPause, sStopAndDraw,
 		sMsgInputSel, sMsgListSel, sMsgSendButtonSel, sLastMoveGameTimeStamp, useIndexedDbStore, version, ddlTestActions,
-		iTooLong2Duration = 125) {
+		arrServiceModeControls, iTooLong2Duration = 125) {
 		this.#bIsWon = false;
 		this.#iDelayBetweenMultiCaptures = 4000;
 		this.#iTooLong2Duration = iTooLong2Duration/*125*/;
@@ -2515,7 +2955,7 @@ class InkBallGame {
 		this.#rAF_StartTimeStamp = null;
 		this.#rAF_FrameID = null;
 		this.#workingCyclePolyLine = null;
-		this.#lastCycle = [];
+		this.#cyclesFound = [];
 		this.#AIMethod = null;
 		///////CpuGame variables end//////
 
@@ -2553,27 +2993,37 @@ class InkBallGame {
 			this.#StopAndDraw.onclick = this.#OnStopAndDraw.bind(this);
 			if (false === this.#bIsCPUGame) {
 				document.querySelector(this.#sMsgInputSel).disabled = '';
-				document.getElementById('testArea').textContent = '';
 
 				this.#MessagesRingBufferStore = new MessagesRingBufferStore(window.localStorage, this);
 				this.#MessagesRingBufferStore.RestoreMessages(this.#sMsgListSel, this.#iPlayerID, this.#iOtherPlayerId, this.#bIsPlayingWithRed, this.#Player1Name, this.#Player2Name);
 			}
 			else {
-				let i = 0;
-				if (ddlTestActions.length > i)
-					document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestBuildCurrentGraph.bind(this);
-				if (ddlTestActions.length > i)
-					document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestConcaveman.bind(this);
-				if (ddlTestActions.length > i)
-					document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestMarkAllCycles.bind(this);
-				if (ddlTestActions.length > i)
-					document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestGroupPoints.bind(this);
-				if (ddlTestActions.length > i)
-					document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestFindSurroundablePoints.bind(this);
-				if (ddlTestActions.length > i)
-					document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestDFS2.bind(this);
-				if (ddlTestActions.length > i)
-					document.querySelector(ddlTestActions[i++]).onclick = this.#OnFloodFill.bind(this);
+				//Service Menu
+				if (document.querySelector(arrServiceModeControls[0]) !== null) {
+					document.getElementById('testArea').classList.remove("d-none");
+					let i = 0;
+					if (ddlTestActions.length > i)
+						document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestBuildCurrentGraph.bind(this);
+					if (ddlTestActions.length > i)
+						document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestConcaveman.bind(this);
+					if (ddlTestActions.length > i)
+						document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestMarkAllCycles.bind(this);
+					if (ddlTestActions.length > i)
+						document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestGroupPoints.bind(this);
+					if (ddlTestActions.length > i)
+						document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestFindSurroundablePoints.bind(this);
+					if (ddlTestActions.length > i)
+						document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestDFS2.bind(this);
+					if (ddlTestActions.length > i)
+						document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestFloodFill.bind(this);
+					if (ddlTestActions.length > i)
+						document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestAStar.bind(this);
+					if (ddlTestActions.length > i)
+						document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestClustering.bind(this);
+
+					document.querySelector(arrServiceModeControls[1]).onclick = this.#OnTestServiceModeClick.bind(this);
+					document.querySelector(arrServiceModeControls[2]).onclick = this.#OnTestServiceModeClick.bind(this);
+				}
 
 				//disable or even delete chat functionality, coz we're not going to chat with CPU bot
 				//const chatSection = document.querySelector(this.#sMsgListSel).parentElement;
@@ -2581,10 +3031,10 @@ class InkBallGame {
 
 				//if (!this.#bIsPlayerActive)
 				//	this.#StartCPUCalculation();
-				this.#AIMethod = localStorage.getItem('AIMethod');
+				this.#AIMethod = window.localStorage.getItem('AIMethod');
 				if (!this.#AIMethod) {
 					this.#AIMethod = 'centroid';
-					localStorage.setItem('AIMethod', this.#AIMethod);
+					window.localStorage.setItem('AIMethod', this.#AIMethod);
 				}
 			}
 
@@ -2678,7 +3128,7 @@ class InkBallGame {
 		);
 		await game.PrepareDrawing('#screen', '#Player1Name', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw',
 			'#messageInput', '#messagesList', '#sendButton', sLastMoveTimeStampUtcIso, gameOptions.PointsAsJavaScriptArray === null, version,
-			['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints', '#TestFindSurroundablePoints', '#TestDFS2', '#FloodFill']);
+			['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints', '#TestFindSurroundablePoints', '#TestDFS2', '#FloodFill', '#AStar', '#Clustering'], ['#serviceMenu', '#cbSrvMnuRed', '#cbSrvMnuBlue']);
 
 		if (gameOptions.PointsAsJavaScriptArray !== null) {
 			await game.StartSignalRConnection(false);
@@ -2889,7 +3339,7 @@ class InkBallGame {
 		cpufillCol: cpuFillColor = this.#COLOR_BLUE
 		//, visuals: presentVisually = false
 	} = {}) {
-		const graph_points = [], graph_edges = new Map();
+		const graph_points = new Map(), graph_edges = new Map();
 
 		const isPointOKForPath = function (freePointStatusArr, pt) {
 			const status = pt.GetStatus();
@@ -2904,32 +3354,29 @@ class InkBallGame {
 				const next = await this.#Points.get(to_y * this.#iGridWidth + to_x);
 				if (next && isPointOKForPath([freePointStatus], next) === true) {
 
-					if (graph_edges.has(`${x},${y}_${to_x},${to_y}`) === false && graph_edges.has(`${to_x},${to_y}_${x},${y}`) === false) {
-
-						const edge = {
-							from: point,
-							to: next
-						};
+					const point_hash = `${x},${y}`;
+					const next_hash = `${to_x},${to_y}`;
+					if (graph_edges.has(`${point_hash}_${next_hash}`) === false && graph_edges.has(`${next_hash}_${point_hash}`) === false) {
 						//if (presentVisually === true) {
 						//	const line = CreateLine(3, 'rgba(0, 255, 0, 0.3)');
 						//	line.move(x, y, next_pos.x, next_pos.y);
 						//	edge.line = line;
 						//}
-						graph_edges.set(`${x},${y}_${to_x},${to_y}`, edge);
+						graph_edges.set(`${point_hash}_${next_hash}`, { from: point, to: next });
 
 
-						if (graph_points.includes(point) === false) {
+						if (!graph_points.has(point_hash)) {
 							point.adjacents = [next];
-							graph_points.push(point);
+							graph_points.set(point_hash, point);
 						} else {
-							const pt = graph_points.find(x => x === point);
+							const pt = graph_points.get(point_hash);
 							pt.adjacents.push(next);
 						}
-						if (graph_points.includes(next) === false) {
+						if (!graph_points.has(next_hash)) {
 							next.adjacents = [point];
-							graph_points.push(next);
+							graph_points.set(next_hash, next);
 						} else {
-							const pt = graph_points.find(x => x === next);
+							const pt = graph_points.get(next_hash);
 							pt.adjacents.push(point);
 						}
 					}
@@ -2961,7 +3408,7 @@ class InkBallGame {
 		}
 		//return graph
 		return {
-			vertices: graph_points,
+			vertices: Array.from(graph_points.values()),
 			edges: Array.from(graph_edges.values()),
 			getNeighbors: function (vert) {
 				const found = this.vertices.find(v => v === vert);
@@ -2980,7 +3427,7 @@ class InkBallGame {
 	 */
 	async #MarkAllCycles(graph, sHumanColor) {
 		const vertices = graph.vertices;
-		const N = vertices.length;
+		const N = vertices.length, PARTIALLY_VISITED = 1, COMPLETELY_VISITED = 2;
 		let cycles = new Array(N);
 		// mark with unique numbers
 		const mark = new Array(N);
@@ -2992,14 +3439,26 @@ class InkBallGame {
 			mark[i] = []; cycles[i] = [];
 		}
 
+		const vertexImmediatePresenterFn = async (vertex, color = 'black', sleepTimeMs = 25) => {
+			const { x, y } = vertex.GetPosition();
+			const visible_vertex = await this.#Points.get(y * this.#iGridWidth + x);
+
+			visible_vertex.SetStrokeColor(color);
+			visible_vertex.SetFillColor(color);
+			visible_vertex.StrokeWeight(0.2);
+			visible_vertex.setAttribute("r", 6 / this.#iGridSpacingX);
+
+			await Sleep(sleepTimeMs);
+		};
+
 		const dfs_cycle = async (u, p) => {
 			// already (completely) visited vertex. 
-			if (color[u] === 2)
+			if (color[u] === COMPLETELY_VISITED)
 				return;
 
 			// seen vertex, but was not completely visited -> cycle detected. 
 			// backtrack based on parents to find the complete cycle. 
-			if (color[u] === 1) {
+			if (color[u] === PARTIALLY_VISITED) {
 				cyclenumber++;
 				let cur = p;
 				mark[cur].push(cyclenumber);
@@ -3015,19 +3474,11 @@ class InkBallGame {
 			par[u] = p;
 
 			// partially visited.
-			color[u] = 1;
+			color[u] = PARTIALLY_VISITED;
 			const vertex = vertices[u];
 			if (vertex) {
 
-
-				const { x, y } = vertex.GetPosition();
-				const vis_v = await this.#Points.get(y * this.#iGridWidth + x);
-				vis_v.SetStrokeColor('black');
-				vis_v.SetFillColor('black');
-				vis_v.StrokeWeight(0.2);
-				vis_v.setAttribute("r", 6 / 16);
-				await Sleep(25);
-
+				await vertexImmediatePresenterFn(vertex);
 
 				// simple dfs on graph
 				for (const adj of vertex.adjacents) {
@@ -3041,18 +3492,18 @@ class InkBallGame {
 			}
 
 			// completely visited. 
-			color[u] = 2;
+			color[u] = COMPLETELY_VISITED;
 		};
 
-		const printCycles = async (edges, mark) => {
+		const printCycles = async (edgesCount, mark) => {
 			// push the edges that into the 
 			// cycle adjacency list 
-			for (let e = 0; e < edges; e++) {
+			for (let e = 0; e < edgesCount; e++) {
 				const mark_e = mark[e];
 				if (mark_e !== undefined && mark_e.length > 0) {
 					for (let m = 0; m < mark_e.length; m++) {
 						const found_c = cycles[mark_e[m]];
-						if (found_c !== undefined)
+						if (found_c)
 							found_c.push(e);
 					}
 				}
@@ -3089,9 +3540,7 @@ class InkBallGame {
 					const rand_color = 'var(--bs-teal)';
 
 					//convert to logical space
-					const mapped_verts = cycl.map(c => {
-						return vertices[c].GetPosition();
-					});
+					const mapped_verts = cycl.map(c => vertices[c].GetPosition());
 					//sort clockwise (https://stackoverflow.com/questions/45660743/sort-points-in-counter-clockwise-in-javascript)
 					const cw_sorted_verts = sortPointsClockwise(mapped_verts);
 
@@ -3146,15 +3595,15 @@ class InkBallGame {
 		};
 
 		// store the numbers of cycle
-		let cyclenumber = 0, edges = N;
+		let cyclenumber = 0;
 
 		// call DFS to mark the cycles
 		for (let vind = 0; vind < N; vind++) {
-			await dfs_cycle(vind + 1, vind);//, color, mark, par);
+			await dfs_cycle(vind + 1, vind);
 		}
 
 		// function to print the cycles
-		return await printCycles(edges, mark);
+		return await printCycles(N, mark);
 	}
 
 	// eslint-disable-next-line no-unused-vars
@@ -3207,23 +3656,37 @@ class InkBallGame {
 	/**
 	 * Floyd's tortoise and hare
 	 * https://en.wikipedia.org/wiki/Cycle_detection
-	 * @param {Function} f function where f(x0) is the element/node next to x0
-	 * @param {Number} x0 index of element
+	 * @param {Function} getNextFunc function where getNextFunc(x0) is the element/node next to x0
+	 * @param {Number} head index of element
 	 * @returns {Object} length of the shortest cycle and starting point
 	 */
-	#floyd(f, x0) {
+	#floyd(getNextFunc, head) {
 		// Main phase of algorithm: finding a repetition x_i = x_2i.
 		// The hare moves twice as quickly as the tortoise and
 		// the distance between them increases by 1 at each step.
 		// Eventually they will both be inside the cycle and then,
 		// at some point, the distance between them will be
 		// divisible by the period λ.
-		let tortoise = f(x0); // f(x0) is the element/node next to x0.
-		let hare = f(f(x0));
-		while (tortoise !== hare) {
-			tortoise = f(tortoise);
-			hare = f(f(hare));
+
+		// let tortoise = getNextFunc(head); // getNextFunc(x0) is the element/node next to x0.
+		// let hare = getNextFunc(getNextFunc(head));
+		// while (tortoise !== hare) {
+		// 	tortoise = getNextFunc(tortoise);
+		// 	hare = getNextFunc(getNextFunc(hare));
+		// }
+
+		let tortoise = getNextFunc(head); // getNextFunc(x0) is the element/node next to x0.
+		let hare = getNextFunc(getNextFunc(head));
+		while (tortoise !== undefined && hare !== undefined && tortoise !== hare) {
+			tortoise = getNextFunc(tortoise);
+			hare = getNextFunc(getNextFunc(hare));
 		}
+
+		// if there is no loop exit now
+		if (tortoise !== hare)
+			return false;
+
+		return true;
 
 		// At this point the tortoise position, ν, which is also equal
 		// to the distance between hare and tortoise, is divisible by
@@ -3234,11 +3697,12 @@ class InkBallGame {
 		// they will agree as soon as the tortoise reaches index μ.
 
 		// Find the position μ of first repetition.    
+		/*
 		let mu = 0;
-		tortoise = x0;
+		tortoise = head;
 		while (tortoise !== hare) {
-			tortoise = f(tortoise);
-			hare = f(hare);   // Hare and tortoise move at same speed
+			tortoise = getNextFunc(tortoise);
+			hare = getNextFunc(hare);   // Hare and tortoise move at same speed
 			mu += 1;
 		}
 
@@ -3246,13 +3710,14 @@ class InkBallGame {
 		// The hare moves one step at a time while tortoise is still.
 		// lam is incremented until λ is found.
 		let lam = 1;
-		hare = f(tortoise);
+		hare = getNextFunc(tortoise);
 		while (tortoise !== hare) {
-			hare = f(hare);
+			hare = getNextFunc(hare);
 			lam += 1;
 		}
 
 		return { lam, mu };
+		*/
 	}
 
 	/**
@@ -3262,11 +3727,13 @@ class InkBallGame {
 	 * @returns {Promise<Array>} of found candidates
 	 */
 	async #GroupPointsRecurse(currPointsArr, point) {
+		//stop conditions. simple
 		if (point === undefined || currPointsArr.includes(point)
-			|| currPointsArr.length > 60 || this.#lastCycle.length > 3
+			/* || currPointsArr.length > 60  */ || this.#cyclesFound.length > 3
 		) {
 			return currPointsArr;
 		}
+		//only opponent points, starting and not in path are allowed to be traversed
 		if ([StatusEnum.POINT_FREE_BLUE, StatusEnum.POINT_STARTING, StatusEnum.POINT_IN_PATH].includes(point.GetStatus()) === false ||
 			point.GetFillColor() !== this.#COLOR_BLUE) {
 			return currPointsArr;
@@ -3287,22 +3754,40 @@ class InkBallGame {
 		else
 			currPointsArr.push(point);//1st starting point
 
-		if (currPointsArr.length > 2) {
+		if (currPointsArr.length >= 4) {
 			//draw currently constructed cycle path
 			await this.#DisplayPointsProgressWithDelay(currPointsArr);
 
-			if (currPointsArr.length >= 4) {
-				const first_pos = currPointsArr[0].GetPosition();
-				const last = currPointsArr.at(-1);
-				const { x: last_x, y: last_y } = last.GetPosition();
+			const first_pos = currPointsArr[0].GetPosition();
+			const last_pos = currPointsArr.at(-1).GetPosition();
 
-				if (Math.abs(last_x - first_pos.x) <= 1 && Math.abs(last_y - first_pos.y) <= 1) {
-					const tmp = currPointsArr.slice(); //copy array in current state
-					tmp.push(currPointsArr[0]);
-					this.#lastCycle.push(tmp);
+			//check if first point is within 1 jump away from last point - indicating of cycle found
+			if (Math.abs(last_pos.x - first_pos.x) <= 1 && Math.abs(last_pos.y - first_pos.y) <= 1) {
+				const points = currPointsArr.slice(); //copy array in current state
+				points.push(currPointsArr[0]);//adding current checking point, 'coz it is forming a cycle
 
-					this.#floyd(x => Number.isInteger(x) ? tmp[x] : tmp[tmp.indexOf(x) + 1], 0);
-				}
+				const floyd_result = this.#floyd(ind_or_obj => {
+					if (ind_or_obj === undefined)
+						return undefined;
+
+					let ind;
+					if (Number.isInteger(ind_or_obj)) {
+						//ind_or_obj is integer so index array
+						ind = ind_or_obj;
+						if (ind >= points.length)
+							return undefined;
+					}
+					else {
+						//ind_or_obj is object so get index out of array
+						ind = points.indexOf(ind_or_obj) + 1;
+						if (ind >= points.length)
+							return undefined;
+					}
+
+					return points[ind];
+				}, 0);
+				if (floyd_result === true)
+					this.#cyclesFound.push(points);
 			}
 		}
 
@@ -3326,9 +3811,9 @@ class InkBallGame {
 		await this.#GroupPointsRecurse(currPointsArr, south_west);
 		await this.#GroupPointsRecurse(currPointsArr, south_east);
 
-		const ind = currPointsArr.lastIndexOf(point);
-		if (ind !== -1) {
-			currPointsArr.splice(ind/* + 1*/);
+		const index_of_last = currPointsArr.lastIndexOf(point);
+		if (index_of_last !== -1) {
+			currPointsArr.splice(index_of_last/* + 1*/);
 
 			if (currPointsArr.length >= 2) {
 				//draw currently constructed cycle path
@@ -3350,6 +3835,7 @@ class InkBallGame {
 		const queue = [startingPoint.GetPosition()];
 		const blanks_changed = new Set();
 		const edge_points = new Map();
+		const log_list = [];
 
 		while (queue.length > 0) {
 			const { x, y } = queue.shift();
@@ -3391,10 +3877,14 @@ class InkBallGame {
 					}
 					else if (color !== replacementColor) {
 						edge_points.set(point_position_hashed, { point, x: newPos.x, y: newPos.y });
+						log_list.push(point);
 					}
 				}
 			}
 		}
+		LocalLog('log_list: ');
+		LocalLog(log_list);
+
 
 		if (edge_points.size > 3) {
 			//verification and constructing of surrounding path from edge_points
@@ -3402,16 +3892,53 @@ class InkBallGame {
 			const gathered = verts.splice(-1, 1);//drop last vert from verts and create new array out of it
 
 			let last = gathered[0];//take single vert as starting last value
-			for (let counter = verts.length; counter > 0; counter--) {//go in reverse order over every vertices
-				const ind_or_negative_one = verts.findIndex(v => Math.abs(v.x - last.x) <= 1 && Math.abs(v.y - last.y) <= 1);
-				if (ind_or_negative_one !== -1) {//new neighboring vertex found
-					//move found vertex from verts into gathered array...
-					//...and set new last from this moved vert
-					last = verts.splice(ind_or_negative_one, 1)[0];
-					gathered.push(last);//add to found path points
+			let direction = null;
+			// eslint-disable-next-line no-unused-vars
+			const continuousTestFun = (v, index, arr) => {
+				const res = Math.abs(v.x - last.x) <= 1 && Math.abs(v.y - last.y) <= 1;
+				if (res === true && direction !== null) {
+					const dir = { x: (last.x - v.x), y: (last.y - v.y) };
+					v.direction = dir;
 				}
-				else//neighboring vertex not found, break, we fail
-					break;
+				return res;
+			};
+			// eslint-disable-next-line no-unused-vars
+			const continuousSortFun = (left, right) => {
+				if (!left.direction && !right.direction)
+					return 0;
+				if ((left.direction.x === direction.x && left.direction.y === direction.y) ||
+					(right.direction.x === direction.x && right.direction.y === direction.y))
+					return 0;
+				const square_dist = ((left.direction.x - direction.x) + (left.direction.y - direction.y) +
+					(right.direction.x - direction.x) + (right.direction.y - direction.y)) / 4;
+				return square_dist;
+			};
+			for (let counter = verts.length; counter > 0; counter--) {//go in reverse order over every vertices
+				let simple_counter = 0;
+				const filtered_objs = verts.filter(continuousTestFun)/* .sort(continuousSortFun) */;
+				do {
+					const obj = filtered_objs.at(simple_counter);
+					if (obj !== undefined) {
+						const ind_or_negative_one = verts.indexOf(obj);
+						if (ind_or_negative_one !== -1) {//new neighboring vertex found
+							//move found vertex from verts into gathered array...
+							//...and set new last from this moved vert
+							const candidate = verts.splice(ind_or_negative_one, 1)[0];
+							direction = { x: (last.x - candidate.x), y: (last.y - candidate.y) };
+							last = candidate;
+							gathered.push(last);//add to found path points
+							// LocalLog(`found direction: ${direction.x},${direction.y}, filtered_objs.cnt: ${filtered_objs.length}`);
+							break;
+						}
+						else {
+							//neighboring vertex not found, break, we fail
+							// break;
+							// gathered.pop();
+							// LocalLog(`missed direction: ${direction.x},${direction.y}, filtered_objs.cnt: ${filtered_objs.length}`);
+						}
+					}
+				}
+				while (++simple_counter < 4);
 			}
 			//verification
 			const { x, y } = startingPoint.GetPosition();
@@ -3427,6 +3954,7 @@ class InkBallGame {
 				//check if "points-created-path" actually contains selected single point inside its boundaries
 				false === pnpoly(gathered, x, y)
 			) {
+				await this.#DisplayPointsProgressWithDelay(gathered.map(({ point }) => point), 0);
 				return;
 			}
 
@@ -3483,5 +4011,122 @@ class InkBallGame {
 }
 /******** /funcs-n-classes ********/
 
+/**
+ * Home page OnLoad event
+ * @param {string} modelMessage alert message
+ * @param {boolean} bIsCurrentGameOk game status flag
+ * @param {string} logoutPath logout url path
+ * @param {string} loginPath login url path
+ * @param {string} registerPath registerPath url path
+ */
+function HomeOnLoad(
+	modelMessage,
+	bIsCurrentGameOk,
+	logoutPath,
+	loginPath,
+	registerPath
+) {
 
-export { InkBallGame };
+	const alert = document.querySelector(".alert.alert-dismissible.inkhome");
+	const msg = modelMessage;
+	if (msg !== "") {
+		let addendum;
+		if (msg.toLowerCase().indexOf('exception') !== -1)
+			addendum = 'danger';
+		else if (msg.toLowerCase().indexOf('error') !== -1)
+			addendum = 'danger';
+		else if (msg.toLowerCase().indexOf('warning') !== -1)
+			addendum = 'warning';
+		else
+			addendum = 'success';
+
+		const statusMessageClass = 'alert-' + addendum;
+		alert.classList.add(statusMessageClass);
+		const span = alert.querySelector("span");
+		span.textContent = msg;
+	}
+	else
+		alert.parentNode.removeChild(alert);
+
+
+	const userName = document.querySelector("p.inkhome span").textContent;
+	const bIsLoggedIn = userName !== '' ? true : false;
+
+	const form = document.querySelector(".inkhome form");
+	let innerForm = '';
+	if (bIsLoggedIn) {
+		if (bIsCurrentGameOk) {
+			//continue
+			innerForm += "<a href='Game' class='btn btn-primary btn-lg rounded-top'>Continue</a>";
+		}
+		else {
+			//new game
+			innerForm +=
+				"<input type='submit' name='action' value='New game' class='btn btn-primary btn-lg rounded-top' />" +
+				"<div class='w-100'><select name='GameType' id='GameType' class='form-select' required>" +
+				"<option value='' selected='selected'>Choose game type</option>" +
+				"<optgroup label='Game types'>" +
+				"<option value='0'>First capture wins</option>" +
+				"<option value='1'>First 5 captures wins</option>" +
+				"<option value='2'>First 5 paths wins</option>" +
+				"<option value='3'>Advantage of 5 paths wins</option>" +
+				"</optgroup>" +
+				"</select>" +
+				"<div class='invalid-feedback'>Invalid game type</div></div>" +
+
+				"<div class='w-100'><select name='BoardSize' id='BoardSize' class='form-select' required>" +
+				"<option value='' selected='selected'>Choose board size</option>" +
+				"<optgroup label='Board sizes'>" +
+				"<option value='20'>20 x 26</option>" +
+				"<option value='40'>40 x 52</option>" +
+				"<option value='64'>64 x 64</option>" +
+				"</optgroup>" +
+				"</select>" +
+				"<div class='invalid-feedback'>Invalid board size</div></div>" +
+
+				"<div class='form-check form-switch w-100'>" +
+				"<input type='checkbox' class='form-check-input form-control-input' name='CpuOponent' id='CpuOponent' />" +
+				"<label class='form-check-label' for='CpuOponent'>Play against CPU</label>" +
+				"</div>";
+		}
+
+		innerForm +=
+			"<a href='GamesList' class='btn btn-primary'>Games list</a>" +
+			"<a href='Highscores' class='btn btn-primary'>Best</a>" +
+			"<a href='Rules' class='btn btn-primary'>Game rules</a>" +
+			(logoutPath ? "<input type='submit' name='action' value='Logout' class='btn btn-warning rounded-bottom' formnovalidate='formnovalidate' />" : "");
+	}
+	else {
+		//not logged or bad
+
+		document.querySelector("p.inkhome").textContent = 'You are not logged in ... or allowed 😅';
+
+		innerForm +=
+			"<a href='Rules' class='btn btn-primary rounded-top'>Game rules</a>" +
+			(loginPath ? "<a href='" + loginPath + "' class='btn btn-primary'>Login</a>" : "") +
+			(registerPath ? "<a href='" + registerPath + "' class='btn btn-primary rounded-bottom'>Register</a>" : "");
+	}
+	form.innerHTML += innerForm;
+}
+
+function ListOnLoad() {
+	const alert = document.querySelector(".alert.inkgames");
+	let msg = document.querySelector(".alert.inkgames > span").textContent;
+	if (msg !== "") {
+		msg = msg.toLowerCase();
+		let addendum;
+		if (msg.indexOf('exception') !== -1 || msg.indexOf('error') !== -1)
+			addendum = 'danger';
+		else if (msg.indexOf('warning') !== -1)
+			addendum = 'warning';
+		else
+			addendum = 'success';
+
+		alert.classList.add('alert-' + addendum);
+		alert.classList.remove('d-none');
+	}
+	else
+		alert.parentNode.removeChild(alert);
+}
+
+export { InkBallGame, HomeOnLoad, ListOnLoad };

@@ -19,17 +19,15 @@ namespace InkBall.Module.Pages
 	{
 		public const string ASPX = "GamesList";
 
-		private readonly IOptions<InkBallOptions> _commonUIConfigureOptions;
 		private readonly IHubContext<GameHub, IGameClient> _inkballHubContext;
 
 
 		public IEnumerable<InkBallGame> GamesList { get; private set; }
 
 
-		public GamesListModel(GamesContext dbContext, ILogger<RulesModel> logger, IOptions<InkBallOptions> commonUIConfigureOptions,
+		public GamesListModel(GamesContext dbContext, ILogger<RulesModel> logger,
 			IHubContext<Hubs.GameHub, Hubs.IGameClient> inkballHubContext) : base(dbContext, logger)
 		{
-			_commonUIConfigureOptions = commonUIConfigureOptions;
 			_inkballHubContext = inkballHubContext;
 		}
 

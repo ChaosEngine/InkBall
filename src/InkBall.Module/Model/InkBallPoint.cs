@@ -269,7 +269,7 @@ namespace InkBall.Module.Model
 		/// <summary>
 		/// Helper for serialization only selected properties
 		/// </summary>
-		private sealed record ThinSerializedPoint : IThinPoint
+		internal sealed record ThinSerializedPoint : IThinPoint
 		{
 			public int iGameId { get; set; }
 
@@ -313,7 +313,7 @@ namespace InkBall.Module.Model
 		{
 			//string last_move = JsonSerializer.Serialize(this, _ignoreNullJsonSerializerOptions);
 			var thin_point = new ThinSerializedPoint(this);
-			string last_move = JsonSerializer.Serialize(thin_point);
+			string last_move = JsonSerializer.Serialize(thin_point, ThinSerializedPoint_Context.Default.ThinSerializedPoint);
 
 			return last_move;
 		}

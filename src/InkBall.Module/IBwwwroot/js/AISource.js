@@ -1,5 +1,5 @@
 import concaveman from "concaveman";
-import decomp from "poly-decomp";
+// import decomp from "poly-decomp";
 import { StatusEnum, LocalLog, sortPointsClockwise, /*Sleep,*/ pnpoly } from "./shared.js";
 
 
@@ -12,7 +12,7 @@ class GraphAI {
 	#Points;
 	#POINT_STARTING;
 	#POINT_IN_PATH;
-	
+
 	constructor(iGridWidth, iGridHeight, pointStore) {
 		this.#iGridWidth = iGridWidth;
 		this.#iGridHeight = iGridHeight;
@@ -32,7 +32,7 @@ class GraphAI {
 		cpufillCol: cpuFillColor = 'var(--bluish)'
 		//, visuals: presentVisually = false
 	} = {}) {
-		const graph_points = [], graph_edges = new Map();
+		const graph_points = new Map(), graph_edges = new Map();
 
 		const isPointOKForPath = function (freePointStatusArr, pt) {
 			const status = pt.GetStatus();
@@ -47,32 +47,29 @@ class GraphAI {
 				const next = await this.#Points.get(to_y * this.#iGridWidth + to_x);
 				if (next && isPointOKForPath([freePointStatus], next) === true) {
 
-					if (graph_edges.has(`${x},${y}_${to_x},${to_y}`) === false && graph_edges.has(`${to_x},${to_y}_${x},${y}`) === false) {
-
-						const edge = {
-							from: point,
-							to: next
-						};
+					const point_hash = `${x},${y}`;
+					const next_hash = `${to_x},${to_y}`;
+					if (graph_edges.has(`${point_hash}_${next_hash}`) === false && graph_edges.has(`${next_hash}_${point_hash}`) === false) {
 						//if (presentVisually === true) {
 						//	const line = CreateLine(3, 'rgba(0, 255, 0, 0.3)');
 						//	line.move(x, y, next_pos.x, next_pos.y);
 						//	edge.line = line;
 						//}
-						graph_edges.set(`${x},${y}_${to_x},${to_y}`, edge);
+						graph_edges.set(`${point_hash}_${next_hash}`, { from: point, to: next });
 
 
-						if (graph_points.includes(point) === false) {
+						if (!graph_points.has(point_hash)) {
 							point.adjacents = [next];
-							graph_points.push(point);
+							graph_points.set(point_hash, point);
 						} else {
-							const pt = graph_points.find(x => x === point);
+							const pt = graph_points.get(point_hash);
 							pt.adjacents.push(next);
 						}
-						if (graph_points.includes(next) === false) {
+						if (!graph_points.has(next_hash)) {
 							next.adjacents = [point];
-							graph_points.push(next);
+							graph_points.set(next_hash, next);
 						} else {
-							const pt = graph_points.find(x => x === next);
+							const pt = graph_points.get(next_hash);
 							pt.adjacents.push(point);
 						}
 					}
@@ -103,7 +100,10 @@ class GraphAI {
 			}
 		}
 		//return graph
-		return { vertices: graph_points, edges: Array.from(graph_edges.values()) };
+		return {
+			vertices: Array.from(graph_points.values()),
+			edges: Array.from(graph_edges.values())
+		};
 	}
 
 	async #IsPointOutsideAllPaths(x, y, allLines) {
@@ -296,7 +296,7 @@ class GraphAI {
 }
 
 // eslint-disable-next-line no-unused-vars
-function concavemanTesting() {
+/* function concavemanTesting() {
 	const precision_points = [[484, 480], [676, 363], [944, 342], [678, 41], [286, 237], [758, 215], [752, 117], [282, 492], [609, 262], [129, 252]];
 	const concavity = 2.0, lengthThreshold = 0.0;
 	const concaveman_output = concaveman(precision_points, concavity, lengthThreshold);
@@ -317,6 +317,6 @@ function concavemanTesting() {
 		!convexPolygons || convexPolygons.length <= 0) {
 		LocalLog('decomp or concaveman error');
 	}
-}
+} */
 
 export { concaveman, GraphAI };

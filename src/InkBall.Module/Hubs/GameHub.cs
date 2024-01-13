@@ -181,6 +181,8 @@ namespace InkBall.Module.Hubs
 				ThisPlayer = this_Player;
 			}
 
+			if(ThisGame == null || ThisPlayer == null) return;
+
 			ThisUserName = ThisPlayer.UserName;
 
 			// if (OtherPlayer == null || OtherUserIdentifier == null)
@@ -245,9 +247,15 @@ namespace InkBall.Module.Hubs
 					&& (GamesContext.ActiveVisibleGameStates.Contains(w.GameState))
 				, token);
 				if (dbGame == null)
-					throw new NoGameArgumentNullException(nameof(dbGame), "game == null");
+				{
+					// throw new NoGameArgumentNullException(nameof(dbGame), "game == null");
+					return (null, null);
+				}
 				if (!(dbGame.iPlayer1Id == ThisPlayerID || (dbGame.iPlayer2Id.HasValue && dbGame.iPlayer2Id.Value == ThisPlayerID)))
-					throw new ArgumentException("no player exist in that game");
+				{
+					// throw new ArgumentException("no player exist in that game");
+					return (dbGame, null);
+				}
 
 				bool bIsPlayer1;
 				if (thisUserIdentifier == dbGame.Player1.sExternalId)
@@ -261,14 +269,20 @@ namespace InkBall.Module.Hubs
 					bIsPlayer1 = false;
 				}
 				else
-					throw new ArgumentNullException(nameof(thisUserIdentifier), "player not found");
+				{
+					// throw new ArgumentNullException(nameof(thisUserIdentifier), "player not found");
+					return (dbGame, null);
+				}
 				dbGame.bIsPlayer1 = bIsPlayer1;
 
 				//additional validation
 				string value = claimsPrincipal.FindFirstValue(nameof(Pages.BasePageModel.InkBalPlayerId));
 				int.TryParse(value, out int this_PlayerId);
 				if (this_PlayerId != this_Player.iId)
-					throw new ArgumentException("this_PlayerId != this_Player.iId", nameof(this_Player.iId));
+				{
+					// throw new ArgumentException("this_PlayerId != this_Player.iId", nameof(this_Player.iId));
+					return (dbGame, null);
+				}
 
 				game = dbGame;
 				//this.Context.Items[nameof(ThisGame)] = game;
@@ -336,10 +350,10 @@ namespace InkBall.Module.Hubs
 				var msg = $"Other player {ThisPlayer?.UserName} disconnected 😢";
 				await Clients.User(OtherUserIdentifier).ServerToClientOtherPlayerDisconnected(msg);
 			}
-			catch (NoGameArgumentNullException ex)
-			{
-				_logger.LogWarning(ex, ex.Message);
-			}
+			//catch (NoGameArgumentNullException ex)
+			//{
+			//	_logger.LogWarning(ex, ex.Message);
+			//}
 			catch (Exception ex)
 			{
 				_logger.LogError(ex.Message);
@@ -387,7 +401,7 @@ namespace InkBall.Module.Hubs
 				if (ThisGame == null || ThisPlayer == null || OtherPlayer == null || string.IsNullOrEmpty(OtherUserIdentifier)
 					|| string.IsNullOrEmpty(ThisUserName))
 				{
-					throw new ArgumentException("bad player or game");
+					throw new NoGameArgumentNullException("bad player or game");
 				}
 				if (!ThisGame.IsThisPlayerActive(point))
 				{
@@ -479,7 +493,7 @@ namespace InkBall.Module.Hubs
 			{
 				if (ThisGame == null || ThisPlayer == null || OtherPlayer == null || string.IsNullOrEmpty(OtherUserIdentifier)
 					|| string.IsNullOrEmpty(ThisUserName))
-					throw new ArgumentException("bad game or player");
+					throw new NoGameArgumentNullException("bad game or player");
 				bool isDelayedPathDrawn = false;
 				if (!ThisGame.IsThisPlayerActive(path)
 					&& !(isDelayedPathDrawn = ThisPlayer.IsDelayedPathDrawPossible()))
@@ -638,7 +652,7 @@ namespace InkBall.Module.Hubs
 			{
 				if (ThisGame == null || ThisPlayer == null || OtherPlayer == null || string.IsNullOrEmpty(OtherUserIdentifier)
 					|| string.IsNullOrEmpty(ThisUserName))
-					throw new ArgumentException("bad game or player");
+					throw new NoGameArgumentNullException("bad game or player");
 				if (!ThisGame.IsThisPlayerActive())
 					throw new ArgumentException("not your turn");
 
@@ -729,13 +743,13 @@ namespace InkBall.Module.Hubs
 				ThisPlayer = await GetPlayer(claimsPrincipal, ThisUserIdentifier, token);
 
 				if (gameID <= 0 || ThisPlayer == null)
-					throw new ArgumentException("bad player or game");
+					throw new NoGameArgumentNullException("bad player or game");
 			}
 			else
 			{
 				await LoadGameAndPlayerStructures(token);
 				if (ThisGame == null || ThisPlayer == null || string.IsNullOrEmpty(ThisUserName))
-					throw new ArgumentException("bad player or game");
+					throw new NoGameArgumentNullException("bad player or game");
 
 				gameID = ThisGame.iId;
 			}
@@ -762,7 +776,7 @@ namespace InkBall.Module.Hubs
 
 			await LoadGameAndPlayerStructures(token);
 			if (ThisGame == null || ThisPlayer == null || string.IsNullOrEmpty(ThisUserName))
-				throw new ArgumentException("bad player or game");
+				throw new NoGameArgumentNullException("bad player or game");
 
 			try
 			{
@@ -788,7 +802,7 @@ namespace InkBall.Module.Hubs
 
 			await LoadGameAndPlayerStructures(token);
 			if (ThisGame == null || ThisPlayer == null || string.IsNullOrEmpty(ThisUserName))
-				throw new ArgumentException("bad player or game");
+				throw new NoGameArgumentNullException("bad player or game");
 
 			try
 			{

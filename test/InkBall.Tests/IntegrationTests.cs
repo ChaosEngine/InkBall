@@ -22,7 +22,7 @@ namespace InkBall.IntegrationTests
 	{
 		public static string ExtractAntiForgeryToken(string htmlResponseText)
 		{
-			if (htmlResponseText == null) throw new ArgumentNullException("htmlResponseText");
+			ArgumentNullException.ThrowIfNull(htmlResponseText);
 
 			Match match = Regex.Match(htmlResponseText, @"\<input name=""__RequestVerificationToken"" type=""hidden"" value=""([^""]+)"" \/\>");
 			return match.Success ? match.Groups[1].Captures[0].Value : null;
@@ -316,7 +316,7 @@ namespace InkBall.IntegrationTests
 						response.EnsureSuccessStatusCode();
 
 						var responseString = await response.Content.ReadAsStringAsync();
-						Assert.Contains("const msg = \"You are not logged in\";", responseString);
+						Assert.Contains("You are not logged in", responseString);
 					}
 				}
 			}//end using get_response

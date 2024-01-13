@@ -1,18 +1,25 @@
 ﻿@charset "UTF-8";
 @import "svg-url";
 
-/**********inkgame*********/
-h3.inkgame {
-	color: darkorange;
-}
-
-p.inkgame {
-	margin-bottom: 0.3em;
-}
-
-@mixin background($cellWidth, $cellHeight, $fill, $stroke) {
+//////////////////////Functions, mixins start//////////////////////
+@mixin generateBackgroundDataUrlSvg($cellWidth, $cellHeight, $strokePrefersLight, $strokePrefersDark) {
 	//https://codepen.io/jakob-e/pen/doMoML processed SVG
-	background-image: svg-url('<svg xmlns="http://www.w3.org/2000/svg"><defs><pattern id="grid" width="#{$cellWidth}" height="#{$cellHeight}" patternUnits="userSpaceOnUse"><rect width="#{$cellWidth}" height="#{$cellHeight}" fill="#{$fill}" stroke="#{$stroke}" stroke-width="0.25"/></pattern></defs><rect width="100%" height="100%" fill="url(#grid)" /></svg>');
+	background-image: svg-url(
+	'<svg xmlns="http://www.w3.org/2000/svg">' +
+		'<style>' +
+			'@media(prefers-color-scheme:dark){' +
+				'#grp{' +
+					'stroke:#{$strokePrefersDark}' +
+				'}' +
+			'}' +
+		'</style>' +
+		'<defs>' +
+			'<pattern id="grp" width="#{$cellWidth}" height="#{$cellHeight}" stroke="#{$strokePrefersLight}" patternUnits="userSpaceOnUse">' +
+				'<rect width="#{$cellWidth}" height="#{$cellHeight}" fill="none" stroke-width="0.25"/>' +
+			'</pattern>' +
+		'</defs>' +
+		'<rect width="100%" height="100%" fill="url(#grp)"/>' +
+	'</svg>');
 }
 
 @mixin baseBoard($width, $height, $cellWidth, $cellHeight) {
@@ -28,12 +35,22 @@ p.inkgame {
 	}
 }
 
-@mixin irregularBoard($parent, $width, $height, $cellWidth: 15px, $cellHeight: 1em, $fill, $stroke) {
+@mixin irregularBoard($parent, $width, $height, $cellWidth: 15px, $cellHeight: 1em, $strokePrefersLight: gray, $strokePrefersDark: white) {
 	#{$parent}-#{$width}x#{$height} {
-		@include background(15, 16, $fill, $stroke);
+		@include generateBackgroundDataUrlSvg(15, 16, $strokePrefersLight, $strokePrefersDark);
 		background-size: calc(#{$cellWidth} * 5) calc(#{$cellHeight} * 5);
 		@include baseBoard(#{$width}, #{$height}, #{$cellWidth}, #{$cellHeight});
 	}
+}
+//////////////////////Functions, mixins end//////////////////////
+
+/**********inkgame*********/
+h3.inkgame {
+	color: darkorange;
+}
+
+p.inkgame {
+	margin-bottom: 0.3em;
 }
 
 .inkgame {
@@ -58,19 +75,14 @@ p.inkgame {
 
 	@media (prefers-color-scheme: light) {
 		--path_draw: black;
-
-		.boardsize-20x26, .boardsize-40x52, .boardsize-64x64 {
-			@include background(16, 16, 'none', 'gray');
-			background-size: 1em 1em;
-		}
 	}
 	@media (prefers-color-scheme: dark) {
 		--path_draw: white;
+	}
 
-		.boardsize-20x26, .boardsize-40x52, .boardsize-64x64 {
-			@include background(16, 16, 'black', 'white');
-			background-size: 1em 1em;
-		}
+	.boardsize-20x26, .boardsize-40x52, .boardsize-64x64 {
+		@include generateBackgroundDataUrlSvg(16, 16, gray, white);
+		background-size: 1em 1em;
 	}
 
 	& svg#screen {
@@ -96,78 +108,76 @@ p.inkgame {
 	}
 }
 
-svg {
-	&>circle {
-		///
-		/// Those r: XXX need to go along with package.json overrides for gulp-clean-css to use clean-css: >5* version
-		/// https://docs.npmjs.com/cli/v8/configuring-npm/package-json#overrides
-		/// "overrides": {
-		/// 	"clean-css": "5.3.1"
-		/// }
-		///
-		&[data-status="POINT_FREE_RED"] {
-			fill: var(--redish);
-			r: var(--point_radius);
-		}
-
-		&[data-status="POINT_FREE_BLUE"] {
-			fill: var(--bluish);
-			r: var(--point_radius);
-		}
-
-		&[data-status="POINT_OWNED_BY_RED"] {
-			// fill: lightskyblue;
-			fill: var(--owned_by_red);
-			r: var(--point_radius);
-		}
-
-		&[data-status="POINT_OWNED_BY_BLUE"] {
-			// fill: lightpink;
-			fill: var(--owned_by_blue);
-			r: var(--point_radius);
-		}
-
-		&[data-status="POINT_IN_PATH"] {
-			// fill: lightgray;
-			r: var(--point_radius);
-		}
-
-		&[data-status="POINT_STARTING"] {
-			fill: yellow;
-			r: 0.5px;
-		}
-		
-		//mouse pointer/cursor style
-		&[data-status="MOUSE_POINTER"] {
-			/* fill: transparent; */
-			stroke: rgba(128, 255, 0, 0.5);
-			stroke-width: 0.06em;
-			r: var(--point_radius);
-		}
-
-		//test points
-		// &[data-status="POINT_FREE"] {
-		// 	// fill: transparent;
-		// 	// stroke: gray;
-		// 	stroke-width: 0.1em;
-		// }
+circle {
+	///
+	/// Those r: XXX need to go along with package.json overrides for gulp-clean-css to use clean-css: >5* version
+	/// https://docs.npmjs.com/cli/v8/configuring-npm/package-json#overrides
+	/// "overrides": {
+	/// 	"clean-css": "5.3.1"
+	/// }
+	///
+	&[data-status="POINT_FREE_RED"] {
+		fill: var(--redish);
+		r: var(--point_radius);
 	}
 
-	&>polyline {
-		stroke-width: 0.1875px;
-		fill-opacity: 0.1;
-		stroke-linecap: round;
-		stroke-linejoin: round;
+	&[data-status="POINT_FREE_BLUE"] {
+		fill: var(--bluish);
+		r: var(--point_radius);
+	}
 
-		@media (prefers-reduced-motion: no-preference) {
-			&[data-id="0"] {
-				stroke-dasharray: 0.7;
-				animation: dash 5s infinite linear reverse;
-			}
-			@keyframes dash {
-				to {
-					stroke-dashoffset: 10;
-				}
+	&[data-status="POINT_OWNED_BY_RED"] {
+		// fill: lightskyblue;
+		fill: var(--owned_by_red);
+		r: var(--point_radius);
+	}
+
+	&[data-status="POINT_OWNED_BY_BLUE"] {
+		// fill: lightpink;
+		fill: var(--owned_by_blue);
+		r: var(--point_radius);
+	}
+
+	&[data-status="POINT_IN_PATH"] {
+		// fill: lightgray;
+		r: var(--point_radius);
+	}
+
+	&[data-status="POINT_STARTING"] {
+		fill: yellow;
+		r: 0.5px;
+	}
+	
+	//mouse pointer/cursor style
+	&[data-status="MOUSE_POINTER"] {
+		/* fill: transparent; */
+		stroke: rgba(128, 255, 0, 0.5);
+		stroke-width: 0.06em;
+		r: var(--point_radius);
+	}
+
+	//test points
+	// &[data-status="POINT_FREE"] {
+	// 	// fill: transparent;
+	// 	// stroke: gray;
+	// 	stroke-width: 0.1em;
+	// }
+}
+
+polyline {
+	stroke-width: 0.1875px;
+	fill-opacity: 0.1;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+
+	@media (prefers-reduced-motion: no-preference) {
+		&[data-id="0"] {
+			stroke-dasharray: 0.7;
+			animation: dash 5s infinite linear reverse;
+		}
+		@keyframes dash {
+			to {
+				stroke-dashoffset: 10;
 			}
 		}
 	}
@@ -177,12 +187,8 @@ svg {
 
 @include board('.boardsize', 40, 52);
 
-// @media (prefers-color-scheme: light) {
-// 	@include irregularBoard('.boardsize', 64, 64, 'none', 'gray');
-// }
-// @media (prefers-color-scheme: dark) {
-// 	@include irregularBoard('.boardsize', 64, 64, 'black', 'white');
-// }
+// 	@include irregularBoard('.boardsize', 64, 64, 'none', 'gray', 'white');
+
 @include board('.boardsize', 64, 64);
 
 [data-otherplayerid="-1"], [data-otherplayerid=""] {

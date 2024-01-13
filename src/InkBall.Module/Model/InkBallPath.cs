@@ -238,10 +238,10 @@ namespace InkBall.Module.Model
 	{
 		delegate void ActionRef<T1, T2, T3, T4>(ref T1 arg1, ref T2 arg2, ref T3 arg3, ref T4 arg4);
 
-		/// <summary>
-		/// Helper for serialization only selected properties
-		/// </summary>
-		private sealed record ThinSerializedPath : IThinPath
+        /// <summary>
+        /// Helper for serialization only selected properties
+        /// </summary>
+        internal sealed record ThinSerializedPath : IThinPath
 		{
 			public string PointsAsString { get; set; }
 
@@ -440,7 +440,7 @@ namespace InkBall.Module.Model
 			//	//DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
 			//	DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingDefault
 			//});
-			string last_move_and_path_json = JsonSerializer.Serialize(thin_path);
+			string last_move_and_path_json = JsonSerializer.Serialize(thin_path, ThinSerializedPath_Context.Default.ThinSerializedPath);
 
 			return last_move_and_path_json;
 		}

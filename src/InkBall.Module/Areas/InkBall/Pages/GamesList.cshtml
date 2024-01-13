@@ -8,18 +8,17 @@
 
     HtmlHelpers.RenderHeaderSection(this, Url, commonUIConfigureOptions);
 
-    var sExternalUserID = Model.Player.sExternalId;
-    var bIsCurrentGameOk = Model.Game != null;
-    var bCanViewOtherPlayerGames = (await authorization.AuthorizeAsync(User, null, Constants.InkBallViewOtherGamesPolicyName)).Succeeded;
+	var bIsCurrentGameOk = Model.Game != null;
 }
 
-<div class="alert alert-dismissible fade show inkgames" role="alert">
-	<span></span>
+<div class="alert alert-dismissible fade show d-none inkgames" role="alert">
+	<span>@Model.Message</span>
 	<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 </div>
 
 <div class='container inkgames'>
 	<div class="table-responsive">
+		<a href='Home' class='btn btn-outline-primary'>Home</a>
 		<table class='table game_tab'>
 			<thead>
 				<tr>
@@ -34,6 +33,8 @@
 			<tbody>
 			@if(Model.GamesList?.Count() > 0)
 			{
+				var sExternalUserID = Model.Player.sExternalId;
+    			var bCanViewOtherPlayerGames = (await authorization.AuthorizeAsync(User, null, Constants.InkBallViewOtherGamesPolicyName)).Succeeded;
 				foreach (var game in Model.GamesList)
 				{
 					<tr>
@@ -128,73 +129,50 @@
 			</tbody>
 		</table>
 	</div>
+	@if (!bIsCurrentGameOk)
+	{
 	<form method='post' class="was-validated">
-		@if (!bIsCurrentGameOk)
-		{
-			<fieldset class="g-3">
-				<legend class="col-sm-12 col-md-4 col-lg-4 col-xl-3">New game creation</legend>
-				<div class="row" role="group" aria-label="New game options">
-					<div class="col-sm-12 col-md-4 col-lg-4 col-xl-3">
-						<select name='GameType' id='GameType' class="form-select" required>
-							<option value='' selected='selected'>Choose game type</option>
-							<optgroup label='Game types'>
-								<option value='0'>First capture wins</option>
-								<option value='1'>First 5 captures wins</option>
-								<option value='2'>First 5 paths wins</option>
-								<option value='3'>Advantage of 5 paths wins</option>
-							</optgroup>
-						</select>
-						<div class="invalid-feedback">Invalid game type</div>
-					</div>
-					<div class="col-sm-12 col-md-4 col-lg-4 col-xl-3">
-						<select name='BoardSize' id='BoardSize' class="form-select" required>
-							<option value='' selected='selected'>Choose board size</option>
-							<optgroup label='Board sizes'>
-								<option value='20'>20 x 26</option>
-								<option value='40'>40 x 52</option>
-								<option value='64'>64 x 64</option>
-							</optgroup>
-						</select>
-						<div class="invalid-feedback">Invalid bard size</div>
-					</div>
-					<div class="col-sm-12 col-md-auto col-xl-3 form-check form-switch ps-2">
-						<input type="checkbox" class="form-check-input form-control-input mx-1" name="CpuOponent" id="CpuOponent" />
-						<label class="form-check-label" for="CpuOponent">Play against CPU</label>
-					</div>
-					<div class="col-sm-12 col-md-auto">
-						<input type='submit' name='action' value='New game' class='btn btn-primary' />
-					</div>
+		<fieldset class="g-3">
+			<legend class="col-sm-12 col-md-4 col-lg-4 col-xl-3">New game creation</legend>
+			<div class="row" role="group" aria-label="New game options">
+				<div class="col-sm-12 col-md-4 col-lg-4 col-xl-3">
+					<select name='GameType' id='GameType' class="form-select" required>
+						<option value='' selected='selected'>Choose game type</option>
+						<optgroup label='Game types'>
+							<option value='0'>First capture wins</option>
+							<option value='1'>First 5 captures wins</option>
+							<option value='2'>First 5 paths wins</option>
+							<option value='3'>Advantage of 5 paths wins</option>
+						</optgroup>
+					</select>
+					<div class="invalid-feedback">Invalid game type</div>
 				</div>
-			</fieldset>
-			<a href='Home' class='mt-2 btn btn-outline-primary'>Home</a>
-		}
-		else
-		{
-			<a href='Home' class='btn btn-outline-primary'>Home</a>
-		}
+				<div class="col-sm-12 col-md-4 col-lg-4 col-xl-3">
+					<select name='BoardSize' id='BoardSize' class="form-select" required>
+						<option value='' selected='selected'>Choose board size</option>
+						<optgroup label='Board sizes'>
+							<option value='20'>20 x 26</option>
+							<option value='40'>40 x 52</option>
+							<option value='64'>64 x 64</option>
+						</optgroup>
+					</select>
+					<div class="invalid-feedback">Invalid bard size</div>
+				</div>
+				<div class="col-sm-12 col-md-auto col-xl-3 form-check form-switch ps-2">
+					<input type="checkbox" class="form-check-input form-control-input mx-1" name="CpuOponent" id="CpuOponent" />
+					<label class="form-check-label" for="CpuOponent">Play against CPU</label>
+				</div>
+				<div class="col-sm-12 col-md-auto">
+					<input type='submit' name='action' value='New game' class='btn btn-primary' />
+				</div>
+			</div>
+		</fieldset>
 	</form>
+	}
 </div>
 
-<script type='text/javascript'>
-"use strict";
-	const alert = document.querySelector(".alert.alert-dismissible.inkgames");
-	const msg = "@Model.Message";
-	if (msg !== "") {
-		let addendum;
-		if (msg.toLowerCase().indexOf('exception') !== -1)
-			addendum = 'danger';
-		else if (msg.toLowerCase().indexOf('error') !== -1)
-			addendum = 'danger';
-		else if (msg.toLowerCase().indexOf('warning') !== -1)
-			addendum = 'warning';
-		else
-			addendum = 'success';
+<script type='module'>
+	import { ListOnLoad } from "@Url.Content(Constants.WwwIncludeInkballJS)";
 
-		const statusMessageClass = 'alert-' + addendum;
-		alert.classList.add(statusMessageClass);
-		const span = alert.querySelector("span");
-		span.textContent = msg;
-	}
-	else
-		alert.parentNode.removeChild(alert);
+	ListOnLoad();
 </script>
