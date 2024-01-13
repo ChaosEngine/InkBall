@@ -5,7 +5,7 @@
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
     <!-- <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest> -->
     <LangVersion>latest</LangVersion>
-    <Version>1.0.1.22</Version>
+    <Version>1.0.1.23</Version>
     <Configurations>Debug;Release;Oracle</Configurations>
     <PublishTrimmed>true</PublishTrimmed>
     <TrimMode>partial</TrimMode>
