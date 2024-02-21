@@ -1,6 +1,6 @@
 import concaveman from "concaveman";
 // import decomp from "poly-decomp";
-import { StatusEnum, LocalLog, sortPointsClockwise, /*Sleep,*/ pnpoly } from "./shared.js";
+import { StatusEnum, /*LocalLog,*/ sortPointsClockwise, /*Sleep,*/ pnpoly } from "./shared.js";
 
 
 /**
