@@ -2327,6 +2327,46 @@ class InkBallGame {
 	async #OnTestConcaveman(event) {
 		event.preventDefault();
 
+		const loadParamsFromStore = (store) => {
+			const fromStore = JSON.parse(store.getItem("AIConcaveman")) || {};
+			const obj2Return = {};
+
+			if (fromStore?.concavity !== undefined) {
+				let concavity = parseFloat(fromStore.concavity);
+				concavity = (isNaN(concavity) || concavity <= 0) ? 2.0 : concavity;
+				obj2Return.concavity = concavity;
+			}
+			else
+				obj2Return.concavity = 2.0;
+
+			if (fromStore?.lengthThreshold !== undefined) {
+				let lengthThreshold = parseFloat(fromStore.lengthThreshold);
+				lengthThreshold = (isNaN(lengthThreshold) || lengthThreshold <= 0) ? 0.0 : lengthThreshold;
+				obj2Return.lengthThreshold = lengthThreshold;
+			}
+			else
+				obj2Return.lengthThreshold = 0.0;
+
+			return obj2Return;
+		};
+		const saveParamsToStore = (params, store) => {
+			const toStore = JSON.parse(store.getItem("AIConcaveman")) || {};
+			let persist = false;
+			if (params.concavity !== toStore?.concavity) {
+				toStore.concavity = params.concavity;
+				persist = true;
+			}
+			if (params.lengthThreshold !== toStore?.lengthThreshold) {
+				toStore.lengthThreshold = params.lengthThreshold;
+				persist = true;
+			}
+
+			if (persist === true) {
+				store.setItem("AIConcaveman", JSON.stringify(toStore));
+			}
+		};
+
+		const runParams = loadParamsFromStore(window.localStorage);
 		const data = await this.#RunAIWorker((worker) => {
 			const serialized_points = Array.from(this.#Points.store.entries()).map(([key, value]) => ({ key, value: value.Serialize() }));
 			//const serialized_paths = this.#Lines.store.map(pa => pa.Serialize());
@@ -2335,9 +2375,13 @@ class InkBallGame {
 				operation: "CONCAVEMAN",
 				boardSize: { iGridWidth: this.#iGridWidth, iGridHeight: this.#iGridHeight },
 				state: this.#GetGameStateForIndexedDb(),
-				points: serialized_points
+				points: serialized_points,
+				concavity: runParams.concavity,
+				lengthThreshold: runParams.lengthThreshold
 			});
 		});
+		saveParamsToStore(runParams, window.localStorage);
+
 		if (data.convex_hull && data.convex_hull.length > 0) {
 			const convex_hull = data.convex_hull;
 
@@ -2522,9 +2566,9 @@ class InkBallGame {
 					continue;
 				}
 				const rand_color = RandomColor();
-				const r = 2;
+				const radius = 2;
 
-				const enclosing_circle = this.#SvgVml.CreateOval(r);
+				const enclosing_circle = this.#SvgVml.CreateOval(radius);
 				enclosing_circle.move(x, y);
 				enclosing_circle.SetStrokeColor(rand_color);
 				enclosing_circle.StrokeWeight(0.1);
@@ -2540,7 +2584,7 @@ class InkBallGame {
 						if (false === await this.#IsPointOutsideAllPaths(cpu_x, cpu_y, allLines))
 							continue;
 
-						if (0 <= this.#SvgVml.IsPointInCircle({ x: cpu_x, y: cpu_y }, { x, y }, r)) {
+						if (0 <= this.#SvgVml.IsPointInCircle({ x: cpu_x, y: cpu_y }, { x, y }, radius)) {
 							cpu_pt.x = cpu_x;
 							cpu_pt.y = cpu_y;
 							possible.push(cpu_pt);
@@ -2697,7 +2741,7 @@ class InkBallGame {
 
 	async #OnTestClustering(event) {
 		const loadParamsFromStore = (store) => {
-			const fromStore = JSON.parse(store.getItem("AIClustering"));
+			const fromStore = JSON.parse(store.getItem("AIClustering")) || {};
 			const obj2Return = {};
 
 			if (fromStore?.x !== undefined && this.#iLastX < 0) {
@@ -2740,8 +2784,8 @@ class InkBallGame {
 			else
 				obj2Return.minPointsPerCluster = 2;
 
-			if (fromStore?.method !== undefined && ["KMEANS", "OPTICS", "DBSCAN"].includes(fromStore.method)) {
-				obj2Return.method = fromStore.method;
+			if (fromStore?.method !== undefined && ["KMEANS", "OPTICS", "DBSCAN"].includes(fromStore.method.toUpperCase())) {
+				obj2Return.method = fromStore.method.toUpperCase();
 			}
 			else
 				obj2Return.method = "KMEANS";
@@ -2772,7 +2816,7 @@ class InkBallGame {
 				persist = true;
 			}
 			if (params.method !== toStore?.method) {
-				toStore.method = params.method;
+				toStore.method = params.method.toUpperCase();
 				persist = true;
 			}
 
@@ -2787,7 +2831,7 @@ class InkBallGame {
 		//get from local_storage
 		const runParams = loadParamsFromStore(window.localStorage);
 		if (!(runParams.y >= 0 && runParams.x >= 0)) {
-			LocalLog("!!!First you need to click some point with mouse!!!");
+			LocalLog("!!!First you need to click some point with mouse to pick the color!!!");
 			return;
 		}
 		const point_color = (await this.#Points.get(runParams.y * this.#iGridWidth + runParams.x))?.GetFillColor();
@@ -2815,15 +2859,18 @@ class InkBallGame {
 		});
 
 		if (data.clusters?.length > 0) {
+			const clusters = [];
 			for (const cluster of data.clusters) {
 				const rand_color = RandomColor();
 
+				const points_in_cluster = [];
 				for (const index of cluster) {
 					const vert = arr[index];
 					const [x, y] = vert;
 					// const pt = document.querySelector(`svg > circle[cx="${x}"][cy="${y}"]`);
 					const pt = await this.#Points.get(y * this.#iGridWidth + x);
 					if (pt) {
+						points_in_cluster.push(pt);
 						// pt.setAttribute("data-status", 'test');
 						pt.SetStrokeColor(rand_color);
 						pt.SetFillColor(rand_color);
@@ -2832,7 +2879,9 @@ class InkBallGame {
 					}
 					// await Sleep(50);
 				}
+				clusters.push(points_in_cluster);
 			}
+			LocalLog({ method: data.method, clusters, plot: data.plot, noise: data.noise });
 		}
 	}
 
@@ -3705,7 +3754,7 @@ class InkBallGame {
 			hare = getNextFunc(hare);   // Hare and tortoise move at same speed
 			mu += 1;
 		}
-
+	
 		// Find the length of the shortest cycle starting from x_μ
 		// The hare moves one step at a time while tortoise is still.
 		// lam is incremented until λ is found.
@@ -3715,7 +3764,7 @@ class InkBallGame {
 			hare = getNextFunc(hare);
 			lam += 1;
 		}
-
+	
 		return { lam, mu };
 		*/
 	}

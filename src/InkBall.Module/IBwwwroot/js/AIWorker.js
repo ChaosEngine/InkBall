@@ -47,7 +47,7 @@ addEventListener('message', async function (e) {
 					const { x, y } = pt.GetPosition();
 					return [x, y];
 				});
-				const convex_hull = concaveman(vertices, 2.0, 0.0);
+				const convex_hull = concaveman(vertices, params.concavity ?? 2.0, params.lengthThreshold ?? 0.0);
 
 				const mapped_verts = convex_hull.map(([x, y]) => ({ x, y }));
 				const cw_sorted_verts = sortPointsClockwise(mapped_verts);
@@ -105,8 +105,8 @@ addEventListener('message', async function (e) {
 							// parameters: 3 - number of clusters
 							const clusters = kmeans.run(dataset, numberOfClusters);
 
-							LocalLog({ method, clusters });
-							postMessage({ operation: params.operation, clusters });
+							// LocalLog({ method, clusters });
+							postMessage({ operation: params.operation, method, clusters });
 						}
 						break;
 					case "OPTICS":
@@ -116,8 +116,8 @@ addEventListener('message', async function (e) {
 							const clusters = optics.run(dataset, neighborhoodRadius, minPointsPerCluster);
 							const plot = optics.getReachabilityPlot();
 
-							LocalLog({ method, clusters, plot });
-							postMessage({ operation: params.operation, clusters, plot });
+							// LocalLog({ method, clusters, plot });
+							postMessage({ operation: params.operation, method, clusters, plot });
 						}
 						break;
 					case "DBSCAN":
@@ -127,8 +127,8 @@ addEventListener('message', async function (e) {
 							const clusters = dbscan.run(dataset, neighborhoodRadius, minPointsPerCluster);
 							const noise = dbscan.noise;
 
-							LocalLog({ method, clusters, noise });
-							postMessage({ operation: params.operation, clusters, noise });
+							// LocalLog({ method, clusters, noise });
+							postMessage({ operation: params.operation, method, clusters, noise });
 						}
 						break;
 

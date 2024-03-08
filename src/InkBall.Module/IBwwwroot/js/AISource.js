@@ -190,7 +190,7 @@ class GraphAI {
 
 		const printCycles = async (edges, mark) => {
 			// push the edges that into the 
-			// cycle adjacency list 
+			// cycle adjacency list
 			for (let e = 0; e < edges; e++) {
 				const mark_e = mark[e];
 				if (mark_e !== undefined && mark_e.length > 0) {
