@@ -109,6 +109,7 @@ addEventListener('message', async function (e) {
 							postMessage({ operation: params.operation, method, clusters });
 						}
 						break;
+
 					case "OPTICS":
 						{
 							const optics = new clustering.OPTICS();
@@ -120,6 +121,7 @@ addEventListener('message', async function (e) {
 							postMessage({ operation: params.operation, method, clusters, plot });
 						}
 						break;
+
 					case "DBSCAN":
 						{
 							const dbscan = new clustering.DBSCAN();

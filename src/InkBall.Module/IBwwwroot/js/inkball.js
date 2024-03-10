@@ -2,7 +2,7 @@
 /*global signalR*/
 "use strict";
 
-let SHRD, LocalLog, LocalError, StatusEnum, hasDuplicates, pnpoly, sortPointsClockwise, Sleep, depthFirstSearch;
+let SHRD, LocalLog, LocalError, StatusEnum, hasDuplicates, pnpoly, sortPointsClockwise, Sleep, depthFirstSearch, IBversionHash;
 
 /******** funcs-n-classes ********/
 const CommandKindEnum = Object.freeze({
@@ -436,13 +436,16 @@ class MessagesRingBufferStore {
  */
 async function importAllModulesAsync(gameOptions) {
 	const importMetaUrl = import.meta.url;//do not optimize, take into separate variable, miss..feature of terser-5.16.6
-	const selfFileName = importMetaUrl.split('/').at(-1);
+	const url = new URL(importMetaUrl);
+	IBversionHash = url.searchParams.get('v');
+
+	const selfFileName = url.pathname.split('/').at(-1);
 	const isMinified = selfFileName.indexOf("min") !== -1;
 
 	if (isMinified)
-		SHRD = await import(/* webpackChunkName: "shared.Min" */'./shared.min.js');
+		SHRD = await import(/* webpackChunkName: "shared.Min" */'./shared.min.js?v=' + IBversionHash);
 	else
-		SHRD = await import(/* webpackChunkName: "shared" */'./shared.js');
+		SHRD = await import(/* webpackChunkName: "shared" */'./shared.js?v=' + IBversionHash);
 	LocalLog = SHRD.LocalLog, LocalError = SHRD.LocalError, StatusEnum = SHRD.StatusEnum,
 		hasDuplicates = SHRD.hasDuplicates, pnpoly = SHRD.pnpoly, sortPointsClockwise = SHRD.sortPointsClockwise,
 		Sleep = SHRD.Sleep;
@@ -452,7 +455,7 @@ async function importAllModulesAsync(gameOptions) {
 		// AIBundle = await import(/* webpackChunkName: "AIDeps" */'./AIBundle.js');
 
 		// import depthFirstSearch from "./depthFirstSearch.js";
-		const module = await import("./depthFirstSearch.js");
+		const module = await import('./depthFirstSearch.js?v=' + IBversionHash);
 		depthFirstSearch = module.default;
 	}
 }
@@ -2268,7 +2271,7 @@ class InkBallGame {
 	 */
 	async #RunAIWorker(setupFunction) {
 		return new Promise((resolve, reject) => {
-			this.#Worker = this.#Worker ?? new Worker('../js/AIWorker.Bundle.js'
+			this.#Worker = this.#Worker ?? new Worker('../js/AIWorker.Bundle.js?v=' + IBversionHash 
 				//, { type: 'module' }
 			);
 

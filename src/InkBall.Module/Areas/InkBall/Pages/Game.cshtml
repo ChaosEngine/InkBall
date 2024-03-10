@@ -107,19 +107,19 @@
 </div>
 
 <environment include="Development">
-    <script src='@Url.Content("~/lib/signalr/browser/signalr.min.js")'></script>
+    <script src='~/lib/signalr/browser/signalr.min.js'></script>
     @if (useMessagePackBinaryTransport)
     {
-        @:<script type='module' src='@Url.Content("~/lib/msgpack5/msgpack5.min.js")'></script>
-        @:<script type='module' src='@Url.Content("~/lib/signalr-protocol-msgpack/browser/signalr-protocol-msgpack.min.js")'></script>
+        <script type='module' src='~/lib/msgpack5/msgpack5.min.js'></script>
+        <script type='module' src='~/lib/signalr-protocol-msgpack/browser/signalr-protocol-msgpack.min.js'></script>
     }
 </environment>
 <environment exclude="Development">
     <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.0/dist/browser/signalr.min.js" integrity="sha256-+k7RplYeBZa1wx3zb0fBaSYRX6xF3PAvq1Cgp55YC04=" crossorigin="anonymous"></script>
     @if (useMessagePackBinaryTransport)
     {
-        @:<script type='module' src="https://cdn.jsdelivr.net/npm/msgpack5@6.0.2/dist/msgpack5.min.js" integrity="sha256-AxiBUMElqJXwwKZro5eMMWVExjtxeZSUQ/4nC4oCU2E=" crossorigin="anonymous"></script>
-        @:<script type='module' src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr-protocol-msgpack@8.0.0/dist/browser/signalr-protocol-msgpack.min.js" integrity="sha256-p8DEsRMrJM6A4GrPWFgUfo2uL4DxwipCjcICqZYqeyo=" crossorigin="anonymous"></script>
+        <script type='module' src="https://cdn.jsdelivr.net/npm/msgpack5@6.0.2/dist/msgpack5.min.js" integrity="sha256-AxiBUMElqJXwwKZro5eMMWVExjtxeZSUQ/4nC4oCU2E=" crossorigin="anonymous"></script>
+        <script type='module' src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr-protocol-msgpack@8.0.0/dist/browser/signalr-protocol-msgpack.min.js" integrity="sha256-p8DEsRMrJM6A4GrPWFgUfo2uL4DxwipCjcICqZYqeyo=" crossorigin="anonymous"></script>
     }
 </environment>
 <script type='module'>
