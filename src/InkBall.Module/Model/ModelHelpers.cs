@@ -136,7 +136,7 @@ $@"CREATE OR REPLACE TRIGGER ""{tableName}_update_{timeStampColumnName}_Trigger"
 	BEFORE UPDATE ON ""{tableName}""
 	FOR EACH ROW
 BEGIN
-	:NEW.""{timeStampColumnName}"" := SYSTIMESTAMP;
+	:NEW.""{timeStampColumnName}"" := CURRENT_TIMESTAMP;
 END;";
 					//Console.Error.WriteLine($"executing '{command}'");
 					migrationBuilder.Sql(command);
