@@ -254,6 +254,8 @@ namespace InkBall.Module.Model
 
 		public InkBallPlayer Player { get; set; }
 
+		public DateTime When { get; set; }
+
 		public InkBallPoint()
 		{
 		}

@@ -16,10 +16,10 @@ namespace InkBall.Module.Migrations
 			var is_sqlite = migrationBuilder.ActiveProvider == "Microsoft.EntityFrameworkCore.Sqlite";
 			if (is_sqlite)
 			{
-				var player_ent = TargetModel.FindEntityType(typeof(InkBallPlayer));
-				if (player_ent != null && player_ent.Name == typeof(InkBallPlayer).FullName)
+				var entity = TargetModel.FindEntityType(typeof(InkBallPlayer));
+				if (entity != null && entity.Name == typeof(InkBallPlayer).FullName)
 				{
-					migrationBuilder.CreateTimestampTrigger(player_ent, nameof(InkBallPlayer.TimeStamp), nameof(InkBallPlayer.iId));
+					migrationBuilder.CreateTimestampTrigger(entity, nameof(InkBallPlayer.TimeStamp), nameof(InkBallPlayer.iId));
 				}
 			}
 		}

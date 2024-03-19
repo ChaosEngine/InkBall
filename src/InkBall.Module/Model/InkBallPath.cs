@@ -128,6 +128,8 @@ namespace InkBall.Module.Model
 		public InkBallPlayer Player { get; set; }
 		public override ICollection<InkBallPoint> InkBallPoint { get; set; }
 
+		public DateTime When { get; set; }
+
 		public InkBallPath()
 		{
 			// InkBallPoint = new HashSet<InkBallPoint>();

@@ -268,6 +268,12 @@ namespace InkBall.Module.Model
 					.HasForeignKey(d => d.iPlayerId)
 					.OnDelete(DeleteBehavior.Restrict)
 					.HasConstraintName("InkBallPath_ibfk_2");
+
+				entity.Property(e => e.When)
+					.HasColumnType(TimeStampColumnTypeFromProvider(Database.ProviderName))
+					.ValueGeneratedOnAddOrUpdate()
+					.HasDefaultValueSql(TimeStampDefaultValueFromProvider(Database.ProviderName))
+					.HasConversion(TimeStampValueConverterFromProvider(Database.ProviderName));
 			});
 
 			modelBuilder.Entity<InkBallPlayer>(entity =>
@@ -378,6 +384,12 @@ namespace InkBall.Module.Model
 					.HasForeignKey(d => d.iPlayerId)
 					.OnDelete(DeleteBehavior.Restrict)
 					.HasConstraintName("InkBallPoint_ibfk_4");
+
+				entity.Property(e => e.When)
+					.HasColumnType(TimeStampColumnTypeFromProvider(Database.ProviderName))
+					.ValueGeneratedOnAddOrUpdate()
+					.HasDefaultValueSql(TimeStampDefaultValueFromProvider(Database.ProviderName))
+					.HasConversion(TimeStampValueConverterFromProvider(Database.ProviderName));
 			});
 
 		}

@@ -23,7 +23,7 @@ namespace InkBall.Module.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "6.0.11")
+                .HasAnnotation("ProductVersion", "8.0.3")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
 #if INCLUDE_POSTGRES
@@ -130,6 +130,10 @@ namespace InkBall.Module.Migrations
 					b.Property<string>("PointsAsString")
 						.HasColumnName("PointsAsString")
 						.HasColumnType("varchar(1000)");
+
+                    b.Property<DateTime>("When")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("timestamp");
 
 					b.HasKey("iId");
 
@@ -238,6 +242,10 @@ namespace InkBall.Module.Migrations
 
                     b.Property<int>("iY")
                         .HasColumnName("iY");
+
+                    b.Property<DateTime>("When")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("timestamp");
 
                     b.HasKey("iGameId", "iX", "iY");
 
