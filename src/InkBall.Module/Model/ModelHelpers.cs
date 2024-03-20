@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using System;
 using System.Linq;
+using System.Text;
 
 namespace InkBall.Module.Model
 {
@@ -90,28 +91,44 @@ namespace InkBall.Module.Model
 	internal static class MigrationExtensions
 	{
 		internal static MigrationBuilder CreateTimestampTrigger(this MigrationBuilder migrationBuilder, IEntityType entityType,
-			string timeStampColumnName, string primaryKey)
+			string timeStampColumnName, params string[] primaryKeys)
 		{
 			var tableName = entityType.GetTableName();
 			//var primaryKey = entityType.FindPrimaryKey();
 
+			string comma = string.Empty;
+			var prim_keys_where = new StringBuilder(primaryKeys.Length << 2);
+
 			switch (migrationBuilder.ActiveProvider)
 			{
 				case "Microsoft.EntityFrameworkCore.Sqlite":
-                    //SQLite: RETURNING clause doesn't work with AFTER triggers #gh-29811
-                    //https://github.com/dotnet/efcore/issues/29811
-                    //
-                    string command =
+					//SQLite: RETURNING clause doesn't work with AFTER triggers #gh-29811
+					//https://github.com/dotnet/efcore/issues/29811
+					//
+					foreach (var key in primaryKeys)
+					{
+						prim_keys_where.Append(comma).AppendFormat(""" "{0}" = NEW."{1}" """, key, key);
+						comma = "AND";
+					}
+
+					string command =
 $@"CREATE TRIGGER IF NOT EXISTS {tableName}_update_{timeStampColumnName}_Trigger
 BEFORE UPDATE ON {tableName}
 BEGIN
-	UPDATE {tableName} SET {timeStampColumnName} = datetime(CURRENT_TIMESTAMP, 'localtime') WHERE {primaryKey} = NEW.{primaryKey};
+	UPDATE {tableName} SET
+	""{timeStampColumnName}"" = datetime(CURRENT_TIMESTAMP, 'localtime')
+	WHERE {prim_keys_where};
 END;";
 					//Console.Error.WriteLine($"executing '{command}'");
 					migrationBuilder.Sql(command);
 					break;
 
 				case "Microsoft.EntityFrameworkCore.SqlServer":
+					foreach (var key in primaryKeys)
+					{
+						prim_keys_where.Append(comma).AppendFormat(""" t.[{0}] = i.[{1}] """, key, key);
+						comma = "AND";
+					}
 					command =
 $@"CREATE OR ALTER TRIGGER [dbo].[{tableName}_update_{timeStampColumnName}_Trigger] ON [dbo].[{tableName}]
 	AFTER UPDATE
@@ -121,10 +138,9 @@ BEGIN
 	IF ((SELECT TRIGGER_NESTLEVEL()) > 1) RETURN;
 
 	UPDATE {tableName}
-	SET {timeStampColumnName} = GETDATE()
+	SET [{timeStampColumnName}] = GETDATE()
 	FROM {tableName} t
-	INNER JOIN INSERTED i ON i.{primaryKey} = t.{primaryKey}
-	WHERE t.{primaryKey} = i.{primaryKey}
+	INNER JOIN INSERTED i ON {prim_keys_where}
 END";
 					//Console.Error.WriteLine($"executing '{command}'");
 					migrationBuilder.Sql(command);
@@ -203,7 +219,10 @@ END;";
 					break;
 
 				case "Npgsql.EntityFrameworkCore.PostgreSQL":
-					command = $@"DROP TRIGGER IF EXISTS ""{tableName}_update_{timeStampColumnName}_Trigger"" ON ""{tableName}"";";
+					command = """
+						DROP TRIGGER IF EXISTS "{tableName}_update_{timeStampColumnName}_Trigger" ON "{tableName}";
+						DROP FUNCTION IF EXISTS "{tableName}_update_{timeStampColumnName}_TrigFunc"
+						""";
 
 					//Console.Error.WriteLine($"executing '{command}'");
 					migrationBuilder.Sql(command);
@@ -224,8 +243,8 @@ END;";
 		{
 		}
 
-        public NoGameArgumentNullException(string message) : base(null, message) 
+		public NoGameArgumentNullException(string message) : base(null, message)
 		{
 		}
-    }
+	}
 }

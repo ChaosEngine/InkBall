@@ -17,10 +17,10 @@ using Oracle.EntityFrameworkCore.Metadata;
 
 namespace InkBall.Module.Migrations
 {
-    [DbContext(typeof(GamesContext))]
-    [Migration("20240318215638_PointPathTimestamps")]
-    partial class PointPathTimestamps
-    {
+	[DbContext(typeof(GamesContext))]
+	[Migration("20240318215638_PointPathTimestamps")]
+	partial class PointPathTimestamps
+	{
 		/// <inheritdoc />
 		protected override void BuildTargetModel(ModelBuilder modelBuilder)
 		{
@@ -135,9 +135,9 @@ namespace InkBall.Module.Migrations
 					.HasColumnName("PointsAsString")
 					.HasColumnType(GamesContext.JsonColumnTypeFromProvider(this.ActiveProvider));
 
-                b.Property<DateTime>("When")
-                    .ValueGeneratedOnAddOrUpdate()
-                    .HasColumnType(GamesContext.TimeStampColumnTypeFromProvider(this.ActiveProvider))
+				b.Property<DateTime>("When")
+					.ValueGeneratedOnAddOrUpdate()
+					.HasColumnType(GamesContext.TimeStampColumnTypeFromProvider(this.ActiveProvider))
 					.HasDefaultValueSql(GamesContext.TimeStampDefaultValueFromProvider(this.ActiveProvider));
 
 				b.HasKey("iId");
@@ -250,11 +250,11 @@ namespace InkBall.Module.Migrations
 					b.Property<int>("iY")
 						.HasColumnName("iY");
 
-                    b.Property<DateTime>("When")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType(GamesContext.TimeStampColumnTypeFromProvider(this.ActiveProvider))
-                        .HasDefaultValueSql(GamesContext.TimeStampDefaultValueFromProvider(this.ActiveProvider));
-                    
+					b.Property<DateTime>("When")
+						.ValueGeneratedOnAddOrUpdate()
+						.HasColumnType(GamesContext.TimeStampColumnTypeFromProvider(this.ActiveProvider))
+						.HasDefaultValueSql(GamesContext.TimeStampDefaultValueFromProvider(this.ActiveProvider));
+					
 					b.HasKey("iGameId", "iX", "iY");
 
 					b.HasIndex("iEnclosingPathId")
@@ -359,5 +359,5 @@ namespace InkBall.Module.Migrations
 				});
 #pragma warning restore 612, 618
 		}
-    }
+	}
 }

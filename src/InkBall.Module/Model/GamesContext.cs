@@ -274,6 +274,13 @@ namespace InkBall.Module.Model
 					.ValueGeneratedOnAddOrUpdate()
 					.HasDefaultValueSql(TimeStampDefaultValueFromProvider(Database.ProviderName))
 					.HasConversion(TimeStampValueConverterFromProvider(Database.ProviderName));
+
+				entity.Ignore(c => c.When);
+					
+				if (Database.ProviderName == "Microsoft.EntityFrameworkCore.SqlServer")
+					entity.ToTable(t => t.HasTrigger(
+						$"{nameof(Module.Model.InkBallPath)}_update_{nameof(Module.Model.InkBallPath.When)}_Trigger")
+					);
 			});
 
 			modelBuilder.Entity<InkBallPlayer>(entity =>
@@ -390,8 +397,14 @@ namespace InkBall.Module.Model
 					.ValueGeneratedOnAddOrUpdate()
 					.HasDefaultValueSql(TimeStampDefaultValueFromProvider(Database.ProviderName))
 					.HasConversion(TimeStampValueConverterFromProvider(Database.ProviderName));
-			});
 
+				entity.Ignore(c => c.When);
+
+				if (Database.ProviderName == "Microsoft.EntityFrameworkCore.SqlServer")
+					entity.ToTable(t => t.HasTrigger(
+						$"{nameof(Module.Model.InkBallPoint)}_update_{nameof(Module.Model.InkBallPoint.When)}_Trigger")
+					);
+			});
 		}
 
 		#region Business logic methods

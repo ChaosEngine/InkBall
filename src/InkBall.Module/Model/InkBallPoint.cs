@@ -1,6 +1,7 @@
 ﻿using MessagePack;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
@@ -254,6 +255,9 @@ namespace InkBall.Module.Model
 
 		public InkBallPlayer Player { get; set; }
 
+		[JsonIgnore]
+		[IgnoreMember]
+		[NotMapped]
 		public DateTime When { get; set; }
 
 		public InkBallPoint()
