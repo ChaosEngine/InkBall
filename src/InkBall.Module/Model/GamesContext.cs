@@ -269,17 +269,16 @@ namespace InkBall.Module.Model
 					.OnDelete(DeleteBehavior.Restrict)
 					.HasConstraintName("InkBallPath_ibfk_2");
 
-				entity.Property(e => e.When)
+				//Shadow Property
+				entity.Property<DateTime>("When")
 					.HasColumnType(TimeStampColumnTypeFromProvider(Database.ProviderName))
 					.ValueGeneratedOnAddOrUpdate()
 					.HasDefaultValueSql(TimeStampDefaultValueFromProvider(Database.ProviderName))
 					.HasConversion(TimeStampValueConverterFromProvider(Database.ProviderName));
 
-				entity.Ignore(c => c.When);
-					
 				if (Database.ProviderName == "Microsoft.EntityFrameworkCore.SqlServer")
 					entity.ToTable(t => t.HasTrigger(
-						$"{nameof(Module.Model.InkBallPath)}_update_{nameof(Module.Model.InkBallPath.When)}_Trigger")
+						$"{nameof(Module.Model.InkBallPath)}_update_When_Trigger")
 					);
 			});
 
@@ -392,17 +391,16 @@ namespace InkBall.Module.Model
 					.OnDelete(DeleteBehavior.Restrict)
 					.HasConstraintName("InkBallPoint_ibfk_4");
 
-				entity.Property(e => e.When)
+				//Shadow Property
+				entity.Property<DateTime>("When")
 					.HasColumnType(TimeStampColumnTypeFromProvider(Database.ProviderName))
 					.ValueGeneratedOnAddOrUpdate()
 					.HasDefaultValueSql(TimeStampDefaultValueFromProvider(Database.ProviderName))
 					.HasConversion(TimeStampValueConverterFromProvider(Database.ProviderName));
 
-				entity.Ignore(c => c.When);
-
 				if (Database.ProviderName == "Microsoft.EntityFrameworkCore.SqlServer")
 					entity.ToTable(t => t.HasTrigger(
-						$"{nameof(Module.Model.InkBallPoint)}_update_{nameof(Module.Model.InkBallPoint.When)}_Trigger")
+						$"{nameof(Module.Model.InkBallPoint)}_update_When_Trigger")
 					);
 			});
 		}

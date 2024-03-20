@@ -255,10 +255,10 @@ namespace InkBall.Module.Model
 
 		public InkBallPlayer Player { get; set; }
 
-		[JsonIgnore]
-		[IgnoreMember]
-		[NotMapped]
-		public DateTime When { get; set; }
+		// [JsonIgnore]
+		// [IgnoreMember]
+		// [NotMapped]
+		// public DateTime When { get; set; }
 
 		public InkBallPoint()
 		{

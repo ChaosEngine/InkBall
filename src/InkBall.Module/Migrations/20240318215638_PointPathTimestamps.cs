@@ -31,13 +31,13 @@ namespace InkBall.Module.Migrations
 			var entity = TargetModel.FindEntityType(typeof(InkBallPoint));
 			if (entity != null && entity.Name == typeof(InkBallPoint).FullName)
 			{
-				migrationBuilder.CreateTimestampTrigger(entity, nameof(InkBallPoint.When),
+				migrationBuilder.CreateTimestampTrigger(entity, "When",
 				[nameof(InkBallPoint.iGameId), nameof(InkBallPoint.iX), nameof(InkBallPoint.iY)]);
 			}
 			entity = TargetModel.FindEntityType(typeof(InkBallPath));
 			if (entity != null && entity.Name == typeof(InkBallPath).FullName)
 			{
-				migrationBuilder.CreateTimestampTrigger(entity, nameof(InkBallPath.When), nameof(InkBallPath.iId));
+				migrationBuilder.CreateTimestampTrigger(entity, "When", nameof(InkBallPath.iId));
 			}
 		}
 
@@ -47,12 +47,12 @@ namespace InkBall.Module.Migrations
 			var entity = TargetModel.FindEntityType(typeof(InkBallPoint));
 			if (entity != null && entity.Name == typeof(InkBallPoint).FullName)
 			{
-				migrationBuilder.DropTimestampTrigger(entity, nameof(InkBallPoint.When));
+				migrationBuilder.DropTimestampTrigger(entity, "When");
 			}
 			entity = TargetModel.FindEntityType(typeof(InkBallPath));
 			if (entity != null && entity.Name == typeof(InkBallPath).FullName)
 			{
-				migrationBuilder.DropTimestampTrigger(entity, nameof(InkBallPath.When));
+				migrationBuilder.DropTimestampTrigger(entity, "When");
 			}
 
 

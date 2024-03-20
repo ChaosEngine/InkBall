@@ -129,10 +129,10 @@ namespace InkBall.Module.Model
 		public InkBallPlayer Player { get; set; }
 		public override ICollection<InkBallPoint> InkBallPoint { get; set; }
 
-		[JsonIgnore]
-		[IgnoreMember]
-		[NotMapped]
-		public DateTime When { get; set; }
+		// [JsonIgnore]
+		// [IgnoreMember]
+		// [NotMapped]
+		// public DateTime When { get; set; }
 
 		public InkBallPath()
 		{
