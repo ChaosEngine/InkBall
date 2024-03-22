@@ -96,21 +96,17 @@ namespace InkBall.Module.Model
 			var tableName = entityType.GetTableName();
 			//var primaryKey = entityType.FindPrimaryKey();
 
-			string comma = string.Empty;
-			var prim_keys_where = new StringBuilder(primaryKeys.Length << 2);
+			StringBuilder prim_keys_where;
 
 			switch (migrationBuilder.ActiveProvider)
 			{
 				case "Microsoft.EntityFrameworkCore.Sqlite":
+					prim_keys_where = primaryKeys.Aggregate(new StringBuilder(70), (current, next) =>
+					current.Append(current.Length == 0 ? "" : "AND").AppendFormat(""" "{0}" = NEW."{1}" """, next, next));
+					
 					//SQLite: RETURNING clause doesn't work with AFTER triggers #gh-29811
 					//https://github.com/dotnet/efcore/issues/29811
 					//
-					foreach (var key in primaryKeys)
-					{
-						prim_keys_where.Append(comma).AppendFormat(""" "{0}" = NEW."{1}" """, key, key);
-						comma = "AND";
-					}
-
 					string command =
 $@"CREATE TRIGGER IF NOT EXISTS {tableName}_update_{timeStampColumnName}_Trigger
 BEFORE UPDATE ON {tableName}
@@ -124,11 +120,9 @@ END;";
 					break;
 
 				case "Microsoft.EntityFrameworkCore.SqlServer":
-					foreach (var key in primaryKeys)
-					{
-						prim_keys_where.Append(comma).AppendFormat(""" t.[{0}] = i.[{1}] """, key, key);
-						comma = "AND";
-					}
+					prim_keys_where = primaryKeys.Aggregate(new StringBuilder(70), (current, next) =>
+					current.Append(current.Length == 0 ? "" : "AND").AppendFormat(""" t.[{0}] = i.[{1}] """, next, next));
+					
 					command =
 $@"CREATE OR ALTER TRIGGER [dbo].[{tableName}_update_{timeStampColumnName}_Trigger] ON [dbo].[{tableName}]
 	AFTER UPDATE

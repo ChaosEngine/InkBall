@@ -275,6 +275,7 @@ namespace InkBall.Module.Model
 					.ValueGeneratedOnAddOrUpdate()
 					.HasDefaultValueSql(TimeStampDefaultValueFromProvider(Database.ProviderName))
 					.HasConversion(TimeStampValueConverterFromProvider(Database.ProviderName));
+				entity.Ignore("When");
 
 				if (Database.ProviderName == "Microsoft.EntityFrameworkCore.SqlServer")
 					entity.ToTable(t => t.HasTrigger(
@@ -397,6 +398,7 @@ namespace InkBall.Module.Model
 					.ValueGeneratedOnAddOrUpdate()
 					.HasDefaultValueSql(TimeStampDefaultValueFromProvider(Database.ProviderName))
 					.HasConversion(TimeStampValueConverterFromProvider(Database.ProviderName));
+				entity.Ignore("When");
 
 				if (Database.ProviderName == "Microsoft.EntityFrameworkCore.SqlServer")
 					entity.ToTable(t => t.HasTrigger(
