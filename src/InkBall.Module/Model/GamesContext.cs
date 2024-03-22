@@ -270,11 +270,11 @@ namespace InkBall.Module.Model
 					.HasConstraintName("InkBallPath_ibfk_2");
 
 				//Shadow Property
-				entity.Property<DateTime>("When")
-					.HasColumnType(TimeStampColumnTypeFromProvider(Database.ProviderName))
-					.ValueGeneratedOnAddOrUpdate()
-					.HasDefaultValueSql(TimeStampDefaultValueFromProvider(Database.ProviderName))
-					.HasConversion(TimeStampValueConverterFromProvider(Database.ProviderName));
+				//entity.Property<DateTime>("When")
+				//	.HasColumnType(TimeStampColumnTypeFromProvider(Database.ProviderName))
+				//	.ValueGeneratedOnAddOrUpdate()
+				//	.HasDefaultValueSql(TimeStampDefaultValueFromProvider(Database.ProviderName))
+				//	.HasConversion(TimeStampValueConverterFromProvider(Database.ProviderName));
 				entity.Ignore("When");
 
 				if (Database.ProviderName == "Microsoft.EntityFrameworkCore.SqlServer")
@@ -393,11 +393,11 @@ namespace InkBall.Module.Model
 					.HasConstraintName("InkBallPoint_ibfk_4");
 
 				//Shadow Property
-				entity.Property<DateTime>("When")
-					.HasColumnType(TimeStampColumnTypeFromProvider(Database.ProviderName))
-					.ValueGeneratedOnAddOrUpdate()
-					.HasDefaultValueSql(TimeStampDefaultValueFromProvider(Database.ProviderName))
-					.HasConversion(TimeStampValueConverterFromProvider(Database.ProviderName));
+				//entity.Property<DateTime>("When")
+				//	.HasColumnType(TimeStampColumnTypeFromProvider(Database.ProviderName))
+				//	.ValueGeneratedOnAddOrUpdate()
+				//	.HasDefaultValueSql(TimeStampDefaultValueFromProvider(Database.ProviderName))
+				//	.HasConversion(TimeStampValueConverterFromProvider(Database.ProviderName));
 				entity.Ignore("When");
 
 				if (Database.ProviderName == "Microsoft.EntityFrameworkCore.SqlServer")
