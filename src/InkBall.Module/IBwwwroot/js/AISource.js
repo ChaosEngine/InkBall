@@ -1,6 +1,6 @@
 import concaveman from "concaveman";
 // import decomp from "poly-decomp";
-import { StatusEnum, /*LocalLog,*/ sortPointsClockwise, /*Sleep,*/ pnpoly } from "./shared.js";
+import { StatusEnum, /*LocalLog,*/ sortPointsClockwise, IsPointOutsideAllPaths, /*Sleep,*/ pnpoly } from "./shared.js";
 
 
 /**
@@ -106,17 +106,6 @@ class GraphAI {
 		};
 	}
 
-	async #IsPointOutsideAllPaths(x, y, allLines) {
-		for (const line of allLines) {
-			const points = line.GetPointsArray();
-
-			if (false !== pnpoly(points, x, y))
-				return false;
-		}
-
-		return true;
-	}
-
 	/**
 	 * Based on https://www.geeksforgeeks.org/print-all-the-cycles-in-an-undirected-graph/
 	 * @param {any} graph constructed earlier with BuildGraph
@@ -210,7 +199,7 @@ class GraphAI {
 			for (const pt of await this.#Points.values()) {
 				if (pt !== undefined && pt.GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.GetStatus()) {
 					const { x, y } = pt.GetPosition();
-					if (false === await this.#IsPointOutsideAllPaths(x, y, lines))
+					if (false === await IsPointOutsideAllPaths(x, y, lines))
 						continue;
 
 					//check if really exists

@@ -112,6 +112,24 @@ function sortPointsClockwise(points) {
 	return pointsSorted;
 }
 
+/**
+ * Checks if point is outside all created lines
+ * @param {number} x point coordinate
+ * @param {number} y point coordinate
+ * @param {Array} allLines array
+ * @returns bool - true if outside, false otherwise
+ */
+async function IsPointOutsideAllPaths(x, y, allLines) {
+	for (const line of allLines) {
+		const points = line.GetPointsArray();
+
+		if (false !== pnpoly(points, x, y))
+			return false;
+	}
+
+	return true;
+}
+
 //////////////////////////////////////////////////////
 // SVG-VML mini graphic library 
 // ==========================================
@@ -1352,6 +1370,6 @@ class GameStateStore {
 
 export {
 	SvgVml, StatusEnum, pnpoly, LocalLog, LocalError, LocalAlert,
-	hasDuplicates, sortPointsClockwise, Sleep,
+	hasDuplicates, sortPointsClockwise, Sleep, IsPointOutsideAllPaths,
 	GameStateStore
 };
