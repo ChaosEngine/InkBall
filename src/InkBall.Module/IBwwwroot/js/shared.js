@@ -409,7 +409,7 @@ class SvgVml {
 			return { iId: id, Color: color, PointsAsString: pts };
 		};
 
-		this.CreateSVGVML = function (contextElement, iWidth, iHeight, { iGridWidth, iGridHeight }, antialias) {
+		this.Init = function (contextElement, iWidth, iHeight, { iGridWidth, iGridHeight }, antialias) {
 			this.#cont = documentCreateElementNS_SVG(contextElement);
 			if (iWidth)
 				this.#cont.setAttributeNS(null, 'width', iWidth);
@@ -591,6 +591,7 @@ class GameStateStore {
 	#bulkStores;
 	#PointStore;
 	#PathStore;
+	#sMsgThisEngineDoesntKnowHowToCloneABlob;
 
 	constructor(useIndexedDb, pointCreationCallbackFn = null, pathCreationCallbackFn = null, getGameStateFn = null, version = "") {
 		if (useIndexedDb) {
@@ -885,6 +886,8 @@ class GameStateStore {
 			this.#PointStore = new SimplePointStoreDefinition();
 			this.#PathStore = new SimplePathStoreDefinition();
 		}
+
+		this.#sMsgThisEngineDoesntKnowHowToCloneABlob = "This engine doesn't know how to clone a Blob!??!!";
 	}
 
 	GetPointStore() {
@@ -1090,7 +1093,7 @@ class GameStateStore {
 				req = store.add(val/* , key */);//earlier was 'add'
 			} catch (e) {
 				if (e.name === 'DataCloneError')
-					LocalError("This engine doesn't know how to clone a Blob, use Firefox");
+					LocalError(this.#sMsgThisEngineDoesntKnowHowToCloneABlob);
 				throw e;
 			}
 			req.onsuccess = function () {
@@ -1124,7 +1127,7 @@ class GameStateStore {
 				req = store.put(val/* , key */);//earlier was 'add'
 			} catch (e) {
 				if (e.name === 'DataCloneError')
-					LocalError("This engine doesn't know how to clone a Blob, use Firefox");
+					LocalError(this.#sMsgThisEngineDoesntKnowHowToCloneABlob);
 				throw e;
 			}
 			req.onsuccess = function () {
@@ -1161,7 +1164,7 @@ class GameStateStore {
 				this.pointBulkBuffer = null;
 				resolve();
 			} catch (e) {
-				LocalError("This engine doesn't know how to clone a Blob, use Firefox");
+				LocalError(this.#sMsgThisEngineDoesntKnowHowToCloneABlob);
 				reject(e);
 			}
 		});
@@ -1179,7 +1182,7 @@ class GameStateStore {
 				req = store.add(gameState, key);
 			} catch (e) {
 				if (e.name === 'DataCloneError')
-					LocalError("This engine doesn't know how to clone a Blob, use Firefox");
+					LocalError(this.#sMsgThisEngineDoesntKnowHowToCloneABlob);
 				throw e;
 			}
 			req.onsuccess = function () {
@@ -1200,7 +1203,7 @@ class GameStateStore {
 				req = store.put(gameState, key);
 			} catch (e) {
 				if (e.name === 'DataCloneError')
-					LocalError("This engine doesn't know how to clone a Blob, use Firefox");
+					LocalError(this.#sMsgThisEngineDoesntKnowHowToCloneABlob);
 				throw e;
 			}
 			req.onsuccess = function () {
@@ -1232,7 +1235,7 @@ class GameStateStore {
 				req = store.add(val/*, key*/);
 			} catch (e) {
 				if (e.name === 'DataCloneError')
-					LocalError("This engine doesn't know how to clone a Blob, use Firefox");
+					LocalError(this.#sMsgThisEngineDoesntKnowHowToCloneABlob);
 				throw e;
 			}
 			req.onsuccess = function () {
@@ -1263,7 +1266,7 @@ class GameStateStore {
 				this.pathBulkBuffer = null;
 				resolve();
 			} catch (e) {
-				LocalError("This engine doesn't know how to clone a Blob, use Firefox");
+				LocalError(this.#sMsgThisEngineDoesntKnowHowToCloneABlob);
 				reject(e);
 			}
 		});

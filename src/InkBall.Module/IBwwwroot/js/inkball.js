@@ -561,6 +561,9 @@ class InkBallGame {
 	#GameType;
 	#CursorPos;
 	#SvgVml;
+	#sMsgBrowserDoesNotSupportNotifications;
+	#sMsgUserBlockedNotifications;
+	#sMsgWeHaveAWinner;
 
 	/**
 	 * InkBallGame constructor
@@ -652,6 +655,11 @@ class InkBallGame {
 		this.#sLastMoveGameTimeStamp = null;
 		this.#sVersion = null;
 		this.#Worker = null;
+		this.#sMsgBrowserDoesNotSupportNotifications = 'Browser does not support notifications.';
+		this.#sMsgUserBlockedNotifications = 'User blocked notifications.';
+		this.#sMsgWeHaveAWinner = 'We have a winner';
+
+
 
 		if (sHubName === null || sHubName === "") return;
 
@@ -748,7 +756,7 @@ class InkBallGame {
 
 	#SetupNotifications() {
 		if (!window.Notification) {
-			LocalLog('Browser does not support notifications.');
+			LocalLog(this.#sMsgBrowserDoesNotSupportNotifications);
 			return false;
 		}
 		else {
@@ -763,7 +771,7 @@ class InkBallGame {
 						return true;
 					}
 					else {
-						LocalLog('User blocked notifications.');
+						LocalLog(this.#sMsgUserBlockedNotifications);
 						return false;
 					}
 				}).catch(function (err) {
@@ -779,7 +787,7 @@ class InkBallGame {
 			return false;
 
 		if (!window.Notification) {
-			LocalLog('Browser does not support notifications.');
+			LocalLog(this.#sMsgBrowserDoesNotSupportNotifications);
 			return false;
 		}
 		else {
@@ -804,7 +812,7 @@ class InkBallGame {
 						return true;
 					}
 					else {
-						LocalLog('User blocked notifications.');
+						LocalLog(this.#sMsgUserBlockedNotifications);
 						return false;
 					}
 				}).catch(function (err) {
@@ -869,7 +877,7 @@ class InkBallGame {
 				document.querySelector(this.#sMsgListSel).appendChild(li);
 
 				this.#ReceivedWinProcessing(win);
-				this.#NotifyBrowser('We have a winner', encodedMsg);
+				this.#NotifyBrowser(this.#sMsgWeHaveAWinner, encodedMsg);
 			}
 			else
 				throw new Error("ServerToClientPath bad Kind!");
@@ -939,7 +947,7 @@ class InkBallGame {
 			}
 
 			this.#ReceivedWinProcessing(win);
-			this.#NotifyBrowser('We have a winner', encodedMsg);
+			this.#NotifyBrowser(this.#sMsgWeHaveAWinner, encodedMsg);
 
 		});
 
@@ -2636,24 +2644,21 @@ class InkBallGame {
 		*/
 
 		const sHumanColor = this.#COLOR_RED, sCPUColor = this.#COLOR_BLUE;
-		const all_points = [...await this.#Points.values()];
+		const all_points = [...await this.#Points.values()].map(value => value.Serialize());
+		const allLines = this.#Lines.store.map(value => value.Serialize());
+
 		const pt = await this.#Points.get(this.#iMouseY * this.#iGridWidth + this.#iMouseX);
-		
-		const working_points = pt !== undefined ? [pt] : all_points;
+		const working_points = pt !== undefined ? [pt.Serialize()] : all_points;
 
 		const data = await this.#RunAIWorker((worker) => {
-			const all_points_ser = all_points.map(value => value.Serialize());
-			const working_points_ser = working_points.map(value => value.Serialize());
-			const allLines_ser = this.#Lines.store.map(pa => pa.Serialize());
-
 			worker.postMessage({
 				operation: "FIND_SURROUNDABLE_POINTS",
 				boardSize: { iGridWidth: this.#iGridWidth, iGridHeight: this.#iGridHeight },
 				sHumanColor: sHumanColor,
 				sCPUColor: sCPUColor,
-				allPoints: all_points_ser,
-				workingPoints: working_points_ser,
-				allLines: allLines_ser
+				allPoints: all_points,
+				workingPoints: working_points,
+				allLines: allLines
 			});
 		});
 
@@ -2667,6 +2672,7 @@ class InkBallGame {
 				enclosing_circle.StrokeWeight(0.1);
 				enclosing_circle.SetFillColor('transparent');
 
+				const matched_pts = [];
 				for (const cpu_pt of gr.cw_sorted_verts) {
 					const pt1 = document.querySelector(`svg > circle[cx="${cpu_pt.x}"][cy="${cpu_pt.y}"]`);
 					if (pt1) {
@@ -2674,9 +2680,10 @@ class InkBallGame {
 						pt1.StrokeWeight('0.020em');
 						pt1.SetFillColor(rand_color);
 						pt1.setAttribute("r", 6 / this.#iGridSpacingX);
+						matched_pts.push(pt1);
 					}
 				}
-				await this.#DisplayPointsProgressWithDelay(gr.cw_sorted_verts, 250);
+				await this.#DisplayPointsProgressWithDelay(matched_pts, 250);
 			});
 		}
 	}
@@ -3050,9 +3057,10 @@ class InkBallGame {
 		///////CpuGame variables end//////
 
 		this.#SvgVml = new SHRD.SvgVml();
-		if (this.#SvgVml.CreateSVGVML(this.#Screen, svg_width_x_height, svg_width_x_height,
-			{ iGridWidth: this.#iGridWidth, iGridHeight: this.#iGridHeight }) === null)
+		if (!this.#SvgVml.Init(this.#Screen, svg_width_x_height, svg_width_x_height,
+			{ iGridWidth: this.#iGridWidth, iGridHeight: this.#iGridHeight })) {
 			alert('SVG is not supported!');
+		}
 
 		const stateStore = new SHRD.GameStateStore(useIndexedDbStore,
 			this.#CreateScreenPointFromIndexedDb.bind(this),
@@ -3658,9 +3666,10 @@ class InkBallGame {
 
 							const pt1 = await this.#Points.get(possible_intercept.y * this.#iGridWidth + possible_intercept.x);
 							if (pt1) {
-								pt1.SetStrokeColor('var(--bs-yellow)');
+								const col = 'var(--bs-yellow)';
+								pt1.SetStrokeColor(col);
 								pt1.StrokeWeight(0.2);
-								pt1.SetFillColor('var(--bs-yellow)');
+								pt1.SetFillColor(col);
 								pt1.setAttribute("r", 6 / this.#iGridSpacingX);
 							}
 							comma = ',';
@@ -3726,8 +3735,8 @@ class InkBallGame {
 		//
 		//serialize points as string: "x0,y0 x1,y1 x2,y2"
 		//
-		const pts = pointsArr.map((pt) => {
-			const pos = pt;//pt.GetPosition();
+		const pts = pointsArr.map(pt => {
+			const pos = pt.GetPosition();
 			return `${pos.x},${pos.y}`;
 		}).join(' ');
 

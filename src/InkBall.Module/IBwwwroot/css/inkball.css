@@ -7,13 +7,6 @@ p.inkgame {
   margin-bottom: 0.3em;
 }
 
-.inkgame {
-  --redish: red;
-  --bluish: blue;
-  --owned_by_red: #DC143C;
-  --owned_by_blue: #8A2BE2;
-  --point_radius: 0.25px;
-}
 .inkgame div#status span {
   vertical-align: middle;
   display: inline-block;
@@ -24,6 +17,13 @@ p.inkgame {
   vertical-align: middle;
   display: inline-block;
   line-height: 1em;
+}
+.inkgame {
+  --redish: red;
+  --bluish: blue;
+  --owned_by_red: #DC143C;
+  --owned_by_blue: #8A2BE2;
+  --point_radius: 0.25px;
 }
 @media (prefers-color-scheme: light) {
   .inkgame {

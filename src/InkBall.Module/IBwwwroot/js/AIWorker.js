@@ -1,17 +1,35 @@
 ﻿import { GraphAI, concaveman } from "./AISource.js";
-import { SvgVml, StatusEnum, LocalLog, LocalError, sortPointsClockwise, pnpoly, IsPointOutsideAllPaths } from "./shared.js";
+// import { SvgVml, StatusEnum, LocalLog, LocalError, sortPointsClockwise, pnpoly, IsPointOutsideAllPaths } from "./shared.js";
 import { astar, Graph } from "javascript-astar";
 import * as clustering from "density-clustering";
 
+//globals loaded only once hopefully
+let SvgVml, StatusEnum, LocalLog, LocalError, sortPointsClockwise, pnpoly, IsPointOutsideAllPaths;
+
 // This is the entry point for our worker
 addEventListener('message', async function (e) {
+
+	if (SvgVml === undefined) {
+		const importMetaUrl = import.meta.url;//do not optimize, take into separate variable, miss..feature of terser-5.16.6
+		const url = new URL(importMetaUrl);
+
+		const selfFileName = url.pathname.split('/').at(-1), isMinified = selfFileName.indexOf("min") !== -1;
+
+		const shrd = await import(/* webpackIgnore: true */`./shared${isMinified ? '.min' : ''}.js`);
+
+		SvgVml = shrd.SvgVml, StatusEnum = shrd.StatusEnum, LocalLog = shrd.LocalLog, LocalError = shrd.LocalError,
+			sortPointsClockwise = shrd.sortPointsClockwise, pnpoly = shrd.pnpoly,
+			IsPointOutsideAllPaths = shrd.IsPointOutsideAllPaths;
+	}
+
+
 	const params = e.data;
 
 	switch (params.operation) {
 		case "BUILD_GRAPH":
 			{
 				const svgVml = new SvgVml();
-				svgVml.CreateSVGVML(null, null, null, params.boardSize);
+				svgVml.Init(null, null, null, params.boardSize);
 
 				//debugger;
 				const lines = params.paths.map(pa => svgVml.DeserializePolyline(pa));
@@ -33,7 +51,7 @@ addEventListener('message', async function (e) {
 		case "CONCAVEMAN":
 			{
 				const svgVml = new SvgVml();
-				svgVml.CreateSVGVML(null, null, null, params.boardSize);
+				svgVml.Init(null, null, null, params.boardSize);
 
 				const points = new Map();
 				params.points.forEach((pt) => {
@@ -59,7 +77,7 @@ addEventListener('message', async function (e) {
 		case "MARK_ALL_CYCLES":
 			{
 				const svgVml = new SvgVml();
-				svgVml.CreateSVGVML(null, null, null, params.boardSize);
+				svgVml.Init(null, null, null, params.boardSize);
 
 				const lines = params.paths.map(pa => svgVml.DeserializePolyline(pa));
 				const points = new Map();
@@ -83,14 +101,13 @@ addEventListener('message', async function (e) {
 		case "FIND_SURROUNDABLE_POINTS":
 			{
 				const svgVml = new SvgVml();
-				svgVml.CreateSVGVML(null, null, null, params.boardSize);
+				svgVml.Init(null, null, null, params.boardSize);
 
 				const allLines = params.allLines.map(pa => svgVml.DeserializePolyline(pa));
 				const all_points = params.allPoints.map(pt => svgVml.DeserializeOval(pt));
 				const working_points = params.workingPoints.map(pt => svgVml.DeserializeOval(pt));
 
-				const sHumanColor = params.sHumanColor;
-				const sCPUColor = params.sCPUColor;
+				const sHumanColor = params.sHumanColor, sCPUColor = params.sCPUColor;
 
 
 				const results = [];
@@ -227,4 +244,4 @@ addEventListener('message', async function (e) {
 	}
 });
 
-LocalLog('Worker loaded');
+// LocalLog('Worker loaded');

@@ -67,11 +67,13 @@ p.inkgame {
 		}
 	}
 
-	--redish: red;
-	--bluish: blue;
-	--owned_by_red: #DC143C;
-	--owned_by_blue: #8A2BE2;
-	--point_radius: 0.25px;
+	& {
+		--redish: red;
+		--bluish: blue;
+		--owned_by_red: #DC143C;
+		--owned_by_blue: #8A2BE2;
+		--point_radius: 0.25px;
+	}
 
 	@media (prefers-color-scheme: light) {
 		--path_draw: black;
