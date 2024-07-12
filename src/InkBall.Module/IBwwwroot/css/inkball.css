@@ -108,24 +108,24 @@ polyline {
 }
 
 .boardsize-20x26 {
-  width: calc(1em * 20 * 1);
-  height: calc(1em * 26 * 1);
-  max-width: calc(1em * 20 * 1);
-  max-height: calc(1em * 26 * 1);
+  width: 20em;
+  height: 26em;
+  max-width: 20em;
+  max-height: 26em;
 }
 
 .boardsize-40x52 {
-  width: calc(1em * 40 * 1);
-  height: calc(1em * 52 * 1);
-  max-width: calc(1em * 40 * 1);
-  max-height: calc(1em * 52 * 1);
+  width: 40em;
+  height: 52em;
+  max-width: 40em;
+  max-height: 52em;
 }
 
 .boardsize-64x64 {
-  width: calc(1em * 64 * 1);
-  height: calc(1em * 64 * 1);
-  max-width: calc(1em * 64 * 1);
-  max-height: calc(1em * 64 * 1);
+  width: 64em;
+  height: 64em;
+  max-width: 64em;
+  max-height: 64em;
 }
 
 [data-otherplayerid="-1"], [data-otherplayerid=""] {

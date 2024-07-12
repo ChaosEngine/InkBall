@@ -23,23 +23,23 @@
 }
 
 @mixin baseBoard($width, $height, $cellWidth, $cellHeight) {
-	width: calc(#{$cellWidth} * #{$width} * 1);
-	height: calc(#{$cellHeight} * #{$height} * 1);
-	max-width: calc(#{$cellWidth} * #{$width} * 1);
-	max-height: calc(#{$cellHeight} * #{$height} * 1);
+	width: #{$cellWidth * $width * 1 /*<-- scaling factor*/}em;
+	height: #{$cellHeight * $height * 1 /*<-- scaling factor*/}em;
+	max-width: #{$cellWidth * $width * 1 /*<-- scaling factor*/}em;
+	max-height: #{$cellHeight * $height * 1 /*<-- scaling factor*/}em;
 }
 
-@mixin board($parent, $width, $height, $cellWidth: 1em, $cellHeight: 1em) {
+@mixin board($parent, $width, $height, $cellWidth: 1, $cellHeight: 1) {
 	#{$parent}-#{$width}x#{$height} {
-		@include baseBoard(#{$width}, #{$height}, #{$cellWidth}, #{$cellHeight});
+		@include baseBoard($width, $height, $cellWidth, $cellHeight);
 	}
 }
 
-@mixin irregularBoard($parent, $width, $height, $cellWidth: 15px, $cellHeight: 1em, $strokePrefersLight: gray, $strokePrefersDark: white) {
+@mixin irregularBoard($parent, $width, $height, $cellWidth: 15, $cellHeight: 1, $strokePrefersLight: gray, $strokePrefersDark: white) {
 	#{$parent}-#{$width}x#{$height} {
 		@include generateBackgroundDataUrlSvg(15, 16, $strokePrefersLight, $strokePrefersDark);
 		background-size: calc(#{$cellWidth} * 5) calc(#{$cellHeight} * 5);
-		@include baseBoard(#{$width}, #{$height}, #{$cellWidth}, #{$cellHeight});
+		@include baseBoard($width, $height, $cellWidth, $cellHeight);
 	}
 }
 //////////////////////Functions, mixins end//////////////////////
