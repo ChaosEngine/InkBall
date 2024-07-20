@@ -2330,7 +2330,7 @@ class InkBallGame {
 		event.preventDefault();
 
 		const loadParamsFromStore = (store) => {
-			const fromStore = JSON.parse(store.getItem("AIConcaveman")) || {};
+			let fromStore = JSON.parse(store.getItem("AIConcaveman")) || {};
 			const obj2Return = {};
 
 			if (fromStore?.concavity !== undefined) {
@@ -2349,10 +2349,27 @@ class InkBallGame {
 			else
 				obj2Return.lengthThreshold = 0.0;
 
+			fromStore = JSON.parse(store.getItem("AIClustering")) || {};
+			if (fromStore?.lastClickedX !== undefined && this.#iLastX < 0) {
+				let lastClickedX = parseInt(fromStore.lastClickedX);
+				lastClickedX = (isNaN(lastClickedX) || lastClickedX <= 0) ? this.#iLastX : lastClickedX;
+				obj2Return.lastClickedX = lastClickedX;
+			}
+			else
+				obj2Return.lastClickedX = this.#iLastX;
+
+			if (fromStore?.lastClickedY !== undefined && this.#iLastY < 0) {
+				let lastClickedY = parseInt(fromStore.lastClickedY);
+				lastClickedY = (isNaN(lastClickedY) || lastClickedY <= 0) ? this.#iLastY : lastClickedY;
+				obj2Return.lastClickedY = lastClickedY;
+			}
+			else
+				obj2Return.lastClickedY = this.#iLastY;
+
 			return obj2Return;
 		};
 		const saveParamsToStore = (params, store) => {
-			const toStore = JSON.parse(store.getItem("AIConcaveman")) || {};
+			let toStore = JSON.parse(store.getItem("AIConcaveman")) || {};
 			let persist = false;
 			if (params.concavity !== toStore?.concavity) {
 				toStore.concavity = params.concavity;
@@ -2363,14 +2380,39 @@ class InkBallGame {
 				persist = true;
 			}
 
-			if (persist === true) {
+			if (persist === true)
 				store.setItem("AIConcaveman", JSON.stringify(toStore));
+
+			persist = false;
+			toStore = JSON.parse(store.getItem("AIClustering")) || {};
+			if (params.lastClickedX !== toStore?.lastClickedX) {
+				toStore.lastClickedX = params.lastClickedX;
+				persist = true;
 			}
+			if (params.lastClickedY !== toStore?.lastClickedY) {
+				toStore.lastClickedY = params.lastClickedY;
+				persist = true;
+			}
+
+			if (persist === true)
+				store.setItem("AIClustering", JSON.stringify(toStore));
 		};
 
 		const runParams = loadParamsFromStore(window.localStorage);
+		if (!(runParams.lastClickedY >= 0 && runParams.lastClickedX >= 0)) {
+			LocalLog("!!!First you need to click some point with mouse to pick the color!!!");
+			return;
+		}
+		const clicked_point_status = (await this.#Points.get(runParams.lastClickedY * this.#iGridWidth + runParams.lastClickedX))?.GetStatus();
+
 		const data = await this.#RunAIWorker((worker) => {
-			const serialized_points = Array.from(this.#Points.store.entries()).map(([key, value]) => ({ key, value: value.Serialize() }));
+			const serialized_points = this.#cyclesFound?.length > 0 ?
+				this.#cyclesFound.map(pt => {
+					const ser = pt.Serialize();
+					return { key: ser.y * this.#iGridWidth + ser.x, value: ser };
+				})
+				:
+				[...this.#Points.store.entries()].map(([key, value]) => ({ key, value: value.Serialize() }));
 			//const serialized_paths = this.#Lines.store.map(pa => pa.Serialize());
 
 			worker.postMessage({
@@ -2378,6 +2420,7 @@ class InkBallGame {
 				boardSize: { iGridWidth: this.#iGridWidth, iGridHeight: this.#iGridHeight },
 				state: this.#GetGameStateForIndexedDb(),
 				points: serialized_points,
+				clickedPointStatus: clicked_point_status,
 				concavity: runParams.concavity,
 				lengthThreshold: runParams.lengthThreshold
 			});
@@ -2399,7 +2442,7 @@ class InkBallGame {
 			const rand_color = RandomColor();
 			for (const vert of cw_sorted_verts) {
 				const { x, y } = vert;
-				const pt = document.querySelector(`svg > circle[cx="${x}"][cy="${y}"]`);
+				const pt = await this.#Points.get(y * this.#iGridWidth + x);
 				if (pt) {
 					pt.SetStrokeColor(rand_color);
 					pt.SetFillColor(rand_color);
@@ -2440,7 +2483,6 @@ class InkBallGame {
 		// 		points: serialized_points,
 		// 		paths: serialized_paths,
 		// 		colorRed: this.#COLOR_RED,
-		// 		colorBlue: this.#COLOR_BLUE
 		// 	});
 		// });
 
@@ -2690,7 +2732,14 @@ class InkBallGame {
 
 	async #OnTestDFS2(event) {
 		event.preventDefault();
-		await this.#DFS2(await this.#BuildGraph(), this.#COLOR_RED);
+		if (!(this.#iLastY >= 0 && this.#iLastX >= 0)) {
+			LocalLog("!!!First you need to click starting point with mouse!!!");
+			return;
+		}
+
+		const clicked_point = await this.#Points.get(this.#iLastY * this.#iGridWidth + this.#iLastX);
+
+		await this.#DFS2(await this.#BuildGraph(), clicked_point);
 	}
 
 	async #OnTestFloodFill(event) {
@@ -2869,9 +2918,8 @@ class InkBallGame {
 			}
 
 
-			if (persist === true) {
+			if (persist === true)
 				store.setItem("AIClustering", JSON.stringify(toStore));
-			}
 		};
 
 		event.preventDefault();
@@ -2897,7 +2945,8 @@ class InkBallGame {
 		//Web Worker calc
 		const data = await this.#RunAIWorker((worker) => {
 			worker.postMessage({
-				operation: "CLUSTERING", dataset: arr,
+				operation: "CLUSTERING",
+				dataset: arr,
 				method: runParams.method,
 
 				numberOfClusters: runParams.numberOfClusters,
@@ -2924,6 +2973,8 @@ class InkBallGame {
 						pt.SetFillColor(rand_color);
 						pt.SetZIndex(100);
 						pt.setAttribute("r", 2 / this.#iGridSpacingX);
+						if (y === runParams.lastClickedY && x === runParams.lastClickedX)
+							this.#cyclesFound = points_in_cluster;
 					}
 					// await Sleep(50);
 				}
@@ -3439,18 +3490,19 @@ class InkBallGame {
 	} = {}) {
 		const graph_points = new Map(), graph_edges = new Map();
 
-		const isPointOKForPath = function (freePointStatusArr, pt) {
+		const isPointOKForPath = function (allowedPoints, pt) {
 			const status = pt.GetStatus();
 
-			if (freePointStatusArr.includes(status) && pt.GetFillColor() === cpuFillColor)
+			if (allowedPoints.includes(status) && pt.GetFillColor() === cpuFillColor)
 				return true;
 			return false;
 		};
 
+		const freePointStatusArr = [freePointStatus];
 		const addPointsAndEdgesToGraph = async (point, to_x, to_y, x, y) => {
 			if (to_x >= 0 && to_x < this.#iGridWidth && to_y >= 0 && to_y < this.#iGridHeight) {
 				const next = await this.#Points.get(to_y * this.#iGridWidth + to_x);
-				if (next && isPointOKForPath([freePointStatus], next) === true) {
+				if (next && isPointOKForPath(freePointStatusArr, next) === true) {
 
 					const point_hash = `${x},${y}`;
 					const next_hash = `${to_x},${to_y}`;
@@ -3482,8 +3534,10 @@ class InkBallGame {
 			}
 		};
 
-		for (const point of await this.#Points.values()) {
-			if (point && isPointOKForPath([freePointStatus, this.POINT_STARTING, this.POINT_IN_PATH], point) === true) {
+		const all_points = await this.#Points.values();
+		const good_point_status_arr = [freePointStatus, this.POINT_STARTING, this.POINT_IN_PATH];
+		for (const point of all_points) {
+			if (point && isPointOKForPath(good_point_status_arr, point) === true) {
 				const { x, y } = point.GetPosition();
 				//TODO: await all below promises
 				//east
@@ -3706,7 +3760,7 @@ class InkBallGame {
 	}
 
 	// eslint-disable-next-line no-unused-vars
-	async #DFS2(graph, sHumanColor) {
+	async #DFS2(graph, clickedPoint) {
 		const enterVertex = () => {
 		};
 		const leaveVertex = () => {
@@ -3723,7 +3777,7 @@ class InkBallGame {
 			await this.#DisplayPointsProgressWithDelay(cw_sorted_verts, 250);
 		};
 
-		await depthFirstSearch(graph, graph.vertices[0], { enterVertex, leaveVertex, showCycle });
+		await depthFirstSearch(graph, clickedPoint, { enterVertex, leaveVertex, showCycle });
 	}
 
 	/**
@@ -4001,6 +4055,7 @@ class InkBallGame {
 				}
 				return res;
 			};
+			/*
 			// eslint-disable-next-line no-unused-vars
 			const continuousSortFun = (left, right) => {
 				if (!left.direction && !right.direction)
@@ -4012,11 +4067,12 @@ class InkBallGame {
 					(right.direction.x - direction.x) + (right.direction.y - direction.y)) / 4;
 				return square_dist;
 			};
+			*/
 			for (let counter = verts.length; counter > 0; counter--) {//go in reverse order over every vertices
-				let simple_counter = 0;
+				let stop_counter = 0;
 				const filtered_objs = verts.filter(continuousTestFun)/* .sort(continuousSortFun) */;
 				do {
-					const obj = filtered_objs.at(simple_counter);
+					const obj = filtered_objs.at(stop_counter);
 					if (obj !== undefined) {
 						const ind_or_negative_one = verts.indexOf(obj);
 						if (ind_or_negative_one !== -1) {//new neighboring vertex found
@@ -4037,7 +4093,7 @@ class InkBallGame {
 						}
 					}
 				}
-				while (++simple_counter < 4);
+				while (++stop_counter < 4);
 			}
 			//verification
 			const { x, y } = startingPoint.GetPosition();

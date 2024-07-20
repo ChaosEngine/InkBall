@@ -10,10 +10,7 @@ let SvgVml, StatusEnum, LocalLog, LocalError, sortPointsClockwise, pnpoly, IsPoi
 addEventListener('message', async function (e) {
 
 	if (SvgVml === undefined) {
-		const importMetaUrl = import.meta.url;//do not optimize, take into separate variable, miss..feature of terser-5.16.6
-		const url = new URL(importMetaUrl);
-
-		const selfFileName = url.pathname.split('/').at(-1), isMinified = selfFileName.indexOf("min") !== -1;
+		const isMinified = location.hostname !== "localhost";
 
 		const shrd = await import(/* webpackIgnore: true */`./shared${isMinified ? '.min' : ''}.js`);
 
@@ -38,10 +35,14 @@ addEventListener('message', async function (e) {
 					points.set(pt.key, svgVml.DeserializeOval(pt.value));
 				});
 
-				LocalLog(`lines.count = ${await lines.length}, points.count = ${await points.size}`);
+				LocalLog(`lines.count = ${lines.length}, points.count = ${points.size}`);
 
 				const ai = new GraphAI(params.state.iGridWidth, params.state.iGridHeight, points);
-				const graph = await ai.BuildGraph({ freePointStatus: StatusEnum.POINT_FREE_BLUE, cpufillCol: 'var(--bluish)', visuals: false });
+				const graph = await ai.BuildGraph({
+					freePointStatus: StatusEnum.POINT_FREE_BLUE,
+					// cpufillCol: 'var(--bluish)', 
+					visuals: false
+				});
 				//LocalLog(graph);
 
 				postMessage({ operation: params.operation, params: graph });
@@ -58,17 +59,26 @@ addEventListener('message', async function (e) {
 					points.set(pt.key, svgVml.DeserializeOval(pt.value));
 				});
 				const ai = new GraphAI(params.state.iGridWidth, params.state.iGridHeight, points);
-				const graph = await ai.BuildGraph({ freePointStatus: StatusEnum.POINT_FREE_BLUE, cpufillCol: 'var(--bluish)', visuals: false });
+				const clicked_status = params.clickedPointStatus;
+				const graph = await ai.BuildGraph({
+					freePointStatus: clicked_status,
+					// cpufillCol: clicked_status === StatusEnum.POINT_FREE_RED ? 'var(--redish)' : 'var(--bluish)',
+					visuals: false
+				});
 
 
 				const vertices = graph.vertices.map(function (pt) {
 					const { x, y } = pt.GetPosition();
 					return [x, y];
 				});
-				const convex_hull = concaveman(vertices, params.concavity ?? 2.0, params.lengthThreshold ?? 0.0);
 
-				const mapped_verts = convex_hull.map(([x, y]) => ({ x, y }));
-				const cw_sorted_verts = sortPointsClockwise(mapped_verts);
+				let convex_hull = null, mapped_verts, cw_sorted_verts;
+				if (vertices.length > 0) {
+					convex_hull = concaveman(vertices, params.concavity ?? 2.0, params.lengthThreshold ?? 0.0);
+
+					mapped_verts = convex_hull.map(([x, y]) => ({ x, y }));
+					cw_sorted_verts = sortPointsClockwise(mapped_verts);
+				}
 
 				postMessage({ operation: params.operation, convex_hull: convex_hull, cw_sorted_verts: cw_sorted_verts });
 			}
@@ -85,8 +95,12 @@ addEventListener('message', async function (e) {
 					points.set(pt.key, svgVml.DeserializeOval(pt.value));
 				});
 				const ai = new GraphAI(params.state.iGridWidth, params.state.iGridHeight, points);
-				const graph = await ai.BuildGraph({ freePointStatus: StatusEnum.POINT_FREE_BLUE, cpufillCol: params.colorBlue, visuals: false });
-				const result = await ai.MarkAllCycles(graph, params.colorBlue, params.colorRed, lines);
+				const graph = await ai.BuildGraph({
+					freePointStatus: StatusEnum.POINT_FREE_BLUE,
+					// cpufillCol: params.colorBlue,
+					visuals: false
+				});
+				const result = await ai.MarkAllCycles(graph, params.colorRed, lines);
 
 
 				postMessage({
@@ -108,12 +122,15 @@ addEventListener('message', async function (e) {
 				const working_points = params.workingPoints.map(pt => svgVml.DeserializeOval(pt));
 
 				const sHumanColor = params.sHumanColor, sCPUColor = params.sCPUColor;
+				const human_point_statuses = [StatusEnum.POINT_FREE_RED, StatusEnum.POINT_IN_PATH];
+				const cpu_point_statuses = [StatusEnum.POINT_FREE_BLUE, StatusEnum.POINT_IN_PATH];
+
 
 
 				const results = [];
 				for (const pt of working_points) {
 					if (pt !== undefined && pt.GetFillColor() === sHumanColor
-						&& [StatusEnum.POINT_FREE_RED, StatusEnum.POINT_IN_PATH].includes(pt.GetStatus())) {
+						&& human_point_statuses.includes(pt.GetStatus())) {
 						const { x, y } = pt.GetPosition();
 						if (false === await IsPointOutsideAllPaths(x, y, allLines)) {
 							LocalLog("!!!Point inside path!!!");
@@ -126,7 +143,7 @@ addEventListener('message', async function (e) {
 							//let's find closes CPU points to it lying on circle
 							for (const cpu_pt of all_points) {
 								if (cpu_pt !== undefined && cpu_pt.GetFillColor() === sCPUColor
-									&& [StatusEnum.POINT_FREE_BLUE, StatusEnum.POINT_IN_PATH].includes(cpu_pt.GetStatus())) {
+									&& cpu_point_statuses.includes(cpu_pt.GetStatus())) {
 									const { x: cpu_x, y: cpu_y } = cpu_pt.GetPosition();
 									if (false === await IsPointOutsideAllPaths(cpu_x, cpu_y, allLines))
 										continue;
