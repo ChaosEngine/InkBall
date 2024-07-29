@@ -2,7 +2,7 @@
 /*global signalR*/
 "use strict";
 
-let SHRD, LocalLog, LocalError, StatusEnum, hasDuplicates, pnpoly, IsPointOutsideAllPaths, sortPointsClockwise, Sleep, depthFirstSearch, IBversionHash;
+let SHRD, LocalLog, LocalError, StatusEnum, hasDuplicates, pnpoly, IsPointOutsideAllPaths, sortPointsClockwise, Sleep, IBversionHash;
 
 /******** funcs-n-classes ********/
 const CommandKindEnum = Object.freeze({
@@ -453,14 +453,14 @@ async function importAllModulesAsync(gameOptions) {
 		sortPointsClockwise = SHRD.sortPointsClockwise,
 		Sleep = SHRD.Sleep;
 
-	//for CPU game enable AI libs and calculations
-	if (gameOptions.iOtherPlayerID === -1) {
-		// AIBundle = await import(/* webpackChunkName: "AIDeps" */'./AIBundle.js');
-
-		// import depthFirstSearch from "./depthFirstSearch.js";
-		const module = await import('./depthFirstSearch.js?v=' + IBversionHash);
-		depthFirstSearch = module.default;
-	}
+	// //for CPU game enable AI libs and calculations
+	// if (gameOptions.iOtherPlayerID === -1) {
+	// 	// AIBundle = await import(/* webpackChunkName: "AIDeps" */'./AIBundle.js');
+	//
+	// 	// import depthFirstSearch from "./depthFirstSearch.js";
+	// 	const module = await import('./depthFirstSearch.js?v=' + IBversionHash);
+	// 	depthFirstSearch = module.default;
+	// }
 }
 
 function RandomColor() {
@@ -3761,6 +3761,10 @@ class InkBallGame {
 
 	// eslint-disable-next-line no-unused-vars
 	async #DFS2(graph, clickedPoint) {
+		const module = await import('./depthFirstSearch.js?v=' + IBversionHash);
+		const depthFirstSearch = module.default;
+
+		
 		const enterVertex = () => {
 		};
 		const leaveVertex = () => {
