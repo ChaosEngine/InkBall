@@ -3,158 +3,158 @@
 @inject Microsoft.AspNetCore.Authorization.IAuthorizationService authorization
 @model GameModel
 @{
-    ViewData["Title"] = "Game";
+	ViewData["Title"] = "Game";
 
-    HtmlHelpers.RenderHeaderSection(this, Url, commonUIConfigureOptions);
+	HtmlHelpers.RenderHeaderSection(this, Url, commonUIConfigureOptions);
 
 
-    string P2Name = Model.Game.Player2 != null ? Model.Game.Player2?.UserName : "???";
-    string surrender_win_cancel_name;
-    bool isThisPlayerActive = Model.Game.IsThisPlayerActive();
-    bool useMessagePackBinaryTransport = commonUIConfigureOptions.Value.UseMessagePackBinaryTransport;
-    string lastTimeStampISO = @Model.Game.TimeStamp.ToString("O");
-    string hubName = commonUIConfigureOptions.Value.AppRootPath + InkBall.Module.Hubs.GameHub.HubName;
-    string IBversion = this.GetType().Assembly.GetName().Version.ToString(4);
-    bool bServiceModeVisible = (await authorization.AuthorizeAsync(User, Model.Game, Constants.ServiceModePolicyName)).Succeeded;
-    if (Model.Game.Player2 != null)
-    {
-        if (Model.Game.GetOtherPlayer().IsLastMoveOverdue() && isThisPlayerActive)
-        {
-            surrender_win_cancel_name = "win";
-        }
-        else
-        {
-            surrender_win_cancel_name = "surrender";
-        }
-    }
-    else
-    {
-        surrender_win_cancel_name = "cancel";
-    }
+	string P2Name = Model.Game.Player2 != null ? Model.Game.Player2?.UserName : "???";
+	string surrender_win_cancel_name;
+	bool isThisPlayerActive = Model.Game.IsThisPlayerActive();
+	bool useMessagePackBinaryTransport = commonUIConfigureOptions.Value.UseMessagePackBinaryTransport;
+	string lastTimeStampISO = @Model.Game.TimeStamp.ToString("O");
+	string hubName = commonUIConfigureOptions.Value.AppRootPath + InkBall.Module.Hubs.GameHub.HubName;
+	string IBversion = this.GetType().Assembly.GetName().Version.ToString(4);
+	bool bServiceModeVisible = (await authorization.AuthorizeAsync(User, Model.Game, Constants.ServiceModePolicyName)).Succeeded;
+	if (Model.Game.Player2 != null)
+	{
+		if (Model.Game.GetOtherPlayer().IsLastMoveOverdue() && isThisPlayerActive)
+		{
+			surrender_win_cancel_name = "win";
+		}
+		else
+		{
+			surrender_win_cancel_name = "surrender";
+		}
+	}
+	else
+	{
+		surrender_win_cancel_name = "cancel";
+	}
 }
 <h3 class="inkgame">
-    Inball Game
+	Inball Game
 </h3>
 <p class="inkgame">
-    <!-- Debug State -->
-    iGameID=<span id="gameID"></span>,
-    iPlayerID=<span id="playerID"></span>,
-    <span id="whichPlayer"></span> playing with <span id="whichColor"></span>
-    (<span id='Player1Name'>@Model.Game.Player1?.UserName</span> vs <span id='Player2Name'>@P2Name</span>)
+	<!-- Debug State -->
+	iGameID=<span id="gameID"></span>,
+	iPlayerID=<span id="playerID"></span>,
+	<span id="whichPlayer"></span> playing with <span id="whichColor"></span>
+	(<span id='Player1Name'>@Model.Game.Player1?.UserName</span> vs <span id='Player2Name'>@P2Name</span>)
 </p>
 <div class="container inkgame">
-    <form action="GamesList" method="post" asp-antiforgery="true" class="row">
-        <input type='hidden' name='GameID' />
-        <div class="col-xs-6 col-sm-auto ps-0">
-            <a id='Pause' href='GamesList' class="btn btn-outline-primary">pause</a>
-            <input id='SurrenderButton' type='submit' name='action' value="@surrender_win_cancel_name" class='btn btn-outline-primary' disabled />
-        </div>
-        <div class="col-xs-6 col-sm-auto ps-0">
-            <input id="StopAndDraw" type="button" value="Stop and Draw" class='btn btn-warning' disabled />
-            <input id="CancelPath" type="button" value="Cancel path" class='btn btn-primary' disabled />
-        </div>
-        @if(bServiceModeVisible)
-        {
-        <fieldset id="serviceMenu" class="col-xs-6 col-sm-auto pb-1 border border-2">
-            <legend class="mb-0 fs-6 w-auto float-none text-center">Service Menu</legend>
+	<form action="GamesList" method="post" asp-antiforgery="true" class="row">
+		<input type='hidden' name='GameID' />
+		<div class="col-xs-6 col-sm-auto ps-0">
+			<a id='Pause' href='GamesList' class="btn btn-outline-primary">pause</a>
+			<input id='SurrenderButton' type='submit' name='action' value="@surrender_win_cancel_name" class='btn btn-outline-primary' disabled />
+		</div>
+		<div class="col-xs-6 col-sm-auto ps-0">
+			<input id="StopAndDraw" type="button" value="Stop and Draw" class='btn btn-warning' disabled />
+			<input id="CancelPath" type="button" value="Cancel path" class='btn btn-primary' disabled />
+		</div>
+		@if(bServiceModeVisible)
+		{
+		<fieldset id="serviceMenu" class="col-xs-6 col-sm-auto pb-1 border border-2">
+			<legend class="mb-0 fs-6 w-auto float-none text-center">Service Menu</legend>
 
-            <div id="testArea" class="d-inline d-none dropdown dropend">
-                <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="ddlTest" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    Test
-                </button>
-                <ul class="dropdown-menu" aria-labelledby="ddlTest">
-                    <li><a class="dropdown-item" href="#" id="TestBuildGraph">Build current graph</a></li>
-                    <li><a class="dropdown-item" href="#" id="TestConcaveman">Concaveman</a></li>
-                    <li><a class="dropdown-item" href="#" id="TestMarkAllCycles">Mark all cycles</a></li>
-                    <li><a class="dropdown-item" href="#" id="TestGroupPoints">Group points recurse</a></li>
-                    <li><a class="dropdown-item" href="#" id="TestFindSurroundablePoints">Find surroundable points</a></li>
-                    <li><a class="dropdown-item" href="#" id="TestDFS2">DFS 2</a></li>
-                    <li><a class="dropdown-item" href="#" id="FloodFill">Flood fill</a></li>
-                    <li><a class="dropdown-item" href="#" id="AStar">A-Star</a></li>
-                    <li><a class="dropdown-item" href="#" id="Clustering">Clustering</a></li>
-                </ul>
-            </div>
-            
-            <input id="cbSrvMnuRed" type="checkbox" class="btn-check" name="options" autocomplete="off">
-            <label class="btn btn-outline-danger btn-sm" for="cbSrvMnuRed">Place Red</label>
-            <input id="cbSrvMnuBlue" type="checkbox" class="btn-check" name="options" autocomplete="off">
-            <label class="btn btn-outline-primary btn-sm" for="cbSrvMnuBlue">Place Blue</label>
-        </fieldset>
-        }
-    </form>
-    <div id="status" class="row">
-        <div class="col-auto px-0">
-            <span id="gameStatus">•</span>&nbsp;
-            <span id="debug0"></span>&nbsp;
-            <span id="debug1"></span>&nbsp;
-            <span id="debug2"></span>
-        </div>
-    </div>
-    <div class="row mx-auto">
-        <svg id="screen" class="col-auto p-0 mb-3 mx-auto boardsize-@(Model.Game.iBoardWidth)x@(Model.Game.iBoardHeight)">
-        </svg>
-        <div class="col msgchat" data-otherplayerid="@(Model.Game.GetOtherPlayer()?.iId)">
-            <div class="input-group">
-                <input id="messageInput" type="text" class="form-control" placeholder="Message..." aria-label="Message to send" aria-describedby="sendButton"
-                       onkeyup="document.querySelector('#sendButton').disabled = this.value == ''" disabled />
-                <div class="input-group-append ps-2">
-                    <input id="sendButton" type="button" value="Send Message" class="btn btn-secondary" disabled />
-                </div>
-            </div>
-            <ul id="messagesList" class="list-group list-group-flush pt-1"></ul>
-        </div>
-    </div>
+			<div id="testArea" class="d-inline d-none dropdown dropend">
+				<button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="ddlTest" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+					Test
+				</button>
+				<ul class="dropdown-menu" aria-labelledby="ddlTest">
+					<li><a class="dropdown-item" href="#" id="TestBuildGraph">Build current graph</a></li>
+					<li><a class="dropdown-item" href="#" id="TestConcaveman">Concaveman</a></li>
+					<li><a class="dropdown-item" href="#" id="TestMarkAllCycles">Mark all cycles</a></li>
+					<li><a class="dropdown-item" href="#" id="TestGroupPoints">Group points recurse</a></li>
+					<li><a class="dropdown-item" href="#" id="TestFindSurroundablePoints">Find surroundable points</a></li>
+					<li><a class="dropdown-item" href="#" id="TestDFS2">DFS 2</a></li>
+					<li><a class="dropdown-item" href="#" id="FloodFill">Flood fill</a></li>
+					<li><a class="dropdown-item" href="#" id="AStar">A-Star</a></li>
+					<li><a class="dropdown-item" href="#" id="Clustering">Clustering</a></li>
+				</ul>
+			</div>
+			
+			<input id="cbSrvMnuRed" type="checkbox" class="btn-check" name="options" autocomplete="off">
+			<label class="btn btn-outline-danger btn-sm" for="cbSrvMnuRed">Place Red</label>
+			<input id="cbSrvMnuBlue" type="checkbox" class="btn-check" name="options" autocomplete="off">
+			<label class="btn btn-outline-primary btn-sm" for="cbSrvMnuBlue">Place Blue</label>
+		</fieldset>
+		}
+	</form>
+	<div id="status" class="row">
+		<div class="col-auto px-0">
+			<span id="gameStatus">•</span>&nbsp;
+			<span id="debug0"></span>&nbsp;
+			<span id="debug1"></span>&nbsp;
+			<span id="debug2"></span>
+		</div>
+	</div>
+	<div class="row mx-auto">
+		<svg id="screen" class="col-auto p-0 mb-3 mx-auto boardsize-@(Model.Game.iBoardWidth)x@(Model.Game.iBoardHeight)">
+		</svg>
+		<div class="col msgchat" data-otherplayerid="@(Model.Game.GetOtherPlayer()?.iId)">
+			<div class="input-group">
+				<input id="messageInput" type="text" class="form-control" placeholder="Message..." aria-label="Message to send" aria-describedby="sendButton"
+					   onkeyup="document.querySelector('#sendButton').disabled = this.value == ''" disabled />
+				<div class="input-group-append ps-2">
+					<input id="sendButton" type="button" value="Send Message" class="btn btn-secondary" disabled />
+				</div>
+			</div>
+			<ul id="messagesList" class="list-group list-group-flush pt-1"></ul>
+		</div>
+	</div>
 </div>
 
 <environment include="Development">
-    <script src='~/lib/signalr/browser/signalr.min.js'></script>
-    @if (useMessagePackBinaryTransport)
-    {
-        <script type='module' src='~/lib/msgpack5/msgpack5.min.js'></script>
-        <script type='module' src='~/lib/signalr-protocol-msgpack/browser/signalr-protocol-msgpack.min.js'></script>
-    }
+	<script src='~/lib/signalr/browser/signalr.min.js'></script>
+	@if (useMessagePackBinaryTransport)
+	{
+		<script type='module' src='~/lib/msgpack5/msgpack5.min.js'></script>
+		<script type='module' src='~/lib/signalr-protocol-msgpack/browser/signalr-protocol-msgpack.min.js'></script>
+	}
 </environment>
 <environment exclude="Development">
-    <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.7/dist/browser/signalr.min.js" integrity="sha256-4opyCjWbN8sBV1jVQ/kIcw7Vu+R42wlQa7aIfxgxNTg=" crossorigin="anonymous"></script>
-    @if (useMessagePackBinaryTransport)
-    {
-        <script type='module' src="https://cdn.jsdelivr.net/npm/msgpack5@6.0.2/dist/msgpack5.min.js" integrity="sha256-AxiBUMElqJXwwKZro5eMMWVExjtxeZSUQ/4nC4oCU2E=" crossorigin="anonymous"></script>
-        <script type='module' src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr-protocol-msgpack@8.0.7/dist/browser/signalr-protocol-msgpack.min.js" integrity="sha256-3vx/CZAhuWYVd8BYbOG6FnZXX9eUtP2ppROxUGMcydc=" crossorigin="anonymous"></script>
-    }
+	<script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.7/dist/browser/signalr.min.js" integrity="sha256-4opyCjWbN8sBV1jVQ/kIcw7Vu+R42wlQa7aIfxgxNTg=" crossorigin="anonymous"></script>
+	@if (useMessagePackBinaryTransport)
+	{
+		<script type='module' src="https://cdn.jsdelivr.net/npm/msgpack5@6.0.2/dist/msgpack5.min.js" integrity="sha256-AxiBUMElqJXwwKZro5eMMWVExjtxeZSUQ/4nC4oCU2E=" crossorigin="anonymous"></script>
+		<script type='module' src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr-protocol-msgpack@8.0.7/dist/browser/signalr-protocol-msgpack.min.js" integrity="sha256-3vx/CZAhuWYVd8BYbOG6FnZXX9eUtP2ppROxUGMcydc=" crossorigin="anonymous"></script>
+	}
 </environment>
 <script type='module'>
-    import { InkBallGame } from "@Url.Content(Constants.WwwIncludeInkballJS)";
+	import { InkBallGame } from "@Url.Content(Constants.WwwIncludeInkballJS)";
 
-    window.addEventListener('load', async () => {
-        const gameOptions = {
-            inkBallHubName: '@hubName',
-            iGameID: @Model.Game.iId,
-            iPlayerID: @Model.Player.iId,
-            bPlayingWithRed: JSON.parse('@Model.Game.IsThisPlayerPlayingWithRed()'.toLowerCase()),
-            bIsThisPlayer1: JSON.parse('@Model.Game.IsThisPlayer1()'.toLowerCase()),
-            bPlayerActive: JSON.parse('@isThisPlayerActive'.toLowerCase()),
-            gameType: '@Model.Game.GameType',
-            isMessagePackProtocol: JSON.parse('@useMessagePackBinaryTransport'.toLowerCase()),
-            servTimeoutMillis: @Model.ClientTimeoutInterval.TotalMilliseconds,
-            isReadonly: JSON.parse('@Model.IsReadonly'.toLowerCase()),
-            pathAfterPointDrawAllowanceSecAmount: @Constants.PathAfterPointDrawAllowanceSecAmount,
-            sLastMoveGameTimeStamp: '@lastTimeStampISO',
-            version: '@IBversion',
+	window.addEventListener('load', async () => {
+		const gameOptions = {
+			inkBallHubName: '@hubName',
+			iGameID: @Model.Game.iId,
+			iPlayerID: @Model.Player.iId,
+			bPlayingWithRed: JSON.parse('@Model.Game.IsThisPlayerPlayingWithRed()'.toLowerCase()),
+			bIsThisPlayer1: JSON.parse('@Model.Game.IsThisPlayer1()'.toLowerCase()),
+			bPlayerActive: JSON.parse('@isThisPlayerActive'.toLowerCase()),
+			gameType: '@Model.Game.GameType',
+			isMessagePackProtocol: JSON.parse('@useMessagePackBinaryTransport'.toLowerCase()),
+			servTimeoutMillis: @Model.ClientTimeoutInterval.TotalMilliseconds,
+			isReadonly: JSON.parse('@Model.IsReadonly'.toLowerCase()),
+			pathAfterPointDrawAllowanceSecAmount: @Constants.PathAfterPointDrawAllowanceSecAmount,
+			sLastMoveGameTimeStamp: '@lastTimeStampISO',
+			version: '@IBversion',
 
-            @if(Model.PlayerPointsAndPaths.Points != null)
-            {
-                @:PointsAsJavaScriptArray: @Model.PointsAsJavaScriptArray,
-                @:PathsAsJavaScriptArray: @Model.PathsAsJavaScriptArray,
-            }
-            else
-            {
-                @:PointsAsJavaScriptArray: null,
-                @:PathsAsJavaScriptArray: null
-            }
-        };
+			@if(Model.PlayerPointsAndPaths.Points != null)
+			{
+				@:PointsAsJavaScriptArray: @Model.PointsAsJavaScriptArray,
+				@:PathsAsJavaScriptArray: @Model.PathsAsJavaScriptArray,
+			}
+			else
+			{
+				@:PointsAsJavaScriptArray: null,
+				@:PathsAsJavaScriptArray: null
+			}
+		};
 
-        await InkBallGame.OnLoad(gameOptions);
-    });
+		await InkBallGame.OnLoad(gameOptions);
+	});
 
-    window.addEventListener('beforeunload', InkBallGame.OnBeforeUnload);
+	window.addEventListener('beforeunload', InkBallGame.OnBeforeUnload);
 </script>
