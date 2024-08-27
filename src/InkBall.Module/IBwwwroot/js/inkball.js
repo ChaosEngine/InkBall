@@ -4049,14 +4049,14 @@ class InkBallGame {
 			const gathered = verts.splice(-1, 1);//drop last vert from verts and create new array out of it
 
 			let last = gathered[0];//take single vert as starting last value
-			let direction = null;
+			// let direction = null;
 			// eslint-disable-next-line no-unused-vars
 			const continuousTestFun = (v, index, arr) => {
 				const res = Math.abs(v.x - last.x) <= 1 && Math.abs(v.y - last.y) <= 1;
-				if (res === true && direction !== null) {
-					const dir = { x: (last.x - v.x), y: (last.y - v.y) };
-					v.direction = dir;
-				}
+				// if (res === true /* && direction !== null */) {
+				// 	// const dir = { x: (last.x - v.x), y: (last.y - v.y) };
+				// 	// v.direction = dir;
+				// }
 				return res;
 			};
 			/*
@@ -4083,18 +4083,18 @@ class InkBallGame {
 							//move found vertex from verts into gathered array...
 							//...and set new last from this moved vert
 							const candidate = verts.splice(ind_or_negative_one, 1)[0];
-							direction = { x: (last.x - candidate.x), y: (last.y - candidate.y) };
+							//direction = { x: (last.x - candidate.x), y: (last.y - candidate.y) };
 							last = candidate;
 							gathered.push(last);//add to found path points
 							// LocalLog(`found direction: ${direction.x},${direction.y}, filtered_objs.cnt: ${filtered_objs.length}`);
 							break;
 						}
-						else {
-							//neighboring vertex not found, break, we fail
-							// break;
-							// gathered.pop();
-							// LocalLog(`missed direction: ${direction.x},${direction.y}, filtered_objs.cnt: ${filtered_objs.length}`);
-						}
+						//else {
+						//	//neighboring vertex not found, break, we fail
+						//	// break;
+						//	// gathered.pop();
+						//	// LocalLog(`missed direction: ${direction.x},${direction.y}, filtered_objs.cnt: ${filtered_objs.length}`);
+						//}
 					}
 				}
 				while (++stop_counter < 4);
