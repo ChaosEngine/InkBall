@@ -3764,7 +3764,7 @@ class InkBallGame {
 		const module = await import('./depthFirstSearch.js?v=' + IBversionHash);
 		const depthFirstSearch = module.default;
 
-		
+
 		const enterVertex = () => {
 		};
 		const leaveVertex = () => {
@@ -3992,7 +3992,6 @@ class InkBallGame {
 		const queue = [startingPoint.GetPosition()];
 		const blanks_changed = new Set();
 		const edge_points = new Map();
-		const log_list = [];
 
 		while (queue.length > 0) {
 			const { x, y } = queue.shift();
@@ -4011,36 +4010,33 @@ class InkBallGame {
 			for (const newPos of directions) {
 				if (false === (newPos.x < 0 || newPos.y < 0 || newPos.x >= this.#iGridWidth || newPos.y >= this.#iGridHeight)) {
 					const point_position_hashed = newPos.y * this.#iGridWidth + newPos.x;
-					let color, point;
-					if (blanks_changed.has(point_position_hashed)) {
-						point = null;
-						color = replacementColor;
-					}
-					else {
-						point = await this.#Points.get(point_position_hashed);
-						color = point !== undefined ? point.GetFillColor() : null;
-					}
 
+					if (false === blanks_changed.has(point_position_hashed)) {
+						const point = await this.#Points.get(point_position_hashed);
 
-					if (color === clickedColor) {
-						point.SetFillColor(replacementColor); point.SetStrokeColor(replacementColor); point.StrokeWeight(0.3);
+						if (point !== undefined) {
+							const color = point.GetFillColor();
 
-						queue.push(newPos);
-					}
-					else if (color === null) {
-						blanks_changed.add(point_position_hashed);
+							if (color === clickedColor) {
+								point.SetFillColor(replacementColor); point.SetStrokeColor(replacementColor); point.StrokeWeight(0.3);
 
-						queue.push(newPos);
-					}
-					else if (color !== replacementColor) {
-						edge_points.set(point_position_hashed, { point, x: newPos.x, y: newPos.y });
-						log_list.push(point);
+								queue.push(newPos);
+							}
+							else if (color !== replacementColor && !edge_points.has(point_position_hashed)) {
+								edge_points.set(point_position_hashed, { point, x: newPos.x, y: newPos.y });
+							}
+						}
+						else {
+							blanks_changed.add(point_position_hashed);
+
+							queue.push(newPos);
+						}
 					}
 				}
 			}
 		}
-		LocalLog('log_list: ');
-		LocalLog(log_list);
+		LocalLog('edge_points: ');
+		LocalLog([...edge_points.values().map(({ point }) => point)]);
 
 
 		if (edge_points.size > 3) {
