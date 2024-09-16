@@ -2,7 +2,7 @@
 /*global signalR*/
 "use strict";
 
-let SHRD, LocalLog, LocalError, StatusEnum, hasDuplicates, pnpoly, IsPointOutsideAllPaths, sortPointsClockwise, Sleep, IBversionHash;
+let SHRD, LocalLog, LocalError, StatusEnum, hasDuplicates, pnpoly, IsPointOutsideAllPaths, sortPointsClockwise, Sleep, IBversionHash, getBoundingBox;
 
 /******** funcs-n-classes ********/
 const CommandKindEnum = Object.freeze({
@@ -450,7 +450,7 @@ async function importAllModulesAsync(gameOptions) {
 
 	LocalLog = SHRD.LocalLog, LocalError = SHRD.LocalError, StatusEnum = SHRD.StatusEnum,
 		hasDuplicates = SHRD.hasDuplicates, pnpoly = SHRD.pnpoly, IsPointOutsideAllPaths = SHRD.IsPointOutsideAllPaths,
-		sortPointsClockwise = SHRD.sortPointsClockwise,
+		sortPointsClockwise = SHRD.sortPointsClockwise, getBoundingBox = SHRD.getBoundingBox,
 		Sleep = SHRD.Sleep;
 
 	// //for CPU game enable AI libs and calculations
@@ -1910,7 +1910,7 @@ class InkBallGame {
 				this.#Debug('Wrong point - already existing', 0);
 				return;
 			}
-			if (!(await IsPointOutsideAllPaths(loc_x, loc_y, await this.#Lines.all()))) {
+			if (!IsPointOutsideAllPaths(loc_x, loc_y, await this.#Lines.all())) {
 				this.#Debug('Wrong point, Point is not outside all paths', 0);
 				return;
 			}
@@ -2493,7 +2493,7 @@ class InkBallGame {
 		// 	for (const pt of data.free_human_player_points) {
 		// 		//if (pt !== undefined && pt.GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.GetStatus()) {
 		// 		const { x, y } = pt;
-		// 		//	if (false === await IsPointOutsideAllPaths(x, y, await this.#Lines.all()))
+		// 		//	if (false === IsPointOutsideAllPaths(x, y, await this.#Lines.all()))
 		// 		//		continue;
 
 		// 		//check if really exists
@@ -2606,7 +2606,7 @@ class InkBallGame {
 			if (pt !== undefined && pt.GetFillColor() === sHumanColor
 				&& [StatusEnum.POINT_FREE_RED, StatusEnum.POINT_IN_PATH].includes(pt.GetStatus())) {
 				const { x, y } = pt.GetPosition();
-				if (false === await IsPointOutsideAllPaths(x, y, allLines)) {
+				if (false === IsPointOutsideAllPaths(x, y, allLines)) {
 					LocalLog("!!!Point inside path!!!");
 					continue;
 				}
@@ -2620,7 +2620,7 @@ class InkBallGame {
 						if (cpu_pt !== undefined && cpu_pt.GetFillColor() === sCPUColor
 							&& [StatusEnum.POINT_FREE_BLUE, StatusEnum.POINT_IN_PATH].includes(cpu_pt.GetStatus())) {
 							const { x: cpu_x, y: cpu_y } = cpu_pt.GetPosition();
-							if (false === await IsPointOutsideAllPaths(cpu_x, cpu_y, allLines))
+							if (false === IsPointOutsideAllPaths(cpu_x, cpu_y, allLines))
 								continue;
 
 							if (0 <= this.#SvgVml.IsPointInCircle({ x: cpu_x, y: cpu_y }, { x, y }, radius)) {
@@ -2979,6 +2979,8 @@ class InkBallGame {
 					// await Sleep(50);
 				}
 				clusters.push(points_in_cluster);
+				const bbox = getBoundingBox(points_in_cluster.map(p => p.GetPosition()));
+				LocalLog(this.#SvgVml.CreateRect(bbox.minX - 1, bbox.minY - 1, bbox.width + 2, bbox.height + 2, 'black'));
 			}
 			LocalLog({ method: data.method, clusters, plot: data.plot, noise: data.noise });
 		}
@@ -3325,7 +3327,7 @@ class InkBallGame {
 			x = this.#GetRandomInt(0, this.#iGridWidth);
 			y = this.#GetRandomInt(0, this.#iGridHeight);
 
-			if (!(await this.#Points.has(y * this.#iGridWidth + x)) && await IsPointOutsideAllPaths(x, y, allLines)) {
+			if (!(await this.#Points.has(y * this.#iGridWidth + x)) && IsPointOutsideAllPaths(x, y, allLines)) {
 				break;
 			}
 		}
@@ -3361,7 +3363,7 @@ class InkBallGame {
 		while (++random_pick_amount_cnter <= 50) {
 			random_picked_points.add(`${x}_${y}`);
 			if (false === (await this.#Points.has(y * this.#iGridWidth + x)) &&
-				true === (await IsPointOutsideAllPaths(x, y, allLines))) {
+				true === IsPointOutsideAllPaths(x, y, allLines)) {
 				log_str += (`checking centroid coords ${x}_${y} succeed\n`);
 				break;
 			}
@@ -3399,7 +3401,7 @@ class InkBallGame {
 			while (++random_pick_amount_cnter <= 50) {
 				random_picked_points.add(`${x}_${y}`);
 				if (false === (await this.#Points.has(y * this.#iGridWidth + x)) &&
-					true === (await IsPointOutsideAllPaths(x, y, allLines))) {
+					true === IsPointOutsideAllPaths(x, y, allLines)) {
 					log_str += (`checking nearest coords ${x}_${y} succeed\n`);
 					break;
 				}
@@ -3671,7 +3673,7 @@ class InkBallGame {
 			for (const pt of await this.#Points.values()) {
 				if (pt !== undefined && pt.GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.GetStatus()) {
 					const { x, y } = pt.GetPosition();
-					if (false === await IsPointOutsideAllPaths(x, y, allLines))
+					if (false === IsPointOutsideAllPaths(x, y, allLines))
 						continue;
 
 					//check if really exists

@@ -132,7 +132,7 @@ addEventListener('message', async function (e) {
 					if (pt !== undefined && pt.GetFillColor() === sHumanColor
 						&& human_point_statuses.includes(pt.GetStatus())) {
 						const { x, y } = pt.GetPosition();
-						if (false === await IsPointOutsideAllPaths(x, y, allLines)) {
+						if (false === IsPointOutsideAllPaths(x, y, allLines)) {
 							LocalLog("!!!Point inside path!!!");
 							continue;
 						}
@@ -145,7 +145,7 @@ addEventListener('message', async function (e) {
 								if (cpu_pt !== undefined && cpu_pt.GetFillColor() === sCPUColor
 									&& cpu_point_statuses.includes(cpu_pt.GetStatus())) {
 									const { x: cpu_x, y: cpu_y } = cpu_pt.GetPosition();
-									if (false === await IsPointOutsideAllPaths(cpu_x, cpu_y, allLines))
+									if (false === IsPointOutsideAllPaths(cpu_x, cpu_y, allLines))
 										continue;
 
 									if (0 <= svgVml.IsPointInCircle({ x: cpu_x, y: cpu_y }, { x, y }, radius)) {

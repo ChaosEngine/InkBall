@@ -223,7 +223,7 @@ class GraphAI {
 			for (const pt of await this.#Points.values()) {
 				if (pt !== undefined && pt.GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.GetStatus()) {
 					const { x, y } = pt.GetPosition();
-					if (false === await IsPointOutsideAllPaths(x, y, lines))
+					if (false === IsPointOutsideAllPaths(x, y, lines))
 						continue;
 
 					//check if really exists

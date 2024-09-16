@@ -119,7 +119,7 @@ function sortPointsClockwise(points) {
  * @param {Array} allLines array
  * @returns bool - true if outside, false otherwise
  */
-async function IsPointOutsideAllPaths(x, y, allLines) {
+function IsPointOutsideAllPaths(x, y, allLines) {
 	for (const line of allLines) {
 		const points = line.GetPointsArray();
 
@@ -128,6 +128,42 @@ async function IsPointOutsideAllPaths(x, y, allLines) {
 	}
 
 	return true;
+}
+
+/**
+ * The function returns an object containing the following properties:
+	minX: The minimum x-coordinate.
+	minY: The minimum y-coordinate.
+	maxX: The maximum x-coordinate.
+	maxY: The maximum y-coordinate.
+	width: The width of the bounding box (calculated as maxX - minX).
+	height: The height of the bounding box (calculated as maxY - minY).
+ * @param {Array<InkBallPointViewModel>} points array
+ * @returns bounding box object
+ */
+function getBoundingBox(points) {
+	let minX = Infinity;
+	let minY = Infinity;
+	let maxX = -Infinity;
+	let maxY = -Infinity;
+
+	for (const point of points) {
+		minX = Math.min(minX, point.x);
+		minY = Math.min(minY, point.y);
+
+		maxX = Math.max(maxX, point.x);
+		maxY = Math.max(maxY, point.y);
+	}
+
+	return {
+		minX,
+		minY,
+		maxX,
+		maxY,
+
+		width: maxX - minX,
+		height: maxY - minY
+	};
 }
 
 //////////////////////////////////////////////////////
@@ -166,10 +202,8 @@ class SvgVml {
 					case "circle":
 					case "line":
 					case "polyline":
-						{
-							const o = document.createElementNS(svgNS, elementName);
-							return o;
-						}
+					case "rect":
+						return document.createElementNS(svgNS, elementName);
 
 					default:
 						throw new Error(`unknown type ${elementName}`);
@@ -208,19 +242,6 @@ class SvgVml {
 				this.attributes.delete(key);
 			};
 
-			// self.SVGLineElement = function () {
-			// 	this.attributes = new Map();
-			// };
-			// SVGLineElement.prototype.setAttribute = function (key, val) {
-			// 	this.attributes.set(key, val);
-			// };
-			// SVGLineElement.prototype.getAttribute = function (key) {
-			// 	return this.attributes.get(key);
-			// };
-			// SVGLineElement.prototype.removeAttribute = function (key) {
-			// 	this.attributes.delete(key);
-			// };
-
 			self.SVGPolylineElement = function () {
 				this.attributes = new Map();
 			};
@@ -233,16 +254,20 @@ class SvgVml {
 			SVGPolylineElement.prototype.removeAttribute = function (key) {
 				this.attributes.delete(key);
 			};
+
+			self.SVGRectElement = function () {
+				this.attributes = new Map();
+			};
 			/////////////// Pollyfills end ///////////////
 
 			documentCreateElementNS_Element = function (elementName) {
 				switch (elementName) {
 					case "circle":
 						return new SVGCircleElement();
-					// case "line":
-					// 	return new SVGLineElement();
 					case "polyline":
 						return new SVGPolylineElement();
+					case "rect":
+						return new SVGRectElement();
 
 					default:
 						throw new Error(`unknown type ${elementName}`);
@@ -273,7 +298,6 @@ class SvgVml {
 		SVGCircleElement.prototype.SetFillColor = function (col) {
 			this.cachedFillColor = col;
 			this.setAttribute("fill", col);
-			// this.setAttribute("style", `fill: ${col}`);
 		};
 		SVGCircleElement.prototype.GetStatus = function () {
 			if (typeof (this.cachedStatus) === 'undefined') {
@@ -315,18 +339,6 @@ class SvgVml {
 			const Color = this.GetFillColor();
 			return { x, y, Status, Color };
 		};
-
-		// SVGLineElement.prototype.move = function (x1, y1, x2, y2) {
-		// 	this.setAttribute("x1", x1);
-		// 	this.setAttribute("y1", y1);
-		// 	this.setAttribute("x2", x2);
-		// 	this.setAttribute("y2", y2);
-		// };
-		// SVGLineElement.prototype.RGBcolor = function (r, g, b) {
-		// 	this.setAttribute("stroke", `rgb(${Math.round(r)},${Math.round(g)},${Math.round(b)})`);
-		// };
-		// SVGLineElement.prototype.SetColor = function (color) { this.setAttribute("stroke", color); };
-		// SVGLineElement.prototype.strokeWidth = function (sw) { this.setAttribute("stroke-width", sw + "px"); };
 
 		SVGPolylineElement.prototype.AppendPoints = function (x, y, diff = 1) {
 			const pts_str = this.getAttribute("points");
@@ -425,17 +437,6 @@ class SvgVml {
 
 			return svgAvailable ? this.#cont : null;
 		};
-		// this.CreateLine = function (w, col, linecap) {
-		// 	const o = documentCreateElementNS_Element("line");
-		// 	if (svgAntialias !== undefined)
-		// 		o.setAttribute("shape-rendering", svgAntialias === true ? "auto" : "optimizeSpeed");
-		// 	o.setAttribute("stroke-width", w + "px");
-		// 	if (col) o.setAttribute("stroke", col);
-		// 	if (linecap) o.setAttribute("stroke-linecap", linecap);
-
-		// 	this.#cont.appendChild(o);
-		// 	return o;
-		// };
 		this.CreatePolyline = function (points, col, width = undefined) {
 			const o = documentCreateElementNS_Element("polyline");
 			if (svgAntialias !== undefined)
@@ -468,7 +469,42 @@ class SvgVml {
 			this.#cont.appendChild(o);
 			return o;
 		};
+		/**
+		 * Creates rectangle
+		 * For example: <rect x="15" y="25" width="20" height="20" rx="2" fill="transparent" stroke="green" stroke-width="0.25"></rect>
+		 * 
+		 * @param {number} x 
+		 * @param {number} y 
+		 * @param {number} width 
+		 * @param {number} height 
+		 * @param {string} fill color
+		 * @param {string} stroke color
+		 * @returns created rectangle
+		 */
+		this.CreateRect = function (x, y, width, height, stroke = "green", fill = "transparent") {
+			const o = documentCreateElementNS_Element("rect");
+			if (svgAntialias !== undefined)
+				o.setAttribute("shape-rendering", svgAntialias === true ? "auto" : "optimizeSpeed");
 
+			o.setAttribute("x", x);
+			o.setAttribute("y", y);
+
+			o.setAttribute("width", width);
+			o.setAttribute("height", height);
+
+			o.setAttribute("fill", fill);
+			o.setAttribute("stroke", stroke);
+			o.setAttribute("stroke-width", 0.1);
+
+			this.#cont.appendChild(o);
+			return o;
+		};
+
+		/**
+		 * Convert numerical StatusEnum to string
+		 * @param {number} enumVal to convert
+		 * @returns string representation
+		 */
 		const StatusEnumToString = function (enumVal) {
 			switch (enumVal) {
 				case StatusEnum.POINT_FREE_RED:
@@ -489,22 +525,28 @@ class SvgVml {
 					throw new Error('bad status enum value');
 			}
 		};
-
+		
+		const allStatusesAsString = Object.keys(StatusEnum);
+		/**
+		 * Convert string representation to numerical StatusEnum
+		 * @param {string} enumStr string representation
+		 * @returns numeric StatusEnum
+		 */
 		const StringToStatusEnum = function (enumStr) {
 			switch (enumStr.toUpperCase()) {
-				case Object.keys(StatusEnum)[0]:
+				case allStatusesAsString[0]:
 					return StatusEnum.POINT_FREE_RED;
-				case Object.keys(StatusEnum)[1]:
+				case allStatusesAsString[1]:
 					return StatusEnum.POINT_FREE_BLUE;
-				case Object.keys(StatusEnum)[2]:
+				case allStatusesAsString[2]:
 					return StatusEnum.POINT_FREE;
-				case Object.keys(StatusEnum)[3]:
+				case allStatusesAsString[3]:
 					return StatusEnum.POINT_STARTING;
-				case Object.keys(StatusEnum)[4]:
+				case allStatusesAsString[4]:
 					return StatusEnum.POINT_IN_PATH;
-				case Object.keys(StatusEnum)[5]:
+				case allStatusesAsString[5]:
 					return StatusEnum.POINT_OWNED_BY_RED;
-				case Object.keys(StatusEnum)[6]:
+				case allStatusesAsString[6]:
 					return StatusEnum.POINT_OWNED_BY_BLUE;
 				default:
 					throw new Error('bad status enum string');
@@ -520,13 +562,16 @@ class SvgVml {
 		this.#cont.removeChild(polyline);
 	}
 
+	RemoveRect(rect) {
+		this.#cont.removeChild(rect);
+	}
+
 	DeserializeOval(packed, radius = undefined) {
 		let { x, y, Status, Color } = packed;
 		x = parseInt(x);
 		y = parseInt(y);
 		const o = this.CreateOval(radius);
 		o.move(x, y);
-		// o.SetStrokeColor(Color);
 		o.SetFillColor(Color);
 		o.SetStatus(Status);
 		return o;
@@ -536,6 +581,12 @@ class SvgVml {
 		const { iId, Color, PointsAsString } = packed;
 		const o = this.CreatePolyline(PointsAsString, Color, width);
 		o.SetID(iId);
+		return o;
+	}
+
+	DeserializeRect(packed) {
+		const { x, y, width, height, stroke, fill } = packed;
+		const o = this.CreateRect(x, y, width, height, stroke, fill);
 		return o;
 	}
 
@@ -1374,5 +1425,5 @@ class GameStateStore {
 export {
 	SvgVml, StatusEnum, pnpoly, LocalLog, LocalError, LocalAlert,
 	hasDuplicates, sortPointsClockwise, Sleep, IsPointOutsideAllPaths,
-	GameStateStore
+	GameStateStore, getBoundingBox
 };
