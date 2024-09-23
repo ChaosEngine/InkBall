@@ -151,11 +151,8 @@ namespace InkBall.Tests
 			var points0 = new Dictionary<string, InkBallPoint>(100);
 			var paths0 = new List<InkBallPath>(5);
 			bool is_player_turn = true;
-			foreach (var source in UnitTest1.CorrectPathAndOwnedPointsData)
+			foreach (((int x, int y)[] coords, string expectedCoords, (int x, int y)[] ownedPoints) parameters in UnitTest1.CorrectPathAndOwnedPointsData)
 			{
-				((int x, int y)[] coords, string expectedCoords, (int x, int y)[] ownedPoints) parameters =
-					(ValueTuple<(int, int)[], string, (int, int)[]>)source[0];
-
 				foreach ((int x, int y) pt in parameters.coords.Union(parameters.ownedPoints))
 				{
 					if (!points0.ContainsKey($"{pt.x},{pt.y}"))
