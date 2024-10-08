@@ -48,7 +48,7 @@ function initCallbacks(callbacks = {}) {
 }
 
 /**
- * @param {Graph} graph representaion
+ * @param {Graph} graph representation
  * @param {GraphVertex} currentVertex obj
  * @param {GraphVertex} previousVertex obj
  * @param {Callbacks} callbacks obj
@@ -68,7 +68,7 @@ async function depthFirstSearchRecursive(graph, currentVertex, previousVertex, c
 }
 
 /**
- * @param {Graph} graph representaion
+ * @param {Graph} graph representation
  * @param {GraphVertex} startVertex obj
  * @param {Callbacks} [callbacks] obj
  */

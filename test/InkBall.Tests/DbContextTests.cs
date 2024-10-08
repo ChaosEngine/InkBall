@@ -152,7 +152,7 @@ namespace InkBall.Tests
 					pa.PointsAsString.Contains(nameof(InkBallPathViewModel.TimeStamp)) ||
 					pa.PointsAsString.Contains(nameof(InkBallPath.InkBallPoint)) ||
 					pa.PointsAsString.Contains(nameof(InkBallPath.BelongsToCPU))
-					));
+					).ToArray());
 
 				//Assert
 				Assert.Empty(context.InkBallPlayer.Where(pl =>

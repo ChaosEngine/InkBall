@@ -15,10 +15,12 @@ namespace InkBall.Tests
 		{
 			public PathValidationTheoryData(IEnumerable<((int x, int y)[] coords, string expectedCoords, (int x, int y)[] ownedPoints)> data)
 			{
-				foreach (((int x, int y)[] coords, string expectedCoords, (int x, int y)[] ownedPoints) t1 in data)
-				{
-					Add(t1);
-				}
+				//foreach (((int x, int y)[] coords, string expectedCoords, (int x, int y)[] ownedPoints) t1 in data)
+				//{
+				//	Add(t1);
+				//}
+
+				AddRange(data.ToArray());
 			}
 		}
 

@@ -2,7 +2,7 @@
 /*global signalR*/
 "use strict";
 
-let SHRD, LocalLog, LocalError, StatusEnum, hasDuplicates, pnpoly, sortPointsClockwise, Sleep, depthFirstSearch;
+let SHRD, LocalLog, LocalError, StatusEnum, hasDuplicates, pnpoly, IsPointOutsideAllPaths, sortPointsClockwise, Sleep, IBversionHash, getBoundingBox;
 
 /******** funcs-n-classes ********/
 const CommandKindEnum = Object.freeze({
@@ -436,25 +436,31 @@ class MessagesRingBufferStore {
  */
 async function importAllModulesAsync(gameOptions) {
 	const importMetaUrl = import.meta.url;//do not optimize, take into separate variable, miss..feature of terser-5.16.6
-	const selfFileName = importMetaUrl.split('/').at(-1);
+	const url = new URL(importMetaUrl);
+	IBversionHash = url.searchParams.get('v');
+
+	const selfFileName = url.pathname.split('/').at(-1);
 	const isMinified = selfFileName.indexOf("min") !== -1;
 
 	if (isMinified)
-		SHRD = await import(/* webpackChunkName: "shared.Min" */'./shared.min.js');
+		SHRD = await import(/* webpackChunkName: "shared.Min" */'./shared.min.js?v=' + IBversionHash);
 	else
-		SHRD = await import(/* webpackChunkName: "shared" */'./shared.js');
+		SHRD = await import(/* webpackChunkName: "shared" */'./shared.js?v=' + IBversionHash);
+
+
 	LocalLog = SHRD.LocalLog, LocalError = SHRD.LocalError, StatusEnum = SHRD.StatusEnum,
-		hasDuplicates = SHRD.hasDuplicates, pnpoly = SHRD.pnpoly, sortPointsClockwise = SHRD.sortPointsClockwise,
+		hasDuplicates = SHRD.hasDuplicates, pnpoly = SHRD.pnpoly, IsPointOutsideAllPaths = SHRD.IsPointOutsideAllPaths,
+		sortPointsClockwise = SHRD.sortPointsClockwise, getBoundingBox = SHRD.getBoundingBox,
 		Sleep = SHRD.Sleep;
 
-	//for CPU game enable AI libs and calculations
-	if (gameOptions.iOtherPlayerID === -1) {
-		// AIBundle = await import(/* webpackChunkName: "AIDeps" */'./AIBundle.js');
-
-		// import depthFirstSearch from "./depthFirstSearch.js";
-		const module = await import("./depthFirstSearch.js");
-		depthFirstSearch = module.default;
-	}
+	// //for CPU game enable AI libs and calculations
+	// if (gameOptions.iOtherPlayerID === -1) {
+	// 	// AIBundle = await import(/* webpackChunkName: "AIDeps" */'./AIBundle.js');
+	//
+	// 	// import depthFirstSearch from "./depthFirstSearch.js";
+	// 	const module = await import('./depthFirstSearch.js?v=' + IBversionHash);
+	// 	depthFirstSearch = module.default;
+	// }
 }
 
 function RandomColor() {
@@ -555,6 +561,9 @@ class InkBallGame {
 	#GameType;
 	#CursorPos;
 	#SvgVml;
+	#sMsgBrowserDoesNotSupportNotifications;
+	#sMsgUserBlockedNotifications;
+	#sMsgWeHaveAWinner;
 
 	/**
 	 * InkBallGame constructor
@@ -646,6 +655,11 @@ class InkBallGame {
 		this.#sLastMoveGameTimeStamp = null;
 		this.#sVersion = null;
 		this.#Worker = null;
+		this.#sMsgBrowserDoesNotSupportNotifications = 'Browser does not support notifications.';
+		this.#sMsgUserBlockedNotifications = 'User blocked notifications.';
+		this.#sMsgWeHaveAWinner = 'We have a winner';
+
+
 
 		if (sHubName === null || sHubName === "") return;
 
@@ -742,7 +756,7 @@ class InkBallGame {
 
 	#SetupNotifications() {
 		if (!window.Notification) {
-			LocalLog('Browser does not support notifications.');
+			LocalLog(this.#sMsgBrowserDoesNotSupportNotifications);
 			return false;
 		}
 		else {
@@ -757,7 +771,7 @@ class InkBallGame {
 						return true;
 					}
 					else {
-						LocalLog('User blocked notifications.');
+						LocalLog(this.#sMsgUserBlockedNotifications);
 						return false;
 					}
 				}).catch(function (err) {
@@ -773,7 +787,7 @@ class InkBallGame {
 			return false;
 
 		if (!window.Notification) {
-			LocalLog('Browser does not support notifications.');
+			LocalLog(this.#sMsgBrowserDoesNotSupportNotifications);
 			return false;
 		}
 		else {
@@ -798,7 +812,7 @@ class InkBallGame {
 						return true;
 					}
 					else {
-						LocalLog('User blocked notifications.');
+						LocalLog(this.#sMsgUserBlockedNotifications);
 						return false;
 					}
 				}).catch(function (err) {
@@ -863,7 +877,7 @@ class InkBallGame {
 				document.querySelector(this.#sMsgListSel).appendChild(li);
 
 				this.#ReceivedWinProcessing(win);
-				this.#NotifyBrowser('We have a winner', encodedMsg);
+				this.#NotifyBrowser(this.#sMsgWeHaveAWinner, encodedMsg);
 			}
 			else
 				throw new Error("ServerToClientPath bad Kind!");
@@ -933,7 +947,7 @@ class InkBallGame {
 			}
 
 			this.#ReceivedWinProcessing(win);
-			this.#NotifyBrowser('We have a winner', encodedMsg);
+			this.#NotifyBrowser(this.#sMsgWeHaveAWinner, encodedMsg);
 
 		});
 
@@ -1380,19 +1394,6 @@ class InkBallGame {
 			path: sPathPoints,
 			errorDesc: "No surrounded points"
 		};
-	}
-
-	async #IsPointOutsideAllPaths(x, y, allLines = undefined) {
-		if (allLines === undefined)
-			allLines = await this.#Lines.all();//TODO: async for
-		for (const line of allLines) {
-			const points = line.GetPointsArray();
-
-			if (false !== pnpoly(points, x, y))
-				return false;
-		}
-
-		return true;
 	}
 
 	#CreateWaitForPlayerRequest(/*...args*/) {
@@ -1909,7 +1910,7 @@ class InkBallGame {
 				this.#Debug('Wrong point - already existing', 0);
 				return;
 			}
-			if (!(await this.#IsPointOutsideAllPaths(loc_x, loc_y))) {
+			if (!IsPointOutsideAllPaths(loc_x, loc_y, await this.#Lines.all())) {
 				this.#Debug('Wrong point, Point is not outside all paths', 0);
 				return;
 			}
@@ -2268,33 +2269,34 @@ class InkBallGame {
 	 */
 	async #RunAIWorker(setupFunction) {
 		return new Promise((resolve, reject) => {
-			this.#Worker = this.#Worker ?? new Worker('../js/AIWorker.Bundle.js'
+			this.#Worker = this.#Worker ?? new Worker('../js/AIWorker.Bundle.js?v=' + IBversionHash
 				//, { type: 'module' }
 			);
 
-			this.#Worker.onerror = function () {
+			this.#Worker.onerror = function (e) {
 				this.#Worker.terminate();
 				this.#Worker = null;
-				reject(new Error('no data'));
+				reject(new Error(e || 'no data'));
 			};
 
 			this.#Worker.onmessage = function (e) {
 				const data = e.data;
-				switch (data.operation) {
-					case "BUILD_GRAPH":
-					case "CONCAVEMAN":
-					case "MARK_ALL_CYCLES":
-					case "ASTAR":
-					case "CLUSTERING":
-						//worker.terminate();
-						resolve(data);
-						break;
-					default:
-						LocalError(`unknown params.operation = ${data.operation}`);
-						//worker.terminate();
-						reject(new Error(`unknown params.operation = ${data.operation}`));
-						break;
-				}
+				// switch (data.operation) {
+				// case "BUILD_GRAPH":
+				// case "CONCAVEMAN":
+				// case "MARK_ALL_CYCLES":
+				// case "FIND_SURROUNDABLE_POINTS":
+				// case "ASTAR":
+				// case "CLUSTERING":
+				// //worker.terminate();
+				resolve(data);
+				// break;
+				// default:
+				// 	LocalError(`unknown params.operation = ${data.operation}`);
+				// 	//worker.terminate();
+				// 	reject(new Error(`unknown params.operation = ${data.operation}`));
+				// 	break;
+				// }
 			};
 
 			if (setupFunction)
@@ -2327,17 +2329,104 @@ class InkBallGame {
 	async #OnTestConcaveman(event) {
 		event.preventDefault();
 
+		const loadParamsFromStore = (store) => {
+			let fromStore = JSON.parse(store.getItem("AIConcaveman")) || {};
+			const obj2Return = {};
+
+			if (fromStore?.concavity !== undefined) {
+				let concavity = parseFloat(fromStore.concavity);
+				concavity = (isNaN(concavity) || concavity <= 0) ? 2.0 : concavity;
+				obj2Return.concavity = concavity;
+			}
+			else
+				obj2Return.concavity = 2.0;
+
+			if (fromStore?.lengthThreshold !== undefined) {
+				let lengthThreshold = parseFloat(fromStore.lengthThreshold);
+				lengthThreshold = (isNaN(lengthThreshold) || lengthThreshold <= 0) ? 0.0 : lengthThreshold;
+				obj2Return.lengthThreshold = lengthThreshold;
+			}
+			else
+				obj2Return.lengthThreshold = 0.0;
+
+			fromStore = JSON.parse(store.getItem("AIClustering")) || {};
+			if (fromStore?.lastClickedX !== undefined && this.#iLastX < 0) {
+				let lastClickedX = parseInt(fromStore.lastClickedX);
+				lastClickedX = (isNaN(lastClickedX) || lastClickedX <= 0) ? this.#iLastX : lastClickedX;
+				obj2Return.lastClickedX = lastClickedX;
+			}
+			else
+				obj2Return.lastClickedX = this.#iLastX;
+
+			if (fromStore?.lastClickedY !== undefined && this.#iLastY < 0) {
+				let lastClickedY = parseInt(fromStore.lastClickedY);
+				lastClickedY = (isNaN(lastClickedY) || lastClickedY <= 0) ? this.#iLastY : lastClickedY;
+				obj2Return.lastClickedY = lastClickedY;
+			}
+			else
+				obj2Return.lastClickedY = this.#iLastY;
+
+			return obj2Return;
+		};
+		const saveParamsToStore = (params, store) => {
+			let toStore = JSON.parse(store.getItem("AIConcaveman")) || {};
+			let persist = false;
+			if (params.concavity !== toStore?.concavity) {
+				toStore.concavity = params.concavity;
+				persist = true;
+			}
+			if (params.lengthThreshold !== toStore?.lengthThreshold) {
+				toStore.lengthThreshold = params.lengthThreshold;
+				persist = true;
+			}
+
+			if (persist === true)
+				store.setItem("AIConcaveman", JSON.stringify(toStore));
+
+			persist = false;
+			toStore = JSON.parse(store.getItem("AIClustering")) || {};
+			if (params.lastClickedX !== toStore?.lastClickedX) {
+				toStore.lastClickedX = params.lastClickedX;
+				persist = true;
+			}
+			if (params.lastClickedY !== toStore?.lastClickedY) {
+				toStore.lastClickedY = params.lastClickedY;
+				persist = true;
+			}
+
+			if (persist === true)
+				store.setItem("AIClustering", JSON.stringify(toStore));
+		};
+
+		const runParams = loadParamsFromStore(window.localStorage);
+		if (!(runParams.lastClickedY >= 0 && runParams.lastClickedX >= 0)) {
+			LocalLog("!!!First you need to click some point with mouse to pick the color!!!");
+			return;
+		}
+		const clicked_point_status = (await this.#Points.get(runParams.lastClickedY * this.#iGridWidth + runParams.lastClickedX))?.GetStatus();
+
 		const data = await this.#RunAIWorker((worker) => {
-			const serialized_points = Array.from(this.#Points.store.entries()).map(([key, value]) => ({ key, value: value.Serialize() }));
+			const serialized_points = this.#cyclesFound?.length > 0 ?
+				this.#cyclesFound.map(pt => {
+					const ser = pt.Serialize();
+					return { key: ser.y * this.#iGridWidth + ser.x, value: ser };
+				})
+				:
+				[...this.#Points.store.entries()].map(([key, value]) => ({ key, value: value.Serialize() }));
 			//const serialized_paths = this.#Lines.store.map(pa => pa.Serialize());
 
 			worker.postMessage({
 				operation: "CONCAVEMAN",
 				boardSize: { iGridWidth: this.#iGridWidth, iGridHeight: this.#iGridHeight },
 				state: this.#GetGameStateForIndexedDb(),
-				points: serialized_points
+				points: serialized_points,
+				clickedPointStatus: clicked_point_status,
+				concavity: runParams.concavity,
+				lengthThreshold: runParams.lengthThreshold
 			});
 		});
+		saveParamsToStore(runParams, window.localStorage);
+
 		if (data.convex_hull && data.convex_hull.length > 0) {
 			const convex_hull = data.convex_hull;
 
@@ -2353,7 +2442,7 @@ class InkBallGame {
 			const rand_color = RandomColor();
 			for (const vert of cw_sorted_verts) {
 				const { x, y } = vert;
-				const pt = document.querySelector(`svg > circle[cx="${x}"][cy="${y}"]`);
+				const pt = await this.#Points.get(y * this.#iGridWidth + x);
 				if (pt) {
 					pt.SetStrokeColor(rand_color);
 					pt.SetFillColor(rand_color);
@@ -2394,7 +2483,6 @@ class InkBallGame {
 		// 		points: serialized_points,
 		// 		paths: serialized_paths,
 		// 		colorRed: this.#COLOR_RED,
-		// 		colorBlue: this.#COLOR_BLUE
 		// 	});
 		// });
 
@@ -2405,7 +2493,7 @@ class InkBallGame {
 		// 	for (const pt of data.free_human_player_points) {
 		// 		//if (pt !== undefined && pt.GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.GetStatus()) {
 		// 		const { x, y } = pt;
-		// 		//	if (false === await this.#IsPointOutsideAllPaths(x, y))
+		// 		//	if (false === IsPointOutsideAllPaths(x, y, await this.#Lines.all()))
 		// 		//		continue;
 
 		// 		//check if really exists
@@ -2502,6 +2590,7 @@ class InkBallGame {
 	async #OnTestFindSurroundablePoints(event) {
 		event.preventDefault();
 
+		/*
 		const sHumanColor = this.#COLOR_RED, sCPUColor = this.#COLOR_BLUE;
 		let working_points;
 		const pt = await this.#Points.get(this.#iMouseY * this.#iGridWidth + this.#iMouseX);
@@ -2517,88 +2606,140 @@ class InkBallGame {
 			if (pt !== undefined && pt.GetFillColor() === sHumanColor
 				&& [StatusEnum.POINT_FREE_RED, StatusEnum.POINT_IN_PATH].includes(pt.GetStatus())) {
 				const { x, y } = pt.GetPosition();
-				if (false === await this.#IsPointOutsideAllPaths(x, y, allLines)) {
+				if (false === IsPointOutsideAllPaths(x, y, allLines)) {
 					LocalLog("!!!Point inside path!!!");
 					continue;
 				}
-				const rand_color = RandomColor();
-				const r = 2;
+				for (let radius = 1; radius <= 4; radius++) {
+					const rand_color = RandomColor();
+					const possible = [];
 
-				const enclosing_circle = this.#SvgVml.CreateOval(r);
-				enclosing_circle.move(x, y);
+					//pt,x,y is good "surroundable point"
+					//let's find closes CPU points to it lying on circle
+					for (const cpu_pt of all_points) {
+						if (cpu_pt !== undefined && cpu_pt.GetFillColor() === sCPUColor
+							&& [StatusEnum.POINT_FREE_BLUE, StatusEnum.POINT_IN_PATH].includes(cpu_pt.GetStatus())) {
+							const { x: cpu_x, y: cpu_y } = cpu_pt.GetPosition();
+							if (false === IsPointOutsideAllPaths(cpu_x, cpu_y, allLines))
+								continue;
+
+							if (0 <= this.#SvgVml.IsPointInCircle({ x: cpu_x, y: cpu_y }, { x, y }, radius)) {
+								cpu_pt.x = cpu_x;
+								cpu_pt.y = cpu_y;
+								possible.push(cpu_pt);
+							}
+						}
+					}
+					if (possible.length > 2) {
+						let cw_sorted_verts = sortPointsClockwise(possible);
+						//check if points are aligned one-by-one next to each other no more than 1 point apart
+						for (let i = cw_sorted_verts.length - 2, last = cw_sorted_verts.at(-1); i > 0; i--) {
+							const it = cw_sorted_verts[i];
+							if (!(Math.abs(last.x - it.x) <= 1 && Math.abs(last.y - it.y) <= 1)) {
+								cw_sorted_verts = null;
+								break;
+							}
+							last = it;
+						}
+
+						if (
+							//check if above loop exited with not consecutive points
+							cw_sorted_verts === null ||
+
+							//check last and first path points that they close up nicely
+							!(Math.abs(cw_sorted_verts.at(-1).x - cw_sorted_verts[0].x) <= 1 &&
+								Math.abs(cw_sorted_verts.at(-1).y - cw_sorted_verts[0].y) <= 1
+							) ||
+
+							//check if "points-created-path" actually contains selected single point inside its boundaries
+							false === pnpoly(cw_sorted_verts, x, y)
+						) {
+							continue;
+						}
+
+						const enclosing_circle = this.#SvgVml.CreateOval(radius);
+						enclosing_circle.move(x, y);
+						enclosing_circle.SetStrokeColor(rand_color);
+						enclosing_circle.StrokeWeight(0.1);
+						enclosing_circle.SetFillColor('transparent');
+
+						if (working_points.length <= 1) {
+							for (const cpu_pt of cw_sorted_verts) {
+								const pt1 = document.querySelector(`svg > circle[cx="${cpu_pt.x}"][cy="${cpu_pt.y}"]`);
+								if (pt1) {
+									pt1.SetStrokeColor(rand_color);
+									pt1.StrokeWeight('0.020em');
+									pt1.SetFillColor(rand_color);
+									pt1.setAttribute("r", 6 / this.#iGridSpacingX);
+								}
+							}
+							await this.#DisplayPointsProgressWithDelay(cw_sorted_verts, 250);
+						}
+
+						LocalLog(`circle sorted possible path points for ${radius} radius: `);
+						LocalLog(cw_sorted_verts);
+					}
+				}
+			}
+		}
+
+		*/
+
+		const sHumanColor = this.#COLOR_RED, sCPUColor = this.#COLOR_BLUE;
+		const all_points = [...await this.#Points.values()].map(value => value.Serialize());
+		const allLines = this.#Lines.store.map(value => value.Serialize());
+
+		const pt = await this.#Points.get(this.#iMouseY * this.#iGridWidth + this.#iMouseX);
+		const working_points = pt !== undefined ? [pt.Serialize()] : all_points;
+
+		const data = await this.#RunAIWorker((worker) => {
+			worker.postMessage({
+				operation: "FIND_SURROUNDABLE_POINTS",
+				boardSize: { iGridWidth: this.#iGridWidth, iGridHeight: this.#iGridHeight },
+				sHumanColor: sHumanColor,
+				sCPUColor: sCPUColor,
+				allPoints: all_points,
+				workingPoints: working_points,
+				allLines: allLines
+			});
+		});
+
+		if (data?.results?.length > 0) {
+			data.results.forEach(async (gr) => {
+
+				const rand_color = RandomColor();
+				const enclosing_circle = this.#SvgVml.CreateOval(gr.radius);
+				enclosing_circle.move(gr.x, gr.y);
 				enclosing_circle.SetStrokeColor(rand_color);
 				enclosing_circle.StrokeWeight(0.1);
 				enclosing_circle.SetFillColor('transparent');
 
-				//pt,x,y is good "surroundable point"
-				//let's find closes CPU points to it lying on circle
-				const possible = [];
-				for (const cpu_pt of all_points) {
-					if (cpu_pt !== undefined && cpu_pt.GetFillColor() === sCPUColor
-						&& [StatusEnum.POINT_FREE_BLUE, StatusEnum.POINT_IN_PATH].includes(cpu_pt.GetStatus())) {
-						const { x: cpu_x, y: cpu_y } = cpu_pt.GetPosition();
-						if (false === await this.#IsPointOutsideAllPaths(cpu_x, cpu_y, allLines))
-							continue;
-
-						if (0 <= this.#SvgVml.IsPointInCircle({ x: cpu_x, y: cpu_y }, { x, y }, r)) {
-							cpu_pt.x = cpu_x;
-							cpu_pt.y = cpu_y;
-							possible.push(cpu_pt);
-						}
+				const matched_pts = [];
+				for (const cpu_pt of gr.cw_sorted_verts) {
+					const pt1 = document.querySelector(`svg > circle[cx="${cpu_pt.x}"][cy="${cpu_pt.y}"]`);
+					if (pt1) {
+						pt1.SetStrokeColor(rand_color);
+						pt1.StrokeWeight('0.020em');
+						pt1.SetFillColor(rand_color);
+						pt1.setAttribute("r", 6 / this.#iGridSpacingX);
+						matched_pts.push(pt1);
 					}
 				}
-				if (possible.length > 2) {
-					let cw_sorted_verts = sortPointsClockwise(possible);
-					let last = cw_sorted_verts.at(-1);
-					//check if points are aligned one-by-one next to each other no more than 1 point apart
-					for (let i = cw_sorted_verts.length - 2; i > 0; i--) {
-						const it = cw_sorted_verts[i];
-						if (!(Math.abs(last.x - it.x) <= 1 && Math.abs(last.y - it.y) <= 1)) {
-							cw_sorted_verts = null;
-							break;
-						}
-						last = it;
-					}
-
-					if (
-						//check if above loop exited with not consecutive points
-						cw_sorted_verts === null ||
-
-						//check last and first path points that they close up nicely
-						!(Math.abs(cw_sorted_verts.at(-1).x - cw_sorted_verts[0].x) <= 1 &&
-							Math.abs(cw_sorted_verts.at(-1).y - cw_sorted_verts[0].y) <= 1
-						) ||
-
-						//check if "points-created-path" actually contains selected single point inside its boundaries
-						false === pnpoly(cw_sorted_verts, x, y)
-					) {
-						continue;
-					}
-
-					if (working_points.length <= 1) {
-						for (const cpu_pt of cw_sorted_verts) {
-							const pt1 = document.querySelector(`svg > circle[cx="${cpu_pt.x}"][cy="${cpu_pt.y}"]`);
-							if (pt1) {
-								pt1.SetStrokeColor(rand_color);
-								pt1.StrokeWeight('0.020em');
-								pt1.SetFillColor(rand_color);
-								pt1.setAttribute("r", 6 / this.#iGridSpacingX);
-							}
-						}
-						await this.#DisplayPointsProgressWithDelay(cw_sorted_verts, 250);
-					}
-
-					LocalLog('circle sorted possible path points: ');
-					LocalLog(cw_sorted_verts);
-
-				}
-			}
+				await this.#DisplayPointsProgressWithDelay(matched_pts, 250);
+			});
 		}
 	}
 
 	async #OnTestDFS2(event) {
 		event.preventDefault();
-		await this.#DFS2(await this.#BuildGraph(), this.#COLOR_RED);
+		if (!(this.#iLastY >= 0 && this.#iLastX >= 0)) {
+			LocalLog("!!!First you need to click starting point with mouse!!!");
+			return;
+		}
+
+		const clicked_point = await this.#Points.get(this.#iLastY * this.#iGridWidth + this.#iLastX);
+
+		await this.#DFS2(await this.#BuildGraph(), clicked_point);
 	}
 
 	async #OnTestFloodFill(event) {
@@ -2697,24 +2838,24 @@ class InkBallGame {
 
 	async #OnTestClustering(event) {
 		const loadParamsFromStore = (store) => {
-			const fromStore = JSON.parse(store.getItem("AIClustering"));
+			const fromStore = JSON.parse(store.getItem("AIClustering")) || {};
 			const obj2Return = {};
 
-			if (fromStore?.x !== undefined && this.#iLastX < 0) {
-				let x = parseInt(fromStore.x);
-				x = (isNaN(x) || x <= 0) ? this.#iLastX : x;
-				obj2Return.x = x;
+			if (fromStore?.lastClickedX !== undefined && this.#iLastX < 0) {
+				let lastClickedX = parseInt(fromStore.lastClickedX);
+				lastClickedX = (isNaN(lastClickedX) || lastClickedX <= 0) ? this.#iLastX : lastClickedX;
+				obj2Return.lastClickedX = lastClickedX;
 			}
 			else
-				obj2Return.x = this.#iLastX;
+				obj2Return.lastClickedX = this.#iLastX;
 
-			if (fromStore?.y !== undefined && this.#iLastY < 0) {
-				let y = parseInt(fromStore.y);
-				y = (isNaN(y) || y <= 0) ? this.#iLastY : y;
-				obj2Return.y = y;
+			if (fromStore?.lastClickedY !== undefined && this.#iLastY < 0) {
+				let lastClickedY = parseInt(fromStore.lastClickedY);
+				lastClickedY = (isNaN(lastClickedY) || lastClickedY <= 0) ? this.#iLastY : lastClickedY;
+				obj2Return.lastClickedY = lastClickedY;
 			}
 			else
-				obj2Return.y = this.#iLastY;
+				obj2Return.lastClickedY = this.#iLastY;
 
 			if (fromStore?.numberOfClusters !== undefined) {
 				let numberOfClusters = parseInt(fromStore.numberOfClusters);
@@ -2740,8 +2881,8 @@ class InkBallGame {
 			else
 				obj2Return.minPointsPerCluster = 2;
 
-			if (fromStore?.method !== undefined && ["KMEANS", "OPTICS", "DBSCAN"].includes(fromStore.method)) {
-				obj2Return.method = fromStore.method;
+			if (fromStore?.method !== undefined && ["KMEANS", "OPTICS", "DBSCAN"].includes(fromStore.method.toUpperCase())) {
+				obj2Return.method = fromStore.method.toUpperCase();
 			}
 			else
 				obj2Return.method = "KMEANS";
@@ -2751,12 +2892,12 @@ class InkBallGame {
 		const saveParamsToStore = (params, store) => {
 			const toStore = JSON.parse(store.getItem("AIClustering")) || {};
 			let persist = false;
-			if (params.x !== toStore?.x) {
-				toStore.x = params.x;
+			if (params.lastClickedX !== toStore?.lastClickedX) {
+				toStore.lastClickedX = params.lastClickedX;
 				persist = true;
 			}
-			if (params.y !== toStore?.y) {
-				toStore.y = params.y;
+			if (params.lastClickedY !== toStore?.lastClickedY) {
+				toStore.lastClickedY = params.lastClickedY;
 				persist = true;
 			}
 			if (params.numberOfClusters !== toStore?.numberOfClusters) {
@@ -2772,25 +2913,24 @@ class InkBallGame {
 				persist = true;
 			}
 			if (params.method !== toStore?.method) {
-				toStore.method = params.method;
+				toStore.method = params.method.toUpperCase();
 				persist = true;
 			}
 
 
-			if (persist === true) {
+			if (persist === true)
 				store.setItem("AIClustering", JSON.stringify(toStore));
-			}
 		};
 
 		event.preventDefault();
 		//checks for valid points, color, states
 		//get from local_storage
 		const runParams = loadParamsFromStore(window.localStorage);
-		if (!(runParams.y >= 0 && runParams.x >= 0)) {
-			LocalLog("!!!First you need to click some point with mouse!!!");
+		if (!(runParams.lastClickedY >= 0 && runParams.lastClickedX >= 0)) {
+			LocalLog("!!!First you need to click some point with mouse to pick the color!!!");
 			return;
 		}
-		const point_color = (await this.#Points.get(runParams.y * this.#iGridWidth + runParams.x))?.GetFillColor();
+		const point_color = (await this.#Points.get(runParams.lastClickedY * this.#iGridWidth + runParams.lastClickedX))?.GetFillColor();
 		const point_status = point_color === this.#COLOR_RED ? StatusEnum.POINT_FREE_RED : StatusEnum.POINT_FREE_BLUE;
 
 		const arr = [];
@@ -2805,7 +2945,8 @@ class InkBallGame {
 		//Web Worker calc
 		const data = await this.#RunAIWorker((worker) => {
 			worker.postMessage({
-				operation: "CLUSTERING", dataset: arr,
+				operation: "CLUSTERING",
+				dataset: arr,
 				method: runParams.method,
 
 				numberOfClusters: runParams.numberOfClusters,
@@ -2815,24 +2956,33 @@ class InkBallGame {
 		});
 
 		if (data.clusters?.length > 0) {
+			const clusters = [];
 			for (const cluster of data.clusters) {
 				const rand_color = RandomColor();
 
+				const points_in_cluster = [];
 				for (const index of cluster) {
 					const vert = arr[index];
 					const [x, y] = vert;
 					// const pt = document.querySelector(`svg > circle[cx="${x}"][cy="${y}"]`);
 					const pt = await this.#Points.get(y * this.#iGridWidth + x);
 					if (pt) {
+						points_in_cluster.push(pt);
 						// pt.setAttribute("data-status", 'test');
 						pt.SetStrokeColor(rand_color);
 						pt.SetFillColor(rand_color);
 						pt.SetZIndex(100);
 						pt.setAttribute("r", 2 / this.#iGridSpacingX);
+						if (y === runParams.lastClickedY && x === runParams.lastClickedX)
+							this.#cyclesFound = points_in_cluster;
 					}
 					// await Sleep(50);
 				}
+				clusters.push(points_in_cluster);
+				const bbox = getBoundingBox(points_in_cluster.map(p => p.GetPosition()));
+				LocalLog(this.#SvgVml.CreateRect(bbox.minX - 1, bbox.minY - 1, bbox.width + 2, bbox.height + 2, 'black'));
 			}
+			LocalLog({ method: data.method, clusters, plot: data.plot, noise: data.noise });
 		}
 	}
 
@@ -2960,9 +3110,10 @@ class InkBallGame {
 		///////CpuGame variables end//////
 
 		this.#SvgVml = new SHRD.SvgVml();
-		if (this.#SvgVml.CreateSVGVML(this.#Screen, svg_width_x_height, svg_width_x_height,
-			{ iGridWidth: this.#iGridWidth, iGridHeight: this.#iGridHeight }) === null)
+		if (!this.#SvgVml.Init(this.#Screen, svg_width_x_height, svg_width_x_height,
+			{ iGridWidth: this.#iGridWidth, iGridHeight: this.#iGridHeight })) {
 			alert('SVG is not supported!');
+		}
 
 		const stateStore = new SHRD.GameStateStore(useIndexedDbStore,
 			this.#CreateScreenPointFromIndexedDb.bind(this),
@@ -3176,7 +3327,7 @@ class InkBallGame {
 			x = this.#GetRandomInt(0, this.#iGridWidth);
 			y = this.#GetRandomInt(0, this.#iGridHeight);
 
-			if (!(await this.#Points.has(y * this.#iGridWidth + x)) && await this.#IsPointOutsideAllPaths(x, y, allLines)) {
+			if (!(await this.#Points.has(y * this.#iGridWidth + x)) && IsPointOutsideAllPaths(x, y, allLines)) {
 				break;
 			}
 		}
@@ -3212,7 +3363,7 @@ class InkBallGame {
 		while (++random_pick_amount_cnter <= 50) {
 			random_picked_points.add(`${x}_${y}`);
 			if (false === (await this.#Points.has(y * this.#iGridWidth + x)) &&
-				true === (await this.#IsPointOutsideAllPaths(x, y, allLines))) {
+				true === IsPointOutsideAllPaths(x, y, allLines)) {
 				log_str += (`checking centroid coords ${x}_${y} succeed\n`);
 				break;
 			}
@@ -3250,7 +3401,7 @@ class InkBallGame {
 			while (++random_pick_amount_cnter <= 50) {
 				random_picked_points.add(`${x}_${y}`);
 				if (false === (await this.#Points.has(y * this.#iGridWidth + x)) &&
-					true === (await this.#IsPointOutsideAllPaths(x, y, allLines))) {
+					true === IsPointOutsideAllPaths(x, y, allLines)) {
 					log_str += (`checking nearest coords ${x}_${y} succeed\n`);
 					break;
 				}
@@ -3341,18 +3492,19 @@ class InkBallGame {
 	} = {}) {
 		const graph_points = new Map(), graph_edges = new Map();
 
-		const isPointOKForPath = function (freePointStatusArr, pt) {
+		const isPointOKForPath = function (allowedPoints, pt) {
 			const status = pt.GetStatus();
 
-			if (freePointStatusArr.includes(status) && pt.GetFillColor() === cpuFillColor)
+			if (allowedPoints.includes(status) && pt.GetFillColor() === cpuFillColor)
 				return true;
 			return false;
 		};
 
+		const freePointStatusArr = [freePointStatus];
 		const addPointsAndEdgesToGraph = async (point, to_x, to_y, x, y) => {
 			if (to_x >= 0 && to_x < this.#iGridWidth && to_y >= 0 && to_y < this.#iGridHeight) {
 				const next = await this.#Points.get(to_y * this.#iGridWidth + to_x);
-				if (next && isPointOKForPath([freePointStatus], next) === true) {
+				if (next && isPointOKForPath(freePointStatusArr, next) === true) {
 
 					const point_hash = `${x},${y}`;
 					const next_hash = `${to_x},${to_y}`;
@@ -3384,8 +3536,10 @@ class InkBallGame {
 			}
 		};
 
-		for (const point of await this.#Points.values()) {
-			if (point && isPointOKForPath([freePointStatus, this.POINT_STARTING, this.POINT_IN_PATH], point) === true) {
+		const all_points = await this.#Points.values();
+		const good_point_status_arr = [freePointStatus, this.POINT_STARTING, this.POINT_IN_PATH];
+		for (const point of all_points) {
+			if (point && isPointOKForPath(good_point_status_arr, point) === true) {
 				const { x, y } = point.GetPosition();
 				//TODO: await all below promises
 				//east
@@ -3519,7 +3673,7 @@ class InkBallGame {
 			for (const pt of await this.#Points.values()) {
 				if (pt !== undefined && pt.GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.GetStatus()) {
 					const { x, y } = pt.GetPosition();
-					if (false === await this.#IsPointOutsideAllPaths(x, y, allLines))
+					if (false === IsPointOutsideAllPaths(x, y, allLines))
 						continue;
 
 					//check if really exists
@@ -3568,9 +3722,10 @@ class InkBallGame {
 
 							const pt1 = await this.#Points.get(possible_intercept.y * this.#iGridWidth + possible_intercept.x);
 							if (pt1) {
-								pt1.SetStrokeColor('var(--bs-yellow)');
+								const col = 'var(--bs-yellow)';
+								pt1.SetStrokeColor(col);
 								pt1.StrokeWeight(0.2);
-								pt1.SetFillColor('var(--bs-yellow)');
+								pt1.SetFillColor(col);
 								pt1.setAttribute("r", 6 / this.#iGridSpacingX);
 							}
 							comma = ',';
@@ -3607,7 +3762,11 @@ class InkBallGame {
 	}
 
 	// eslint-disable-next-line no-unused-vars
-	async #DFS2(graph, sHumanColor) {
+	async #DFS2(graph, clickedPoint) {
+		const module = await import('./depthFirstSearch.js?v=' + IBversionHash);
+		const depthFirstSearch = module.default;
+
+
 		const enterVertex = () => {
 		};
 		const leaveVertex = () => {
@@ -3624,7 +3783,7 @@ class InkBallGame {
 			await this.#DisplayPointsProgressWithDelay(cw_sorted_verts, 250);
 		};
 
-		await depthFirstSearch(graph, graph.vertices[0], { enterVertex, leaveVertex, showCycle });
+		await depthFirstSearch(graph, clickedPoint, { enterVertex, leaveVertex, showCycle });
 	}
 
 	/**
@@ -3636,7 +3795,7 @@ class InkBallGame {
 		//
 		//serialize points as string: "x0,y0 x1,y1 x2,y2"
 		//
-		const pts = pointsArr.map((pt) => {
+		const pts = pointsArr.map(pt => {
 			const pos = pt.GetPosition();
 			return `${pos.x},${pos.y}`;
 		}).join(' ');
@@ -3705,7 +3864,7 @@ class InkBallGame {
 			hare = getNextFunc(hare);   // Hare and tortoise move at same speed
 			mu += 1;
 		}
-
+	
 		// Find the length of the shortest cycle starting from x_μ
 		// The hare moves one step at a time while tortoise is still.
 		// lam is incremented until λ is found.
@@ -3715,7 +3874,7 @@ class InkBallGame {
 			hare = getNextFunc(hare);
 			lam += 1;
 		}
-
+	
 		return { lam, mu };
 		*/
 	}
@@ -3835,7 +3994,6 @@ class InkBallGame {
 		const queue = [startingPoint.GetPosition()];
 		const blanks_changed = new Set();
 		const edge_points = new Map();
-		const log_list = [];
 
 		while (queue.length > 0) {
 			const { x, y } = queue.shift();
@@ -3854,36 +4012,33 @@ class InkBallGame {
 			for (const newPos of directions) {
 				if (false === (newPos.x < 0 || newPos.y < 0 || newPos.x >= this.#iGridWidth || newPos.y >= this.#iGridHeight)) {
 					const point_position_hashed = newPos.y * this.#iGridWidth + newPos.x;
-					let color, point;
-					if (blanks_changed.has(point_position_hashed)) {
-						point = null;
-						color = replacementColor;
-					}
-					else {
-						point = await this.#Points.get(point_position_hashed);
-						color = point !== undefined ? point.GetFillColor() : null;
-					}
 
+					if (false === blanks_changed.has(point_position_hashed)) {
+						const point = await this.#Points.get(point_position_hashed);
 
-					if (color === clickedColor) {
-						point.SetFillColor(replacementColor); point.SetStrokeColor(replacementColor); point.StrokeWeight(0.3);
+						if (point !== undefined) {
+							const color = point.GetFillColor();
 
-						queue.push(newPos);
-					}
-					else if (color === null) {
-						blanks_changed.add(point_position_hashed);
+							if (color === clickedColor) {
+								point.SetFillColor(replacementColor); point.SetStrokeColor(replacementColor); point.StrokeWeight(0.3);
 
-						queue.push(newPos);
-					}
-					else if (color !== replacementColor) {
-						edge_points.set(point_position_hashed, { point, x: newPos.x, y: newPos.y });
-						log_list.push(point);
+								queue.push(newPos);
+							}
+							else if (color !== replacementColor && !edge_points.has(point_position_hashed)) {
+								edge_points.set(point_position_hashed, { point, x: newPos.x, y: newPos.y });
+							}
+						}
+						else {
+							blanks_changed.add(point_position_hashed);
+
+							queue.push(newPos);
+						}
 					}
 				}
 			}
 		}
-		LocalLog('log_list: ');
-		LocalLog(log_list);
+		LocalLog('edge_points: ');
+		LocalLog([...edge_points.values().map(({ point }) => point)]);
 
 
 		if (edge_points.size > 3) {
@@ -3892,16 +4047,17 @@ class InkBallGame {
 			const gathered = verts.splice(-1, 1);//drop last vert from verts and create new array out of it
 
 			let last = gathered[0];//take single vert as starting last value
-			let direction = null;
+			// let direction = null;
 			// eslint-disable-next-line no-unused-vars
 			const continuousTestFun = (v, index, arr) => {
 				const res = Math.abs(v.x - last.x) <= 1 && Math.abs(v.y - last.y) <= 1;
-				if (res === true && direction !== null) {
-					const dir = { x: (last.x - v.x), y: (last.y - v.y) };
-					v.direction = dir;
-				}
+				// if (res === true /* && direction !== null */) {
+				// 	// const dir = { x: (last.x - v.x), y: (last.y - v.y) };
+				// 	// v.direction = dir;
+				// }
 				return res;
 			};
+			/*
 			// eslint-disable-next-line no-unused-vars
 			const continuousSortFun = (left, right) => {
 				if (!left.direction && !right.direction)
@@ -3913,32 +4069,33 @@ class InkBallGame {
 					(right.direction.x - direction.x) + (right.direction.y - direction.y)) / 4;
 				return square_dist;
 			};
+			*/
 			for (let counter = verts.length; counter > 0; counter--) {//go in reverse order over every vertices
-				let simple_counter = 0;
+				let stop_counter = 0;
 				const filtered_objs = verts.filter(continuousTestFun)/* .sort(continuousSortFun) */;
 				do {
-					const obj = filtered_objs.at(simple_counter);
+					const obj = filtered_objs.at(stop_counter);
 					if (obj !== undefined) {
 						const ind_or_negative_one = verts.indexOf(obj);
 						if (ind_or_negative_one !== -1) {//new neighboring vertex found
 							//move found vertex from verts into gathered array...
 							//...and set new last from this moved vert
 							const candidate = verts.splice(ind_or_negative_one, 1)[0];
-							direction = { x: (last.x - candidate.x), y: (last.y - candidate.y) };
+							//direction = { x: (last.x - candidate.x), y: (last.y - candidate.y) };
 							last = candidate;
 							gathered.push(last);//add to found path points
 							// LocalLog(`found direction: ${direction.x},${direction.y}, filtered_objs.cnt: ${filtered_objs.length}`);
 							break;
 						}
-						else {
-							//neighboring vertex not found, break, we fail
-							// break;
-							// gathered.pop();
-							// LocalLog(`missed direction: ${direction.x},${direction.y}, filtered_objs.cnt: ${filtered_objs.length}`);
-						}
+						//else {
+						//	//neighboring vertex not found, break, we fail
+						//	// break;
+						//	// gathered.pop();
+						//	// LocalLog(`missed direction: ${direction.x},${direction.y}, filtered_objs.cnt: ${filtered_objs.length}`);
+						//}
 					}
 				}
-				while (++simple_counter < 4);
+				while (++stop_counter < 4);
 			}
 			//verification
 			const { x, y } = startingPoint.GetPosition();

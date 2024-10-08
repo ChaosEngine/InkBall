@@ -1149,13 +1149,13 @@ namespace InkBall.Tests
                     Assert.Single(json_points, q => CommonPoint.UnDataMinimizerPlayerId(q.iPlayerId) == 2 &&
                         q.iX == p2_pts[rank, 0] && q.iY == p2_pts[rank, 1]);
                 });
-                Assert.NotEmpty(json_points.Where(pt => Enum.IsDefined(typeof(InkBallPoint.StatusEnum), pt.Status) == false));
+                Assert.Contains(json_points, pt => Enum.IsDefined(typeof(InkBallPoint.StatusEnum), pt.Status) == false);
                 Assert.All(json_points, pt =>
                 {
                     Assert.True(Enum.IsDefined(typeof(InkBallPoint.StatusEnum), CommonPoint.UnDataMinimizerStatus(pt.Status)));
                 });
-                Assert.NotEmpty(json_points.Where(pt =>
-                    CommonPoint.UnDataMinimizerStatus(pt.Status) == 2 || CommonPoint.UnDataMinimizerStatus(pt.Status) == 3));
+                Assert.Contains(json_points, pt =>
+                    CommonPoint.UnDataMinimizerStatus(pt.Status) == 2 || CommonPoint.UnDataMinimizerStatus(pt.Status) == 3);
 
                 //Assert
                 Assert.Single(json_paths, q => q.iPlayerId == 1 &&// q.iGameId == 1 &&

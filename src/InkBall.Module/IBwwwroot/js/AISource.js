@@ -1,7 +1,9 @@
 import concaveman from "concaveman";
 // import decomp from "poly-decomp";
-import { StatusEnum, LocalLog, sortPointsClockwise, /*Sleep,*/ pnpoly } from "./shared.js";
+// import { StatusEnum, sortPointsClockwise, IsPointOutsideAllPaths, /*LocalLog, Sleep, pnpoly*/ } from "./shared.js";
 
+//globals loaded only once hopefully
+let StatusEnum, sortPointsClockwise, IsPointOutsideAllPaths/*, LocalLog, Sleep, pnpoly*/;
 
 /**
  * AI operations class
@@ -17,8 +19,20 @@ class GraphAI {
 		this.#iGridWidth = iGridWidth;
 		this.#iGridHeight = iGridHeight;
 		this.#Points = pointStore;
-		this.#POINT_STARTING = StatusEnum.POINT_STARTING;
-		this.#POINT_IN_PATH = StatusEnum.POINT_IN_PATH;
+	}
+
+	async #Init() {
+		if (StatusEnum === undefined) {
+			const isMinified = location.hostname !== "localhost";
+
+			const shrd = await import(/* webpackIgnore: true */`./shared${isMinified ? '.min' : ''}.js`);
+
+			StatusEnum = shrd.StatusEnum, sortPointsClockwise = shrd.sortPointsClockwise,
+				IsPointOutsideAllPaths = shrd.IsPointOutsideAllPaths;
+				
+			this.#POINT_STARTING = StatusEnum.POINT_STARTING;
+			this.#POINT_IN_PATH = StatusEnum.POINT_IN_PATH;
+		}
 	}
 
 	/**
@@ -29,23 +43,28 @@ class GraphAI {
 	 */
 	async BuildGraph({
 		freePointStatus = StatusEnum.POINT_FREE_BLUE,
-		cpufillCol: cpuFillColor = 'var(--bluish)'
+		// cpufillCol: cpuFillColor = 'var(--bluish)'
 		//, visuals: presentVisually = false
 	} = {}) {
+		await this.#Init();
+
+
+
 		const graph_points = new Map(), graph_edges = new Map();
 
-		const isPointOKForPath = function (freePointStatusArr, pt) {
+		const isPointOKForPath = function (allowedPoints, pt) {
 			const status = pt.GetStatus();
 
-			if (freePointStatusArr.includes(status) && pt.GetFillColor() === cpuFillColor)
+			if (allowedPoints.includes(status)/* && pt.GetFillColor() === cpuFillColor */)
 				return true;
 			return false;
 		};
 
+		const freePointStatusArr = [freePointStatus];
 		const addPointsAndEdgesToGraph = async (point, to_x, to_y, x, y) => {
 			if (to_x >= 0 && to_x < this.#iGridWidth && to_y >= 0 && to_y < this.#iGridHeight) {
 				const next = await this.#Points.get(to_y * this.#iGridWidth + to_x);
-				if (next && isPointOKForPath([freePointStatus], next) === true) {
+				if (next && isPointOKForPath(freePointStatusArr, next) === true) {
 
 					const point_hash = `${x},${y}`;
 					const next_hash = `${to_x},${to_y}`;
@@ -77,8 +96,10 @@ class GraphAI {
 			}
 		};
 
-		for (const point of await this.#Points.values()) {
-			if (point && isPointOKForPath([freePointStatus, this.#POINT_STARTING, this.#POINT_IN_PATH], point) === true) {
+		const all_points = await this.#Points.values();
+		const good_point_status_arr = [freePointStatus, this.#POINT_STARTING, this.#POINT_IN_PATH];
+		for (const point of all_points) {
+			if (point && isPointOKForPath(good_point_status_arr, point) === true) {
 				const { x, y } = point.GetPosition();
 				//TODO: await all below promises
 				//east
@@ -106,26 +127,18 @@ class GraphAI {
 		};
 	}
 
-	async #IsPointOutsideAllPaths(x, y, allLines) {
-		for (const line of allLines) {
-			const points = line.GetPointsArray();
-
-			if (false !== pnpoly(points, x, y))
-				return false;
-		}
-
-		return true;
-	}
-
 	/**
 	 * Based on https://www.geeksforgeeks.org/print-all-the-cycles-in-an-undirected-graph/
 	 * @param {any} graph constructed earlier with BuildGraph
-	 * @param {string} COLOR_BLUE - cpu blue playing color
 	 * @param {string} sHumanColor - human red playing color
 	 * @param {object} lines - line array
 	 * @returns {array} of cycles
 	 */
-	async MarkAllCycles(graph, COLOR_BLUE, sHumanColor, lines) {
+	async MarkAllCycles(graph, sHumanColor, lines) {
+		await this.#Init();
+
+
+
 		const vertices = graph.vertices;
 		const N = vertices.length;
 		let cycles = new Array(N);
@@ -190,7 +203,7 @@ class GraphAI {
 
 		const printCycles = async (edges, mark) => {
 			// push the edges that into the 
-			// cycle adjacency list 
+			// cycle adjacency list
 			for (let e = 0; e < edges; e++) {
 				const mark_e = mark[e];
 				if (mark_e !== undefined && mark_e.length > 0) {
@@ -210,7 +223,7 @@ class GraphAI {
 			for (const pt of await this.#Points.values()) {
 				if (pt !== undefined && pt.GetFillColor() === sHumanColor && StatusEnum.POINT_FREE_RED === pt.GetStatus()) {
 					const { x, y } = pt.GetPosition();
-					if (false === await this.#IsPointOutsideAllPaths(x, y, lines))
+					if (false === IsPointOutsideAllPaths(x, y, lines))
 						continue;
 
 					//check if really exists

@@ -5,7 +5,7 @@
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
     <!-- <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest> -->
     <LangVersion>latest</LangVersion>
-    <Version>1.0.1.22</Version>
+    <Version>1.0.1.23</Version>
     <Configurations>Debug;Release;Oracle</Configurations>
     <PublishTrimmed>true</PublishTrimmed>
     <TrimMode>partial</TrimMode>
@@ -23,16 +23,16 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="8.0.1" />
-    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="8.0.1" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.1" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.0" Condition="$(DefineConstants.Contains('INCLUDE_POSTGRES'))" />
-    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.0-beta.2.ci.20231014172607" Condition="$(DefineConstants.Contains('INCLUDE_MYSQL'))" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.1" Condition="$(DefineConstants.Contains('INCLUDE_SQLSERVER'))" />
-    <PackageReference Include="Oracle.EntityFrameworkCore" Version="8.21.121" Condition="$(DefineConstants.Contains('INCLUDE_ORACLE'))" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="8.0.1" />
-    <PackageReference Include="MessagePack" Version="2.5.140" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="8.0.10" />
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="8.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.10" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.8" Condition="$(DefineConstants.Contains('INCLUDE_POSTGRES'))" />
+    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.2" Condition="$(DefineConstants.Contains('INCLUDE_MYSQL'))" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.10" Condition="$(DefineConstants.Contains('INCLUDE_SQLSERVER'))" />
+    <PackageReference Include="Oracle.EntityFrameworkCore" Version="8.23.60" Condition="$(DefineConstants.Contains('INCLUDE_ORACLE'))" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="8.0.10" />
+    <PackageReference Include="MessagePack" Version="2.5.172" />
   </ItemGroup>
 <!--
   <ItemGroup Condition="'$(Configuration)'=='Debug'">
