@@ -125,6 +125,9 @@ namespace InkBall.IntegrationTests
 
 			//DbContextOptions<T> options = new DbContextOptionsBuilder<T>()
 			//	.UseSqlite(connection)
+			// .ConfigureWarnings(b =>
+			// 		b.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)
+			// 	)
 			//	.Options;
 
 			//return options;
@@ -135,8 +138,18 @@ namespace InkBall.IntegrationTests
 		// For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
 		public void ConfigureServices(IServiceCollection services)
 		{
-			services.AddDbContextPool<ApplicationDbContext<TApplicationUser>>(options => options.UseSqlite(Connection));
-			services.AddDbContextPool<GamesContext>(options => options.UseSqlite(Connection));
+			services.AddDbContextPool<ApplicationDbContext<TApplicationUser>>(options => {
+				options.UseSqlite(Connection)
+				.ConfigureWarnings(b =>
+					b.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)
+				);
+			});
+			services.AddDbContextPool<GamesContext>(options => {
+				options.UseSqlite(Connection)
+				.ConfigureWarnings(b =>
+					b.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)
+				);
+			});
 
 			services.AddDefaultIdentity<TApplicationUser>()
 				.AddEntityFrameworkStores<ApplicationDbContext<TApplicationUser>>()
