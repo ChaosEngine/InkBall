@@ -251,4 +251,9 @@ namespace InkBall.Module
 				HtmlHelpers.RenderHeaderSection = HtmlHelpers.HeaderRendererImpl;
 		}
 	}
+
+	public static class ContextSnapshotHelper
+	{
+		public static string DBKind { get; set; } = null;
+    }
 }

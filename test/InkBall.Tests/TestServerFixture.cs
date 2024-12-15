@@ -140,15 +140,17 @@ namespace InkBall.IntegrationTests
 		{
 			services.AddDbContextPool<ApplicationDbContext<TApplicationUser>>(options => {
 				options.UseSqlite(Connection)
-				.ConfigureWarnings(b =>
-					b.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)
-				);
+				// .ConfigureWarnings(b =>
+				// 	b.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)
+				// )
+				;
 			});
 			services.AddDbContextPool<GamesContext>(options => {
 				options.UseSqlite(Connection)
-				.ConfigureWarnings(b =>
-					b.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)
-				);
+				// .ConfigureWarnings(b =>
+				// 	b.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)
+				// )
+				;
 			});
 
 			services.AddDefaultIdentity<TApplicationUser>()

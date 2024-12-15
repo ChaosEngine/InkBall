@@ -65,8 +65,15 @@ namespace InkBall.Module.Migrations
 
                     b.Property<DateTime>("TimeStamp")
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType(GamesContext.TimeStampColumnTypeFromProvider(this.ActiveProvider))
-                        .HasDefaultValueSql(GamesContext.TimeStampDefaultValueFromProvider(this.ActiveProvider));
+                        .HasColumnType(GamesContext.TimeStampColumnTypeFromProvider(ActiveProvider
+                            , "TEXT", "timestamp", "timestamp without time zone", "TIMESTAMP(7)", "datetime2"
+                        ))
+                        .HasDefaultValueSql(GamesContext.TimeStampDefaultValueFromProvider(ActiveProvider,
+							"datetime('now','localtime')",
+							"CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
+							"CURRENT_TIMESTAMP",
+							"CURRENT_TIMESTAMP",
+							"GETDATE()"));
 
                     b.Property<bool>("bIsPlayer1Active")
                         .ValueGeneratedOnAdd()
@@ -133,7 +140,9 @@ namespace InkBall.Module.Migrations
 
                     b.Property<string>("PointsAsString")
                         .HasColumnName("PointsAsString")
-                        .HasColumnType(GamesContext.JsonColumnTypeFromProvider(this.ActiveProvider));
+                        .HasColumnType(GamesContext.JsonColumnTypeFromProvider(ActiveProvider,
+                            "TEXT", "json", "jsonb", "CLOB", "NVARCHAR(1000)"
+                        ));
 
                     b.HasKey("iId");
 
@@ -168,8 +177,15 @@ namespace InkBall.Module.Migrations
 
                     b.Property<DateTime>("TimeStamp")
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType(GamesContext.TimeStampColumnTypeFromProvider(this.ActiveProvider))
-                        .HasDefaultValueSql(GamesContext.TimeStampDefaultValueFromProvider(this.ActiveProvider));
+                        .HasColumnType(GamesContext.TimeStampColumnTypeFromProvider(ActiveProvider
+                            , "TEXT", "timestamp", "timestamp without time zone", "TIMESTAMP(7)", "datetime2"
+                        ))
+                        .HasDefaultValueSql(GamesContext.TimeStampDefaultValueFromProvider(ActiveProvider,
+							"datetime('now','localtime')",
+							"CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
+							"CURRENT_TIMESTAMP",
+							"CURRENT_TIMESTAMP",
+							"GETDATE()"));
 
                     b.Property<int>("iDrawCount")
                         .ValueGeneratedOnAdd()
@@ -191,7 +207,9 @@ namespace InkBall.Module.Migrations
 
                     b.Property<string>("sLastMoveCode")
                         .HasColumnName("sLastMoveCode")
-                        .HasColumnType(GamesContext.JsonColumnTypeFromProvider(this.ActiveProvider));
+                        .HasColumnType(GamesContext.JsonColumnTypeFromProvider(ActiveProvider,
+                            "TEXT", "json", "jsonb", "CLOB", "NVARCHAR(1000)"
+                        ));
 
                     b.HasKey("iId");
 

@@ -36,6 +36,7 @@ namespace InkBall.Tests
 			var builder = new ConfigurationBuilder()
 				// .AddJsonFile("config.json", optional: false, reloadOnChange: true)
 				;
+			Module.ContextSnapshotHelper.DBKind = "sqlite";
 			var config = builder.Build();
 
 			var connection = new SqliteConnection("DataSource=:memory:");
@@ -45,9 +46,9 @@ namespace InkBall.Tests
 
 			var options = new DbContextOptionsBuilder<GamesContext>()
 				.UseSqlite(connection)
-				.ConfigureWarnings(b =>
-					b.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)
-				)
+				// .ConfigureWarnings(b =>
+				// 	b.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)
+				// )
 				.Options;
 
 			// Create the schema in the database
@@ -77,6 +78,7 @@ namespace InkBall.Tests
 			var builder = new ConfigurationBuilder()
 				// .AddJsonFile("config.json", optional: false, reloadOnChange: true)
 				;
+			Module.ContextSnapshotHelper.DBKind = "sqlite";
 			var config = builder.Build();
 
 			var connection = new SqliteConnection("DataSource=:memory:");
@@ -86,9 +88,9 @@ namespace InkBall.Tests
 
 			var options = new DbContextOptionsBuilder<GamesContext>()
 				.UseSqlite(connection)
-				.ConfigureWarnings(b =>
-					b.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)
-				)
+				// .ConfigureWarnings(b =>
+				// 	b.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)
+				// )
 				.Options;
 
 			// Create the schema in the database
