@@ -950,6 +950,8 @@ namespace InkBall.Module.Model
 
 	public sealed class StatisticalPointAndPathCounter : IPointAndPathCounter
 	{
+		static readonly InkBallPoint.StatusEnum[] _ownedStatuses = [InkBallPoint.StatusEnum.POINT_OWNED_BY_RED, InkBallPoint.StatusEnum.POINT_OWNED_BY_BLUE];
+
 		Dictionary<int, int> _pathCountsDict;
 		Dictionary<InkBallPoint.StatusEnum, int> _ownedCountsDict;
 		readonly GamesContext _dbContext;
@@ -995,11 +997,9 @@ namespace InkBall.Module.Model
 		{
 			if (_ownedCountsDict == null)
 			{
-				var statuses = new[] { InkBallPoint.StatusEnum.POINT_OWNED_BY_RED, InkBallPoint.StatusEnum.POINT_OWNED_BY_BLUE };
-
 				_ownedCountsDict = await (from pt in _dbContext.InkBallPoint
 										  where pt.iGameId == _gameID && pt.iEnclosingPathId.HasValue &&
-										  statuses.Contains(pt.Status)
+										  _ownedStatuses.Contains(pt.Status)
 										  group pt by pt.Status into g
 										  select new
 										  {

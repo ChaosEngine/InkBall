@@ -67,6 +67,8 @@ namespace InkBall.Module.Hubs
 
 		private static readonly SimpleCoordsPointComparer _simpleCoordsPointComparer = new SimpleCoordsPointComparer();
 
+		private static readonly InkBallPoint.StatusEnum[] _inPathColors = [InkBallPoint.StatusEnum.POINT_IN_PATH, InkBallPoint.StatusEnum.POINT_STARTING];
+
 		private readonly GamesContext _dbContext;
 		private readonly ILogger<GameHub> _logger;
 
@@ -520,14 +522,12 @@ namespace InkBall.Module.Hubs
 					owning_color = InkBallPoint.StatusEnum.POINT_OWNED_BY_BLUE;
 					other_owning_color = InkBallPoint.StatusEnum.POINT_OWNED_BY_RED;
 				}
-				InkBallPoint.StatusEnum[] free_colors = new[] { current_player_color, other_player_color };
-				InkBallPoint.StatusEnum[] in_path_colors = new[] { InkBallPoint.StatusEnum.POINT_IN_PATH, InkBallPoint.StatusEnum.POINT_STARTING };
 				var db_path_player = ThisPlayer.iId == path.iPlayerId ? ThisPlayer : OtherPlayer;
 				var all_placed_points_fromDB = await (from p in _dbContext.InkBallPoint
 													  where p.iGameId == ThisGame.iId &&
 													  (
-														  (p.iEnclosingPathId == null && free_colors.Contains(p.Status)) ||
-														  (p.iEnclosingPathId != null && in_path_colors.Contains(p.Status))
+														  (p.iEnclosingPathId == null && new[] { current_player_color, other_player_color }.Contains(p.Status)) ||
+														  (p.iEnclosingPathId != null && _inPathColors.Contains(p.Status))
 													  )
 													  select p).Cast<IPoint>()
 													  .ToDictionaryAsync(pip => pip, _simpleCoordsPointComparer, token);
@@ -548,8 +548,8 @@ namespace InkBall.Module.Hubs
 					if (!(all_placed_points_fromDB.TryGetValue(pop, out IPoint iobj) && iobj is InkBallPoint found)
 						|| !(found.iPlayerId == ThisPlayer.iId &&
 							(
-								((found.iEnclosingPathId == null && (found.Status == current_player_color || _simpleCoordsPointComparer.Equals(found, last_point_in_path))) ||
-								(found.iEnclosingPathId != null && in_path_colors.Contains(found.Status)))
+								(found.iEnclosingPathId == null && (found.Status == current_player_color || _simpleCoordsPointComparer.Equals(found, last_point_in_path))) ||
+								(found.iEnclosingPathId != null && _inPathColors.Contains(found.Status))
 							))
 						)
 					{
