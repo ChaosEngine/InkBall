@@ -171,6 +171,40 @@ namespace InkBall.Module.Model
 			}
 		}
 
+		public static string CharColumnTypeFromProvider(string activeProvider
+			, string sqliteColumnType
+			, string mysqlColumnType
+			, string postgresColumnType
+			, string oracleColumnType
+			, string sqlServerColumnType)
+		{
+			switch (activeProvider.ToLowerInvariant())
+			{
+				case "microsoft.entityframeworkcore.sqlite":
+				case "sqlite":
+					return sqliteColumnType ?? "char";
+
+				case "pomelo.entityframeworkcore.mysql":
+				case "mysql":
+					return mysqlColumnType ?? "char";
+
+				case "npgsql.entityframeworkcore.postgresql":
+				case "postgresql":
+					return postgresColumnType ?? "character";
+
+				case "oracle.entityframeworkcore":
+				case "oracle":
+					return oracleColumnType ?? "char";
+
+				case "microsoft.entityframeworkcore.sqlserver":
+				case "sqlserver":
+					return sqlServerColumnType ?? "char";
+
+				default:
+					throw new NotSupportedException($"Bad DBKind name {activeProvider}");
+			}
+		}
+
 		public static string IntegerColumnTypeFromProvider(string activeProvider
 			, string sqliteColumnType
 			, string mysqlColumnType
