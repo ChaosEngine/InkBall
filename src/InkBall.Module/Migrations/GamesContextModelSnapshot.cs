@@ -61,28 +61,36 @@ namespace InkBall.Module.Migrations
                         .IsRequired();
 
                     b.Property<DateTime>("TimeStamp")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp");
+					    .ValueGeneratedOnAddOrUpdate()
+						.HasColumnType(GamesContext.TimeStampColumnTypeFromProvider(ContextSnapshotHelper.DBKind
+                            , "TEXT", "timestamp", "timestamp without time zone", "TIMESTAMP(7)", "datetime2"
+                        ))
+						.HasDefaultValueSql(GamesContext.TimeStampDefaultValueFromProvider(ContextSnapshotHelper.DBKind,
+							"datetime('now','localtime')",
+							"CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
+							"CURRENT_TIMESTAMP",
+							"CURRENT_TIMESTAMP",
+							"GETDATE()"));
 
                     b.Property<bool>("bIsPlayer1Active")
                         .ValueGeneratedOnAdd()
                         .HasColumnName("bIsPlayer1Active")
-                        .HasDefaultValueSql("1");
+                        .HasDefaultValue(1);
 
                     b.Property<int>("iBoardHeight")
                         .ValueGeneratedOnAdd()
                         .HasColumnName("iBoardHeight")
-                        .HasDefaultValueSql("'26'");
+                        .HasDefaultValue(26);
 
                     b.Property<int>("iBoardWidth")
                         .ValueGeneratedOnAdd()
                         .HasColumnName("iBoardWidth")
-                        .HasDefaultValueSql("'20'");
+                        .HasDefaultValue(20);
 
                     b.Property<int>("iGridSize")
                         .ValueGeneratedOnAdd()
                         .HasColumnName("iGridSize")
-                        .HasDefaultValueSql("'16'");
+                        .HasDefaultValue(16);
 
                     b.Property<int>("iPlayer1Id")
                         .HasColumnName("iPlayer1ID");
@@ -127,9 +135,11 @@ namespace InkBall.Module.Migrations
                     b.Property<int>("iPlayerId")
                         .HasColumnName("iPlayerID");
 
-					b.Property<string>("PointsAsString")
-						.HasColumnName("PointsAsString")
-						.HasColumnType("varchar(1000)");
+                    b.Property<string>("PointsAsString")
+                        .HasColumnName("PointsAsString")
+                        .HasColumnType(GamesContext.JsonColumnTypeFromProvider(ContextSnapshotHelper.DBKind,
+                            "TEXT", "json", "jsonb", "CLOB", "NVARCHAR(1000)"
+                        ));
 
 					b.HasKey("iId");
 
@@ -163,45 +173,68 @@ namespace InkBall.Module.Migrations
                         ;
 
                     b.Property<DateTime>("TimeStamp")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp");
+						.ValueGeneratedOnAddOrUpdate()
+						.HasColumnType(GamesContext.TimeStampColumnTypeFromProvider(ContextSnapshotHelper.DBKind
+                            , "TEXT", "timestamp", "timestamp without time zone", "TIMESTAMP(7)", "datetime2"
+                        ))
+						.HasDefaultValueSql(GamesContext.TimeStampDefaultValueFromProvider(ContextSnapshotHelper.DBKind,
+							"datetime('now','localtime')",
+							"CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
+							"CURRENT_TIMESTAMP",
+							"CURRENT_TIMESTAMP",
+							"GETDATE()"));
 
-                    b.Property<int>("iDrawCount")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnName("iDrawCount")
-                        .HasDefaultValueSql("'0'");
+					b.Property<int>("iDrawCount")
+						.ValueGeneratedOnAdd()
+						.HasDefaultValue(0)
+						.HasColumnName("iDrawCount")
+                        .HasColumnType(GamesContext.IntegerColumnTypeFromProvider(ContextSnapshotHelper.DBKind
+                            ,"INTEGER", "int", "integer", "NUMBER(10)", "int"
+                        ));
 
                     b.Property<int>("iLossCount")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnName("iLossCount")
-                        .HasDefaultValueSql("'0'");
-
-                    b.Property<int>("iPrivileges")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnName("iPrivileges")
-                        .HasDefaultValueSql("'0'");
-
-                    b.Property<string>("sExternalId");
-
-                    b.HasIndex("sExternalId")
-                        .IsUnique()
-                        .HasDatabaseName("sExternalId");
-
-                    b.Property<string>("UserName")
-                        .HasColumnName("UserName");
+						.ValueGeneratedOnAdd()
+						.HasDefaultValue(0)
+						.HasColumnName("iLossCount")
+                        .HasColumnType(GamesContext.IntegerColumnTypeFromProvider(ContextSnapshotHelper.DBKind
+                            ,"INTEGER", "int", "integer", "NUMBER(10)", "int"
+                        ));
 
                     b.Property<int>("iWinCount")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnName("iWinCount")
-                        .HasDefaultValueSql("'0'");
+						.ValueGeneratedOnAdd()
+						.HasDefaultValue(0)
+						.HasColumnName("iWinCount")
+					    .HasColumnType(GamesContext.IntegerColumnTypeFromProvider(ContextSnapshotHelper.DBKind
+                            ,"INTEGER", "int", "integer", "NUMBER(10)", "int"
+                        ));
 
                     b.Property<string>("sLastMoveCode")
-                        .HasColumnName("sLastMoveCode")
-                        .HasColumnType("varchar(1000)");
+						.HasColumnName("sLastMoveCode")
+					    .HasColumnType(GamesContext.JsonColumnTypeFromProvider(ContextSnapshotHelper.DBKind,
+                            "TEXT", "json", "jsonb", "CLOB", "NVARCHAR(1000)"
+                        ));
 
-                    b.HasKey("iId");
+					b.Property<int>("iPrivileges")
+                        .HasColumnType(GamesContext.IntegerColumnTypeFromProvider(ContextSnapshotHelper.DBKind
+                            ,"INTEGER", "int", "integer", "NUMBER(10)", "int"
+                        ));
 
-                    b.ToTable("InkBallPlayer");
+					b.Property<string>("sExternalId")
+						.HasMaxLength(256);
+
+					b.HasIndex("sExternalId")
+						.IsUnique()
+						.HasDatabaseName("sExternalId")
+                        .HasFilter(GamesContext.HasIndexFilterFromProvider(ContextSnapshotHelper.DBKind,
+                            null, null, null,null, "[sExternalId] IS NOT NULL")
+                        );
+
+					b.Property<string>("UserName")
+						.HasColumnName("UserName");
+
+					b.HasKey("iId");
+
+					b.ToTable("InkBallPlayer");
                     
 					b.HasData(
                         new
@@ -211,7 +244,7 @@ namespace InkBall.Module.Migrations
                             iDrawCount = 0,
                             iLossCount = 0,
                             iWinCount = 0,
-							UserName = InkBallPlayer.CPUOponentPlayerName,
+							UserName = "Multi CPU Oponent UserPlayer",
                             iPrivileges = 1,
                             sLastMoveCode = "{}"
                         });
@@ -234,10 +267,16 @@ namespace InkBall.Module.Migrations
                         .HasColumnName("iPlayerID");
 
                     b.Property<int>("iX")
-                        .HasColumnName("iX");
+                        .HasColumnName("iX")
+                        .HasColumnType(GamesContext.IntegerColumnTypeFromProvider(ContextSnapshotHelper.DBKind
+                            ,"INTEGER", "smallint", "integer", "NUMBER(10)", "int"
+                        ));
 
                     b.Property<int>("iY")
-                        .HasColumnName("iY");
+                        .HasColumnName("iY")
+                        .HasColumnType(GamesContext.IntegerColumnTypeFromProvider(ContextSnapshotHelper.DBKind
+                            ,"INTEGER", "smallint", "integer", "NUMBER(10)", "int"
+                        ));
 
                     b.HasKey("iGameId", "iX", "iY");
 

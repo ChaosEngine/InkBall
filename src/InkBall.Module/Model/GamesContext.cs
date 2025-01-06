@@ -31,14 +31,12 @@ namespace InkBall.Module.Model
 
 	public partial class GamesContext : DbContext, IGamesContext
 	{
-		//private static DateTimeToBytesConverter _sqlServerTimestampConverter;
-
 		public virtual DbSet<InkBallGame> InkBallGame { get; set; }
 		public virtual DbSet<InkBallPath> InkBallPath { get; set; }
 		public virtual DbSet<InkBallPlayer> InkBallPlayer { get; set; }
 		public virtual DbSet<InkBallPoint> InkBallPoint { get; set; }
 
-        [RequiresUnreferencedCode("Contains trimming unsafe calls")]
+		[RequiresUnreferencedCode("Contains trimming unsafe calls")]
 		public GamesContext(DbContextOptions<GamesContext> options) : base(options)
 		{
 		}
@@ -48,42 +46,56 @@ namespace InkBall.Module.Model
 		internal static readonly GameStateEnum[] ActiveVisibleGameStates =
 			new GameStateEnum[] { GameStateEnum.ACTIVE, GameStateEnum.AWAITING };
 
-		internal static string TimeStampDefaultValueFromProvider(string activeProvider)
+		internal static string TimeStampDefaultValueFromProvider(string activeProvider
+			, string sqliteColumnType
+			, string mysqlColumnType
+			, string postgresColumnType
+			, string oracleColumnType
+			, string sqlServerColumnType
+			)
 		{
-			switch (activeProvider)
+			switch (activeProvider.ToLowerInvariant())
 			{
-				case "Microsoft.EntityFrameworkCore.SqlServer":
-					return "GETDATE()";
+				case "microsoft.entityframeworkcore.sqlite":
+				case "sqlite":
+					return sqliteColumnType ?? "datetime('now','localtime')";
 
-				case "Pomelo.EntityFrameworkCore.MySql":
-					return "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP";
+				case "pomelo.entityframeworkcore.mysql":
+				case "mysql":
+					return mysqlColumnType ?? "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP";
 
-				case "Microsoft.EntityFrameworkCore.Sqlite":
-					return "datetime('now','localtime')";
+				case "npgsql.entityframeworkcore.postgresql":
+				case "postgresql":
+					return postgresColumnType ?? "CURRENT_TIMESTAMP";
 
-				case "Npgsql.EntityFrameworkCore.PostgreSQL":
-				case "Oracle.EntityFrameworkCore":
-					return "CURRENT_TIMESTAMP";
+				case "oracle.entityframeworkcore":
+				case "oracle":
+					return oracleColumnType ?? "CURRENT_TIMESTAMP";
+
+				case "microsoft.entityframeworkcore.sqlserver":
+				case "sqlserver":
+					return sqlServerColumnType ?? "GETDATE()";
 
 				default:
 					throw new NotSupportedException($"Bad DBKind name {activeProvider}");
 			}
 		}
 
+		//TODO: is it really needed? remove?
 		internal static ValueConverter TimeStampValueConverterFromProvider(string activeProvider)
 		{
-			switch (activeProvider)
+			switch (activeProvider.ToLowerInvariant())
 			{
-				case "Microsoft.EntityFrameworkCore.SqlServer":
+				case "microsoft.entityframeworkcore.sqlserver":
 					//if (_sqlServerTimestampConverter == null)
 					//	_sqlServerTimestampConverter = new DateTimeToBytesConverter();
 					//return _sqlServerTimestampConverter;
 					return null;
 
-				case "Microsoft.EntityFrameworkCore.Sqlite":
-				case "Pomelo.EntityFrameworkCore.MySql":
-				case "Npgsql.EntityFrameworkCore.PostgreSQL":
-				case "Oracle.EntityFrameworkCore":
+				case "microsoft.entityframeworkcore.sqlite":
+				case "pomelo.entityframeworkcore.mysql":
+				case "npgsql.entityframeworkcore.postgresql":
+				case "oracle.entityframeworkcore":
 					return null;
 
 				default:
@@ -91,35 +103,174 @@ namespace InkBall.Module.Model
 			}
 		}
 
-		internal static string TimeStampColumnTypeFromProvider(string activeProvider)
+		internal static string TimeStampColumnTypeFromProvider(string activeProvider
+			, string sqliteColumnType
+			, string mysqlColumnType
+			, string postgresColumnType
+			, string oracleColumnType
+			, string sqlServerColumnType)
 		{
-			switch (activeProvider)
+			switch (activeProvider.ToLowerInvariant())
 			{
-				case "Microsoft.EntityFrameworkCore.SqlServer":
-					return "datetime2";
+				case "microsoft.entityframeworkcore.sqlserver":
+				case "sqlserver":
+					return sqlServerColumnType ?? "datetime2";
 
-				case "Pomelo.EntityFrameworkCore.MySql":
-				case "Microsoft.EntityFrameworkCore.Sqlite":
-				case "Npgsql.EntityFrameworkCore.PostgreSQL":
-				case "Oracle.EntityFrameworkCore":
-					return "timestamp";
+				case "pomelo.entityframeworkcore.mysql":
+				case "mysql":
+					return mysqlColumnType ?? "timestamp";
+
+				case "microsoft.entityframeworkcore.sqlite":
+				case "sqlite":
+					return sqliteColumnType ?? "TEXT";
+
+				case "npgsql.entityframeworkcore.postgresql":
+				case "postgresql":
+					return postgresColumnType ?? "timestamp without time zone";
+
+				case "oracle.entityframeworkcore":
+				case "oracle":
+					return oracleColumnType ?? "TIMESTAMP(7)";
 
 				default:
 					throw new NotSupportedException($"Bad DBKind name{activeProvider}");
 			}
 		}
 
-		public static string JsonColumnTypeFromProvider(string activeProvider)
+		public static string JsonColumnTypeFromProvider(string activeProvider
+			, string sqliteColumnType
+			, string mysqlColumnType
+			, string postgresColumnType
+			, string oracleColumnType
+			, string sqlServerColumnType)
 		{
-			return activeProvider switch
+			switch (activeProvider.ToLowerInvariant())
 			{
-				"Microsoft.EntityFrameworkCore.SqlServer" => "nvarchar(1000)",
-				"Pomelo.EntityFrameworkCore.MySql" => "json",
-				"Microsoft.EntityFrameworkCore.Sqlite" => "TEXT",
-				"Npgsql.EntityFrameworkCore.PostgreSQL" => "jsonb",
-				"Oracle.EntityFrameworkCore" => "VARCHAR2(4000)",
-				_ => throw new NotSupportedException($"Bad DBKind name {activeProvider}"),
-			};
+				case "microsoft.entityframeworkcore.sqlite":
+				case "sqlite":
+					return sqliteColumnType ?? "TEXT";
+
+				case "pomelo.entityframeworkcore.mysql":
+				case "mysql":
+					return mysqlColumnType ?? "json";
+
+				case "npgsql.entityframeworkcore.postgresql":
+				case "postgresql":
+					return postgresColumnType ?? "jsonb";
+
+				case "oracle.entityframeworkcore":
+				case "oracle":
+					return oracleColumnType ?? "VARCHAR2(4000)";
+
+				case "microsoft.entityframeworkcore.sqlserver":
+				case "sqlserver":
+					return sqlServerColumnType ?? "nvarchar(1000)";
+
+				default:
+					throw new NotSupportedException($"Bad DBKind name {activeProvider}");
+			}
+		}
+
+		public static string CharColumnTypeFromProvider(string activeProvider
+			, string sqliteColumnType
+			, string mysqlColumnType
+			, string postgresColumnType
+			, string oracleColumnType
+			, string sqlServerColumnType)
+		{
+			switch (activeProvider.ToLowerInvariant())
+			{
+				case "microsoft.entityframeworkcore.sqlite":
+				case "sqlite":
+					return sqliteColumnType ?? "char";
+
+				case "pomelo.entityframeworkcore.mysql":
+				case "mysql":
+					return mysqlColumnType ?? "char";
+
+				case "npgsql.entityframeworkcore.postgresql":
+				case "postgresql":
+					return postgresColumnType ?? "character";
+
+				case "oracle.entityframeworkcore":
+				case "oracle":
+					return oracleColumnType ?? "char";
+
+				case "microsoft.entityframeworkcore.sqlserver":
+				case "sqlserver":
+					return sqlServerColumnType ?? "char";
+
+				default:
+					throw new NotSupportedException($"Bad DBKind name {activeProvider}");
+			}
+		}
+
+		public static string IntegerColumnTypeFromProvider(string activeProvider
+			, string sqliteColumnType
+			, string mysqlColumnType
+			, string postgresColumnType
+			, string oracleColumnType
+			, string sqlServerColumnType)
+		{
+			switch (activeProvider.ToLowerInvariant())
+			{
+				case "microsoft.entityframeworkcore.sqlite":
+				case "sqlite":
+					return sqliteColumnType ?? "INTEGER";
+
+				case "pomelo.entityframeworkcore.mysql":
+				case "mysql":
+					return mysqlColumnType ?? "int";
+
+				case "npgsql.entityframeworkcore.postgresql":
+				case "postgresql":
+					return postgresColumnType ?? "integer";
+
+				case "oracle.entityframeworkcore":
+				case "oracle":
+					return oracleColumnType ?? "NUMBER";
+
+				case "microsoft.entityframeworkcore.sqlserver":
+				case "sqlserver":
+					return sqlServerColumnType ?? "int";
+
+				default:
+					throw new NotSupportedException($"Bad DBKind name {activeProvider}");
+			}
+		}
+
+		public static string HasIndexFilterFromProvider(string activeProvider
+			, string sqliteColumnType
+			, string mysqlColumnType
+			, string postgresColumnType
+			, string oracleColumnType
+			, string sqlServerColumnType)
+		{
+			switch (activeProvider.ToLowerInvariant())
+			{
+				case "microsoft.entityframeworkcore.sqlite":
+				case "sqlite":
+					return sqliteColumnType ?? null;
+
+				case "pomelo.entityframeworkcore.mysql":
+				case "mysql":
+					return mysqlColumnType ?? null;
+
+				case "npgsql.entityframeworkcore.postgresql":
+				case "postgresql":
+					return postgresColumnType ?? null;
+
+				case "oracle.entityframeworkcore":
+				case "oracle":
+					return oracleColumnType ?? null;
+
+				case "microsoft.entityframeworkcore.sqlserver":
+				case "sqlserver":
+					return sqlServerColumnType ?? null;
+
+				default:
+					throw new NotSupportedException($"Bad DBKind name {activeProvider}");
+			}
 		}
 
 		/*protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -167,7 +318,7 @@ namespace InkBall.Module.Model
 					.HasDefaultValue(true)
 					.HasSentinel(false);
 
-				entity.Property(e => e.CreateTime).HasColumnType("datetime");
+				entity.Property(e => e.CreateTime);
 
 				entity.Property(e => e.iBoardHeight)
 					.HasColumnName("iBoardHeight")
@@ -200,10 +351,16 @@ namespace InkBall.Module.Model
 				entity.Property(e => e.iPlayer2Id).HasColumnName("iPlayer2ID");
 
 				entity.Property(e => e.TimeStamp)
-					.HasColumnType(TimeStampColumnTypeFromProvider(Database.ProviderName))
 					.ValueGeneratedOnAddOrUpdate()
-					.HasDefaultValueSql(TimeStampDefaultValueFromProvider(Database.ProviderName))
-					.HasConversion(TimeStampValueConverterFromProvider(Database.ProviderName));
+					.HasColumnType(GamesContext.TimeStampColumnTypeFromProvider(Database.ProviderName
+						, "TEXT", "timestamp", "timestamp without time zone", "TIMESTAMP(7)", "datetime2"
+					))
+					.HasDefaultValueSql(GamesContext.TimeStampDefaultValueFromProvider(Database.ProviderName,
+						"datetime('now','localtime')",
+						"CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
+						"CURRENT_TIMESTAMP",
+						"CURRENT_TIMESTAMP",
+						"GETDATE()"));
 
 				entity.HasOne(d => d.Player1)
 					.WithMany(p => p.InkBallGameIPlayer1)
@@ -255,7 +412,9 @@ namespace InkBall.Module.Model
 
 				entity.Property(e => e.PointsAsString)
 					.HasColumnName("PointsAsString")
-					.HasColumnType(JsonColumnTypeFromProvider(Database.ProviderName));
+					.HasColumnType(GamesContext.JsonColumnTypeFromProvider(Database.ProviderName,
+						"TEXT", "json", "jsonb", "CLOB", "NVARCHAR(1000)"
+					));
 
 				entity.HasOne(d => d.Game)
 					.WithMany(p => p.InkBallPath)
@@ -293,29 +452,53 @@ namespace InkBall.Module.Model
 
 				entity.Property(e => e.iDrawCount)
 					.HasColumnName("iDrawCount")
-					.HasColumnType("int(11)")
+					.HasColumnType(GamesContext.IntegerColumnTypeFromProvider(Database.ProviderName
+						, "INTEGER", "int", "integer", "NUMBER(10)", "int"
+					))
 					.HasDefaultValue(0);
 
 				entity.Property(e => e.iLossCount)
 					.HasColumnName("iLossCount")
-					.HasColumnType("int(11)")
+					.HasColumnType(GamesContext.IntegerColumnTypeFromProvider(Database.ProviderName
+						, "INTEGER", "int", "integer", "NUMBER(10)", "int"
+					))
 					.HasDefaultValue(0);
 
 				entity.Property(e => e.iWinCount)
 					.HasColumnName("iWinCount")
-					.HasColumnType("int(11)")
+					.HasColumnType(GamesContext.IntegerColumnTypeFromProvider(Database.ProviderName
+						, "INTEGER", "int", "integer", "NUMBER(10)", "int"
+					))
 					.HasDefaultValue(0);
 
 				entity.Property(e => e.sLastMoveCode)
 					.HasColumnName("sLastMoveCode")
-					.HasColumnType(JsonColumnTypeFromProvider(Database.ProviderName));
+					.HasColumnType(GamesContext.JsonColumnTypeFromProvider(Database.ProviderName,
+						"TEXT", "json", "jsonb", "CLOB", "NVARCHAR(1000)"
+					));
+
+				entity.Property(e => e.sExternalId)
+					.HasMaxLength(256);
+
+				entity.HasIndex("sExternalId")
+					.IsUnique()
+					.HasDatabaseName("sExternalId")
+					.HasFilter(GamesContext.HasIndexFilterFromProvider(Database.ProviderName,
+						null, null, null,null, "[sExternalId] IS NOT NULL")
+					);
+
 
 				entity.Property(e => e.TimeStamp)
-					.HasColumnType(TimeStampColumnTypeFromProvider(Database.ProviderName))
 					.ValueGeneratedOnAddOrUpdate()
-					.HasDefaultValueSql(TimeStampDefaultValueFromProvider(Database.ProviderName))
-					.HasConversion(TimeStampValueConverterFromProvider(Database.ProviderName));
-
+					.HasColumnType(GamesContext.TimeStampColumnTypeFromProvider(Database.ProviderName
+						, "TEXT", "timestamp", "timestamp without time zone", "TIMESTAMP(7)", "datetime2"
+					))
+					.HasDefaultValueSql(GamesContext.TimeStampDefaultValueFromProvider(Database.ProviderName,
+						"datetime('now','localtime')",
+						"CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
+						"CURRENT_TIMESTAMP",
+						"CURRENT_TIMESTAMP",
+						"GETDATE()"));
 
 				if (Database.ProviderName == "Microsoft.EntityFrameworkCore.SqlServer")
 					entity.ToTable(t => t.HasTrigger(
@@ -326,7 +509,7 @@ namespace InkBall.Module.Model
 				{
 					iId = -1,
 					iPrivileges = 1,
-					UserName = Module.Model.InkBallPlayer.CPUOponentPlayerName,
+					UserName = "Multi CPU Oponent UserPlayer",
 					sLastMoveCode = "{}",
 					iWinCount = 0,
 					iLossCount = 0,
@@ -341,9 +524,6 @@ namespace InkBall.Module.Model
 				entity.HasIndex(e => e.iEnclosingPathId)
 					.HasDatabaseName("ByEnclosingPath");
 
-				//entity.HasIndex(e => e.iGameId)
-				//	.HasDatabaseName("IDX_InkBallPoint_ByGame");
-
 				entity.HasIndex(e => e.iPlayerId)
 					.HasDatabaseName("IDX_InkBallPoint_ByPlayer");
 
@@ -353,9 +533,17 @@ namespace InkBall.Module.Model
 
 				entity.Property(e => e.iPlayerId).HasColumnName("iPlayerID");
 
-				entity.Property(e => e.iX).HasColumnName("iX");
+				entity.Property(e => e.iX)
+					.HasColumnName("iX")
+					.HasColumnType(GamesContext.IntegerColumnTypeFromProvider(Database.ProviderName
+						, "INTEGER", "smallint", "integer", "NUMBER(10)", "int"
+					));
 
-				entity.Property(e => e.iY).HasColumnName("iY");
+				entity.Property(e => e.iY)
+					.HasColumnName("iY")
+					.HasColumnType(GamesContext.IntegerColumnTypeFromProvider(Database.ProviderName
+						, "INTEGER", "smallint", "integer", "NUMBER(10)", "int"
+					));
 
 				entity.Property(e => e.Status)
 					.HasDefaultValue(Module.Model.InkBallPoint.StatusEnum.POINT_FREE)
@@ -796,6 +984,8 @@ namespace InkBall.Module.Model
 
 	public sealed class StatisticalPointAndPathCounter : IPointAndPathCounter
 	{
+		static readonly InkBallPoint.StatusEnum[] _ownedStatuses = [InkBallPoint.StatusEnum.POINT_OWNED_BY_RED, InkBallPoint.StatusEnum.POINT_OWNED_BY_BLUE];
+
 		Dictionary<int, int> _pathCountsDict;
 		Dictionary<InkBallPoint.StatusEnum, int> _ownedCountsDict;
 		readonly GamesContext _dbContext;
@@ -841,11 +1031,9 @@ namespace InkBall.Module.Model
 		{
 			if (_ownedCountsDict == null)
 			{
-				var statuses = new[] { InkBallPoint.StatusEnum.POINT_OWNED_BY_RED, InkBallPoint.StatusEnum.POINT_OWNED_BY_BLUE };
-
 				_ownedCountsDict = await (from pt in _dbContext.InkBallPoint
 										  where pt.iGameId == _gameID && pt.iEnclosingPathId.HasValue &&
-										  statuses.Contains(pt.Status)
+										  _ownedStatuses.Contains(pt.Status)
 										  group pt by pt.Status into g
 										  select new
 										  {

@@ -31,11 +31,12 @@ namespace InkBall.Tests
 
 		protected async Task<(SqliteConnection, DbContextOptions<GamesContext>,
 							IConfiguration, IMemoryCache, ILogger<GameHub>)>
-							SetupInMemoryDB()
+							SetupInMemoryDBAsync()
 		{
 			var builder = new ConfigurationBuilder()
 				// .AddJsonFile("config.json", optional: false, reloadOnChange: true)
 				;
+			Module.ContextSnapshotHelper.DBKind = "sqlite";
 			var config = builder.Build();
 
 			var connection = new SqliteConnection("DataSource=:memory:");
@@ -45,6 +46,9 @@ namespace InkBall.Tests
 
 			var options = new DbContextOptionsBuilder<GamesContext>()
 				.UseSqlite(connection)
+				// .ConfigureWarnings(b =>
+				// 	b.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)
+				// )
 				.Options;
 
 			// Create the schema in the database
@@ -67,12 +71,54 @@ namespace InkBall.Tests
 
 			return (connection, options, config, cache, logger);
 		}
+		
+		protected (SqliteConnection, DbContextOptions<GamesContext>, IConfiguration, IMemoryCache, ILogger<GameHub>)
+			SetupInMemoryDB()
+		{
+			var builder = new ConfigurationBuilder()
+				// .AddJsonFile("config.json", optional: false, reloadOnChange: true)
+				;
+			Module.ContextSnapshotHelper.DBKind = "sqlite";
+			var config = builder.Build();
+
+			var connection = new SqliteConnection("DataSource=:memory:");
+
+			// In-memory database only exists while the connection is open
+			connection.Open();
+
+			var options = new DbContextOptionsBuilder<GamesContext>()
+				.UseSqlite(connection)
+				// .ConfigureWarnings(b =>
+				// 	b.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)
+				// )
+				.Options;
+
+			// Create the schema in the database
+			using (var context = new GamesContext(options))
+			{
+				//await context.Database.EnsureCreatedAsync(CancellationToken);
+				context.Database.Migrate();
+			}
+
+            var serviceCollection = new ServiceCollection()
+				.AddMemoryCache()
+				.AddLogging();
+			serviceCollection.AddDataProtection();
+			var serviceProvider = serviceCollection.BuildServiceProvider();
+
+			IMemoryCache cache = serviceProvider.GetService<IMemoryCache>();
+
+			var logger = serviceProvider.GetService<ILoggerFactory>()
+				.CreateLogger<GameHub>();
+
+			return (connection, options, config, cache, logger);
+		}
 
 		public DbContextSetup()
 		{
 			var db = SetupInMemoryDB();
-			db.Wait();
-			Setup = db.Result;
+			// db.Wait();
+			Setup = db/* .Result */;
 		}
 
 		#region IDisposable Support

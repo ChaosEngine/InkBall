@@ -1,14 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
     <!-- <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest> -->
     <LangVersion>latest</LangVersion>
-    <Version>1.0.1.23</Version>
+    <Version>1.0.2.0</Version>
     <Configurations>Debug;Release;Oracle</Configurations>
-    <PublishTrimmed>true</PublishTrimmed>
-    <TrimMode>partial</TrimMode>
+    <!--<PublishTrimmed>true</PublishTrimmed>
+    <TrimMode>partial</TrimMode>-->
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -23,16 +23,16 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.10" />
-    <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="8.0.10" />
-    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="8.0.10" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.10" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.8" Condition="$(DefineConstants.Contains('INCLUDE_POSTGRES'))" />
-    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.2" Condition="$(DefineConstants.Contains('INCLUDE_MYSQL'))" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.10" Condition="$(DefineConstants.Contains('INCLUDE_SQLSERVER'))" />
-    <PackageReference Include="Oracle.EntityFrameworkCore" Version="8.23.60" Condition="$(DefineConstants.Contains('INCLUDE_ORACLE'))" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="8.0.10" />
-    <PackageReference Include="MessagePack" Version="2.5.187" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="9.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.2" Condition="$(DefineConstants.Contains('INCLUDE_POSTGRES'))" />
+    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0-preview.3.efcore.9.0.0.ci.20241214050811" Condition="$(DefineConstants.Contains('INCLUDE_MYSQL'))" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.0" Condition="$(DefineConstants.Contains('INCLUDE_SQLSERVER'))" />
+    <PackageReference Include="Oracle.EntityFrameworkCore" Version="9.23.60" Condition="$(DefineConstants.Contains('INCLUDE_ORACLE'))" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="9.0.0" />
+    <PackageReference Include="MessagePack" Version="3.1.1" />
   </ItemGroup>
 <!--
   <ItemGroup Condition="'$(Configuration)'=='Debug'">

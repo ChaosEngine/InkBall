@@ -1,10 +1,10 @@
 ﻿@charset "UTF-8";
-@import "svg-url";
+@use "svg-url";
 
 //////////////////////Functions, mixins start//////////////////////
 @mixin generateBackgroundDataUrlSvg($cellWidth, $cellHeight, $strokePrefersLight, $strokePrefersDark) {
 	//https://codepen.io/jakob-e/pen/doMoML processed SVG
-	background-image: svg-url(
+	background-image: svg-url.svg-url(
 	'<svg xmlns="http://www.w3.org/2000/svg">' +
 		'<style>' +
 			'@media(prefers-color-scheme:dark){' +

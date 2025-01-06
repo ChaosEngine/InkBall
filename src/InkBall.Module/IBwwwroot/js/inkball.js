@@ -2933,11 +2933,11 @@ class InkBallGame {
 		const point_color = (await this.#Points.get(runParams.lastClickedY * this.#iGridWidth + runParams.lastClickedX))?.GetFillColor();
 		const point_status = point_color === this.#COLOR_RED ? StatusEnum.POINT_FREE_RED : StatusEnum.POINT_FREE_BLUE;
 
-		const arr = [];
+		const arrOfArrOfPoints = [];
 		for (const pt of await this.#Points.values()) {
 			if (pt !== undefined && pt.GetFillColor() === point_color && pt.GetStatus() === point_status) {
 				const { x, y } = pt.GetPosition();
-				arr.push([x, y]);
+				arrOfArrOfPoints.push([x, y]);
 			}
 		}
 		saveParamsToStore(runParams, window.localStorage);
@@ -2946,7 +2946,7 @@ class InkBallGame {
 		const data = await this.#RunAIWorker((worker) => {
 			worker.postMessage({
 				operation: "CLUSTERING",
-				dataset: arr,
+				dataset: arrOfArrOfPoints,
 				method: runParams.method,
 
 				numberOfClusters: runParams.numberOfClusters,
@@ -2959,10 +2959,10 @@ class InkBallGame {
 			const clusters = [];
 			for (const cluster of data.clusters) {
 				const rand_color = RandomColor();
-
+				let enclosing_circle = null;
 				const points_in_cluster = [];
 				for (const index of cluster) {
-					const vert = arr[index];
+					const vert = arrOfArrOfPoints[index];
 					const [x, y] = vert;
 					// const pt = document.querySelector(`svg > circle[cx="${x}"][cy="${y}"]`);
 					const pt = await this.#Points.get(y * this.#iGridWidth + x);
@@ -2975,12 +2975,27 @@ class InkBallGame {
 						pt.setAttribute("r", 2 / this.#iGridSpacingX);
 						if (y === runParams.lastClickedY && x === runParams.lastClickedX)
 							this.#cyclesFound = points_in_cluster;
+
+
+						// if(enclosing_circle === null) {
+						enclosing_circle = this.#SvgVml.CreateOval(1.5);
+						enclosing_circle.move(x, y);
+						enclosing_circle.SetStrokeColor('black');
+						enclosing_circle.StrokeWeight(0.1);
+						enclosing_circle.SetFillColor('transparent');
+						// }
 					}
 					// await Sleep(50);
 				}
 				clusters.push(points_in_cluster);
 				const bbox = getBoundingBox(points_in_cluster.map(p => p.GetPosition()));
-				LocalLog(this.#SvgVml.CreateRect(bbox.minX - 1, bbox.minY - 1, bbox.width + 2, bbox.height + 2, 'black'));
+				bbox.minX--; bbox.minY--; bbox.width += 2; bbox.height += 2;
+
+
+				//TODO: get points inside bbox but not found in cluster and not inside points without cluster - only outside?
+				//calculate all points from bbox and subtract (??)
+				
+				LocalLog(this.#SvgVml.CreateRect(bbox.minX, bbox.minY, bbox.width, bbox.height, 'rgb(128,128,128,128)'));
 			}
 			LocalLog({ method: data.method, clusters, plot: data.plot, noise: data.noise });
 		}

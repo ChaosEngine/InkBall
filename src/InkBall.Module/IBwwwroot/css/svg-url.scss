@@ -1,4 +1,5 @@
 ﻿//Taken from https://codepen.io/jakob-e/pen/doMoML. Thnx!
+@use "sass:string";
 @use "sass:math";
 
 //
@@ -8,7 +9,7 @@
 	//
 	//  Add missing namespace
 	//
-	@if not str-index($svg,xmlns) {
+	@if not string.index($svg,xmlns) {
 		$svg: str-replace($svg, '<svg','<svg xmlns="http://www.w3.org/2000/svg"');
 	}
 	//
@@ -18,10 +19,10 @@
 	$encoded: '';
 	$slice: 2000;
 	$index: 0;
-	$loops: ceil(math.div(str-length($svg),$slice));
+	$loops: math.ceil(math.div(string.length($svg),$slice));
 
 	@for $i from 1 through $loops {
-		$chunk: str-slice($svg, $index, $index + $slice - 1);
+		$chunk: string.slice($svg, $index, $index + $slice - 1);
 		//
 		//   Encode
 		//
@@ -65,6 +66,6 @@
 
 //  Helper function to replace characters in a string
 @function str-replace($string, $search, $replace: '') {
-	$index: str-index($string, $search);
-	@return if($index, str-slice($string, 1, $index - 1) + $replace + str-replace(str-slice($string, $index + str-length($search)), $search, $replace), $string);
+	$index: string.index($string, $search);
+	@return if($index, string.slice($string, 1, $index - 1) + $replace + str-replace(string.slice($string, $index + string.length($search)), $search, $replace), $string);
 }

@@ -47,7 +47,7 @@ namespace InkBall.Module.Model
 	}
 
 	[MessagePackObject(true)]
-	public sealed class PlayerJoiningCommand : IDtoMsg
+	public sealed partial class PlayerJoiningCommand : IDtoMsg
 	{
 		public int OtherPlayerId { get; private set; }
 
@@ -69,7 +69,7 @@ namespace InkBall.Module.Model
 	}
 
 	[MessagePackObject(true)]
-	public sealed class PlayerSurrenderingCommand : IDtoMsg
+	public sealed partial class PlayerSurrenderingCommand : IDtoMsg
 	{
 		public int? OtherPlayerId { get; private set; }
 

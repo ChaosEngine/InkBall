@@ -525,7 +525,7 @@ class SvgVml {
 					throw new Error('bad status enum value');
 			}
 		};
-		
+
 		const allStatusesAsString = Object.keys(StatusEnum);
 		/**
 		 * Convert string representation to numerical StatusEnum
@@ -615,20 +615,28 @@ class SvgVml {
 	 * @param {float} tolerance +- above below tolerance value
 	 * @returns {1 | 0 | -1} 1 if the point is inside, 0 if it is on and -1 if it is outside the circle.
 	 */
-	IsPointInCircle(pt, center, r, tolerance = 4) {
-		const lhs = Math.pow(center.x - pt.x, 2) + Math.pow(center.y - pt.y, 2);
-		const rhs = Math.pow(r, 2);
+	IsPointInCircle(pt, center, r, tolerance = 0) {
+		const isInRectangle = function(center, radius, pt) {
+			return pt.x >= center.x - radius && pt.x <= center.x + radius &&
+				pt.y >= center.y - radius && pt.y <= center.y + radius;
+		};
+		
+		if (isInRectangle(center, r, pt)) {
+			const lhs = Math.pow(center.x - pt.x, 2) + Math.pow(center.y - pt.y, 2);
+			const rhs = Math.pow(r, 2);
 
-		if (Math.abs(lhs - rhs) < tolerance) {//inside
-			// if ((rhs - lhs) < tolerance)
-			// 	return 0;
-			// LocalLog(`lhs - rhs = ${lhs - rhs}`);
-			return 1;
+			if (/* Math.abs */(lhs - rhs) < tolerance) {//inside
+				// if ((rhs - lhs) < tolerance)
+				// 	return 0;
+				// LocalLog(`lhs - rhs = ${lhs - rhs}`);
+				return 1;
+			}
+			else if (lhs === rhs)
+				return 0;//on circle
+			else
+				return -1;//outside
 		}
-		else if (lhs === rhs)
-			return 0;//on circle
-		else
-			return -1;//outside
+		return -1;//outside
 	}
 }
 

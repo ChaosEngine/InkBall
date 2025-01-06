@@ -62,15 +62,24 @@ namespace InkBall.Module.Migrations
 						.Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
 #endif
 					, iUserID = table.Column<int>(nullable: true),
-					sLastMoveCode = table.Column<string>(type: GamesContext.JsonColumnTypeFromProvider(this.ActiveProvider), nullable: true),
+					sLastMoveCode = table.Column<string>(type: GamesContext.JsonColumnTypeFromProvider(ActiveProvider,
+						"TEXT", "json", "jsonb", "CLOB", "NVARCHAR(1000)"
+					), nullable: true),
 					iWinCount = table.Column<int>(nullable: false, defaultValue: 0)
 						.Annotation("Sqlite:Autoincrement", true),
 					iLossCount = table.Column<int>(nullable: false, defaultValue: 0)
 						.Annotation("Sqlite:Autoincrement", true),
 					iDrawCount = table.Column<int>(nullable: false, defaultValue: 0)
 						.Annotation("Sqlite:Autoincrement", true),
-					TimeStamp = table.Column<DateTime>(type: GamesContext.TimeStampColumnTypeFromProvider(this.ActiveProvider), nullable: false,
-						defaultValueSql: GamesContext.TimeStampDefaultValueFromProvider(this.ActiveProvider))
+					TimeStamp = table.Column<DateTime>(type: GamesContext.TimeStampColumnTypeFromProvider(ActiveProvider
+						, "TEXT", "timestamp", "timestamp without time zone", "TIMESTAMP(7)", "datetime2"
+					), nullable: false,
+						defaultValueSql: GamesContext.TimeStampDefaultValueFromProvider(ActiveProvider,
+							"datetime('now','localtime')",
+							"CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
+							"CURRENT_TIMESTAMP",
+							"CURRENT_TIMESTAMP",
+							"GETDATE()"))
 				},
 				constraints: table =>
 				{
@@ -112,8 +121,15 @@ namespace InkBall.Module.Migrations
 						.Annotation("Sqlite:Autoincrement", true),
 					GameType = table.Column<string>(maxLength: 256, nullable: false),
 					GameState = table.Column<string>(maxLength: 256, nullable: false),
-					TimeStamp = table.Column<DateTime>(type: GamesContext.TimeStampColumnTypeFromProvider(this.ActiveProvider), nullable: false,
-						defaultValueSql: GamesContext.TimeStampDefaultValueFromProvider(this.ActiveProvider)),
+					TimeStamp = table.Column<DateTime>(type: GamesContext.TimeStampColumnTypeFromProvider(ActiveProvider
+						, "TEXT", "timestamp", "timestamp without time zone", "TIMESTAMP(7)", "datetime2"
+					), nullable: false,
+						defaultValueSql: GamesContext.TimeStampDefaultValueFromProvider(ActiveProvider,
+							"datetime('now','localtime')",
+							"CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
+							"CURRENT_TIMESTAMP",
+							"CURRENT_TIMESTAMP",
+							"GETDATE()")),
 					CreateTime = table.Column<DateTime>(nullable: false)
 				},
 				constraints: table =>
@@ -153,7 +169,9 @@ namespace InkBall.Module.Migrations
 #endif
 					, iGameID = table.Column<int>(nullable: false),
 					iPlayerID = table.Column<int>(nullable: false),
-					PointsAsString = table.Column<string>(type: GamesContext.JsonColumnTypeFromProvider(this.ActiveProvider), nullable: true),
+					PointsAsString = table.Column<string>(type: GamesContext.JsonColumnTypeFromProvider(ActiveProvider,
+						"TEXT", "json", "jsonb", "CLOB", "NVARCHAR(1000)"
+					), nullable: true),
 				},
 				constraints: table =>
 				{
