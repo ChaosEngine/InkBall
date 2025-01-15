@@ -4191,13 +4191,7 @@ class InkBallGame {
  * @param {string} loginPath login url path
  * @param {string} registerPath registerPath url path
  */
-function HomeOnLoad(
-	modelMessage,
-	bIsCurrentGameOk,
-	logoutPath,
-	loginPath,
-	registerPath
-) {
+function HomeOnLoad(modelMessage, bIsCurrentGameOk, logoutPath, loginPath, registerPath) {
 
 	const alert = document.querySelector(".alert.alert-dismissible.inkhome");
 	const msg = modelMessage;
@@ -4234,39 +4228,39 @@ function HomeOnLoad(
 		else {
 			//new game
 			innerForm +=
-				"<input type='submit' name='action' value='New game' class='btn btn-primary btn-lg rounded-top' />" +
-				"<div class='w-100'><select name='GameType' id='GameType' class='form-select' required>" +
-				"<option value='' selected='selected'>Choose game type</option>" +
-				"<optgroup label='Game types'>" +
-				"<option value='0'>First capture wins</option>" +
-				"<option value='1'>First 5 captures wins</option>" +
-				"<option value='2'>First 5 paths wins</option>" +
-				"<option value='3'>Advantage of 5 paths wins</option>" +
-				"</optgroup>" +
-				"</select>" +
-				"<div class='invalid-feedback'>Invalid game type</div></div>" +
+`<input type='submit' name='action' value='New game' class='btn btn-primary btn-lg rounded-top' />
+<div class='w-100'><select name='GameType' id='GameType' class='form-select' required>
+<option value='' selected='selected'>Choose game type</option>
+<optgroup label='Game types'>
+<option value='0'>First capture wins</option>
+<option value='1'>First 5 captures wins</option>
+<option value='2'>First 5 paths wins</option>
+<option value='3'>Advantage of 5 paths wins</option>
+</optgroup>
+</select>
+<div class='invalid-feedback'>Invalid game type</div></div>
 
-				"<div class='w-100'><select name='BoardSize' id='BoardSize' class='form-select' required>" +
-				"<option value='' selected='selected'>Choose board size</option>" +
-				"<optgroup label='Board sizes'>" +
-				"<option value='20'>20 x 26</option>" +
-				"<option value='40'>40 x 52</option>" +
-				"<option value='64'>64 x 64</option>" +
-				"</optgroup>" +
-				"</select>" +
-				"<div class='invalid-feedback'>Invalid board size</div></div>" +
+<div class='w-100'><select name='BoardSize' id='BoardSize' class='form-select' required>
+<option value='' selected='selected'>Choose board size</option>
+<optgroup label='Board sizes'>
+<option value='20'>20 x 26</option>
+<option value='40'>40 x 52</option>
+<option value='64'>64 x 64</option>
+</optgroup>
+</select>
+<div class='invalid-feedback'>Invalid board size</div></div>
 
-				"<div class='form-check form-switch w-100'>" +
-				"<input type='checkbox' class='form-check-input form-control-input' name='CpuOponent' id='CpuOponent' />" +
-				"<label class='form-check-label' for='CpuOponent'>Play against CPU</label>" +
-				"</div>";
+<div class='form-check form-switch w-100'>
+<input type='checkbox' class='form-check-input form-control-input' name='CpuOponent' id='CpuOponent' />
+<label class='form-check-label' for='CpuOponent'>Play against CPU</label>
+</div>`;
 		}
 
 		innerForm +=
-			"<a href='GamesList' class='btn btn-primary'>Games list</a>" +
-			"<a href='Highscores' class='btn btn-primary'>Best</a>" +
-			"<a href='Rules' class='btn btn-primary'>Game rules</a>" +
-			(logoutPath ? "<input type='submit' name='action' value='Logout' class='btn btn-warning rounded-bottom' formnovalidate='formnovalidate' />" : "");
+`<a href='GamesList' class='btn btn-primary'>Games list</a>
+<a href='Highscores' class='btn btn-primary'>Best</a>
+<a href='Rules' class='btn btn-primary'>Game rules</a>
+${(logoutPath ? "<input type='submit' name='action' value='Logout' class='btn btn-warning rounded-bottom' formnovalidate='formnovalidate' />" : "")}`;
 	}
 	else {
 		//not logged or bad
@@ -4275,8 +4269,8 @@ function HomeOnLoad(
 
 		innerForm +=
 			"<a href='Rules' class='btn btn-primary rounded-top'>Game rules</a>" +
-			(loginPath ? "<a href='" + loginPath + "' class='btn btn-primary'>Login</a>" : "") +
-			(registerPath ? "<a href='" + registerPath + "' class='btn btn-primary rounded-bottom'>Register</a>" : "");
+			(loginPath ? `<a href='${loginPath}' class='btn btn-primary'>Login</a>` : "") +
+			(registerPath ? `<a href='${registerPath}' class='btn btn-primary rounded-bottom'>Register</a>` : "");
 	}
 	form.innerHTML += innerForm;
 }
