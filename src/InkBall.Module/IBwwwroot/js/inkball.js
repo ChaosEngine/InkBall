@@ -5,6 +5,9 @@
 let SHRD, LocalLog, LocalError, StatusEnum, hasDuplicates, pnpoly, IsPointOutsideAllPaths, sortPointsClockwise, Sleep, IBversionHash, getBoundingBox;
 
 /******** funcs-n-classes ********/
+/**
+ * Enum for command kinds
+ */
 const CommandKindEnum = Object.freeze({
 	UNKNOWN: -1,
 	PING: 0,
@@ -18,6 +21,9 @@ const CommandKindEnum = Object.freeze({
 	STOP_AND_DRAW: 8
 });
 
+/**
+ * Enum for status of point
+ */
 const GameTypeEnum = Object.freeze({
 	FIRST_CAPTURE: 0,
 	FIRST_5_CAPTURES: 1,
@@ -25,6 +31,9 @@ const GameTypeEnum = Object.freeze({
 	FIRST_5_ADVANTAGE_PATHS: 3
 });
 
+/**
+ * Enum for winning status
+ */
 const WinStatusEnum = Object.freeze({
 	RED_WINS: 0,
 	GREEN_WINS: 1,
