@@ -783,7 +783,7 @@ class InkBallGame {
 						LocalLog(this.#sMsgUserBlockedNotifications);
 						return false;
 					}
-				}).catch(function (err) {
+				}.bind(this)).catch(function (err) {
 					LocalError(err);
 					return false;
 				});
@@ -824,7 +824,7 @@ class InkBallGame {
 						LocalLog(this.#sMsgUserBlockedNotifications);
 						return false;
 					}
-				}).catch(function (err) {
+				}.bind(this)).catch(function (err) {
 					LocalError(err);
 					return false;
 				});
