@@ -46,7 +46,7 @@ namespace InkBall.Module.Model
 		internal static readonly GameStateEnum[] ActiveVisibleGameStates =
 			new GameStateEnum[] { GameStateEnum.ACTIVE, GameStateEnum.AWAITING };
 
-		internal static string TimeStampDefaultValueFromProvider(string activeProvider
+		public static string TimeStampDefaultValueFromProvider(string activeProvider
 			, string sqliteColumnType
 			, string mysqlColumnType
 			, string postgresColumnType
@@ -103,7 +103,7 @@ namespace InkBall.Module.Model
 			}
 		}
 
-		internal static string TimeStampColumnTypeFromProvider(string activeProvider
+		public static string TimeStampColumnTypeFromProvider(string activeProvider
 			, string sqliteColumnType
 			, string mysqlColumnType
 			, string postgresColumnType
