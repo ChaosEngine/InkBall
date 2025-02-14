@@ -1,4 +1,3 @@
-/*eslint no-unused-vars: ["error", { "varsIgnorePattern": "InkBallGame" }]*/
 /*global signalR*/
 "use strict";
 
@@ -443,7 +442,7 @@ class MessagesRingBufferStore {
  * don't break webpack logic here! https://webpack.js.org/guides/code-splitting/
  * @param {object} gameOptions is an entry starter object defining game parameters
  */
-async function importAllModulesAsync(gameOptions) {
+async function importAllModulesAsync(/* gameOptions */) {
 	const importMetaUrl = import.meta.url;//do not optimize, take into separate variable, miss..feature of terser-5.16.6
 	const url = new URL(importMetaUrl);
 	IBversionHash = url.searchParams.get('v');
@@ -504,27 +503,27 @@ class InkBallGame {
 	#iGameID;
 	#iPlayerID;
 	#iOtherPlayerId;
-	#iDelayBetweenMultiCaptures;
-	#iTooLong2Duration;
-	#iSlowdownLevel;
+	// #iDelayBetweenMultiCaptures;
+	// #iTooLong2Duration;
+	// #iSlowdownLevel;
 	#iGridWidth;
 	#iGridHeight;
 	#iGridSpacingX;
-	#iGridSpacingY;
+	// #iGridSpacingY;
 	#iLastX;
 	#iLastY;
 	#iLastLastX;
 	#iLastLastY;
 	#iMouseX;
 	#iMouseY;
-	#iPosX;
-	#iPosY;
+	// #iPosX;
+	// #iPosY;
 	#bIsCPUGame;
-	#bIsWon;
+	// #bIsWon;
 	#bPointsAndPathsLoaded;
 	#Timer;
 	#ReconnectTimer;
-	#WaitStartTime;
+	// #WaitStartTime;
 	#TimerOpts;
 	#LineStrokeWidth;
 	#Screen;
@@ -540,7 +539,7 @@ class InkBallGame {
 	#bMouseDown;
 	#bHandlingEvent;
 	#bDrawLines;
-	#sMessage;
+	// #sMessage;
 	#bIsPlayingWithRed;
 	#bIsThisPlayer1;
 	#bIsPlayerActive;
@@ -594,7 +593,7 @@ class InkBallGame {
 	 */
 	constructor(iGameID, iPlayerID, iOtherPlayerID, sHubName, loggingLevel, hubProtocol, transportType, serverTimeoutInMilliseconds,
 		gameType, bIsPlayingWithRed = true, bIsThisPlayer1 = true, bIsPlayerActive = true, bViewOnly = false,
-		pathAfterPointDrawAllowanceSecAmount = 60, iTooLong2Duration = 125) {
+		pathAfterPointDrawAllowanceSecAmount = 60/* , iTooLong2Duration = 125 */) {
 		this.#iGameID = iGameID;
 		this.#iPlayerID = iPlayerID;
 		this.#iOtherPlayerId = iOtherPlayerID;
@@ -607,24 +606,24 @@ class InkBallGame {
 		this.#COLOR_OWNED_RED = 'var(--owned_by_red)';
 		this.#COLOR_OWNED_BLUE = 'var(--owned_by_blue)';
 		this.#DRAWING_PATH_COLOR = "var(--path_draw)";
-		this.#bIsWon = false;
+		// this.#bIsWon = false;
 		this.#bPointsAndPathsLoaded = false;
-		this.#iDelayBetweenMultiCaptures = 4000;
-		this.#iTooLong2Duration = iTooLong2Duration/*125*/;
+		// this.#iDelayBetweenMultiCaptures = 4000;
+		// this.#iTooLong2Duration = iTooLong2Duration;
 		this.#Timer = null;
 		this.#ReconnectTimer = null;
-		this.#WaitStartTime = null;
+		// this.#WaitStartTime = null;
 		this.#TimerOpts = {
 			countdownSeconds: pathAfterPointDrawAllowanceSecAmount,
 			labelSelector: "#debug2",
 			initialStart: true,
 			countdownReachedHandler: this.CountDownReachedHandler.bind(this)
 		};
-		this.#iSlowdownLevel = 0;
+		// this.#iSlowdownLevel = 0;
 		this.#iGridWidth = 0;
 		this.#iGridHeight = 0;
 		this.#iGridSpacingX = 0;
-		this.#iGridSpacingY = 0;
+		// this.#iGridSpacingY = 0;
 		// this.#PointRadius = "var(--point_radius)";
 		this.#LineStrokeWidth = 0;
 		this.#iLastX = -1;
@@ -633,8 +632,8 @@ class InkBallGame {
 		this.#iLastLastY = -1;
 		this.#iMouseX = 0;
 		this.#iMouseY = 0;
-		this.#iPosX = 0;
-		this.#iPosY = 0;
+		// this.#iPosX = 0;
+		// this.#iPosY = 0;
 		this.#Screen = null;
 		this.#spDebug = null;
 		this.#Player1Name = null;
@@ -648,7 +647,7 @@ class InkBallGame {
 		this.#bMouseDown = false;
 		this.#bHandlingEvent = false;
 		this.#bDrawLines = !true;
-		this.#sMessage = '';
+		// this.#sMessage = '';
 		this.#bIsPlayingWithRed = bIsPlayingWithRed;
 		this.#bIsThisPlayer1 = bIsThisPlayer1;
 		this.#bIsPlayerActive = bIsPlayerActive;
@@ -835,6 +834,7 @@ class InkBallGame {
 	/**
 	 * Start connection to SignalR
 	 * @param {boolean} loadPointsAndPathsFromSignalR load points and path through SignalR
+	 * @returns {Promise} promise resolving when connected
 	 */
 	async StartSignalRConnection(loadPointsAndPathsFromSignalR) {
 		if (this.#SignalRConnection === null) return Promise.reject(new Error("signalr conn is null"));
@@ -1327,6 +1327,7 @@ class InkBallGame {
 		}
 	}
 
+	// eslint-disable-next-line no-unused-private-class-members
 	#IsPointBelongingToLine(sPoints, iX, iY) {
 		for (const packed of sPoints) {
 			const [x, y] = packed.split(",");
@@ -1405,6 +1406,7 @@ class InkBallGame {
 		};
 	}
 
+	// eslint-disable-next-line no-unused-private-class-members
 	#CreateWaitForPlayerRequest(/*...args*/) {
 		//let cmd = new WaitForPlayerCommand((args.length > 0 && args[0] === true) ? true : false);
 		//return cmd;
@@ -1674,6 +1676,7 @@ class InkBallGame {
 		}
 	}
 
+	// eslint-disable-next-line no-unused-private-class-members
 	#Check4Win(playerPaths, otherPlayerPaths, playerPoints, otherPlayerPoints) {
 		let owned_status, count;
 		switch (this.#GameType) {
@@ -2275,6 +2278,7 @@ class InkBallGame {
 	/**
 	 * Worker entry point - async version
 	 * @param {any} setupFunction - init params callback to be given a worker as 1st param
+	 * @returns {Promise<any>} - promise with data from worker
 	 */
 	async #RunAIWorker(setupFunction) {
 		return new Promise((resolve, reject) => {
@@ -3070,23 +3074,23 @@ class InkBallGame {
 	 */
 	async PrepareDrawing(sScreen, sPlayer1Name, sPlayer2Name, sGameStatus, sSurrenderButton, sCancelPath, sPause, sStopAndDraw,
 		sMsgInputSel, sMsgListSel, sMsgSendButtonSel, sLastMoveGameTimeStamp, useIndexedDbStore, version, ddlTestActions,
-		arrServiceModeControls, iTooLong2Duration = 125) {
-		this.#bIsWon = false;
-		this.#iDelayBetweenMultiCaptures = 4000;
-		this.#iTooLong2Duration = iTooLong2Duration/*125*/;
+		arrServiceModeControls/* , iTooLong2Duration = 125 */) {
+		// this.#bIsWon = false;
+		// this.#iDelayBetweenMultiCaptures = 4000;
+		// this.#iTooLong2Duration = iTooLong2Duration;
 		this.#Timer = null;
-		this.#WaitStartTime = null;
-		this.#iSlowdownLevel = 0;
+		// this.#WaitStartTime = null;
+		// this.#iSlowdownLevel = 0;
 		this.#iLastX = -1;
 		this.#iLastY = -1;
 		this.#iMouseX = 0;
 		this.#iMouseY = 0;
-		this.#iPosX = 0;
-		this.#iPosY = 0;
+		// this.#iPosX = 0;
+		// this.#iPosY = 0;
 		this.#bMouseDown = false;
 		this.#bHandlingEvent = false;
 		this.#bDrawLines = !true;
-		this.#sMessage = '';
+		// this.#sMessage = '';
 		this.#sDotColor = this.#bIsPlayingWithRed ? this.#COLOR_RED : this.#COLOR_BLUE;
 		this.#Line = null;
 		this.#spDebug = document.getElementById('debug0');
@@ -3104,8 +3108,8 @@ class InkBallGame {
 			alert("no board");
 			return;
 		}
-		this.#iPosX = this.#Screen.offsetLeft;
-		this.#iPosY = this.#Screen.offsetTop;
+		// this.#iPosX = this.#Screen.offsetLeft;
+		// this.#iPosY = this.#Screen.offsetTop;
 
 		let [iGridWidth, iGridHeight] = [...this.#Screen.classList].find(x => x.startsWith('boardsize')).split('-')[1].split('x');
 		this.#iGridWidth = parseInt(iGridWidth);
@@ -3119,7 +3123,7 @@ class InkBallGame {
 			svg_width_x_height = "100%";
 		}
 		this.#iGridSpacingX = Math.ceil(iClientWidth / this.#iGridWidth);
-		this.#iGridSpacingY = Math.ceil(iClientHeight / this.#iGridHeight);
+		// this.#iGridSpacingY = Math.ceil(iClientHeight / this.#iGridHeight);
 		//this.#PointRadius = (4 / this.#iGridSpacingX);
 		this.#LineStrokeWidth = (3 / this.#iGridSpacingX);
 
@@ -3455,6 +3459,7 @@ class InkBallGame {
 	}
 
 	// Returns true if the graph contains a cycle, else false. 
+	// eslint-disable-next-line no-unused-private-class-members
 	#IsGraphCyclic(graph) {
 		const vertices = graph.vertices;
 
@@ -3508,6 +3513,7 @@ class InkBallGame {
 	 * @param {any} param0 is a optional object comprised of:
 	 *	freePointStatus - status of free point
 	 *	cpuFillColor - CPU point color
+	 * @returns {object} graph object with vertices and edges
 	 */
 	async #BuildGraph({
 		freePointStatus = StatusEnum.POINT_FREE_BLUE,
@@ -3785,7 +3791,6 @@ class InkBallGame {
 		return await printCycles(N, mark);
 	}
 
-	// eslint-disable-next-line no-unused-vars
 	async #DFS2(graph, clickedPoint) {
 		const module = await import('./depthFirstSearch.js?v=' + IBversionHash);
 		const depthFirstSearch = module.default;

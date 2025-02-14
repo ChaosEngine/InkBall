@@ -40,10 +40,12 @@ class GraphAI {
 	 * @param {any} param0 is a optional object comprised of:
 	 *	freePointStatus - status of free point
 	 *	cpuFillColor - CPU point color
+	 *	visuals - present visually
+	 * @returns {object} with vertices and edges
 	 */
 	async BuildGraph({
-		freePointStatus = StatusEnum.POINT_FREE_BLUE,
-		// cpufillCol: cpuFillColor = 'var(--bluish)'
+		freePointStatus = StatusEnum.POINT_FREE_BLUE
+		//, cpufillCol: cpuFillColor = 'var(--bluish)'
 		//, visuals: presentVisually = false
 	} = {}) {
 		await this.#Init();
@@ -308,8 +310,9 @@ class GraphAI {
 	}
 }
 
+/*
 // eslint-disable-next-line no-unused-vars
-/* function concavemanTesting() {
+ function concavemanTesting() {
 	const precision_points = [[484, 480], [676, 363], [944, 342], [678, 41], [286, 237], [758, 215], [752, 117], [282, 492], [609, 262], [129, 252]];
 	const concavity = 2.0, lengthThreshold = 0.0;
 	const concaveman_output = concaveman(precision_points, concavity, lengthThreshold);
@@ -330,6 +333,7 @@ class GraphAI {
 		!convexPolygons || convexPolygons.length <= 0) {
 		LocalLog('decomp or concaveman error');
 	}
-} */
+}
+*/
 
 export { concaveman, GraphAI };

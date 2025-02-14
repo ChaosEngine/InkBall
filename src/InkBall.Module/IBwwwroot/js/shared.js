@@ -4,7 +4,7 @@
 
 /**
  * Point status enum
- * */
+ */
 const StatusEnum = Object.freeze({
 	POINT_FREE_RED: -3,
 	POINT_FREE_BLUE: -2,
@@ -51,7 +51,7 @@ const LocalAlert = (typeof myAlert !== "undefined") ?
  * Based on http://www.faqs.org/faqs/graphics/algorithms-faq/
  * but mainly on http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
  * returns != 0 if point is inside path
- * @param {array} pathPoints points as array of {x,y}
+ * @param {Array} pathPoints points as array of {x,y}
  * @param {number} x point to check x coordinate
  * @param {number} y point to check y coordinate
  * @returns {boolean} if point lies inside the polygon
@@ -74,7 +74,7 @@ function pnpoly(pathPoints, x, y) {
 
 /**
  * Test for array uniqueness using default object comparator
- * @param {array} array of objects that are tested against uniqueness
+ * @param {Array} array of objects that are tested against uniqueness
  * @returns {boolean} true - has duplicates
  */
 function hasDuplicates(array) {
@@ -736,7 +736,7 @@ class GameStateStore {
 
 		const IDBPointStoreDefinition = class IDBPointStore extends SimplePointStoreDefinition {
 			#MainGameStateStore;
-			#GetPoint;
+			// #GetPoint;
 			#StorePoint;
 			#UpdatePoint;
 			// GetAllPoints;
@@ -747,7 +747,7 @@ class GameStateStore {
 			constructor(mainGameStateStore, pointCreationCallbackFn, getGameStateFn) {
 				super();
 				this.#MainGameStateStore = mainGameStateStore;
-				this.#GetPoint = mainGameStateStore.GetPoint.bind(this.#MainGameStateStore);
+				// this.#GetPoint = mainGameStateStore.GetPoint.bind(this.#MainGameStateStore);
 				this.#StorePoint = mainGameStateStore.StorePoint.bind(this.#MainGameStateStore);
 				this.#UpdatePoint = mainGameStateStore.UpdatePoint.bind(this.#MainGameStateStore);
 				this.GetAllPoints = mainGameStateStore.GetAllPoints.bind(this.#MainGameStateStore);
@@ -1048,6 +1048,7 @@ class GameStateStore {
 
 	/**
 	  * @param {number} key is calculated index of point y * width + x, probably not useful
+	  * @returns {Promise} returning promise with point
 	  */
 	async GetPoint(key) {
 		return new Promise((resolve, reject) => {
@@ -1097,6 +1098,7 @@ class GameStateStore {
 
 	/**
 	  * @param {number} key is path Id
+	  * @returns {Promise} returning promise with path
 	  */
 	async GetPath(key) {
 		return new Promise((resolve, reject) => {
@@ -1134,6 +1136,7 @@ class GameStateStore {
 	/**
 	  * @param {number} key is calculated index of point y * width + x, probably not useful
 	  * @param {object} val is serialized, thin circle
+	  * @returns {Promise} resolved promise after storing
 	  */
 	async StorePoint(key, val) {
 		if (this.#bulkStores !== null && this.#bulkStores.has(this.#DB_POINT_STORE)) {
@@ -1168,6 +1171,7 @@ class GameStateStore {
 	/**
 	  * @param {number} key is calculated index of point y * width + x, probably not useful
 	  * @param {object} val is serialized, thin circle
+	  * @returns {Promise} resolved promise after updating
 	  */
 	async UpdatePoint(key, val) {
 		if (this.#bulkStores !== null && this.#bulkStores.has(this.#DB_POINT_STORE)) {
@@ -1278,6 +1282,7 @@ class GameStateStore {
 	/**
 	  * @param {number} key is path Id
 	  * @param {object} val is serialized thin path
+	  * @returns {Promise} resolved promise after storing path
 	  */
 	async StorePath(key, val) {
 		if (this.#bulkStores !== null && this.#bulkStores.has(this.#DB_PATH_STORE)) {
