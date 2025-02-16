@@ -7,7 +7,7 @@ let StatusEnum, sortPointsClockwise, IsPointOutsideAllPaths/*, LocalLog, Sleep, 
 
 /**
  * AI operations class
- * */
+ */
 class GraphAI {
 	#iGridWidth;
 	#iGridHeight;
@@ -134,7 +134,7 @@ class GraphAI {
 	 * @param {any} graph constructed earlier with BuildGraph
 	 * @param {string} sHumanColor - human red playing color
 	 * @param {object} lines - line array
-	 * @returns {array} of cycles
+	 * @returns {Array} of cycles
 	 */
 	async MarkAllCycles(graph, sHumanColor, lines) {
 		await this.#Init();

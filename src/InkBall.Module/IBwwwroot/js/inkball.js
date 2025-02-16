@@ -415,8 +415,8 @@ class MessagesRingBufferStore {
 	/**
 	 * Restores messages from ring buffer in storage (if any) and displays it on screen
 	 * @param {string} sMsgListSel name of parent list element to add messages to
-	 * @param {integer} iPlayerID this player id
-	 * @param {integer} iOtherPlayerId other player id
+	 * @param {number} iPlayerID this player id
+	 * @param {number} iOtherPlayerId other player id
 	 * @param {boolean} bIsPlayingWithRed playing color of player
 	 * @param {Element} elPlayer1Name P1 element holding name
 	 * @param {Element} elPlayer2Name P2 element holding name
@@ -440,7 +440,7 @@ class MessagesRingBufferStore {
 /**
  * Loads modules dynamically
  * don't break webpack logic here! https://webpack.js.org/guides/code-splitting/
- * @param {object} gameOptions is an entry starter object defining game parameters
+ * //@param {object} gameOptions is an entry starter object defining game parameters
  */
 async function importAllModulesAsync(/* gameOptions */) {
 	const importMetaUrl = import.meta.url;//do not optimize, take into separate variable, miss..feature of terser-5.16.6
@@ -471,6 +471,10 @@ async function importAllModulesAsync(/* gameOptions */) {
 	// }
 }
 
+/**
+ * Returns generated random color
+ * @returns {string} random color
+ */
 function RandomColor() {
 	//return 'var(--bs-orange)';
 	// return '#' + Math.floor(Math.random() * 16777215).toString(16);
@@ -579,17 +583,17 @@ class InkBallGame {
 	 * @param {number} iPlayerID player ID
 	 * @param {number} iOtherPlayerID player ID
 	 * @param {string} sHubName SignalR hub name
-	 * @param {enum} loggingLevel log level for SignalR
-	 * @param {enum} hubProtocol Json or messagePack
-	 * @param {enum} transportType websocket, server events or long polling
+	 * @param {signalR.LogLevel} loggingLevel log level for SignalR
+	 * @param {signalR.IHubProtocol} hubProtocol Json or messagePack
+	 * @param {signalR.ITransport} transportType websocket, server events or long polling
 	 * @param {number} serverTimeoutInMilliseconds If the server hasn't sent a message in this interval, the client considers the server disconnected
-	 * @param {enum} gameType of game enum as string
+	 * @param {GameTypeEnum} gameType of game enum as string
 	 * @param {boolean} bIsPlayingWithRed true - red, false - blue
 	 * @param {boolean} bIsThisPlayer1 - if this player is P1 or P2
 	 * @param {boolean} bIsPlayerActive is this player active now
 	 * @param {boolean} bViewOnly only viewing the game no interaction
 	 * @param {number} pathAfterPointDrawAllowanceSecAmount is number of seconds, a player is allowed to start drawing path after putting point
-	 * @param {number} iTooLong2Duration too long wait duration
+	 * //@param {number} iTooLong2Duration too long wait duration
 	 */
 	constructor(iGameID, iPlayerID, iOtherPlayerID, sHubName, loggingLevel, hubProtocol, transportType, serverTimeoutInMilliseconds,
 		gameType, bIsPlayingWithRed = true, bIsThisPlayer1 = true, bIsPlayerActive = true, bViewOnly = false,
@@ -1057,6 +1061,9 @@ class InkBallGame {
 		return this.#Connect();
 	}
 
+	/**
+	 * Stops SignalR connection in graceful way
+	 */
 	StopSignalRConnection() {
 		if (this.#SignalRConnection !== null) {
 			this.#SignalRConnection.stop();
@@ -1433,7 +1440,7 @@ class InkBallGame {
 	/**
 	 * Send data through signalR
 	 * @param {object} payload transferrableObject (DTO)
-	 * @param {function} revertFunction on-error revert/rollback function
+	 * @param {Function} revertFunction on-error revert/rollback function
 	 */
 	async #SendData(payload, revertFunction = undefined) {
 
@@ -1512,6 +1519,10 @@ class InkBallGame {
 		}
 	}
 
+	/**
+	 * Callback handler for time to execute when reaching zero
+	 * @param {HTMLElement} label element showing timer text
+	 */
 	CountDownReachedHandler(label) {
 		if (label)
 			label.textContent = '';
@@ -3007,7 +3018,7 @@ class InkBallGame {
 
 				//TODO: get points inside bbox but not found in cluster and not inside points without cluster - only outside?
 				//calculate all points from bbox and subtract (??)
-				
+
 				LocalLog(this.#SvgVml.CreateRect(bbox.minX, bbox.minY, bbox.width, bbox.height, 'rgb(128,128,128,128)'));
 			}
 			LocalLog({ method: data.method, clusters, plot: data.plot, noise: data.noise });
@@ -3070,7 +3081,7 @@ class InkBallGame {
 	 * @param {string} version is semVer string of main module (for IndexedDb DB version)
 	 * @param {Array} ddlTestActions array of test actions button ids
 	 * @param {Array<string>} arrServiceModeControls controls of service menu or null
-	 * @param {number} iTooLong2Duration how long waiting is too long
+	 * //@param {number} iTooLong2Duration how long waiting is too long
 	 */
 	async PrepareDrawing(sScreen, sPlayer1Name, sPlayer2Name, sGameStatus, sSurrenderButton, sCancelPath, sPause, sStopAndDraw,
 		sMsgInputSel, sMsgListSel, sMsgSendButtonSel, sLastMoveGameTimeStamp, useIndexedDbStore, version, ddlTestActions,
@@ -3276,6 +3287,10 @@ class InkBallGame {
 		}
 	}
 
+	/**
+	 * On load handler of maine game page
+	 * @param {object} gameOptions options object passed from page with various settings and configs
+	 */
 	static async OnLoad(gameOptions) {
 		const isMsgpackDefined = window.msgpack5 !== undefined;
 		// const gameOptions = window.gameOptions;
@@ -3324,6 +3339,9 @@ class InkBallGame {
 		window.game = game;
 	}
 
+	/**
+	 * Before unload page handler
+	 */
 	static OnBeforeUnload() {
 		if (window.game)
 			window.game.StopSignalRConnection();
@@ -3337,7 +3355,7 @@ class InkBallGame {
 	 * Gets random number in range: min(inclusive) - max (exclusive)
 	 * @param {any} min - from(inclusive)
 	 * @param {any} max - to (exclusive)
-	 * @returns {integer} random number
+	 * @returns {number} random number
 	 */
 	#GetRandomInt(min, max) {
 		min = Math.max(0, Math.min(min, this.#iGridWidth));
@@ -3607,7 +3625,7 @@ class InkBallGame {
 	 * Based on https://www.geeksforgeeks.org/print-all-the-cycles-in-an-undirected-graph/
 	 * @param {any} graph constructed earlier with BuildGraph
 	 * @param {string} sHumanColor - human red playing color
-	 * @returns {array} of cycles
+	 * @returns {Array} of cycles
 	 */
 	async #MarkAllCycles(graph, sHumanColor) {
 		const vertices = graph.vertices;
@@ -3845,8 +3863,8 @@ class InkBallGame {
 	 * Floyd's tortoise and hare
 	 * https://en.wikipedia.org/wiki/Cycle_detection
 	 * @param {Function} getNextFunc function where getNextFunc(x0) is the element/node next to x0
-	 * @param {Number} head index of element
-	 * @returns {Object} length of the shortest cycle and starting point
+	 * @param {number} head index of element
+	 * @returns {object} length of the shortest cycle and starting point
 	 */
 	#floyd(getNextFunc, head) {
 		// Main phase of algorithm: finding a repetition x_i = x_2i.
@@ -4208,12 +4226,10 @@ class InkBallGame {
 function HomeOnLoad(modelMessage, bIsCurrentGameOk, logoutPath, loginPath, registerPath) {
 
 	const alert = document.querySelector(".alert.alert-dismissible.inkhome");
-	const msg = modelMessage;
-	if (msg !== "") {
+	if (modelMessage !== "") {
+		const [msg, i18l_err_key] = modelMessage.split(';');
 		let addendum;
-		if (msg.toLowerCase().indexOf('exception') !== -1)
-			addendum = 'danger';
-		else if (msg.toLowerCase().indexOf('error') !== -1)
+		if (msg.toLowerCase().indexOf('exception') !== -1 || msg.toLowerCase().indexOf('error') !== -1)
 			addendum = 'danger';
 		else if (msg.toLowerCase().indexOf('warning') !== -1)
 			addendum = 'warning';
@@ -4224,12 +4240,14 @@ function HomeOnLoad(modelMessage, bIsCurrentGameOk, logoutPath, loginPath, regis
 		alert.classList.add(statusMessageClass);
 		const span = alert.querySelector("span");
 		span.textContent = msg;
+		if (i18l_err_key)
+			span.dataset.i18n = `inkBall:err.${i18l_err_key}`;
 	}
 	else
 		alert.parentNode.removeChild(alert);
 
 
-	const userName = document.querySelector("p.inkhome span").textContent;
+	const userName = document.querySelector("p.inkhome span:nth-child(2)").textContent;
 	const bIsLoggedIn = userName !== '' ? true : false;
 
 	const form = document.querySelector(".inkhome form");
@@ -4237,76 +4255,90 @@ function HomeOnLoad(modelMessage, bIsCurrentGameOk, logoutPath, loginPath, regis
 	if (bIsLoggedIn) {
 		if (bIsCurrentGameOk) {
 			//continue
-			innerForm += "<a href='Game' class='btn btn-primary btn-lg rounded-top'>Continue</a>";
+			innerForm += "<a href='Game' class='btn btn-primary btn-lg rounded-top' data-i18n='inkBall:home.continue'>Continue</a>";
 		}
 		else {
 			//new game
 			innerForm +=
-`<input type='submit' name='action' value='New game' class='btn btn-primary btn-lg rounded-top' />
+				`<button type='submit' name='action' value='New game' class='btn btn-primary btn-lg rounded-top' data-i18n='inkBall:home.newGame'>New game</button>
 <div class='w-100'><select name='GameType' id='GameType' class='form-select' required>
-<option value='' selected='selected'>Choose game type</option>
-<optgroup label='Game types'>
-<option value='0'>First capture wins</option>
-<option value='1'>First 5 captures wins</option>
-<option value='2'>First 5 paths wins</option>
-<option value='3'>Advantage of 5 paths wins</option>
+<option value='' selected='selected' data-i18n='inkBall:home.chooseGameType'>Choose game type</option>
+<optgroup label='Game types' data-i18n='[label]inkBall:home.gameTypes.name'>
+<option value='0' data-i18n='inkBall:home.gameTypes.firstCapture'>First capture wins</option>
+<option value='1' data-i18n='inkBall:home.gameTypes.first5Captures'>First 5 captures wins</option>
+<option value='2' data-i18n='inkBall:home.gameTypes.first5Paths'>First 5 paths wins</option>
+<option value='3' data-i18n='inkBall:home.gameTypes.advantageOf5'>Advantage of 5 paths wins</option>
 </optgroup>
 </select>
-<div class='invalid-feedback'>Invalid game type</div></div>
+<div class='invalid-feedback' data-i18n='inkBall:home.gameTypes.invalidGameType'>Invalid game type</div></div>
 
 <div class='w-100'><select name='BoardSize' id='BoardSize' class='form-select' required>
-<option value='' selected='selected'>Choose board size</option>
-<optgroup label='Board sizes'>
+<option value='' selected='selected' data-i18n='inkBall:home.boardSize.chooseBoardSize'>Choose board size</option>
+<optgroup label='Board sizes' data-i18n='[label]inkBall:home.boardSize.boardSizes'>
 <option value='20'>20 x 26</option>
 <option value='40'>40 x 52</option>
 <option value='64'>64 x 64</option>
 </optgroup>
 </select>
-<div class='invalid-feedback'>Invalid board size</div></div>
+<div class='invalid-feedback' data-i18n='inkBall:home.boardSize.invalidBoardSize'>Invalid board size</div></div>
 
 <div class='form-check form-switch w-100'>
 <input type='checkbox' class='form-check-input form-control-input' name='CpuOponent' id='CpuOponent' />
-<label class='form-check-label' for='CpuOponent'>Play against CPU</label>
+<label class='form-check-label' for='CpuOponent' data-i18n='inkBall:home.playAgainstCPU'>Play against CPU</label>
 </div>`;
 		}
 
 		innerForm +=
-`<a href='GamesList' class='btn btn-primary'>Games list</a>
-<a href='Highscores' class='btn btn-primary'>Best</a>
-<a href='Rules' class='btn btn-primary'>Game rules</a>
-${(logoutPath ? "<input type='submit' name='action' value='Logout' class='btn btn-warning rounded-bottom' formnovalidate='formnovalidate' />" : "")}`;
+			`<a href='GamesList' class='btn btn-primary' data-i18n='inkBall:home.gamesList'>Games list</a>
+<a href='Highscores' class='btn btn-primary' data-i18n='inkBall:home.best'>Best</a>
+<a href='Rules' class='btn btn-primary' data-i18n='inkBall:home.gameRules'>Game rules</a>
+${(logoutPath ? "<button type='submit' name='action' value='Logout' class='btn btn-warning rounded-bottom' formnovalidate='formnovalidate' data-i18n='inkBall:home.logout'>Logout</button>" : "")}`;
 	}
 	else {
 		//not logged or bad
 
-		document.querySelector("p.inkhome").textContent = 'You are not logged in ... or allowed 😅';
+		const inkhome = document.querySelector("p.inkhome");
+		inkhome.textContent = 'You are not logged in ... or allowed 😅';
+		inkhome.dataset.i18n = "inkBall:home.notLoggedIn";
 
 		innerForm +=
-			"<a href='Rules' class='btn btn-primary rounded-top'>Game rules</a>" +
-			(loginPath ? `<a href='${loginPath}' class='btn btn-primary'>Login</a>` : "") +
-			(registerPath ? `<a href='${registerPath}' class='btn btn-primary rounded-bottom'>Register</a>` : "");
+			"<a href='Rules' class='btn btn-primary rounded-top' data-i18n='inkBall:home.gameRules'>Game rules</a>" +
+			(loginPath ? `<a href='${loginPath}' class='btn btn-primary' data-i18n='inkBall:home.login'>Login</a>` : "") +
+			(registerPath ? `<a href='${registerPath}' class='btn btn-primary rounded-bottom' data-i18n='inkBall:home.register'>Register</a>` : "");
 	}
 	form.innerHTML += innerForm;
 }
 
-function ListOnLoad() {
+/**
+ * Processes on load event for games list page
+ * @param {string} modelMessage alert message
+ */
+function ListOnLoad(modelMessage) {
 	const alert = document.querySelector(".alert.inkgames");
-	let msg = document.querySelector(".alert.inkgames > span").textContent;
-	if (msg !== "") {
-		msg = msg.toLowerCase();
+	// let msg = document.querySelector(".alert.inkgames > span").textContent;
+	if (modelMessage !== "") {
+		const [msg, i18l_err_key] = modelMessage.split(';');
 		let addendum;
-		if (msg.indexOf('exception') !== -1 || msg.indexOf('error') !== -1)
+		if (msg.toLowerCase().indexOf('exception') !== -1 || msg.toLowerCase().indexOf('error') !== -1)
 			addendum = 'danger';
-		else if (msg.indexOf('warning') !== -1)
+		else if (msg.toLowerCase().indexOf('warning') !== -1)
 			addendum = 'warning';
 		else
 			addendum = 'success';
 
 		alert.classList.add('alert-' + addendum);
 		alert.classList.remove('d-none');
+
+		const span = alert.querySelector("span");
+		span.textContent = msg;
+		if (i18l_err_key)
+			span.dataset.i18n = `inkBall:err.${i18l_err_key}`;
 	}
 	else
 		alert.parentNode.removeChild(alert);
 }
 
+
+
+/******** exports of methods and objects used publicly on pages  ********/
 export { InkBallGame, HomeOnLoad, ListOnLoad };

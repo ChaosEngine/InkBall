@@ -3,20 +3,13 @@
 //
 
 /**
- * @typedef {Object} Callbacks
- *
- * @property {function(vertices: Object): boolean} [allowTraversal] -
- *  Determines whether DFS should traverse from the vertex to its neighbor
- *  (along the edge). By default prohibits visiting the same vertex again.
- *
- * @property {function(vertices: Object)} [enterVertex] - Called when DFS enters the vertex.
- *
- * @property {function(vertices: Object)} [leaveVertex] - Called when DFS leaves the vertex.
- */
-
-/**
- * @param {Callbacks} [callbacks] callbacks
- * @returns {Callbacks} callbacks
+ * Initializes the callbacks for depth-first search traversal.
+ * @param {object} [callbacks] - An object containing optional callback functions.
+ * @param {Function} [callbacks.allowTraversal] - A function to determine if traversal to the next vertex is allowed.
+ * @param {Function} [callbacks.enterVertex] - A function to be called when entering a vertex.
+ * @param {Function} [callbacks.leaveVertex] - A function to be called when leaving a vertex.
+ * @param {Function} [callbacks.showCycle] - A function to be called when a cycle is detected.
+ * @returns {object} An object containing the initialized callback functions.
  */
 function initCallbacks(callbacks = {}) {
 	const initiatedCallback = callbacks;
@@ -48,10 +41,10 @@ function initCallbacks(callbacks = {}) {
 }
 
 /**
- * @param {Graph} graph representation
- * @param {GraphVertex} currentVertex obj
- * @param {GraphVertex} previousVertex obj
- * @param {Callbacks} callbacks obj
+ * @param {object} graph representation
+ * @param {object} currentVertex obj
+ * @param {object} previousVertex obj
+ * @param {Function} callbacks obj
  */
 async function depthFirstSearchRecursive(graph, currentVertex, previousVertex, callbacks) {
 	callbacks.enterVertex({ currentVertex, previousVertex });
@@ -68,9 +61,9 @@ async function depthFirstSearchRecursive(graph, currentVertex, previousVertex, c
 }
 
 /**
- * @param {Graph} graph representation
- * @param {GraphVertex} startVertex obj
- * @param {Callbacks} [callbacks] obj
+ * @param {object} graph representation
+ * @param {object} startVertex obj
+ * @param {Function} [callbacks] obj
  */
 export default async function depthFirstSearch(graph, startVertex, callbacks) {
 	const previousVertex = null;

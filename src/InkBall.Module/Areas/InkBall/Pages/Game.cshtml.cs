@@ -68,7 +68,7 @@ namespace InkBall.Module.Pages
 
 			if (Game == null)
 			{
-				Message = "No active game for you";
+				Message = "No active game for you;noActiveGame";
 
 				return RedirectToPage(HomeModel.ASPX);
 			}
@@ -100,7 +100,7 @@ namespace InkBall.Module.Pages
 
 			if (!ModelState.IsValid)//model.GameID <= 0
 			{
-				Message = "View only: Bad GameID";
+				Message = "View only: Bad GameID;viewOnlyBadGameID";
 
 				return RedirectToPage(HomeModel.ASPX);
 			}
@@ -113,7 +113,7 @@ namespace InkBall.Module.Pages
 				!int.TryParse(User.FindFirstValue(nameof(InkBalPlayerId)), out var inkBallPlayerId) || inkBallPlayerId <= 0 ||
 				Game?.iPlayer1Id == inkBallPlayerId || Game?.iPlayer2Id == inkBallPlayerId)
 			{
-				Message = "View only: It is your game, or bad GameID";
+				Message = "View only: It is your game, or bad GameID;viewOnlyYourGame";
 
 				return RedirectToPage(HomeModel.ASPX);
 			}

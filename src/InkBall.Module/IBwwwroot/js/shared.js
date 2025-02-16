@@ -81,14 +81,19 @@ function hasDuplicates(array) {
 	return (new Set(array)).size !== array.length;
 }
 
+/**
+ * Pauses the execution for a specified amount of time.
+ * @param {number} ms - The number of milliseconds to sleep.
+ * @returns {Promise<void>} A promise that resolves after the specified time has passed.
+ */
 async function Sleep(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 /**
  * Sorting point clockwise/anticlockwise
- * @param {array} points array of points to sort
- * @returns {array} of points
+ * @param {Array} points array of points to sort
+ * @returns {Array} of points
  */
 function sortPointsClockwise(points) {
 	// Get the center (mean value) using reduce
@@ -117,7 +122,7 @@ function sortPointsClockwise(points) {
  * @param {number} x point coordinate
  * @param {number} y point coordinate
  * @param {Array} allLines array
- * @returns bool - true if outside, false otherwise
+ * @returns {boolean} - true if outside, false otherwise
  */
 function IsPointOutsideAllPaths(x, y, allLines) {
 	for (const line of allLines) {
@@ -138,8 +143,8 @@ function IsPointOutsideAllPaths(x, y, allLines) {
 	maxY: The maximum y-coordinate.
 	width: The width of the bounding box (calculated as maxX - minX).
 	height: The height of the bounding box (calculated as maxY - minY).
- * @param {Array<InkBallPointViewModel>} points array
- * @returns bounding box object
+ * @param {Array<{x: number, y: number}>} points array
+ * @returns {object} bounding box object
  */
 function getBoundingBox(points) {
 	let minX = Infinity;
@@ -472,14 +477,13 @@ class SvgVml {
 		/**
 		 * Creates rectangle
 		 * For example: <rect x="15" y="25" width="20" height="20" rx="2" fill="transparent" stroke="green" stroke-width="0.25"></rect>
-		 * 
-		 * @param {number} x 
-		 * @param {number} y 
-		 * @param {number} width 
-		 * @param {number} height 
-		 * @param {string} fill color
+		 * @param {number} x x
+		 * @param {number} y y
+		 * @param {number} width width
+		 * @param {number} height height
 		 * @param {string} stroke color
-		 * @returns created rectangle
+		 * @param {string} fill color
+		 * @returns {HTMLElement} created rectangle
 		 */
 		this.CreateRect = function (x, y, width, height, stroke = "green", fill = "transparent") {
 			const o = documentCreateElementNS_Element("rect");
@@ -503,7 +507,7 @@ class SvgVml {
 		/**
 		 * Convert numerical StatusEnum to string
 		 * @param {number} enumVal to convert
-		 * @returns string representation
+		 * @returns {string} string representation
 		 */
 		const StatusEnumToString = function (enumVal) {
 			switch (enumVal) {
@@ -530,7 +534,7 @@ class SvgVml {
 		/**
 		 * Convert string representation to numerical StatusEnum
 		 * @param {string} enumStr string representation
-		 * @returns numeric StatusEnum
+		 * @returns {number} numeric StatusEnum
 		 */
 		const StringToStatusEnum = function (enumStr) {
 			switch (enumStr.toUpperCase()) {
@@ -554,18 +558,36 @@ class SvgVml {
 		};
 	}
 
+	/**
+	 * Circle remove method
+	 * @param {SVGCircleElement} oval to remove
+	 */
 	RemoveOval(oval) {
 		this.#cont.removeChild(oval);
 	}
 
+	/**
+	 * Polyline remove method
+	 * @param {SVGPolylineElement} polyline line to be removed
+	 */
 	RemovePolyline(polyline) {
 		this.#cont.removeChild(polyline);
 	}
 
+	/**
+	 * Rectangle remove method
+	 * @param {SVGRectElement} rect rect to be removed
+	 */
 	RemoveRect(rect) {
 		this.#cont.removeChild(rect);
 	}
 
+	/**
+	 * Deserialize string representation of circle object into SVGCircleElement
+	 * @param {object} packed representation of string serialized circle object
+	 * @param {number} radius r of the circle
+	 * @returns {SVGCircleElement} created circle
+	 */
 	DeserializeOval(packed, radius = undefined) {
 		let { x, y, Status, Color } = packed;
 		x = parseInt(x);
@@ -577,6 +599,12 @@ class SvgVml {
 		return o;
 	}
 
+	/**
+	 * Deserialize string representation of polyline object into SVGPolylineElement
+	 * @param {object} packed representation of string serialized polyline object
+	 * @param {number} width width of the polyline
+	 * @returns {SVGPolylineElement} created polyline
+	 */
 	DeserializePolyline(packed, width = undefined) {
 		const { iId, Color, PointsAsString } = packed;
 		const o = this.CreatePolyline(PointsAsString, Color, width);
@@ -584,6 +612,11 @@ class SvgVml {
 		return o;
 	}
 
+	/**
+	 * Deserialize string representation of rectangle object into SVGRectElement
+	 * @param {object} packed representation of string serialized rectangle object
+	 * @returns {SVGRectElement} created rectangle
+	 */
 	DeserializeRect(packed) {
 		const { x, y, width, height, stroke, fill } = packed;
 		const o = this.CreateRect(x, y, width, height, stroke, fill);
@@ -609,10 +642,10 @@ class SvgVml {
 	/**
 	 * https://stackoverflow.com/a/68078941/4429828
 	 * @description Check if a pt is in, on or outside of a circle.
-	 * @param {point} pt The point to test. An array of two floats - x and y coordinates.
-	 * @param {point} center The circle center. An array of two floats - x and y coordinates.
-	 * @param {float} r The circle radius.
-	 * @param {float} tolerance +- above below tolerance value
+	 * @param {{x: number, y: number}} pt The point to test. An object with x and y coordinates.
+	 * @param {{x: number, y: number}} center The circle center. An object with x and y coordinates.
+	 * @param {number} r The circle radius.
+	 * @param {number} tolerance +- above below tolerance value
 	 * @returns {1 | 0 | -1} 1 if the point is inside, 0 if it is on and -1 if it is outside the circle.
 	 */
 	IsPointInCircle(pt, center, r, tolerance = 0) {
@@ -949,10 +982,18 @@ class GameStateStore {
 		this.#sMsgThisEngineDoesntKnowHowToCloneABlob = "This engine doesn't know how to clone a Blob!??!!";
 	}
 
+	/**
+	 * Gets point store
+	 * @returns {object} point store
+	 */
 	GetPointStore() {
 		return this.#PointStore;
 	}
 
+	/**
+	 * Gets path store
+	 * @returns {object} path store
+	 */
 	GetPathStore() {
 		return this.#PathStore;
 	}
@@ -1012,10 +1053,10 @@ class GameStateStore {
 	}
 
 	/**
-	  * @param {string} storeName is a store name
-	  * @param {string} mode either "readonly" or "readwrite"
-	  * @returns {object} store
-	  */
+	 * @param {string} storeName is a store name
+	 * @param {string} mode either "readonly" or "readwrite"
+	 * @returns {object} store
+	 */
 	#GetObjectStore(storeName, mode) {
 		if (this.#bulkStores !== null && this.#bulkStores.has(storeName))
 			return this.#bulkStores.get(storeName);
@@ -1047,9 +1088,9 @@ class GameStateStore {
 	}
 
 	/**
-	  * @param {number} key is calculated index of point y * width + x, probably not useful
-	  * @returns {Promise} returning promise with point
-	  */
+	 * @param {number} key is calculated index of point y * width + x, probably not useful
+	 * @returns {Promise} returning promise with point
+	 */
 	async GetPoint(key) {
 		return new Promise((resolve, reject) => {
 			const store = this.#GetObjectStore(this.#DB_POINT_STORE, 'readonly');
@@ -1063,6 +1104,10 @@ class GameStateStore {
 		});
 	}
 
+	/**
+	 * Retrieves all points from the object store.
+	 * @returns {Promise<Array>} A promise that resolves to an array of all points.
+	 */
 	async GetAllPoints() {
 		return new Promise((resolve, reject) => {
 			const store = this.#GetObjectStore(this.#DB_POINT_STORE, 'readonly');
@@ -1083,6 +1128,11 @@ class GameStateStore {
 		});
 	}
 
+	/**
+	 * Gets state object from store
+	 * @param {string} key state key
+	 * @returns {Promise<object>} state object returned from store
+	 */
 	async GetState(key) {
 		return new Promise((resolve, reject) => {
 			const store = this.#GetObjectStore(this.#DB_STATE_STORE, 'readonly');
@@ -1097,9 +1147,9 @@ class GameStateStore {
 	}
 
 	/**
-	  * @param {number} key is path Id
-	  * @returns {Promise} returning promise with path
-	  */
+	 * @param {number} key is path Id
+	 * @returns {Promise} returning promise with path
+	 */
 	async GetPath(key) {
 		return new Promise((resolve, reject) => {
 			const store = this.#GetObjectStore(this.#DB_PATH_STORE, 'readonly');
@@ -1113,6 +1163,10 @@ class GameStateStore {
 		});
 	}
 
+	/**
+	 * Gets all paths from store
+	 * @returns {Promise} resolved promise with all paths array
+	 */
 	async GetAllPaths() {
 		return new Promise((resolve, reject) => {
 			const store = this.#GetObjectStore(this.#DB_PATH_STORE, 'readonly');
@@ -1134,10 +1188,10 @@ class GameStateStore {
 	}
 
 	/**
-	  * @param {number} key is calculated index of point y * width + x, probably not useful
-	  * @param {object} val is serialized, thin circle
-	  * @returns {Promise} resolved promise after storing
-	  */
+	 * @param {number} key is calculated index of point y * width + x, probably not useful
+	 * @param {object} val is serialized, thin circle
+	 * @returns {Promise} resolved promise after storing
+	 */
 	async StorePoint(key, val) {
 		if (this.#bulkStores !== null && this.#bulkStores.has(this.#DB_POINT_STORE)) {
 			if (this.pointBulkBuffer === null)
@@ -1169,10 +1223,10 @@ class GameStateStore {
 	}
 
 	/**
-	  * @param {number} key is calculated index of point y * width + x, probably not useful
-	  * @param {object} val is serialized, thin circle
-	  * @returns {Promise} resolved promise after updating
-	  */
+	 * @param {number} key is calculated index of point y * width + x, probably not useful
+	 * @param {object} val is serialized, thin circle
+	 * @returns {Promise} resolved promise after updating
+	 */
 	async UpdatePoint(key, val) {
 		if (this.#bulkStores !== null && this.#bulkStores.has(this.#DB_POINT_STORE)) {
 			if (this.pointBulkBuffer === null)
@@ -1234,9 +1288,9 @@ class GameStateStore {
 	}
 
 	/**
-	  * @param {number} key is GameID
-	  * @param {object} gameState is InkBallGame state object
-	  */
+	 * @param {number} key is GameID
+	 * @param {object} gameState is InkBallGame state object
+	 */
 	async #StoreState(key, gameState) {
 		return new Promise((resolve, reject) => {
 			const store = this.#GetObjectStore(this.#DB_STATE_STORE, 'readwrite');
@@ -1258,6 +1312,12 @@ class GameStateStore {
 		});
 	}
 
+	/**
+	 * Saves current value state value to state store with appropriate unique key
+	 * @param {string} key state key
+	 * @param {*} gameState current value of state to save
+	 * @returns {Promise} resolved promise after storing
+	 */
 	async UpdateState(key, gameState) {
 		return new Promise((resolve, reject) => {
 			const store = this.#GetObjectStore(this.#DB_STATE_STORE, 'readwrite');
@@ -1280,10 +1340,10 @@ class GameStateStore {
 	}
 
 	/**
-	  * @param {number} key is path Id
-	  * @param {object} val is serialized thin path
-	  * @returns {Promise} resolved promise after storing path
-	  */
+	 * @param {number} key is path Id
+	 * @param {object} val is serialized thin path
+	 * @returns {Promise} resolved promise after storing path
+	 */
 	async StorePath(key, val) {
 		if (this.#bulkStores !== null && this.#bulkStores.has(this.#DB_PATH_STORE)) {
 			if (this.pathBulkBuffer === null)
@@ -1312,6 +1372,11 @@ class GameStateStore {
 		});
 	}
 
+	/**
+	 * Stores paths array into store, either with single mode or batch mode using bulk buffer setup previously
+	 * @param {Array} values array of paths to store
+	 * @returns {Promise} resolved promise
+	 */
 	async StoreAllPaths(values = null) {
 		if (!values)
 			values = this.pathBulkBuffer;
@@ -1336,6 +1401,11 @@ class GameStateStore {
 		});
 	}
 
+	/**
+	 * Prepares store for saving, loading and operating on points and paths and possibly using IndexedDb if available.
+	 * If state values or last move timestamp is different from IndexedDb, it will clear all stores and return false
+	 * @returns {Promise<boolean>} true if IndexedDb is used and all stores are prepared
+	 */
 	async PrepareStore() {
 		//detecting if we have IndexedDb advanced store (only checking point-store); otherwise, there is no point in going further
 		if (!this.#PointStore.GetAllPoints) return false;
@@ -1384,8 +1454,8 @@ class GameStateStore {
 	}
 
 	/**
-	 * Load all needed stores upfront
-	 * @param {any} storeName array or string of store to load
+	 * Load all needed stores upfront for batch operations on points and paths
+	 * @param {Array<string> | string} storeName array or string of store to load
 	 * @param {any} mode - readonly/readwrite
 	 */
 	async #BeginBulkStorage(storeName, mode) {
@@ -1403,10 +1473,20 @@ class GameStateStore {
 		}
 	}
 
+	/**
+	 * Prepares point store for bulk operation mode
+	 * @param {string} mode operation mode for store
+	 * @returns {Promise} resolved promise at the end 
+	 */
 	async BeginPointBulkStorage(mode) {
 		return await this.#BeginBulkStorage(this.#DB_POINT_STORE, mode);
 	}
 
+	/**
+	 * Prepares path store for bulk operation mode
+	 * @param {string} mode operation mode for store
+	 * @returns {Promise} resolved promise at the end 
+	 */
 	async BeginPathBulkStorage(mode) {
 		return await this.#BeginBulkStorage([this.#DB_POINT_STORE, this.#DB_PATH_STORE], mode);
 	}
@@ -1425,10 +1505,18 @@ class GameStateStore {
 		}
 	}
 
+	/**
+	 * Ends point store bulk operation
+	 * @returns {Promise} resolved promise at the end
+	 */
 	async EndPointBulkStorage() {
 		return await this.#EndBulkStorage(this.#DB_POINT_STORE);
 	}
 
+	/**
+	 * Ends path store bulk operation
+	 * @returns {Promise} resolved promise at the end
+	 */
 	async EndPathBulkStorage() {
 		return await this.#EndBulkStorage([this.#DB_POINT_STORE, this.#DB_PATH_STORE]);
 	}
