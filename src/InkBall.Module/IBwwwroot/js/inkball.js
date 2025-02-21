@@ -1,4 +1,4 @@
-/*global signalR*/
+/*global signalR, i18next*/
 "use strict";
 
 let SHRD, LocalLog, LocalError, StatusEnum, hasDuplicates, pnpoly, IsPointOutsideAllPaths, sortPointsClockwise, Sleep, IBversionHash, getBoundingBox;
@@ -41,7 +41,7 @@ const WinStatusEnum = Object.freeze({
 });
 
 class DtoMsg {
-	get Kind() { throw new Error("missing Kind implementation!"); }
+	get Kind() { throw new Error(i18next.t('inkBall:err.kind.misImpl')/* "missing Kind implementation!" */); }
 }
 
 class InkBallPointViewModel extends DtoMsg {
@@ -86,10 +86,11 @@ class InkBallPointViewModel extends DtoMsg {
 				break;
 
 			default:
-				throw new Error("Bad point type!");
+				throw new Error(i18next.t('inkBall:err.badPointT')/* "Bad point type!" */);
 		}
 
-		return `${sUser} places ${msg}) point`;
+		// return `${sUser} places ${msg}) point`;
+		return i18next.t('inkBall:game.usrXPoint', { sUser, msg })/* `${sUser} places ${msg}) point` */;
 	}
 }
 
@@ -109,7 +110,8 @@ class InkBallPathViewModel extends DtoMsg {
 	static Format(sUser, path) {
 		let msg = `(${path.PointsAsString || path.pointsAsString}) [${path.OwnedPointsAsString || path.ownedPointsAsString}]`;
 
-		return `${sUser} places ${msg} path`;
+		// return `${sUser} places ${msg} path`;
+		return i18next.t('inkBall:game.usrXPath', { sUser, msg })/* `${sUser} places ${msg} path` */;
 	}
 }
 
@@ -154,10 +156,10 @@ class PingCommand extends DtoMsg {
 
 	get Kind() { return CommandKindEnum.PING; }
 
-	static Format(/* sUser,  */ping) {
+	static Format(ping) {
 		const txt = ping.Message || ping.message;
 
-		return /*sUser + " says '" + */txt/* + "'"*/;
+		return txt;
 	}
 }
 
@@ -177,20 +179,20 @@ class WinCommand extends DtoMsg {
 		const status = win.Status !== undefined ? win.Status : win.status;
 		switch (status) {
 			case WinStatusEnum.RED_WINS:
-				msg = 'red.';
+				msg = i18next.t('inkBall:game.whoWins.red')/* 'red.' */;
 				break;
 			case WinStatusEnum.GREEN_WINS:
-				msg = 'blue.';
+				msg = i18next.t('inkBall:game.whoWins.blue')/* 'blue.' */;
 				break;
 			case WinStatusEnum.NO_WIN:
-				msg = 'no one!';
+				msg = i18next.t('inkBall:game.whoWins.noOne')/* 'no one!' */;
 				break;
 			case WinStatusEnum.DRAW_WIN:
-				msg = 'draw!';
+				msg = i18next.t('inkBall:game.whoWins.draw')/* 'draw!' */;
 				break;
 		}
 
-		return 'And the winner is... ' + msg;
+		return i18next.t('inkBall:game.andWinner', { msg })/* 'And the winner is... ' + msg */;
 	}
 }
 
@@ -202,7 +204,8 @@ class StopAndDrawCommand extends DtoMsg {
 	get Kind() { return CommandKindEnum.STOP_AND_DRAW; }
 
 	static Format(otherUser) {
-		return 'User ' + otherUser + ' started to draw path';
+		// return 'User ' + otherUser + ' started to draw path';
+		return i18next.t('inkBall:game.usrStartedPath', { other: otherUser })/*'User ' + otherUser + ' started to draw path'*/;
 	}
 }
 
@@ -573,9 +576,6 @@ class InkBallGame {
 	#GameType;
 	#CursorPos;
 	#SvgVml;
-	#sMsgBrowserDoesNotSupportNotifications;
-	#sMsgUserBlockedNotifications;
-	#sMsgWeHaveAWinner;
 
 	/**
 	 * InkBallGame constructor
@@ -667,9 +667,6 @@ class InkBallGame {
 		this.#sLastMoveGameTimeStamp = null;
 		this.#sVersion = null;
 		this.#Worker = null;
-		this.#sMsgBrowserDoesNotSupportNotifications = 'Browser does not support notifications.';
-		this.#sMsgUserBlockedNotifications = 'User blocked notifications.';
-		this.#sMsgWeHaveAWinner = 'We have a winner';
 
 
 
@@ -768,7 +765,7 @@ class InkBallGame {
 
 	#SetupNotifications() {
 		if (!window.Notification) {
-			LocalLog(this.#sMsgBrowserDoesNotSupportNotifications);
+			LocalLog(i18next.t('inkBall:game.browsNoNotif')/*'Browser does not support notifications.'*/);
 			return false;
 		}
 		else {
@@ -783,7 +780,7 @@ class InkBallGame {
 						return true;
 					}
 					else {
-						LocalLog(this.#sMsgUserBlockedNotifications);
+						LocalLog(i18next.t('inkBall:game.usrBlockNotif')/*'User blocked notifications.'*/);
 						return false;
 					}
 				}.bind(this)).catch(function (err) {
@@ -794,12 +791,15 @@ class InkBallGame {
 		}
 	}
 
-	#NotifyBrowser(title = 'Hi there!', body = 'How are you doing?') {
+	#NotifyBrowser(
+		title = i18next.t('inkBall:game.notifTitle')/*'Hi there!'*/,
+		body = i18next.t('inkBall:game.notifBody')/*'How are you doing?'*/
+	) {
 		if (!document.hidden || this.#ApplicationUserSettings === null || this.#ApplicationUserSettings?.DesktopNotifications !== true)
 			return false;
 
 		if (!window.Notification) {
-			LocalLog(this.#sMsgBrowserDoesNotSupportNotifications);
+			LocalLog(i18next.t('inkBall:game.browsNoNotif')/*'Browser does not support notifications.'*/);
 			return false;
 		}
 		else {
@@ -824,7 +824,7 @@ class InkBallGame {
 						return true;
 					}
 					else {
-						LocalLog(this.#sMsgUserBlockedNotifications);
+						LocalLog(i18next.t('inkBall:game.usrBlockNotif')/*'User blocked notifications.'*/);
 						return false;
 					}
 				}.bind(this)).catch(function (err) {
@@ -841,7 +841,7 @@ class InkBallGame {
 	 * @returns {Promise} promise resolving when connected
 	 */
 	async StartSignalRConnection(loadPointsAndPathsFromSignalR) {
-		if (this.#SignalRConnection === null) return Promise.reject(new Error("signalr conn is null"));
+		if (this.#SignalRConnection === null) return Promise.reject(new Error(i18next.t('inkBall:err.signalrNull')/*"signalr conn is null"*/));
 		if (false === this.#bPointsAndPathsLoaded)
 			this.#bPointsAndPathsLoaded = !loadPointsAndPathsFromSignalR;
 
@@ -857,7 +857,7 @@ class InkBallGame {
 					document.querySelector(this.#sMsgListSel).appendChild(li);
 				}
 
-				this.#NotifyBrowser('New Point', encodedMsg);
+				this.#NotifyBrowser(i18next.t('inkBall:game.newPoint')/*'New Point'*/, encodedMsg);
 			}
 			await this.#ReceivedPointProcessing(point);
 
@@ -877,7 +877,7 @@ class InkBallGame {
 						document.querySelector(this.#sMsgListSel).appendChild(li);
 					}
 
-					this.#NotifyBrowser('New Path', encodedMsg);
+					this.#NotifyBrowser(i18next.t('inkBall:game.newPath')/*'New Path'*/, encodedMsg);
 				}
 				this.#ReceivedPathProcessing(path);
 			}
@@ -890,10 +890,10 @@ class InkBallGame {
 				document.querySelector(this.#sMsgListSel).appendChild(li);
 
 				this.#ReceivedWinProcessing(win);
-				this.#NotifyBrowser(this.#sMsgWeHaveAWinner, encodedMsg);
+				this.#NotifyBrowser(i18next.t('inkBall:game.weHaveWinner')/*'We have a winner'*/, encodedMsg);
 			}
 			else
-				throw new Error("ServerToClientPath bad Kind!");
+				throw new Error(i18next.t('inkBall:err.kind.serv2Cl')/* "ServerToClientPath bad Kind!" */);
 
 		});
 
@@ -915,13 +915,14 @@ class InkBallGame {
 				if (join.OtherPlayerName !== '') {
 					this.#Player2Name.textContent = join.OtherPlayerName || join.otherPlayerName;
 					this.#SurrenderButton.value = 'surrender';
-					this.#ShowStatus('Your move');
+					this.#SurrenderButton.dataset.i18n = 'inkBall:game.back2List';
+					this.#ShowStatus(i18next.t('inkBall:game.yourMove')/* 'Your move' */);
 				}
 			}
 
 			this.#MessagesRingBufferStore.RestoreMessages(this.#sMsgListSel, this.#iPlayerID, this.#iOtherPlayerId, this.#bIsPlayingWithRed, this.#Player1Name, this.#Player2Name);
 
-			this.#NotifyBrowser('Player joining', encodedMsg);
+			this.#NotifyBrowser(i18next.t('inkBall:game.plJoining')/* 'Player joining' */, encodedMsg);
 
 			this.#bHandlingEvent = false;
 		});
@@ -939,9 +940,9 @@ class InkBallGame {
 
 
 			this.#bHandlingEvent = false;
-			encodedMsg = encodedMsg === '' ? 'Game interrupted!' : encodedMsg;
-			this.#NotifyBrowser('Game interruption', encodedMsg);
-			SHRD.LocalAlert(encodedMsg, 'Game interruption', () => {
+			encodedMsg = encodedMsg === '' ? i18next.t('inkBall:err.gameIntrpt!')/*'Game interrupted!'*/ : encodedMsg;
+			this.#NotifyBrowser(i18next.t('inkBall:err.gameIntrpt'), encodedMsg);
+			SHRD.LocalAlert(encodedMsg, i18next.t('inkBall:err.gameIntrpt')/*'Game interruption'*/, () => {
 				window.location.href = "GamesList";
 			});
 		});
@@ -960,7 +961,7 @@ class InkBallGame {
 			}
 
 			this.#ReceivedWinProcessing(win);
-			this.#NotifyBrowser(this.#sMsgWeHaveAWinner, encodedMsg);
+			this.#NotifyBrowser(i18next.t('inkBall:game.weHaveWinner')/*'We have a winner'*/, encodedMsg);
 
 		});
 
@@ -971,7 +972,7 @@ class InkBallGame {
 			this.#MessagesRingBufferStore.Append(encodedMsg, false, this.#sMsgListSel, this.#bIsPlayingWithRed,
 				this.#Player1Name, this.#Player2Name);
 
-			this.#NotifyBrowser('User Message', encodedMsg);
+			this.#NotifyBrowser(i18next.t('inkBall:game.usrMsg')/* 'User Message' */, encodedMsg);
 
 		});
 
@@ -989,7 +990,7 @@ class InkBallGame {
 					li.appendChild(strong);
 					document.querySelector(this.#sMsgListSel).appendChild(li);
 
-					this.#NotifyBrowser('User disconnected', encodedMsg);
+					this.#NotifyBrowser(i18next.t('inkBall:game.usrDisc')/*'User disconnected'*/, encodedMsg);
 					this.#ReconnectTimer = null;
 				}
 			};
@@ -1013,7 +1014,7 @@ class InkBallGame {
 				li.appendChild(strong);
 				document.querySelector(this.#sMsgListSel).appendChild(li);
 
-				this.#NotifyBrowser('User connected', encodedMsg);
+				this.#NotifyBrowser(i18next.t('inkBall:game.usrCon')/* 'User connected' */, encodedMsg);
 				this.#ReconnectTimer = null;
 			}
 		});
@@ -1031,7 +1032,7 @@ class InkBallGame {
 			li.appendChild(strong);
 			document.querySelector(this.#sMsgListSel).appendChild(li);
 
-			this.#NotifyBrowser('User ' + user + ' started drawing new path', encodedMsg);
+			this.#NotifyBrowser(i18next.t('inkBall:game.usrStrtDraw',{user})/* 'User ' + user + ' started drawing new path' */, encodedMsg);
 		});
 
 		if (false === this.#bIsCPUGame) {
@@ -1074,7 +1075,7 @@ class InkBallGame {
 			if (this.#Timer)
 				this.#Timer.Stop();
 
-			LocalLog('Stopped SignalR connection');
+			LocalLog(i18next.t('inkBall:game.stpSignRCon')/* 'Stopped SignalR connection' */);
 		}
 	}
 
@@ -1148,7 +1149,8 @@ class InkBallGame {
 				oval.SetStatus(iStatus);
 				break;
 			default:
-				alert('bad point');
+				SHRD.LocalAlert(i18next.t('inkBall:game.badPoint'), i18next.t('inkBall:err.err!'));
+				// alert('bad point');
 				break;
 		}
 
@@ -1217,7 +1219,8 @@ class InkBallGame {
 				oval.SetStatus(iStatus);
 				break;
 			default:
-				alert('bad point');
+				SHRD.LocalAlert(i18next.t('inkBall:err.badPoint'), i18next.t('inkBall:err.err!'));
+				// alert('bad point');
 				break;
 		}
 
@@ -1356,7 +1359,7 @@ class InkBallGame {
 				OwnedPoints: undefined,
 				owned: "",
 				path: "",
-				errorDesc: "Points not unique"
+				errorDesc: i18next.t('inkBall:game.AI.ptsNotUniq')/* "Points not unique" */
 			};
 		}
 		let sColor, owned_by, sOwnedCol;
@@ -1409,14 +1412,8 @@ class InkBallGame {
 			owned: sOwnedPoints,
 			PathPoints: [],
 			path: sPathPoints,
-			errorDesc: "No surrounded points"
+			errorDesc: i18next.t('inkBall:game.AI.noSurrPts')/* "No surrounded points" */
 		};
-	}
-
-	// eslint-disable-next-line no-unused-private-class-members
-	#CreateWaitForPlayerRequest(/*...args*/) {
-		//let cmd = new WaitForPlayerCommand((args.length > 0 && args[0] === true) ? true : false);
-		//return cmd;
 	}
 
 	#CreatePutPointRequest(iX, iY) {
@@ -1446,7 +1443,7 @@ class InkBallGame {
 
 		switch (payload.Kind) {
 			case CommandKindEnum.POINT:
-				LocalLog(InkBallPointViewModel.Format('some player', payload));
+				LocalLog(InkBallPointViewModel.Format(i18next.t('inkBall:game.somePlayer')/* 'some player' */, payload));
 				this.#bHandlingEvent = true;
 
 				try {
@@ -1460,7 +1457,7 @@ class InkBallGame {
 				break;
 
 			case CommandKindEnum.PATH:
-				LocalLog(InkBallPathViewModel.Format('some player', payload));
+				LocalLog(InkBallPathViewModel.Format(i18next.t('inkBall:game.somePlayer')/* 'some player' */, payload));
 				this.#bHandlingEvent = true;
 
 				try {
@@ -1475,7 +1472,7 @@ class InkBallGame {
 						await this.#ReceivedPathProcessing(path);
 					}
 					else
-						throw new Error("ClientToServerPath bad Kind!");
+						throw new Error(i18next.t('inkBall:err.kind.cl2Srv')/* "ClientToServerPath bad Kind!" */);
 				} catch (err) {
 					LocalError(err.toString());
 					if (revertFunction !== undefined)
@@ -1514,7 +1511,7 @@ class InkBallGame {
 				break;
 
 			default:
-				LocalError('unknown object');
+				LocalError(i18next.t('inkBall:game.err.unkwnObj')/* 'unknown object' */);
 				break;
 		}
 	}
@@ -1543,16 +1540,20 @@ class InkBallGame {
 
 		if (this.#iPlayerID !== point.iPlayerId) {
 			this.#bIsPlayerActive = true;
-			this.#ShowStatus('Opponent has moved, your turn');
+			this.#ShowStatus(i18next.t('inkBall:game.oppMovedYou')/* 'Opponent has moved, your turn' */);
 			this.#Screen.style.cursor = "crosshair";
 
 			if (this.#Line !== null)
 				await this.#OnCancelClick();
 			this.#StopAndDraw.disabled = '';
-			if (!this.#bDrawLines)
-				this.#StopAndDraw.value = 'Draw line';
-			else
-				this.#StopAndDraw.value = 'Draw dot';
+			if (!this.#bDrawLines) {
+				// this.#StopAndDraw.value = 'Draw line';
+				this.#StopAndDraw.dataset.i18n = 'inkBall:game.drawLine';
+			}
+			else {
+				// this.#StopAndDraw.value = 'Draw dot';
+				this.#StopAndDraw.dataset.i18n = 'inkBall:game.drawDot';
+			}
 
 			if (this.#Timer) {
 				this.#Timer.Stop();
@@ -1561,12 +1562,13 @@ class InkBallGame {
 		}
 		else {
 			this.#bIsPlayerActive = false;
-			this.#ShowStatus('Waiting for opponent move');
+			this.#ShowStatus(i18next.t('inkBall:game.waitingForOppo')/* 'Waiting for opponent move' */);
 			this.#Screen.style.cursor = "wait";
 			this.#MouseCursorOval.Hide();
 			this.#CancelPath.disabled = 'disabled';
 			this.#StopAndDraw.disabled = '';
-			this.#StopAndDraw.value = 'Stop and Draw';
+			// this.#StopAndDraw.value = 'Stop and Draw';
+			this.#StopAndDraw.dataset.i18n = 'inkBall:game.stopAndDraw';
 
 			if (this.#Timer)
 				this.#Timer.Reset(this.#TimerOpts);
@@ -1609,7 +1611,7 @@ class InkBallGame {
 
 
 			this.#bIsPlayerActive = true;
-			this.#ShowStatus('Opponent has moved, your turn');
+			this.#ShowStatus(i18next.t('inkBall:game.oppMovedYou')/* 'Opponent has moved, your turn' */);
 			this.#Screen.style.cursor = "crosshair";
 			this.#MouseCursorOval.Hide();
 
@@ -1649,7 +1651,7 @@ class InkBallGame {
 
 
 			this.#bIsPlayerActive = false;
-			this.#ShowStatus('Waiting for opponent move');
+			this.#ShowStatus(i18next.t('inkBall:game.waitingForOppo')/* 'Waiting for opponent move' */);
 			this.#Screen.style.cursor = "wait";
 			this.#MouseCursorOval.Hide();
 
@@ -1658,10 +1660,14 @@ class InkBallGame {
 			if (true === this.#bIsCPUGame && !this.#bIsPlayerActive)
 				this.#StartCPUCalculation();
 		}
-		if (!this.#bDrawLines)
-			this.#StopAndDraw.value = 'Draw line';
-		else
-			this.#StopAndDraw.value = 'Draw dot';
+		if (!this.#bDrawLines) {
+			// this.#StopAndDraw.value = 'Draw line';
+			this.#StopAndDraw.dataset.i18n = 'inkBall:game.drawLine';
+		}
+		else {
+			// this.#StopAndDraw.value = 'Draw dot';
+			this.#StopAndDraw.dataset.i18n = 'inkBall:game.drawDot';
+		}
 		this.#bHandlingEvent = false;
 
 		if (this.#Timer) {
@@ -1671,7 +1677,7 @@ class InkBallGame {
 	}
 
 	#ReceivedWinProcessing(win) {
-		this.#ShowStatus('Win situation');
+		this.#ShowStatus(i18next.t('inkBall:game.winSituation')/*'Win situation'*/);
 		this.#bHandlingEvent = false;
 
 		const encodedMsg = WinCommand.Format(win);
@@ -1681,7 +1687,7 @@ class InkBallGame {
 		if (((status === WinStatusEnum.RED_WINS || status === WinStatusEnum.GREEN_WINS) && winningPlayerId > 0) ||
 			status === WinStatusEnum.DRAW_WIN) {
 
-			SHRD.LocalAlert(encodedMsg === '' ? 'Game won!' : encodedMsg, 'Win situation', () => {
+			SHRD.LocalAlert(encodedMsg === '' ? i18next.t('inkBall:err.gameWon!') : encodedMsg, i18next.t('inkBall:game.winSituation'), () => {
 				window.location.href = "GamesList";
 			});
 		}
@@ -1763,10 +1769,25 @@ class InkBallGame {
 				return WinStatusEnum.NO_WIN;//continue game
 
 			default:
-				throw new Error("Wrong game type");
+				throw new Error(i18next.t('inkBall:err.wrongGameType')/* "Wrong game type" */);
 		}
 	}
 
+	/**
+	 *
+	 * 
+	 * Use case:
+	 * 	i18next.t('inkBall:err.noBoard')
+	 * Make custom method wrapper
+	 * it should take fallback string as well as i18n key and check if i18n is available:
+	 * if so use it
+	 * else use fallback content string
+	 * 
+	 * 
+	 */
+
+
+	//TODO: should take fallback plain string apart from i18n keys and  set those keys inside and uer localize internally to allow flag-lng-change and resource translation switch
 	#ShowStatus(sMessage = '') {
 		if (this.#Player2Name.textContent === '???') {
 			if (this.#bIsPlayerActive)
@@ -1849,7 +1870,7 @@ class InkBallGame {
 								true === this.#Line.AppendPoints(tox, toy)) {
 								const val = await this.#SurroundOpponentPoints();
 								if (val.owned.length > 0) {
-									this.#Debug('Closing path', 0);
+									this.#Debug(i18next.t('inkBall:game.closingPat')/* 'Closing path' */, 0);
 									this.#rAF_FrameID = null;
 									await this.#SendData(this.#CreatePutPathRequest(val), async () => {
 										await this.#OnCancelClick();
@@ -1862,8 +1883,13 @@ class InkBallGame {
 										this.#bHandlingEvent = false;
 									});
 								}
-								else
-									this.#Debug(`${val.errorDesc ? val.errorDesc : 'Wrong path'}, cancel it or refresh page`, 0);
+								else{
+									// this.#Debug(`${val.errorDesc ? val.errorDesc : 'Wrong path'}, cancel it or refresh page`, 0);
+									const msg = i18next.t('inkBall:err.pathDrawErrorDesc', {
+										errDesc: val.errorDesc ? val.errorDesc : i18next.t('inkBall:err.wrongPath'/* 'Wrong path' */)
+									});
+									this.#Debug(msg, 0);
+								}
 								this.#iLastX = x;
 								this.#iLastY = y;
 							}
@@ -2218,9 +2244,11 @@ class InkBallGame {
 			this.#bDrawLines = !this.#bDrawLines;
 			const btn = event.target;
 			if (!this.#bDrawLines)
-				btn.value = 'Draw line';
+				btn.dataset.i18n = 'inkBall:game.drawLine';
 			else
-				btn.value = 'Draw dot';
+				btn.dataset.i18n = 'inkBall:game.drawDot';
+			window.localize('#StopAndDraw');
+
 			this.#iLastX = this.#iLastY = -1;
 			this.#Line = null;
 		} else if (this.#Line === null) {
@@ -2951,7 +2979,7 @@ class InkBallGame {
 		//get from local_storage
 		const runParams = loadParamsFromStore(window.localStorage);
 		if (!(runParams.lastClickedY >= 0 && runParams.lastClickedX >= 0)) {
-			LocalLog("!!!First you need to click some point with mouse to pick the color!!!");
+			LocalLog(i18next.t('inkBall:game.AI.clustFirstClick')/* "!!!First you need to click some point with mouse to pick the color!!!" */);
 			return;
 		}
 		const point_color = (await this.#Points.get(runParams.lastClickedY * this.#iGridWidth + runParams.lastClickedX))?.GetFillColor();
@@ -3116,7 +3144,10 @@ class InkBallGame {
 		this.#sMsgSendButtonSel = sMsgSendButtonSel;
 		this.#Screen = document.querySelector(sScreen);
 		if (!this.#Screen) {
-			alert("no board");
+			setTimeout(() => {
+				SHRD.LocalAlert(i18next.t('inkBall:err.noBoard'), i18next.t('inkBall:err.err!'));
+				// alert("no board");
+			}, 100);
 			return;
 		}
 		// this.#iPosX = this.#Screen.offsetLeft;
@@ -3151,7 +3182,10 @@ class InkBallGame {
 		this.#SvgVml = new SHRD.SvgVml();
 		if (!this.#SvgVml.Init(this.#Screen, svg_width_x_height, svg_width_x_height,
 			{ iGridWidth: this.#iGridWidth, iGridHeight: this.#iGridHeight })) {
-			alert('SVG is not supported!');
+			setTimeout(() => {
+				SHRD.LocalAlert(i18next.t('inkBall:err.noSVG'), i18next.t('inkBall:err.err!'));
+				// alert('SVG is not supported!');
+			}, 100);
 		}
 
 		const stateStore = new SHRD.GameStateStore(useIndexedDbStore,
@@ -3190,7 +3224,7 @@ class InkBallGame {
 			else {
 				//Service Menu
 				if (document.querySelector(arrServiceModeControls[0]) !== null) {
-					document.getElementById('testArea').classList.remove("d-none");
+					// document.getElementById('testArea').classList.remove("d-none");
 					let i = 0;
 					if (ddlTestActions.length > i)
 						document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestBuildCurrentGraph.bind(this);
@@ -3231,29 +3265,33 @@ class InkBallGame {
 			this.#SurrenderButton.disabled = '';
 
 			if (this.#Player2Name.textContent === '???') {
-				this.#ShowStatus('Waiting for other player to connect');
+				this.#ShowStatus(i18next.t('inkBall:game.waitingForOther')/* 'Waiting for other player to connect' */);
 				this.#Screen.style.cursor = "wait";
 			}
 			else {
+				this.#SurrenderButton.dataset.i18n = 'inkBall:game.surrender';
 				this.#SurrenderButton.value = 'surrender';
 
 				if (this.#bIsPlayerActive) {
-					this.#ShowStatus('Your move');
+					this.#ShowStatus(i18next.t('inkBall:game.yourMove')/* 'Your move' */);
 					this.#Screen.style.cursor = "crosshair";
 					this.#StopAndDraw.disabled = '';
 				}
 				else {
-					this.#ShowStatus('Waiting for opponent move');
+					this.#ShowStatus(i18next.t('inkBall:game.waitingForOppo')/* 'Waiting for opponent move' */);
 					this.#Screen.style.cursor = "wait";
 				}
-				if (!this.#bDrawLines)
-					this.#StopAndDraw.value = 'Draw line';
-				else
-					this.#StopAndDraw.value = 'Draw dot';
+				if (!this.#bDrawLines) {
+					this.#StopAndDraw.dataset.i18n = 'inkBall:game.drawLine';
+				}
+				else {
+					this.#StopAndDraw.dataset.i18n = 'inkBall:game.drawDot';
+				}
 			}
 		}
 		else {
-			document.querySelector(sPause).textContent = 'back to Game List';
+			// document.querySelector(sPause).textContent = 'back to Game List';
+			document.querySelector(sPause).dataset.i18n = 'inkBall:game.back2List';
 		}
 
 		//set status info for player, color, "who is who" stuff.
@@ -3261,30 +3299,46 @@ class InkBallGame {
 		const whichPlayer = document.getElementById('whichPlayer');
 		whichColor.style.color = this.#sDotColor;
 		if (this.#bIsPlayingWithRed) {
-			whichColor.textContent = "red";
+			whichColor.dataset.i18n = 'inkBall:game.red'/* "red" */;
 			if (this.#bIsThisPlayer1) {
 				this.#Player1Name.style.color = this.#COLOR_RED;
 				this.#Player2Name.style.color = this.#COLOR_BLUE;
-				whichPlayer.textContent = "Player1";
+				whichPlayer.dataset.i18n = 'inkBall:game.player1'/* "Player 1" */;
 			}
 			else {
 				this.#Player1Name.style.color = this.#COLOR_BLUE;
 				this.#Player2Name.style.color = this.#COLOR_RED;
-				whichPlayer.textContent = "Player2";
+				whichPlayer.dataset.i18n = 'inkBall:game.player2'/* "Player 2" */;
 			}
 		} else {
-			whichColor.textContent = "blue";
+			whichColor.dataset.i18n = 'inkBall:game.blue'/* "blue" */;
 			if (this.#bIsThisPlayer1) {
 				this.#Player1Name.style.color = this.#COLOR_BLUE;
 				this.#Player2Name.style.color = this.#COLOR_RED;
-				whichPlayer.textContent = "Player1";
+				whichPlayer.dataset.i18n = 'inkBall:game.player1'/* "Player 1" */;
 			}
 			else {
 				this.#Player1Name.style.color = this.#COLOR_RED;
 				this.#Player2Name.style.color = this.#COLOR_BLUE;
-				whichPlayer.textContent = "Player2";
+				whichPlayer.dataset.i18n = 'inkBall:game.player2'/* "Player 2" */;
 			}
 		}
+
+		if (window.localize) {
+			LocalLog('ch_logging PrepareDrawing immediate');
+
+			window.localize('p.inkgame');
+			window.localize('div.container.inkgame');
+		}
+		else {
+			setTimeout(() => {
+				LocalLog('ch_logging PrepareDrawing delayed');
+
+				window.localize('p.inkgame');
+				window.localize('div.container.inkgame');
+			}, 100);
+		}
+
 	}
 
 	/**
@@ -4225,7 +4279,7 @@ class InkBallGame {
  */
 function HomeOnLoad(modelMessage, bIsCurrentGameOk, logoutPath, loginPath, registerPath) {
 
-	const alert = document.querySelector(".alert.alert-dismissible.inkhome");
+	const alert_msg = document.querySelector(".alert.alert-dismissible.inkhome");
 	if (modelMessage !== "") {
 		const [msg, i18l_err_key] = modelMessage.split(';');
 		let addendum;
@@ -4237,14 +4291,14 @@ function HomeOnLoad(modelMessage, bIsCurrentGameOk, logoutPath, loginPath, regis
 			addendum = 'success';
 
 		const statusMessageClass = 'alert-' + addendum;
-		alert.classList.add(statusMessageClass);
-		const span = alert.querySelector("span");
+		alert_msg.classList.add(statusMessageClass);
+		const span = alert_msg.querySelector("span");
 		span.textContent = msg;
 		if (i18l_err_key)
 			span.dataset.i18n = `inkBall:err.${i18l_err_key}`;
 	}
 	else
-		alert.parentNode.removeChild(alert);
+		alert_msg.parentNode.removeChild(alert_msg);
 
 
 	const userName = document.querySelector("p.inkhome span:nth-child(2)").textContent;
@@ -4314,7 +4368,7 @@ ${(logoutPath ? "<button type='submit' name='action' value='Logout' class='btn b
  * @param {string} modelMessage alert message
  */
 function ListOnLoad(modelMessage) {
-	const alert = document.querySelector(".alert.inkgames");
+	const alert_msg = document.querySelector(".alert.inkgames");
 	// let msg = document.querySelector(".alert.inkgames > span").textContent;
 	if (modelMessage !== "") {
 		const [msg, i18l_err_key] = modelMessage.split(';');
@@ -4326,16 +4380,16 @@ function ListOnLoad(modelMessage) {
 		else
 			addendum = 'success';
 
-		alert.classList.add('alert-' + addendum);
-		alert.classList.remove('d-none');
+		alert_msg.classList.add('alert-' + addendum);
+		alert_msg.classList.remove('d-none');
 
-		const span = alert.querySelector("span");
+		const span = alert_msg.querySelector("span");
 		span.textContent = msg;
 		if (i18l_err_key)
 			span.dataset.i18n = `inkBall:err.${i18l_err_key}`;
 	}
 	else
-		alert.parentNode.removeChild(alert);
+		alert_msg.parentNode.removeChild(alert_msg);
 }
 
 
