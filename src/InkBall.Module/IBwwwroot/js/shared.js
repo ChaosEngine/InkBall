@@ -39,6 +39,11 @@ function LocalError(...args) {
 	console.error(msg);
 }
 
+/**
+ * Check if custom alert dialog handler is available if so use it, if not fallback to default window.alert
+ * @param {string} msg - message to show
+ * @param {Function} onCloseCallback optional callback function to call on end
+ */
 const LocalAlert = (typeof myAlert !== "undefined") ?
 	myAlert :
 	(msg, onCloseCallback = undefined) => {

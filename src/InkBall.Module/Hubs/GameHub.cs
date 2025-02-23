@@ -327,7 +327,7 @@ namespace InkBall.Module.Hubs
 					|| string.IsNullOrEmpty(ThisUserName) || ThisGame.CpuOponent == true)
 					return;
 
-				var msg = $"Other player {ThisPlayer?.UserName} connected 😁";
+				var msg = $"Other player {ThisPlayer?.UserName} connected 😁;othPlConn;{ThisPlayer?.UserName}";
 				await Clients.User(OtherUserIdentifier).ServerToClientOtherPlayerConnected(msg);
 			}
 			catch (Exception ex)
@@ -349,7 +349,7 @@ namespace InkBall.Module.Hubs
 					|| string.IsNullOrEmpty(ThisUserName) || ThisGame.CpuOponent == true)
 					return;
 
-				var msg = $"Other player {ThisPlayer?.UserName} disconnected 😢";
+				var msg = $"Other player {ThisPlayer?.UserName} disconnected 😢;othPlDisc;{ThisPlayer?.UserName}";
 				await Clients.User(OtherUserIdentifier).ServerToClientOtherPlayerDisconnected(msg);
 			}
 			//catch (NoGameArgumentNullException ex)
