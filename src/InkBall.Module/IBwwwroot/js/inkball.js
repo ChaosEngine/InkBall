@@ -1157,7 +1157,6 @@ class InkBallGame {
 			case 1:
 				this.#spDebug.dataset.i18n = args[0];
 
-				// window.localize('#debug0');
 				if (window.localize)
 					window.localize('#debug0');
 				else
@@ -1171,7 +1170,6 @@ class InkBallGame {
 					const d = document.getElementById('debug' + args[1]);
 					d.dataset.i18n = args[0];
 
-					// window.localize('#debug' + args[1]);
 					if (window.localize)
 						window.localize('#debug' + args[1]);
 					else
@@ -1191,7 +1189,6 @@ class InkBallGame {
 					}
 				}
 
-				// window.localize('#status');
 				if (window.localize)
 					window.localize('#status');
 				else
@@ -2369,11 +2366,19 @@ class InkBallGame {
 				await this.#OnCancelClick();
 			this.#bDrawLines = !this.#bDrawLines;
 			const btn = event.target;
-			if (!this.#bDrawLines)
-				btn.dataset.i18n = 'inkBall:game.drawLine';
-			else
-				btn.dataset.i18n = 'inkBall:game.drawDot';
-			window.localize('#StopAndDraw');
+
+			if (window.localize) {
+				if (!this.#bDrawLines)
+					btn.dataset.i18n = 'inkBall:game.drawLine';
+				else
+					btn.dataset.i18n = 'inkBall:game.drawDot';
+				window.localize('#StopAndDraw');
+			} else {
+				if (!this.#bDrawLines)
+					btn.value = 'Draw line';
+				else
+					btn.value = 'Draw dot';
+			}
 
 			this.#iLastX = this.#iLastY = -1;
 			this.#Line = null;
@@ -2462,10 +2467,17 @@ class InkBallGame {
 		// document.querySelector(sSelector2Set).textContent = aggregated;
 
 		const el = document.querySelector(sSelector2Set);
-		el.dataset.i18n = 'inkBall:game.stat.all';
+		el.dataset.i18n = 'inkBall:game.stat';
 		el.dataset.i18nOptions = `{ "pts": ${tags[0].cnt}, "lin": ${tags[1].cnt}, "intP1": ${tags[2].cnt}, "intP2": ${tags[3].cnt} }`;
 
-		window.localize(sSelector2Set);
+		if (window.localize)
+			window.localize(sSelector2Set);
+		else {
+			setTimeout(() => {
+				if (window.localize)
+					window.localize(sSelector2Set);
+			}, 100);
+		}
 	}
 
 	/**

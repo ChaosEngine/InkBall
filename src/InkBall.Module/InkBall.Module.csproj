@@ -54,6 +54,7 @@
     <Content Include="IBwwwroot\css\*.css*" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="IBwwwroot\img\homescreen.*" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="IBwwwroot\js\*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="IBwwwroot\locales\*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>
