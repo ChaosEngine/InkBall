@@ -125,8 +125,8 @@ namespace InkBall.IntegrationTests
 		[InlineData("css/inkball.min.css")]
 		[InlineData("img/homescreen.webp")]
 		[InlineData("img/homescreen.jpg")]
-		[InlineData("locales/en/inkBall.min.json")]
-		[InlineData("locales/pl/inkBall.min.json")]
+		[InlineData("locales/en/ib.min.json")]
+		[InlineData("locales/pl/ib.min.json")]
 		public async Task StaticAssets(string asset)
 		{
 			//if (_fixture.DOTNET_RUNNING_IN_CONTAINER) return;//pass on fake DB with no data
@@ -358,7 +358,7 @@ namespace InkBall.IntegrationTests
 
 							var responseString = await response.Content.ReadAsStringAsync();
 							Assert.Contains("Inkball Game", responseString);
-							Assert.Contains("<span id='Player1Name'>Alice Testing</span> <span data-i18n='inkBall:game.vs'>vs</span> <span id='Player2Name'>???</span>", responseString);
+							Assert.Contains("<span id='Player1Name'>Alice Testing</span> <span data-i18n='ib:game.vs'>vs</span> <span id='Player2Name'>???</span>", responseString);
 						}
 					}
 				}//end using (var get_response
