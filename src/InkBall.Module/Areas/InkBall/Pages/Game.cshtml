@@ -123,9 +123,11 @@
 </environment>
 <script type='module'>
 	import { InkBallGame } from "@Url.Content(Constants.WwwIncludeInkballJS)";
-
+	
+	window.addEventListener('DOMContentLoaded', InkBallGame.OnGameDOMContentLoaded);
+	
 	window.addEventListener('load', async () => {
-		await InkBallGame.OnLoad({
+		await InkBallGame.OnGameLoad({
 			inkBallHubName: '@hubName',
 			iGameID: @Model.Game.iId,
 			iPlayerID: @Model.Player.iId,

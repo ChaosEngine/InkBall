@@ -187,7 +187,7 @@ namespace InkBall.Module.Pages
 												{
 													await _inkballHubContext.Clients.User(recipient_id_looser.Item1).ServerToClientPlayerSurrender(
 														new PlayerSurrenderingCommand(recipient_id_looser.Item2.GetValueOrDefault(0), true,
-														$"Player {recipient_id_looser.Item3 ?? ""} logged out"));
+														$"Player {recipient_id_looser.Item3 ?? ""} logged out;plaXLoggedOut"));
 												}
 											}
 											catch (Exception ex)

@@ -889,14 +889,14 @@ namespace InkBall.Tests
 
                 //Assert
                 mockGameClient.Verify(client => client.ServerToClientOtherPlayerConnected(It.Is<string>(msg =>
-                   msg == $"Other player {hub_P1.ThisPlayer.UserName} connected 😁"
+                   msg == $"Other player {hub_P1.ThisPlayer.UserName} connected 😁;{hub_P1.ThisPlayer.UserName}"
                    )), Times.Once);
 
                 //Act 
                 await hub_P1.OnDisconnectedAsync(null);
                 //Assert
                 mockGameClient.Verify(client => client.ServerToClientOtherPlayerDisconnected(It.Is<string>(msg =>
-                   msg == $"Other player {hub_P1.ThisPlayer.UserName} disconnected 😢"
+                   msg == $"Other player {hub_P1.ThisPlayer.UserName} disconnected 😢;{hub_P1.ThisPlayer.UserName}"
                    )), Times.Once);
 
                 //Act
@@ -904,7 +904,7 @@ namespace InkBall.Tests
                 await hub_P2.OnDisconnectedAsync(null);
                 //Assert
                 mockGameClient.Verify(client => client.ServerToClientOtherPlayerDisconnected(It.Is<string>(msg =>
-                   msg == $"Other player {hub_P2.ThisPlayer.UserName} disconnected 😢"
+                   msg == $"Other player {hub_P2.ThisPlayer.UserName} disconnected 😢;{hub_P2.ThisPlayer.UserName}"
                    )), Times.Once);
             }
         }

@@ -105,7 +105,7 @@ namespace InkBall.Module.Pages
 													await _inkballHubContext.Clients.User(recipient_id_joiner.Item1).ServerToClientPlayerJoin(
 														new PlayerJoiningCommand(recipient_id_joiner.Item2.GetValueOrDefault(0),
 														recipient_id_joiner.Item3,
-														$"Player {recipient_id_joiner.Item3 ?? ""} joining;plXJoining"));
+														$"Player {recipient_id_joiner.Item3 ?? ""} joining"));
 												}
 											}
 											catch (Exception ex)

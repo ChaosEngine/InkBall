@@ -125,6 +125,8 @@ namespace InkBall.IntegrationTests
 		[InlineData("css/inkball.min.css")]
 		[InlineData("img/homescreen.webp")]
 		[InlineData("img/homescreen.jpg")]
+		[InlineData("locales/en/inkBall.min.json")]
+		[InlineData("locales/pl/inkBall.min.json")]
 		public async Task StaticAssets(string asset)
 		{
 			//if (_fixture.DOTNET_RUNNING_IN_CONTAINER) return;//pass on fake DB with no data
