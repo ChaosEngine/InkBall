@@ -50,11 +50,16 @@
     <EmbeddedResource Include="wwwroot\css\*.map" />
   </ItemGroup>
 -->
+<!--
   <ItemGroup>
-    <Content Include="IBwwwroot\css\*.css*" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="IBwwwroot\img\homescreen.*" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="IBwwwroot\js\*" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="IBwwwroot\locales\*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="wwwroot\css\*.css*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="wwwroot\img\homescreen.*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="wwwroot\js\*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="wwwroot\locales\*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+-->
+  <PropertyGroup>
+    <DefaultItemExcludes>$(DefaultItemExcludes);wwwroot\css\*.scss;wwwroot\img\grid*;wwwroot\js\grid*</DefaultItemExcludes>
+  </PropertyGroup>
 
 </Project>

@@ -87,7 +87,7 @@ namespace InkBall.Module
 
 			string assembly_location = new Uri(assembly.Location).AbsolutePath;
 			var location_dir = Path.GetDirectoryName(assembly_location);
-			string inkBall_Module_wwwroot_full_path = Path.Combine(location_dir, "IBwwwroot");
+			string inkBall_Module_wwwroot_full_path = Path.Combine(location_dir, "wwwroot");
 
 			var uber_hash = CalculateGlobalHashFromModuleAndWebContent(inkBall_Module_wwwroot_full_path, module_hashId.ToByteArray());
 
@@ -101,9 +101,9 @@ namespace InkBall.Module
 		public static string WwwIncludeSharedJS => "~/js/shared.js" + _versionHashQueryParam;
 		public static string WwwIncludeCSS => "~/css/inkball.css" + _versionHashQueryParam;
 #else
-		public static string WwwIncludeInkballJS => "~/js/inkball.min.js" + _versionHashQueryParam;
-		public static string WwwIncludeSharedJS => "~/js/shared.min.js" + _versionHashQueryParam;
-		public static string WwwIncludeCSS => "~/css/inkball.min.css" + _versionHashQueryParam;
+		public static string WwwIncludeInkballJS => "~/_content/InkBall.Module/js/inkball.min.js" + _versionHashQueryParam;
+		public static string WwwIncludeSharedJS => "~/_content/InkBall.Module/js/shared.min.js" + _versionHashQueryParam;
+		public static string WwwIncludeCSS => "~/_content/InkBall.Module/css/inkball.min.css" + _versionHashQueryParam;
 #endif
 
 		#endregion JS/CSS variables
@@ -297,14 +297,14 @@ namespace InkBall.Module
 			if (env == null)
 				throw new ArgumentException($"Missing env: {nameof(IWebHostEnvironment)}");
 
-			string inkBall_Module_wwwroot_full_path = Path.Combine(env.ContentRootPath, "../InkBall/src/InkBall.Module/IBwwwroot");
+			string inkBall_Module_wwwroot_full_path = Path.Combine(env.ContentRootPath, "../../../../../src/InkBall.Module/wwwroot");
 			if (!Directory.Exists(inkBall_Module_wwwroot_full_path))
 			{
 				var assm = typeof(InkBallOptions).GetTypeInfo().Assembly;
 				string assembly_location = new Uri(assm.Location).AbsolutePath;
 
 				var location_dir = Path.GetDirectoryName(assembly_location);
-				inkBall_Module_wwwroot_full_path = Path.Combine(location_dir, "IBwwwroot");
+				inkBall_Module_wwwroot_full_path = Path.Combine(location_dir, "../../../../InkBall/src/InkBall.Module/wwwroot");
 			}
 #else
 			var ass = typeof(InkBallOptions).GetTypeInfo().Assembly;
@@ -312,7 +312,7 @@ namespace InkBall.Module
 
 			var location_dir = Path.GetDirectoryName(assembly_location);
 
-			string inkBall_Module_wwwroot_full_path = Path.Combine(location_dir, "IBwwwroot");
+			string inkBall_Module_wwwroot_full_path = Path.Combine(location_dir, "wwwroot/_content/InkBall.Module");
 #endif
 
 			return builder.UseStaticFilesForInkBall(inkBall_Module_wwwroot_full_path);
