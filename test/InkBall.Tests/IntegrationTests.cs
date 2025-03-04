@@ -146,7 +146,7 @@ namespace InkBall.IntegrationTests
 
 		[Theory]
 		[InlineData("InkBall/Home", "<picture aria-label=\"home screen image\">")]
-		[InlineData("InkBall/Rules", "<li>Player put dots on the grid one after another</li>")]
+		[InlineData("InkBall/Rules", "<li data-i18n='ib:rules.li00'>Player put dots on the grid one after another</li>")]
 		public async Task Pages_Anonymous(string page, string contentToCheck)
 		{
 			//if (_fixture.DOTNET_RUNNING_IN_CONTAINER) return;//pass on fake DB with no data

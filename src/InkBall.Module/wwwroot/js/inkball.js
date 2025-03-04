@@ -1205,11 +1205,9 @@ class InkBallGame {
 	 */
 	#DebugI18n(msg, fallbackMsg) {
 		const d = document.getElementById('debug0');
-		if (localizeSelector && msg !== '') {
-			d.dataset.i18n = (msg.indexOf('ib:') !== -1 ? msg : 'ib:' + msg);
-
+		d.dataset.i18n = (msg.indexOf('ib:') !== -1 ? msg : 'ib:' + msg);
+		if (localizeSelector && msg !== '')
 			localizeSelector('#debug0');
-		}
 		else
 			d.textContent = fallbackMsg;
 	}

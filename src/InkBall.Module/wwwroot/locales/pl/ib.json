@@ -136,6 +136,24 @@
 			"aStarFirst": "!!!Najpierw musisz kliknąć myszką dwa punkty (początkowy i końcowy)!!!"
 		}
 	},
+	"highscores": {
+		"player": "Gracz",
+		"wins": "Zwycięstwa",
+		"loses": "Przegrane",
+		"draws": "Remisy",
+		"gameCount": "Liczba gier"
+	},
+	"rules": {
+		"li00": "Gracz umieszcza kropki na siatce jedna po drugiej",
+		"li10": "Kiedy gracz chce otoczyć kropki przeciwnika, wybiera",
+		"li11": "Rysuj ścieżkę",
+		"li12": "i rysuje otaczającą linię; aby ponownie umieścić kropki - kliknij",
+		"li13": "Postaw kropkę",
+		"li20": "Anuluj ścieżkę",
+		"li21": "przywraca już narysowaną linię",
+		"li3": "Nie można umieszczać kropek wewnątrz otoczonych grup",
+		"li4": "Musi być co najmniej jeden punkt przeciwnika otoczony"
+	},
 	"err": {
 		"noActiveGame": "Brak aktywnej gry dla Ciebie",
 		"viewOnlyBadGameID": "Tylko podgląd: Zły GameID",

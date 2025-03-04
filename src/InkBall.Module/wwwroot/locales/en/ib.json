@@ -136,6 +136,24 @@
 			"aStarFirst": "!!!First you need to click two (starting and ending) points with mouse!!!"
 		}
 	},
+	"highscores": {
+		"player": "Player",
+		"wins": "Wins",
+		"loses": "Loses",
+		"draws": "Draws",
+		"gameCount": "Game count"
+	},
+	"rules": {
+		"li00": "Player put dots on the grid one after another",
+		"li10": "When player wants to surround opponent dots, one choses",
+		"li11": "Draw line",
+		"li12": "and draws surrounding line; to put dots again - click",
+		"li13": "Draw dots",
+		"li20": "Cancel path",
+		"li21": "reverts already drawn line",
+		"li3": "One can not put dots inside surrounded groups",
+		"li4": "There must be at least one opponent dots surrounded"
+	},
 	"err": {
 		"noActiveGame": "No active game for you",
 		"viewOnlyBadGameID": "View only: Bad GameID",
