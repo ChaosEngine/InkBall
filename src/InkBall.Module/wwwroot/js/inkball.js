@@ -536,6 +536,21 @@ function localizeMessageOpts(locKey, opts, locFallbackMsg) {
 		return locFallbackMsg;
 }
 
+/**
+ * The sanitizeUrl function ensures that a given URL is valid and safe to use. It attempts to parse the URL using the URL constructor
+ * @param {string} url url for sanitization
+ * @returns {string} secured url or null if not possible
+ */
+function sanitizeUrl(url) {
+	try {
+		const parsedUrl = new URL(url, window.location.origin); // Use the current origin as the base
+		return parsedUrl.href; // Return the sanitized URL
+	} catch {
+		LocalError("Invalid URL: " + url);
+		return null; // Return null or a safe fallback if the URL is invalid
+	}
+}
+
 class InkBallGame {
 	#SignalRConnection;
 	#MessagesRingBufferStore;
@@ -4552,8 +4567,8 @@ ${(logoutPath ? "<button type='submit' name='action' value='Logout' class='btn b
 
 		innerForm +=
 			"<a href='Rules' class='btn btn-primary rounded-top' data-i18n='ib:home.gameRules'>Game rules</a>" +
-			(loginPath ? `<a href='${loginPath}' class='btn btn-primary' data-i18n='ib:home.login'>Login</a>` : "") +
-			(registerPath ? `<a href='${registerPath}' class='btn btn-primary rounded-bottom' data-i18n='ib:home.register'>Register</a>` : "");
+			(loginPath ? `<a href='${sanitizeUrl(loginPath)}' class='btn btn-primary' data-i18n='ib:home.login'>Login</a>` : "") +
+			(registerPath ? `<a href='${sanitizeUrl(registerPath)}' class='btn btn-primary rounded-bottom' data-i18n='ib:home.register'>Register</a>` : "");
 	}
 	form.innerHTML += innerForm;
 }
