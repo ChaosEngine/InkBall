@@ -74,8 +74,10 @@ namespace InkBall.Module
 
 				return BitConverter.ToString(hasher.Hash).Replace("-", "").ToLower();
 			}
-			catch (Exception)
+			catch (Exception ex)
 			{
+				Console.WriteLine($"Error calculating hash: {ex.Message}");
+				// In case of error, return a fixed hash to avoid breaking the application
 				return "baaadhashbaaadhashbaaadhashbaaadhash";
 			}
 		}
@@ -87,7 +89,11 @@ namespace InkBall.Module
 
 			string assembly_location = new Uri(assembly.Location).AbsolutePath;
 			var location_dir = Path.GetDirectoryName(assembly_location);
+#if DEBUG
+			string inkBall_Module_wwwroot_full_path = Path.Combine(location_dir, "../../../../InkBall/src/InkBall.Module/wwwroot");
+#else
 			string inkBall_Module_wwwroot_full_path = Path.Combine(location_dir, "wwwroot");
+#endif
 
 			var uber_hash = CalculateGlobalHashFromModuleAndWebContent(inkBall_Module_wwwroot_full_path, module_hashId.ToByteArray());
 
