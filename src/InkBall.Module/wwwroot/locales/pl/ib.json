@@ -73,7 +73,7 @@
 		"testGroupPoints": "Grupuj punkty rekursywnie",
 		"testFindSurroundablePoints": "Znajdź otaczalne punkty",
 		"testDFS2": "DFS 2",
-		"floodFill": "Wypełnienie powodziowe",
+		"floodFill": "Wypełnienie metodą rozlewania",
 		"aStar": "A-Star",
 		"clustering": "Klastrowanie",
 		"placeRed": "Postaw czerwony",

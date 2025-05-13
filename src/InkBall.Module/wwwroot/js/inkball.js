@@ -1,7 +1,7 @@
 /*global signalR, i18next*/
 "use strict";
 
-let SHRD, LocalLog, LocalError, StatusEnum, hasDuplicates, pnpoly, IsPointOutsideAllPaths, sortPointsClockwise, Sleep, IBversionHash, getBoundingBox, localizeSelector;
+let SHRD, LocalLog, LocalError, StatusEnum, hasDuplicates, pnpoly, IsPointOutsideAllPaths, sortPointsClockwise, Sleep, IBversionHash, AABB, localizeSelector;
 
 /******** funcs-n-classes ********/
 /**
@@ -466,7 +466,7 @@ async function importAllModulesAsync(/* gameOptions */) {
 
 	LocalLog = SHRD.LocalLog, LocalError = SHRD.LocalError, StatusEnum = SHRD.StatusEnum,
 		hasDuplicates = SHRD.hasDuplicates, pnpoly = SHRD.pnpoly, IsPointOutsideAllPaths = SHRD.IsPointOutsideAllPaths,
-		sortPointsClockwise = SHRD.sortPointsClockwise, getBoundingBox = SHRD.getBoundingBox,
+		sortPointsClockwise = SHRD.sortPointsClockwise, AABB = SHRD.AABB,
 		Sleep = SHRD.Sleep;
 
 	// //for CPU game enable AI libs and calculations
@@ -1790,7 +1790,6 @@ class InkBallGame {
 			if (true === this.#bIsCPUGame && !this.#bIsPlayerActive)
 				this.#StartCPUCalculation();
 		}
-		//TODO: localize this better
 		if (!this.#bDrawLines) {
 			// this.#StopAndDraw.value = 'Draw line';
 			this.#StopAndDraw.dataset.i18n = 'ib:game.drawLine';
@@ -2654,8 +2653,8 @@ class InkBallGame {
 
 			worker.postMessage({
 				operation: "CONCAVEMAN",
+				subOperation: "BY_POINTS",
 				boardSize: { iGridWidth: this.#iGridWidth, iGridHeight: this.#iGridHeight },
-				state: this.#GetGameStateForIndexedDb(),
 				points: serialized_points,
 				clickedPointStatus: clicked_point_status,
 				concavity: runParams.concavity,
@@ -2814,8 +2813,8 @@ class InkBallGame {
 		}
 		this.#cyclesFound.forEach(cycle => {
 			const line = this.#SvgVml.CreatePolyline(cycle.map(function (pt) {
-				const pos = pt.GetPosition();
-				return `${pos.x},${pos.y}`;
+				const { x, y } = pt.GetPosition();
+				return `${x},${y}`;
 			}).join(' '), RandomColor());
 			line.SetID(-1);
 		});
@@ -3194,45 +3193,86 @@ class InkBallGame {
 
 		if (data.clusters?.length > 0) {
 			const clusters = [];
-			for (const cluster of data.clusters) {
+			for (const point_indexes of data.clusters) {
 				const rand_color = RandomColor();
-				let enclosing_circle = null;
 				const points_in_cluster = [];
-				for (const index of cluster) {
-					const vert = arrOfArrOfPoints[index];
-					const [x, y] = vert;
-					// const pt = document.querySelector(`svg > circle[cx="${x}"][cy="${y}"]`);
+				const coords_array = [];
+				for (const index of point_indexes) {
+					const [x, y] = arrOfArrOfPoints[index];
 					const pt = await this.#Points.get(y * this.#iGridWidth + x);
 					if (pt) {
 						points_in_cluster.push(pt);
-						// pt.setAttribute("data-status", 'test');
+						coords_array.push({ x, y });
+
 						pt.SetStrokeColor(rand_color);
-						pt.SetFillColor(rand_color);
+						pt.StrokeWeight(0.45);
+						// pt.SetFillColor(rand_color);
 						pt.SetZIndex(100);
 						pt.setAttribute("r", 2 / this.#iGridSpacingX);
 						if (y === runParams.lastClickedY && x === runParams.lastClickedX)
 							this.#cyclesFound = points_in_cluster;
-
-
-						// if(enclosing_circle === null) {
-						enclosing_circle = this.#SvgVml.CreateOval(1.5);
-						enclosing_circle.move(x, y);
-						enclosing_circle.SetStrokeColor('black');
-						enclosing_circle.StrokeWeight(0.1);
-						enclosing_circle.SetFillColor('transparent');
-						// }
 					}
-					// await Sleep(50);
 				}
 				clusters.push(points_in_cluster);
-				const bbox = getBoundingBox(points_in_cluster.map(p => p.GetPosition()));
-				bbox.minX--; bbox.minY--; bbox.width += 2; bbox.height += 2;
+				const wrapping_bbox = AABB.fromPoints(coords_array);
+				wrapping_bbox.expand(1);
 
 
-				//TODO: get points inside bbox but not found in cluster and not inside points without cluster - only outside?
-				//calculate all points from bbox and subtract (??)
+				// if (clusters.length === 9)
+				{
+					const candidate_path = [];
+					for (let j = wrapping_bbox.minY; j <= wrapping_bbox.maxY; j++) {
+						for (let i = wrapping_bbox.minX; i <= wrapping_bbox.maxX; i++) {
 
-				LocalLog(this.#SvgVml.CreateRect(bbox.minX, bbox.minY, bbox.width, bbox.height, 'rgb(128,128,128,128)'));
+							const is_ok = coords_array.some(({ x, y }) => {
+								return ((x === i && y === j) ||
+									(x === i + 1 && y === j) ||
+									(x === i && y === j + 1) ||
+									(x === i + 1 && y === j + 1));
+							});
+							if (is_ok) {
+								this.#SvgVml.CreateRect(i, j, 1, 1, rand_color);
+								// i, j and i+1, j+1 are dimensions of the bounding box
+								// find which points of it are not included in point_only_arr
+								const boundingBoxPoints = [
+									{ x: i, y: j },
+									{ x: i + 1, y: j },
+									{ x: i, y: j + 1 },
+									{ x: i + 1, y: j + 1 }
+								];
+
+								const missingPoints = boundingBoxPoints.filter(({ x, y }) => {
+									return !coords_array.some(point => point.x === x && point.y === y);
+								});
+								//add all missing points to path
+								candidate_path.push(...missingPoints);
+							}
+						}
+					}
+					LocalLog(`Path points around bounding box points: ${JSON.stringify(candidate_path)}`);
+
+					const data = await this.#RunAIWorker((worker) => {
+						worker.postMessage({
+							operation: "CONCAVEMAN",
+							subOperation: "BY_COORDINATES",
+							points: candidate_path,
+							concavity: runParams.concavity,
+							lengthThreshold: runParams.lengthThreshold
+						});
+					});
+
+					const convex_hull = data?.convex_hull;
+					if (convex_hull?.length > 0) {
+						const poly_line = this.#SvgVml.CreatePolyline(
+							convex_hull.map(([x, y]) => x + ',' + y).join(' ')
+							, 'green');
+						poly_line.SetID(-1);
+
+						LocalLog(poly_line);
+					}
+				}
+
+				// LocalLog(this.#SvgVml.CreateRect(wrapping_bbox.minX, wrapping_bbox.minY, wrapping_bbox.width, wrapping_bbox.height, 'rgb(128,128,128,128)'));
 			}
 			LocalLog({ method: data.method, clusters, plot: data.plot, noise: data.noise });
 		}
@@ -3547,9 +3587,9 @@ class InkBallGame {
 	static OnGameDOMContentLoaded() {
 		//tries to register localization function; it will return callback taht we store for later use when localizing individual selector elements
 		if (window.registerLocalizationOnReady && Array.isArray(window.registerLocalizationOnReady)) {
-			window.registerLocalizationOnReady.push((i18nLoc) => {
+			window.registerLocalizationOnReady.push(i18nLocalizeFunc => {
 				// console.warn('registerLocalizationOnReady, loc-func');
-				localizeSelector = typeof i18nLoc === "function" ? i18nLoc : undefined;
+				localizeSelector = typeof i18nLocalizeFunc === "function" ? i18nLocalizeFunc : undefined;
 			});
 		}
 	}
@@ -4110,8 +4150,8 @@ class InkBallGame {
 		//serialize points as string: "x0,y0 x1,y1 x2,y2"
 		//
 		const pts = pointsArr.map(pt => {
-			const pos = pt.GetPosition();
-			return `${pos.x},${pos.y}`;
+			const { x, y } = typeof pt.GetPosition === "function" ? pt.GetPosition() : pt;
+			return `${x},${y}`;
 		}).join(' ');
 
 		//if not existing, create new...

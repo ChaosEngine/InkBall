@@ -51,26 +51,40 @@ addEventListener('message', async function (e) {
 
 		case "CONCAVEMAN":
 			{
-				const svgVml = new SvgVml();
-				svgVml.Init(null, null, null, params.boardSize);
+				let vertices;
+				switch (params.subOperation) {
+					case "BY_POINTS":
+						{
+							const svgVml = new SvgVml();
+							svgVml.Init(null, null, null, params.boardSize);
 
-				const points = new Map();
-				params.points.forEach((pt) => {
-					points.set(pt.key, svgVml.DeserializeOval(pt.value));
-				});
-				const ai = new GraphAI(params.state.iGridWidth, params.state.iGridHeight, points);
-				const clicked_status = params.clickedPointStatus;
-				const graph = await ai.BuildGraph({
-					freePointStatus: clicked_status,
-					// cpufillCol: clicked_status === StatusEnum.POINT_FREE_RED ? 'var(--redish)' : 'var(--bluish)',
-					visuals: false
-				});
+							const points = new Map();
+							params.points.forEach((pt) => {
+								points.set(pt.key, svgVml.DeserializeOval(pt.value));
+							});
+							const ai = new GraphAI(params.boardSize.iGridWidth, params.boardSize.iGridHeight, points);
+							const clicked_status = params.clickedPointStatus;
+							const graph = await ai.BuildGraph({
+								freePointStatus: clicked_status,
+								// cpufillCol: clicked_status === StatusEnum.POINT_FREE_RED ? 'var(--redish)' : 'var(--bluish)',
+								visuals: false
+							});
+							vertices = graph.vertices.map(function (pt) {
+								const { x, y } = pt.GetPosition();
+								return [x, y];
+							});
+						}
+						break;
+					case "BY_COORDINATES":
+						vertices = params.points.map(function (pt) {
+							const { x, y } = pt;
+							return [x, y];
+						});
+						break;
+					default:
+						throw new Error(`unknown params.subOperation = ${params.subOperation}`);
+				}
 
-
-				const vertices = graph.vertices.map(function (pt) {
-					const { x, y } = pt.GetPosition();
-					return [x, y];
-				});
 
 				let convex_hull = null, mapped_verts, cw_sorted_verts;
 				if (vertices.length > 0) {
