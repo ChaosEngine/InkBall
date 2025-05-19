@@ -51,7 +51,6 @@ addEventListener('message', async function (e) {
 
 		case "CONCAVEMAN":
 			{
-				let vertices;
 				switch (params.subOperation) {
 					case "BY_POINTS":
 						{
@@ -69,32 +68,36 @@ addEventListener('message', async function (e) {
 								// cpufillCol: clicked_status === StatusEnum.POINT_FREE_RED ? 'var(--redish)' : 'var(--bluish)',
 								visuals: false
 							});
-							vertices = graph.vertices.map(function (pt) {
+							const vertices = graph.vertices.map(function (pt) {
 								const { x, y } = pt.GetPosition();
 								return [x, y];
 							});
+
+							let convex_hull = null, cw_sorted_verts;
+							if (vertices.length > 0) {
+								convex_hull = concaveman(vertices, params.concavity ?? 2.0, params.lengthThreshold ?? 0.0);
+
+								const mapped_verts = convex_hull.map(([x, y]) => ({ x, y }));
+								cw_sorted_verts = sortPointsClockwise(mapped_verts);
+							}
+
+							postMessage({ operation: params.operation, convex_hull, cw_sorted_verts });
 						}
 						break;
-					case "BY_COORDINATES":
-						vertices = params.points.map(function (pt) {
-							const { x, y } = pt;
-							return [x, y];
-						});
+					case "BY_COORDS":
+						{
+							const vertices = params.points.map(({ x, y }) => [x, y]);
+
+							let convex_hull = null;
+							if (vertices.length > 0)
+								convex_hull = concaveman(vertices, params.concavity ?? 2.0, params.lengthThreshold ?? 0.0);
+
+							postMessage({ operation: params.operation, convex_hull });
+						}
 						break;
 					default:
 						throw new Error(`unknown params.subOperation = ${params.subOperation}`);
 				}
-
-
-				let convex_hull = null, mapped_verts, cw_sorted_verts;
-				if (vertices.length > 0) {
-					convex_hull = concaveman(vertices, params.concavity ?? 2.0, params.lengthThreshold ?? 0.0);
-
-					mapped_verts = convex_hull.map(([x, y]) => ({ x, y }));
-					cw_sorted_verts = sortPointsClockwise(mapped_verts);
-				}
-
-				postMessage({ operation: params.operation, convex_hull: convex_hull, cw_sorted_verts: cw_sorted_verts });
 			}
 			break;
 
@@ -226,7 +229,6 @@ addEventListener('message', async function (e) {
 		case "CLUSTERING":
 			{
 				const { dataset, method, numberOfClusters, neighborhoodRadius, minPointsPerCluster } = params;
-				// LocalLog(dataset);
 				switch (method) {
 					case "KMEANS":
 						{

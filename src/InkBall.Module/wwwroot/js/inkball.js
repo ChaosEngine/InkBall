@@ -2498,6 +2498,115 @@ class InkBallGame {
 		}
 	}
 
+	#LoadAIParamsFromStore(store) {
+		const fromStore = JSON.parse(store.getItem("AIOpts")) || {};
+		const obj2Return = {};
+
+		if (fromStore?.concavity !== undefined) {
+			let concavity = parseFloat(fromStore.concavity);
+			concavity = (isNaN(concavity) || concavity <= 0) ? 2.0 : concavity;
+			obj2Return.concavity = concavity;
+		}
+		else
+			obj2Return.concavity = 2.0;
+
+		if (fromStore?.lengthThreshold !== undefined) {
+			let lengthThreshold = parseFloat(fromStore.lengthThreshold);
+			lengthThreshold = (isNaN(lengthThreshold) || lengthThreshold <= 0) ? 0.0 : lengthThreshold;
+			obj2Return.lengthThreshold = lengthThreshold;
+		}
+		else
+			obj2Return.lengthThreshold = 0.0;
+
+		if (fromStore?.lastClickedX !== undefined && this.#iLastX < 0) {
+			let lastClickedX = parseInt(fromStore.lastClickedX);
+			lastClickedX = (isNaN(lastClickedX) || lastClickedX <= 0) ? this.#iLastX : lastClickedX;
+			obj2Return.lastClickedX = lastClickedX;
+		}
+		else
+			obj2Return.lastClickedX = this.#iLastX;
+
+		if (fromStore?.lastClickedY !== undefined && this.#iLastY < 0) {
+			let lastClickedY = parseInt(fromStore.lastClickedY);
+			lastClickedY = (isNaN(lastClickedY) || lastClickedY <= 0) ? this.#iLastY : lastClickedY;
+			obj2Return.lastClickedY = lastClickedY;
+		}
+		else
+			obj2Return.lastClickedY = this.#iLastY;
+
+		if (fromStore?.numberOfClusters !== undefined) {
+			let numberOfClusters = parseInt(fromStore.numberOfClusters);
+			numberOfClusters = (isNaN(numberOfClusters) || numberOfClusters <= 0) ? 5 : numberOfClusters;
+			obj2Return.numberOfClusters = numberOfClusters;
+		}
+		else
+			obj2Return.numberOfClusters = 5;
+
+		if (fromStore?.neighborhoodRadius !== undefined) {
+			let neighborhoodRadius = parseInt(fromStore.neighborhoodRadius);
+			neighborhoodRadius = (isNaN(neighborhoodRadius) || neighborhoodRadius <= 0) ? 2 : neighborhoodRadius;
+			obj2Return.neighborhoodRadius = neighborhoodRadius;
+		}
+		else
+			obj2Return.neighborhoodRadius = 2;
+
+		if (fromStore?.minPointsPerCluster !== undefined) {
+			let minPointsPerCluster = parseInt(fromStore.minPointsPerCluster);
+			minPointsPerCluster = (isNaN(minPointsPerCluster) || minPointsPerCluster <= 0) ? 2 : minPointsPerCluster;
+			obj2Return.minPointsPerCluster = minPointsPerCluster;
+		}
+		else
+			obj2Return.minPointsPerCluster = 2;
+
+		if (fromStore?.clusteringMethod !== undefined && ["KMEANS", "OPTICS", "DBSCAN"].includes(fromStore.clusteringMethod.toUpperCase())) {
+			obj2Return.clusteringMethod = fromStore.clusteringMethod.toUpperCase();
+		}
+		else
+			obj2Return.clusteringMethod = "KMEANS";
+
+		return obj2Return;
+	}
+
+	#SaveAIParamsToStore(params, store) {
+		const toStore = JSON.parse(store.getItem("AIOpts")) || {};
+		let persist = false;
+		if (params.lastClickedX !== toStore?.lastClickedX) {
+			toStore.lastClickedX = params.lastClickedX;
+			persist = true;
+		}
+		if (params.lastClickedY !== toStore?.lastClickedY) {
+			toStore.lastClickedY = params.lastClickedY;
+			persist = true;
+		}
+		if (params.concavity !== toStore?.concavity) {
+			toStore.concavity = params.concavity;
+			persist = true;
+		}
+		if (params.lengthThreshold !== toStore?.lengthThreshold) {
+			toStore.lengthThreshold = params.lengthThreshold;
+			persist = true;
+		}
+		if (params.numberOfClusters !== toStore?.numberOfClusters) {
+			toStore.numberOfClusters = params.numberOfClusters;
+			persist = true;
+		}
+		if (params.neighborhoodRadius !== toStore?.neighborhoodRadius) {
+			toStore.neighborhoodRadius = params.neighborhoodRadius;
+			persist = true;
+		}
+		if (params.minPointsPerCluster !== toStore?.minPointsPerCluster) {
+			toStore.minPointsPerCluster = params.minPointsPerCluster;
+			persist = true;
+		}
+		if (params.clusteringMethod !== toStore?.clusteringMethod) {
+			toStore.clusteringMethod = params.clusteringMethod.toUpperCase();
+			persist = true;
+		}
+
+		if (persist === true)
+			store.setItem("AIOpts", JSON.stringify(toStore));
+	}
+
 	/**
 	 * Worker entry point - async version
 	 * @param {any} setupFunction - init params callback to be given a worker as 1st param
@@ -2565,76 +2674,7 @@ class InkBallGame {
 	async #OnTestConcaveman(event) {
 		event.preventDefault();
 
-		const loadParamsFromStore = (store) => {
-			let fromStore = JSON.parse(store.getItem("AIConcaveman")) || {};
-			const obj2Return = {};
-
-			if (fromStore?.concavity !== undefined) {
-				let concavity = parseFloat(fromStore.concavity);
-				concavity = (isNaN(concavity) || concavity <= 0) ? 2.0 : concavity;
-				obj2Return.concavity = concavity;
-			}
-			else
-				obj2Return.concavity = 2.0;
-
-			if (fromStore?.lengthThreshold !== undefined) {
-				let lengthThreshold = parseFloat(fromStore.lengthThreshold);
-				lengthThreshold = (isNaN(lengthThreshold) || lengthThreshold <= 0) ? 0.0 : lengthThreshold;
-				obj2Return.lengthThreshold = lengthThreshold;
-			}
-			else
-				obj2Return.lengthThreshold = 0.0;
-
-			fromStore = JSON.parse(store.getItem("AIClustering")) || {};
-			if (fromStore?.lastClickedX !== undefined && this.#iLastX < 0) {
-				let lastClickedX = parseInt(fromStore.lastClickedX);
-				lastClickedX = (isNaN(lastClickedX) || lastClickedX <= 0) ? this.#iLastX : lastClickedX;
-				obj2Return.lastClickedX = lastClickedX;
-			}
-			else
-				obj2Return.lastClickedX = this.#iLastX;
-
-			if (fromStore?.lastClickedY !== undefined && this.#iLastY < 0) {
-				let lastClickedY = parseInt(fromStore.lastClickedY);
-				lastClickedY = (isNaN(lastClickedY) || lastClickedY <= 0) ? this.#iLastY : lastClickedY;
-				obj2Return.lastClickedY = lastClickedY;
-			}
-			else
-				obj2Return.lastClickedY = this.#iLastY;
-
-			return obj2Return;
-		};
-		const saveParamsToStore = (params, store) => {
-			let toStore = JSON.parse(store.getItem("AIConcaveman")) || {};
-			let persist = false;
-			if (params.concavity !== toStore?.concavity) {
-				toStore.concavity = params.concavity;
-				persist = true;
-			}
-			if (params.lengthThreshold !== toStore?.lengthThreshold) {
-				toStore.lengthThreshold = params.lengthThreshold;
-				persist = true;
-			}
-
-			if (persist === true)
-				store.setItem("AIConcaveman", JSON.stringify(toStore));
-
-			persist = false;
-			toStore = JSON.parse(store.getItem("AIClustering")) || {};
-			if (params.lastClickedX !== toStore?.lastClickedX) {
-				toStore.lastClickedX = params.lastClickedX;
-				persist = true;
-			}
-			if (params.lastClickedY !== toStore?.lastClickedY) {
-				toStore.lastClickedY = params.lastClickedY;
-				persist = true;
-			}
-
-			if (persist === true)
-				store.setItem("AIClustering", JSON.stringify(toStore));
-		};
-
-		const runParams = loadParamsFromStore(window.localStorage);
+		const runParams = this.#LoadAIParamsFromStore(window.localStorage);
 		if (!(runParams.lastClickedY >= 0 && runParams.lastClickedX >= 0)) {
 			LocalLog(localizeMessage('game.AI.clustFirstClick', "!!!First you need to click some point with mouse to pick the color!!!"));
 			return;
@@ -2661,7 +2701,7 @@ class InkBallGame {
 				lengthThreshold: runParams.lengthThreshold
 			});
 		});
-		saveParamsToStore(runParams, window.localStorage);
+		this.#SaveAIParamsToStore(runParams, window.localStorage);
 
 		if (data.convex_hull && data.convex_hull.length > 0) {
 			const convex_hull = data.convex_hull;
@@ -3073,194 +3113,132 @@ class InkBallGame {
 	}
 
 	async #OnTestClustering(event) {
-		const loadParamsFromStore = (store) => {
-			const fromStore = JSON.parse(store.getItem("AIClustering")) || {};
-			const obj2Return = {};
-
-			if (fromStore?.lastClickedX !== undefined && this.#iLastX < 0) {
-				let lastClickedX = parseInt(fromStore.lastClickedX);
-				lastClickedX = (isNaN(lastClickedX) || lastClickedX <= 0) ? this.#iLastX : lastClickedX;
-				obj2Return.lastClickedX = lastClickedX;
-			}
-			else
-				obj2Return.lastClickedX = this.#iLastX;
-
-			if (fromStore?.lastClickedY !== undefined && this.#iLastY < 0) {
-				let lastClickedY = parseInt(fromStore.lastClickedY);
-				lastClickedY = (isNaN(lastClickedY) || lastClickedY <= 0) ? this.#iLastY : lastClickedY;
-				obj2Return.lastClickedY = lastClickedY;
-			}
-			else
-				obj2Return.lastClickedY = this.#iLastY;
-
-			if (fromStore?.numberOfClusters !== undefined) {
-				let numberOfClusters = parseInt(fromStore.numberOfClusters);
-				numberOfClusters = (isNaN(numberOfClusters) || numberOfClusters <= 0) ? 5 : numberOfClusters;
-				obj2Return.numberOfClusters = numberOfClusters;
-			}
-			else
-				obj2Return.numberOfClusters = 5;
-
-			if (fromStore?.neighborhoodRadius !== undefined) {
-				let neighborhoodRadius = parseInt(fromStore.neighborhoodRadius);
-				neighborhoodRadius = (isNaN(neighborhoodRadius) || neighborhoodRadius <= 0) ? 2 : neighborhoodRadius;
-				obj2Return.neighborhoodRadius = neighborhoodRadius;
-			}
-			else
-				obj2Return.neighborhoodRadius = 2;
-
-			if (fromStore?.minPointsPerCluster !== undefined) {
-				let minPointsPerCluster = parseInt(fromStore.minPointsPerCluster);
-				minPointsPerCluster = (isNaN(minPointsPerCluster) || minPointsPerCluster <= 0) ? 2 : minPointsPerCluster;
-				obj2Return.minPointsPerCluster = minPointsPerCluster;
-			}
-			else
-				obj2Return.minPointsPerCluster = 2;
-
-			if (fromStore?.method !== undefined && ["KMEANS", "OPTICS", "DBSCAN"].includes(fromStore.method.toUpperCase())) {
-				obj2Return.method = fromStore.method.toUpperCase();
-			}
-			else
-				obj2Return.method = "KMEANS";
-
-			return obj2Return;
-		};
-		const saveParamsToStore = (params, store) => {
-			const toStore = JSON.parse(store.getItem("AIClustering")) || {};
-			let persist = false;
-			if (params.lastClickedX !== toStore?.lastClickedX) {
-				toStore.lastClickedX = params.lastClickedX;
-				persist = true;
-			}
-			if (params.lastClickedY !== toStore?.lastClickedY) {
-				toStore.lastClickedY = params.lastClickedY;
-				persist = true;
-			}
-			if (params.numberOfClusters !== toStore?.numberOfClusters) {
-				toStore.numberOfClusters = params.numberOfClusters;
-				persist = true;
-			}
-			if (params.neighborhoodRadius !== toStore?.neighborhoodRadius) {
-				toStore.neighborhoodRadius = params.neighborhoodRadius;
-				persist = true;
-			}
-			if (params.minPointsPerCluster !== toStore?.minPointsPerCluster) {
-				toStore.minPointsPerCluster = params.minPointsPerCluster;
-				persist = true;
-			}
-			if (params.method !== toStore?.method) {
-				toStore.method = params.method.toUpperCase();
-				persist = true;
-			}
-
-
-			if (persist === true)
-				store.setItem("AIClustering", JSON.stringify(toStore));
-		};
-
 		event.preventDefault();
+
 		//checks for valid points, color, states
-		//get from local_storage
-		const runParams = loadParamsFromStore(window.localStorage);
-		if (!(runParams.lastClickedY >= 0 && runParams.lastClickedX >= 0)) {
+		//get options from local_storage
+		const aiParams = this.#LoadAIParamsFromStore(window.localStorage);
+		if (!(aiParams.lastClickedY >= 0 && aiParams.lastClickedX >= 0)) {
 			LocalLog(localizeMessage('game.AI.clustFirstClick', "!!!First you need to click some point with mouse to pick the color!!!"));
 			return;
 		}
-		const point_color = (await this.#Points.get(runParams.lastClickedY * this.#iGridWidth + runParams.lastClickedX))?.GetFillColor();
+		//check if point exists, if so get color and status
+		const point_color = (await this.#Points.get(aiParams.lastClickedY * this.#iGridWidth + aiParams.lastClickedX))?.GetFillColor();
 		const point_status = point_color === this.#COLOR_RED ? StatusEnum.POINT_FREE_RED : StatusEnum.POINT_FREE_BLUE;
 
+		//filter same color and status of last clicked point
+		//we are going to operate on those points only
 		const arrOfArrOfPoints = [];
 		for (const pt of await this.#Points.values()) {
 			if (pt !== undefined && pt.GetFillColor() === point_color && pt.GetStatus() === point_status) {
 				const { x, y } = pt.GetPosition();
+				//density clustering algorithm needs array of array of points only
 				arrOfArrOfPoints.push([x, y]);
 			}
 		}
-		saveParamsToStore(runParams, window.localStorage);
+		this.#SaveAIParamsToStore(aiParams, window.localStorage);//save params to local_storage
 
-		//Web Worker calc
+		//Web Worker calculation of density clustering
 		const data = await this.#RunAIWorker((worker) => {
 			worker.postMessage({
 				operation: "CLUSTERING",
 				dataset: arrOfArrOfPoints,
-				method: runParams.method,
-
-				numberOfClusters: runParams.numberOfClusters,
-				neighborhoodRadius: runParams.neighborhoodRadius,
-				minPointsPerCluster: runParams.minPointsPerCluster
+				method: aiParams.clusteringMethod,
+				//take params saved in local_storage
+				numberOfClusters: aiParams.numberOfClusters,
+				neighborhoodRadius: aiParams.neighborhoodRadius,
+				minPointsPerCluster: aiParams.minPointsPerCluster
 			});
 		});
 
+		//for each cluster, process it's point group
+		//and create a convex hull around it, then display it
 		if (data.clusters?.length > 0) {
 			const clusters = [];
 			for (const point_indexes of data.clusters) {
-				const rand_color = RandomColor();
-				const points_in_cluster = [];
-				const coords_array = [];
+				const rand_color = RandomColor();//random color for each points
+				const points_in_cluster = [];//array of points in cluster
+				const point_coords = [];//array of points coordinates
 				for (const index of point_indexes) {
+					//mark those cluster found points visually
+					//get x,y coordinates of point from cluster input array of arrays back
 					const [x, y] = arrOfArrOfPoints[index];
-					const pt = await this.#Points.get(y * this.#iGridWidth + x);
+					const pt = await this.#Points.get(y * this.#iGridWidth + x);//get point from points store
 					if (pt) {
-						points_in_cluster.push(pt);
-						coords_array.push({ x, y });
+						points_in_cluster.push(pt);//add point to simple array
+						point_coords.push({ x, y });//add points coordinates to array
 
-						pt.SetStrokeColor(rand_color);
-						pt.StrokeWeight(0.45);
-						// pt.SetFillColor(rand_color);
+						pt.SetStrokeColor(rand_color);//set color to some random color and visually "pop"
+						pt.StrokeWeight(0.45);//
 						pt.SetZIndex(100);
 						pt.setAttribute("r", 2 / this.#iGridSpacingX);
-						if (y === runParams.lastClickedY && x === runParams.lastClickedX)
-							this.#cyclesFound = points_in_cluster;
+						if (y === aiParams.lastClickedY && x === aiParams.lastClickedX)
+							this.#cyclesFound = points_in_cluster;//save points in cluster to be used later
 					}
 				}
-				clusters.push(points_in_cluster);
-				const wrapping_bbox = AABB.fromPoints(coords_array);
-				wrapping_bbox.expand(1);
+				clusters.push(points_in_cluster);//add points in cluster to array of clusters
+
+				//0. create bounding box around points wrapping all points in cluster
+				const wrapping_bbox = AABB.fromPoints(point_coords);
+				wrapping_bbox.expand(1);//expand it a bit by 1 unit in all directions -> enlarge it
 
 
 				// if (clusters.length === 9)
 				{
-					const candidate_path = [];
+					//1. Convert candidate_path to a Map to ensure uniqueness by x,y and to avoid duplicates
+					//this hold points of prepared surrounding path
+					const candidate_path_map = new Map();
+					//2. devide wrapping_bbox into 1x1 unit bbox and gather matching points
 					for (let j = wrapping_bbox.minY; j <= wrapping_bbox.maxY; j++) {
 						for (let i = wrapping_bbox.minX; i <= wrapping_bbox.maxX; i++) {
 
-							const is_ok = coords_array.some(({ x, y }) => {
-								return ((x === i && y === j) ||
+							//3. check if any created bbox point contains any of the points in point_coords (cluster points)
+							const is_ok = point_coords.some(({ x, y }) => {
+								return (//(x === i && y === j) ||
 									(x === i + 1 && y === j) ||
 									(x === i && y === j + 1) ||
 									(x === i + 1 && y === j + 1));
 							});
 							if (is_ok) {
+								//4. if so, create a rectangle around it 1x1 unit fir visualization
 								this.#SvgVml.CreateRect(i, j, 1, 1, rand_color);
-								// i, j and i+1, j+1 are dimensions of the bounding box
-								// find which points of it are not included in point_only_arr
-								const boundingBoxPoints = [
-									{ x: i, y: j },
+								//5. i,j and i+1, j+1 are dimensions of the bounding box
+								// 	 find which points of it are NOT included in point_coords
+								// 	 3 points of the rectangle
+								[
+									// { x: i, y: j },
 									{ x: i + 1, y: j },
 									{ x: i, y: j + 1 },
 									{ x: i + 1, y: j + 1 }
-								];
-
-								const missingPoints = boundingBoxPoints.filter(({ x, y }) => {
-									return !coords_array.some(point => point.x === x && point.y === y);
+								].filter(({ x, y }) => {
+									//6. not included in point_coords (not from cluster points), so they should be around
+									// 	 cluster points, or inside
+									return !point_coords.some(point => point.x === x && point.y === y)
+										//no duplicates from alread added points
+										&& !candidate_path_map.has(`${x},${y}`);
+								}).forEach(pt => {
+									//7. add point to candidate path map
+									candidate_path_map.set(`${pt.x},${pt.y}`, pt);
 								});
-								//add all missing points to path
-								candidate_path.push(...missingPoints);
 							}
 						}
 					}
-					LocalLog(`Path points around bounding box points: ${JSON.stringify(candidate_path)}`);
+					//8. convert candidate_path_map to array of points
+					const candidate_path = Array.from(candidate_path_map.values());
+					LocalLog(`Path points #${clusters.length} around bounding box points(${candidate_path.length}): ${JSON.stringify(candidate_path)}`);
 
+					//9. calculate convex hull of candidate_path points with concaveman algorithm
 					const data = await this.#RunAIWorker((worker) => {
 						worker.postMessage({
 							operation: "CONCAVEMAN",
-							subOperation: "BY_COORDINATES",
+							subOperation: "BY_COORDS",
 							points: candidate_path,
-							concavity: runParams.concavity,
-							lengthThreshold: runParams.lengthThreshold
+							concavity: aiParams.concavity,
+							lengthThreshold: aiParams.lengthThreshold
 						});
 					});
 
+					//10. get points of convex hull and create a polyline around it
 					const convex_hull = data?.convex_hull;
 					if (convex_hull?.length > 0) {
 						const poly_line = this.#SvgVml.CreatePolyline(
@@ -3274,7 +3252,7 @@ class InkBallGame {
 
 				// LocalLog(this.#SvgVml.CreateRect(wrapping_bbox.minX, wrapping_bbox.minY, wrapping_bbox.width, wrapping_bbox.height, 'rgb(128,128,128,128)'));
 			}
-			LocalLog({ method: data.method, clusters, plot: data.plot, noise: data.noise });
+			LocalLog({ clusteringMethod: data.method, clusters, plot: data.plot, noise: data.noise });
 		}
 	}
 
