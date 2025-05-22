@@ -411,7 +411,8 @@ class SvgVml {
 
 			return svgAvailable ? this.#cont : null;
 		};
-		this.CreatePolyline = function (points, col, width = undefined) {
+
+		function CreatePolylineImpl(targetEL, points, col, width = undefined) {
 			const o = documentCreateElementNS_Element("polyline");
 			if (svgAntialias !== undefined)
 				o.setAttribute("shape-rendering", svgAntialias === true ? "auto" : "optimizeSpeed");
@@ -427,8 +428,12 @@ class SvgVml {
 			// o.setAttribute("stroke-linejoin", "round");
 			o.setAttribute("data-id", 0);
 
-			this.#cont.appendChild(o);
+			targetEL.appendChild(o);
 			return o;
+		}
+
+		this.CreatePolyline = function (points, col, width = undefined) {
+			return CreatePolylineImpl(this.#cont, points, col, width);
 		};
 		this.CreateOval = function (radius = undefined) {
 			const o = documentCreateElementNS_Element("circle");
@@ -443,18 +448,8 @@ class SvgVml {
 			this.#cont.appendChild(o);
 			return o;
 		};
-		/**
-		 * Creates rectangle
-		 * For example: <rect x="15" y="25" width="20" height="20" rx="2" fill="transparent" stroke="green" stroke-width="0.25"></rect>
-		 * @param {number} x x coordinate of top left corner
-		 * @param {number} y y coordinate of top left corner
-		 * @param {number} width width
-		 * @param {number} height height
-		 * @param {string} stroke color
-		 * @param {string} fill color
-		 * @returns {HTMLElement} created rectangle
-		 */
-		this.CreateRect = function (x, y, width, height, stroke = "green", fill = "transparent") {
+
+		function CreateRectImpl(targetEL, x, y, width, height, stroke = "green", fill = "transparent") {
 			const o = documentCreateElementNS_Element("rect");
 			if (svgAntialias !== undefined)
 				o.setAttribute("shape-rendering", svgAntialias === true ? "auto" : "optimizeSpeed");
@@ -470,8 +465,51 @@ class SvgVml {
 			o.setAttribute("stroke-width", 0.1);
 			// o.setAttribute("stroke-dasharray", "0.5,0.2"); // Make the line dashed
 
-			this.#cont.appendChild(o);
+			targetEL.appendChild(o);
 			return o;
+		}
+
+		/**
+		 * Create rectangle
+		 * For example: <rect x="15" y="25" width="20" height="20" rx="2" fill="transparent" stroke="green" stroke-width="0.25"></rect>
+		 * @param {number} x x coordinate of top left corner
+		 * @param {number} y y coordinate of top left corner
+		 * @param {number} width width
+		 * @param {number} height height
+		 * @param {string} stroke color
+		 * @param {string} fill color
+		 * @returns {HTMLElement} created rectangle
+		 */
+		this.CreateRect = function (x, y, width, height, stroke = "green", fill = "transparent") {
+			return CreateRectImpl(this.#cont, x, y, width, height, stroke, fill);
+		};
+		/**
+		 * Create a fragment to be used for batch operations
+		 * @returns {object} container of fragment context and methods operating on it
+		 */
+		this.BeginBatchFragment = function () {
+			const fragment = document.createDocumentFragment(); // Create a DocumentFragment
+			const parent = this.#cont; // Get the parent of the SVG container
+
+			return {
+				cont: fragment,
+
+				// Append the fragment to the SVG context
+				EndBatchFragment: function () {
+					parent.appendChild(this.cont); // Append the fragment to the SVG context
+					this.cont = null; // Clear the reference to the fragment
+				},
+
+				// Create a rect into the fragment
+				CreateRect: function (x, y, width, height, stroke = "green", fill = "transparent") {
+					return CreateRectImpl(this.cont, x, y, width, height, stroke, fill);
+				},
+
+				// Create a polyline into the fragment
+				CreatePolyline: function (points, col, width = undefined) {
+					return CreatePolylineImpl(this.cont, points, col, width);
+				}
+			};
 		};
 
 		/**

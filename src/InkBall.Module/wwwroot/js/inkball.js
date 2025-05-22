@@ -3150,11 +3150,12 @@ class InkBallGame {
 				minPointsPerCluster: aiParams.minPointsPerCluster
 			});
 		});
+		const fragment = this.#SvgVml.BeginBatchFragment();
 
 		//for each cluster, process it's point group
 		//and create a convex hull around it, then display it
 		if (data.clusters?.length > 0) {
-			const clusters = [];
+			const cluster_points = [];
 			for (const point_indexes of data.clusters) {
 				const rand_color = RandomColor();//random color for each points
 				const points_in_cluster = [];//array of points in cluster
@@ -3176,63 +3177,63 @@ class InkBallGame {
 							this.#cyclesFound = points_in_cluster;//save points in cluster to be used later
 					}
 				}
-				clusters.push(points_in_cluster);//add points in cluster to array of clusters
+				cluster_points.push(points_in_cluster);//add points in cluster to array of clusters
 
 				//0. create bounding box around points wrapping all points in cluster
 				const wrapping_bbox = AABB.fromPoints(point_coords);
 				wrapping_bbox.expand(1);//expand it a bit by 1 unit in all directions -> enlarge it
 
 
-				// if (clusters.length === 9)
+				// if (cluster_points.length === 9)
 				{
 					//1. Convert candidate_path to a Map to ensure uniqueness by x,y and to avoid duplicates
 					//this hold points of prepared surrounding path
-					const candidate_path_map = new Map();
+					const candidate_path = new Map();
 					//2. devide wrapping_bbox into 1x1 unit bbox and gather matching points
-					for (let j = wrapping_bbox.minY; j <= wrapping_bbox.maxY; j++) {
-						for (let i = wrapping_bbox.minX; i <= wrapping_bbox.maxX; i++) {
+					for (let j = wrapping_bbox.minY; j < wrapping_bbox.maxY; j++) {
+						for (let i = wrapping_bbox.minX; i < wrapping_bbox.maxX; i++) {
+
+							const current_unit_bbox = [
+								// { x: i, y: j },
+								{ x: i + 1, y: j },
+								{ x: i, y: j + 1 },
+								{ x: i + 1, y: j + 1 }
+							];
 
 							//3. check if any created bbox point contains any of the points in point_coords (cluster points)
-							const is_ok = point_coords.some(({ x, y }) => {
-								return (//(x === i && y === j) ||
-									(x === i + 1 && y === j) ||
-									(x === i && y === j + 1) ||
-									(x === i + 1 && y === j + 1));
+							const contains_oponent_cluster_point = current_unit_bbox.some(({ x, y }) => {
+								return point_coords.some(pt => pt.x === x && pt.y === y);
 							});
-							if (is_ok) {
-								//4. if so, create a rectangle around it 1x1 unit fir visualization
-								this.#SvgVml.CreateRect(i, j, 1, 1, rand_color);
+							//4. if so, create a rectangle around it 1x1 unit fir visualization
+							fragment.CreateRect(i, j, 1, 1, rand_color);
+							if (contains_oponent_cluster_point) {
 								//5. i,j and i+1, j+1 are dimensions of the bounding box
 								// 	 find which points of it are NOT included in point_coords
 								// 	 3 points of the rectangle
-								[
-									// { x: i, y: j },
-									{ x: i + 1, y: j },
-									{ x: i, y: j + 1 },
-									{ x: i + 1, y: j + 1 }
-								].filter(({ x, y }) => {
+								current_unit_bbox.filter(({ x, y }) => {
 									//6. not included in point_coords (not from cluster points), so they should be around
 									// 	 cluster points, or inside
 									return !point_coords.some(point => point.x === x && point.y === y)
-										//no duplicates from alread added points
-										&& !candidate_path_map.has(`${x},${y}`);
+										//no duplicates from already added points
+										&& !candidate_path.has(`${x},${y}`);
 								}).forEach(pt => {
 									//7. add point to candidate path map
-									candidate_path_map.set(`${pt.x},${pt.y}`, pt);
+									candidate_path.set(`${pt.x},${pt.y}`, pt);
 								});
 							}
 						}
 					}
+
 					//8. convert candidate_path_map to array of points
-					const candidate_path = Array.from(candidate_path_map.values());
-					LocalLog(`Path points #${clusters.length} around bounding box points(${candidate_path.length}): ${JSON.stringify(candidate_path)}`);
+					const surrounding_path = [...candidate_path.values()];
+					LocalLog(`Path points #${cluster_points.length} around bounding box points(${surrounding_path.length}): ${JSON.stringify(surrounding_path)}`);
 
 					//9. calculate convex hull of candidate_path points with concaveman algorithm
 					const data = await this.#RunAIWorker((worker) => {
 						worker.postMessage({
 							operation: "CONCAVEMAN",
 							subOperation: "BY_COORDS",
-							points: candidate_path,
+							points: surrounding_path,
 							concavity: aiParams.concavity,
 							lengthThreshold: aiParams.lengthThreshold
 						});
@@ -3241,7 +3242,7 @@ class InkBallGame {
 					//10. get points of convex hull and create a polyline around it
 					const convex_hull = data?.convex_hull;
 					if (convex_hull?.length > 0) {
-						const poly_line = this.#SvgVml.CreatePolyline(
+						const poly_line = fragment.CreatePolyline(
 							convex_hull.map(([x, y]) => x + ',' + y).join(' ')
 							, 'green');
 						poly_line.SetID(-1);
@@ -3250,9 +3251,10 @@ class InkBallGame {
 					}
 				}
 
-				// LocalLog(this.#SvgVml.CreateRect(wrapping_bbox.minX, wrapping_bbox.minY, wrapping_bbox.width, wrapping_bbox.height, 'rgb(128,128,128,128)'));
+				// LocalLog(fragment.CreateRect(wrapping_bbox.minX, wrapping_bbox.minY, wrapping_bbox.width, wrapping_bbox.height, 'rgb(128,128,128,128)'));
 			}
-			LocalLog({ clusteringMethod: data.method, clusters, plot: data.plot, noise: data.noise });
+			fragment.EndBatchFragment();
+			LocalLog({ clusteringMethod: data.method, clustersPoints: cluster_points.sort(), plot: data.plot, noise: data.noise });
 		}
 	}
 
