@@ -3,7 +3,7 @@
 @inject Microsoft.AspNetCore.Authorization.IAuthorizationService authorization
 @model GameModel
 @{
-	ViewData["Title"] = "Game";
+	ViewData["Title"] = "ib:game.title";
 
 	HtmlHelpers.RenderHeaderSection(this, Url, commonUIConfigureOptions);
 
@@ -32,7 +32,7 @@
 		surrender_win_cancel_name = "cancel";
 	}
 }
-<h3 class="inkgame" data-i18n='ib:game.name'>Inkball Game</h3>
+<h3 class="inkgame" data-i18n='ib:game.title'>Inkball Game</h3>
 <p class="inkgame">
 	<!-- Debug State -->
 	iGameID=<span id="gameID"></span>,

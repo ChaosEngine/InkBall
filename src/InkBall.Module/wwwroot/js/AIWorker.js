@@ -14,8 +14,12 @@ addEventListener('message', async function (e) {
 
 		const shrd = await import(/* webpackIgnore: true */`./shared${isMinified ? '.min' : ''}.js`);
 
-		SvgVml = shrd.SvgVml, StatusEnum = shrd.StatusEnum, LocalLog = shrd.LocalLog, LocalError = shrd.LocalError,
-			sortPointsClockwise = shrd.sortPointsClockwise, pnpoly = shrd.pnpoly,
+		SvgVml = shrd.SvgVml,
+			StatusEnum = shrd.StatusEnum,
+			LocalLog = shrd.LocalLog,
+			LocalError = shrd.LocalError,
+			sortPointsClockwise = shrd.sortPointsClockwise,
+			pnpoly = shrd.pnpoly,
 			IsPointOutsideAllPaths = shrd.IsPointOutsideAllPaths;
 	}
 

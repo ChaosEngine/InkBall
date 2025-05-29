@@ -1526,12 +1526,15 @@ class InkBallGame {
 		}
 
 		if (sOwnedPoints !== "") {
-			sPathPoints = points.map((pt) => {
-				const x = pt.x, y = pt.y;
-				if (x === null || y === null) return '';
+			// sPathPoints = points.map(({ x, y }) => {
+			// 	if (x === null || y === null) return '';
+			// 	return `${x},${y}`;
+			// }).join(' ');
 
-				return `${x},${y}`;
-			}).join(' ');
+			sPathPoints = points.reduce((acc, { x, y }) => {
+				if (x === null || y === null) return '';
+				return acc + `${x},${y} `;
+			}, '').trimEnd();
 		}
 
 		return {
@@ -2562,7 +2565,15 @@ class InkBallGame {
 			obj2Return.clusteringMethod = fromStore.clusteringMethod.toUpperCase();
 		}
 		else
-			obj2Return.clusteringMethod = "KMEANS";
+			obj2Return.clusteringMethod = "DBSCAN";
+
+		if (fromStore?.visuals !== undefined) {
+			let visuals = fromStore.visuals.trim().toLowerCase();
+			visuals = ["true", "1", "yes", "on", "ok"].includes(visuals);
+			obj2Return.visuals = visuals;
+		}
+		else
+			obj2Return.visuals = true;
 
 		return obj2Return;
 	}
@@ -2600,6 +2611,10 @@ class InkBallGame {
 		}
 		if (params.clusteringMethod !== toStore?.clusteringMethod) {
 			toStore.clusteringMethod = params.clusteringMethod.toUpperCase();
+			persist = true;
+		}
+		if (params.visuals !== toStore?.visuals) {
+			toStore.visuals = params.visuals.toString().toLowerCase();
 			persist = true;
 		}
 
@@ -2706,9 +2721,9 @@ class InkBallGame {
 		if (data.convex_hull && data.convex_hull.length > 0) {
 			const convex_hull = data.convex_hull;
 
-			const line = this.#SvgVml.CreatePolyline(convex_hull.map(([x, y]) =>
-				parseInt(x) + ',' + parseInt(y))
-				.join(' '), 'green');
+			const line = this.#SvgVml.CreatePolyline(
+				convex_hull.reduce((acc, [x, y]) => acc + ` ${parseInt(x)},${parseInt(y)}`),
+				'green');
 			line.SetID(-1);
 
 			LocalLog(`convex_hull = ${convex_hull}`);
@@ -2852,7 +2867,7 @@ class InkBallGame {
 			this.#workingCyclePolyLine = null;
 		}
 		this.#cyclesFound.forEach(cycle => {
-			const line = this.#SvgVml.CreatePolyline(cycle.map(function (pt) {
+			const line = this.#SvgVml.CreatePolyline(cycle.map((pt) => {
 				const { x, y } = pt.GetPosition();
 				return `${x},${y}`;
 			}).join(' '), RandomColor());
@@ -3056,7 +3071,8 @@ class InkBallGame {
 			//
 			//serialize points as string: "y0,x0 y1,x1 y2,x2" but inverse order of coords: y,x
 			//
-			const pts = pointsArr.map((pt) => `${pt.y},${pt.x}`).join(' ');
+			// const pts = pointsArr.map((pt) => `${pt.y},${pt.x}`).join(' ');
+			const pts = pointsArr.reduce((acc, { x, y }) => acc + `${y},${x} `, '').trimEnd();
 
 			//if not existing, create new...
 			if (this.#workingCyclePolyLine === null) {
@@ -3150,7 +3166,10 @@ class InkBallGame {
 				minPointsPerCluster: aiParams.minPointsPerCluster
 			});
 		});
-		const fragment = this.#SvgVml.BeginBatchFragment();
+
+		let fragment;
+		if (aiParams.visuals)
+			fragment = this.#SvgVml.BeginBatchFragment();
 
 		//for each cluster, process it's point group
 		//and create a convex hull around it, then display it
@@ -3169,10 +3188,12 @@ class InkBallGame {
 						points_in_cluster.push(pt);//add point to simple array
 						point_coords.push({ x, y });//add points coordinates to array
 
-						pt.SetStrokeColor(rand_color);//set color to some random color and visually "pop"
-						pt.StrokeWeight(0.45);//
-						pt.SetZIndex(100);
-						pt.setAttribute("r", 2 / this.#iGridSpacingX);
+						if (aiParams.visuals) {
+							pt.SetStrokeColor(rand_color);//set color to some random color and visually "pop"
+							pt.StrokeWeight(0.45);//
+							pt.SetZIndex(100);
+							pt.setAttribute("r", 2 / this.#iGridSpacingX);
+						}
 						if (y === aiParams.lastClickedY && x === aiParams.lastClickedX)
 							this.#cyclesFound = points_in_cluster;//save points in cluster to be used later
 					}
@@ -3204,9 +3225,10 @@ class InkBallGame {
 							const contains_oponent_cluster_point = current_unit_bbox.some(({ x, y }) => {
 								return point_coords.some(pt => pt.x === x && pt.y === y);
 							});
-							//4. if so, create a rectangle around it 1x1 unit fir visualization
-							fragment.CreateRect(i, j, 1, 1, rand_color);
 							if (contains_oponent_cluster_point) {
+								//4. if so, create a rectangle around it 1x1 unit fir visualization
+								if (aiParams.visuals)
+									fragment.CreateRect(i, j, 1, 1, rand_color);
 								//5. i,j and i+1, j+1 are dimensions of the bounding box
 								// 	 find which points of it are NOT included in point_coords
 								// 	 3 points of the rectangle
@@ -3242,18 +3264,23 @@ class InkBallGame {
 					//10. get points of convex hull and create a polyline around it
 					const convex_hull = data?.convex_hull;
 					if (convex_hull?.length > 0) {
-						const poly_line = fragment.CreatePolyline(
-							convex_hull.map(([x, y]) => x + ',' + y).join(' ')
-							, 'green');
-						poly_line.SetID(-1);
+						// const poly_points = convex_hull.map(([x, y]) => `${x},${y}`).join(' ');
+						const poly_points = convex_hull.reduce((acc, [x, y]) => acc + ` ${x},${y}`);
+						if (aiParams.visuals) {
+							const poly_line = fragment.CreatePolyline(poly_points, 'green');
+							poly_line.SetID(-1);
 
-						LocalLog(poly_line);
+							LocalLog(poly_line);
+						} else {
+							LocalLog(`<polyline points='${poly_points}'></polyline>`);
+						}
 					}
 				}
 
 				// LocalLog(fragment.CreateRect(wrapping_bbox.minX, wrapping_bbox.minY, wrapping_bbox.width, wrapping_bbox.height, 'rgb(128,128,128,128)'));
 			}
-			fragment.EndBatchFragment();
+			if (aiParams.visuals)
+				fragment.EndBatchFragment();
 			LocalLog({ clusteringMethod: data.method, clustersPoints: cluster_points.sort(), plot: data.plot, noise: data.noise });
 		}
 	}
@@ -4129,10 +4156,14 @@ class InkBallGame {
 		//
 		//serialize points as string: "x0,y0 x1,y1 x2,y2"
 		//
-		const pts = pointsArr.map(pt => {
+		// const pts = pointsArr.map(pt => {
+		// 	const { x, y } = typeof pt.GetPosition === "function" ? pt.GetPosition() : pt;
+		// 	return `${x},${y}`;
+		// }).join(' ');
+		const pts = pointsArr.reduce((acc, pt) => {
 			const { x, y } = typeof pt.GetPosition === "function" ? pt.GetPosition() : pt;
-			return `${x},${y}`;
-		}).join(' ');
+			return acc + `${x},${y} `;
+		}, '').trimEnd();
 
 		//if not existing, create new...
 		if (this.#workingCyclePolyLine === null) {

@@ -1,5 +1,6 @@
 {
 	"home": {
+		"title": "InkBall Game",
 		"welcome": "Welcome",
 		"gamesList": "Games list",
 		"notLoggedIn": "You are not logged in ... or allowed 😅",
@@ -27,6 +28,7 @@
 		"playAgainstCPU": "Play against CPU"
 	},
 	"list": {
+		"title": "Games list",
 		"home": "Home",
 		"player1": "Player 1",
 		"player2": "Player 2",
@@ -50,7 +52,7 @@
 		"newGameOpts": "New game options"
 	},
 	"game": {
-		"name": "InkBall Game",
+		"title": "InkBall Game",
 		"playingWith": "playing with",
 		"vs": "vs",
 		"withRed": "red",
@@ -137,6 +139,7 @@
 		}
 	},
 	"highscores": {
+		"title": "Highscores",
 		"player": "Player",
 		"wins": "Wins",
 		"loses": "Loses",
@@ -144,6 +147,7 @@
 		"gameCount": "Game count"
 	},
 	"rules": {
+		"title": "Game rules",
 		"li00": "Player put dots on the grid one after another",
 		"li10": "When player wants to surround opponent dots, one choses",
 		"li11": "Draw line",

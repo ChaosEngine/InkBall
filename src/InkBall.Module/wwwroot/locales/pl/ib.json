@@ -1,5 +1,6 @@
 {
 	"home": {
+		"title": "Gra w kropki",
 		"welcome": "Witaj",
 		"gamesList": "Lista gier",
 		"notLoggedIn": "Nie jesteś zalogoway ... albo uprawniony 😅",
@@ -7,7 +8,7 @@
 		"logout": "Wyloguj",
 		"register": "Zarejestruj",
 		"continue": "Kontynuuj",
-		"best": "Najlepsi",
+		"best": "Ranking",
 		"gameRules": "Zasady gry",
 		"newGame": "Nowa gra",
 		"chooseGameType": "Wybierz typ gry",
@@ -27,6 +28,7 @@
 		"playAgainstCPU": "Graj przeciwko CPU"
 	},
 	"list": {
+		"title": "Lista gier",
 		"home": "Start",
 		"player1": "Gracz 1",
 		"player2": "Gracz 2",
@@ -50,7 +52,7 @@
 		"newGameOpts": "Opcje nowej gry"
 	},
 	"game": {
-		"name": "Gra w kropki",
+		"title": "Gra w kropki",
 		"playingWith": "gra ",
 		"vs": "vs",
 		"withRed": "czerwonymi",
@@ -137,6 +139,7 @@
 		}
 	},
 	"highscores": {
+		"title": "Ranking",
 		"player": "Gracz",
 		"wins": "Zwycięstwa",
 		"loses": "Przegrane",
@@ -144,6 +147,7 @@
 		"gameCount": "Liczba gier"
 	},
 	"rules": {
+		"title": "Zasady gry",
 		"li00": "Gracz umieszcza kropki na siatce jedna po drugiej",
 		"li10": "Kiedy gracz chce otoczyć kropki przeciwnika, wybiera",
 		"li11": "Rysuj ścieżkę",

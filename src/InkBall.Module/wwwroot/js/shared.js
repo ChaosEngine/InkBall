@@ -932,11 +932,17 @@ class GameStateStore {
 				const idb_path = {
 					iId: id_key,
 					Color: val.GetFillColor(),
-					PointsAsString: val.GetPointsString().split(" ").map((pt) => {
+					PointsAsString: val.GetPointsString().split(" ")
+					/* .map((pt) => {
 						let [x, y] = pt.split(',');
 						x = parseInt(x); y = parseInt(y);
 						return `${x},${y}`;
-					}).join(" ")
+					}).join(" ") */
+					.reduce((acc, pt) => {
+						let [x, y] = pt.split(',');
+						x = parseInt(x); y = parseInt(y);
+						return acc + ` ${x},${y}`;
+					})
 				};
 
 				await this.#StorePath(id_key, idb_path);
@@ -1553,45 +1559,6 @@ class AABB {
 	}
 
 	/**
-	 * Creates an AABB from a top-left corner (x, y), width, and height.
-	 * @param {number} x - The x-coordinate of the top-left corner.
-	 * @param {number} y - The y-coordinate of the top-left corner.
-	 * @param {number} width - The width of the AABB.
-	 * @param {number} height - The height of the AABB.
-	 * @returns {AABB} A new AABB instance.
-	 */
-	static fromXYWidthHeight(x, y, width, height) {
-		if (width < 0 || height < 0) {
-			LocalError("AABB.fromXYWidthHeight: Width and height should be non-negative.");
-			return new AABB(x, y, x, y); // Degenerate AABB
-		}
-		return new AABB(x, y, x + width, y + height);
-	}
-
-	/**
-	 * Creates an AABB from a center point and dimensions (width, height).
-	 * @param {number} centerX - The x-coordinate of the center.
-	 * @param {number} centerY - The y-coordinate of the center.
-	 * @param {number} width - The width of the AABB.
-	 * @param {number} height - The height of the AABB.
-	 * @returns {AABB} A new AABB instance.
-	 */
-	static fromCenterSize(centerX, centerY, width, height) {
-		if (width < 0 || height < 0) {
-			LocalError("AABB.fromCenterSize: Width and height should be non-negative.");
-			return new AABB(centerX, centerY, centerX, centerY); // Degenerate AABB
-		}
-		const halfWidth = width / 2;
-		const halfHeight = height / 2;
-		return new AABB(
-			centerX - halfWidth,
-			centerY - halfHeight,
-			centerX + halfWidth,
-			centerY + halfHeight
-		);
-	}
-
-	/**
 	 * Creates an AABB that encloses all given points.
 	 * Points should be objects with 'x' and 'y' properties (e.g., {x: number, y: number}).
 	 * @param {Array<{x: number, y: number}>} points - An array of points.
@@ -1604,8 +1571,8 @@ class AABB {
 
 		let minX = points[0].x;
 		let minY = points[0].y;
-		let maxX = points[0].x;
-		let maxY = points[0].y;
+		let maxX = minX;
+		let maxY = minY;
 
 		for (let i = 1; i < points.length; i++) {
 			const p = points[i];
@@ -1615,125 +1582,6 @@ class AABB {
 			if (p.y > maxY) maxY = p.y;
 		}
 		return new AABB(minX, minY, maxX, maxY);
-	}
-
-	/**
-	 * Gets the width of the AABB.
-	 * @returns {number} The width of the AABB.
-	 */
-	get width() {
-		return this.maxX - this.minX;
-	}
-
-	/**
-	 * Gets the height of the AABB.
-	 * @returns {number} The height of the AABB.
-	 */
-	get height() {
-		return this.maxY - this.minY;
-	}
-
-	/**
-	 * Gets the x-coordinate of the center of the AABB.
-	 * @returns {number} The x-coordinate of the center.
-	 */
-	get centerX() {
-		return this.minX + this.width / 2;
-	}
-
-	/**
-	 * Gets the y-coordinate of the center of the AABB.
-	 * @returns {number} The y-coordinate of the center.
-	 */
-	get centerY() {
-		return this.minY + this.height / 2;
-	}
-
-	/**
-	 * Checks if this AABB is valid (min coordinates are less than or equal to max coordinates).
-	 * @returns {boolean} True if valid, false otherwise.
-	 */
-	isValid() {
-		return this.minX <= this.maxX && this.minY <= this.maxY;
-	}
-
-	/**
-	 * Checks if this AABB intersects with another AABB.
-	 * @param {AABB} other - The other AABB to check against.
-	 * @returns {boolean} True if they intersect, false otherwise.
-	 */
-	intersects(other) {
-		if (!other || !(other instanceof AABB)) return false;
-		return (
-			this.minX < other.maxX &&
-			this.maxX > other.minX &&
-			this.minY < other.maxY &&
-			this.maxY > other.minY
-		);
-	}
-
-	/**
-	 * Checks if a point (x, y) is contained within this AABB (inclusive of edges).
-	 * @param {number} x - The x-coordinate of the point.
-	 * @param {number} y - The y-coordinate of the point.
-	 * @returns {boolean} True if the point is contained, false otherwise.
-	 */
-	containsPoint(x, y) {
-		return (
-			x >= this.minX &&
-			x <= this.maxX &&
-			y >= this.minY &&
-			y <= this.maxY
-		);
-	}
-
-	/**
-	 * Checks if another AABB is fully contained within this AABB.
-	 * @param {AABB} other - The other AABB.
-	 * @returns {boolean} True if the other AABB is fully contained, false otherwise.
-	 */
-	containsAABB(other) {
-		if (!other || !(other instanceof AABB)) return false;
-		return (
-			this.minX <= other.minX &&
-			this.minY <= other.minY &&
-			this.maxX >= other.maxX &&
-			this.maxY >= other.maxY
-		);
-	}
-
-	/**
-	 * Returns a new AABB that is the union of this AABB and another AABB.
-	 * The union is the smallest AABB that contains both.
-	 * @param {AABB} other - The other AABB.
-	 * @returns {AABB} A new AABB instance representing the union.
-	 */
-	union(other) {
-		if (!other || !(other instanceof AABB)) return this.clone(); // Or throw error
-		return new AABB(
-			Math.min(this.minX, other.minX),
-			Math.min(this.minY, other.minY),
-			Math.max(this.maxX, other.maxX),
-			Math.max(this.maxY, other.maxY)
-		);
-	}
-
-	/**
-	 * Returns a new AABB that is the intersection of this AABB and another AABB.
-	 * If they do not intersect, returns null.
-	 * @param {AABB} other - The other AABB.
-	 * @returns {AABB|null} A new AABB instance representing the intersection, or null.
-	 */
-	intersection(other) {
-		if (!other || !(other instanceof AABB) || !this.intersects(other)) {
-			return null;
-		}
-		return new AABB(
-			Math.max(this.minX, other.minX),
-			Math.max(this.minY, other.minY),
-			Math.min(this.maxX, other.maxX),
-			Math.min(this.maxY, other.maxY)
-		);
 	}
 
 	/**
@@ -1751,61 +1599,219 @@ class AABB {
 		this.maxY += deltaY;
 	}
 
-	/**
-	 * Returns a new AABB that is expanded to include the given point.
-	 * @param {number} x - The x-coordinate of the point.
-	 * @param {number} y - The y-coordinate of the point.
-	 * @returns {AABB} A new, expanded AABB instance.
-	 */
-	expandToIncludePoint(x, y) {
-		return new AABB(
-			Math.min(this.minX, x),
-			Math.min(this.minY, y),
-			Math.max(this.maxX, x),
-			Math.max(this.maxY, y)
-		);
-	}
+	// /**
+	//  * Returns a new AABB that is expanded to include the given point.
+	//  * @param {number} x - The x-coordinate of the point.
+	//  * @param {number} y - The y-coordinate of the point.
+	//  * @returns {AABB} A new, expanded AABB instance.
+	//  */
+	// expandToIncludePoint(x, y) {
+	// 	return new AABB(
+	// 		Math.min(this.minX, x),
+	// 		Math.min(this.minY, y),
+	// 		Math.max(this.maxX, x),
+	// 		Math.max(this.maxY, y)
+	// 	);
+	// }
+	
+	// /**
+	//  * Creates an AABB from a top-left corner (x, y), width, and height.
+	//  * @param {number} x - The x-coordinate of the top-left corner.
+	//  * @param {number} y - The y-coordinate of the top-left corner.
+	//  * @param {number} width - The width of the AABB.
+	//  * @param {number} height - The height of the AABB.
+	//  * @returns {AABB} A new AABB instance.
+	//  */
+	// static fromXYWidthHeight(x, y, width, height) {
+	// 	if (width < 0 || height < 0) {
+	// 		LocalError("AABB.fromXYWidthHeight: Width and height should be non-negative.");
+	// 		return new AABB(x, y, x, y); // Degenerate AABB
+	// 	}
+	// 	return new AABB(x, y, x + width, y + height);
+	// }
 
-	/**
-	 * Returns a new AABB that is expanded to include another AABB (same as union).
-	 * @param {AABB} other - The other AABB.
-	 * @returns {AABB} A new, expanded AABB instance.
-	 */
-	expandToIncludeAABB(other) {
-		return this.union(other);
-	}
+	// /**
+	//  * Creates an AABB from a center point and dimensions (width, height).
+	//  * @param {number} centerX - The x-coordinate of the center.
+	//  * @param {number} centerY - The y-coordinate of the center.
+	//  * @param {number} width - The width of the AABB.
+	//  * @param {number} height - The height of the AABB.
+	//  * @returns {AABB} A new AABB instance.
+	//  */
+	// static fromCenterSize(centerX, centerY, width, height) {
+	// 	if (width < 0 || height < 0) {
+	// 		LocalError("AABB.fromCenterSize: Width and height should be non-negative.");
+	// 		return new AABB(centerX, centerY, centerX, centerY); // Degenerate AABB
+	// 	}
+	// 	const halfWidth = width / 2;
+	// 	const halfHeight = height / 2;
+	// 	return new AABB(
+	// 		centerX - halfWidth,
+	// 		centerY - halfHeight,
+	// 		centerX + halfWidth,
+	// 		centerY + halfHeight
+	// 	);
+	// }
 
-	/**
-	 * Creates a new AABB instance with the same dimensions and position.
-	 * @returns {AABB} A new AABB instance.
-	 */
-	clone() {
-		return new AABB(this.minX, this.minY, this.maxX, this.maxY);
-	}
+	// /**
+	//  * Gets the width of the AABB.
+	//  * @returns {number} The width of the AABB.
+	//  */
+	// get width() {
+	// 	return this.maxX - this.minX;
+	// }
 
-	/**
-	 * Moves the AABB by a given delta x and delta y.
-	 * Returns a new, moved AABB instance.
-	 * @param {number} dx - The change in x.
-	 * @param {number} dy - The change in y.
-	 * @returns {AABB} A new AABB instance at the new position.
-	 */
-	translate(dx, dy) {
-		return new AABB(
-			this.minX + dx,
-			this.minY + dy,
-			this.maxX + dx,
-			this.maxY + dy
-		);
-	}
+	// /**
+	//  * Gets the height of the AABB.
+	//  * @returns {number} The height of the AABB.
+	//  */
+	// get height() {
+	// 	return this.maxY - this.minY;
+	// }
 
-	/**
-	 * Returns a string representation of the AABB.
-	 * @returns {string} String representation of the AABB.
-	 */
-	toString() {
-		return `AABB(minX: ${this.minX}, minY: ${this.minY}, maxX: ${this.maxX}, maxY: ${this.maxY}, width: ${this.width}, height: ${this.height})`;
-	}
+	// /**
+	//  * Gets the x-coordinate of the center of the AABB.
+	//  * @returns {number} The x-coordinate of the center.
+	//  */
+	// get centerX() {
+	// 	return this.minX + this.width / 2;
+	// }
+
+	// /**
+	//  * Gets the y-coordinate of the center of the AABB.
+	//  * @returns {number} The y-coordinate of the center.
+	//  */
+	// get centerY() {
+	// 	return this.minY + this.height / 2;
+	// }
+
+	// /**
+	//  * Checks if this AABB is valid (min coordinates are less than or equal to max coordinates).
+	//  * @returns {boolean} True if valid, false otherwise.
+	//  */
+	// isValid() {
+	// 	return this.minX <= this.maxX && this.minY <= this.maxY;
+	// }
+
+	// /**
+	//  * Checks if this AABB intersects with another AABB.
+	//  * @param {AABB} other - The other AABB to check against.
+	//  * @returns {boolean} True if they intersect, false otherwise.
+	//  */
+	// intersects(other) {
+	// 	if (!other || !(other instanceof AABB)) return false;
+	// 	return (
+	// 		this.minX < other.maxX &&
+	// 		this.maxX > other.minX &&
+	// 		this.minY < other.maxY &&
+	// 		this.maxY > other.minY
+	// 	);
+	// }
+
+	// /**
+	//  * Checks if a point (x, y) is contained within this AABB (inclusive of edges).
+	//  * @param {number} x - The x-coordinate of the point.
+	//  * @param {number} y - The y-coordinate of the point.
+	//  * @returns {boolean} True if the point is contained, false otherwise.
+	//  */
+	// containsPoint(x, y) {
+	// 	return (
+	// 		x >= this.minX &&
+	// 		x <= this.maxX &&
+	// 		y >= this.minY &&
+	// 		y <= this.maxY
+	// 	);
+	// }
+	
+	// /**
+	//  * Checks if another AABB is fully contained within this AABB.
+	//  * @param {AABB} other - The other AABB.
+	//  * @returns {boolean} True if the other AABB is fully contained, false otherwise.
+	//  */
+	// containsAABB(other) {
+	// 	if (!other || !(other instanceof AABB)) return false;
+	// 	return (
+	// 		this.minX <= other.minX &&
+	// 		this.minY <= other.minY &&
+	// 		this.maxX >= other.maxX &&
+	// 		this.maxY >= other.maxY
+	// 	);
+	// }
+
+	// /**
+	//  * Returns a new AABB that is the union of this AABB and another AABB.
+	//  * The union is the smallest AABB that contains both.
+	//  * @param {AABB} other - The other AABB.
+	//  * @returns {AABB} A new AABB instance representing the union.
+	//  */
+	// union(other) {
+	// 	if (!other || !(other instanceof AABB)) return this.clone(); // Or throw error
+	// 	return new AABB(
+	// 		Math.min(this.minX, other.minX),
+	// 		Math.min(this.minY, other.minY),
+	// 		Math.max(this.maxX, other.maxX),
+	// 		Math.max(this.maxY, other.maxY)
+	// 	);
+	// }
+
+	// /**
+	//  * Returns a new AABB that is the intersection of this AABB and another AABB.
+	//  * If they do not intersect, returns null.
+	//  * @param {AABB} other - The other AABB.
+	//  * @returns {AABB|null} A new AABB instance representing the intersection, or null.
+	//  */
+	// intersection(other) {
+	// 	if (!other || !(other instanceof AABB) || !this.intersects(other)) {
+	// 		return null;
+	// 	}
+	// 	return new AABB(
+	// 		Math.max(this.minX, other.minX),
+	// 		Math.max(this.minY, other.minY),
+	// 		Math.min(this.maxX, other.maxX),
+	// 		Math.min(this.maxY, other.maxY)
+	// 	);
+	// }
+	//
+	// /**
+	//  * Returns a new AABB that is expanded to include another AABB (same as union).
+	//  * @param {AABB} other - The other AABB.
+	//  * @returns {AABB} A new, expanded AABB instance.
+	//  */
+	// expandToIncludeAABB(other) {
+	// 	return this.union(other);
+	// }
+
+	// /**
+	//  * Creates a new AABB instance with the same dimensions and position.
+	//  * @returns {AABB} A new AABB instance.
+	//  */
+	// clone() {
+	// 	return new AABB(this.minX, this.minY, this.maxX, this.maxY);
+	// }
+
+	// /**
+	//  * Moves the AABB by a given delta x and delta y.
+	//  * Returns a new, moved AABB instance.
+	//  * @param {number} dx - The change in x.
+	//  * @param {number} dy - The change in y.
+	//  * @returns {AABB} A new AABB instance at the new position.
+	//  */
+	// translate(dx, dy) {
+	// 	return new AABB(
+	// 		this.minX + dx,
+	// 		this.minY + dy,
+	// 		this.maxX + dx,
+	// 		this.maxY + dy
+	// 	);
+	// }
+
+	// /**
+	//  * Returns a string representation of the AABB.
+	//  * @returns {string} String representation of the AABB.
+	//  */
+	// toString() {
+	// 	return `AABB(minX: ${this.minX}, minY: ${this.minY}, maxX: ${this.maxX}, maxY: ${this.maxY}, width: ${this.width}, height: ${this.height})`;
+	// }
 }
 
 export {
