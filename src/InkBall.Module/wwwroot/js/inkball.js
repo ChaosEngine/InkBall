@@ -4470,27 +4470,28 @@ class InkBallGame {
 			for (let i = wrapping_bbox.minX; i < wrapping_bbox.maxX; i++) {
 
 				const current_unit_bbox = [
-					// { x: i, y: j },
-					{ x: i + 1, y: j },
-					{ x: i, y: j + 1 },
-					{ x: i + 1, y: j + 1 }
+					// { x: i, y: j, ind: 0 },
+					{ x: i + 1, y: j, ind: 1 },
+					{ x: i, y: j + 1, ind: 2 },
+					{ x: i + 1, y: j + 1, ind: 3 }
 				];
 
 				//3. check if any created bbox point contains any of the points in point_coords (cluster points)
-				const contains_oponent_cluster_point = current_unit_bbox.some(({ x, y }) => {
+				const contains_oponent_cluster_point = current_unit_bbox.filter(({ x, y }) => {
 					return pointCoords.some(pt => pt.x === x && pt.y === y);
 				});
-				if (contains_oponent_cluster_point) {
+				if (contains_oponent_cluster_point.length > 0) {
 					//4. if so, create a rectangle around it 1x1 unit fir visualization
 					if (createRectForVisualsFunction)
 						createRectForVisualsFunction(i, j, 1, 1);
 					//5. i,j and i+1, j+1 are dimensions of the bounding box
 					// 	 find which points of it are NOT included in point_coords
 					// 	 3 points of the rectangle
-					current_unit_bbox.filter(({ x, y }) => {
+					current_unit_bbox.filter(({ x, y, ind }) => {
 						//6. not included in point_coords (not from cluster points), so they should be around
 						// 	 cluster points, or inside
-						return !pointCoords.some(point => point.x === x && point.y === y)
+						return !contains_oponent_cluster_point.some(point =>
+							point.ind !== ind && point.x === x && point.y === y)
 							//no duplicates from already added points
 							&& !candidate_path.has(`${x},${y}`);
 					}).forEach(pt => {

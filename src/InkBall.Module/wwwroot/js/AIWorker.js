@@ -1,6 +1,6 @@
 ﻿import { GraphAI, concaveman } from "./AISource.js";
 // import { SvgVml, StatusEnum, LocalLog, LocalError, sortPointsClockwise, pnpoly, IsPointOutsideAllPaths } from "./shared.js";
-import { astar, Graph } from "javascript-astar";
+import { astar, Graph as AStarGraph } from "javascript-astar";
 import * as clustering from "density-clustering";
 
 //globals loaded only once hopefully
@@ -219,7 +219,7 @@ addEventListener('message', async function (e) {
 		case "ASTAR":
 			{
 				const { arr, start, end } = params;
-				const graphDiagonal = new Graph(arr, { diagonal: true });
+				const graphDiagonal = new AStarGraph(arr, { diagonal: true });
 				const from = graphDiagonal.grid[start.y][start.x];
 				const to = graphDiagonal.grid[end.y][end.x];
 				const resultWithDiagonals = astar.search(graphDiagonal, from, to, { heuristic: astar.heuristics.diagonal });
@@ -241,6 +241,7 @@ addEventListener('message', async function (e) {
 							const clusters = kmeans.run(dataset, numberOfClusters);
 
 							// LocalLog({ method, clusters });
+							clusters.sort((a, b) => a.length - b.length);
 							postMessage({ operation: params.operation, method, clusters });
 						}
 						break;
@@ -253,6 +254,7 @@ addEventListener('message', async function (e) {
 							const plot = optics.getReachabilityPlot();
 
 							// LocalLog({ method, clusters, plot });
+							clusters.sort((a, b) => a.length - b.length);
 							postMessage({ operation: params.operation, method, clusters, plot });
 						}
 						break;
@@ -265,6 +267,7 @@ addEventListener('message', async function (e) {
 							const noise = dbscan.noise;
 
 							// LocalLog({ method, clusters, noise });
+							clusters.sort((a, b) => a.length - b.length);
 							postMessage({ operation: params.operation, method, clusters, noise });
 						}
 						break;
