@@ -2722,7 +2722,7 @@ class InkBallGame {
 			const convex_hull = data.convex_hull;
 
 			const line = this.#SvgVml.CreatePolyline(
-				convex_hull.reduce((acc, [x, y]) => acc + ` ${parseInt(x)},${parseInt(y)}`),
+				convex_hull.reduce((acc, [x, y]) => acc + `${parseInt(x)},${parseInt(y)} `, '').trimEnd(),
 				'green');
 			line.SetID(-1);
 
@@ -2861,7 +2861,9 @@ class InkBallGame {
 			LocalLog(localizeMessage('game.AI.groupPtsFirst', "!!!First you need to click 'blue' starting point with mouse!!!"));
 			return;
 		}
+
 		await this.#GroupPointsRecurse([], starting_point);
+
 		if (this.#workingCyclePolyLine !== null) {
 			this.#SvgVml.RemovePolyline(this.#workingCyclePolyLine);
 			this.#workingCyclePolyLine = null;
@@ -3167,16 +3169,20 @@ class InkBallGame {
 			});
 		});
 
-		let fragment;
-		if (aiParams.visuals)
+		let fragment, createRectForVisualsFunction = null, rand_color;
+		if (aiParams.visuals) {
 			fragment = this.#SvgVml.BeginBatchFragment();
+			createRectForVisualsFunction = (i, j, width, height) => {
+				return fragment.CreateRect(i, j, width, height, rand_color);
+			};
+		}
 
 		//for each cluster, process it's point group
 		//and create a convex hull around it, then display it
 		if (data.clusters?.length > 0) {
 			const cluster_points = [];
 			for (const point_indexes of data.clusters) {
-				const rand_color = RandomColor();//random color for each points
+				rand_color = RandomColor();//random color for each points
 				const points_in_cluster = [];//array of points in cluster
 				const point_coords = [];//array of points coordinates
 				for (const index of point_indexes) {
@@ -3200,54 +3206,12 @@ class InkBallGame {
 				}
 				cluster_points.push(points_in_cluster);//add points in cluster to array of clusters
 
-				//0. create bounding box around points wrapping all points in cluster
-				const wrapping_bbox = AABB.fromPoints(point_coords);
-				wrapping_bbox.expand(1);//expand it a bit by 1 unit in all directions -> enlarge it
-
-
 				// if (cluster_points.length === 9)
 				{
-					//1. Convert candidate_path to a Map to ensure uniqueness by x,y and to avoid duplicates
-					//this hold points of prepared surrounding path
-					const candidate_path = new Map();
-					//2. devide wrapping_bbox into 1x1 unit bbox and gather matching points
-					for (let j = wrapping_bbox.minY; j < wrapping_bbox.maxY; j++) {
-						for (let i = wrapping_bbox.minX; i < wrapping_bbox.maxX; i++) {
+					const surrounding_path = this.#CalculateWrappingPathFromDividedBoundingBoxes(
+						point_coords, createRectForVisualsFunction
+					);
 
-							const current_unit_bbox = [
-								// { x: i, y: j },
-								{ x: i + 1, y: j },
-								{ x: i, y: j + 1 },
-								{ x: i + 1, y: j + 1 }
-							];
-
-							//3. check if any created bbox point contains any of the points in point_coords (cluster points)
-							const contains_oponent_cluster_point = current_unit_bbox.some(({ x, y }) => {
-								return point_coords.some(pt => pt.x === x && pt.y === y);
-							});
-							if (contains_oponent_cluster_point) {
-								//4. if so, create a rectangle around it 1x1 unit fir visualization
-								if (aiParams.visuals)
-									fragment.CreateRect(i, j, 1, 1, rand_color);
-								//5. i,j and i+1, j+1 are dimensions of the bounding box
-								// 	 find which points of it are NOT included in point_coords
-								// 	 3 points of the rectangle
-								current_unit_bbox.filter(({ x, y }) => {
-									//6. not included in point_coords (not from cluster points), so they should be around
-									// 	 cluster points, or inside
-									return !point_coords.some(point => point.x === x && point.y === y)
-										//no duplicates from already added points
-										&& !candidate_path.has(`${x},${y}`);
-								}).forEach(pt => {
-									//7. add point to candidate path map
-									candidate_path.set(`${pt.x},${pt.y}`, pt);
-								});
-							}
-						}
-					}
-
-					//8. convert candidate_path_map to array of points
-					const surrounding_path = [...candidate_path.values()];
 					LocalLog(`Path points #${cluster_points.length} around bounding box points(${surrounding_path.length}): ${JSON.stringify(surrounding_path)}`);
 
 					//9. calculate convex hull of candidate_path points with concaveman algorithm
@@ -3265,7 +3229,7 @@ class InkBallGame {
 					const convex_hull = data?.convex_hull;
 					if (convex_hull?.length > 0) {
 						// const poly_points = convex_hull.map(([x, y]) => `${x},${y}`).join(' ');
-						const poly_points = convex_hull.reduce((acc, [x, y]) => acc + ` ${x},${y}`);
+						const poly_points = convex_hull.reduce((acc, [x, y]) => acc + `${x},${y} `, '').trimEnd();
 						if (aiParams.visuals) {
 							const poly_line = fragment.CreatePolyline(poly_points, 'green');
 							poly_line.SetID(-1);
@@ -4483,6 +4447,63 @@ class InkBallGame {
 			LocalLog(gathered);
 			await this.#DisplayPointsProgressWithDelay(gathered.map(({ point }) => point), 0);
 		}
+	}
+
+	/**
+	 * Calculate wrapping path around given points using divided bounding boxes method
+	 * @param {Array<{x: number, y: number}>} pointCoords array of points to wrap around
+	 * @param {Function} createRectForVisualsFunction optional function to create rectangle around points for visualization
+	 * @returns {Array<{x: number, y: number}>} array of points forming surrounding path
+	 */
+	#CalculateWrappingPathFromDividedBoundingBoxes(pointCoords, createRectForVisualsFunction = null) {
+
+		//0. create bounding box around points wrapping all points in cluster
+		const wrapping_bbox = AABB.fromPoints(pointCoords);
+		wrapping_bbox.expand(1);//expand it a bit by 1 unit in all directions -> enlarge it
+
+
+		//1. Convert candidate_path to a Map to ensure uniqueness by x,y and to avoid duplicates
+		//this hold points of prepared surrounding path
+		const candidate_path = new Map();
+		//2. devide wrapping_bbox into 1x1 unit bbox and gather matching points
+		for (let j = wrapping_bbox.minY; j < wrapping_bbox.maxY; j++) {
+			for (let i = wrapping_bbox.minX; i < wrapping_bbox.maxX; i++) {
+
+				const current_unit_bbox = [
+					// { x: i, y: j },
+					{ x: i + 1, y: j },
+					{ x: i, y: j + 1 },
+					{ x: i + 1, y: j + 1 }
+				];
+
+				//3. check if any created bbox point contains any of the points in point_coords (cluster points)
+				const contains_oponent_cluster_point = current_unit_bbox.some(({ x, y }) => {
+					return pointCoords.some(pt => pt.x === x && pt.y === y);
+				});
+				if (contains_oponent_cluster_point) {
+					//4. if so, create a rectangle around it 1x1 unit fir visualization
+					if (createRectForVisualsFunction)
+						createRectForVisualsFunction(i, j, 1, 1);
+					//5. i,j and i+1, j+1 are dimensions of the bounding box
+					// 	 find which points of it are NOT included in point_coords
+					// 	 3 points of the rectangle
+					current_unit_bbox.filter(({ x, y }) => {
+						//6. not included in point_coords (not from cluster points), so they should be around
+						// 	 cluster points, or inside
+						return !pointCoords.some(point => point.x === x && point.y === y)
+							//no duplicates from already added points
+							&& !candidate_path.has(`${x},${y}`);
+					}).forEach(pt => {
+						//7. add point to candidate path map
+						candidate_path.set(`${pt.x},${pt.y}`, pt);
+					});
+				}
+			}
+		}
+
+		//8. convert candidate_path_map to array of points
+		const surrounding_path = [...candidate_path.values()];
+		return surrounding_path;
 	}
 
 	async #rAFCallBack(timeStamp) {
