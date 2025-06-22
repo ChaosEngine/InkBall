@@ -123,12 +123,11 @@ namespace InkBall.Module.Hubs
 		private void ValidateOriginHeaderAndAccessToken(HttpContext ctx)
 		{
 			//Game page populates WebSocketAllowedOrigins
-			if (WebSocketAllowedOrigins.Any() && ctx.Request.Headers.TryGetValue(HeaderNames.Origin, out var origin)
-				&& ctx.Request.Headers.TryGetValue(HeaderNames.Upgrade, out var upgrade))
+			if (WebSocketAllowedOrigins.Any() && ctx.Request.Headers.TryGetValue(HeaderNames.Upgrade, out var upgrade))
 			{
 				if (string.Equals(upgrade, "websocket", StringComparison.InvariantCultureIgnoreCase))
 				{
-					if (!string.IsNullOrEmpty(origin) && !WebSocketAllowedOrigins.ContainsValue(origin))
+					if (ctx.Request.Host.HasValue && !WebSocketAllowedOrigins.ContainsValue(ctx.Request.Host.Host))
 					{
 						throw new UnauthorizedAccessException("Origin not allowed!");
 					}

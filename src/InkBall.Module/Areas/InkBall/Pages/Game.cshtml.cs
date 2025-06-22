@@ -54,9 +54,9 @@ namespace InkBall.Module.Pages
 		public async Task<IActionResult> OnGetAsync()
 		{
 			if (!GameHub.WebSocketAllowedOrigins.Any())
-				GameHub.WebSocketAllowedOrigins.Add($"{Request.Scheme}://{Request.Host}");
+				GameHub.WebSocketAllowedOrigins.Add(Request.Host.Host);
 			else
-				GameHub.WebSocketAllowedOrigins.AddOrUpdate($"{Request.Scheme}://{Request.Host}");
+				GameHub.WebSocketAllowedOrigins.AddOrUpdate(Request.Host.Host);
 
 			//https://developer.chrome.com/blog/enabling-shared-array-buffer/
 			Response.Headers.Append("Cross-Origin-Embedder-Policy", "require-corp");
@@ -89,9 +89,9 @@ namespace InkBall.Module.Pages
 
 
 			if (!GameHub.WebSocketAllowedOrigins.Any())
-				GameHub.WebSocketAllowedOrigins.Add($"{Request.Scheme}://{Request.Host}");
+				GameHub.WebSocketAllowedOrigins.Add(Request.Host.Host);
 			else
-				GameHub.WebSocketAllowedOrigins.AddOrUpdate($"{Request.Scheme}://{Request.Host}");
+				GameHub.WebSocketAllowedOrigins.AddOrUpdate(Request.Host.Host);
 
 			//https://developer.chrome.com/blog/enabling-shared-array-buffer/
 			Response.Headers.Append("Cross-Origin-Embedder-Policy", "require-corp");
