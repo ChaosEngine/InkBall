@@ -196,7 +196,7 @@ namespace InkBall.Module.Model
 			}
 		}
 
-		public async Task<InkBallGame.WinStatusEnum> Check4Win(IPointAndPathCounter pointAndPathCounter)
+		public async Task<InkBallGame.WinStatusEnum> Check4Win(IPointAndPathCounter pointAndPathCounter, IBelongingToCPU entity)
 		{
 			switch (this.GameType)
 			{
@@ -221,14 +221,14 @@ namespace InkBall.Module.Model
 				case InkBallGame.GameTypeEnum.FIRST_5_CAPTURES:
 					if (await pointAndPathCounter.GetOtherPlayerOwnedPointCountAsync() >= 5)
 					{
-						if (this.IsThisPlayerPlayingWithRed())
+						if (this.IsThisPlayerPlayingWithRed(entity))
 							return InkBallGame.WinStatusEnum.GREEN_WINS;
 						else
 							return InkBallGame.WinStatusEnum.RED_WINS;
 					}
 					else if (await pointAndPathCounter.GetThisPlayerOwnedPointCountAsync() >= 5)
 					{
-						if (this.IsThisPlayerPlayingWithRed())
+						if (this.IsThisPlayerPlayingWithRed(entity))
 							return InkBallGame.WinStatusEnum.RED_WINS;
 						else
 							return InkBallGame.WinStatusEnum.GREEN_WINS;

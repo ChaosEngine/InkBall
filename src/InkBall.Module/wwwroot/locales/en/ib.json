@@ -17,13 +17,11 @@
 			"firstCapture": "First capture wins",
 			"first5Captures": "First 5 captures wins",
 			"first5Paths": "First 5 paths wins",
-			"advantageOf5": "Advantage of 5 paths wins",
-			"invalidGameType": "Invalid game type"
+			"advantageOf5": "Advantage of 5 paths wins"
 		},
 		"boardSize": {
 			"chooseBoardSize": "Choose board size",
-			"boardSizes": "Board sizes",
-			"invalidBoardSize": "Invalid board size"
+			"boardSizes": "Board sizes"
 		},
 		"playAgainstCPU": "Play against CPU"
 	},

@@ -99,6 +99,8 @@ namespace InkBall.Module.Model
 
 		public string Message { get; }
 
+		public InkBallPathViewModel Path { get; set; }
+
 		public WinCommand(InkBallGame.WinStatusEnum status, int winningPlayerId, string message)
 		{
 			this.Status = status;

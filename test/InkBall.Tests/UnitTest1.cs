@@ -111,7 +111,7 @@ namespace InkBall.Tests
 				string serialized = System.Text.Json.JsonSerializer.Serialize(db, new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull });
 				//Assert
 				Assert.DoesNotContain(nameof(InkBallPathViewModel.TimeStamp), serialized);
-				Assert.DoesNotContain(nameof(InkBallPathViewModel.InkBallPoint), serialized);
+				Assert.DoesNotContain(nameof(InkBallPathViewModel.InkBallPoints), serialized);
 				Assert.DoesNotContain(nameof(InkBallPathViewModel.BelongsToCPU), serialized);
 
 
@@ -129,7 +129,7 @@ namespace InkBall.Tests
 				serialized = System.Text.Json.JsonSerializer.Serialize(db, new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull });
 				//Assert
 				Assert.DoesNotContain(nameof(InkBallPathViewModel.TimeStamp), serialized);
-				Assert.DoesNotContain(nameof(InkBallPathViewModel.InkBallPoint), serialized);
+				Assert.DoesNotContain(nameof(InkBallPathViewModel.InkBallPoints), serialized);
 				Assert.DoesNotContain(nameof(InkBallPathViewModel.BelongsToCPU), serialized);
 			}
 			else if (type.IsAssignableFrom(typeof(InkBallPath)))
@@ -140,7 +140,7 @@ namespace InkBall.Tests
 					iId = 1,
 					iGameId = -1,
 					iPlayerId = 1,
-					InkBallPoint = new[] { new InkBallPoint { iX = pointsTab[0], iY = pointsTab[1], iGameId = 1, iPlayerId = 1,
+					InkBallPoints = new[] { new InkBallPoint { iX = pointsTab[0], iY = pointsTab[1], iGameId = 1, iPlayerId = 1,
 						Status = InkBallPoint.StatusEnum.POINT_FREE_BLUE } },
 					PointsAsString = expectedCoords
 				};
@@ -151,7 +151,7 @@ namespace InkBall.Tests
 				//Assert
 				Assert.NotNull(str);
 				Assert.DoesNotContain(nameof(InkBallPathViewModel.TimeStamp), serialized);
-				Assert.Contains(nameof(InkBallPathViewModel.InkBallPoint), serialized);
+				Assert.Contains(nameof(InkBallPathViewModel.InkBallPoints), serialized);
 				Assert.DoesNotContain(nameof(InkBallPathViewModel.BelongsToCPU), serialized);
 
 
@@ -162,7 +162,7 @@ namespace InkBall.Tests
 					iId = 1,
 					iGameId = -1,
 					iPlayerId = 1,
-					InkBallPoint = new[] { new InkBallPointViewModel { iX = pointsTab[0], iY = pointsTab[1], iGameId = 1, iPlayerId = 1,
+					InkBallPoints = new[] { new InkBallPointViewModel { iX = pointsTab[0], iY = pointsTab[1], iGameId = 1, iPlayerId = 1,
 						Status = InkBallPoint.StatusEnum.POINT_FREE_BLUE , iEnclosingPathId = null, TimeStamp = null } },
 					PointsAsString = expectedCoords,
 				};
@@ -171,14 +171,14 @@ namespace InkBall.Tests
 				//Assert
 				Assert.DoesNotContain(nameof(InkBallPathViewModel.BelongsToCPU), serialized);
 				Assert.DoesNotContain(nameof(InkBallPathViewModel.TimeStamp), serialized);
-				Assert.DoesNotContain(nameof(InkBallPathViewModel.InkBallPoint), serialized);
+				Assert.DoesNotContain(nameof(InkBallPathViewModel.InkBallPoints), serialized);
 
 				view = new InkBallPathViewModel
 				{
 					iId = 1,
 					iGameId = -1,
 					iPlayerId = 1,
-					InkBallPoint = new[] { new InkBallPointViewModel { iX = pointsTab[0], iY = pointsTab[1], iGameId = 1, iPlayerId = 1,
+					InkBallPoints = new[] { new InkBallPointViewModel { iX = pointsTab[0], iY = pointsTab[1], iGameId = 1, iPlayerId = 1,
 						Status = InkBallPoint.StatusEnum.POINT_FREE_BLUE , iEnclosingPathId = null,
 					} },
 					PointsAsString = expectedCoords,
@@ -189,7 +189,7 @@ namespace InkBall.Tests
 				//Assert
 				Assert.DoesNotContain(nameof(InkBallPathViewModel.BelongsToCPU), serialized);
 				Assert.Contains(nameof(InkBallPathViewModel.TimeStamp), serialized);
-				Assert.DoesNotContain(nameof(InkBallPathViewModel.InkBallPoint), serialized);
+				Assert.DoesNotContain(nameof(InkBallPathViewModel.InkBallPoints), serialized);
 			}
 			else
 				Assert.Fail("unknown type");
@@ -259,7 +259,7 @@ namespace InkBall.Tests
 				Assert.IsType<(int x, int y)>(parameters.coords[i]);
 				(int x, int y) coords = parameters.coords[i];
 
-				var ponit2verify = path.InkBallPoint.ElementAtOrDefault(i);
+				var ponit2verify = path.InkBallPoints.ElementAtOrDefault(i);
 				//Assert
 				Assert.NotNull(ponit2verify);
 
@@ -284,7 +284,7 @@ namespace InkBall.Tests
 			//Assert
 			Assert.ThrowsAny<Exception>(() =>
 			{
-				var path_points = path.InkBallPoint;
+				var path_points = path.InkBallPoints;
 			});
 		}
 
@@ -300,7 +300,7 @@ namespace InkBall.Tests
 			};
 
 			//Act
-			var path_points = path.InkBallPoint;
+			var path_points = path.InkBallPoints;
 
 			//Assert
 			foreach (var owned in parameters.ownedPoints)
@@ -327,7 +327,7 @@ namespace InkBall.Tests
 			};
 
 			//Act
-			var path_points = path.InkBallPoint;
+			var path_points = path.InkBallPoints;
 
 			//Assert
 			foreach (var owned in parameters.ownedPoints)

@@ -17,13 +17,11 @@
 			"firstCapture": "Wygrywa pierwsze przechwycenie",
 			"first5Captures": "Wygrywa pierwsze 5 przechwyceń",
 			"first5Paths": "Wygrywa pierwsze 5 ścieżek",
-			"advantageOf5": "Wygrywa przewaga 5 ścieżek",
-			"invalidGameType": "Nieprawidłowy typ gry"
+			"advantageOf5": "Wygrywa przewaga 5 ścieżek"
 		},
 		"boardSize": {
 			"chooseBoardSize": "Wybierz rozmiar planszy",
-			"boardSizes": "Rozmiary planszy",
-			"invalidBoardSize": "Nieprawidłowy rozmiar planszy"
+			"boardSizes": "Rozmiary planszy"
 		},
 		"playAgainstCPU": "Graj przeciwko CPU"
 	},

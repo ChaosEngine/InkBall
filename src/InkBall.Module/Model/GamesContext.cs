@@ -551,7 +551,7 @@ namespace InkBall.Module.Model
 					.HasSentinel(Module.Model.InkBallPoint.StatusEnum.POINT_FREE);
 
 				entity.HasOne(d => d.EnclosingPath)
-					.WithMany(p => p.InkBallPoint)
+					.WithMany(p => p.InkBallPoints)
 					.HasForeignKey(d => d.iEnclosingPathId)
 					.HasConstraintName("InkBallPoint_ibfk_5");
 
@@ -930,8 +930,8 @@ namespace InkBall.Module.Model
 			///Construct points collection form string point representation
 			static void createPathPointCollection_HandlerImpl(InkBallPath path, InkBallPathViewModel fromJson)
 			{
-				path.InkBallPoint = fromJson
-					.InkBallPoint.Select(c => new InkBallPoint
+				path.InkBallPoints = fromJson
+					.InkBallPoints.Select(c => new InkBallPoint
 					{
 						//iId = c.iId,
 						//iGameId = c.iGameId,
