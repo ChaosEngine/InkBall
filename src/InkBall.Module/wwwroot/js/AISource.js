@@ -23,13 +23,9 @@ class GraphAI {
 
 	async #Init() {
 		if (StatusEnum === undefined) {
-			const isMinified = location.hostname !== "localhost";
 
-			const shrd = await import(/* webpackIgnore: true */`./shared${isMinified ? '.min' : ''}.js`);
+			({ StatusEnum, sortPointsClockwise, IsPointOutsideAllPaths } = await import(/* webpackIgnore: true */`./shared${location.hostname !== "localhost" ? '.min' : ''}.js`));
 
-			StatusEnum = shrd.StatusEnum, sortPointsClockwise = shrd.sortPointsClockwise,
-				IsPointOutsideAllPaths = shrd.IsPointOutsideAllPaths;
-				
 			this.#POINT_STARTING = StatusEnum.POINT_STARTING;
 			this.#POINT_IN_PATH = StatusEnum.POINT_IN_PATH;
 		}

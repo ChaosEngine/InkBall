@@ -1,7 +1,7 @@
 /*global signalR, i18next*/
 "use strict";
 
-let SHRD, LocalLog, LocalError, StatusEnum, hasDuplicates, pnpoly, IsPointOutsideAllPaths, sortPointsClockwise, Sleep, IBversionHash, AABB, localizeSelector;
+let LocalAlert, LocalLog, LocalError, StatusEnum, hasDuplicates, pnpoly, GameStateStore, SvgVml, IsPointOutsideAllPaths, sortPointsClockwise, Sleep, IBversionHash, AABB, localizeSelector;
 
 /******** funcs-n-classes ********/
 /**
@@ -458,16 +458,22 @@ async function importAllModulesAsync(/* gameOptions */) {
 	const selfFileName = url.pathname.split('/').at(-1);
 	const isMinified = selfFileName.indexOf("min") !== -1;
 
-	if (isMinified)
-		SHRD = await import(/* webpackChunkName: "shared.Min" */'./shared.min.js?v=' + IBversionHash);
-	else
-		SHRD = await import(/* webpackChunkName: "shared" */'./shared.js?v=' + IBversionHash);
-
-
-	LocalLog = SHRD.LocalLog, LocalError = SHRD.LocalError, StatusEnum = SHRD.StatusEnum,
-		hasDuplicates = SHRD.hasDuplicates, pnpoly = SHRD.pnpoly, IsPointOutsideAllPaths = SHRD.IsPointOutsideAllPaths,
-		sortPointsClockwise = SHRD.sortPointsClockwise, AABB = SHRD.AABB,
-		Sleep = SHRD.Sleep;
+	({
+		LocalLog,
+		LocalError,
+		LocalAlert,
+		StatusEnum,
+		hasDuplicates,
+		pnpoly,
+		SvgVml,
+		GameStateStore,
+		IsPointOutsideAllPaths,
+		sortPointsClockwise,
+		AABB,
+		Sleep
+	} = isMinified
+			? await import(/* webpackChunkName: "shared.Min" */'./shared.min.js?v=' + IBversionHash)
+			: await import(/* webpackChunkName: "shared" */'./shared.js?v=' + IBversionHash));
 
 	// //for CPU game enable AI libs and calculations
 	// if (gameOptions.iOtherPlayerID === -1) {
@@ -630,9 +636,9 @@ class InkBallGame {
 	 * @param {number} iPlayerID player ID
 	 * @param {number} iOtherPlayerID player ID
 	 * @param {string} sHubName SignalR hub name
-	 * @param {signalR.LogLevel} loggingLevel log level for SignalR
-	 * @param {signalR.IHubProtocol} hubProtocol Json or messagePack
-	 * @param {signalR.ITransport} transportType websocket, server events or long polling
+	 * @param {object} loggingLevel log level for SignalR
+	 * @param {object} hubProtocol Json or messagePack
+	 * @param {object} transportType websocket, server events or long polling
 	 * @param {number} serverTimeoutInMilliseconds If the server hasn't sent a message in this interval, the client considers the server disconnected
 	 * @param {GameTypeEnum} gameType of game enum as string
 	 * @param {boolean} bIsPlayingWithRed true - red, false - blue
@@ -1023,7 +1029,7 @@ class InkBallGame {
 			this.#bHandlingEvent = false;
 
 			this.#NotifyBrowser(title, encodedMsg);
-			SHRD.LocalAlert(encodedMsg, title, () => {
+			LocalAlert(encodedMsg, title, () => {
 				window.location.href = "GamesList";
 			});
 		});
@@ -1275,7 +1281,7 @@ class InkBallGame {
 				oval.SetStatus(iStatus);
 				break;
 			default:
-				SHRD.LocalAlert(localizeMessage('game.badPoint', 'bad point'), localizeMessage('err.err!', 'Error!'));
+				LocalAlert(localizeMessage('game.badPoint', 'bad point'), localizeMessage('err.err!', 'Error!'));
 				// alert('bad point');
 				break;
 		}
@@ -1345,7 +1351,7 @@ class InkBallGame {
 				oval.SetStatus(iStatus);
 				break;
 			default:
-				SHRD.LocalAlert(localizeMessage('err.badPoint', 'bad point'), localizeMessage('err.err!', 'Error!'));
+				LocalAlert(localizeMessage('err.badPoint', 'bad point'), localizeMessage('err.err!', 'Error!'));
 				// alert('bad point');
 				break;
 		}
@@ -1822,7 +1828,7 @@ class InkBallGame {
 		if (((status === WinStatusEnum.RED_WINS || status === WinStatusEnum.GREEN_WINS) /* && winningPlayerId > 0 */) ||
 			status === WinStatusEnum.DRAW_WIN) {
 
-			SHRD.LocalAlert(encodedMsg === '' ? localizeMessage('err.gameWon!', 'Game won!') : encodedMsg, localizeMessage('game.winSituation', 'Victory!'), () => {
+			LocalAlert(encodedMsg === '' ? localizeMessage('err.gameWon!', 'Game won!') : encodedMsg, localizeMessage('game.winSituation', 'Victory!'), () => {
 				window.location.href = "GamesList";
 			});
 		}
@@ -2432,11 +2438,11 @@ class InkBallGame {
 
 		if (fromStore?.concavity !== undefined) {
 			let concavity = parseFloat(fromStore.concavity);
-			concavity = (isNaN(concavity) || concavity <= 0) ? 2.0 : concavity;
+			concavity = (isNaN(concavity) || concavity <= 0) ? 1.0 : concavity;
 			obj2Return.concavity = concavity;
 		}
 		else
-			obj2Return.concavity = 2.0;
+			obj2Return.concavity = 1.0;
 
 		if (fromStore?.lengthThreshold !== undefined) {
 			let lengthThreshold = parseFloat(fromStore.lengthThreshold);
@@ -3059,15 +3065,28 @@ class InkBallGame {
 	 * Detects clusters of points with same color and status.
 	 * Returns array of clusters surrounding those points
 	 * @param {string} humanPointColor - color of points to find
-	 * @param {string} humanPointStatus - status of points to find
 	 * @param {object} aiParams - AI parameters for clustering
 	 * @param {boolean} [visuals] - if true, will create visual representation of clusters, defaults to false
 	 * @returns {Promise<Array>} - array of clusters found, each cluster is an object with points and convex hull
 	 */
-	async #GetSurroundingPoints(humanPointColor, humanPointStatus, aiParams, visuals = false) {
+	async #GetSurroundingPoints(humanPointColor, aiParams, visuals = false) {
+		const humanPointStatus = humanPointColor === this.#COLOR_RED
+			?
+			[StatusEnum.POINT_FREE_RED
+			// ,StatusEnum.POINT_STARTING,
+			// StatusEnum.POINT_IN_PATH,
+			// StatusEnum.POINT_OWNED_BY_BLUE
+			]
+			:
+			[StatusEnum.POINT_FREE_BLUE
+			// ,StatusEnum.POINT_STARTING,
+			// StatusEnum.POINT_IN_PATH,
+			// StatusEnum.POINT_OWNED_BY_RED
+			];
 		const arrOfArrOfPoints = [];
+
 		for (const pt of await this.#Points.values()) {
-			if (pt !== undefined && pt.GetFillColor() === humanPointColor && pt.GetStatus() === humanPointStatus) {
+			if (pt !== undefined && pt.GetFillColor() === humanPointColor && humanPointStatus.includes(pt.GetStatus())) {
 				const { x, y } = pt.GetPosition();
 				//density clustering algorithm needs array of array of points only
 				arrOfArrOfPoints.push([x, y]);
@@ -3087,7 +3106,7 @@ class InkBallGame {
 			});
 		});
 
-		let fragment, createRectForVisualsFunction = null, rand_color;
+		let fragment, createRectForVisualsFunction = () => { /* dummy filler func*/ }, rand_color;
 		if (visuals) {
 			fragment = this.#SvgVml.BeginBatchFragment();
 			createRectForVisualsFunction = (i, j, width, height) => {
@@ -3151,7 +3170,7 @@ class InkBallGame {
 
 					results.push({ points_in_cluster, convex_hull }); //add points in cluster to array of clusters
 
-					LocalLog(`Planned path points #${results.length} around bounding box points(${surrounding_path.length}): ${surrounding_path.reduce((acc, { x, y }) => acc + `(${x},${y}) `, '').trimEnd()}`);
+					LocalLog(`Planned path points #${results.length} around bounding box points(${surrounding_path.length}): ${/* sortPointsClockwise */(surrounding_path).reduce((acc, [x, y]) => acc + `${x},${y} `, '').trimEnd()}`);
 				}
 				// LocalLog(fragment.CreateRect(wrapping_bbox.minX, wrapping_bbox.minY, wrapping_bbox.width, wrapping_bbox.height, 'rgb(128,128,128,128)'));
 
@@ -3166,16 +3185,18 @@ class InkBallGame {
 			for (const { convex_hull, points_in_cluster } of results) {
 				//take x,y pair from convex hull
 				for (const [x, y] of convex_hull) {
-
-					const isPointAlreadyPlaced = await this.#Points.has(y * this.#iGridWidth + x);
-					const isOutSideAllPaths = true === IsPointOutsideAllPaths(x, y, allLines);
-
-					if (!isPointAlreadyPlaced && isOutSideAllPaths) {
+					//take point from path and check if it is not already placed on the board
+					//and if it is outside all paths - if so, return it as next AI move coz path is still not closed
+					if (
+						!(await this.#Points.has(y * this.#iGridWidth + x)) &&
+						(true === IsPointOutsideAllPaths(x, y, allLines))
+					) {
 						const point = new InkBallPointViewModel(this.#iGameID, -1/*player*/, x, y, StatusEnum.POINT_FREE_BLUE, 0);
 						LocalLog(`Returning point (${x},${y}) as AI generated next point`);
 						return point; //return point as next AI move
 					}
 				}
+				//if all points from convex hull are already placed on the board, return path as next AI move
 				const path = new InkBallPathViewModel(0, this.#iGameID, -1/*player*/,
 					convex_hull.reduce((acc, [x, y]) => acc + `${x},${y} `, '').trimEnd(),
 					points_in_cluster.reduce((acc, pt) => {
@@ -3207,13 +3228,11 @@ class InkBallGame {
 
 		//check if point exists, if so get color and status
 		const point_color = (await this.#Points.get(aiParams.lastClickedY * this.#iGridWidth + aiParams.lastClickedX))?.GetFillColor();
-		const point_status = point_color === this.#COLOR_RED ? StatusEnum.POINT_FREE_RED : StatusEnum.POINT_FREE_BLUE;
 
 		//filter same color and status of last clicked point
 		//we are going to operate on those points only
 		// eslint-disable-next-line no-unused-vars
-		const point = await this.#GetSurroundingPoints(point_color, point_status, aiParams,
-			true/*visuals*/);
+		const point = await this.#GetSurroundingPoints(point_color, aiParams, true/*visuals*/);
 	}
 
 	async #OnTestServiceModeClick(event) {
@@ -3308,9 +3327,9 @@ class InkBallGame {
 		this.#Screen = document.querySelector(sScreen);
 		if (!this.#Screen) {
 			if (localizeSelector)
-				SHRD.LocalAlert(localizeMessage('err.noBoard', 'no board'), localizeMessage('err.err!', 'Error!'));
+				LocalAlert(localizeMessage('err.noBoard', 'no board'), localizeMessage('err.err!', 'Error!'));
 			else
-				SHRD.LocalAlert("no board", "Error!");
+				LocalAlert("no board", "Error!");
 			return;
 		}
 		// this.#iPosX = this.#Screen.offsetLeft;
@@ -3342,16 +3361,16 @@ class InkBallGame {
 		this.#AIMethod = null;
 		///////CpuGame variables end//////
 
-		this.#SvgVml = new SHRD.SvgVml();
+		this.#SvgVml = new SvgVml();
 		if (!this.#SvgVml.Init(this.#Screen, svg_width_x_height, svg_width_x_height,
 			{ iGridWidth: this.#iGridWidth, iGridHeight: this.#iGridHeight })) {
 			if (localizeSelector)
-				SHRD.LocalAlert(localizeMessage('err.noSVG', 'SVG is not supported! 😢'), localizeMessage('err.err!', 'Error!'));
+				LocalAlert(localizeMessage('err.noSVG', 'SVG is not supported! 😢'), localizeMessage('err.err!', 'Error!'));
 			else
-				SHRD.LocalAlert("SVG is not supported!", "Error!");
+				LocalAlert("SVG is not supported!", "Error!");
 		}
 
-		const stateStore = new SHRD.GameStateStore(useIndexedDbStore,
+		const stateStore = new GameStateStore(useIndexedDbStore,
 			this.#CreateScreenPointFromIndexedDb.bind(this),
 			this.#CreateScreenPathFromIndexedDb.bind(this),
 			this.#GetGameStateForIndexedDb.bind(this),
@@ -3420,7 +3439,7 @@ class InkBallGame {
 				//	this.#StartCPUCalculation();
 				this.#AIMethod = window.localStorage.getItem('AIMethod');
 				if (!this.#AIMethod) {
-					this.#AIMethod = 'centroid';
+					this.#AIMethod = 'surrounding';
 					window.localStorage.setItem('AIMethod', this.#AIMethod);
 				}
 			}
@@ -3559,7 +3578,7 @@ class InkBallGame {
 		const sLastMoveTimeStampUtcIso = new Date(gameOptions.sLastMoveGameTimeStamp).toISOString();
 		const version = gameOptions.version;
 
-		await importAllModulesAsync(gameOptions);
+		await importAllModulesAsync(/* gameOptions */);
 
 		const game = new InkBallGame(iGameID, iPlayerID, iOtherPlayerID, inkBallHubName, signalR.LogLevel.Warning, protocol,
 			signalR.HttpTransportType.None, servTimeoutMillis,
@@ -4419,14 +4438,21 @@ class InkBallGame {
 	/**
 	 * Calculate wrapping path around given points using divided bounding boxes method
 	 * @param {Array<{x: number, y: number}>} pointCoords array of points to wrap around
-	 * @param {Function} createRectForVisualsFunction optional function to create rectangle around points for visualization
-	 * @returns {Array<{x: number, y: number}>} array of points forming surrounding path
+	 * @param {Function} createRectForVisualsFunc optional function to create rectangle around points for visualization
+	 * @returns {Array<[number,number]>} array of points forming surrounding path
 	 */
-	#CalculateWrappingPathFromDividedBoundingBoxes(pointCoords, createRectForVisualsFunction = null) {
+	#CalculateWrappingPathFromDividedBoundingBoxes(pointCoords, createRectForVisualsFunc) {
 
 		//0. create bounding box around points wrapping all points in cluster
 		const wrapping_bbox = AABB.fromPoints(pointCoords);
 		wrapping_bbox.expand(1);//expand it a bit by 1 unit in all directions -> enlarge it
+
+		// //draw bounding box for visualization
+		// LocalLog(`wrapping_bbox: ${JSON.stringify(wrapping_bbox)}`);
+
+		// createRectForVisualsFunc(wrapping_bbox.minX, wrapping_bbox.minY,
+		// 	wrapping_bbox.maxX - wrapping_bbox.minX, wrapping_bbox.maxY - wrapping_bbox.minY);
+
 
 
 		//1. Convert candidate_path to a Map to ensure uniqueness by x,y and to avoid duplicates
@@ -4449,21 +4475,20 @@ class InkBallGame {
 				});
 				if (contains_oponent_cluster_point.length > 0) {
 					//4. if so, create a rectangle around it 1x1 unit fir visualization
-					if (createRectForVisualsFunction)
-						createRectForVisualsFunction(i, j, 1, 1);
+					createRectForVisualsFunc(i, j, 1, 1);
 					//5. i,j and i+1, j+1 are dimensions of the bounding box
 					// 	 find which points of it are NOT included in point_coords
 					// 	 3 points of the rectangle
 					current_unit_bbox.filter(({ x, y, ind }) => {
 						//6. not included in point_coords (not from cluster points), so they should be around
 						// 	 cluster points, or inside
-						return !contains_oponent_cluster_point.some(point =>
-							point.ind !== ind && point.x === x && point.y === y)
+
+						return !contains_oponent_cluster_point.some(q => q.ind !== ind && q.x === x && q.y === y)
 							//no duplicates from already added points
 							&& !candidate_path.has(`${x},${y}`);
 					}).forEach(pt => {
 						//7. add point to candidate path map
-						candidate_path.set(`${pt.x},${pt.y}`, pt);
+						candidate_path.set(`${pt.x},${pt.y}`, [pt.x, pt.y]);
 					});
 				}
 			}
@@ -4498,8 +4523,7 @@ class InkBallGame {
 			case 'surrounding':
 				{
 					const aiParams = this.#LoadAIParamsFromStore(window.localStorage);
-					point = await this.#GetSurroundingPoints(this.#COLOR_RED, StatusEnum.POINT_FREE_RED,
-						aiParams, false/*visuals*/);
+					point = await this.#GetSurroundingPoints(this.#COLOR_RED, aiParams, false/*visuals*/);
 					if (point === null)
 						point = await this.#FindRandomCPUPoint();
 				}

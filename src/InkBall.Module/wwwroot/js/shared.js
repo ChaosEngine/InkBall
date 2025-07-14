@@ -40,6 +40,21 @@ function LocalError(...args) {
 }
 
 /**
+ * Shared warn log function
+ * @param {...any} args - objects to log
+ */
+function LocalWarning(...args) {
+	let msg = '';
+	for (let i = 0; i < args.length; i++) {
+		const str = args[i];
+		if (str)
+			msg += str;
+	}
+	// eslint-disable-next-line no-console
+	console.warn(msg);
+}
+
+/**
  * Check if custom alert dialog handler is available if so use it, if not fallback to default window.alert
  * @param {string} msg - message to show
  * @param {Function} onCloseCallback optional callback function to call on end
@@ -138,6 +153,41 @@ function IsPointOutsideAllPaths(x, y, allLines) {
 	}
 
 	return true;
+}
+
+/**
+ * Checks if points are continuous
+ * @param {Array<{x,y}>|Array<Array>} pointsArr array of objects with x and y properties, or array of arrays with two elements
+ * @returns {boolean} true if all points are continuous, false otherwise
+ */
+function ArePointsContinuous(pointsArr) {
+	//check if points is array of {x, y} objects or array of arrays with two elements
+	//checking only first element
+	if (!Array.isArray(pointsArr) || pointsArr.length < 1)
+		throw new Error("Invalid points array. Expected an array of objects with x and y properties.");
+
+	let calcDX, calcDY;
+	// Check if points are in {x, y} format or [x, y] format
+	if (Array.isArray(pointsArr[0]) || !('x' in pointsArr[0]) || !('y' in pointsArr[0])) {
+		calcDX = (prev, curr) => Math.abs(prev[0] - curr[0]);
+		calcDY = (prev, curr) => Math.abs(prev[1] - curr[1]);
+	} else {
+		calcDX = (prev, curr) => Math.abs(prev.x - curr.x);
+		calcDY = (prev, curr) => Math.abs(prev.y - curr.y);
+	}
+
+	// Check if all points are continuous
+	for (let i = 1; i < pointsArr.length; i++) {
+		const curr = pointsArr[i];
+		const prev = pointsArr[i - 1];
+		const dx = calcDX(curr, prev);
+		const dy = calcDY(curr, prev);
+
+		if (Math.max(dx, dy) > 1)
+			return { result: false, offenderIndex: i, offender: curr }; // Not continuous
+	}
+
+	return { result: true }; // All points are continuous
 }
 
 //////////////////////////////////////////////////////
@@ -933,16 +983,16 @@ class GameStateStore {
 					iId: id_key,
 					Color: val.GetFillColor(),
 					PointsAsString: val.GetPointsString().split(" ")
-					/* .map((pt) => {
-						let [x, y] = pt.split(',');
-						x = parseInt(x); y = parseInt(y);
-						return `${x},${y}`;
-					}).join(" ") */
-					.reduce((acc, pt) => {
-						let [x, y] = pt.split(',');
-						x = parseInt(x); y = parseInt(y);
-						return acc + ` ${x},${y}`;
-					})
+						/* .map((pt) => {
+							let [x, y] = pt.split(',');
+							x = parseInt(x); y = parseInt(y);
+							return `${x},${y}`;
+						}).join(" ") */
+						.reduce((acc, pt) => {
+							let [x, y] = pt.split(',');
+							x = parseInt(x); y = parseInt(y);
+							return acc + ` ${x},${y}`;
+						})
 				};
 
 				await this.#StorePath(id_key, idb_path);
@@ -1536,9 +1586,6 @@ class GameStateStore {
 	}
 }
 
-
-
-
 /**
  * Axis-Aligned Bounding Box (AABB) class.
  * Represents a rectangle defined by its minimum and maximum x and y coordinates.
@@ -1613,7 +1660,7 @@ class AABB {
 	// 		Math.max(this.maxY, y)
 	// 	);
 	// }
-	
+
 	// /**
 	//  * Creates an AABB from a top-left corner (x, y), width, and height.
 	//  * @param {number} x - The x-coordinate of the top-left corner.
@@ -1722,7 +1769,7 @@ class AABB {
 	// 		y <= this.maxY
 	// 	);
 	// }
-	
+
 	// /**
 	//  * Checks if another AABB is fully contained within this AABB.
 	//  * @param {AABB} other - The other AABB.
@@ -1815,7 +1862,7 @@ class AABB {
 }
 
 export {
-	SvgVml, StatusEnum, pnpoly, LocalLog, LocalError, LocalAlert,
+	SvgVml, StatusEnum, pnpoly, LocalLog, LocalError, LocalWarning, LocalAlert, ArePointsContinuous,
 	hasDuplicates, sortPointsClockwise, Sleep, IsPointOutsideAllPaths,
 	GameStateStore, AABB
 };

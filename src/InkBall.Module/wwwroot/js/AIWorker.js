@@ -4,7 +4,7 @@ import { astar, Graph as AStarGraph } from "javascript-astar";
 import * as clustering from "density-clustering";
 
 //globals loaded only once hopefully
-let SvgVml, StatusEnum, LocalLog, LocalError, sortPointsClockwise, pnpoly, IsPointOutsideAllPaths;
+let SvgVml, StatusEnum, LocalLog, LocalError, LocalWarning, sortPointsClockwise, pnpoly, IsPointOutsideAllPaths, ArePointsContinuous;
 
 // This is the entry point for our worker
 addEventListener('message', async function (e) {
@@ -12,15 +12,7 @@ addEventListener('message', async function (e) {
 	if (SvgVml === undefined) {
 		const isMinified = location.hostname !== "localhost";
 
-		const shrd = await import(/* webpackIgnore: true */`./shared${isMinified ? '.min' : ''}.js`);
-
-		SvgVml = shrd.SvgVml,
-			StatusEnum = shrd.StatusEnum,
-			LocalLog = shrd.LocalLog,
-			LocalError = shrd.LocalError,
-			sortPointsClockwise = shrd.sortPointsClockwise,
-			pnpoly = shrd.pnpoly,
-			IsPointOutsideAllPaths = shrd.IsPointOutsideAllPaths;
+		({ SvgVml, StatusEnum, LocalLog, LocalError, LocalWarning, sortPointsClockwise, pnpoly, IsPointOutsideAllPaths, ArePointsContinuous } = await import(/* webpackIgnore: true */`./shared${isMinified ? '.min' : ''}.js`));
 	}
 
 
@@ -90,11 +82,27 @@ addEventListener('message', async function (e) {
 						break;
 					case "BY_COORDS":
 						{
-							const vertices = params.points.map(({ x, y }) => [x, y]);
+							const vertices = params.points/* .map(({ x, y }) => [x, y]) */;
 
 							let convex_hull = null;
-							if (vertices.length > 0)
+							if (vertices.length > 0) {
 								convex_hull = concaveman(vertices, params.concavity ?? 2.0, params.lengthThreshold ?? 0.0);
+								const continuous_result = ArePointsContinuous(convex_hull);
+								if (!continuous_result.result) {
+									LocalWarning(`Concaveman result is not continuous, please check your input points. offenderIndex: ${continuous_result.offenderIndex}, offender: ${continuous_result.offender}`);
+
+
+									const prev = convex_hull.at(continuous_result.offenderIndex - 1);
+									const curr = convex_hull.at(continuous_result.offenderIndex);
+									// Use lerpMissingPoints to interpolate missing points from prev to curr
+									const missing = LerpMissingPoints(prev, curr);
+									convex_hull = convex_hull.slice(0, continuous_result.offenderIndex)
+										.concat(missing)
+										.concat(convex_hull.slice(continuous_result.offenderIndex + 1));
+
+									LocalLog(`Concaveman result fixed by adding ${missing.length} points between ${prev} and ${curr}, missing: ${missing.map(pt => pt.join(",")).join(" ")}`);
+								}
+							}
 
 							postMessage({ operation: params.operation, convex_hull });
 						}
@@ -283,5 +291,39 @@ addEventListener('message', async function (e) {
 			break;
 	}
 });
+
+/**
+ * Linearly interpolates missing points between two coordinates (prev and curr).
+ * Usage:
+ * 		const test_missing = LerpMissingPoints([27, 29], [25, 32]);
+ *		LocalLog(`test_missing: [27, 29] -> [25, 32]: ${test_missing.map(pt => pt.join(",")).join(" ")}`);
+ * @param {[number,number]} prev - The starting point [x, y].
+ * @param {[number,number]} curr - The ending point [x, y].
+ * @returns {Array<[number,number]>} Array of interpolated points, including curr.
+ */
+function LerpMissingPoints(prev, curr) {
+	const
+		dx = curr[0] - prev[0],
+		dy = curr[1] - prev[1];
+	const step = Math.max(Math.abs(dx), Math.abs(dy));
+	const
+		stepX = dx / step,
+		stepY = dy / step;
+
+	const missing = [];
+	for (let i = 1, stepXIncr = stepX, stepYIncr = stepY;
+		i < step;
+		i++, stepXIncr += stepX, stepYIncr += stepY) {
+
+		missing.push([
+			Math.floor(prev[0] + stepXIncr),//x
+			Math.floor(prev[1] + stepYIncr)//y
+		]);
+
+	}
+	missing.push(curr);
+
+	return missing;
+}
 
 // LocalLog('Worker loaded');
