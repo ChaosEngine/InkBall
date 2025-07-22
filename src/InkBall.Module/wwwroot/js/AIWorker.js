@@ -1,10 +1,10 @@
-﻿import { GraphAI, concaveman } from "./AISource.js";
+﻿import { GraphAI, concaveman, ArePointsContinuous, LerpMissingPoints } from "./AISource.js";
 // import { SvgVml, StatusEnum, LocalLog, LocalError, sortPointsClockwise, pnpoly, IsPointOutsideAllPaths } from "./shared.js";
 import { astar, Graph as AStarGraph } from "javascript-astar";
 import * as clustering from "density-clustering";
 
 //globals loaded only once hopefully
-let SvgVml, StatusEnum, LocalLog, LocalError, LocalWarning, sortPointsClockwise, pnpoly, IsPointOutsideAllPaths, ArePointsContinuous;
+let SvgVml, StatusEnum, LocalLog, LocalError, LocalWarning, sortPointsClockwise, pnpoly, IsPointOutsideAllPaths;
 
 // This is the entry point for our worker
 addEventListener('message', async function (e) {
@@ -12,7 +12,7 @@ addEventListener('message', async function (e) {
 	if (SvgVml === undefined) {
 		const isMinified = location.hostname !== "localhost";
 
-		({ SvgVml, StatusEnum, LocalLog, LocalError, LocalWarning, sortPointsClockwise, pnpoly, IsPointOutsideAllPaths, ArePointsContinuous } = await import(/* webpackIgnore: true */`./shared${isMinified ? '.min' : ''}.js`));
+		({ SvgVml, StatusEnum, LocalLog, LocalError, LocalWarning, sortPointsClockwise, pnpoly, IsPointOutsideAllPaths } = await import(/* webpackIgnore: true */`./shared${isMinified ? '.min' : ''}.js`));
 	}
 
 
@@ -82,7 +82,7 @@ addEventListener('message', async function (e) {
 						break;
 					case "BY_COORDS":
 						{
-							const vertices = params.points/* .map(({ x, y }) => [x, y]) */;
+							const vertices = params.points;
 
 							let convex_hull = null;
 							if (vertices.length > 0) {
@@ -291,39 +291,5 @@ addEventListener('message', async function (e) {
 			break;
 	}
 });
-
-/**
- * Linearly interpolates missing points between two coordinates (prev and curr).
- * Usage:
- * 		const test_missing = LerpMissingPoints([27, 29], [25, 32]);
- *		LocalLog(`test_missing: [27, 29] -> [25, 32]: ${test_missing.map(pt => pt.join(",")).join(" ")}`);
- * @param {[number,number]} prev - The starting point [x, y].
- * @param {[number,number]} curr - The ending point [x, y].
- * @returns {Array<[number,number]>} Array of interpolated points, including curr.
- */
-function LerpMissingPoints(prev, curr) {
-	const
-		dx = curr[0] - prev[0],
-		dy = curr[1] - prev[1];
-	const step = Math.max(Math.abs(dx), Math.abs(dy));
-	const
-		stepX = dx / step,
-		stepY = dy / step;
-
-	const missing = [];
-	for (let i = 1, stepXIncr = stepX, stepYIncr = stepY;
-		i < step;
-		i++, stepXIncr += stepX, stepYIncr += stepY) {
-
-		missing.push([
-			Math.floor(prev[0] + stepXIncr),//x
-			Math.floor(prev[1] + stepYIncr)//y
-		]);
-
-	}
-	missing.push(curr);
-
-	return missing;
-}
 
 // LocalLog('Worker loaded');

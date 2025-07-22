@@ -155,41 +155,6 @@ function IsPointOutsideAllPaths(x, y, allLines) {
 	return true;
 }
 
-/**
- * Checks if points are continuous
- * @param {Array<{x,y}>|Array<Array>} pointsArr array of objects with x and y properties, or array of arrays with two elements
- * @returns {boolean} true if all points are continuous, false otherwise
- */
-function ArePointsContinuous(pointsArr) {
-	//check if points is array of {x, y} objects or array of arrays with two elements
-	//checking only first element
-	if (!Array.isArray(pointsArr) || pointsArr.length < 1)
-		throw new Error("Invalid points array. Expected an array of objects with x and y properties.");
-
-	let calcDX, calcDY;
-	// Check if points are in {x, y} format or [x, y] format
-	if (Array.isArray(pointsArr[0]) || !('x' in pointsArr[0]) || !('y' in pointsArr[0])) {
-		calcDX = (prev, curr) => Math.abs(prev[0] - curr[0]);
-		calcDY = (prev, curr) => Math.abs(prev[1] - curr[1]);
-	} else {
-		calcDX = (prev, curr) => Math.abs(prev.x - curr.x);
-		calcDY = (prev, curr) => Math.abs(prev.y - curr.y);
-	}
-
-	// Check if all points are continuous
-	for (let i = 1; i < pointsArr.length; i++) {
-		const curr = pointsArr[i];
-		const prev = pointsArr[i - 1];
-		const dx = calcDX(curr, prev);
-		const dy = calcDY(curr, prev);
-
-		if (Math.max(dx, dy) > 1)
-			return { result: false, offenderIndex: i, offender: curr }; // Not continuous
-	}
-
-	return { result: true }; // All points are continuous
-}
-
 //////////////////////////////////////////////////////
 // SVG-VML mini graphic library 
 // ==========================================
@@ -1862,7 +1827,7 @@ class AABB {
 }
 
 export {
-	SvgVml, StatusEnum, pnpoly, LocalLog, LocalError, LocalWarning, LocalAlert, ArePointsContinuous,
+	SvgVml, StatusEnum, pnpoly, LocalLog, LocalError, LocalWarning, LocalAlert,
 	hasDuplicates, sortPointsClockwise, Sleep, IsPointOutsideAllPaths,
 	GameStateStore, AABB
 };

@@ -306,6 +306,76 @@ class GraphAI {
 	}
 }
 
+
+/**
+ * Checks if points are continuous
+ * @param {Array<{x,y}>|Array<Array>} pointsArr array of objects with x and y properties, or array of arrays with two elements
+ * @returns {boolean} true if all points are continuous, false otherwise
+ */
+function ArePointsContinuous(pointsArr) {
+	//check if points is array of {x, y} objects or array of arrays with two elements
+	//checking only first element
+	if (!Array.isArray(pointsArr) || pointsArr.length < 1)
+		throw new Error("Invalid points array. Expected an array of objects with x and y properties.");
+
+	let calcDX, calcDY;
+	// Check if points are in {x, y} format or [x, y] format
+	if (Array.isArray(pointsArr[0]) || !('x' in pointsArr[0]) || !('y' in pointsArr[0])) {
+		calcDX = (prev, curr) => Math.abs(prev[0] - curr[0]);
+		calcDY = (prev, curr) => Math.abs(prev[1] - curr[1]);
+	} else {
+		calcDX = (prev, curr) => Math.abs(prev.x - curr.x);
+		calcDY = (prev, curr) => Math.abs(prev.y - curr.y);
+	}
+
+	// Check if all points are continuous
+	for (let i = 1; i < pointsArr.length; i++) {
+		const curr = pointsArr[i];
+		const prev = pointsArr[i - 1];
+		const dx = calcDX(curr, prev);
+		const dy = calcDY(curr, prev);
+
+		if (Math.max(dx, dy) > 1)
+			return { result: false, offenderIndex: i, offender: curr }; // Not continuous
+	}
+
+	return { result: true }; // All points are continuous
+}
+
+/**
+ * Linearly interpolates missing points between two coordinates (prev and curr).
+ * Usage:
+ * 		const test_missing = LerpMissingPoints([27, 29], [25, 32]);
+ *		LocalLog(`test_missing: [27, 29] -> [25, 32]: ${test_missing.map(pt => pt.join(",")).join(" ")}`);
+ * @param {[number,number]} prev - The starting point [x, y].
+ * @param {[number,number]} curr - The ending point [x, y].
+ * @returns {Array<[number,number]>} Array of interpolated points, including curr.
+ */
+function LerpMissingPoints(prev, curr) {
+	const
+		dx = curr[0] - prev[0],
+		dy = curr[1] - prev[1];
+	const step = Math.max(Math.abs(dx), Math.abs(dy));
+	const
+		stepX = dx / step,
+		stepY = dy / step;
+
+	const missing = [];
+	for (let i = 1, stepXIncr = stepX, stepYIncr = stepY;
+		i < step;
+		i++, stepXIncr += stepX, stepYIncr += stepY) {
+
+		missing.push([
+			Math.floor(prev[0] + stepXIncr),//x
+			Math.floor(prev[1] + stepYIncr)//y
+		]);
+
+	}
+	missing.push(curr);
+
+	return missing;
+}
+
 /*
 // eslint-disable-next-line no-unused-vars
  function concavemanTesting() {
@@ -332,4 +402,4 @@ class GraphAI {
 }
 */
 
-export { concaveman, GraphAI };
+export { concaveman, GraphAI, ArePointsContinuous, LerpMissingPoints };

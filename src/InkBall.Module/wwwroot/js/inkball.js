@@ -3070,23 +3070,21 @@ class InkBallGame {
 	 * @returns {Promise<Array>} - array of clusters found, each cluster is an object with points and convex hull
 	 */
 	async #GetSurroundingPoints(humanPointColor, aiParams, visuals = false) {
-		const humanPointStatus = humanPointColor === this.#COLOR_RED
+		const humanPointStatuses = humanPointColor === this.#COLOR_RED
 			?
-			[StatusEnum.POINT_FREE_RED
-			// ,StatusEnum.POINT_STARTING,
-			// StatusEnum.POINT_IN_PATH,
-			// StatusEnum.POINT_OWNED_BY_BLUE
-			]
+			[StatusEnum.POINT_FREE_RED,
+			StatusEnum.POINT_STARTING,
+			StatusEnum.POINT_IN_PATH,
+			StatusEnum.POINT_OWNED_BY_RED]
 			:
-			[StatusEnum.POINT_FREE_BLUE
-			// ,StatusEnum.POINT_STARTING,
-			// StatusEnum.POINT_IN_PATH,
-			// StatusEnum.POINT_OWNED_BY_RED
-			];
+			[StatusEnum.POINT_FREE_BLUE,
+			StatusEnum.POINT_STARTING,
+			StatusEnum.POINT_IN_PATH,
+			StatusEnum.POINT_OWNED_BY_BLUE];
 		const arrOfArrOfPoints = [];
 
 		for (const pt of await this.#Points.values()) {
-			if (pt !== undefined && pt.GetFillColor() === humanPointColor && humanPointStatus.includes(pt.GetStatus())) {
+			if (pt !== undefined && pt.GetFillColor() === humanPointColor && humanPointStatuses.includes(pt.GetStatus())) {
 				const { x, y } = pt.GetPosition();
 				//density clustering algorithm needs array of array of points only
 				arrOfArrOfPoints.push([x, y]);
