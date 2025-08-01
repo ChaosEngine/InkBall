@@ -3072,15 +3072,17 @@ class InkBallGame {
 	async #GetSurroundingPoints(humanPointColor, aiParams, visuals = false) {
 		const humanPointStatuses = humanPointColor === this.#COLOR_RED
 			?
-			[StatusEnum.POINT_FREE_RED,
-			StatusEnum.POINT_STARTING,
-			StatusEnum.POINT_IN_PATH,
-			StatusEnum.POINT_OWNED_BY_RED]
+			[StatusEnum.POINT_FREE_RED
+				// ,StatusEnum.POINT_STARTING
+				// ,StatusEnum.POINT_IN_PATH
+				// ,StatusEnum.POINT_OWNED_BY_RED
+			]
 			:
-			[StatusEnum.POINT_FREE_BLUE,
-			StatusEnum.POINT_STARTING,
-			StatusEnum.POINT_IN_PATH,
-			StatusEnum.POINT_OWNED_BY_BLUE];
+			[StatusEnum.POINT_FREE_BLUE
+				// ,StatusEnum.POINT_STARTING
+				// ,StatusEnum.POINT_IN_PATH
+				// ,StatusEnum.POINT_OWNED_BY_BLUE
+			];
 		const arrOfArrOfPoints = [];
 
 		for (const pt of await this.#Points.values()) {
@@ -3115,6 +3117,9 @@ class InkBallGame {
 		//for each cluster, process it's point group
 		//and create a convex hull around it, then display it
 		if (data.clusters?.length > 0) {
+			//loading all line up front and pass into below "looped" function calls
+			const allLines = await this.#Lines.all();
+
 			let results = [];
 			for (const point_indexes of data.clusters) {
 				rand_color = RandomColor(); //random color for each points
@@ -3156,6 +3161,10 @@ class InkBallGame {
 				//10. get points of convex hull and create a polyline around it
 				const convex_hull = data?.convex_hull;
 				if (convex_hull?.length > 0) {
+					results.push({ points_in_cluster, convex_hull }); //add points in cluster to array of clusters
+
+					LocalLog(`Planned path points #${results.length} around bounding box points(${surrounding_path.length}): ${surrounding_path.reduce((acc, [x, y]) => acc + `${x},${y} `, '').trimEnd()}`);
+
 					// const poly_points = convex_hull.map(([x, y]) => `${x},${y}`).join(' ');
 					const poly_points = convex_hull.reduce((acc, [x, y]) => acc + `${x},${y} `, '').trimEnd();
 					if (visuals) {
@@ -3165,10 +3174,6 @@ class InkBallGame {
 						LocalLog(poly_line);
 					} else
 						LocalLog(`<polyline points='${poly_points}'></polyline>`);
-
-					results.push({ points_in_cluster, convex_hull }); //add points in cluster to array of clusters
-
-					LocalLog(`Planned path points #${results.length} around bounding box points(${surrounding_path.length}): ${/* sortPointsClockwise */(surrounding_path).reduce((acc, [x, y]) => acc + `${x},${y} `, '').trimEnd()}`);
 				}
 				// LocalLog(fragment.CreateRect(wrapping_bbox.minX, wrapping_bbox.minY, wrapping_bbox.width, wrapping_bbox.height, 'rgb(128,128,128,128)'));
 
@@ -3178,35 +3183,53 @@ class InkBallGame {
 			LocalLog({ clusteringMethod: data.method, clustersPoints: results, plot: data.plot, noise: data.noise });
 
 
-			//loading all line up front and pass into below "looped" function calls
-			const allLines = await this.#Lines.all();
 			for (const { convex_hull, points_in_cluster } of results) {
-				//take x,y pair from convex hull
+				//take ALL x,y pairs from convex hull and check if they are not already placed on the board
+				//and if it is outside all paths
+				//if point is already placed on the board, check its color if not, prepare for placing it
+				let all_points_ok = true;
 				for (const [x, y] of convex_hull) {
-					//take point from path and check if it is not already placed on the board
-					//and if it is outside all paths - if so, return it as next AI move coz path is still not closed
-					if (
-						!(await this.#Points.has(y * this.#iGridWidth + x)) &&
-						(true === IsPointOutsideAllPaths(x, y, allLines))
-					) {
-						const point = new InkBallPointViewModel(this.#iGameID, -1/*player*/, x, y, StatusEnum.POINT_FREE_BLUE, 0);
+					const point = await this.#Points.get(y * this.#iGridWidth + x);
+					if (point !== undefined) {
+						//take point from convex hull and check if it is not already placed on the board as human point
+						//and if it is outside all paths - if so, return it as next AI move coz path is still not closed
+						if (point.GetFillColor() !== humanPointColor && IsPointOutsideAllPaths(x, y, allLines)) {
+							//point ok! outside all paths, not human, placed on the board
+						} else {
+							all_points_ok = false;
+							break; //bad point found
+						}
+					}
+					//else point is not placed on the board, so it is ok for placing it
+				}
+				if (!all_points_ok) continue;
+
+				for (const [x, y] of convex_hull) {
+					const point = await this.#Points.get(y * this.#iGridWidth + x);
+
+					//take point from convex hull and check if it is not already placed on the board
+					//and if it is outside all paths - if so, return it as next AI move because the path is still not closed
+					if (point === undefined) {
+						const return_point = new InkBallPointViewModel(this.#iGameID, -1/*player*/, x, y, StatusEnum.POINT_FREE_BLUE, 0);
 						LocalLog(`Returning point (${x},${y}) as AI generated next point`);
-						return point; //return point as next AI move
+						return return_point; //return point as next AI move
 					}
 				}
 				//if all points from convex hull are already placed on the board, return path as next AI move
-				const path = new InkBallPathViewModel(0, this.#iGameID, -1/*player*/,
+				const return_path = new InkBallPathViewModel(0, this.#iGameID, -1/*player*/,
 					convex_hull.reduce((acc, [x, y]) => acc + `${x},${y} `, '').trimEnd(),
-					points_in_cluster.reduce((acc, pt) => {
-						const { x, y } = pt.GetPosition();
-						return acc + `${x},${y} `;
-					}, '').trimEnd()
+					points_in_cluster
+						.filter(pt => pt.GetStatus() === StatusEnum.POINT_FREE_RED)
+						.reduce((acc, pt) => {
+							const { x, y } = pt.GetPosition();
+							return acc + `${x},${y} `;
+						}, '').trimEnd()
 				);
-				LocalLog({ info: `Planned path ${convex_hull.length} fully filled (?), no point to return, possible path:`, path });
-				return path; //return path as next AI move
+				LocalLog({ info: `Planned as AI generated next path ${convex_hull.length}, possible path:`, path: return_path });
+				return return_path; //return path as next AI move
 			}
 
-			return null; //point from "clusters concave-ing" found
+			return null; //no point from "clusters concave-ing" found, fail
 		}//end if clusters found
 		else
 			return null; //no clusters found
