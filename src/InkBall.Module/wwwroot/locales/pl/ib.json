@@ -28,8 +28,6 @@
 	"list": {
 		"title": "Lista gier",
 		"home": "Start",
-		"player1": "Gracz 1",
-		"player2": "Gracz 2",
 		"gameType": "Typ gry",
 		"gameState": "Stan gry",
 		"action": "Akcja",

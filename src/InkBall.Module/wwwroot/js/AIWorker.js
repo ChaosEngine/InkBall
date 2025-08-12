@@ -1,4 +1,4 @@
-﻿import { GraphAI, concaveman, ArePointsContinuous, LerpMissingPoints } from "./AISource.js";
+﻿import { GraphAI, concaveman, ArePointsContinuous/* , LerpMissingPoints  */ } from "./AISource.js";
 // import { SvgVml, StatusEnum, LocalLog, LocalError, sortPointsClockwise, pnpoly, IsPointOutsideAllPaths } from "./shared.js";
 import { astar, Graph as AStarGraph } from "javascript-astar";
 import * as clustering from "density-clustering";
@@ -82,11 +82,11 @@ addEventListener('message', async function (e) {
 						break;
 					case "BY_COORDS":
 						{
-							const vertices = params.points;
+							const { concavity, lengthThreshold, points: vertices, humanPoints, iGridHeight, iGridWidth } = params;
 
 							let convex_hull = null;
 							if (vertices.length > 0) {
-								convex_hull = concaveman(vertices, params.concavity ?? 2.0, params.lengthThreshold ?? 0.0);
+								convex_hull = concaveman(vertices, concavity ?? 2.0, lengthThreshold ?? 0.0);
 								const continuous_result = ArePointsContinuous(convex_hull);
 								if (!continuous_result.result) {
 									LocalWarning(`Concaveman result is not continuous, please check your input points. offenderIndex: ${continuous_result.offenderIndex}, offender: ${continuous_result.offender}`);
@@ -94,8 +94,24 @@ addEventListener('message', async function (e) {
 
 									const prev = convex_hull.at(continuous_result.offenderIndex - 1);
 									const curr = convex_hull.at(continuous_result.offenderIndex);
+
 									// Use lerpMissingPoints to interpolate missing points from prev to curr
-									const missing = LerpMissingPoints(prev, curr);
+									// const missing = LerpMissingPoints(prev, curr, (x, y) => {
+									// 	return !humanPoints.find(pt => pt[0] === x && pt[1] === y);
+									// });
+
+									// Initialize arr with 1s
+									const arr = Array.from({ length: iGridHeight + 1 }, () => Array(iGridWidth + 1).fill(1));
+
+									// Mark human points as not accessible, inverted x,y coords -> y,x
+									for (const [x, y] of humanPoints) arr[y][x] = 0;
+									// Mark convex hull points as ready to travel
+									// for (const [x, y] of convex_hull) arr[y][x] = 1;
+
+									//Call ASTAR to find missing points between prev and curr
+									const missing = AstarPathFind(arr, prev[1]/*y*/, prev[0]/*x*/, curr[1]/*y*/, curr[0]/*x*/)
+										.map(({ x, y }) => [x, y]);
+
 									convex_hull = convex_hull.slice(0, continuous_result.offenderIndex)
 										.concat(missing)
 										.concat(convex_hull.slice(continuous_result.offenderIndex + 1));
@@ -227,11 +243,8 @@ addEventListener('message', async function (e) {
 		case "ASTAR":
 			{
 				const { arr, start, end } = params;
-				const graphDiagonal = new AStarGraph(arr, { diagonal: true });
-				const from = graphDiagonal.grid[start.y][start.x];
-				const to = graphDiagonal.grid[end.y][end.x];
-				const resultWithDiagonals = astar.search(graphDiagonal, from, to, { heuristic: astar.heuristics.diagonal });
 
+				const resultWithDiagonals = AstarPathFind(arr, start.y, start.x, end.y, end.x);
 				LocalLog(resultWithDiagonals);
 
 				postMessage({ operation: params.operation, resultWithDiagonals });
@@ -291,5 +304,22 @@ addEventListener('message', async function (e) {
 			break;
 	}
 });
+
+function AstarPathFind(arr, fromY, fromX, toY, toX) {
+	const graphDiagonal = new AStarGraph(arr, { diagonal: true });
+
+	const from = graphDiagonal.grid[fromY][fromX];
+	const to = graphDiagonal.grid[toY][toX];
+
+	const resultWithDiagonalsInvertedXY = astar.search(graphDiagonal, from, to, { heuristic: astar.heuristics.diagonal });
+
+	const resultWithDiagonals = resultWithDiagonalsInvertedXY.map(obj => ({
+		...obj,
+		x: obj.y,
+		y: obj.x
+	}));
+
+	return resultWithDiagonals;
+}
 
 // LocalLog('Worker loaded');

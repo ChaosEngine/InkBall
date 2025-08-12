@@ -28,8 +28,6 @@
 	"list": {
 		"title": "Games list",
 		"home": "Home",
-		"player1": "Player 1",
-		"player2": "Player 2",
 		"gameType": "Game type",
 		"gameState": "Game state",
 		"action": "Action",

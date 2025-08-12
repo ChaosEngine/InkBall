@@ -1,7 +1,7 @@
 /*global signalR, i18next*/
 "use strict";
 
-let LocalAlert, LocalLog, LocalError, StatusEnum, hasDuplicates, pnpoly, GameStateStore, SvgVml, IsPointOutsideAllPaths, sortPointsClockwise, Sleep, IBversionHash, AABB, localizeSelector;
+let LocalAlert, LocalLog, LocalError, LocalWarning, StatusEnum, hasDuplicates, pnpoly, GameStateStore, SvgVml, IsPointOutsideAllPaths, sortPointsClockwise, Sleep, IBversionHash, AABB, localizeSelector;
 
 /******** funcs-n-classes ********/
 /**
@@ -461,6 +461,7 @@ async function importAllModulesAsync(/* gameOptions */) {
 	({
 		LocalLog,
 		LocalError,
+		LocalWarning,
 		LocalAlert,
 		StatusEnum,
 		hasDuplicates,
@@ -2620,12 +2621,14 @@ class InkBallGame {
 	async #OnTestConcaveman(event) {
 		event.preventDefault();
 
+		let clicked_point_status;
 		const runParams = this.#LoadAIParamsFromStore(window.localStorage);
-		if (!(runParams.lastClickedY >= 0 && runParams.lastClickedX >= 0)) {
+		if (!(runParams.lastClickedY >= 0 && runParams.lastClickedX >= 0) ||
+			(clicked_point_status = (await this.#Points.get(runParams.lastClickedY * this.#iGridWidth + runParams.lastClickedX))?.GetStatus()) === undefined
+		) {
 			LocalLog(localizeMessage('game.AI.clustFirstClick', "!!!First you need to click some point with mouse to pick the color!!!"));
 			return;
 		}
-		const clicked_point_status = (await this.#Points.get(runParams.lastClickedY * this.#iGridWidth + runParams.lastClickedX))?.GetStatus();
 
 		const data = await this.#RunAIWorker((worker) => {
 			const serialized_points = this.#cyclesFound?.length > 0 ?
@@ -3002,10 +3005,10 @@ class InkBallGame {
 		//helper func
 		const displayPointsHelper = async (pointsArr, sleepMillisecs = 25) => {
 			//
-			//serialize points as string: "y0,x0 y1,x1 y2,x2" but inverse order of coords: y,x
+			//serialize points as string: "x0,y0 x1,y1 x2,y2"
 			//
-			// const pts = pointsArr.map((pt) => `${pt.y},${pt.x}`).join(' ');
-			const pts = pointsArr.reduce((acc, { x, y }) => acc + `${y},${x} `, '').trimEnd();
+			// const pts = pointsArr.map((pt) => `${pt.x},${pt.y}`).join(' ');
+			const pts = pointsArr.reduce((acc, { x, y }) => acc + `${x},${y} `, '').trimEnd();
 
 			//if not existing, create new...
 			if (this.#workingCyclePolyLine === null) {
@@ -3027,25 +3030,11 @@ class InkBallGame {
 
 				const pt = await this.#Points.get(y * this.#iGridWidth + x);
 				if (pt !== undefined && pt.GetFillColor() === point_color && pt.GetStatus() === point_status)
-					arr[y][x] = 1;
+					arr[y][x] = 1;//inverted coords, y,x in array
 				else
 					arr[y][x] = 0;
 			}
 		}
-
-		// Main thread calc
-		/*
-		const graphDiagonal = new astarJS.Graph(arr, { diagonal: true });
-		const start = graphDiagonal.grid[this.#iLastY][this.#iLastX];
-		const end = graphDiagonal.grid[this.#iLastLastY][this.#iLastLastX];
-		const resultWithDiagonals = astarJS.astar.search(graphDiagonal, start, end, { heuristic: astarJS.astar.heuristics.diagonal });
-		if (resultWithDiagonals.length > 0)
-			await displayPointsHelper(resultWithDiagonals, 0);
-
-		LocalLog(resultWithDiagonals);
-		*/
-
-
 
 		//Web Worker calc
 		const data = await this.#RunAIWorker((worker) => {
@@ -3083,13 +3072,13 @@ class InkBallGame {
 				// ,StatusEnum.POINT_IN_PATH
 				// ,StatusEnum.POINT_OWNED_BY_BLUE
 			];
-		const arrOfArrOfPoints = [];
+		const humanPointsArrOfArr = [];
 
 		for (const pt of await this.#Points.values()) {
 			if (pt !== undefined && pt.GetFillColor() === humanPointColor && humanPointStatuses.includes(pt.GetStatus())) {
 				const { x, y } = pt.GetPosition();
 				//density clustering algorithm needs array of array of points only
-				arrOfArrOfPoints.push([x, y]);
+				humanPointsArrOfArr.push([x, y]);
 			}
 		}
 
@@ -3097,7 +3086,7 @@ class InkBallGame {
 		const data = await this.#RunAIWorker(worker => {
 			worker.postMessage({
 				operation: "CLUSTERING",
-				dataset: arrOfArrOfPoints,
+				dataset: humanPointsArrOfArr,
 				method: aiParams.clusteringMethod,
 				//take params saved in local_storage
 				numberOfClusters: aiParams.numberOfClusters,
@@ -3121,16 +3110,22 @@ class InkBallGame {
 			const allLines = await this.#Lines.all();
 
 			let results = [];
-			for (const point_indexes of data.clusters) {
+			clusterLoop: for (const point_indexes of data.clusters) {
 				rand_color = RandomColor(); //random color for each points
 				const points_in_cluster = []; //array of points in cluster
 				const point_coords = []; //array of points coordinates
+
 				for (const index of point_indexes) {
 					//mark those cluster found points visually
 					//get x,y coordinates of point from cluster input array of arrays back
-					const [x, y] = arrOfArrOfPoints[index];
+					const [x, y] = humanPointsArrOfArr[index];
 					const pt = await this.#Points.get(y * this.#iGridWidth + x); //get point from points store
 					if (pt) {
+						if (!(x > 0 && x < this.#iGridWidth && y > 0 && y < this.#iGridHeight)) {
+							LocalWarning(`Point (${x},${y}) out of bounds; will not try to surround.`);
+							continue clusterLoop;
+						}
+
 						points_in_cluster.push(pt); //add point to simple array
 						point_coords.push({ x, y }); //add points coordinates to array
 
@@ -3143,8 +3138,8 @@ class InkBallGame {
 					}
 				}
 
-				const surrounding_path = this.#CalculateWrappingPathFromDividedBoundingBoxes(
-					point_coords, createRectForVisualsFunction
+				const surrounding_path = await this.#CalculateWrappingPathFromDividedBoundingBoxes(
+					point_coords, createRectForVisualsFunction, humanPointColor
 				);
 
 				//9. calculate convex hull of candidate_path points with concaveman algorithm
@@ -3154,7 +3149,10 @@ class InkBallGame {
 						subOperation: "BY_COORDS",
 						points: surrounding_path,
 						concavity: aiParams.concavity,
-						lengthThreshold: aiParams.lengthThreshold
+						lengthThreshold: aiParams.lengthThreshold,
+						humanPoints: humanPointsArrOfArr,
+						iGridHeight: this.#iGridHeight,
+						iGridWidth: this.#iGridWidth
 					});
 				});
 
@@ -3183,11 +3181,10 @@ class InkBallGame {
 			LocalLog({ clusteringMethod: data.method, clustersPoints: results, plot: data.plot, noise: data.noise });
 
 
-			for (const { convex_hull, points_in_cluster } of results) {
+			resultLoop: for (const { convex_hull, points_in_cluster } of results) {
 				//take ALL x,y pairs from convex hull and check if they are not already placed on the board
 				//and if it is outside all paths
 				//if point is already placed on the board, check its color if not, prepare for placing it
-				let all_points_ok = true;
 				for (const [x, y] of convex_hull) {
 					const point = await this.#Points.get(y * this.#iGridWidth + x);
 					if (point !== undefined) {
@@ -3196,13 +3193,12 @@ class InkBallGame {
 						if (point.GetFillColor() !== humanPointColor && IsPointOutsideAllPaths(x, y, allLines)) {
 							//point ok! outside all paths, not human, placed on the board
 						} else {
-							all_points_ok = false;
-							break; //bad point found
+							LocalWarning(`Point (${x},${y}) is breaking the predicted path!`);
+							continue resultLoop; //bad point found
 						}
 					}
 					//else point is not placed on the board, so it is ok for placing it
 				}
-				if (!all_points_ok) continue;
 
 				for (const [x, y] of convex_hull) {
 					const point = await this.#Points.get(y * this.#iGridWidth + x);
@@ -3238,17 +3234,19 @@ class InkBallGame {
 	async #OnTestClustering(event) {
 		event.preventDefault();
 
-		//checks for valid points, color, states
-		//get options from local_storage
+		//checks for valid points, color, states get options from local_storage
+		let point_color;
 		const aiParams = this.#LoadAIParamsFromStore(window.localStorage);
-		if (!(aiParams.lastClickedY >= 0 && aiParams.lastClickedX >= 0)) {
+
+		if (!(aiParams.lastClickedY >= 0 && aiParams.lastClickedX >= 0) ||
+			//check if point exists, if so get color and status
+			(point_color = (await this.#Points.get(aiParams.lastClickedY * this.#iGridWidth + aiParams.lastClickedX))?.GetFillColor()) === undefined
+		) {
 			LocalLog(localizeMessage('game.AI.clustFirstClick', "!!!First you need to click some point with mouse to pick the color!!!"));
 			return;
 		}
 		this.#SaveAIParamsToStore(aiParams, window.localStorage);//save params to local_storage
 
-		//check if point exists, if so get color and status
-		const point_color = (await this.#Points.get(aiParams.lastClickedY * this.#iGridWidth + aiParams.lastClickedX))?.GetFillColor();
 
 		//filter same color and status of last clicked point
 		//we are going to operate on those points only
@@ -4460,9 +4458,10 @@ class InkBallGame {
 	 * Calculate wrapping path around given points using divided bounding boxes method
 	 * @param {Array<{x: number, y: number}>} pointCoords array of points to wrap around
 	 * @param {Function} createRectForVisualsFunc optional function to create rectangle around points for visualization
+	 * @param {string} humanPointColor color of human points
 	 * @returns {Array<[number,number]>} array of points forming surrounding path
 	 */
-	#CalculateWrappingPathFromDividedBoundingBoxes(pointCoords, createRectForVisualsFunc) {
+	async #CalculateWrappingPathFromDividedBoundingBoxes(pointCoords, createRectForVisualsFunc, humanPointColor) {
 
 		//0. create bounding box around points wrapping all points in cluster
 		const wrapping_bbox = AABB.fromPoints(pointCoords);
@@ -4492,7 +4491,10 @@ class InkBallGame {
 
 				//3. check if any created bbox point contains any of the points in point_coords (cluster points)
 				const contains_oponent_cluster_point = current_unit_bbox.filter(({ x, y }) => {
-					return pointCoords.some(pt => pt.x === x && pt.y === y);
+					// if (!(x >= 0 && x < this.#iGridWidth && y >= 0 && y < this.#iGridHeight))
+					// 	return false;
+					// else
+						return pointCoords.some(pt => pt.x === x && pt.y === y);
 				});
 				if (contains_oponent_cluster_point.length > 0) {
 					//4. if so, create a rectangle around it 1x1 unit fir visualization
@@ -4500,17 +4502,23 @@ class InkBallGame {
 					//5. i,j and i+1, j+1 are dimensions of the bounding box
 					// 	 find which points of it are NOT included in point_coords
 					// 	 3 points of the rectangle
-					current_unit_bbox.filter(({ x, y, ind }) => {
+					for (const { x, y, ind } of current_unit_bbox) {
+						// if (!(x >= 0 && x < this.#iGridWidth && y >= 0 && y < this.#iGridHeight))
+						// 	continue;
+
 						//6. not included in point_coords (not from cluster points), so they should be around
 						// 	 cluster points, or inside
+						const point = await this.#Points.get(y * this.#iGridWidth + x);
+						if (point !== undefined && point.GetFillColor() === humanPointColor)
+							continue; //skip human points
 
-						return !contains_oponent_cluster_point.some(q => q.ind !== ind && q.x === x && q.y === y)
+						if (!contains_oponent_cluster_point.some(q => q.ind !== ind && q.x === x && q.y === y)
 							//no duplicates from already added points
-							&& !candidate_path.has(`${x},${y}`);
-					}).forEach(pt => {
-						//7. add point to candidate path map
-						candidate_path.set(`${pt.x},${pt.y}`, [pt.x, pt.y]);
-					});
+							&& !candidate_path.has(`${x},${y}`)) {
+							//7. add point to candidate path map
+							candidate_path.set(`${x},${y}`, [x, y]);
+						}
+					}
 				}
 			}
 		}

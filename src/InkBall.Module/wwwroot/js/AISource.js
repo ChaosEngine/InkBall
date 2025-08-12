@@ -349,9 +349,10 @@ function ArePointsContinuous(pointsArr) {
  *		LocalLog(`test_missing: [27, 29] -> [25, 32]: ${test_missing.map(pt => pt.join(",")).join(" ")}`);
  * @param {[number,number]} prev - The starting point [x, y].
  * @param {[number,number]} curr - The ending point [x, y].
+ * @param {function(number,number): boolean} isPointOk - A function that checks if a point is valid (e.g., not occupied by another point).
  * @returns {Array<[number,number]>} Array of interpolated points, including curr.
  */
-function LerpMissingPoints(prev, curr) {
+function LerpMissingPoints(prev, curr, isPointOk) {
 	const
 		dx = curr[0] - prev[0],
 		dy = curr[1] - prev[1];
@@ -365,10 +366,18 @@ function LerpMissingPoints(prev, curr) {
 		i < step;
 		i++, stepXIncr += stepX, stepYIncr += stepY) {
 
-		missing.push([
-			Math.floor(prev[0] + stepXIncr),//x
-			Math.floor(prev[1] + stepYIncr)//y
-		]);
+		let x, y, trying = 3, plus = 0;
+		do {
+			x = Math.floor(prev[0] + stepXIncr + (plus !== 0 && stepXIncr !== 0 ? 0 : plus));
+			y = Math.floor(prev[1] + stepYIncr + (plus !== 0 && stepYIncr !== 0 ? 0 : plus));
+
+			if (isPointOk(x, y)) {
+				missing.push([x, y]);
+				break; // Found a missing point, break the loop
+			}
+			plus = 1;
+		}
+		while (trying-- > 0);
 
 	}
 	missing.push(curr);
@@ -383,8 +392,8 @@ function LerpMissingPoints(prev, curr) {
 	const concavity = 2.0, lengthThreshold = 0.0;
 	const concaveman_output = concaveman(precision_points, concavity, lengthThreshold);
 	//console.log('Hello concaveman. Simple test output points: \n' + JSON.stringify(output));
-
-
+	
+	
 	// Make sure the polygon has counter-clockwise winding. Skip this step if you know it's already counter-clockwise.
 	//console.log(`decomp.makeCCW(concavePolygon) => ${decomp.makeCCW(precision_points)}`);
 	//const convexPolygonsQuick = decomp.quickDecomp(precision_points);
