@@ -1307,10 +1307,10 @@ class InkBallGame {
 
 	/**
 	 * Callback method invoked by IndexedDb abstraction store
-	 * @param {any} iX point x taken from IndexedDb
-	 * @param {any} iY point y taken from IndexedDb
-	 * @param {any} iStatus status taken from IndexedDb
-	 * @param {any} sColor color taken from IndexedDb
+	 * @param {number} iX point x taken from IndexedDb
+	 * @param {number} iY point y taken from IndexedDb
+	 * @param {number} iStatus status taken from IndexedDb
+	 * @param {string} sColor color taken from IndexedDb
 	 * @returns {object} created oval/circle
 	 */
 	#CreateScreenPointFromIndexedDb(iX, iY, iStatus, sColor) {
@@ -1579,7 +1579,7 @@ class InkBallGame {
 	/**
 	 * Send data through signalR
 	 * @param {object} payload transferrableObject (DTO)
-	 * @param {Function} revertFunction on-error revert/rollback function
+	 * @param {() => void} revertFunction on-error revert/rollback function
 	 */
 	async #SendData(payload, revertFunction = undefined) {
 
@@ -2556,8 +2556,8 @@ class InkBallGame {
 
 	/**
 	 * Worker entry point - async version
-	 * @param {any} setupFunction - init params callback to be given a worker as 1st param
-	 * @returns {Promise<any>} - promise with data from worker
+	 * @param {(worker: Worker) => void} setupFunction - init params callback to be given a worker as 1st param
+	 * @returns {Promise<object>} - promise with data from worker
 	 */
 	async #RunAIWorker(setupFunction) {
 		return new Promise((resolve, reject) => {
@@ -3106,8 +3106,8 @@ class InkBallGame {
 		//for each cluster, process it's point group
 		//and create a convex hull around it, then display it
 		if (data.clusters?.length > 0) {
-			//loading all line up front and pass into below "looped" function calls
-			const allLines = await this.#Lines.all();
+			//loading all human lines up front and pass into below "looped" function calls
+			const allHumanLines = (await this.#Lines.all()).filter(line => line.GetFillColor() === humanPointColor);
 
 			let results = [];
 			clusterLoop: for (const point_indexes of data.clusters) {
@@ -3190,7 +3190,7 @@ class InkBallGame {
 					if (point !== undefined) {
 						//take point from convex hull and check if it is not already placed on the board as human point
 						//and if it is outside all paths - if so, return it as next AI move coz path is still not closed
-						if (point.GetFillColor() !== humanPointColor && IsPointOutsideAllPaths(x, y, allLines)) {
+						if (point.GetFillColor() !== humanPointColor && IsPointOutsideAllPaths(x, y, allHumanLines)) {
 							//point ok! outside all paths, not human, placed on the board
 						} else {
 							LocalWarning(`Point (${x},${y}) is breaking the predicted path!`);
@@ -3636,8 +3636,8 @@ class InkBallGame {
 	///////CpuGame variables methods start//////
 	/**
 	 * Gets random number in range: min(inclusive) - max (exclusive)
-	 * @param {any} min - from(inclusive)
-	 * @param {any} max - to (exclusive)
+	 * @param {number} min - from(inclusive)
+	 * @param {number} max - to (exclusive)
 	 * @returns {number} random number
 	 */
 	#GetRandomInt(min, max) {
@@ -3811,14 +3811,14 @@ class InkBallGame {
 
 	/**
 	 * Building graph of connected vertices and edges
-	 * @param {any} param0 is a optional object comprised of:
-	 *	freePointStatus - status of free point
-	 *	cpuFillColor - CPU point color
+	 * @param {object} [param0] is a optional object comprised of:
+	 *	@param {number} param0.freePointStatus - status of free point
+	 *	@param {string} param0.cpuFillColor - CPU point color
 	 * @returns {object} graph object with vertices and edges
 	 */
 	async #BuildGraph({
 		freePointStatus = StatusEnum.POINT_FREE_BLUE,
-		cpufillCol: cpuFillColor = this.#COLOR_BLUE
+		cpuFillColor = this.#COLOR_BLUE
 		//, visuals: presentVisually = false
 	} = {}) {
 		const graph_points = new Map(), graph_edges = new Map();
@@ -3906,7 +3906,7 @@ class InkBallGame {
 
 	/**
 	 * Based on https://www.geeksforgeeks.org/print-all-the-cycles-in-an-undirected-graph/
-	 * @param {any} graph constructed earlier with BuildGraph
+	 * @param {object} graph constructed earlier with BuildGraph
 	 * @param {string} sHumanColor - human red playing color
 	 * @returns {Array} of cycles
 	 */
@@ -4149,7 +4149,7 @@ class InkBallGame {
 	/**
 	 * Floyd's tortoise and hare
 	 * https://en.wikipedia.org/wiki/Cycle_detection
-	 * @param {Function} getNextFunc function where getNextFunc(x0) is the element/node next to x0
+	 * @param {(element: number) => boolean} getNextFunc function where getNextFunc(x0) is the element/node next to x0
 	 * @param {number} head index of element
 	 * @returns {object} length of the shortest cycle and starting point
 	 */
@@ -4457,7 +4457,7 @@ class InkBallGame {
 	/**
 	 * Calculate wrapping path around given points using divided bounding boxes method
 	 * @param {Array<{x: number, y: number}>} pointCoords array of points to wrap around
-	 * @param {Function} createRectForVisualsFunc optional function to create rectangle around points for visualization
+	 * @param {(worker: Worker) => void} createRectForVisualsFunc optional function to create rectangle around points for visualization
 	 * @param {string} humanPointColor color of human points
 	 * @returns {Array<[number,number]>} array of points forming surrounding path
 	 */

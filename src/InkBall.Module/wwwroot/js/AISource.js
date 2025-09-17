@@ -33,16 +33,14 @@ class GraphAI {
 
 	/**
 	 * Building graph of connected vertices and edges
-	 * @param {any} param0 is a optional object comprised of:
-	 *	freePointStatus - status of free point
-	 *	cpuFillColor - CPU point color
-	 *	visuals - present visually
+	 * @param {object} [param0] Optional object:
+	 *   @param {number} param0.freePointStatus - status of free point
 	 * @returns {object} with vertices and edges
 	 */
 	async BuildGraph({
 		freePointStatus = StatusEnum.POINT_FREE_BLUE
-		//, cpufillCol: cpuFillColor = 'var(--bluish)'
-		//, visuals: presentVisually = false
+		//, cpuFillColor = 'var(--bluish)'
+		//, visuals = false
 	} = {}) {
 		await this.#Init();
 
@@ -127,7 +125,7 @@ class GraphAI {
 
 	/**
 	 * Based on https://www.geeksforgeeks.org/print-all-the-cycles-in-an-undirected-graph/
-	 * @param {any} graph constructed earlier with BuildGraph
+	 * @param {object} graph constructed earlier with BuildGraph
 	 * @param {string} sHumanColor - human red playing color
 	 * @param {object} lines - line array
 	 * @returns {Array} of cycles

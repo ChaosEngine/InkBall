@@ -17,7 +17,7 @@ const StatusEnum = Object.freeze({
 
 /**
  * Shared log function
- * @param {any} msg - object to log
+ * @param {string} msg - object to log
  */
 function LocalLog(msg) {
 	// eslint-disable-next-line no-console
@@ -26,7 +26,7 @@ function LocalLog(msg) {
 
 /**
  * Shared error log function
- * @param {...any} args - objects to log
+ * @param {...string} args - objects to log
  */
 function LocalError(...args) {
 	let msg = '';
@@ -41,7 +41,7 @@ function LocalError(...args) {
 
 /**
  * Shared warn log function
- * @param {...any} args - objects to log
+ * @param {...string} args - objects to log
  */
 function LocalWarning(...args) {
 	let msg = '';
@@ -57,7 +57,7 @@ function LocalWarning(...args) {
 /**
  * Check if custom alert dialog handler is available if so use it, if not fallback to default window.alert
  * @param {string} msg - message to show
- * @param {Function} onCloseCallback optional callback function to call on end
+ * @param {() => void} onCloseCallback optional callback function to call on end
  */
 const LocalAlert = (typeof myAlert !== "undefined") ?
 	myAlert :
@@ -1344,7 +1344,7 @@ class GameStateStore {
 	/**
 	 * Saves current value state value to state store with appropriate unique key
 	 * @param {string} key state key
-	 * @param {*} gameState current value of state to save
+	 * @param {object} gameState current value of state to save
 	 * @returns {Promise} resolved promise after storing
 	 */
 	async UpdateState(key, gameState) {
@@ -1485,7 +1485,7 @@ class GameStateStore {
 	/**
 	 * Load all needed stores upfront for batch operations on points and paths
 	 * @param {Array<string> | string} storeName array or string of store to load
-	 * @param {any} mode - readonly/readwrite
+	 * @param {'readonly' | 'readwrite'} mode - readonly/readwrite
 	 */
 	async #BeginBulkStorage(storeName, mode) {
 		if (this.#bulkStores === null)

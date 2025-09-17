@@ -5,10 +5,10 @@
 /**
  * Initializes the callbacks for depth-first search traversal.
  * @param {object} [callbacks] - An object containing optional callback functions.
- * @param {Function} [callbacks.allowTraversal] - A function to determine if traversal to the next vertex is allowed.
- * @param {Function} [callbacks.enterVertex] - A function to be called when entering a vertex.
- * @param {Function} [callbacks.leaveVertex] - A function to be called when leaving a vertex.
- * @param {Function} [callbacks.showCycle] - A function to be called when a cycle is detected.
+ * @param {(arg: {nextVertex: object}) => boolean} [callbacks.allowTraversal] - Determines if traversal to the next vertex is allowed.
+ * @param {(arg: {currentVertex: object, previousVertex: object}) => void} [callbacks.enterVertex] - Called when entering a vertex.
+ * @param {(arg: {currentVertex: object, previousVertex: object}) => void} [callbacks.leaveVertex] - Called when leaving a vertex.
+ * @param {(lastSeen: object, nextVertex: object) => void} [callbacks.showCycle] - Called when a cycle is detected.
  * @returns {object} An object containing the initialized callback functions.
  */
 function initCallbacks(callbacks = {}) {
@@ -44,7 +44,12 @@ function initCallbacks(callbacks = {}) {
  * @param {object} graph representation
  * @param {object} currentVertex obj
  * @param {object} previousVertex obj
- * @param {Function} callbacks obj
+ * @param {{
+ *   enterVertex: (arg: {currentVertex: object, previousVertex: object}) => void,
+ *   leaveVertex: (arg: {currentVertex: object, previousVertex: object}) => void,
+ *   allowTraversal: (arg: {previousVertex: object, currentVertex: object, nextVertex: object}) => boolean,
+ *   showCycle: (lastSeen: object, nextVertex: object) => void
+ * }} callbacks - Callback functions for traversal
  */
 async function depthFirstSearchRecursive(graph, currentVertex, previousVertex, callbacks) {
 	callbacks.enterVertex({ currentVertex, previousVertex });
@@ -63,7 +68,12 @@ async function depthFirstSearchRecursive(graph, currentVertex, previousVertex, c
 /**
  * @param {object} graph representation
  * @param {object} startVertex obj
- * @param {Function} [callbacks] obj
+ * @param {{
+ *   enterVertex?: (arg: {currentVertex: object, previousVertex: object}) => void,
+ *   leaveVertex?: (arg: {currentVertex: object, previousVertex: object}) => void,
+ *   allowTraversal?: (arg: {previousVertex: object, currentVertex: object, nextVertex: object}) => boolean,
+ *   showCycle?: (lastSeen: object, nextVertex: object) => void
+ * }} [callbacks] - Optional callback functions for traversal
  */
 export default async function depthFirstSearch(graph, startVertex, callbacks) {
 	const previousVertex = null;
