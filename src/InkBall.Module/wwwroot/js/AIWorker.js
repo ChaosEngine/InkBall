@@ -84,45 +84,48 @@ addEventListener('message', async function (e) {
 						{
 							const { concavity, lengthThreshold, points: vertices, humanPoints, iGridHeight, iGridWidth } = params;
 
-							let convex_hull = null;
+							let convex_hull = null, numOfNonContinuous = 0;
 							if (vertices.length > 0) {
 								convex_hull = concaveman(vertices, concavity ?? 2.0, lengthThreshold ?? 0.0);
-								const continuous_result = ArePointsContinuous(convex_hull);
-								if (!continuous_result.result) {
-									LocalWarning(`Concaveman result is not continuous, please check your input points. offenderIndex: ${continuous_result.offenderIndex}, offender: ${continuous_result.offender}`);
+								let max_attempts = 3, grid = null, graphDiagonal = null;
+								do {
+									const continuous_result = ArePointsContinuous(convex_hull);
+									if (!continuous_result.result) {
+										numOfNonContinuous++;
+										LocalWarning(`Concaveman result is not continuous, please check your input points. offenderIndex: ${continuous_result.offenderIndex}, offender: ${continuous_result.offender}`);
 
+										const prev = convex_hull.at(continuous_result.offenderIndex - 1);
+										const curr = convex_hull.at(continuous_result.offenderIndex);
 
-									const prev = convex_hull.at(continuous_result.offenderIndex - 1);
-									const curr = convex_hull.at(continuous_result.offenderIndex);
+										if (grid === null) {
+											// Initialize arr with 1s
+											grid = Array.from({ length: iGridHeight + 1 }, () => Array(iGridWidth + 1).fill(1));
 
-									// Use lerpMissingPoints to interpolate missing points from prev to curr
-									// const missing = LerpMissingPoints(prev, curr, (x, y) => {
-									// 	return !humanPoints.find(pt => pt[0] === x && pt[1] === y);
-									// });
+											// Mark human points as not accessible, inverted x,y coords -> y,x
+											for (const [x, y] of humanPoints) grid[y][x] = 0;
 
-									// Initialize arr with 1s
-									const arr = Array.from({ length: iGridHeight + 1 }, () => Array(iGridWidth + 1).fill(1));
+											graphDiagonal = new AStarGraph(grid, { diagonal: true });
+										}
 
-									// Mark human points as not accessible, inverted x,y coords -> y,x
-									for (const [x, y] of humanPoints) arr[y][x] = 0;
-									// Mark convex hull points as ready to travel
-									// for (const [x, y] of convex_hull) arr[y][x] = 1;
+										// Call ASTAR to find missing points between prev and curr
+										const missing = AstarPathFind(graphDiagonal, prev[1], prev[0], curr[1], curr[0])
+											.map(({ x, y }) => [x, y]);
 
-									//Call ASTAR to find missing points between prev and curr
-									const missing = AstarPathFind(arr, prev[1]/*y*/, prev[0]/*x*/, curr[1]/*y*/, curr[0]/*x*/)
-										.map(({ x, y }) => [x, y]);
+										convex_hull = convex_hull.slice(0, continuous_result.offenderIndex)
+											.concat(missing)
+											.concat(convex_hull.slice(continuous_result.offenderIndex + 1));
 
-									convex_hull = convex_hull.slice(0, continuous_result.offenderIndex)
-										.concat(missing)
-										.concat(convex_hull.slice(continuous_result.offenderIndex + 1));
-
-									LocalLog(`Concaveman result fixed by adding ${missing.length} points between ${prev} and ${curr}, missing: ${missing.map(pt => pt.join(",")).join(" ")}`);
-								}
+										LocalLog(`Concaveman result fixed by adding ${missing.length} points between ${prev} and ${curr}, missing: ${missing.map(pt => pt.join(",")).join(" ")}`);
+									} else {
+										break;
+									}
+								} while ((--max_attempts) > 0);
 							}
 
-							postMessage({ operation: params.operation, convex_hull });
+							postMessage({ operation: params.operation, convex_hull, numOfNonContinuous });
 						}
 						break;
+
 					default:
 						throw new Error(`unknown params.subOperation = ${params.subOperation}`);
 				}
@@ -244,7 +247,9 @@ addEventListener('message', async function (e) {
 			{
 				const { arr, start, end } = params;
 
-				const resultWithDiagonals = AstarPathFind(arr, start.y, start.x, end.y, end.x);
+				const graphDiagonal = new AStarGraph(arr, { diagonal: true });
+
+				const resultWithDiagonals = AstarPathFind(graphDiagonal, start.y, start.x, end.y, end.x);
 				LocalLog(resultWithDiagonals);
 
 				postMessage({ operation: params.operation, resultWithDiagonals });
@@ -305,8 +310,8 @@ addEventListener('message', async function (e) {
 	}
 });
 
-function AstarPathFind(arr, fromY, fromX, toY, toX) {
-	const graphDiagonal = new AStarGraph(arr, { diagonal: true });
+function AstarPathFind(graphDiagonal, fromY, fromX, toY, toX) {
+	// const graphDiagonal = new AStarGraph(arr, { diagonal: true });
 
 	const from = graphDiagonal.grid[fromY][fromX];
 	const to = graphDiagonal.grid[toY][toX];

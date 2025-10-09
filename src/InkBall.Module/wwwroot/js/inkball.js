@@ -3139,7 +3139,7 @@ class InkBallGame {
 				}
 
 				const surrounding_path = await this.#CalculateWrappingPathFromDividedBoundingBoxes(
-					point_coords, createRectForVisualsFunction, humanPointColor
+					point_coords, createRectForVisualsFunction, [humanPointColor, this.#COLOR_OWNED_RED, this.#COLOR_OWNED_BLUE]
 				);
 
 				//9. calculate convex hull of candidate_path points with concaveman algorithm
@@ -4458,10 +4458,10 @@ class InkBallGame {
 	 * Calculate wrapping path around given points using divided bounding boxes method
 	 * @param {Array<{x: number, y: number}>} pointCoords array of points to wrap around
 	 * @param {(worker: Worker) => void} createRectForVisualsFunc optional function to create rectangle around points for visualization
-	 * @param {string} humanPointColor color of human points
+	 * @param {Array<string>} humanPointColors colors of human points
 	 * @returns {Array<[number,number]>} array of points forming surrounding path
 	 */
-	async #CalculateWrappingPathFromDividedBoundingBoxes(pointCoords, createRectForVisualsFunc, humanPointColor) {
+	async #CalculateWrappingPathFromDividedBoundingBoxes(pointCoords, createRectForVisualsFunc, humanPointColors) {
 
 		//0. create bounding box around points wrapping all points in cluster
 		const wrapping_bbox = AABB.fromPoints(pointCoords);
@@ -4509,7 +4509,7 @@ class InkBallGame {
 						//6. not included in point_coords (not from cluster points), so they should be around
 						// 	 cluster points, or inside
 						const point = await this.#Points.get(y * this.#iGridWidth + x);
-						if (point !== undefined && point.GetFillColor() === humanPointColor)
+						if (point !== undefined && humanPointColors.includes(point.GetFillColor()))
 							continue; //skip human points
 
 						if (!contains_oponent_cluster_point.some(q => q.ind !== ind && q.x === x && q.y === y)
