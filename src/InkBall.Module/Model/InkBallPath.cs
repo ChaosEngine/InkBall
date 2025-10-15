@@ -28,7 +28,7 @@ namespace InkBall.Module.Model
 		int iGameId { get; set; }
 		int iPlayerId { get; set; }
 
-		ICollection<Point> InkBallPoint { get; set; }
+		ICollection<Point> InkBallPoints { get; set; }
 	}
 
 	public abstract class CommonPath<Point> : IPath<Point>, IDtoMsg
@@ -39,7 +39,9 @@ namespace InkBall.Module.Model
 		public int iPlayerId { get; set; }
 		public string PointsAsString { get; set; }
 
-		public abstract ICollection<Point> InkBallPoint { get; set; }
+		[JsonIgnore]
+		[IgnoreMember]
+		public abstract ICollection<Point> InkBallPoints { get; set; }
 
 		[JsonIgnore]
 		[IgnoreMember]
@@ -90,7 +92,7 @@ namespace InkBall.Module.Model
 
 		public virtual bool IsPointInsidePath(CommonPoint point)
 		{
-			var path_points = this.InkBallPoint;
+			var path_points = this.InkBallPoints;
 			if (path_points.Contains(point))
 				return false;
 
@@ -126,7 +128,7 @@ namespace InkBall.Module.Model
 	{
 		public InkBallGame Game { get; set; }
 		public InkBallPlayer Player { get; set; }
-		public override ICollection<InkBallPoint> InkBallPoint { get; set; }
+		public override ICollection<InkBallPoint> InkBallPoints { get; set; }
 
 		public InkBallPath()
 		{
@@ -238,10 +240,10 @@ namespace InkBall.Module.Model
 	{
 		delegate void ActionRef<T1, T2, T3, T4>(ref T1 arg1, ref T2 arg2, ref T3 arg3, ref T4 arg4);
 
-        /// <summary>
-        /// Helper for serialization only selected properties
-        /// </summary>
-        internal sealed record ThinSerializedPath : IThinPath
+		/// <summary>
+		/// Helper for serialization only selected properties
+		/// </summary>
+		internal sealed record ThinSerializedPath : IThinPath
 		{
 			public string PointsAsString { get; set; }
 
@@ -267,7 +269,7 @@ namespace InkBall.Module.Model
 		///Points creating the path; path points
 		[JsonIgnore]
 		[IgnoreMember]
-		public override ICollection<InkBallPointViewModel> InkBallPoint
+		public override ICollection<InkBallPointViewModel> InkBallPoints
 		{
 			get
 			{
@@ -407,9 +409,9 @@ namespace InkBall.Module.Model
 			this.PointsAsString = pointsAsString ?? path.PointsAsString;
 			this.OwnedPointsAsString = ownedPointsAsString;
 
-			if (path?.InkBallPoint?.Count > 0)
+			if (path?.InkBallPoints?.Count > 0)
 			{
-				this.InkBallPoint = path.InkBallPoint.Select(p => new InkBallPointViewModel(p)).ToArray();
+				this.InkBallPoints = path.InkBallPoints.Select(p => new InkBallPointViewModel(p)).ToArray();
 			}
 
 			Debug.Assert(this.iId >= 0);
@@ -423,9 +425,9 @@ namespace InkBall.Module.Model
 			this.PointsAsString = path.PointsAsString;
 			this.OwnedPointsAsString = path.OwnedPointsAsString;
 
-			if (path?.InkBallPoint?.Count > 0)
+			if (path?.InkBallPoints?.Count > 0)
 			{
-				this.InkBallPoint = path.InkBallPoint;
+				this.InkBallPoints = path.InkBallPoints;
 			}
 
 			Debug.Assert(this.iId >= 0);

@@ -124,7 +124,7 @@ namespace InkBall.Module
                                         {
                                             await inkballHubContext.Clients.User(signedOff_id_online.Item1).ServerToClientPlayerSurrender(
                                                 new PlayerSurrenderingCommand(signedOff_id_online.Item2.GetValueOrDefault(0), true,
-                                                $"Player {signedOff_id_online.Item3 ?? ""} logged out"));
+                                                $"Player {signedOff_id_online.Item3 ?? ""} logged out;plaXLoggedOut"));
                                         }
                                     }
                                     catch (Exception ex)

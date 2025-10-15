@@ -2,17 +2,17 @@
 @inject Microsoft.Extensions.Options.IOptions<InkBallOptions> commonUIConfigureOptions
 @model RulesModel
 @{
-    ViewData["Title"] = "Rules";
+    ViewData["Title"] = "ib:rules.title";
 
     HtmlHelpers.RenderHeaderSection(this, Url, commonUIConfigureOptions);
 }
 
 
-<a href="Home" class="btn btn-primary mt-4 mb-2 my-sm-2">Home</a>
+<a href="Home" class="btn btn-primary mt-4 mb-2 my-sm-2" data-i18n='ib:list.home'>Home</a>
 <ol>
-	<li>Player put dots on the grid one after another</li>
-	<li>When player wants to surround opponent dots, one choses <strong class="text-danger">Draw lines</strong> and draws surrounding line; to put dots again - click <strong class="text-danger">Draw dots</strong></li>
-	<li><strong class="text-danger">Cancel path</strong> reverts already drawn line</li>
-	<li>One can not put dots inside surrounded groups</li>
-	<li>There must be at least one opponent dots to surround</li>
+	<li data-i18n='ib:rules.li00'>Player put dots on the grid one after another</li>
+	<li><span data-i18n='ib:rules.li10'>When player wants to surround opponent dots, one choses</span> <strong class="text-danger" data-i18n='ib:rules.li11'>Draw line</strong> <span data-i18n='ib:rules.li12'>and draws surrounding line; to put dots again - click</span> <strong class="text-danger" data-i18n='ib:rules.li13'>Draw dots</strong></li>
+	<li><strong class="text-danger" data-i18n='ib:rules.li20'>Cancel path</strong> <span data-i18n='ib:rules.li21'>reverts already drawn line</span></li>
+	<li data-i18n='ib:rules.li3'>One can not put dots inside surrounded groups</li>
+	<li data-i18n='ib:rules.li4'>There must be at least one opponent dots surrounded</li>
 </ol>

@@ -7,7 +7,7 @@ let StatusEnum, sortPointsClockwise, IsPointOutsideAllPaths/*, LocalLog, Sleep, 
 
 /**
  * AI operations class
- * */
+ */
 class GraphAI {
 	#iGridWidth;
 	#iGridHeight;
@@ -23,13 +23,9 @@ class GraphAI {
 
 	async #Init() {
 		if (StatusEnum === undefined) {
-			const isMinified = location.hostname !== "localhost";
 
-			const shrd = await import(/* webpackIgnore: true */`./shared${isMinified ? '.min' : ''}.js`);
+			({ StatusEnum, sortPointsClockwise, IsPointOutsideAllPaths } = await import(/* webpackIgnore: true */`./shared${location.hostname !== "localhost" ? '.min' : ''}.js`));
 
-			StatusEnum = shrd.StatusEnum, sortPointsClockwise = shrd.sortPointsClockwise,
-				IsPointOutsideAllPaths = shrd.IsPointOutsideAllPaths;
-				
 			this.#POINT_STARTING = StatusEnum.POINT_STARTING;
 			this.#POINT_IN_PATH = StatusEnum.POINT_IN_PATH;
 		}
@@ -37,14 +33,14 @@ class GraphAI {
 
 	/**
 	 * Building graph of connected vertices and edges
-	 * @param {any} param0 is a optional object comprised of:
-	 *	freePointStatus - status of free point
-	 *	cpuFillColor - CPU point color
+	 * @param {object} [param0] Optional object:
+	 *   @param {number} param0.freePointStatus - status of free point
+	 * @returns {object} with vertices and edges
 	 */
 	async BuildGraph({
-		freePointStatus = StatusEnum.POINT_FREE_BLUE,
-		// cpufillCol: cpuFillColor = 'var(--bluish)'
-		//, visuals: presentVisually = false
+		freePointStatus = StatusEnum.POINT_FREE_BLUE
+		//, cpuFillColor = 'var(--bluish)'
+		//, visuals = false
 	} = {}) {
 		await this.#Init();
 
@@ -129,10 +125,10 @@ class GraphAI {
 
 	/**
 	 * Based on https://www.geeksforgeeks.org/print-all-the-cycles-in-an-undirected-graph/
-	 * @param {any} graph constructed earlier with BuildGraph
+	 * @param {object} graph constructed earlier with BuildGraph
 	 * @param {string} sHumanColor - human red playing color
 	 * @param {object} lines - line array
-	 * @returns {array} of cycles
+	 * @returns {Array} of cycles
 	 */
 	async MarkAllCycles(graph, sHumanColor, lines) {
 		await this.#Init();
@@ -308,14 +304,94 @@ class GraphAI {
 	}
 }
 
+
+/**
+ * Checks if points are continuous
+ * @param {Array<{x,y}>|Array<Array>} pointsArr array of objects with x and y properties, or array of arrays with two elements
+ * @returns {boolean} true if all points are continuous, false otherwise
+ */
+function ArePointsContinuous(pointsArr) {
+	//check if points is array of {x, y} objects or array of arrays with two elements
+	//checking only first element
+	if (!Array.isArray(pointsArr) || pointsArr.length < 1)
+		throw new Error("Invalid points array. Expected an array of objects with x and y properties.");
+
+	let calcDX, calcDY;
+	// Check if points are in {x, y} format or [x, y] format
+	if (Array.isArray(pointsArr[0]) || !('x' in pointsArr[0]) || !('y' in pointsArr[0])) {
+		calcDX = (prev, curr) => Math.abs(prev[0] - curr[0]);
+		calcDY = (prev, curr) => Math.abs(prev[1] - curr[1]);
+	} else {
+		calcDX = (prev, curr) => Math.abs(prev.x - curr.x);
+		calcDY = (prev, curr) => Math.abs(prev.y - curr.y);
+	}
+
+	// Check if all points are continuous
+	for (let i = 1; i < pointsArr.length; i++) {
+		const curr = pointsArr[i];
+		const prev = pointsArr[i - 1];
+		const dx = calcDX(curr, prev);
+		const dy = calcDY(curr, prev);
+
+		if (Math.max(dx, dy) > 1)
+			return { result: false, offenderIndex: i, offender: curr }; // Not continuous
+	}
+
+	return { result: true }; // All points are continuous
+}
+
+/**
+ * Linearly interpolates missing points between two coordinates (prev and curr).
+ * Usage:
+ * 		const test_missing = LerpMissingPoints([27, 29], [25, 32]);
+ *		LocalLog(`test_missing: [27, 29] -> [25, 32]: ${test_missing.map(pt => pt.join(",")).join(" ")}`);
+ * @param {[number,number]} prev - The starting point [x, y].
+ * @param {[number,number]} curr - The ending point [x, y].
+ * @param {function(number,number): boolean} isPointOk - A function that checks if a point is valid (e.g., not occupied by another point).
+ * @returns {Array<[number,number]>} Array of interpolated points, including curr.
+ */
+function LerpMissingPoints(prev, curr, isPointOk) {
+	const
+		dx = curr[0] - prev[0],
+		dy = curr[1] - prev[1];
+	const step = Math.max(Math.abs(dx), Math.abs(dy));
+	const
+		stepX = dx / step,
+		stepY = dy / step;
+
+	const missing = [];
+	for (let i = 1, stepXIncr = stepX, stepYIncr = stepY;
+		i < step;
+		i++, stepXIncr += stepX, stepYIncr += stepY) {
+
+		let x, y, trying = 3, plus = 0;
+		do {
+			x = Math.floor(prev[0] + stepXIncr + (plus !== 0 && stepXIncr !== 0 ? 0 : plus));
+			y = Math.floor(prev[1] + stepYIncr + (plus !== 0 && stepYIncr !== 0 ? 0 : plus));
+
+			if (isPointOk(x, y)) {
+				missing.push([x, y]);
+				break; // Found a missing point, break the loop
+			}
+			plus = 1;
+		}
+		while (trying-- > 0);
+
+	}
+	missing.push(curr);
+
+	return missing;
+}
+
+/*
 // eslint-disable-next-line no-unused-vars
-/* function concavemanTesting() {
+ function concavemanTesting() {
 	const precision_points = [[484, 480], [676, 363], [944, 342], [678, 41], [286, 237], [758, 215], [752, 117], [282, 492], [609, 262], [129, 252]];
 	const concavity = 2.0, lengthThreshold = 0.0;
 	const concaveman_output = concaveman(precision_points, concavity, lengthThreshold);
 	//console.log('Hello concaveman. Simple test output points: \n' + JSON.stringify(output));
-
-
+	
+	
 	// Make sure the polygon has counter-clockwise winding. Skip this step if you know it's already counter-clockwise.
 	//console.log(`decomp.makeCCW(concavePolygon) => ${decomp.makeCCW(precision_points)}`);
 	//const convexPolygonsQuick = decomp.quickDecomp(precision_points);
@@ -330,6 +406,7 @@ class GraphAI {
 		!convexPolygons || convexPolygons.length <= 0) {
 		LocalLog('decomp or concaveman error');
 	}
-} */
+}
+*/
 
-export { concaveman, GraphAI };
+export { concaveman, GraphAI, ArePointsContinuous, LerpMissingPoints };

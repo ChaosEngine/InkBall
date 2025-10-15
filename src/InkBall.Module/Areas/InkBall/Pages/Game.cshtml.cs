@@ -54,9 +54,9 @@ namespace InkBall.Module.Pages
 		public async Task<IActionResult> OnGetAsync()
 		{
 			if (!GameHub.WebSocketAllowedOrigins.Any())
-				GameHub.WebSocketAllowedOrigins.Add($"{Request.Scheme}://{Request.Host}");
+				GameHub.WebSocketAllowedOrigins.Add(Request.Host.Host);
 			else
-				GameHub.WebSocketAllowedOrigins.AddOrUpdate($"{Request.Scheme}://{Request.Host}");
+				GameHub.WebSocketAllowedOrigins.AddOrUpdate(Request.Host.Host);
 
 			//https://developer.chrome.com/blog/enabling-shared-array-buffer/
 			Response.Headers.Append("Cross-Origin-Embedder-Policy", "require-corp");
@@ -68,7 +68,7 @@ namespace InkBall.Module.Pages
 
 			if (Game == null)
 			{
-				Message = "No active game for you";
+				Message = "No active game for you;noActiveGame";
 
 				return RedirectToPage(HomeModel.ASPX);
 			}
@@ -89,9 +89,9 @@ namespace InkBall.Module.Pages
 
 
 			if (!GameHub.WebSocketAllowedOrigins.Any())
-				GameHub.WebSocketAllowedOrigins.Add($"{Request.Scheme}://{Request.Host}");
+				GameHub.WebSocketAllowedOrigins.Add(Request.Host.Host);
 			else
-				GameHub.WebSocketAllowedOrigins.AddOrUpdate($"{Request.Scheme}://{Request.Host}");
+				GameHub.WebSocketAllowedOrigins.AddOrUpdate(Request.Host.Host);
 
 			//https://developer.chrome.com/blog/enabling-shared-array-buffer/
 			Response.Headers.Append("Cross-Origin-Embedder-Policy", "require-corp");
@@ -100,7 +100,7 @@ namespace InkBall.Module.Pages
 
 			if (!ModelState.IsValid)//model.GameID <= 0
 			{
-				Message = "View only: Bad GameID";
+				Message = "View only: Bad GameID;viewOnlyBadGameID";
 
 				return RedirectToPage(HomeModel.ASPX);
 			}
@@ -113,7 +113,7 @@ namespace InkBall.Module.Pages
 				!int.TryParse(User.FindFirstValue(nameof(InkBalPlayerId)), out var inkBallPlayerId) || inkBallPlayerId <= 0 ||
 				Game?.iPlayer1Id == inkBallPlayerId || Game?.iPlayer2Id == inkBallPlayerId)
 			{
-				Message = "View only: It is your game, or bad GameID";
+				Message = "View only: It is your game, or bad GameID;viewOnlyYourGame";
 
 				return RedirectToPage(HomeModel.ASPX);
 			}

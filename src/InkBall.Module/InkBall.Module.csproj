@@ -5,7 +5,7 @@
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
     <!-- <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest> -->
     <LangVersion>latest</LangVersion>
-    <Version>1.0.2.0</Version>
+    <Version>1.0.2.1</Version>
     <Configurations>Debug;Release;Oracle</Configurations>
     <!--<PublishTrimmed>true</PublishTrimmed>
     <TrimMode>partial</TrimMode>-->
@@ -23,16 +23,16 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="9.0.0" />
-    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="9.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.2" Condition="$(DefineConstants.Contains('INCLUDE_POSTGRES'))" />
-    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0-preview.3.efcore.9.0.0.ci.20241214050811" Condition="$(DefineConstants.Contains('INCLUDE_MYSQL'))" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.0" Condition="$(DefineConstants.Contains('INCLUDE_SQLSERVER'))" />
-    <PackageReference Include="Oracle.EntityFrameworkCore" Version="9.23.60" Condition="$(DefineConstants.Contains('INCLUDE_ORACLE'))" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="9.0.0" />
-    <PackageReference Include="MessagePack" Version="3.1.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="9.0.10" />
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="9.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.10" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" Condition="$(DefineConstants.Contains('INCLUDE_POSTGRES'))" />
+    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0" Condition="$(DefineConstants.Contains('INCLUDE_MYSQL'))" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.10" Condition="$(DefineConstants.Contains('INCLUDE_SQLSERVER'))" />
+    <PackageReference Include="Oracle.EntityFrameworkCore" Version="9.23.26000" Condition="$(DefineConstants.Contains('INCLUDE_ORACLE'))" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="9.0.10" />
+    <PackageReference Include="MessagePack" Version="3.1.4" />
   </ItemGroup>
 <!--
   <ItemGroup Condition="'$(Configuration)'=='Debug'">
@@ -50,10 +50,16 @@
     <EmbeddedResource Include="wwwroot\css\*.map" />
   </ItemGroup>
 -->
+<!--
   <ItemGroup>
-    <Content Include="IBwwwroot\css\*.css*" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="IBwwwroot\img\homescreen.*" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="IBwwwroot\js\*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="wwwroot\css\*.css*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="wwwroot\img\homescreen.*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="wwwroot\js\*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="wwwroot\locales\*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+-->
+  <PropertyGroup>
+    <DefaultItemExcludes>$(DefaultItemExcludes);wwwroot\css\*.scss;wwwroot\img\grid*;wwwroot\js\grid*</DefaultItemExcludes>
+  </PropertyGroup>
 
 </Project>

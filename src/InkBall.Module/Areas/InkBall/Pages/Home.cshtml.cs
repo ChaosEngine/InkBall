@@ -61,7 +61,7 @@ namespace InkBall.Module.Pages
 						}
 						else
 						{
-							msg = "You have no game to continue";
+							msg = "You have no game to continue;noGameToCont";
 						}
 						break;
 
@@ -70,18 +70,18 @@ namespace InkBall.Module.Pages
 					case "New game":
 						if (Game != null)
 						{
-							msg = "You have another game";
+							msg = "You have another game;anotherGame";
 							break;
 						}
 						if (!bIsLoggedIn)
 						{
-							msg = "You are not logged in";
+							msg = "You are not logged in;notLoggedIn";
 							break;
 						}
 						if (!(Enum.TryParse<InkBallGame.GameTypeEnum>(gameType, true, out var selectedGameType) &&
 							(Enum.IsDefined(typeof(InkBallGame.GameTypeEnum), selectedGameType) | selectedGameType.ToString().Contains(","))))
 						{
-							msg = "Wrong game type";
+							msg = "Wrong game type;wrongGameType";
 							break;
 						}
 
@@ -102,7 +102,7 @@ namespace InkBall.Module.Pages
 						}
 						if (width <= -1)
 						{
-							msg = "Wrong board size";
+							msg = "Wrong board size;wrongBoardSize";
 							break;
 						}
 						bool bCpuOponent;
@@ -134,7 +134,7 @@ namespace InkBall.Module.Pages
 							catch (Exception ex)
 							{
 								await trans.RollbackAsync(token);
-								msg = "Could not create new game for this user";
+								msg = "Could not create new game for this user;couldNotCreate";
 								_logger.LogError(ex, msg);
 							}
 						}
@@ -147,7 +147,7 @@ namespace InkBall.Module.Pages
 							return RedirectToPage(GamesListModel.ASPX);
 						}
 						else
-							msg = "You have to be logged in";
+							msg = "You have to be logged in;haveToLogIn";
 						break;
 
 					case "Best":
@@ -157,7 +157,7 @@ namespace InkBall.Module.Pages
 							return RedirectToPage(HighscoresModel.ASPX);
 						}
 						else
-							msg = "You have to be logged in";
+							msg = "You have to be logged in;haveToLogIn";
 						break;
 
 					case "Game rules":
@@ -187,7 +187,7 @@ namespace InkBall.Module.Pages
 												{
 													await _inkballHubContext.Clients.User(recipient_id_looser.Item1).ServerToClientPlayerSurrender(
 														new PlayerSurrenderingCommand(recipient_id_looser.Item2.GetValueOrDefault(0), true,
-														$"Player {recipient_id_looser.Item3 ?? ""} logged out"));
+														$"Player {recipient_id_looser.Item3 ?? ""} logged out;plaXLoggedOut"));
 												}
 											}
 											catch (Exception ex)

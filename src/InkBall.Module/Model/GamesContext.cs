@@ -46,7 +46,7 @@ namespace InkBall.Module.Model
 		internal static readonly GameStateEnum[] ActiveVisibleGameStates =
 			new GameStateEnum[] { GameStateEnum.ACTIVE, GameStateEnum.AWAITING };
 
-		internal static string TimeStampDefaultValueFromProvider(string activeProvider
+		public static string TimeStampDefaultValueFromProvider(string activeProvider
 			, string sqliteColumnType
 			, string mysqlColumnType
 			, string postgresColumnType
@@ -103,7 +103,7 @@ namespace InkBall.Module.Model
 			}
 		}
 
-		internal static string TimeStampColumnTypeFromProvider(string activeProvider
+		public static string TimeStampColumnTypeFromProvider(string activeProvider
 			, string sqliteColumnType
 			, string mysqlColumnType
 			, string postgresColumnType
@@ -551,7 +551,7 @@ namespace InkBall.Module.Model
 					.HasSentinel(Module.Model.InkBallPoint.StatusEnum.POINT_FREE);
 
 				entity.HasOne(d => d.EnclosingPath)
-					.WithMany(p => p.InkBallPoint)
+					.WithMany(p => p.InkBallPoints)
 					.HasForeignKey(d => d.iEnclosingPathId)
 					.HasConstraintName("InkBallPoint_ibfk_5");
 
@@ -930,8 +930,8 @@ namespace InkBall.Module.Model
 			///Construct points collection form string point representation
 			static void createPathPointCollection_HandlerImpl(InkBallPath path, InkBallPathViewModel fromJson)
 			{
-				path.InkBallPoint = fromJson
-					.InkBallPoint.Select(c => new InkBallPoint
+				path.InkBallPoints = fromJson
+					.InkBallPoints.Select(c => new InkBallPoint
 					{
 						//iId = c.iId,
 						//iGameId = c.iGameId,

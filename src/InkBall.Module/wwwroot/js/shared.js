@@ -4,7 +4,7 @@
 
 /**
  * Point status enum
- * */
+ */
 const StatusEnum = Object.freeze({
 	POINT_FREE_RED: -3,
 	POINT_FREE_BLUE: -2,
@@ -17,7 +17,7 @@ const StatusEnum = Object.freeze({
 
 /**
  * Shared log function
- * @param {any} msg - object to log
+ * @param {string} msg - object to log
  */
 function LocalLog(msg) {
 	// eslint-disable-next-line no-console
@@ -26,7 +26,7 @@ function LocalLog(msg) {
 
 /**
  * Shared error log function
- * @param {...any} args - objects to log
+ * @param {...string} args - objects to log
  */
 function LocalError(...args) {
 	let msg = '';
@@ -39,6 +39,26 @@ function LocalError(...args) {
 	console.error(msg);
 }
 
+/**
+ * Shared warn log function
+ * @param {...string} args - objects to log
+ */
+function LocalWarning(...args) {
+	let msg = '';
+	for (let i = 0; i < args.length; i++) {
+		const str = args[i];
+		if (str)
+			msg += str;
+	}
+	// eslint-disable-next-line no-console
+	console.warn(msg);
+}
+
+/**
+ * Check if custom alert dialog handler is available if so use it, if not fallback to default window.alert
+ * @param {string} msg - message to show
+ * @param {() => void} onCloseCallback optional callback function to call on end
+ */
 const LocalAlert = (typeof myAlert !== "undefined") ?
 	myAlert :
 	(msg, onCloseCallback = undefined) => {
@@ -51,7 +71,7 @@ const LocalAlert = (typeof myAlert !== "undefined") ?
  * Based on http://www.faqs.org/faqs/graphics/algorithms-faq/
  * but mainly on http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
  * returns != 0 if point is inside path
- * @param {array} pathPoints points as array of {x,y}
+ * @param {Array} pathPoints points as array of {x,y}
  * @param {number} x point to check x coordinate
  * @param {number} y point to check y coordinate
  * @returns {boolean} if point lies inside the polygon
@@ -74,21 +94,26 @@ function pnpoly(pathPoints, x, y) {
 
 /**
  * Test for array uniqueness using default object comparator
- * @param {array} array of objects that are tested against uniqueness
+ * @param {Array} array of objects that are tested against uniqueness
  * @returns {boolean} true - has duplicates
  */
 function hasDuplicates(array) {
 	return (new Set(array)).size !== array.length;
 }
 
+/**
+ * Pauses the execution for a specified amount of time.
+ * @param {number} ms - The number of milliseconds to sleep.
+ * @returns {Promise<void>} A promise that resolves after the specified time has passed.
+ */
 async function Sleep(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 /**
  * Sorting point clockwise/anticlockwise
- * @param {array} points array of points to sort
- * @returns {array} of points
+ * @param {Array} points array of points to sort
+ * @returns {Array} of points
  */
 function sortPointsClockwise(points) {
 	// Get the center (mean value) using reduce
@@ -117,7 +142,7 @@ function sortPointsClockwise(points) {
  * @param {number} x point coordinate
  * @param {number} y point coordinate
  * @param {Array} allLines array
- * @returns bool - true if outside, false otherwise
+ * @returns {boolean} - true if outside, false otherwise
  */
 function IsPointOutsideAllPaths(x, y, allLines) {
 	for (const line of allLines) {
@@ -128,42 +153,6 @@ function IsPointOutsideAllPaths(x, y, allLines) {
 	}
 
 	return true;
-}
-
-/**
- * The function returns an object containing the following properties:
-	minX: The minimum x-coordinate.
-	minY: The minimum y-coordinate.
-	maxX: The maximum x-coordinate.
-	maxY: The maximum y-coordinate.
-	width: The width of the bounding box (calculated as maxX - minX).
-	height: The height of the bounding box (calculated as maxY - minY).
- * @param {Array<InkBallPointViewModel>} points array
- * @returns bounding box object
- */
-function getBoundingBox(points) {
-	let minX = Infinity;
-	let minY = Infinity;
-	let maxX = -Infinity;
-	let maxY = -Infinity;
-
-	for (const point of points) {
-		minX = Math.min(minX, point.x);
-		minY = Math.min(minY, point.y);
-
-		maxX = Math.max(maxX, point.x);
-		maxY = Math.max(maxY, point.y);
-	}
-
-	return {
-		minX,
-		minY,
-		maxX,
-		maxY,
-
-		width: maxX - minX,
-		height: maxY - minY
-	};
 }
 
 //////////////////////////////////////////////////////
@@ -437,7 +426,8 @@ class SvgVml {
 
 			return svgAvailable ? this.#cont : null;
 		};
-		this.CreatePolyline = function (points, col, width = undefined) {
+
+		function CreatePolylineImpl(targetEL, points, col, width = undefined) {
 			const o = documentCreateElementNS_Element("polyline");
 			if (svgAntialias !== undefined)
 				o.setAttribute("shape-rendering", svgAntialias === true ? "auto" : "optimizeSpeed");
@@ -453,8 +443,12 @@ class SvgVml {
 			// o.setAttribute("stroke-linejoin", "round");
 			o.setAttribute("data-id", 0);
 
-			this.#cont.appendChild(o);
+			targetEL.appendChild(o);
 			return o;
+		}
+
+		this.CreatePolyline = function (points, col, width = undefined) {
+			return CreatePolylineImpl(this.#cont, points, col, width);
 		};
 		this.CreateOval = function (radius = undefined) {
 			const o = documentCreateElementNS_Element("circle");
@@ -469,19 +463,8 @@ class SvgVml {
 			this.#cont.appendChild(o);
 			return o;
 		};
-		/**
-		 * Creates rectangle
-		 * For example: <rect x="15" y="25" width="20" height="20" rx="2" fill="transparent" stroke="green" stroke-width="0.25"></rect>
-		 * 
-		 * @param {number} x 
-		 * @param {number} y 
-		 * @param {number} width 
-		 * @param {number} height 
-		 * @param {string} fill color
-		 * @param {string} stroke color
-		 * @returns created rectangle
-		 */
-		this.CreateRect = function (x, y, width, height, stroke = "green", fill = "transparent") {
+
+		function CreateRectImpl(targetEL, x, y, width, height, stroke = "green", fill = "transparent") {
 			const o = documentCreateElementNS_Element("rect");
 			if (svgAntialias !== undefined)
 				o.setAttribute("shape-rendering", svgAntialias === true ? "auto" : "optimizeSpeed");
@@ -495,15 +478,59 @@ class SvgVml {
 			o.setAttribute("fill", fill);
 			o.setAttribute("stroke", stroke);
 			o.setAttribute("stroke-width", 0.1);
+			// o.setAttribute("stroke-dasharray", "0.5,0.2"); // Make the line dashed
 
-			this.#cont.appendChild(o);
+			targetEL.appendChild(o);
 			return o;
+		}
+
+		/**
+		 * Create rectangle
+		 * For example: <rect x="15" y="25" width="20" height="20" rx="2" fill="transparent" stroke="green" stroke-width="0.25"></rect>
+		 * @param {number} x x coordinate of top left corner
+		 * @param {number} y y coordinate of top left corner
+		 * @param {number} width width
+		 * @param {number} height height
+		 * @param {string} stroke color
+		 * @param {string} fill color
+		 * @returns {HTMLElement} created rectangle
+		 */
+		this.CreateRect = function (x, y, width, height, stroke = "green", fill = "transparent") {
+			return CreateRectImpl(this.#cont, x, y, width, height, stroke, fill);
+		};
+		/**
+		 * Create a fragment to be used for batch operations
+		 * @returns {object} container of fragment context and methods operating on it
+		 */
+		this.BeginBatchFragment = function () {
+			const fragment = document.createDocumentFragment(); // Create a DocumentFragment
+			const parent = this.#cont; // Get the parent of the SVG container
+
+			return {
+				cont: fragment,
+
+				// Append the fragment to the SVG context
+				EndBatchFragment: function () {
+					parent.appendChild(this.cont); // Append the fragment to the SVG context
+					this.cont = null; // Clear the reference to the fragment
+				},
+
+				// Create a rect into the fragment
+				CreateRect: function (x, y, width, height, stroke = "green", fill = "transparent") {
+					return CreateRectImpl(this.cont, x, y, width, height, stroke, fill);
+				},
+
+				// Create a polyline into the fragment
+				CreatePolyline: function (points, col, width = undefined) {
+					return CreatePolylineImpl(this.cont, points, col, width);
+				}
+			};
 		};
 
 		/**
 		 * Convert numerical StatusEnum to string
 		 * @param {number} enumVal to convert
-		 * @returns string representation
+		 * @returns {string} string representation
 		 */
 		const StatusEnumToString = function (enumVal) {
 			switch (enumVal) {
@@ -530,7 +557,7 @@ class SvgVml {
 		/**
 		 * Convert string representation to numerical StatusEnum
 		 * @param {string} enumStr string representation
-		 * @returns numeric StatusEnum
+		 * @returns {number} numeric StatusEnum
 		 */
 		const StringToStatusEnum = function (enumStr) {
 			switch (enumStr.toUpperCase()) {
@@ -554,18 +581,36 @@ class SvgVml {
 		};
 	}
 
+	/**
+	 * Circle remove method
+	 * @param {SVGCircleElement} oval to remove
+	 */
 	RemoveOval(oval) {
 		this.#cont.removeChild(oval);
 	}
 
+	/**
+	 * Polyline remove method
+	 * @param {SVGPolylineElement} polyline line to be removed
+	 */
 	RemovePolyline(polyline) {
 		this.#cont.removeChild(polyline);
 	}
 
+	/**
+	 * Rectangle remove method
+	 * @param {SVGRectElement} rect rect to be removed
+	 */
 	RemoveRect(rect) {
 		this.#cont.removeChild(rect);
 	}
 
+	/**
+	 * Deserialize string representation of circle object into SVGCircleElement
+	 * @param {object} packed representation of string serialized circle object
+	 * @param {number} radius r of the circle
+	 * @returns {SVGCircleElement} created circle
+	 */
 	DeserializeOval(packed, radius = undefined) {
 		let { x, y, Status, Color } = packed;
 		x = parseInt(x);
@@ -577,6 +622,12 @@ class SvgVml {
 		return o;
 	}
 
+	/**
+	 * Deserialize string representation of polyline object into SVGPolylineElement
+	 * @param {object} packed representation of string serialized polyline object
+	 * @param {number} width width of the polyline
+	 * @returns {SVGPolylineElement} created polyline
+	 */
 	DeserializePolyline(packed, width = undefined) {
 		const { iId, Color, PointsAsString } = packed;
 		const o = this.CreatePolyline(PointsAsString, Color, width);
@@ -584,6 +635,11 @@ class SvgVml {
 		return o;
 	}
 
+	/**
+	 * Deserialize string representation of rectangle object into SVGRectElement
+	 * @param {object} packed representation of string serialized rectangle object
+	 * @returns {SVGRectElement} created rectangle
+	 */
 	DeserializeRect(packed) {
 		const { x, y, width, height, stroke, fill } = packed;
 		const o = this.CreateRect(x, y, width, height, stroke, fill);
@@ -609,18 +665,18 @@ class SvgVml {
 	/**
 	 * https://stackoverflow.com/a/68078941/4429828
 	 * @description Check if a pt is in, on or outside of a circle.
-	 * @param {point} pt The point to test. An array of two floats - x and y coordinates.
-	 * @param {point} center The circle center. An array of two floats - x and y coordinates.
-	 * @param {float} r The circle radius.
-	 * @param {float} tolerance +- above below tolerance value
+	 * @param {{x: number, y: number}} pt The point to test. An object with x and y coordinates.
+	 * @param {{x: number, y: number}} center The circle center. An object with x and y coordinates.
+	 * @param {number} r The circle radius.
+	 * @param {number} tolerance +- above below tolerance value
 	 * @returns {1 | 0 | -1} 1 if the point is inside, 0 if it is on and -1 if it is outside the circle.
 	 */
 	IsPointInCircle(pt, center, r, tolerance = 0) {
-		const isInRectangle = function(center, radius, pt) {
+		const isInRectangle = function (center, radius, pt) {
 			return pt.x >= center.x - radius && pt.x <= center.x + radius &&
 				pt.y >= center.y - radius && pt.y <= center.y + radius;
 		};
-		
+
 		if (isInRectangle(center, r, pt)) {
 			const lhs = Math.pow(center.x - pt.x, 2) + Math.pow(center.y - pt.y, 2);
 			const rhs = Math.pow(r, 2);
@@ -736,7 +792,7 @@ class GameStateStore {
 
 		const IDBPointStoreDefinition = class IDBPointStore extends SimplePointStoreDefinition {
 			#MainGameStateStore;
-			#GetPoint;
+			// #GetPoint;
 			#StorePoint;
 			#UpdatePoint;
 			// GetAllPoints;
@@ -747,7 +803,7 @@ class GameStateStore {
 			constructor(mainGameStateStore, pointCreationCallbackFn, getGameStateFn) {
 				super();
 				this.#MainGameStateStore = mainGameStateStore;
-				this.#GetPoint = mainGameStateStore.GetPoint.bind(this.#MainGameStateStore);
+				// this.#GetPoint = mainGameStateStore.GetPoint.bind(this.#MainGameStateStore);
 				this.#StorePoint = mainGameStateStore.StorePoint.bind(this.#MainGameStateStore);
 				this.#UpdatePoint = mainGameStateStore.UpdatePoint.bind(this.#MainGameStateStore);
 				this.GetAllPoints = mainGameStateStore.GetAllPoints.bind(this.#MainGameStateStore);
@@ -891,11 +947,17 @@ class GameStateStore {
 				const idb_path = {
 					iId: id_key,
 					Color: val.GetFillColor(),
-					PointsAsString: val.GetPointsString().split(" ").map((pt) => {
-						let [x, y] = pt.split(',');
-						x = parseInt(x); y = parseInt(y);
-						return `${x},${y}`;
-					}).join(" ")
+					PointsAsString: val.GetPointsString().split(" ")
+						/* .map((pt) => {
+							let [x, y] = pt.split(',');
+							x = parseInt(x); y = parseInt(y);
+							return `${x},${y}`;
+						}).join(" ") */
+						.reduce((acc, pt) => {
+							let [x, y] = pt.split(',');
+							x = parseInt(x); y = parseInt(y);
+							return acc + ` ${x},${y}`;
+						})
 				};
 
 				await this.#StorePath(id_key, idb_path);
@@ -949,10 +1011,18 @@ class GameStateStore {
 		this.#sMsgThisEngineDoesntKnowHowToCloneABlob = "This engine doesn't know how to clone a Blob!??!!";
 	}
 
+	/**
+	 * Gets point store
+	 * @returns {object} point store
+	 */
 	GetPointStore() {
 		return this.#PointStore;
 	}
 
+	/**
+	 * Gets path store
+	 * @returns {object} path store
+	 */
 	GetPathStore() {
 		return this.#PathStore;
 	}
@@ -1012,10 +1082,10 @@ class GameStateStore {
 	}
 
 	/**
-	  * @param {string} storeName is a store name
-	  * @param {string} mode either "readonly" or "readwrite"
-	  * @returns {object} store
-	  */
+	 * @param {string} storeName is a store name
+	 * @param {string} mode either "readonly" or "readwrite"
+	 * @returns {object} store
+	 */
 	#GetObjectStore(storeName, mode) {
 		if (this.#bulkStores !== null && this.#bulkStores.has(storeName))
 			return this.#bulkStores.get(storeName);
@@ -1047,8 +1117,9 @@ class GameStateStore {
 	}
 
 	/**
-	  * @param {number} key is calculated index of point y * width + x, probably not useful
-	  */
+	 * @param {number} key is calculated index of point y * width + x, probably not useful
+	 * @returns {Promise} returning promise with point
+	 */
 	async GetPoint(key) {
 		return new Promise((resolve, reject) => {
 			const store = this.#GetObjectStore(this.#DB_POINT_STORE, 'readonly');
@@ -1062,6 +1133,10 @@ class GameStateStore {
 		});
 	}
 
+	/**
+	 * Retrieves all points from the object store.
+	 * @returns {Promise<Array>} A promise that resolves to an array of all points.
+	 */
 	async GetAllPoints() {
 		return new Promise((resolve, reject) => {
 			const store = this.#GetObjectStore(this.#DB_POINT_STORE, 'readonly');
@@ -1082,6 +1157,11 @@ class GameStateStore {
 		});
 	}
 
+	/**
+	 * Gets state object from store
+	 * @param {string} key state key
+	 * @returns {Promise<object>} state object returned from store
+	 */
 	async GetState(key) {
 		return new Promise((resolve, reject) => {
 			const store = this.#GetObjectStore(this.#DB_STATE_STORE, 'readonly');
@@ -1096,8 +1176,9 @@ class GameStateStore {
 	}
 
 	/**
-	  * @param {number} key is path Id
-	  */
+	 * @param {number} key is path Id
+	 * @returns {Promise} returning promise with path
+	 */
 	async GetPath(key) {
 		return new Promise((resolve, reject) => {
 			const store = this.#GetObjectStore(this.#DB_PATH_STORE, 'readonly');
@@ -1111,6 +1192,10 @@ class GameStateStore {
 		});
 	}
 
+	/**
+	 * Gets all paths from store
+	 * @returns {Promise} resolved promise with all paths array
+	 */
 	async GetAllPaths() {
 		return new Promise((resolve, reject) => {
 			const store = this.#GetObjectStore(this.#DB_PATH_STORE, 'readonly');
@@ -1132,9 +1217,10 @@ class GameStateStore {
 	}
 
 	/**
-	  * @param {number} key is calculated index of point y * width + x, probably not useful
-	  * @param {object} val is serialized, thin circle
-	  */
+	 * @param {number} key is calculated index of point y * width + x, probably not useful
+	 * @param {object} val is serialized, thin circle
+	 * @returns {Promise} resolved promise after storing
+	 */
 	async StorePoint(key, val) {
 		if (this.#bulkStores !== null && this.#bulkStores.has(this.#DB_POINT_STORE)) {
 			if (this.pointBulkBuffer === null)
@@ -1166,9 +1252,10 @@ class GameStateStore {
 	}
 
 	/**
-	  * @param {number} key is calculated index of point y * width + x, probably not useful
-	  * @param {object} val is serialized, thin circle
-	  */
+	 * @param {number} key is calculated index of point y * width + x, probably not useful
+	 * @param {object} val is serialized, thin circle
+	 * @returns {Promise} resolved promise after updating
+	 */
 	async UpdatePoint(key, val) {
 		if (this.#bulkStores !== null && this.#bulkStores.has(this.#DB_POINT_STORE)) {
 			if (this.pointBulkBuffer === null)
@@ -1230,9 +1317,9 @@ class GameStateStore {
 	}
 
 	/**
-	  * @param {number} key is GameID
-	  * @param {object} gameState is InkBallGame state object
-	  */
+	 * @param {number} key is GameID
+	 * @param {object} gameState is InkBallGame state object
+	 */
 	async #StoreState(key, gameState) {
 		return new Promise((resolve, reject) => {
 			const store = this.#GetObjectStore(this.#DB_STATE_STORE, 'readwrite');
@@ -1254,6 +1341,12 @@ class GameStateStore {
 		});
 	}
 
+	/**
+	 * Saves current value state value to state store with appropriate unique key
+	 * @param {string} key state key
+	 * @param {object} gameState current value of state to save
+	 * @returns {Promise} resolved promise after storing
+	 */
 	async UpdateState(key, gameState) {
 		return new Promise((resolve, reject) => {
 			const store = this.#GetObjectStore(this.#DB_STATE_STORE, 'readwrite');
@@ -1276,9 +1369,10 @@ class GameStateStore {
 	}
 
 	/**
-	  * @param {number} key is path Id
-	  * @param {object} val is serialized thin path
-	  */
+	 * @param {number} key is path Id
+	 * @param {object} val is serialized thin path
+	 * @returns {Promise} resolved promise after storing path
+	 */
 	async StorePath(key, val) {
 		if (this.#bulkStores !== null && this.#bulkStores.has(this.#DB_PATH_STORE)) {
 			if (this.pathBulkBuffer === null)
@@ -1307,6 +1401,11 @@ class GameStateStore {
 		});
 	}
 
+	/**
+	 * Stores paths array into store, either with single mode or batch mode using bulk buffer setup previously
+	 * @param {Array} values array of paths to store
+	 * @returns {Promise} resolved promise
+	 */
 	async StoreAllPaths(values = null) {
 		if (!values)
 			values = this.pathBulkBuffer;
@@ -1331,6 +1430,11 @@ class GameStateStore {
 		});
 	}
 
+	/**
+	 * Prepares store for saving, loading and operating on points and paths and possibly using IndexedDb if available.
+	 * If state values or last move timestamp is different from IndexedDb, it will clear all stores and return false
+	 * @returns {Promise<boolean>} true if IndexedDb is used and all stores are prepared
+	 */
 	async PrepareStore() {
 		//detecting if we have IndexedDb advanced store (only checking point-store); otherwise, there is no point in going further
 		if (!this.#PointStore.GetAllPoints) return false;
@@ -1379,9 +1483,9 @@ class GameStateStore {
 	}
 
 	/**
-	 * Load all needed stores upfront
-	 * @param {any} storeName array or string of store to load
-	 * @param {any} mode - readonly/readwrite
+	 * Load all needed stores upfront for batch operations on points and paths
+	 * @param {Array<string> | string} storeName array or string of store to load
+	 * @param {'readonly' | 'readwrite'} mode - readonly/readwrite
 	 */
 	async #BeginBulkStorage(storeName, mode) {
 		if (this.#bulkStores === null)
@@ -1398,10 +1502,20 @@ class GameStateStore {
 		}
 	}
 
+	/**
+	 * Prepares point store for bulk operation mode
+	 * @param {string} mode operation mode for store
+	 * @returns {Promise} resolved promise at the end 
+	 */
 	async BeginPointBulkStorage(mode) {
 		return await this.#BeginBulkStorage(this.#DB_POINT_STORE, mode);
 	}
 
+	/**
+	 * Prepares path store for bulk operation mode
+	 * @param {string} mode operation mode for store
+	 * @returns {Promise} resolved promise at the end 
+	 */
 	async BeginPathBulkStorage(mode) {
 		return await this.#BeginBulkStorage([this.#DB_POINT_STORE, this.#DB_PATH_STORE], mode);
 	}
@@ -1420,18 +1534,300 @@ class GameStateStore {
 		}
 	}
 
+	/**
+	 * Ends point store bulk operation
+	 * @returns {Promise} resolved promise at the end
+	 */
 	async EndPointBulkStorage() {
 		return await this.#EndBulkStorage(this.#DB_POINT_STORE);
 	}
 
+	/**
+	 * Ends path store bulk operation
+	 * @returns {Promise} resolved promise at the end
+	 */
 	async EndPathBulkStorage() {
 		return await this.#EndBulkStorage([this.#DB_POINT_STORE, this.#DB_PATH_STORE]);
 	}
 }
 
+/**
+ * Axis-Aligned Bounding Box (AABB) class.
+ * Represents a rectangle defined by its minimum and maximum x and y coordinates.
+ */
+class AABB {
+	/**
+	 * Creates an Axis-Aligned Bounding Box.
+	 * @param {number} minX - The minimum x-coordinate.
+	 * @param {number} minY - The minimum y-coordinate.
+	 * @param {number} maxX - The maximum x-coordinate.
+	 * @param {number} maxY - The maximum y-coordinate.
+	 */
+	constructor(minX, minY, maxX, maxY) {
+		this.minX = minX;
+		this.minY = minY;
+		this.maxX = maxX;
+		this.maxY = maxY;
+	}
+
+	/**
+	 * Creates an AABB that encloses all given points.
+	 * Points should be objects with 'x' and 'y' properties (e.g., {x: number, y: number}).
+	 * @param {Array<{x: number, y: number}>} points - An array of points.
+	 * @returns {AABB} A new AABB instance, or null if no points are provided.
+	 */
+	static fromPoints(points) {
+		if (!points || points.length === 0) {
+			return null; // Or throw an error, or return a default AABB
+		}
+
+		let minX = points[0].x;
+		let minY = points[0].y;
+		let maxX = minX;
+		let maxY = minY;
+
+		for (let i = 1; i < points.length; i++) {
+			const p = points[i];
+			if (p.x < minX) minX = p.x;
+			if (p.y < minY) minY = p.y;
+			if (p.x > maxX) maxX = p.x;
+			if (p.y > maxY) maxY = p.y;
+		}
+		return new AABB(minX, minY, maxX, maxY);
+	}
+
+	/**
+	 * Expands the AABB by a given delta x, y. If only one value is provided, it expands equally in both directions.
+	 * This method does modify the original AABB.
+	 * @param {number} deltaX - The amount to expand in the x direction.
+	 * @param {number} deltaY - The amount to expand in the y direction.
+	 */
+	expand(deltaX, deltaY) {
+		if (deltaY === undefined) deltaY = deltaX;
+
+		this.minX -= deltaX;
+		this.minY -= deltaY;
+		this.maxX += deltaX;
+		this.maxY += deltaY;
+	}
+
+	// /**
+	//  * Returns a new AABB that is expanded to include the given point.
+	//  * @param {number} x - The x-coordinate of the point.
+	//  * @param {number} y - The y-coordinate of the point.
+	//  * @returns {AABB} A new, expanded AABB instance.
+	//  */
+	// expandToIncludePoint(x, y) {
+	// 	return new AABB(
+	// 		Math.min(this.minX, x),
+	// 		Math.min(this.minY, y),
+	// 		Math.max(this.maxX, x),
+	// 		Math.max(this.maxY, y)
+	// 	);
+	// }
+
+	// /**
+	//  * Creates an AABB from a top-left corner (x, y), width, and height.
+	//  * @param {number} x - The x-coordinate of the top-left corner.
+	//  * @param {number} y - The y-coordinate of the top-left corner.
+	//  * @param {number} width - The width of the AABB.
+	//  * @param {number} height - The height of the AABB.
+	//  * @returns {AABB} A new AABB instance.
+	//  */
+	// static fromXYWidthHeight(x, y, width, height) {
+	// 	if (width < 0 || height < 0) {
+	// 		LocalError("AABB.fromXYWidthHeight: Width and height should be non-negative.");
+	// 		return new AABB(x, y, x, y); // Degenerate AABB
+	// 	}
+	// 	return new AABB(x, y, x + width, y + height);
+	// }
+
+	// /**
+	//  * Creates an AABB from a center point and dimensions (width, height).
+	//  * @param {number} centerX - The x-coordinate of the center.
+	//  * @param {number} centerY - The y-coordinate of the center.
+	//  * @param {number} width - The width of the AABB.
+	//  * @param {number} height - The height of the AABB.
+	//  * @returns {AABB} A new AABB instance.
+	//  */
+	// static fromCenterSize(centerX, centerY, width, height) {
+	// 	if (width < 0 || height < 0) {
+	// 		LocalError("AABB.fromCenterSize: Width and height should be non-negative.");
+	// 		return new AABB(centerX, centerY, centerX, centerY); // Degenerate AABB
+	// 	}
+	// 	const halfWidth = width / 2;
+	// 	const halfHeight = height / 2;
+	// 	return new AABB(
+	// 		centerX - halfWidth,
+	// 		centerY - halfHeight,
+	// 		centerX + halfWidth,
+	// 		centerY + halfHeight
+	// 	);
+	// }
+
+	// /**
+	//  * Gets the width of the AABB.
+	//  * @returns {number} The width of the AABB.
+	//  */
+	// get width() {
+	// 	return this.maxX - this.minX;
+	// }
+
+	// /**
+	//  * Gets the height of the AABB.
+	//  * @returns {number} The height of the AABB.
+	//  */
+	// get height() {
+	// 	return this.maxY - this.minY;
+	// }
+
+	// /**
+	//  * Gets the x-coordinate of the center of the AABB.
+	//  * @returns {number} The x-coordinate of the center.
+	//  */
+	// get centerX() {
+	// 	return this.minX + this.width / 2;
+	// }
+
+	// /**
+	//  * Gets the y-coordinate of the center of the AABB.
+	//  * @returns {number} The y-coordinate of the center.
+	//  */
+	// get centerY() {
+	// 	return this.minY + this.height / 2;
+	// }
+
+	// /**
+	//  * Checks if this AABB is valid (min coordinates are less than or equal to max coordinates).
+	//  * @returns {boolean} True if valid, false otherwise.
+	//  */
+	// isValid() {
+	// 	return this.minX <= this.maxX && this.minY <= this.maxY;
+	// }
+
+	// /**
+	//  * Checks if this AABB intersects with another AABB.
+	//  * @param {AABB} other - The other AABB to check against.
+	//  * @returns {boolean} True if they intersect, false otherwise.
+	//  */
+	// intersects(other) {
+	// 	if (!other || !(other instanceof AABB)) return false;
+	// 	return (
+	// 		this.minX < other.maxX &&
+	// 		this.maxX > other.minX &&
+	// 		this.minY < other.maxY &&
+	// 		this.maxY > other.minY
+	// 	);
+	// }
+
+	// /**
+	//  * Checks if a point (x, y) is contained within this AABB (inclusive of edges).
+	//  * @param {number} x - The x-coordinate of the point.
+	//  * @param {number} y - The y-coordinate of the point.
+	//  * @returns {boolean} True if the point is contained, false otherwise.
+	//  */
+	// containsPoint(x, y) {
+	// 	return (
+	// 		x >= this.minX &&
+	// 		x <= this.maxX &&
+	// 		y >= this.minY &&
+	// 		y <= this.maxY
+	// 	);
+	// }
+
+	// /**
+	//  * Checks if another AABB is fully contained within this AABB.
+	//  * @param {AABB} other - The other AABB.
+	//  * @returns {boolean} True if the other AABB is fully contained, false otherwise.
+	//  */
+	// containsAABB(other) {
+	// 	if (!other || !(other instanceof AABB)) return false;
+	// 	return (
+	// 		this.minX <= other.minX &&
+	// 		this.minY <= other.minY &&
+	// 		this.maxX >= other.maxX &&
+	// 		this.maxY >= other.maxY
+	// 	);
+	// }
+
+	// /**
+	//  * Returns a new AABB that is the union of this AABB and another AABB.
+	//  * The union is the smallest AABB that contains both.
+	//  * @param {AABB} other - The other AABB.
+	//  * @returns {AABB} A new AABB instance representing the union.
+	//  */
+	// union(other) {
+	// 	if (!other || !(other instanceof AABB)) return this.clone(); // Or throw error
+	// 	return new AABB(
+	// 		Math.min(this.minX, other.minX),
+	// 		Math.min(this.minY, other.minY),
+	// 		Math.max(this.maxX, other.maxX),
+	// 		Math.max(this.maxY, other.maxY)
+	// 	);
+	// }
+
+	// /**
+	//  * Returns a new AABB that is the intersection of this AABB and another AABB.
+	//  * If they do not intersect, returns null.
+	//  * @param {AABB} other - The other AABB.
+	//  * @returns {AABB|null} A new AABB instance representing the intersection, or null.
+	//  */
+	// intersection(other) {
+	// 	if (!other || !(other instanceof AABB) || !this.intersects(other)) {
+	// 		return null;
+	// 	}
+	// 	return new AABB(
+	// 		Math.max(this.minX, other.minX),
+	// 		Math.max(this.minY, other.minY),
+	// 		Math.min(this.maxX, other.maxX),
+	// 		Math.min(this.maxY, other.maxY)
+	// 	);
+	// }
+	//
+	// /**
+	//  * Returns a new AABB that is expanded to include another AABB (same as union).
+	//  * @param {AABB} other - The other AABB.
+	//  * @returns {AABB} A new, expanded AABB instance.
+	//  */
+	// expandToIncludeAABB(other) {
+	// 	return this.union(other);
+	// }
+
+	// /**
+	//  * Creates a new AABB instance with the same dimensions and position.
+	//  * @returns {AABB} A new AABB instance.
+	//  */
+	// clone() {
+	// 	return new AABB(this.minX, this.minY, this.maxX, this.maxY);
+	// }
+
+	// /**
+	//  * Moves the AABB by a given delta x and delta y.
+	//  * Returns a new, moved AABB instance.
+	//  * @param {number} dx - The change in x.
+	//  * @param {number} dy - The change in y.
+	//  * @returns {AABB} A new AABB instance at the new position.
+	//  */
+	// translate(dx, dy) {
+	// 	return new AABB(
+	// 		this.minX + dx,
+	// 		this.minY + dy,
+	// 		this.maxX + dx,
+	// 		this.maxY + dy
+	// 	);
+	// }
+
+	// /**
+	//  * Returns a string representation of the AABB.
+	//  * @returns {string} String representation of the AABB.
+	//  */
+	// toString() {
+	// 	return `AABB(minX: ${this.minX}, minY: ${this.minY}, maxX: ${this.maxX}, maxY: ${this.maxY}, width: ${this.width}, height: ${this.height})`;
+	// }
+}
 
 export {
-	SvgVml, StatusEnum, pnpoly, LocalLog, LocalError, LocalAlert,
+	SvgVml, StatusEnum, pnpoly, LocalLog, LocalError, LocalWarning, LocalAlert,
 	hasDuplicates, sortPointsClockwise, Sleep, IsPointOutsideAllPaths,
-	GameStateStore, getBoundingBox
+	GameStateStore, AABB
 };

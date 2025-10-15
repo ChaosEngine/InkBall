@@ -500,7 +500,8 @@ namespace InkBall.IntegrationTests
 
 					string temp = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER");
 					DOTNET_RUNNING_IN_CONTAINER = !string.IsNullOrEmpty(temp) && temp.Equals(true.ToString(), StringComparison.InvariantCultureIgnoreCase);
-
+					
+					ContextSnapshotHelper.DBKind = "sqlite";
 					var auth_user_db = scopedServices.GetRequiredService<ApplicationDbContext<TApplicationUser>>();
 					var inkball_db = scopedServices.GetRequiredService<GamesContext>();
 

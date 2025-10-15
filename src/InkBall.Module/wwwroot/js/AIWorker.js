@@ -1,10 +1,10 @@
-﻿import { GraphAI, concaveman } from "./AISource.js";
+﻿import { GraphAI, concaveman, ArePointsContinuous/* , LerpMissingPoints  */ } from "./AISource.js";
 // import { SvgVml, StatusEnum, LocalLog, LocalError, sortPointsClockwise, pnpoly, IsPointOutsideAllPaths } from "./shared.js";
-import { astar, Graph } from "javascript-astar";
+import { astar, Graph as AStarGraph } from "javascript-astar";
 import * as clustering from "density-clustering";
 
 //globals loaded only once hopefully
-let SvgVml, StatusEnum, LocalLog, LocalError, sortPointsClockwise, pnpoly, IsPointOutsideAllPaths;
+let SvgVml, StatusEnum, LocalLog, LocalError, LocalWarning, sortPointsClockwise, pnpoly, IsPointOutsideAllPaths;
 
 // This is the entry point for our worker
 addEventListener('message', async function (e) {
@@ -12,11 +12,7 @@ addEventListener('message', async function (e) {
 	if (SvgVml === undefined) {
 		const isMinified = location.hostname !== "localhost";
 
-		const shrd = await import(/* webpackIgnore: true */`./shared${isMinified ? '.min' : ''}.js`);
-
-		SvgVml = shrd.SvgVml, StatusEnum = shrd.StatusEnum, LocalLog = shrd.LocalLog, LocalError = shrd.LocalError,
-			sortPointsClockwise = shrd.sortPointsClockwise, pnpoly = shrd.pnpoly,
-			IsPointOutsideAllPaths = shrd.IsPointOutsideAllPaths;
+		({ SvgVml, StatusEnum, LocalLog, LocalError, LocalWarning, sortPointsClockwise, pnpoly, IsPointOutsideAllPaths } = await import(/* webpackIgnore: true */`./shared${isMinified ? '.min' : ''}.js`));
 	}
 
 
@@ -51,36 +47,88 @@ addEventListener('message', async function (e) {
 
 		case "CONCAVEMAN":
 			{
-				const svgVml = new SvgVml();
-				svgVml.Init(null, null, null, params.boardSize);
+				switch (params.subOperation) {
+					case "BY_POINTS":
+						{
+							const svgVml = new SvgVml();
+							svgVml.Init(null, null, null, params.boardSize);
 
-				const points = new Map();
-				params.points.forEach((pt) => {
-					points.set(pt.key, svgVml.DeserializeOval(pt.value));
-				});
-				const ai = new GraphAI(params.state.iGridWidth, params.state.iGridHeight, points);
-				const clicked_status = params.clickedPointStatus;
-				const graph = await ai.BuildGraph({
-					freePointStatus: clicked_status,
-					// cpufillCol: clicked_status === StatusEnum.POINT_FREE_RED ? 'var(--redish)' : 'var(--bluish)',
-					visuals: false
-				});
+							const points = new Map();
+							params.points.forEach((pt) => {
+								points.set(pt.key, svgVml.DeserializeOval(pt.value));
+							});
+							const ai = new GraphAI(params.boardSize.iGridWidth, params.boardSize.iGridHeight, points);
+							const clicked_status = params.clickedPointStatus;
+							const graph = await ai.BuildGraph({
+								freePointStatus: clicked_status,
+								// cpufillCol: clicked_status === StatusEnum.POINT_FREE_RED ? 'var(--redish)' : 'var(--bluish)',
+								visuals: false
+							});
+							const vertices = graph.vertices.map(function (pt) {
+								const { x, y } = pt.GetPosition();
+								return [x, y];
+							});
 
+							let convex_hull = null, cw_sorted_verts;
+							if (vertices.length > 0) {
+								convex_hull = concaveman(vertices, params.concavity ?? 2.0, params.lengthThreshold ?? 0.0);
 
-				const vertices = graph.vertices.map(function (pt) {
-					const { x, y } = pt.GetPosition();
-					return [x, y];
-				});
+								const mapped_verts = convex_hull.map(([x, y]) => ({ x, y }));
+								cw_sorted_verts = sortPointsClockwise(mapped_verts);
+							}
 
-				let convex_hull = null, mapped_verts, cw_sorted_verts;
-				if (vertices.length > 0) {
-					convex_hull = concaveman(vertices, params.concavity ?? 2.0, params.lengthThreshold ?? 0.0);
+							postMessage({ operation: params.operation, convex_hull, cw_sorted_verts });
+						}
+						break;
+					case "BY_COORDS":
+						{
+							const { concavity, lengthThreshold, points: vertices, humanPoints, iGridHeight, iGridWidth } = params;
 
-					mapped_verts = convex_hull.map(([x, y]) => ({ x, y }));
-					cw_sorted_verts = sortPointsClockwise(mapped_verts);
+							let convex_hull = null, numOfNonContinuous = 0;
+							if (vertices.length > 0) {
+								convex_hull = concaveman(vertices, concavity ?? 2.0, lengthThreshold ?? 0.0);
+								let max_attempts = 3, grid = null, graphDiagonal = null;
+								do {
+									const continuous_result = ArePointsContinuous(convex_hull);
+									if (!continuous_result.result) {
+										numOfNonContinuous++;
+										LocalWarning(`Concaveman result is not continuous, please check your input points. offenderIndex: ${continuous_result.offenderIndex}, offender: ${continuous_result.offender}`);
+
+										const prev = convex_hull.at(continuous_result.offenderIndex - 1);
+										const curr = convex_hull.at(continuous_result.offenderIndex);
+
+										if (grid === null) {
+											// Initialize arr with 1s
+											grid = Array.from({ length: iGridHeight + 1 }, () => Array(iGridWidth + 1).fill(1));
+
+											// Mark human points as not accessible, inverted x,y coords -> y,x
+											for (const [x, y] of humanPoints) grid[y][x] = 0;
+
+											graphDiagonal = new AStarGraph(grid, { diagonal: true });
+										}
+
+										// Call ASTAR to find missing points between prev and curr
+										const missing = AstarPathFind(graphDiagonal, prev[1], prev[0], curr[1], curr[0])
+											.map(({ x, y }) => [x, y]);
+
+										convex_hull = convex_hull.slice(0, continuous_result.offenderIndex)
+											.concat(missing)
+											.concat(convex_hull.slice(continuous_result.offenderIndex + 1));
+
+										LocalLog(`Concaveman result fixed by adding ${missing.length} points between ${prev} and ${curr}, missing: ${missing.map(pt => pt.join(",")).join(" ")}`);
+									} else {
+										break;
+									}
+								} while ((--max_attempts) > 0);
+							}
+
+							postMessage({ operation: params.operation, convex_hull, numOfNonContinuous });
+						}
+						break;
+
+					default:
+						throw new Error(`unknown params.subOperation = ${params.subOperation}`);
 				}
-
-				postMessage({ operation: params.operation, convex_hull: convex_hull, cw_sorted_verts: cw_sorted_verts });
 			}
 			break;
 
@@ -198,11 +246,10 @@ addEventListener('message', async function (e) {
 		case "ASTAR":
 			{
 				const { arr, start, end } = params;
-				const graphDiagonal = new Graph(arr, { diagonal: true });
-				const from = graphDiagonal.grid[start.y][start.x];
-				const to = graphDiagonal.grid[end.y][end.x];
-				const resultWithDiagonals = astar.search(graphDiagonal, from, to, { heuristic: astar.heuristics.diagonal });
 
+				const graphDiagonal = new AStarGraph(arr, { diagonal: true });
+
+				const resultWithDiagonals = AstarPathFind(graphDiagonal, start.y, start.x, end.y, end.x);
 				LocalLog(resultWithDiagonals);
 
 				postMessage({ operation: params.operation, resultWithDiagonals });
@@ -212,7 +259,6 @@ addEventListener('message', async function (e) {
 		case "CLUSTERING":
 			{
 				const { dataset, method, numberOfClusters, neighborhoodRadius, minPointsPerCluster } = params;
-				// LocalLog(dataset);
 				switch (method) {
 					case "KMEANS":
 						{
@@ -221,6 +267,7 @@ addEventListener('message', async function (e) {
 							const clusters = kmeans.run(dataset, numberOfClusters);
 
 							// LocalLog({ method, clusters });
+							clusters.sort((a, b) => a.length - b.length);
 							postMessage({ operation: params.operation, method, clusters });
 						}
 						break;
@@ -233,6 +280,7 @@ addEventListener('message', async function (e) {
 							const plot = optics.getReachabilityPlot();
 
 							// LocalLog({ method, clusters, plot });
+							clusters.sort((a, b) => a.length - b.length);
 							postMessage({ operation: params.operation, method, clusters, plot });
 						}
 						break;
@@ -245,6 +293,7 @@ addEventListener('message', async function (e) {
 							const noise = dbscan.noise;
 
 							// LocalLog({ method, clusters, noise });
+							clusters.sort((a, b) => a.length - b.length);
 							postMessage({ operation: params.operation, method, clusters, noise });
 						}
 						break;
@@ -260,5 +309,22 @@ addEventListener('message', async function (e) {
 			break;
 	}
 });
+
+function AstarPathFind(graphDiagonal, fromY, fromX, toY, toX) {
+	// const graphDiagonal = new AStarGraph(arr, { diagonal: true });
+
+	const from = graphDiagonal.grid[fromY][fromX];
+	const to = graphDiagonal.grid[toY][toX];
+
+	const resultWithDiagonalsInvertedXY = astar.search(graphDiagonal, from, to, { heuristic: astar.heuristics.diagonal });
+
+	const resultWithDiagonals = resultWithDiagonalsInvertedXY.map(obj => ({
+		...obj,
+		x: obj.y,
+		y: obj.x
+	}));
+
+	return resultWithDiagonals;
+}
 
 // LocalLog('Worker loaded');

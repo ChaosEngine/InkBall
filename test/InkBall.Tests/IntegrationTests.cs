@@ -18,13 +18,13 @@ namespace InkBall.IntegrationTests
 	/// http://geeklearning.io/asp-net-core-mvc-testing-and-the-synchronizer-token-pattern/
 	/// http://www.stefanhendriks.com/2016/05/11/integration-testing-your-asp-net-core-app-dealing-with-anti-request-forgery-csrf-formdata-and-cookies/
 	/// </summary>
-	public static class PostRequestHelper
+	public static partial class PostRequestHelper
 	{
 		public static string ExtractAntiForgeryToken(string htmlResponseText)
 		{
 			ArgumentNullException.ThrowIfNull(htmlResponseText);
 
-			Match match = Regex.Match(htmlResponseText, @"\<input name=""__RequestVerificationToken"" type=""hidden"" value=""([^""]+)"" \/\>");
+			Match match = MyRegex().Match(htmlResponseText);
 			return match.Success ? match.Groups[1].Captures[0].Value : null;
 		}
 
@@ -98,7 +98,10 @@ namespace InkBall.IntegrationTests
 				headers.Add("Cookie", new Microsoft.Net.Http.Headers.CookieHeaderValue(kvp.Key, kvp.Value).ToString());
 			}
 		}
-	}
+
+        [GeneratedRegex(@"\<input name=""__RequestVerificationToken"" type=""hidden"" value=""([^""]+)"" \/\>")]
+        private static partial Regex MyRegex();
+    }
 
 	[Collection(nameof(TestingServerCollection))]
 	public class UnAuthenticated
@@ -122,6 +125,8 @@ namespace InkBall.IntegrationTests
 		[InlineData("css/inkball.min.css")]
 		[InlineData("img/homescreen.webp")]
 		[InlineData("img/homescreen.jpg")]
+		[InlineData("locales/en/ib.min.json")]
+		[InlineData("locales/pl/ib.min.json")]
 		public async Task StaticAssets(string asset)
 		{
 			//if (_fixture.DOTNET_RUNNING_IN_CONTAINER) return;//pass on fake DB with no data
@@ -141,7 +146,7 @@ namespace InkBall.IntegrationTests
 
 		[Theory]
 		[InlineData("InkBall/Home", "<picture aria-label=\"home screen image\">")]
-		[InlineData("InkBall/Rules", "<li>Player put dots on the grid one after another</li>")]
+		[InlineData("InkBall/Rules", "<li data-i18n='ib:rules.li00'>Player put dots on the grid one after another</li>")]
 		public async Task Pages_Anonymous(string page, string contentToCheck)
 		{
 			//if (_fixture.DOTNET_RUNNING_IN_CONTAINER) return;//pass on fake DB with no data
@@ -184,7 +189,7 @@ namespace InkBall.IntegrationTests
 	}
 
 	[Collection(nameof(TestingServerCollection))]
-	public class Authenticated
+	public partial class Authenticated
 	{
 		private readonly TestServerFixture _fixture;
 		private readonly HttpClient _anonClient;
@@ -352,8 +357,8 @@ namespace InkBall.IntegrationTests
 							response.EnsureSuccessStatusCode();
 
 							var responseString = await response.Content.ReadAsStringAsync();
-							Assert.Contains("Inball Game", responseString);
-							Assert.Contains("<span id='Player1Name'>Alice Testing</span> vs <span id='Player2Name'>???</span>", responseString);
+							Assert.Contains("Inkball Game", responseString);
+							Assert.Contains("<span id='Player1Name'>Alice Testing</span> <span data-i18n='ib:game.vs'>vs</span> <span id='Player2Name'>???</span>", responseString);
 						}
 					}
 				}//end using (var get_response
@@ -400,9 +405,9 @@ namespace InkBall.IntegrationTests
 
 							responseString = await create_game_response.Content.ReadAsStringAsync();
 							Assert.DoesNotContain("const msg = \"You are not logged in\";", responseString);
-							Assert.Contains("Inball Game", responseString);
+							Assert.Contains("Inkball Game", responseString);
 							//parse GameID from Game page
-							Match match = Regex.Match(responseString, @"iGameID\: ([0-9].*),");
+							Match match = MyRegex().Match(responseString);
 							Assert.True(match.Success);
 							Assert.True(int.TryParse(match.Groups[1].Captures[0].Value, out var GameID));
 							antiforgery_token = await PostRequestHelper.ExtractAntiForgeryToken(create_game_response);
@@ -437,5 +442,8 @@ namespace InkBall.IntegrationTests
 				}//end using (var get_response
 			}//end using request
 		}
-	}
+
+        [GeneratedRegex(@"iGameID\: ([0-9].*),")]
+        private static partial Regex MyRegex();
+    }
 }

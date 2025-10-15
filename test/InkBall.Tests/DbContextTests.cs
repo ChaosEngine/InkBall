@@ -150,14 +150,14 @@ namespace InkBall.Tests
 				//Assert
 				Assert.Empty(points_n_paths.Paths.Where(pa =>
 					pa.PointsAsString.Contains(nameof(InkBallPathViewModel.TimeStamp)) ||
-					pa.PointsAsString.Contains(nameof(InkBallPath.InkBallPoint)) ||
+					pa.PointsAsString.Contains(nameof(InkBallPath.InkBallPoints)) ||
 					pa.PointsAsString.Contains(nameof(InkBallPath.BelongsToCPU))
 					).ToArray());
 
 				//Assert
 				Assert.Empty(context.InkBallPlayer.Where(pl =>
 					pl.sLastMoveCode.Contains(nameof(InkBallPathViewModel.TimeStamp)) ||
-					pl.sLastMoveCode.Contains(nameof(InkBallPath.InkBallPoint)) ||
+					pl.sLastMoveCode.Contains(nameof(InkBallPath.InkBallPoints)) ||
 					pl.sLastMoveCode.Contains(nameof(InkBallPath.BelongsToCPU))
 					));
 			}

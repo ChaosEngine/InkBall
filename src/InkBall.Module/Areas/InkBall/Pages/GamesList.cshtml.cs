@@ -53,7 +53,7 @@ namespace InkBall.Module.Pages
 			await base.LoadUserPlayerAndGameAsync(token);
 
 			string sExternalUserID = Player.sExternalId;
-			string msg = "";
+			string msg = string.Empty;
 
 			if (Game == null)
 				InkBallGame.DeactivateDeadGamezFromExternalUserID(sExternalUserID);
@@ -68,19 +68,19 @@ namespace InkBall.Module.Pages
 					case "Join":
 						if (Game != null)
 						{
-							msg = "You have another game";
+							msg = "You have another game;anotherGame";
 							break;
 						}
 						if (gameID < 0)
 						{
-							msg = "Bad game ID";
+							msg = "Bad game ID;badGameID";
 							break;
 						}
 						var new_game = await _dbContext.GetGameFromDatabaseAsync(gameID, false, token);
 						if (new_game == null
 							|| new_game?.Player1?.sExternalId == sExternalUserID || new_game?.Player2?.sExternalId == sExternalUserID)
 						{
-							msg = "This user cannot join to the game";
+							msg = "This user cannot join to the game;cannotJoin";
 						}
 						else
 						{
@@ -138,7 +138,7 @@ namespace InkBall.Module.Pages
 						}
 						else
 						{
-							msg = "You have no game to continue";
+							msg = "You have no game to continue;noGameToCont";
 						}
 						break;
 
@@ -147,14 +147,14 @@ namespace InkBall.Module.Pages
 					case "New game":
 						if (Game != null)
 						{
-							msg = "You have another game";
+							msg = "You have another game;anotherGame";
 							break;
 						}
 
 						if (!(Enum.TryParse<InkBallGame.GameTypeEnum>(gameType, true, out var selectedGameType) &&
 							(Enum.IsDefined(typeof(InkBallGame.GameTypeEnum), selectedGameType) | selectedGameType.ToString().Contains(","))))
 						{
-							msg = "Wrong game type";
+							msg = "Wrong game type;wrongGameType";
 							break;
 						}
 
@@ -175,7 +175,7 @@ namespace InkBall.Module.Pages
 						}
 						if (width <= -1)
 						{
-							msg = "Wrong board size";
+							msg = "Wrong board size;wrongBoardSize";
 							break;
 						}
 						bool bCpuOponent;
@@ -207,7 +207,7 @@ namespace InkBall.Module.Pages
 							catch (Exception ex)
 							{
 								await trans.RollbackAsync(token);
-								msg = "Could not create new game for this user";
+								msg = "Could not create new game for this user;couldNotCreate";
 								_logger.LogError(ex, msg);
 							}
 						}
@@ -223,7 +223,7 @@ namespace InkBall.Module.Pages
 					case "win":
 						if (Game == null)
 						{
-							msg = "You have no game";
+							msg = "You have no game;noGame";
 							break;
 						}
 						using (var trans = await _dbContext.Database.BeginTransactionAsync(token))
@@ -244,7 +244,7 @@ namespace InkBall.Module.Pages
 											{
 												await _inkballHubContext.Clients.User(recipient_id_looser.Item1).ServerToClientPlayerSurrender(
 													new PlayerSurrenderingCommand(recipient_id_looser.Item2.GetValueOrDefault(0),
-													true, $"Player {recipient_id_looser.Item3 ?? ""} surrenders"));
+													true, $"Player {recipient_id_looser.Item3 ?? ""} surrenders;plaXSurrendr"));
 											}
 										}
 										catch (Exception ex)

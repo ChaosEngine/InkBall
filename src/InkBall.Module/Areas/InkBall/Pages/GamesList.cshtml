@@ -4,7 +4,7 @@
 @inject Microsoft.AspNetCore.Authorization.IAuthorizationService authorization
 @model GamesListModel
 @{
-    ViewData["Title"] = "Game list";
+    ViewData["Title"] = "ib:list.title";
 
     HtmlHelpers.RenderHeaderSection(this, Url, commonUIConfigureOptions);
 
@@ -18,16 +18,16 @@
 
 <div class='container inkgames'>
 	<div class="table-responsive">
-		<a href='Home' class='btn btn-outline-primary mt-4 m-sm-1'>Home</a>
+		<a href='Home' class='btn btn-outline-primary mt-4 m-sm-1' data-i18n='ib:list.home'>Home</a>
 		<table class='table game_tab'>
 			<thead>
 				<tr>
 					<th scope='row'>#</th>
-					<th scope='col'>Player 1</th>
-					<th scope='col'>Player 2</th>
-					<th scope='col'>Game state</th>
-					<th scope='col'>Action</th>
-					<th scope='col'>Game type</th>
+					<th scope='col' data-i18n='ib:game.player1'>Player 1</th>
+					<th scope='col' data-i18n='ib:game.player2'>Player 2</th>
+					<th scope='col' data-i18n='ib:list.gameState'>Game state</th>
+					<th scope='col' data-i18n='ib:list.action'>Action</th>
+					<th scope='col' data-i18n='ib:list.gameType'>Game type</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -57,41 +57,41 @@
 							switch (game.GameState)
 							{
 								case InkBallGame.GameStateEnum.AWAITING:
-									<td class='fst-italic gtd'>waiting for another player</td>
+									<td class='fst-italic gtd' data-i18n='ib:list.waiting'>waiting for another player</td>
 									<td class='gtd'>
 										@if (bIsMyOwnGame)
 										{
-											<a href='Game' class='btn btn-outline-primary'>Continue</a>
+											<a href='Game' class='btn btn-outline-primary' data-i18n='ib:home.continue'>Continue</a>
 										}
 										else if (!bIsCurrentGameOk)
 										{
 											<form method='post'>
 												<input type='hidden' name='GameID' value='@game.iId' />
-												<input type='submit' name='action' value='Join' class='btn btn-outline-primary' />
+												<button type='submit' name='action' value='Join' class='btn btn-outline-primary' data-i18n='ib:list.join'>Join</button>
 											</form>
 										}
 									</td>
 									break;
 
 								case InkBallGame.GameStateEnum.ACTIVE:
-									<td class='fst-italic gtd'>game in progress</td>
+									<td class='fst-italic gtd' data-i18n='ib:list.inProgress'>game in progress</td>
 									<td class='gtd'>
 										@if (bIsMyOwnGame)
 										{
-											<a href='Game' class="btn btn-outline-primary">Continue</a>
+											<a href='Game' class="btn btn-outline-primary" data-i18n='ib:home.continue'>Continue</a>
 										}
 										else if (!bIsCurrentGameOk && bCanViewOtherPlayerGames)
 										{
-											<a href='Game?handler=View&GameID=@game.iId'>View only</a>
+											<a href='Game?handler=View&GameID=@game.iId' data-i18n='ib:list.viewOnly'>View only</a>
 										}
 									</td>
 									break;
 
 								case InkBallGame.GameStateEnum.INACTIVE:
-									<td class='fst-italic gtd' colspan="2">game inactive</td>
+									<td class='fst-italic gtd' colspan="2" data-i18n='ib:list.gameInactive'>game inactive</td>
 									break;
 								case InkBallGame.GameStateEnum.FINISHED:
-									<td class='fst-italic gtd' colspan="2">game finished</td>
+									<td class='fst-italic gtd' colspan="2" data-i18n='ib:list.gameFinished'>game finished</td>
 									break;
 								default:
 									throw new ArgumentNullException(nameof(game.GameState), "bad game state");
@@ -100,16 +100,16 @@
 							switch (game.GameType)
 							{
 								case InkBallGame.GameTypeEnum.FIRST_5_ADVANTAGE_PATHS:
-									<td class='fst-italic gtd'>FIRST 5 ADVANTAGE PATHS</td>
+									<td class='fst-italic gtd' data-i18n='ib:list.gameTypes.advantageOf5'>FIRST 5 ADVANTAGE PATHS</td>
 									break;
 								case InkBallGame.GameTypeEnum.FIRST_5_CAPTURES:
-									<td class='fst-italic gtd'>FIRST 5 CAPTURES</td>
+									<td class='fst-italic gtd' data-i18n='ib:list.gameTypes.first5Captures'>FIRST 5 CAPTURES</td>
 									break;
 								case InkBallGame.GameTypeEnum.FIRST_5_PATHS:
-									<td class='fst-italic gtd'>FIRST 5 PATHS</td>
+									<td class='fst-italic gtd' data-i18n='ib:list.gameTypes.first5Paths'>FIRST 5 PATHS</td>
 									break;
 								case InkBallGame.GameTypeEnum.FIRST_CAPTURE:
-									<td class='fst-italic gtd'>FIRST CAPTURE</td>
+									<td class='fst-italic gtd' data-i18n='ib:list.gameTypes.firstCapture'>FIRST CAPTURE</td>
 									break;
 								default:
 									throw new ArgumentNullException(nameof(game.GameType), "bad game type");
@@ -122,7 +122,7 @@
 			{
 				<tr>
 					<td colspan="6" class="h4 p-3 text-center gtd-nogame">
-						<span>↓↓↓</span> No games, create below
+						<span>↓↓↓</span> <span data-i18n='ib:list.noGamesCreate'>No games, create below</span>
 					</td>
 				</tr>
 			}
@@ -133,37 +133,37 @@
 	{
 	<form method='post' class="was-validated">
 		<fieldset class="g-3">
-			<legend class="col-sm-12 col-md-4 col-lg-4 col-xl-3">New game creation</legend>
-			<div class="row" role="group" aria-label="New game options">
+			<legend class="col-sm-12 col-md-4 col-lg-4 col-xl-3" data-i18n='ib:list.newGameLeg'>New game creation</legend>
+			<div class="row" role="group" aria-label="New game options" data-i18n='[aria-label]ib:list.newGameOpts'>
 				<div class="col-sm-12 col-md-4 col-lg-4 col-xl-3">
 					<select name='GameType' id='GameType' class="form-select" required>
-						<option value='' selected='selected'>Choose game type</option>
-						<optgroup label='Game types'>
-							<option value='0'>First capture wins</option>
-							<option value='1'>First 5 captures wins</option>
-							<option value='2'>First 5 paths wins</option>
-							<option value='3'>Advantage of 5 paths wins</option>
+						<option value='' selected='selected' data-i18n='ib:home.chooseGameType'>Choose game type</option>
+						<optgroup label='Game types' data-i18n='[label]ib:home.gameTypes.name'>
+							<option value='0' data-i18n='ib:home.gameTypes.firstCapture'>First capture wins</option>
+							<option value='1' data-i18n='ib:home.gameTypes.first5Captures'>First 5 captures wins</option>
+							<option value='2' data-i18n='ib:home.gameTypes.first5Paths'>First 5 paths wins</option>
+							<option value='3' data-i18n='ib:home.gameTypes.advantageOf5'>Advantage of 5 paths wins</option>
 						</optgroup>
 					</select>
-					<div class="invalid-feedback">Invalid game type</div>
+					<div class="invalid-feedback" data-i18n='ib:home.chooseGameType'>Invalid game type</div>
 				</div>
 				<div class="col-sm-12 col-md-4 col-lg-4 col-xl-3">
 					<select name='BoardSize' id='BoardSize' class="form-select" required>
-						<option value='' selected='selected'>Choose board size</option>
-						<optgroup label='Board sizes'>
+						<option value='' selected='selected' data-i18n='ib:home.boardSize.chooseBoardSize'>Choose board size</option>
+						<optgroup label='Board sizes' data-i18n='[label]ib:home.boardSize.boardSizes'>
 							<option value='20'>20 x 26</option>
 							<option value='40'>40 x 52</option>
 							<option value='64'>64 x 64</option>
 						</optgroup>
 					</select>
-					<div class="invalid-feedback">Invalid bard size</div>
+					<div class="invalid-feedback" data-i18n='ib:home.boardSize.chooseBoardSize'>Invalid board size</div>
 				</div>
 				<div class="col-sm-12 col-md-auto col-xl-3 form-check form-switch ps-2">
 					<input type="checkbox" class="form-check-input form-control-input mx-1" name="CpuOponent" id="CpuOponent" />
-					<label class="form-check-label" for="CpuOponent">Play against CPU</label>
+					<label class="form-check-label" for="CpuOponent" data-i18n='ib:home.playAgainstCPU'>Play against CPU</label>
 				</div>
 				<div class="col-sm-12 col-md-auto">
-					<input type='submit' name='action' value='New game' class='btn btn-primary' />
+					<button type='submit' name='action' value='New game' class='btn btn-primary' data-i18n='ib:home.newGame'>New game</button>
 				</div>
 			</div>
 		</fieldset>
@@ -174,5 +174,5 @@
 <script type='module'>
 	import { ListOnLoad } from "@Url.Content(Constants.WwwIncludeInkballJS)";
 
-	ListOnLoad();
+	ListOnLoad('@Model.Message');
 </script>
