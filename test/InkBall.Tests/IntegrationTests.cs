@@ -99,9 +99,9 @@ namespace InkBall.IntegrationTests
 			}
 		}
 
-        [GeneratedRegex(@"\<input name=""__RequestVerificationToken"" type=""hidden"" value=""([^""]+)"" \/\>")]
-        private static partial Regex MyRegex();
-    }
+		[GeneratedRegex(@"\<input name=""__RequestVerificationToken"" type=""hidden"" value=""([^""]+)"" \/\>")]
+		private static partial Regex MyRegex();
+	}
 
 	[Collection(nameof(TestingServerCollection))]
 	public class UnAuthenticated
@@ -172,8 +172,7 @@ namespace InkBall.IntegrationTests
 		[InlineData("InkBall/Game")]
 		[InlineData("InkBall/GamesList")]
 		[InlineData("InkBall/Highscores")]
-		[InlineData(InkBall.Module.Hubs.GameHub.HubName)]
-		public async Task Pages_Unauthorized(string page)
+		public async Task Pages_OkUnauthorized(string page)
 		{
 			//if (_fixture.DOTNET_RUNNING_IN_CONTAINER) return;//pass on fake DB with no data
 
@@ -182,8 +181,24 @@ namespace InkBall.IntegrationTests
 			using (var response = await _anonclient.GetAsync($"{_anonclient.BaseAddress}{page}"))
 			{
 				// Assert
-				//Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
 				Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+				Assert.Equal($"{_anonclient.BaseAddress}Identity/Account/Login?ReturnUrl=%2F{UrlEncoder.Default.Encode(page)}",
+					response.Headers.Location.ToString());
+			}
+		}
+
+		[Theory]
+		[InlineData(Module.Hubs.GameHub.HubName)]
+		public async Task Pages_BadUnauthorized(string page)
+		{
+			//if (_fixture.DOTNET_RUNNING_IN_CONTAINER) return;//pass on fake DB with no data
+
+			// Arrange
+			//Act
+			using (var response = await _anonclient.GetAsync($"{_anonclient.BaseAddress}{page}"))
+			{
+				// Assert
+				Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
 				Assert.Equal($"{_anonclient.BaseAddress}Identity/Account/Login?ReturnUrl=%2F{UrlEncoder.Default.Encode(page)}",
 					response.Headers.Location.ToString());
 			}
@@ -380,7 +395,7 @@ namespace InkBall.IntegrationTests
 
 			using (var request = new HttpRequestMessage(HttpMethod.Get, $"{client.BaseAddress}InkBall/Home"))
 			{
-			
+
 				// Act
 				using (var get_response = await client.SendAsync(request, HttpCompletionOption.ResponseContentRead))
 				{
@@ -445,7 +460,7 @@ namespace InkBall.IntegrationTests
 			}//end using request
 		}
 
-        [GeneratedRegex(@"iGameID\: ([0-9].*),")]
-        private static partial Regex MyRegex();
-    }
+		[GeneratedRegex(@"iGameID\: ([0-9].*),")]
+		private static partial Regex MyRegex();
+	}
 }
