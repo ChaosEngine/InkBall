@@ -106,7 +106,7 @@ function hasDuplicates(array) {
  * @param {number} ms - The number of milliseconds to sleep.
  * @returns {Promise<void>} A promise that resolves after the specified time has passed.
  */
-async function Sleep(ms) {
+function Sleep(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
@@ -747,7 +747,7 @@ class GameStateStore {
 				return this.store.set(key, val);
 			}
 
-			async get(key) {
+			get(key) {
 				return this.store.get(key);
 			}
 
@@ -873,7 +873,7 @@ class GameStateStore {
 				return this.store.set(key, oval);
 			}
 
-			async get(key) {
+			get(key) {
 				let val = this.store.get(key);
 				//if (!val) {
 				//	const idb_pt = await this.GetPoint(key);

@@ -1390,7 +1390,7 @@ class InkBallGame {
 			[x, y] = pair.split(",");
 			x = parseInt(x); y = parseInt(y);
 
-			p = await this.#Points.get(y * this.#iGridWidth + x);
+			p = this.#Points.get(y * this.#iGridWidth + x);
 			if (p !== null && p !== undefined) {
 				p.SetStatus(status);
 				status = StatusEnum.POINT_IN_PATH;
@@ -1402,7 +1402,7 @@ class InkBallGame {
 		[x, y] = sPoints[0].split(",");
 		x = parseInt(x); y = parseInt(y);
 
-		p = await this.#Points.get(y * this.#iGridWidth + x);
+		p = this.#Points.get(y * this.#iGridWidth + x);
 		if (p !== null && p !== undefined) {
 			p.SetStatus(status);
 		}
@@ -1425,7 +1425,7 @@ class InkBallGame {
 			[x, y] = pair.split(",");
 			x = parseInt(x); y = parseInt(y);
 
-			p = await this.#Points.get(y * this.#iGridWidth + x);
+			p = this.#Points.get(y * this.#iGridWidth + x);
 			if (p !== null && p !== undefined) {
 				p.SetStatus(status);
 				status = StatusEnum.POINT_IN_PATH;
@@ -1437,7 +1437,7 @@ class InkBallGame {
 		[x, y] = sPoints[0].split(",");
 		x = parseInt(x); y = parseInt(y);
 
-		p = await this.#Points.get(y * this.#iGridWidth + x);
+		p = this.#Points.get(y * this.#iGridWidth + x);
 		if (p !== null && p !== undefined) {
 			p.SetStatus(status);
 		}
@@ -1742,7 +1742,7 @@ class InkBallGame {
 			for (const packed of points) {
 				let [x, y] = packed.split(",");
 				x = parseInt(x), y = parseInt(y);
-				const p = await this.#Points.get(y * this.#iGridWidth + x);
+				const p = this.#Points.get(y * this.#iGridWidth + x);
 				if (p !== undefined) {
 					p.SetStatus(point_status);
 					p.SetFillColor(sOwnedCol);
@@ -1765,7 +1765,7 @@ class InkBallGame {
 			//set starting point to POINT_IN_PATH to block further path closing with it
 			let points = this.#Line.GetPointsArray();
 			let x = points[0].x, y = points[0].y;
-			const p0 = await this.#Points.get(y * this.#iGridWidth + x);
+			const p0 = this.#Points.get(y * this.#iGridWidth + x);
 			if (p0 !== undefined)
 				p0.SetStatus(StatusEnum.POINT_IN_PATH);
 
@@ -1782,7 +1782,7 @@ class InkBallGame {
 			for (const packed of points) {
 				let [x, y] = packed.split(",");
 				x = parseInt(x), y = parseInt(y);
-				const p = await this.#Points.get(y * this.#iGridWidth + x);
+				const p = this.#Points.get(y * this.#iGridWidth + x);
 				if (p !== undefined) {
 					p.SetStatus(point_status);
 					p.SetFillColor(sOwnedCol);
@@ -2007,8 +2007,8 @@ class InkBallGame {
 					(Math.abs(parseInt(this.#iLastX - x)) <= 1 && Math.abs(parseInt(this.#iLastY - y)) <= 1) &&
 					this.#iLastX >= 0 && this.#iLastY >= 0) {
 					if (this.#Line !== null) {
-						let p0 = await this.#Points.get(this.#iLastY * this.#iGridWidth + this.#iLastX);
-						let p1 = await this.#Points.get(y * this.#iGridWidth + x);
+						let p0 = this.#Points.get(this.#iLastY * this.#iGridWidth + this.#iLastX);
+						let p1 = this.#Points.get(y * this.#iGridWidth + x);
 						this.#CancelPath.disabled = this.#Line.GetLength() >= 2 ? '' : 'disabled';
 
 						if (p0 !== undefined && p1 !== undefined &&
@@ -2061,8 +2061,8 @@ class InkBallGame {
 						}
 					}
 					else {
-						let p0 = await this.#Points.get(this.#iLastY * this.#iGridWidth + this.#iLastX);
-						let p1 = await this.#Points.get(y * this.#iGridWidth + x);
+						let p0 = this.#Points.get(this.#iLastY * this.#iGridWidth + this.#iLastX);
+						let p1 = this.#Points.get(y * this.#iGridWidth + x);
 
 						if (p0 !== undefined && p1 !== undefined &&
 							p0.GetFillColor() === this.#sDotColor && p1.GetFillColor() === this.#sDotColor) {
@@ -2130,8 +2130,8 @@ class InkBallGame {
 				(Math.abs(parseInt(this.#iLastX - x)) <= 1 && Math.abs(parseInt(this.#iLastY - y)) <= 1) &&
 				this.#iLastX >= 0 && this.#iLastY >= 0) {
 				if (this.#Line !== null) {
-					let p0 = await this.#Points.get(this.#iLastY * this.#iGridWidth + this.#iLastX);
-					let p1 = await this.#Points.get(y * this.#iGridWidth + x);
+					let p0 = this.#Points.get(this.#iLastY * this.#iGridWidth + this.#iLastX);
+					let p1 = this.#Points.get(y * this.#iGridWidth + x);
 					this.#CancelPath.disabled = this.#Line.GetLength() >= 2 ? '' : 'disabled';
 
 					if (p0 !== undefined && p1 !== undefined &&
@@ -2187,8 +2187,8 @@ class InkBallGame {
 					}
 				}
 				else {
-					let p0 = await this.#Points.get(this.#iLastY * this.#iGridWidth + this.#iLastX);
-					let p1 = await this.#Points.get(y * this.#iGridWidth + x);
+					let p0 = this.#Points.get(this.#iLastY * this.#iGridWidth + this.#iLastX);
+					let p1 = this.#Points.get(y * this.#iGridWidth + x);
 
 					if (p0 !== undefined && p1 !== undefined &&
 						p0.GetFillColor() === this.#sDotColor && p1.GetFillColor() === this.#sDotColor) {
@@ -2206,7 +2206,7 @@ class InkBallGame {
 				}
 			}
 			else if (this.#iLastX < 0 || this.#iLastY < 0) {
-				let p1 = await this.#Points.get(y * this.#iGridWidth + x);
+				let p1 = this.#Points.get(y * this.#iGridWidth + x);
 				if (p1 !== undefined && p1.GetFillColor() === this.#sDotColor) {
 					this.#iLastX = x;
 					this.#iLastY = y;
@@ -2354,7 +2354,7 @@ class InkBallGame {
 				for (const point of points) {
 					const { x, y } = point;
 					if (x === null || y === null) continue;
-					const p0 = await this.#Points.get(y * this.#iGridWidth + x);
+					const p0 = this.#Points.get(y * this.#iGridWidth + x);
 					if (p0 !== undefined) {
 						p0.RevertOldStatus();
 					}
@@ -2624,7 +2624,7 @@ class InkBallGame {
 		let clicked_point_status;
 		const runParams = this.#LoadAIParamsFromStore(window.localStorage);
 		if (!(runParams.lastClickedY >= 0 && runParams.lastClickedX >= 0) ||
-			(clicked_point_status = (await this.#Points.get(runParams.lastClickedY * this.#iGridWidth + runParams.lastClickedX))?.GetStatus()) === undefined
+			(clicked_point_status = (this.#Points.get(runParams.lastClickedY * this.#iGridWidth + runParams.lastClickedX))?.GetStatus()) === undefined
 		) {
 			LocalLog(localizeMessage('game.AI.clustFirstClick', "!!!First you need to click some point with mouse to pick the color!!!"));
 			return;
@@ -2667,7 +2667,7 @@ class InkBallGame {
 			const rand_color = RandomColor();
 			for (const vert of cw_sorted_verts) {
 				const { x, y } = vert;
-				const pt = await this.#Points.get(y * this.#iGridWidth + x);
+				const pt = this.#Points.get(y * this.#iGridWidth + x);
 				if (pt) {
 					pt.SetStrokeColor(rand_color);
 					pt.SetFillColor(rand_color);
@@ -2790,7 +2790,7 @@ class InkBallGame {
 	async #OnTestGroupPoints(event) {
 		event.preventDefault();
 		//LocalLog('OnTestGroupPoints');
-		const starting_point = await this.#Points.get(this.#iMouseY * this.#iGridWidth + this.#iMouseX);
+		const starting_point = this.#Points.get(this.#iMouseY * this.#iGridWidth + this.#iMouseX);
 		if (starting_point === undefined) {
 			LocalLog(localizeMessage('game.AI.groupPtsFirst', "!!!First you need to click 'blue' starting point with mouse!!!"));
 			return;
@@ -2820,7 +2820,7 @@ class InkBallGame {
 		/*
 		const sHumanColor = this.#COLOR_RED, sCPUColor = this.#COLOR_BLUE;
 		let working_points;
-		const pt = await this.#Points.get(this.#iMouseY * this.#iGridWidth + this.#iMouseX);
+		const pt = this.#Points.get(this.#iMouseY * this.#iGridWidth + this.#iMouseX);
 		const all_points = [...await this.#Points.values()];
 		if (pt !== undefined)
 			working_points = [pt];
@@ -2916,7 +2916,7 @@ class InkBallGame {
 		const all_points = [...await this.#Points.values()].map(value => value.Serialize());
 		const allLines = this.#Lines.store.map(value => value.Serialize());
 
-		const pt = await this.#Points.get(this.#iMouseY * this.#iGridWidth + this.#iMouseX);
+		const pt = this.#Points.get(this.#iMouseY * this.#iGridWidth + this.#iMouseX);
 		const working_points = pt !== undefined ? [pt.Serialize()] : all_points;
 
 		const data = await this.#RunAIWorker((worker) => {
@@ -2964,7 +2964,7 @@ class InkBallGame {
 			return;
 		}
 
-		const clicked_point = await this.#Points.get(this.#iLastY * this.#iGridWidth + this.#iLastX);
+		const clicked_point = this.#Points.get(this.#iLastY * this.#iGridWidth + this.#iLastX);
 
 		await this.#DFS2(await this.#BuildGraph(), clicked_point);
 	}
@@ -2973,7 +2973,7 @@ class InkBallGame {
 		event.preventDefault();
 
 		const sHumanColor = this.#COLOR_RED, sCPUColor = this.#COLOR_BLUE;
-		const pt = await this.#Points.get(this.#iMouseY * this.#iGridWidth + this.#iMouseX);
+		const pt = this.#Points.get(this.#iMouseY * this.#iGridWidth + this.#iMouseX);
 		if (!pt) {
 			LocalLog(localizeMessage('game.AI.dfs2First', "!!!First you need to click starting point with mouse!!!"));
 			return;
@@ -2995,8 +2995,8 @@ class InkBallGame {
 			LocalLog("!!!First you need to click two (starting and ending) points with mouse!!!");
 			return;
 		}
-		const point_color = (await this.#Points.get(this.#iLastY * this.#iGridWidth + this.#iLastX))?.GetFillColor();
-		if (point_color !== (await this.#Points.get(this.#iLastLastY * this.#iGridWidth + this.#iLastLastX))?.GetFillColor()) {
+		const point_color = (this.#Points.get(this.#iLastY * this.#iGridWidth + this.#iLastX))?.GetFillColor();
+		if (point_color !== (this.#Points.get(this.#iLastLastY * this.#iGridWidth + this.#iLastLastX))?.GetFillColor()) {
 			LocalLog("!!!Clicked starting and ending point must be same color and not owned!!!");
 			return;
 		}
@@ -3028,7 +3028,7 @@ class InkBallGame {
 
 			for (let x = 0; x < this.#iGridWidth; x++) {
 
-				const pt = await this.#Points.get(y * this.#iGridWidth + x);
+				const pt = this.#Points.get(y * this.#iGridWidth + x);
 				if (pt !== undefined && pt.GetFillColor() === point_color && pt.GetStatus() === point_status)
 					arr[y][x] = 1;//inverted coords, y,x in array
 				else
@@ -3119,7 +3119,7 @@ class InkBallGame {
 					//mark those cluster found points visually
 					//get x,y coordinates of point from cluster input array of arrays back
 					const [x, y] = humanPointsArrOfArr[index];
-					const pt = await this.#Points.get(y * this.#iGridWidth + x); //get point from points store
+					const pt = this.#Points.get(y * this.#iGridWidth + x); //get point from points store
 					if (pt) {
 						if (!(x > 0 && x < this.#iGridWidth && y > 0 && y < this.#iGridHeight)) {
 							LocalWarning(`Point (${x},${y}) out of bounds; will not try to surround.`);
@@ -3186,7 +3186,7 @@ class InkBallGame {
 				//and if it is outside all paths
 				//if point is already placed on the board, check its color if not, prepare for placing it
 				for (const [x, y] of convex_hull) {
-					const point = await this.#Points.get(y * this.#iGridWidth + x);
+					const point = this.#Points.get(y * this.#iGridWidth + x);
 					if (point !== undefined) {
 						//take point from convex hull and check if it is not already placed on the board as human point
 						//and if it is outside all paths - if so, return it as next AI move coz path is still not closed
@@ -3201,7 +3201,7 @@ class InkBallGame {
 				}
 
 				for (const [x, y] of convex_hull) {
-					const point = await this.#Points.get(y * this.#iGridWidth + x);
+					const point = this.#Points.get(y * this.#iGridWidth + x);
 
 					//take point from convex hull and check if it is not already placed on the board
 					//and if it is outside all paths - if so, return it as next AI move because the path is still not closed
@@ -3240,7 +3240,7 @@ class InkBallGame {
 
 		if (!(aiParams.lastClickedY >= 0 && aiParams.lastClickedX >= 0) ||
 			//check if point exists, if so get color and status
-			(point_color = (await this.#Points.get(aiParams.lastClickedY * this.#iGridWidth + aiParams.lastClickedX))?.GetFillColor()) === undefined
+			(point_color = (this.#Points.get(aiParams.lastClickedY * this.#iGridWidth + aiParams.lastClickedX))?.GetFillColor()) === undefined
 		) {
 			LocalLog(localizeMessage('game.AI.clustFirstClick', "!!!First you need to click some point with mouse to pick the color!!!"));
 			return;
@@ -3834,7 +3834,7 @@ class InkBallGame {
 		const freePointStatusArr = [freePointStatus];
 		const addPointsAndEdgesToGraph = async (point, to_x, to_y, x, y) => {
 			if (to_x >= 0 && to_x < this.#iGridWidth && to_y >= 0 && to_y < this.#iGridHeight) {
-				const next = await this.#Points.get(to_y * this.#iGridWidth + to_x);
+				const next = this.#Points.get(to_y * this.#iGridWidth + to_x);
 				if (next && isPointOKForPath(freePointStatusArr, next) === true) {
 
 					const point_hash = `${x},${y}`;
@@ -3926,7 +3926,7 @@ class InkBallGame {
 
 		const vertexImmediatePresenterFn = async (vertex, color = 'black', sleepTimeMs = 25) => {
 			const { x, y } = vertex.GetPosition();
-			const visible_vertex = await this.#Points.get(y * this.#iGridWidth + x);
+			const visible_vertex = this.#Points.get(y * this.#iGridWidth + x);
 
 			visible_vertex.SetStrokeColor(color);
 			visible_vertex.SetFillColor(color);
@@ -4008,7 +4008,7 @@ class InkBallGame {
 						continue;
 
 					//check if really exists
-					const pt1 = await this.#Points.get(y * this.#iGridWidth + x);
+					const pt1 = this.#Points.get(y * this.#iGridWidth + x);
 					if (pt1)
 						free_human_player_points.push({ x, y });
 				}
@@ -4032,7 +4032,7 @@ class InkBallGame {
 					//display which cycle we are dealing with
 					for (const vert of cw_sorted_verts) {
 						const { x, y } = vert;
-						const pt = await this.#Points.get(y * this.#iGridWidth + x);
+						const pt = this.#Points.get(y * this.#iGridWidth + x);
 						if (pt) {//again some basic checks
 							str += (`(${x},${y})`);
 
@@ -4051,7 +4051,7 @@ class InkBallGame {
 						if (false !== pnpoly(cw_sorted_verts, possible_intercept.x, possible_intercept.y)) {
 							tmp += `${comma}(${possible_intercept.x},${possible_intercept.y})`;
 
-							const pt1 = await this.#Points.get(possible_intercept.y * this.#iGridWidth + possible_intercept.x);
+							const pt1 = this.#Points.get(possible_intercept.y * this.#iGridWidth + possible_intercept.x);
 							if (pt1) {
 								const col = 'var(--bs-yellow)';
 								pt1.SetStrokeColor(col);
@@ -4348,7 +4348,7 @@ class InkBallGame {
 					const point_position_hashed = newPos.y * this.#iGridWidth + newPos.x;
 
 					if (false === blanks_changed.has(point_position_hashed)) {
-						const point = await this.#Points.get(point_position_hashed);
+						const point = this.#Points.get(point_position_hashed);
 
 						if (point !== undefined) {
 							const color = point.GetFillColor();
@@ -4508,7 +4508,7 @@ class InkBallGame {
 
 						//6. not included in point_coords (not from cluster points), so they should be around
 						// 	 cluster points, or inside
-						const point = await this.#Points.get(y * this.#iGridWidth + x);
+						const point = this.#Points.get(y * this.#iGridWidth + x);
 						if (point !== undefined && humanPointColors.includes(point.GetFillColor()))
 							continue; //skip human points
 

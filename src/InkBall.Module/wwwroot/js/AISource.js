@@ -59,7 +59,7 @@ class GraphAI {
 		const freePointStatusArr = [freePointStatus];
 		const addPointsAndEdgesToGraph = async (point, to_x, to_y, x, y) => {
 			if (to_x >= 0 && to_x < this.#iGridWidth && to_y >= 0 && to_y < this.#iGridHeight) {
-				const next = await this.#Points.get(to_y * this.#iGridWidth + to_x);
+				const next = this.#Points.get(to_y * this.#iGridWidth + to_x);
 				if (next && isPointOKForPath(freePointStatusArr, next) === true) {
 
 					const point_hash = `${x},${y}`;
