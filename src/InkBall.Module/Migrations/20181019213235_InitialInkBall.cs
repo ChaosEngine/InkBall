@@ -2,6 +2,8 @@
 using InkBall.Module.Model;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
+using MySql.EntityFrameworkCore.Metadata;
+
 #if INCLUDE_POSTGRES
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 #endif
@@ -22,7 +24,7 @@ namespace InkBall.Module.Migrations
 					iId = table.Column<int>(nullable: false)
 						.Annotation("Sqlite:Autoincrement", true)
 #if INCLUDE_MYSQL
-						.Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+						.Annotation("MySql:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn)
 #endif
 #if INCLUDE_SQLSERVER
 						.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
@@ -50,7 +52,7 @@ namespace InkBall.Module.Migrations
 					iId = table.Column<int>(nullable: false)
 						.Annotation("Sqlite:Autoincrement", true)
 #if INCLUDE_MYSQL
-						.Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+						.Annotation("MySql:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn)
 #endif
 #if INCLUDE_SQLSERVER
 						.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
@@ -99,7 +101,7 @@ namespace InkBall.Module.Migrations
 					iId = table.Column<int>(nullable: false)
 						.Annotation("Sqlite:Autoincrement", true)
 #if INCLUDE_MYSQL
-						.Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+						.Annotation("MySql:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn)
 #endif
 #if INCLUDE_SQLSERVER
 						.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
@@ -156,7 +158,7 @@ namespace InkBall.Module.Migrations
 					iId = table.Column<int>(nullable: false)
 						.Annotation("Sqlite:Autoincrement", true)
 #if INCLUDE_MYSQL
-						.Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+						.Annotation("MySql:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn)
 #endif
 #if INCLUDE_SQLSERVER
 						.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
@@ -197,7 +199,7 @@ namespace InkBall.Module.Migrations
 					iId = table.Column<int>(nullable: false)
 						.Annotation("Sqlite:Autoincrement", true)
 #if INCLUDE_MYSQL
-						.Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+						.Annotation("MySql:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn)
 #endif
 #if INCLUDE_SQLSERVER
 						.Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)

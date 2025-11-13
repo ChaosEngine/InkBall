@@ -18,6 +18,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Options;
 using System.Diagnostics.CodeAnalysis;
+using MySql.EntityFrameworkCore.Metadata;
 
 namespace InkBall.Module.Model
 {
@@ -61,6 +62,7 @@ namespace InkBall.Module.Model
 					return sqliteColumnType ?? "datetime('now','localtime')";
 
 				case "pomelo.entityframeworkcore.mysql":
+				case "mysql.entityframeworkcore":
 				case "mysql":
 					return mysqlColumnType ?? "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP";
 
@@ -94,6 +96,7 @@ namespace InkBall.Module.Model
 
 				case "microsoft.entityframeworkcore.sqlite":
 				case "pomelo.entityframeworkcore.mysql":
+				case "mysql.entityframeworkcore":
 				case "npgsql.entityframeworkcore.postgresql":
 				case "oracle.entityframeworkcore":
 					return null;
@@ -117,6 +120,7 @@ namespace InkBall.Module.Model
 					return sqlServerColumnType ?? "datetime2";
 
 				case "pomelo.entityframeworkcore.mysql":
+				case "mysql.entityframeworkcore":
 				case "mysql":
 					return mysqlColumnType ?? "timestamp";
 
@@ -151,6 +155,7 @@ namespace InkBall.Module.Model
 					return sqliteColumnType ?? "TEXT";
 
 				case "pomelo.entityframeworkcore.mysql":
+				case "mysql.entityframeworkcore":
 				case "mysql":
 					return mysqlColumnType ?? "json";
 
@@ -185,6 +190,7 @@ namespace InkBall.Module.Model
 					return sqliteColumnType ?? "char";
 
 				case "pomelo.entityframeworkcore.mysql":
+				case "mysql.entityframeworkcore":
 				case "mysql":
 					return mysqlColumnType ?? "char";
 
@@ -219,6 +225,7 @@ namespace InkBall.Module.Model
 					return sqliteColumnType ?? "INTEGER";
 
 				case "pomelo.entityframeworkcore.mysql":
+				case "mysql.entityframeworkcore":
 				case "mysql":
 					return mysqlColumnType ?? "int";
 
@@ -253,6 +260,7 @@ namespace InkBall.Module.Model
 					return sqliteColumnType ?? null;
 
 				case "pomelo.entityframeworkcore.mysql":
+				case "mysql.entityframeworkcore":
 				case "mysql":
 					return mysqlColumnType ?? null;
 
@@ -300,7 +308,7 @@ namespace InkBall.Module.Model
 					.ValueGeneratedOnAdd()
 					.HasAnnotation("Sqlite:Autoincrement", true)
 #if INCLUDE_MYSQL
-					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+					.HasAnnotation("MySql:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn)
 #endif
 #if INCLUDE_SQLSERVER
 					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
@@ -393,7 +401,7 @@ namespace InkBall.Module.Model
 					.ValueGeneratedOnAdd()
 					.HasAnnotation("Sqlite:Autoincrement", true)
 #if INCLUDE_MYSQL
-					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+					.HasAnnotation("MySql:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn)
 #endif
 #if INCLUDE_SQLSERVER
 					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
@@ -437,7 +445,7 @@ namespace InkBall.Module.Model
 					.ValueGeneratedOnAdd()
 					.HasAnnotation("Sqlite:Autoincrement", true)
 #if INCLUDE_MYSQL
-					.HasAnnotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn)
+					.HasAnnotation("MySql:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn)
 #endif
 #if INCLUDE_SQLSERVER
 					.HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn)
