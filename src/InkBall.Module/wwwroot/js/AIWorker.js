@@ -35,9 +35,8 @@ addEventListener('message', async function (e) {
 
 				const ai = new GraphAI(params.state.iGridWidth, params.state.iGridHeight, points);
 				const graph = await ai.BuildGraph({
-					freePointStatus: StatusEnum.POINT_FREE_BLUE,
-					// cpufillCol: 'var(--bluish)', 
-					visuals: false
+					freePointStatus: StatusEnum.POINT_FREE_BLUE
+					//, cpufillCol: 'var(--bluish)', 
 				});
 				//LocalLog(graph);
 
@@ -60,9 +59,8 @@ addEventListener('message', async function (e) {
 							const ai = new GraphAI(params.boardSize.iGridWidth, params.boardSize.iGridHeight, points);
 							const clicked_status = params.clickedPointStatus;
 							const graph = await ai.BuildGraph({
-								freePointStatus: clicked_status,
-								// cpufillCol: clicked_status === StatusEnum.POINT_FREE_RED ? 'var(--redish)' : 'var(--bluish)',
-								visuals: false
+								freePointStatus: clicked_status
+								//, cpufillCol: clicked_status === StatusEnum.POINT_FREE_RED ? 'var(--redish)' : 'var(--bluish)',
 							});
 							const vertices = graph.vertices.map(function (pt) {
 								const { x, y } = pt.GetPosition();
@@ -144,9 +142,8 @@ addEventListener('message', async function (e) {
 				});
 				const ai = new GraphAI(params.state.iGridWidth, params.state.iGridHeight, points);
 				const graph = await ai.BuildGraph({
-					freePointStatus: StatusEnum.POINT_FREE_BLUE,
-					// cpufillCol: params.colorBlue,
-					visuals: false
+					freePointStatus: StatusEnum.POINT_FREE_BLUE
+					//, cpufillCol: params.colorBlue,
 				});
 				const result = await ai.MarkAllCycles(graph, params.colorRed, lines);
 

@@ -73,7 +73,7 @@
 		"testDFS2": "DFS 2",
 		"floodFill": "Wypełnienie metodą rozlewania",
 		"aStar": "A-Star",
-		"clustering": "Klastrowanie",
+		"aiSurrPredict": "Predykcje otaczania AI",
 		"placeRed": "Postaw czerwony",
 		"placeBlue": "Postaw niebieski",
 		"message2Send": "Wiadomość do wysłania",

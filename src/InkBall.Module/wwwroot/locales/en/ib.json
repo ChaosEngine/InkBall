@@ -73,7 +73,7 @@
 		"testDFS2": "DFS 2",
 		"floodFill": "Flood fill",
 		"aStar": "A-Star",
-		"clustering": "Clustering",
+		"aiSurrPredict": "AI surrounding predictions",
 		"placeRed": "Place Red",
 		"placeBlue": "Place Blue",
 		"message2Send": "Message to send",

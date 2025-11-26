@@ -57,7 +57,7 @@ class GraphAI {
 		};
 
 		const freePointStatusArr = [freePointStatus];
-		const addPointsAndEdgesToGraph = async (point, to_x, to_y, x, y) => {
+		const addPointsAndEdgesToGraph = (point, to_x, to_y, x, y) => {
 			if (to_x >= 0 && to_x < this.#iGridWidth && to_y >= 0 && to_y < this.#iGridHeight) {
 				const next = this.#Points.get(to_y * this.#iGridWidth + to_x);
 				if (next && isPointOKForPath(freePointStatusArr, next) === true) {
@@ -99,21 +99,21 @@ class GraphAI {
 				const { x, y } = point.GetPosition();
 				//TODO: await all below promises
 				//east
-				await addPointsAndEdgesToGraph(point, x + 1, y, x, y);
+				addPointsAndEdgesToGraph(point, x + 1, y, x, y);
 				//west
-				await addPointsAndEdgesToGraph(point, x - 1, y, x, y);
+				addPointsAndEdgesToGraph(point, x - 1, y, x, y);
 				//north
-				await addPointsAndEdgesToGraph(point, x, (y - 1), x, y);
+				addPointsAndEdgesToGraph(point, x, (y - 1), x, y);
 				//south
-				await addPointsAndEdgesToGraph(point, x, (y + 1), x, y);
+				addPointsAndEdgesToGraph(point, x, (y + 1), x, y);
 				//north_west
-				await addPointsAndEdgesToGraph(point, x - 1, (y - 1), x, y);
+				addPointsAndEdgesToGraph(point, x - 1, (y - 1), x, y);
 				//north_east
-				await addPointsAndEdgesToGraph(point, x + 1, (y - 1), x, y);
+				addPointsAndEdgesToGraph(point, x + 1, (y - 1), x, y);
 				//south_west
-				await addPointsAndEdgesToGraph(point, x - 1, (y + 1), x, y);
+				addPointsAndEdgesToGraph(point, x - 1, (y + 1), x, y);
 				//south_east
-				await addPointsAndEdgesToGraph(point, x + 1, (y + 1), x, y);
+				addPointsAndEdgesToGraph(point, x + 1, (y + 1), x, y);
 			}
 		}
 		//return graph

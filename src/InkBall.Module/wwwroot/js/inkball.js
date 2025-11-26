@@ -2964,9 +2964,13 @@ class InkBallGame {
 			return;
 		}
 
-		const clicked_point = this.#Points.get(this.#iLastY * this.#iGridWidth + this.#iLastX);
+		const clicked = this.#Points.get(this.#iLastY * this.#iGridWidth + this.#iLastX);
+		const start_color = clicked.GetFillColor(), start_status = clicked.GetStatus();
 
-		await this.#DFS2(await this.#BuildGraph(), clicked_point);
+		await this.#DFS2(await this.#BuildGraph({
+			freePointStatus: (start_status === StatusEnum.POINT_FREE_BLUE ? StatusEnum.POINT_FREE_BLUE : StatusEnum.POINT_FREE_RED),
+			cpuFillColor: (start_color === this.#COLOR_BLUE ? this.#COLOR_BLUE : this.#COLOR_RED)
+		}), clicked);
 	}
 
 	async #OnTestFloodFill(event) {
@@ -3605,7 +3609,7 @@ class InkBallGame {
 		);
 		await game.PrepareDrawing('#screen', '#Player1Name', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw',
 			'#messageInput', '#messagesList', '#sendButton', sLastMoveTimeStampUtcIso, gameOptions.PointsAsJavaScriptArray === null, version,
-			['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints', '#TestFindSurroundablePoints', '#TestDFS2', '#FloodFill', '#AStar', '#Clustering'], ['#serviceMenu', '#cbSrvMnuRed', '#cbSrvMnuBlue']);
+			['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints', '#TestFindSurroundablePoints', '#TestDFS2', '#FloodFill', '#AStar', '#AISurrPredict'], ['#serviceMenu', '#cbSrvMnuRed', '#cbSrvMnuBlue']);
 
 		if (gameOptions.PointsAsJavaScriptArray !== null) {
 			await game.StartSignalRConnection(false);
@@ -3832,7 +3836,7 @@ class InkBallGame {
 		};
 
 		const freePointStatusArr = [freePointStatus];
-		const addPointsAndEdgesToGraph = async (point, to_x, to_y, x, y) => {
+		const addPointsAndEdgesToGraph = (point, to_x, to_y, x, y) => {
 			if (to_x >= 0 && to_x < this.#iGridWidth && to_y >= 0 && to_y < this.#iGridHeight) {
 				const next = this.#Points.get(to_y * this.#iGridWidth + to_x);
 				if (next && isPointOKForPath(freePointStatusArr, next) === true) {
@@ -3874,21 +3878,21 @@ class InkBallGame {
 				const { x, y } = point.GetPosition();
 				//TODO: await all below promises
 				//east
-				await addPointsAndEdgesToGraph(point, x + 1, y, x, y);
+				addPointsAndEdgesToGraph(point, x + 1, y, x, y);
 				//west
-				await addPointsAndEdgesToGraph(point, x - 1, y, x, y);
+				addPointsAndEdgesToGraph(point, x - 1, y, x, y);
 				//north
-				await addPointsAndEdgesToGraph(point, x, (y - 1), x, y);
+				addPointsAndEdgesToGraph(point, x, (y - 1), x, y);
 				//south
-				await addPointsAndEdgesToGraph(point, x, (y + 1), x, y);
+				addPointsAndEdgesToGraph(point, x, (y + 1), x, y);
 				//north_west
-				await addPointsAndEdgesToGraph(point, x - 1, (y - 1), x, y);
+				addPointsAndEdgesToGraph(point, x - 1, (y - 1), x, y);
 				//north_east
-				await addPointsAndEdgesToGraph(point, x + 1, (y - 1), x, y);
+				addPointsAndEdgesToGraph(point, x + 1, (y - 1), x, y);
 				//south_west
-				await addPointsAndEdgesToGraph(point, x - 1, (y + 1), x, y);
+				addPointsAndEdgesToGraph(point, x - 1, (y + 1), x, y);
 				//south_east
-				await addPointsAndEdgesToGraph(point, x + 1, (y + 1), x, y);
+				addPointsAndEdgesToGraph(point, x + 1, (y + 1), x, y);
 			}
 		}
 		//return graph
@@ -3899,7 +3903,7 @@ class InkBallGame {
 				const found = this.vertices.find(v => v === vert);
 				if (found)
 					return found.adjacents;
-				return null;
+				return [];
 			}
 		};
 	}
@@ -4494,7 +4498,7 @@ class InkBallGame {
 					// if (!(x >= 0 && x < this.#iGridWidth && y >= 0 && y < this.#iGridHeight))
 					// 	return false;
 					// else
-						return pointCoords.some(pt => pt.x === x && pt.y === y);
+					return pointCoords.some(pt => pt.x === x && pt.y === y);
 				});
 				if (contains_oponent_cluster_point.length > 0) {
 					//4. if so, create a rectangle around it 1x1 unit fir visualization
