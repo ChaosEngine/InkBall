@@ -120,7 +120,7 @@ addEventListener('message', async function (e) {
 								} while ((--max_attempts) > 0);
 							}
 
-							postMessage({ operation: params.operation, convex_hull, numOfNonContinuous });
+							postMessage({ operation: params.operation, convex_hull: convex_hull?.map(([x, y]) => ({ x, y })), numOfNonContinuous });
 						}
 						break;
 

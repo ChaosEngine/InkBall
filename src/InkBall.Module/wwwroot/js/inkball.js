@@ -3099,11 +3099,19 @@ class InkBallGame {
 			});
 		});
 
-		let fragment, createRectForVisualsFunction = () => { /* dummy filler func*/ }, rand_color;
+		let rand_color, fragment, createRectForVisualsFunction = () => { /* dummy filler func*/ },
+			createPolylineForVisualsFunction = () => { /* dummy filler func*/ };
 		if (visuals) {
-			fragment = this.#SvgVml.BeginBatchFragment();
+			//fragment = this.#SvgVml.BeginBatchFragment();
 			createRectForVisualsFunction = (i, j, width, height) => {
-				return fragment.CreateRect(i, j, width, height, rand_color);
+				return fragment ?
+					fragment.CreateRect(i, j, width, height, rand_color) :
+					this.#SvgVml.CreateRect(i, j, width, height, rand_color);
+			};
+			createPolylineForVisualsFunction = (pointsStr, color) => {
+				return fragment ?
+					fragment.CreatePolyline(pointsStr, color) :
+					this.#SvgVml.CreatePolyline(pointsStr, color);
 			};
 		}
 
@@ -3111,10 +3119,11 @@ class InkBallGame {
 		//and create a convex hull around it, then display it
 		if (data.clusters?.length > 0) {
 			//loading all human lines up front and pass into below "looped" function calls
-			const allHumanLines = (await this.#Lines.all()).filter(line => line.GetFillColor() === humanPointColor);
+			const allLines = (await this.#Lines.all())/* .filter(line => line.GetFillColor() === humanPointColor) */;
 
 			let results = [];
-			clusterLoop: for (const point_indexes of data.clusters) {
+			clusterLoop:
+			for (const point_indexes of data.clusters) {
 				rand_color = RandomColor(); //random color for each points
 				const points_in_cluster = []; //array of points in cluster
 				const point_coords = []; //array of points coordinates
@@ -3142,7 +3151,7 @@ class InkBallGame {
 					}
 				}
 
-				const surrounding_path = await this.#CalculateWrappingPathFromDividedBoundingBoxes(
+				const surrounding_path = this.#CalculateWrappingPathFromDividedBoundingBoxes(
 					point_coords, createRectForVisualsFunction, [humanPointColor, this.#COLOR_OWNED_RED, this.#COLOR_OWNED_BLUE]
 				);
 
@@ -3163,14 +3172,14 @@ class InkBallGame {
 				//10. get points of convex hull and create a polyline around it
 				const convex_hull = data?.convex_hull;
 				if (convex_hull?.length > 0) {
-					results.push({ points_in_cluster, convex_hull }); //add points in cluster to array of clusters
+					results.push({ points_in_cluster, convex_hull, point_coords }); //add points in cluster to array of clusters
 
 					LocalLog(`Planned path points #${results.length} around bounding box points(${surrounding_path.length}): ${surrounding_path.reduce((acc, [x, y]) => acc + `${x},${y} `, '').trimEnd()}`);
 
-					// const poly_points = convex_hull.map(([x, y]) => `${x},${y}`).join(' ');
-					const poly_points = convex_hull.reduce((acc, [x, y]) => acc + `${x},${y} `, '').trimEnd();
+					// const poly_points = convex_hull.map(({ x, y }) => `${x},${y}`).join(' ');
+					const poly_points = convex_hull.reduce((acc, { x, y }) => acc + `${x},${y} `, '').trimEnd();
 					if (visuals) {
-						const poly_line = fragment.CreatePolyline(poly_points, 'green');
+						const poly_line = createPolylineForVisualsFunction(poly_points, 'green');
 						poly_line.SetID(-1);
 
 						LocalLog(poly_line);
@@ -3181,30 +3190,45 @@ class InkBallGame {
 
 			}// end for each cluster
 			if (visuals)
-				fragment.EndBatchFragment();
+				fragment?.EndBatchFragment();
 			LocalLog({ clusteringMethod: data.method, clustersPoints: results, plot: data.plot, noise: data.noise });
 
 
-			resultLoop: for (const { convex_hull, points_in_cluster } of results) {
+			resultLoop:
+			for (const { convex_hull, points_in_cluster, point_coords } of results) {
 				//take ALL x,y pairs from convex hull and check if they are not already placed on the board
 				//and if it is outside all paths
 				//if point is already placed on the board, check its color if not, prepare for placing it
-				for (const [x, y] of convex_hull) {
+				for (const { x, y } of convex_hull) {
 					const point = this.#Points.get(y * this.#iGridWidth + x);
 					if (point !== undefined) {
 						//take point from convex hull and check if it is not already placed on the board as human point
 						//and if it is outside all paths - if so, return it as next AI move coz path is still not closed
-						if (point.GetFillColor() !== humanPointColor && IsPointOutsideAllPaths(x, y, allHumanLines)) {
+						if (point.GetFillColor() !== humanPointColor && IsPointOutsideAllPaths(x, y, allLines)) {
 							//point ok! outside all paths, not human, placed on the board
 						} else {
 							LocalWarning(`Point (${x},${y}) is breaking the predicted path!`);
 							continue resultLoop; //bad point found
 						}
 					}
+					else if (IsPointOutsideAllPaths(x, y, allLines)) {
+						//point ok! outside all paths, not human, placed on the board
+					} else {
+						LocalWarning(`Point (${x},${y}) is breaking the predicted path!`);
+						continue resultLoop; //bad point found
+					}
+
 					//else point is not placed on the board, so it is ok for placing it
 				}
+				for (const { x, y } of point_coords) {
+					//check if point is inside convex hull polygon
+					if (false === pnpoly(convex_hull, x, y)) {
+						LocalWarning(`Point (${x},${y}) from cluster is outside the predicted path!`);
+						continue resultLoop; //bad point found
+					}
+				}
 
-				for (const [x, y] of convex_hull) {
+				for (const { x, y } of convex_hull) {
 					const point = this.#Points.get(y * this.#iGridWidth + x);
 
 					//take point from convex hull and check if it is not already placed on the board
@@ -3217,7 +3241,7 @@ class InkBallGame {
 				}
 				//if all points from convex hull are already placed on the board, return path as next AI move
 				const return_path = new InkBallPathViewModel(0, this.#iGameID, -1/*player*/,
-					convex_hull.reduce((acc, [x, y]) => acc + `${x},${y} `, '').trimEnd(),
+					convex_hull.reduce((acc, { x, y }) => acc + `${x},${y} `, '').trimEnd(),
 					points_in_cluster
 						.filter(pt => pt.GetStatus() === StatusEnum.POINT_FREE_RED)
 						.reduce((acc, pt) => {
@@ -4462,10 +4486,10 @@ class InkBallGame {
 	 * Calculate wrapping path around given points using divided bounding boxes method
 	 * @param {Array<{x: number, y: number}>} pointCoords array of points to wrap around
 	 * @param {(worker: Worker) => void} createRectForVisualsFunc optional function to create rectangle around points for visualization
-	 * @param {Array<string>} humanPointColors colors of human points
+	 * @param {Array<string>} humanPointColors colors of human points to skip
 	 * @returns {Array<[number,number]>} array of points forming surrounding path
 	 */
-	async #CalculateWrappingPathFromDividedBoundingBoxes(pointCoords, createRectForVisualsFunc, humanPointColors) {
+	#CalculateWrappingPathFromDividedBoundingBoxes(pointCoords, createRectForVisualsFunc, humanPointColors) {
 
 		//0. create bounding box around points wrapping all points in cluster
 		const wrapping_bbox = AABB.fromPoints(pointCoords);
