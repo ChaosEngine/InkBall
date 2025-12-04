@@ -61,7 +61,7 @@
 									<td class='gtd'>
 										@if (bIsMyOwnGame)
 										{
-											<a href='Game' class='btn btn-outline-primary' data-i18n='ib:home.continue'>Continue</a>
+											<a href='Game' class='btn btn-outline-primary' data-otherplayerid="@game.GetOtherPlayer()?.iId" data-i18n='ib:home.continue'>Continue</a>
 										}
 										else if (!bIsCurrentGameOk)
 										{
@@ -78,7 +78,7 @@
 									<td class='gtd'>
 										@if (bIsMyOwnGame)
 										{
-											<a href='Game' class="btn btn-outline-primary" data-i18n='ib:home.continue'>Continue</a>
+											<a href='Game' class="btn btn-outline-primary" data-otherplayerid="@game.GetOtherPlayer()?.iId" data-i18n='ib:home.continue'>Continue</a>
 										}
 										else if (!bIsCurrentGameOk && bCanViewOtherPlayerGames)
 										{
