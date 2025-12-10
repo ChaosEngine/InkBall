@@ -17,11 +17,11 @@ const StatusEnum = Object.freeze({
 
 /**
  * Shared log function
- * @param {string} msg - object to log
+ * @param {...object} args - object/string to log
  */
-function LocalLog(msg) {
+function LocalLog(...args) {
 	// eslint-disable-next-line no-console
-	console.log(msg);
+	console.log(...args);
 }
 
 /**
@@ -29,14 +29,8 @@ function LocalLog(msg) {
  * @param {...string} args - objects to log
  */
 function LocalError(...args) {
-	let msg = '';
-	for (let i = 0; i < args.length; i++) {
-		const str = args[i];
-		if (str)
-			msg += str;
-	}
 	// eslint-disable-next-line no-console
-	console.error(msg);
+	console.error(...args);
 }
 
 /**
@@ -44,14 +38,8 @@ function LocalError(...args) {
  * @param {...string} args - objects to log
  */
 function LocalWarning(...args) {
-	let msg = '';
-	for (let i = 0; i < args.length; i++) {
-		const str = args[i];
-		if (str)
-			msg += str;
-	}
 	// eslint-disable-next-line no-console
-	console.warn(msg);
+	console.warn(...args);
 }
 
 /**

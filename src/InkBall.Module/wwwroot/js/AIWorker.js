@@ -4,7 +4,7 @@ import { astar, Graph as AStarGraph } from "javascript-astar";
 import * as clustering from "density-clustering";
 
 //globals loaded only once hopefully
-let SvgVml, StatusEnum, LocalLog, LocalError, LocalWarning, sortPointsClockwise, pnpoly, IsPointOutsideAllPaths;
+let SvgVml, StatusEnum, LocalLog, LocalError,/* LocalWarning, */sortPointsClockwise, pnpoly, IsPointOutsideAllPaths;
 
 // This is the entry point for our worker
 addEventListener('message', async function (e) {
@@ -12,7 +12,7 @@ addEventListener('message', async function (e) {
 	if (SvgVml === undefined) {
 		const isMinified = location.hostname !== "localhost";
 
-		({ SvgVml, StatusEnum, LocalLog, LocalError, LocalWarning, sortPointsClockwise, pnpoly, IsPointOutsideAllPaths } = await import(/* webpackIgnore: true */`./shared${isMinified ? '.min' : ''}.js`));
+		({ SvgVml, StatusEnum, LocalLog, LocalError,/* LocalWarning, */sortPointsClockwise, pnpoly, IsPointOutsideAllPaths } = await import(/* webpackIgnore: true */`./shared${isMinified ? '.min' : ''}.js`));
 	}
 
 
@@ -90,7 +90,7 @@ addEventListener('message', async function (e) {
 									const continuous_result = ArePointsContinuous(convex_hull);
 									if (!continuous_result.result) {
 										numOfNonContinuous++;
-										LocalWarning(`Concaveman result is not continuous, please check your input points. offenderIndex: ${continuous_result.offenderIndex}, offender: ${continuous_result.offender}`);
+										LocalLog(`Concaveman result is not continuous, please check your input points. offenderIndex: %c${continuous_result.offenderIndex}, offender: %c${continuous_result.offender}`, 'color:orange;font-weight:bold', 'color:red;font-weight:bold');
 
 										const prev = convex_hull.at(continuous_result.offenderIndex - 1);
 										const curr = convex_hull.at(continuous_result.offenderIndex);
@@ -113,7 +113,7 @@ addEventListener('message', async function (e) {
 											.concat(missing)
 											.concat(convex_hull.slice(continuous_result.offenderIndex + 1));
 
-										LocalLog(`Concaveman result fixed by adding ${missing.length} points between ${prev} and ${curr}, missing: ${missing.map(pt => pt.join(",")).join(" ")}`);
+										LocalLog(`Concaveman result fixed by adding ${missing.length} points between %c${prev} and ${curr}, %cmissing: ${missing.map(pt => pt.join(",")).join(" ")}`, 'color:orange; font-weight:bold', 'color:red;font-weight:bold');
 									} else {
 										break;
 									}

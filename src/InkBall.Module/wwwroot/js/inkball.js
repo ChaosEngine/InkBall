@@ -1,7 +1,7 @@
 /*global signalR, i18next*/
 "use strict";
 
-let LocalAlert, LocalLog, LocalError, LocalWarning, StatusEnum, hasDuplicates, pnpoly, GameStateStore, SvgVml, IsPointOutsideAllPaths, sortPointsClockwise, Sleep, IBversionHash, AABB, localizeSelector;
+let LocalAlert, LocalLog, LocalError, /* LocalWarning, */ StatusEnum, hasDuplicates, pnpoly, GameStateStore, SvgVml, IsPointOutsideAllPaths, sortPointsClockwise, Sleep, IBversionHash, AABB, localizeSelector;
 
 /******** funcs-n-classes ********/
 /**
@@ -461,7 +461,7 @@ async function importAllModulesAsync(/* gameOptions */) {
 	({
 		LocalLog,
 		LocalError,
-		LocalWarning,
+		// LocalWarning,
 		LocalAlert,
 		StatusEnum,
 		hasDuplicates,
@@ -3157,8 +3157,8 @@ class InkBallGame {
 					const [x, y] = humanPointsArrOfArr[index];
 					const pt = this.#Points.get(y * this.#iGridWidth + x); //get point from points store
 					if (pt) {
-						if (!(x > 0 && x < this.#iGridWidth && y > 0 && y < this.#iGridHeight)) {
-							LocalWarning(`Point (${x},${y}) out of bounds; will not try to surround.`);
+						if (!(x >= 0 && x < this.#iGridWidth && y >= 0 && y < this.#iGridHeight)) {
+							LocalLog(`Point (${x},${y}) %cout of bounds;`, "color: orange; font-weight: bold", ' will not try to surround.');
 							continue clusterLoop;
 						}
 
@@ -3235,14 +3235,14 @@ class InkBallGame {
 						if (point.GetFillColor() !== humanPointColor && IsPointOutsideAllPaths(x, y, allLines)) {
 							//point ok! outside all paths, not human, placed on the board
 						} else {
-							LocalWarning(`Point (${x},${y}) is breaking the predicted path!`);
+							LocalLog(`Point (${x},${y}) is %cbreaking the predicted path!`, "color: orange;font-weight: bold");
 							continue resultLoop; //bad point found
 						}
 					}
 					else if (IsPointOutsideAllPaths(x, y, allLines)) {
 						//point ok! outside all paths, not human, placed on the board
 					} else {
-						LocalWarning(`Point (${x},${y}) is breaking the predicted path!`);
+						LocalLog(`Point (${x},${y}) is %c not outside all paths!`, "color: orange;font-weight: bold");
 						continue resultLoop; //bad point found
 					}
 
@@ -3251,7 +3251,7 @@ class InkBallGame {
 				for (const { x, y } of point_coords) {
 					//check if point is inside convex hull polygon
 					if (false === pnpoly(convex_hull, x, y)) {
-						LocalWarning(`Point (${x},${y}) from cluster is outside the predicted path!`);
+						LocalLog(`Point (${x},${y}) from convex hull is %coutside the predicted path!`, "color: orange;font-weight: bold");
 						continue resultLoop; //bad point found
 					}
 				}
