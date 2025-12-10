@@ -406,7 +406,7 @@ namespace InkBall.Tests
                 Assert.NotNull(pt.TimeStamp);
                 //verify last action timestamp it not from previous action
                 var utc_now = DateTime.UtcNow;
-				Assert.Equal(utc_now, pt.TimeStamp.Value, TimeSpan.FromSeconds(1));
+                Assert.Equal(utc_now, pt.TimeStamp.Value, TimeSpan.FromSeconds(1));
                 pt = await hub_P2.ClientToServerPoint(new InkBallPointViewModel
                 {
                     iGameId = 1,
@@ -430,7 +430,7 @@ namespace InkBall.Tests
                 Assert.IsType<InkBallPathViewModel>(dto);
                 Assert.NotNull(((InkBallPathViewModel)dto).TimeStamp);
                 utc_now = DateTime.UtcNow;
-				Assert.Equal(utc_now, ((InkBallPathViewModel)dto).TimeStamp.Value, TimeSpan.FromSeconds(1));
+                Assert.Equal(utc_now, ((InkBallPathViewModel)dto).TimeStamp.Value, TimeSpan.FromSeconds(1));
             }
         }
 
@@ -906,6 +906,46 @@ namespace InkBall.Tests
                 mockGameClient.Verify(client => client.ServerToClientOtherPlayerDisconnected(It.Is<string>(msg =>
                    msg == $"Other player {hub_P2.ThisPlayer.UserName} disconnected 😢;{hub_P2.ThisPlayer.UserName}"
                    )), Times.Once);
+            }
+        }
+
+
+        [Fact]
+        public async Task PlayerCanHaveOnlyOneActiveGame()
+        {
+            //Arrange
+            var token = base.CancellationToken;
+
+            //Start from creating a user
+            //Arrange
+            await CreateInitialUsers(new[] { "xxxxx", "yyyyy" }, token);
+
+            using (var db = new GamesContext(Setup.DbOpts))
+            {
+                //Create game for user and assume everything is ready, player, connecting structures, order of moves etc.
+                //Arrange
+                //Act
+                var new_game = await db.CreateNewGameFromExternalUserIDAsync("xxxxx",
+                    InkBallGame.GameTypeEnum.FIRST_CAPTURE, 16, 20, 26, false, token);
+                //Assert
+                Assert.NotNull(new_game);
+                Assert.NotNull(new_game.Player1);
+                Assert.Equal("xxxxx", new_game.Player1.sExternalId);
+
+                var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                {
+                    var create_duplicated_game = await db.CreateNewGameFromExternalUserIDAsync("xxxxx",
+                        InkBallGame.GameTypeEnum.FIRST_CAPTURE, 16, 20, 26, false, token);
+                });
+                Assert.Contains("Could not create new game", exception.Message);
+
+                
+                var exception1 = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                {
+                    var no_user_game = await db.CreateNewGameFromExternalUserIDAsync("",
+                        InkBallGame.GameTypeEnum.FIRST_CAPTURE, 16, 20, 26, false, token);
+                });
+                Assert.Contains("Player external user ID is null or empty", exception1.Message);
             }
         }
 
