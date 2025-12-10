@@ -117,6 +117,8 @@
 		"usrStrtDraw": "User {{user}} started drawing new path",
 		"stpSignRCon": "Stopped SignalR connection",
 		"somePlayer": "some player",
+		"newPoint": "New Point",
+		"newPath": "New Path",
 		"closingPat": "Closing path",
 		"stat": {
 			"pts": "circles: %s, ",
@@ -178,8 +180,6 @@
 			"cl2Srv": "ClientToServerPath - bad Kind!"
 		},
 		"signalrNull": "signalr conn is null",
-		"newPoint": "New Point",
-		"newPath": "New Path",
 		"unkwnObj": "unknown object",
 		"ptsNotUniq": "Points not unique, cancel it or refresh page",
 		"noSurrPts": "No surrounded points, cancel it or refresh page",
@@ -188,6 +188,7 @@
 		"ptAlreadExist": "Wrong point - already existing",
 		"pointNotOutside": "Wrong point, Point is not outside all paths",
 		"noData": "no data",
-		"err!": "Error!"
+		"err!": "Error!",
+		"badPointCoord": "Bad point coord"
 	}
 }

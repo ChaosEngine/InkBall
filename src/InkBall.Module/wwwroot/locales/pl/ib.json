@@ -117,6 +117,8 @@
 		"usrStrtDraw": "Użytkownik {{user}} rozpoczął rysowanie nowej ścieżki",
 		"stpSignRCon": "Zatrzymano połączenie SignalR",
 		"somePlayer": "jakiś gracz",
+		"newPoint": "Nowy punkt",
+		"newPath": "Nowa ścieżka",
 		"closingPat": "Zamykanie ścieżki",
 		"stat": {
 			"pts": "punkty: %s, ",
@@ -178,8 +180,6 @@
 			"cl2Srv": "ClientToServerPath - zły rodzaj!"
 		},
 		"signalrNull": "połączenie signalr jest nullem",
-		"newPoint": "Nowy punkt",
-		"newPath": "Nowa ścieżka",
 		"unkwnObj": "nieznany obiekt",
 		"ptsNotUniq": "Punkty nie są unikalne, anuluj lub odśwież stronę",
 		"noSurrPts": "Brak otoczonych punktów, anuluj lub odśwież stronę",
@@ -188,6 +188,7 @@
 		"ptAlreadExist": "Nieprawidłowy punkt - już istnieje",
 		"pointNotOutside": "Nieprawidłowy punkt, punkt nie znajduje się poza wszystkimi ścieżkami",
 		"noData": "brak danych",
-		"err!": "Błąd!"
+		"err!": "Błąd!",
+		"badPointCoord": "Zły współrzędne punktu"
 	}
 }
