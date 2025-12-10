@@ -1984,6 +1984,11 @@ class InkBallGame {
 		x = parseInt(x);
 		y = parseInt(y);
 
+		//out of bounds point - not allowed
+		if (x >= this.#iGridWidth || y >= this.#iGridHeight) {
+			return;
+		}
+
 		let tox = x;
 		let toy = y;
 
@@ -2096,6 +2101,13 @@ class InkBallGame {
 
 		x = this.#iMouseX = parseInt(x);
 		y = this.#iMouseY = parseInt(y);
+
+		//out of bounds point - not allowed
+		if (x >= this.#iGridWidth || y >= this.#iGridHeight) {
+			this.#DebugI18n('err.badPointCoord', 'Bad point coord');
+			return;
+		}
+
 		this.#iLastLastX = this.#iLastX;
 		this.#iLastLastY = this.#iLastY;
 
@@ -2232,6 +2244,11 @@ class InkBallGame {
 		x = parseInt(x);
 		y = parseInt(y);
 
+		//out of bounds point - not allowed
+		if (x >= this.#iGridWidth || y >= this.#iGridHeight) {
+			return;
+		}
+
 		let tox = x;
 		let toy = y;
 
@@ -2280,6 +2297,12 @@ class InkBallGame {
 		const cursor = this.#SvgVml.ToCursorPoint(event.clientX, event.clientY);
 		let x = cursor.x + 0.5;
 		let y = cursor.y + 0.5;
+
+		//out of bounds point - not allowed
+		if (x >= this.#iGridWidth || y >= this.#iGridHeight) {
+			this.#DebugI18n('err.badPointCoord', 'Bad point coord');
+			return;
+		}
 
 		x = this.#iMouseX = parseInt(x);
 		y = this.#iMouseY = parseInt(y);
@@ -3200,6 +3223,11 @@ class InkBallGame {
 				//and if it is outside all paths
 				//if point is already placed on the board, check its color if not, prepare for placing it
 				for (const { x, y } of convex_hull) {
+					if (!(x >= 0 && x < this.#iGridWidth && y >= 0 && y < this.#iGridHeight)) {
+						LocalLog(`Convex hull point (${x},${y}) %cout of bounds;`, "color: orange;font-weight: bold", 'will not try to surround.');
+						continue resultLoop;
+					}
+
 					const point = this.#Points.get(y * this.#iGridWidth + x);
 					if (point !== undefined) {
 						//take point from convex hull and check if it is not already placed on the board as human point
@@ -4493,7 +4521,7 @@ class InkBallGame {
 
 		//0. create bounding box around points wrapping all points in cluster
 		const wrapping_bbox = AABB.fromPoints(pointCoords);
-		wrapping_bbox.expand(1);//expand it a bit by 1 unit in all directions -> enlarge it
+		wrapping_bbox.expand(1, this.#iGridHeight - 1, this.#iGridWidth - 1);//expand it a bit by 1 unit in all directions -> enlarge it
 
 		// //draw bounding box for visualization
 		// LocalLog(`wrapping_bbox: ${JSON.stringify(wrapping_bbox)}`);
@@ -4519,9 +4547,10 @@ class InkBallGame {
 
 				//3. check if any created bbox point contains any of the points in point_coords (cluster points)
 				const contains_oponent_cluster_point = current_unit_bbox.filter(({ x, y }) => {
-					// if (!(x >= 0 && x < this.#iGridWidth && y >= 0 && y < this.#iGridHeight))
+					// if (!(x >= 0 && x < this.#iGridWidth && y >= 0 && y < this.#iGridHeight)) {
+					// 	// LocalLog(`Out-of-bounds point (${x},${y}) 1`);
 					// 	return false;
-					// else
+					// } else
 					return pointCoords.some(pt => pt.x === x && pt.y === y);
 				});
 				if (contains_oponent_cluster_point.length > 0) {
@@ -4531,8 +4560,10 @@ class InkBallGame {
 					// 	 find which points of it are NOT included in point_coords
 					// 	 3 points of the rectangle
 					for (const { x, y, ind } of current_unit_bbox) {
-						// if (!(x >= 0 && x < this.#iGridWidth && y >= 0 && y < this.#iGridHeight))
+						// if (!(x >= 0 && x < this.#iGridWidth && y >= 0 && y < this.#iGridHeight)) {
+						// 	// LocalLog(`Out-of-bounds point (${x},${y}) 2`);
 						// 	continue;
+						// }
 
 						//6. not included in point_coords (not from cluster points), so they should be around
 						// 	 cluster points, or inside
