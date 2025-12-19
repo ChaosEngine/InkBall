@@ -99,7 +99,7 @@ addEventListener('message', async function (e) {
 											// Initialize arr with 1s
 											grid = Array.from({ length: iGridHeight + 1 }, () => Array(iGridWidth + 1).fill(1));
 
-											// Mark human points as not accessible, inverted x,y coords -> y,x
+											// Mark human points as not accessible/obstacles, inverted x,y coords -> y,x
 											for (const [x, y] of humanPoints) grid[y][x] = 0;
 
 											graphDiagonal = new AStarGraph(grid, { diagonal: true });

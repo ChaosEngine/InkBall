@@ -2457,6 +2457,24 @@ class InkBallGame {
 		}
 	}
 
+	/**
+	 * Checks if point is outside all created lines, returning failing path and status
+	 * @param {number} x point coordinate
+	 * @param {number} y point coordinate
+	 * @param {Array} allLines array
+	 * @returns {{outside: boolean, offenderPoints: Array<{x, y}>|null}} - object with isOutside boolean and offenderPath object or null
+	 */
+	#IsPointOutsideAllPathsEx(x, y, allLines) {
+		for (const line of allLines) {
+			const points = line.GetPointsArray();
+
+			if (false !== pnpoly(points, x, y))
+				return { outside: false, offenderPoints: points };
+		}
+
+		return { outside: true, offenderPoints: [] };
+	}
+
 	#LoadAIParamsFromStore(store) {
 		const fromStore = JSON.parse(store.getItem("AIOpts")) || {};
 		const obj2Return = {};
@@ -3233,7 +3251,18 @@ class InkBallGame {
 					if (point !== undefined) {
 						//take point from convex hull and check if it is not already placed on the board as human point
 						//and if it is outside all paths - if so, return it as next AI move coz path is still not closed
-						if (point.GetFillColor() !== humanPointColor && IsPointOutsideAllPaths(x, y, allLines)) {
+						if (point.GetFillColor() !== humanPointColor) {
+							const checkResult = this.#IsPointOutsideAllPathsEx(x, y, allLines);
+							if (checkResult.outside === true) {
+								//point ok! outside all paths, not human, placed on the board
+							} else if (checkResult.offenderPoints.some(op => op.x === x && op.y === y) === true) {
+								//allow for points that lay on edge of path, not inside
+								//point ok! outside all paths, not human, placed on the board
+								LocalLog(`Point (${x},${y}) is %con the edge of a path, allowed!`, "color: green;font-weight: bold");
+							} else {
+								LocalLog(`Point (${x},${y}) is %cnot outside all paths!`, "color: orange;font-weight: bold");
+								continue resultLoop; //bad point found
+							}
 							//point ok! outside all paths, not human, placed on the board
 						} else {
 							LocalLog(`Point (${x},${y}) is %cbreaking the predicted path!`, "color: orange;font-weight: bold");
