@@ -627,7 +627,7 @@ class InkBallGame {
 	#DRAWING_PATH_COLOR;
 	#iConnErrCount;
 	#iExponentialBackOffMillis;
-	#GameType;
+	// #GameType;
 	#CursorPos;
 	#SvgVml;
 
@@ -656,7 +656,7 @@ class InkBallGame {
 		this.#iPlayerID = iPlayerID;
 		this.#iOtherPlayerId = iOtherPlayerID;
 		this.#bIsCPUGame = this.#iOtherPlayerId === -1;
-		this.#GameType = GameTypeEnum[gameType];
+		// this.#GameType = GameTypeEnum[gameType];
 		this.#iConnErrCount = 0;
 		this.#iExponentialBackOffMillis = 2000;
 		this.#COLOR_RED = 'var(--redish)';
@@ -1835,7 +1835,7 @@ class InkBallGame {
 		}
 	}
 
-	// eslint-disable-next-line no-unused-private-class-members
+	/*
 	#Check4Win(playerPaths, otherPlayerPaths, playerPoints, otherPlayerPoints) {
 		let owned_status, count;
 		switch (this.#GameType) {
@@ -1914,6 +1914,7 @@ class InkBallGame {
 				throw new Error(localizeMessage('err.wrongGameType', "Wrong game type"));
 		}
 	}
+	*/
 
 	/* #ShowStatus(sMessage = '') {
 		if (this.#Player2Name.textContent === '???') {
