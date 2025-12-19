@@ -66,7 +66,7 @@ namespace InkBall.Module.Pages
 
 			await base.LoadUserPlayerAndGameAsync(token);
 
-			if (Game == null)
+			if (ActiveGame == null)
 			{
 				Message = "No active game for you;noActiveGame";
 
@@ -107,18 +107,18 @@ namespace InkBall.Module.Pages
 
 			var token = HttpContext.RequestAborted;
 
-			Game = await _dbContext.GetGameFromDatabaseAsync(model.GameID, true, token);
+			ActiveGame = await _dbContext.GetGameFromDatabaseAsync(model.GameID, true, token);
 
-			if (Game == null ||
+			if (ActiveGame == null ||
 				!int.TryParse(User.FindFirstValue(nameof(InkBalPlayerId)), out var inkBallPlayerId) || inkBallPlayerId <= 0 ||
-				Game?.iPlayer1Id == inkBallPlayerId || Game?.iPlayer2Id == inkBallPlayerId)
+				ActiveGame?.iPlayer1Id == inkBallPlayerId || ActiveGame?.iPlayer2Id == inkBallPlayerId)
 			{
 				Message = "View only: It is your game, or bad GameID;viewOnlyYourGame";
 
 				return RedirectToPage(HomeModel.ASPX);
 			}
 			if (Player == null)
-				Player = Game.Player1;
+				Player = ActiveGame.Player1;
 
 			this.IsReadonly = true;
 

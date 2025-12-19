@@ -40,9 +40,10 @@ namespace InkBall.Module.Pages
 		public async Task OnGet()
 		{
 			var token = HttpContext.RequestAborted;
-			await base.LoadUserPlayerAndGameAsync(token);
+			await base.LoadUserPlayerAndGameAsync(token, false);
 
 			GamesList = await GetGameList(token);
+			ActiveGame = GamesList.FirstOrDefault(g => g.iPlayer1Id == Player?.iId || g.iPlayer2Id == Player?.iId);
 		}
 
 		public async Task<IActionResult> OnPostAsync(string action, int gameID, string gameType,
@@ -50,12 +51,12 @@ namespace InkBall.Module.Pages
 		{
 			var token = HttpContext.RequestAborted;
 
-			await base.LoadUserPlayerAndGameAsync(token);
+			await base.LoadUserPlayerAndGameAsync(token, true);
 
 			string sExternalUserID = Player.sExternalId;
 			string msg = string.Empty;
 
-			if (Game == null)
+			if (ActiveGame == null)
 				InkBallGame.DeactivateDeadGamezFromExternalUserID(sExternalUserID);
 			InkBallGame.WipeAllDeadGamez();
 
@@ -66,7 +67,7 @@ namespace InkBall.Module.Pages
 				{
 					case "join":
 					case "Join":
-						if (Game != null)
+						if (ActiveGame != null)
 						{
 							msg = "You have another game;anotherGame";
 							break;
@@ -132,7 +133,7 @@ namespace InkBall.Module.Pages
 
 					case "continue":
 					case "Continue":
-						if (Game != null)
+						if (ActiveGame != null)
 						{
 							return RedirectToPage(GameModel.ASPX);
 						}
@@ -145,7 +146,7 @@ namespace InkBall.Module.Pages
 					case "create":
 					case "Create":
 					case "New game":
-						if (Game != null)
+						if (ActiveGame != null)
 						{
 							msg = "You have another game;anotherGame";
 							break;
@@ -221,7 +222,7 @@ namespace InkBall.Module.Pages
 					case "cancel":
 					case "Cancel":
 					case "win":
-						if (Game == null)
+						if (ActiveGame == null)
 						{
 							msg = "You have no game;noGame";
 							break;
@@ -230,9 +231,9 @@ namespace InkBall.Module.Pages
 						{
 							try
 							{
-								await _dbContext.SurrenderGameFromPlayerAsync(Game, base.HttpContext.Session, false, token);
+								await _dbContext.SurrenderGameFromPlayerAsync(ActiveGame, base.HttpContext.Session, false, token);
 
-								if (_inkballHubContext != null && Game.GetOtherPlayer() != null)
+								if (_inkballHubContext != null && ActiveGame.GetOtherPlayer() != null)
 								{
 									var tsk = Task.Factory.StartNew(async (payload) =>
 									{
@@ -252,7 +253,7 @@ namespace InkBall.Module.Pages
 											_logger.LogError(ex, ex.Message);
 										}
 									},
-									Tuple.Create(Game.GetOtherPlayer()?.sExternalId, Game.GetOtherPlayer()?.iId, this.Player.UserName),
+									Tuple.Create(ActiveGame.GetOtherPlayer()?.sExternalId, ActiveGame.GetOtherPlayer()?.iId, this.Player.UserName),
 									token);
 								}
 

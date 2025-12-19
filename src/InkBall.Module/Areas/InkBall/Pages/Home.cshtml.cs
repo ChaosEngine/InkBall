@@ -55,7 +55,7 @@ namespace InkBall.Module.Pages
 				{
 					case "continue":
 					case "Continue":
-						if (Game != null)
+						if (ActiveGame != null)
 						{
 							return RedirectToPage(GameModel.ASPX);
 						}
@@ -68,7 +68,7 @@ namespace InkBall.Module.Pages
 					case "create":
 					case "Create":
 					case "New game":
-						if (Game != null)
+						if (ActiveGame != null)
 						{
 							msg = "You have another game;anotherGame";
 							break;
@@ -168,15 +168,15 @@ namespace InkBall.Module.Pages
 						return Redirect(_commonUIConfigureOptions.Value.LoginPath);
 
 					case "Logout":
-						if (Game != null)
+						if (ActiveGame != null)
 						{
 							using (var trans = await _dbContext.Database.BeginTransactionAsync(token))
 							{
 								try
 								{
-									await _dbContext.SurrenderGameFromPlayerAsync(Game, base.HttpContext.Session, false, token);
+									await _dbContext.SurrenderGameFromPlayerAsync(ActiveGame, base.HttpContext.Session, false, token);
 
-									if (_inkballHubContext != null && Game.GetOtherPlayer() != null)
+									if (_inkballHubContext != null && ActiveGame.GetOtherPlayer() != null)
 									{
 										var tsk = Task.Factory.StartNew(async (payload) =>
 										{
@@ -195,7 +195,7 @@ namespace InkBall.Module.Pages
 												_logger.LogError(ex.Message);
 											}
 										},
-										Tuple.Create(Game.GetOtherPlayer()?.sExternalId, Game.GetOtherPlayer()?.iId, this.Player.UserName),
+										Tuple.Create(ActiveGame.GetOtherPlayer()?.sExternalId, ActiveGame.GetOtherPlayer()?.iId, this.Player.UserName),
 										token);
 									}
 

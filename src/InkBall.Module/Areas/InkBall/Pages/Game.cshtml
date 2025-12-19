@@ -8,17 +8,17 @@
 	HtmlHelpers.RenderHeaderSection(this, Url, commonUIConfigureOptions);
 
 
-	string P2Name = Model.Game.Player2 != null ? Model.Game.Player2?.UserName : "???";
+	string P2Name = Model.ActiveGame.Player2 != null ? Model.ActiveGame.Player2?.UserName : "???";
 	string surrender_win_cancel_name;
-	bool isThisPlayerActive = Model.Game.IsThisPlayerActive();
+	bool isThisPlayerActive = Model.ActiveGame.IsThisPlayerActive();
 	bool useMessagePackBinaryTransport = commonUIConfigureOptions.Value.UseMessagePackBinaryTransport;
-	string lastTimeStampISO = @Model.Game.TimeStamp.ToString("O");
+	string lastTimeStampISO = @Model.ActiveGame.TimeStamp.ToString("O");
 	string hubName = commonUIConfigureOptions.Value.AppRootPath + InkBall.Module.Hubs.GameHub.HubName;
 	string IBversion = this.GetType().Assembly.GetName().Version.ToString(4);
-	bool bServiceModeVisible = (await authorization.AuthorizeAsync(User, Model.Game, Constants.ServiceModePolicyName)).Succeeded;
-	if (Model.Game.Player2 != null)
+	bool bServiceModeVisible = (await authorization.AuthorizeAsync(User, Model.ActiveGame, Constants.ServiceModePolicyName)).Succeeded;
+	if (Model.ActiveGame.Player2 != null)
 	{
-		if (Model.Game.GetOtherPlayer().IsLastMoveOverdue() && isThisPlayerActive)
+		if (Model.ActiveGame.GetOtherPlayer().IsLastMoveOverdue() && isThisPlayerActive)
 		{
 			surrender_win_cancel_name = "win";
 		}
@@ -38,7 +38,7 @@
 	iGameID=<span id="gameID"></span>,
 	iPlayerID=<span id="playerID"></span>,
 	<span id="whichPlayer"></span> <span data-i18n='ib:game.playingWith'>playing with</span> <span id="whichColor"></span>
-	(<span id='Player1Name'>@Model.Game.Player1?.UserName</span> <span data-i18n='ib:game.vs'>vs</span> <span id='Player2Name'>@P2Name</span>)
+	(<span id='Player1Name'>@Model.ActiveGame.Player1?.UserName</span> <span data-i18n='ib:game.vs'>vs</span> <span id='Player2Name'>@P2Name</span>)
 </p>
 <div class="container inkgame">
 	<form action="GamesList" method="post" asp-antiforgery="true" class="row">
@@ -88,9 +88,9 @@
 		</div>
 	</div>
 	<div class="row mx-auto">
-		<svg id="screen" class="col-auto p-0 mb-3 mx-auto boardsize-@(Model.Game.iBoardWidth)x@(Model.Game.iBoardHeight)">
+		<svg id="screen" class="col-auto p-0 mb-3 mx-auto boardsize-@(Model.ActiveGame.iBoardWidth)x@(Model.ActiveGame.iBoardHeight)">
 		</svg>
-		<div class="col msgchat" data-otherplayerid="@(Model.Game.GetOtherPlayer()?.iId)">
+		<div class="col msgchat" data-otherplayerid="@(Model.ActiveGame.GetOtherPlayer()?.iId)">
 			<ul id="messagesList" class="list-group list-group-flush pt-1"></ul>
 			<div class="input-group">
 				<input id="messageInput" type="text" class="form-control" placeholder="Message..." aria-label="Message to send" aria-describedby="sendButton"
@@ -129,12 +129,12 @@
 	window.addEventListener('load', async () => {
 		await InkBallGame.OnGameLoad({
 			inkBallHubName: '@hubName',
-			iGameID: @Model.Game.iId,
+			iGameID: @Model.ActiveGame.iId,
 			iPlayerID: @Model.Player.iId,
-			bPlayingWithRed: JSON.parse('@Model.Game.IsThisPlayerPlayingWithRed()'.toLowerCase()),
-			bIsThisPlayer1: JSON.parse('@Model.Game.IsThisPlayer1()'.toLowerCase()),
+			bPlayingWithRed: JSON.parse('@Model.ActiveGame.IsThisPlayerPlayingWithRed()'.toLowerCase()),
+			bIsThisPlayer1: JSON.parse('@Model.ActiveGame.IsThisPlayer1()'.toLowerCase()),
 			bPlayerActive: JSON.parse('@isThisPlayerActive'.toLowerCase()),
-			gameType: '@Model.Game.GameType',
+			gameType: '@Model.ActiveGame.GameType',
 			isMessagePackProtocol: JSON.parse('@useMessagePackBinaryTransport'.toLowerCase()),
 			servTimeoutMillis: @Model.ClientTimeoutInterval.TotalMilliseconds,
 			isReadonly: JSON.parse('@Model.IsReadonly'.toLowerCase()),

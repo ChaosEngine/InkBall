@@ -14,7 +14,7 @@
 	<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 </div>
 
-<div class="container inkhome" data-otherplayerid="@Model.Game?.GetOtherPlayer()?.iId">
+<div class="container inkhome" data-otherplayerid="@Model.ActiveGame?.GetOtherPlayer()?.iId">
 	<div class="row" role="group" aria-label="Game menu">
 		<form method='post' class="col-sm-12 col-md-4 order-last order-md-first btn-group-vertical p-1 was-validated">
 		</form>
@@ -32,7 +32,7 @@
 
 	HomeOnLoad(
 		'@Model.Message',
-		JSON.parse('@(Model.Game != null ? true : false)'.toLowerCase()),
+		JSON.parse('@(Model.ActiveGame != null ? true : false)'.toLowerCase()),
 		'@commonUIConfigureOptions.Value.LogoutPath',
 		'@commonUIConfigureOptions.Value.LoginPath',
 		'@commonUIConfigureOptions.Value.RegisterPath'

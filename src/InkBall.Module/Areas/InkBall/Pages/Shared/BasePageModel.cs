@@ -34,7 +34,7 @@ namespace InkBall.Module.Pages
 
 		public virtual string UserName => Player.UserName;
 
-		public InkBallGame Game { get; protected set; }
+		public InkBallGame ActiveGame { get; protected set; }
 
 		[TempData]
 		public string Message { get; set; }
@@ -102,13 +102,16 @@ namespace InkBall.Module.Pages
 			//	throw new ArgumentNullException(nameof(player), "player not found");
 		}
 
-		public virtual async Task LoadUserPlayerAndGameAsync(CancellationToken token)
+		public virtual async Task LoadUserPlayerAndGameAsync(CancellationToken token, bool loadGame = true)
 		{
 			InkBallPlayer player = await GetPlayer(token);
 			Player = player;
 
-			InkBallGame game = await GetGameAsync(player, token);
-			Game = game;
+			if (loadGame)
+			{
+				InkBallGame activePlayerGame = await GetGameAsync(player, token);
+				ActiveGame = activePlayerGame;
+			}
 		}
 	}
 }
