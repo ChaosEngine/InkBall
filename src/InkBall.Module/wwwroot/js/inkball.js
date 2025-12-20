@@ -3647,13 +3647,14 @@ class InkBallGame {
 	 * DOMContentLoaded page event
 	 */
 	static OnGameDOMContentLoaded() {
-		//tries to register localization function; it will return callback taht we store for later use when localizing individual selector elements
-		if (window.registerLocalizationOnReady && Array.isArray(window.registerLocalizationOnReady)) {
-			window.registerLocalizationOnReady.push(i18nLocalizeFunc => {
-				// console.warn('registerLocalizationOnReady, loc-func');
-				localizeSelector = typeof i18nLocalizeFunc === "function" ? i18nLocalizeFunc : undefined;
+		//tries to register localization function; it will return callback that we store for later use when localizing individual selector elements
+		if (!window.localize && window.registerLocalizationOnReady && Array.isArray(window.registerLocalizationOnReady)) {
+			window.registerLocalizationOnReady.push(localize => {
+				localizeSelector = typeof localize === "function" ? localize : undefined;
 			});
 		}
+		else
+			localizeSelector = window.localize;
 	}
 
 	/**
