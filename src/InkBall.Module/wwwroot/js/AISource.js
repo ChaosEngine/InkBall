@@ -311,33 +311,58 @@ class GraphAI {
  * @returns {boolean} true if all points are continuous, false otherwise
  */
 function ArePointsContinuous(pointsArr) {
+	const length = pointsArr.length;
 	//check if points is array of {x, y} objects or array of arrays with two elements
 	//checking only first element
-	if (!Array.isArray(pointsArr) || pointsArr.length < 1)
+	if (!Array.isArray(pointsArr) || length < 1)
 		throw new Error("Invalid points array. Expected an array of objects with x and y properties.");
 
 	let calcDX, calcDY;
 	// Check if points are in {x, y} format or [x, y] format
 	if (Array.isArray(pointsArr[0]) || !('x' in pointsArr[0]) || !('y' in pointsArr[0])) {
-		calcDX = (prev, curr) => Math.abs(prev[0] - curr[0]);
-		calcDY = (prev, curr) => Math.abs(prev[1] - curr[1]);
+		calcDX = (prev, curr) => prev[0] - curr[0];
+		calcDY = (prev, curr) => prev[1] - curr[1];
 	} else {
-		calcDX = (prev, curr) => Math.abs(prev.x - curr.x);
-		calcDY = (prev, curr) => Math.abs(prev.y - curr.y);
+		calcDX = (prev, curr) => prev.x - curr.x;
+		calcDY = (prev, curr) => prev.y - curr.y;
 	}
 
 	// Check if all points are continuous
-	for (let i = 1; i < pointsArr.length; i++) {
+	for (let i = 1; i < length; i++) {
 		const curr = pointsArr[i];
 		const prev = pointsArr[i - 1];
-		const dx = calcDX(curr, prev);
-		const dy = calcDY(curr, prev);
+		const dx = Math.abs(calcDX(curr, prev));
+		const dy = Math.abs(calcDY(curr, prev));
 
 		if (Math.max(dx, dy) > 1)
 			return { result: false, offenderIndex: i, offender: curr }; // Not continuous
 	}
 
 	return { result: true }; // All points are continuous
+}
+
+/**
+ * Finds duplicated point in an array of points, starting from a given index.
+ * @param {Array<{x,y}>|Array<Array>} pointsArr array of objects with x and y properties, or array of arrays with two elements
+ * @param {number} [startIndex] - Index to start searching from
+ * @returns {{secondIndex: number, point: {x,y}|Array, firstIndex: number}|null} object with index, point, and firstIndex if duplicate found, null otherwise
+ */
+function FindDuplicatedPoint(pointsArr, startIndex = 0) {
+	const getPointKeyFn = Array.isArray(pointsArr[0])
+		? (point) => `${point[0]},${point[1]}`
+		: (point) => `${point.x},${point.y}`;
+
+	for (const pointMap = new Map(), length = pointsArr.length; startIndex < length; startIndex++) {
+		const point = pointsArr[startIndex];
+		const key = getPointKeyFn(point);
+		const val = pointMap.get(key);
+		if (val !== undefined)
+			return { secondIndex: startIndex, firstIndex: val, point };
+
+		pointMap.set(key, startIndex);
+	}
+
+	return null; // No duplicates found
 }
 
 /**
@@ -409,4 +434,4 @@ function LerpMissingPoints(prev, curr, isPointOk) {
 }
 */
 
-export { concaveman, GraphAI, ArePointsContinuous, LerpMissingPoints };
+export { concaveman, GraphAI, ArePointsContinuous, LerpMissingPoints, FindDuplicatedPoint };

@@ -1,4 +1,4 @@
-﻿import { GraphAI, concaveman, ArePointsContinuous/* , LerpMissingPoints  */ } from "./AISource.js";
+﻿import { GraphAI, concaveman, ArePointsContinuous, FindDuplicatedPoint } from "./AISource.js";
 // import { SvgVml, StatusEnum, LocalLog, LocalError, sortPointsClockwise, pnpoly, IsPointOutsideAllPaths } from "./shared.js";
 import { astar, Graph as AStarGraph } from "javascript-astar";
 import * as clustering from "density-clustering";
@@ -82,10 +82,10 @@ addEventListener('message', async function (e) {
 						{
 							const { concavity, lengthThreshold, points: vertices, humanPoints, iGridHeight, iGridWidth } = params;
 
-							let convex_hull = null, numOfNonContinuous = 0;
+							let convex_hull = null, numOfNonContinuous = 0, numOfDuplicatedPointsFixed = 0;
 							if (vertices.length > 0) {
 								convex_hull = concaveman(vertices, concavity ?? 2.0, lengthThreshold ?? 0.0);
-								let max_attempts = 3, grid = null, graphDiagonal = null;
+								let max_attempts = 5, grid = null, graphDiagonal = null;
 								do {
 									const continuous_result = ArePointsContinuous(convex_hull);
 									if (!continuous_result.result) {
@@ -118,9 +118,24 @@ addEventListener('message', async function (e) {
 										break;
 									}
 								} while ((--max_attempts) > 0);
+
+								max_attempts = 5;
+								let duplicated_point_result;
+								do {
+									duplicated_point_result = FindDuplicatedPoint(convex_hull, 1);
+									if (duplicated_point_result !== null) {
+										convex_hull.splice(
+											duplicated_point_result.firstIndex,
+											duplicated_point_result.secondIndex - duplicated_point_result.firstIndex
+										);
+										numOfDuplicatedPointsFixed++;
+									} else {
+										break;
+									}
+								} while ((--max_attempts) > 0);
 							}
 
-							postMessage({ operation: params.operation, convex_hull: convex_hull?.map(([x, y]) => ({ x, y })), numOfNonContinuous });
+							postMessage({ operation: params.operation, convex_hull: convex_hull?.map(([x, y]) => ({ x, y })), numOfNonContinuous, numOfDuplicatedPointsFixed });
 						}
 						break;
 

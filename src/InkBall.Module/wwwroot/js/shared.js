@@ -1588,16 +1588,18 @@ class AABB {
 	 * Expands the AABB by a given delta in x and y directions.
 	 * This method does modify the original AABB.
 	 * @param {number} delta - The amount to expand in the x and y direction.
-	 * @param {number} maxHeight - (Unused) Maximum height constraint.
-	 * @param {number} maxWidth - (Unused) Maximum width constraint.
+	 * @param {number} minHeight - Minimum height constraint.
+	 * @param {number} minWidth - Minimum width constraint.
+	 * @param {number} maxHeight - Maximum height constraint.
+	 * @param {number} maxWidth - Maximum width constraint.
 	 */
-	expand(delta, maxHeight, maxWidth) {
+	expand(delta, minHeight, minWidth, maxHeight, maxWidth) {
 
-		this.minX = Math.min(Math.max(this.minX - delta, 0), maxWidth);
-		this.minY = Math.min(Math.max(this.minY - delta, 0), maxHeight);
+		this.minX = Math.min(Math.max(this.minX - delta, minWidth), maxWidth);
+		this.minY = Math.min(Math.max(this.minY - delta, minHeight), maxHeight);
 
-		this.maxX = Math.max(Math.min(this.maxX + delta, maxWidth), 0);
-		this.maxY = Math.max(Math.min(this.maxY + delta, maxHeight), 0);
+		this.maxX = Math.max(Math.min(this.maxX + delta, maxWidth), minWidth);
+		this.maxY = Math.max(Math.min(this.maxY + delta, maxHeight), minHeight);
 	}
 
 	// /**

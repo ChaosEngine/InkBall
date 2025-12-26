@@ -3265,7 +3265,7 @@ class InkBallGame {
 							}
 							//point ok! outside all paths, not human, placed on the board
 						} else {
-							LocalLog(`Point (${x},${y}) is %cbreaking the predicted path!`, "color: orange;font-weight: bold");
+							LocalLog(`Point (${x},${y}) is %cbreaking the predicted path, %cbad color!`, "color: orange;font-weight: bold", "color: red;font-weight: bold");
 							continue resultLoop; //bad point found
 						}
 					}
@@ -3278,12 +3278,21 @@ class InkBallGame {
 
 					//else point is not placed on the board, so it is ok for placing it
 				}
+				//now count how many points from original cluster are inside the convex hull polygon...
+				let inside_count = 0;
 				for (const { x, y } of point_coords) {
 					//check if point is inside convex hull polygon
 					if (false === pnpoly(convex_hull, x, y)) {
-						LocalLog(`Point (${x},${y}) from convex hull is %coutside the predicted path!`, "color: orange;font-weight: bold");
-						continue resultLoop; //bad point found
+						// LocalLog(`Point (${x},${y}) is %coutside convex hull!`, "color: orange;font-weight: bold");
+						// continue resultLoop; //bad point found
 					}
+					else
+						inside_count++;
+				}
+				//...if > 10% of points from original cluster are inside convex hull, we have a good candidate
+				if (inside_count < Math.ceil(point_coords.length * 0.1)) {
+					LocalLog(`Only ${inside_count} points inside convex hull out of ${point_coords.length} in cluster, %cneed more than ${Math.ceil(point_coords.length * 0.1)}!`, "color: orange;font-weight: bold");
+					continue resultLoop; //bad point found
 				}
 
 				for (const { x, y } of convex_hull) {
@@ -4552,7 +4561,7 @@ class InkBallGame {
 
 		//0. create bounding box around points wrapping all points in cluster
 		const wrapping_bbox = AABB.fromPoints(pointCoords);
-		wrapping_bbox.expand(1, this.#iGridHeight - 1, this.#iGridWidth - 1);//expand it a bit by 1 unit in all directions -> enlarge it
+		wrapping_bbox.expand(1, 1, 1, this.#iGridHeight - 1, this.#iGridWidth - 1);//expand it a bit by 1 unit in all directions -> enlarge it
 
 		// //draw bounding box for visualization
 		// LocalLog(`wrapping_bbox: ${JSON.stringify(wrapping_bbox)}`);
