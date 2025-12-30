@@ -80,9 +80,11 @@ addEventListener('message', async function (e) {
 						break;
 					case "BY_COORDS":
 						{
-							const { concavity, lengthThreshold, points: vertices, humanPoints, iGridHeight, iGridWidth } = params;
+							const { concavity, lengthThreshold,
+								points: vertices, humanPoints, interceptingPoints,
+								iGridHeight, iGridWidth } = params;
 
-							let convex_hull = null, numOfNonContinuous = 0, numOfDuplicatedPointsFixed = 0;
+							let convex_hull = null, real_surrounded_points, numOfNonContinuous = 0, numOfDuplicatesFixed = 0;
 							if (vertices.length > 0) {
 								convex_hull = concaveman(vertices, concavity ?? 2.0, lengthThreshold ?? 0.0);
 								let max_attempts = 5, grid = null, graphDiagonal = null;
@@ -128,14 +130,35 @@ addEventListener('message', async function (e) {
 											duplicated_point_result.firstIndex,
 											duplicated_point_result.secondIndex - duplicated_point_result.firstIndex
 										);
-										numOfDuplicatedPointsFixed++;
+										numOfDuplicatesFixed++;
 									} else {
 										break;
 									}
 								} while ((--max_attempts) > 0);
+
+								//now count how many points from original cluster are inside the convex hull polygon...
+								real_surrounded_points = [];
+								convex_hull = convex_hull.map(([x, y]) => ({ x, y }));
+								for (const pt of interceptingPoints) {
+									//check if point is inside convex hull polygon
+									if (true === pnpoly(convex_hull, pt.x, pt.y))
+										real_surrounded_points.push(pt);
+								}
+								//...if > 10% of points from original cluster are inside convex hull, we have a good candidate
+								if (real_surrounded_points.length < Math.ceil(interceptingPoints.length * 0.1)) {
+									LocalLog(`Only ${real_surrounded_points.length} points inside convex hull out of ${interceptingPoints.length} in cluster, %cneed more than ${Math.ceil(interceptingPoints.length * 0.1)}!`, "color: orange;font-weight: bold");
+
+									real_surrounded_points = null;
+								}
 							}
 
-							postMessage({ operation: params.operation, convex_hull: convex_hull?.map(([x, y]) => ({ x, y })), numOfNonContinuous, numOfDuplicatedPointsFixed });
+							postMessage({
+								operation: params.operation,
+								convex_hull,
+								interceptedPoints: real_surrounded_points,
+								numOfNonContinuous,
+								numOfDuplicatesFixed
+							});
 						}
 						break;
 

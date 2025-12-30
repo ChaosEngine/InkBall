@@ -2604,7 +2604,7 @@ class InkBallGame {
 	async #RunAIWorker(setupFunction) {
 		return new Promise((resolve, reject) => {
 			this.#Worker = this.#Worker ?? new Worker('../js/AIWorker.Bundle.js?v=' + IBversionHash
-				//, { type: 'module' }
+				, { type: 'module' }
 			);
 
 			this.#Worker.onerror = function (e) {
@@ -3167,8 +3167,7 @@ class InkBallGame {
 			clusterLoop:
 			for (const point_indexes of data.clusters) {
 				rand_color = RandomColor(); //random color for each points
-				const points_in_cluster = []; //array of points in cluster
-				const point_coords = []; //array of points coordinates
+				const point_coords = []; //array of points and coordinates
 
 				for (const index of point_indexes) {
 					//mark those cluster found points visually
@@ -3181,8 +3180,7 @@ class InkBallGame {
 							continue clusterLoop;
 						}
 
-						points_in_cluster.push(pt); //add point to simple array
-						point_coords.push({ x, y }); //add points coordinates to array
+						point_coords.push({ x, y/* , point: pt  */ }); //add points and coordinates to array
 
 						if (visuals) {
 							pt.SetStrokeColor(rand_color); //set color to some random color and visually "pop"
@@ -3198,11 +3196,12 @@ class InkBallGame {
 				);
 
 				//9. calculate convex hull of candidate_path points with concaveman algorithm
-				const data = await this.#RunAIWorker((worker) => {
+				const { convex_hull, interceptedPoints } = await this.#RunAIWorker((worker) => {
 					worker.postMessage({
 						operation: "CONCAVEMAN",
 						subOperation: "BY_COORDS",
 						points: surrounding_path,
+						interceptingPoints: point_coords,
 						concavity: aiParams.concavity,
 						lengthThreshold: aiParams.lengthThreshold,
 						humanPoints: humanPointsArrOfArr,
@@ -3212,9 +3211,8 @@ class InkBallGame {
 				});
 
 				//10. get points of convex hull and create a polyline around it
-				const convex_hull = data?.convex_hull;
 				if (convex_hull?.length > 0) {
-					results.push({ points_in_cluster, convex_hull, point_coords }); //add points in cluster to array of clusters
+					results.push({ convex_hull, /* point_coords,  */interceptedPoints }); //add points in cluster to array of clusters
 
 					LocalLog(`Planned path points #${results.length} around bounding box points(${surrounding_path.length}): ${surrounding_path.reduce((acc, [x, y]) => acc + `${x},${y} `, '').trimEnd()}`);
 
@@ -3237,7 +3235,7 @@ class InkBallGame {
 
 
 			resultLoop:
-			for (const { convex_hull, points_in_cluster, point_coords } of results) {
+			for (const { convex_hull, /* point_coords, */ interceptedPoints } of results) {
 				//take ALL x,y pairs from convex hull and check if they are not already placed on the board
 				//and if it is outside all paths
 				//if point is already placed on the board, check its color if not, prepare for placing it
@@ -3278,21 +3276,8 @@ class InkBallGame {
 
 					//else point is not placed on the board, so it is ok for placing it
 				}
-				//now count how many points from original cluster are inside the convex hull polygon...
-				let inside_count = 0;
-				for (const { x, y } of point_coords) {
-					//check if point is inside convex hull polygon
-					if (false === pnpoly(convex_hull, x, y)) {
-						// LocalLog(`Point (${x},${y}) is %coutside convex hull!`, "color: orange;font-weight: bold");
-						// continue resultLoop; //bad point found
-					}
-					else
-						inside_count++;
-				}
-				//...if > 10% of points from original cluster are inside convex hull, we have a good candidate
-				if (inside_count < Math.ceil(point_coords.length * 0.1)) {
-					LocalLog(`Only ${inside_count} points inside convex hull out of ${point_coords.length} in cluster, %cneed more than ${Math.ceil(point_coords.length * 0.1)}!`, "color: orange;font-weight: bold");
-					continue resultLoop; //bad point found
+				if (interceptedPoints?.length === 0) {
+					continue resultLoop; //it seems, there is not enough points surrounded 
 				}
 
 				for (const { x, y } of convex_hull) {
@@ -3309,12 +3294,9 @@ class InkBallGame {
 				//if all points from convex hull are already placed on the board, return path as next AI move
 				const return_path = new InkBallPathViewModel(0, this.#iGameID, -1/*player*/,
 					convex_hull.reduce((acc, { x, y }) => acc + `${x},${y} `, '').trimEnd(),
-					points_in_cluster
-						.filter(pt => pt.GetStatus() === StatusEnum.POINT_FREE_RED)
-						.reduce((acc, pt) => {
-							const { x, y } = pt.GetPosition();
-							return acc + `${x},${y} `;
-						}, '').trimEnd()
+					interceptedPoints
+						// .filter(({ point }) => point.GetStatus() === StatusEnum.POINT_FREE_RED)
+						.reduce((acc, { x, y }) => (acc + `${x},${y} `), '').trimEnd()
 				);
 				LocalLog({ info: `Planned as AI generated next path ${convex_hull.length}, possible path:`, path: return_path });
 				return return_path; //return path as next AI move
@@ -4561,7 +4543,7 @@ class InkBallGame {
 
 		//0. create bounding box around points wrapping all points in cluster
 		const wrapping_bbox = AABB.fromPoints(pointCoords);
-		wrapping_bbox.expand(1, 1, 1, this.#iGridHeight - 1, this.#iGridWidth - 1);//expand it a bit by 1 unit in all directions -> enlarge it
+		wrapping_bbox.expand(1, 0, 0, this.#iGridHeight - 1, this.#iGridWidth - 1);//expand it a bit by 1 unit in all directions -> enlarge it
 
 		// //draw bounding box for visualization
 		// LocalLog(`wrapping_bbox: ${JSON.stringify(wrapping_bbox)}`);
