@@ -3276,7 +3276,7 @@ class InkBallGame {
 
 					//else point is not placed on the board, so it is ok for placing it
 				}
-				if (interceptedPoints?.length === 0) {
+				if (!interceptedPoints || interceptedPoints?.length === 0) {
 					continue resultLoop; //it seems, there is not enough points surrounded 
 				}
 
