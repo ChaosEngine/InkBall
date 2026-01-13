@@ -1,7 +1,7 @@
 /*global signalR, i18next*/
 "use strict";
 
-let LocalAlert, LocalLog, LocalError, /* LocalWarning, */ StatusEnum, hasDuplicates, pnpoly, GameStateStore, SvgVml, IsPointOutsideAllPaths, sortPointsClockwise, Sleep, IBversionHash, AABB, localizeSelector;
+let LocalAlert, LocalLog, LocalError, /* LocalWarning, AABB,*/ StatusEnum, hasDuplicates, pnpoly, GameStateStore, SvgVml, IsPointOutsideAllPaths, sortPointsClockwise, Sleep, IBversionHash, localizeSelector;
 
 /******** funcs-n-classes ********/
 /**
@@ -462,6 +462,7 @@ async function importAllModulesAsync(/* gameOptions */) {
 		LocalLog,
 		LocalError,
 		// LocalWarning,
+		// AABB,
 		LocalAlert,
 		StatusEnum,
 		hasDuplicates,
@@ -470,7 +471,6 @@ async function importAllModulesAsync(/* gameOptions */) {
 		GameStateStore,
 		IsPointOutsideAllPaths,
 		sortPointsClockwise,
-		AABB,
 		Sleep
 	} = isMinified
 			? await import(/* webpackChunkName: "shared.Min" */'./shared.min.js?v=' + IBversionHash)
@@ -2641,23 +2641,22 @@ class InkBallGame {
 	async #OnTestBuildCurrentGraph(event) {
 		event.preventDefault();
 		//// Main thread UI implementation
-		LocalLog(await this.#BuildGraph());
+		// LocalLog(await this.#BuildGraph());
 
-		//// Web worker background implementation
-		// const data = await this.#RunAIWorker((worker) => {
-		// 	const serialized_points = Array.from(this.#Points.store.entries()).map(([key, value]) => ({ key, value: value.Serialize() }));
-		// 	const serialized_paths = this.#Lines.store.map(pa => pa.Serialize());
+		// Web worker background implementation
+		const data = await this.#RunAIWorker((worker) => {
+			const serialized_points = Array.from(this.#Points.store.entries()).map(([key, value]) => ({ key, value: value.Serialize() }));
+			const serialized_paths = this.#Lines.store.map(pa => pa.Serialize());
 
-		// 	worker.postMessage({
-		// 		operation: "BUILD_GRAPH",
-		// 		boardSize: { iGridWidth: this.#iGridWidth, iGridHeight: this.#iGridHeight },
-		// 		state: this.#GetGameStateForIndexedDb(),
-		// 		points: serialized_points,
-		// 		paths: serialized_paths
-		// 	});
-		// });
-		// LocalLog('Message received from worker:');
-		// LocalLog(data);
+			worker.postMessage({
+				operation: "BUILD_GRAPH",
+				boardSize: { iGridWidth: this.#iGridWidth, iGridHeight: this.#iGridHeight },
+				points: serialized_points,
+				paths: serialized_paths
+			});
+		});
+		LocalLog('Message received from worker:');
+		LocalLog(data);
 	}
 
 	async #OnTestConcaveman(event) {
@@ -3118,33 +3117,44 @@ class InkBallGame {
 				// ,StatusEnum.POINT_IN_PATH
 				// ,StatusEnum.POINT_OWNED_BY_BLUE
 			];
-		const humanPointsArrOfArr = [];
+		// const humanPointsArrOfArr = [];
 
-		for (const pt of await this.#Points.values()) {
-			if (pt !== undefined && pt.GetFillColor() === humanPointColor && humanPointStatuses.includes(pt.GetStatus())) {
-				const { x, y } = pt.GetPosition();
-				//density clustering algorithm needs array of array of points only
-				humanPointsArrOfArr.push([x, y]);
-			}
-		}
+		// for (const pt of await this.#Points.values()) {
+		// 	if (pt !== undefined && pt.GetFillColor() === humanPointColor && humanPointStatuses.includes(pt.GetStatus())) {
+		// 		const { x, y } = pt.GetPosition();
+		// 		//density clustering algorithm needs array of array of points only
+		// 		humanPointsArrOfArr.push([x, y]);
+		// 	}
+		// }
+		const all_points_serialized = [...this.#Points.store.entries()].map(([key, value]) => ({ key, value: value.Serialize() }));
 
 		//Web Worker calculation of density clustering
 		const data = await this.#RunAIWorker(worker => {
 			worker.postMessage({
-				operation: "CLUSTERING",
-				dataset: humanPointsArrOfArr,
+				operation: "CLUSTERING_AND_CONCAVEMAN",
 				method: aiParams.clusteringMethod,
 				//take params saved in local_storage
 				numberOfClusters: aiParams.numberOfClusters,
 				neighborhoodRadius: aiParams.neighborhoodRadius,
-				minPointsPerCluster: aiParams.minPointsPerCluster
+				minPointsPerCluster: aiParams.minPointsPerCluster,
+
+				allPoints: all_points_serialized,
+				humanPointStatuses,
+				humanPointColor,
+				COLOR_OWNED_RED: this.#COLOR_OWNED_RED,
+				COLOR_OWNED_BLUE: this.#COLOR_OWNED_BLUE,
+
+				concavity: aiParams.concavity,
+				lengthThreshold: aiParams.lengthThreshold,
+				boardSize: { iGridWidth: this.#iGridWidth, iGridHeight: this.#iGridHeight },
+				visuals
 			});
 		});
 
 		let rand_color, fragment, createRectForVisualsFunction = () => { /* dummy filler func*/ },
 			createPolylineForVisualsFunction = () => { /* dummy filler func*/ };
 		if (visuals) {
-			//fragment = this.#SvgVml.BeginBatchFragment();
+			fragment = this.#SvgVml.BeginBatchFragment();
 			createRectForVisualsFunction = (i, j, width, height) => {
 				return fragment ?
 					fragment.CreateRect(i, j, width, height, rand_color) :
@@ -3159,30 +3169,17 @@ class InkBallGame {
 
 		//for each cluster, process it's point group
 		//and create a convex hull around it, then display it
-		if (data.clusters?.length > 0) {
+		if (data.results?.length > 0) {
 			//loading all human lines up front and pass into below "looped" function calls
 			const allLines = (await this.#Lines.all())/* .filter(line => line.GetFillColor() === humanPointColor) */;
 
-			let results = [];
-			clusterLoop:
-			for (const point_indexes of data.clusters) {
-				rand_color = RandomColor(); //random color for each points
-				const point_coords = []; //array of points and coordinates
+			for (const { convex_hull, /* interceptedPoints, */surrounding_path, clustered_point_coords, rects2Draw } of data.results) {
+				const rand_color = RandomColor(); //random color for each points
 
-				for (const index of point_indexes) {
-					//mark those cluster found points visually
-					//get x,y coordinates of point from cluster input array of arrays back
-					const [x, y] = humanPointsArrOfArr[index];
-					const pt = this.#Points.get(y * this.#iGridWidth + x); //get point from points store
-					if (pt) {
-						if (!(x >= 0 && x < this.#iGridWidth && y >= 0 && y < this.#iGridHeight)) {
-							LocalLog(`Point (${x},${y}) %cout of bounds;`, "color: orange; font-weight: bold", ' will not try to surround.');
-							continue clusterLoop;
-						}
-
-						point_coords.push({ x, y/* , point: pt  */ }); //add points and coordinates to array
-
-						if (visuals) {
+				if (visuals) {
+					for (const { x, y } of clustered_point_coords) {
+						const pt = this.#Points.get(y * this.#iGridWidth + x); //get point from points store
+						if (pt) {
 							pt.SetStrokeColor(rand_color); //set color to some random color and visually "pop"
 							pt.StrokeWeight(0.45); //
 							pt.SetZIndex(100);
@@ -3191,34 +3188,15 @@ class InkBallGame {
 					}
 				}
 
-				const surrounding_path = this.#CalculateWrappingPathFromDividedBoundingBoxes(
-					point_coords, createRectForVisualsFunction, [humanPointColor, this.#COLOR_OWNED_RED, this.#COLOR_OWNED_BLUE]
-				);
-
-				//9. calculate convex hull of candidate_path points with concaveman algorithm
-				const { convex_hull, interceptedPoints } = await this.#RunAIWorker((worker) => {
-					worker.postMessage({
-						operation: "CONCAVEMAN",
-						subOperation: "BY_COORDS",
-						points: surrounding_path,
-						interceptingPoints: point_coords,
-						concavity: aiParams.concavity,
-						lengthThreshold: aiParams.lengthThreshold,
-						humanPoints: humanPointsArrOfArr,
-						iGridHeight: this.#iGridHeight,
-						iGridWidth: this.#iGridWidth
-					});
-				});
-
-				//10. get points of convex hull and create a polyline around it
 				if (convex_hull?.length > 0) {
-					results.push({ convex_hull, /* point_coords,  */interceptedPoints }); //add points in cluster to array of clusters
+					LocalLog(`Planned path points #${convex_hull?.length} around bounding box points(${surrounding_path.length}): ${surrounding_path.reduce((acc, [x, y]) => acc + `${x},${y} `, '').trimEnd()}`);
 
-					LocalLog(`Planned path points #${results.length} around bounding box points(${surrounding_path.length}): ${surrounding_path.reduce((acc, [x, y]) => acc + `${x},${y} `, '').trimEnd()}`);
-
-					// const poly_points = convex_hull.map(({ x, y }) => `${x},${y}`).join(' ');
 					const poly_points = convex_hull.reduce((acc, { x, y }) => acc + `${x},${y} `, '').trimEnd();
 					if (visuals) {
+						rects2Draw.forEach(({ i, j, width, height }) => {
+							createRectForVisualsFunction(i, j, width, height);
+						});
+
 						const poly_line = createPolylineForVisualsFunction(poly_points, 'green');
 						poly_line.SetID(-1);
 
@@ -3226,16 +3204,14 @@ class InkBallGame {
 					} else
 						LocalLog(`<polyline points='${poly_points}'></polyline>`);
 				}
-				// LocalLog(fragment.CreateRect(wrapping_bbox.minX, wrapping_bbox.minY, wrapping_bbox.width, wrapping_bbox.height, 'rgb(128,128,128,128)'));
-
-			}// end for each cluster
+			}
 			if (visuals)
 				fragment?.EndBatchFragment();
-			LocalLog({ clusteringMethod: data.method, clustersPoints: results, plot: data.plot, noise: data.noise });
+			// LocalLog(fragment.CreateRect(wrapping_bbox.minX, wrapping_bbox.minY, wrapping_bbox.width, wrapping_bbox.height, 'rgb(128,128,128,128)'));
 
 
 			resultLoop:
-			for (const { convex_hull, /* point_coords, */ interceptedPoints } of results) {
+			for (const { convex_hull, interceptedPoints/*, surrounding_path, rects2Draw */ } of data.results) {
 				//take ALL x,y pairs from convex hull and check if they are not already placed on the board
 				//and if it is outside all paths
 				//if point is already placed on the board, check its color if not, prepare for placing it
@@ -3288,6 +3264,7 @@ class InkBallGame {
 					if (point === undefined) {
 						const return_point = new InkBallPointViewModel(this.#iGameID, -1/*player*/, x, y, StatusEnum.POINT_FREE_BLUE, 0);
 						LocalLog(`Returning point (${x},${y}) as AI generated next point`);
+
 						return return_point; //return point as next AI move
 					}
 				}
@@ -3298,7 +3275,8 @@ class InkBallGame {
 						// .filter(({ point }) => point.GetStatus() === StatusEnum.POINT_FREE_RED)
 						.reduce((acc, { x, y }) => (acc + `${x},${y} `), '').trimEnd()
 				);
-				LocalLog({ info: `Planned as AI generated next path ${convex_hull.length}, possible path:`, path: return_path });
+				LocalLog({ info: `Planned as AI generated next, possible path:`, path: return_path });
+
 				return return_path; //return path as next AI move
 			}
 
@@ -4539,6 +4517,7 @@ class InkBallGame {
 	 * @param {Array<string>} humanPointColors colors of human points to skip
 	 * @returns {Array<[number,number]>} array of points forming surrounding path
 	 */
+/* 
 	#CalculateWrappingPathFromDividedBoundingBoxes(pointCoords, createRectForVisualsFunc, humanPointColors) {
 
 		//0. create bounding box around points wrapping all points in cluster
@@ -4608,7 +4587,7 @@ class InkBallGame {
 		const surrounding_path = [...candidate_path.values()];
 		return surrounding_path;
 	}
-
+*/
 	async #rAFCallBack(timeStamp) {
 		if (this.#rAF_StartTimeStamp === null) this.#rAF_StartTimeStamp = timeStamp;
 		const elapsed = timeStamp - this.#rAF_StartTimeStamp;
