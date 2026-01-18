@@ -1,7 +1,7 @@
 /*global signalR, i18next*/
 "use strict";
 
-let LocalAlert, LocalLog, LocalError, /* LocalWarning, AABB,*/ StatusEnum, hasDuplicates, pnpoly, GameStateStore, SvgVml, IsPointOutsideAllPaths, sortPointsClockwise, Sleep, IBversionHash, localizeSelector;
+let LocalAlert, LocalLog, LocalError, /* LocalWarning, AABB,*/ StatusEnum, hasDuplicates, pnpoly, GameStateStore, SvgVml, IsPointOutsideAllPaths, sortPointsClockwise, Sleep, RandomColor, IBversionHash, localizeSelector;
 
 /******** funcs-n-classes ********/
 /**
@@ -471,7 +471,8 @@ async function importAllModulesAsync(/* gameOptions */) {
 		GameStateStore,
 		IsPointOutsideAllPaths,
 		sortPointsClockwise,
-		Sleep
+		Sleep,
+		RandomColor
 	} = isMinified
 			? await import(/* webpackChunkName: "shared.Min" */'./shared.min.js?v=' + IBversionHash)
 			: await import(/* webpackChunkName: "shared" */'./shared.js?v=' + IBversionHash));
@@ -484,16 +485,6 @@ async function importAllModulesAsync(/* gameOptions */) {
 	// 	const module = await import('./depthFirstSearch.js?v=' + IBversionHash);
 	// 	depthFirstSearch = module.default;
 	// }
-}
-
-/**
- * Returns generated random color
- * @returns {string} random color
- */
-function RandomColor() {
-	//return 'var(--bs-orange)';
-	// return '#' + Math.floor(Math.random() * 16777215).toString(16);
-	return '#' + ((1 << 24) * Math.random() | 0).toString(16).padStart(6, "0");
 }
 
 /* Old code
@@ -3117,19 +3108,11 @@ class InkBallGame {
 				// ,StatusEnum.POINT_IN_PATH
 				// ,StatusEnum.POINT_OWNED_BY_BLUE
 			];
-		// const humanPointsArrOfArr = [];
 
-		// for (const pt of await this.#Points.values()) {
-		// 	if (pt !== undefined && pt.GetFillColor() === humanPointColor && humanPointStatuses.includes(pt.GetStatus())) {
-		// 		const { x, y } = pt.GetPosition();
-		// 		//density clustering algorithm needs array of array of points only
-		// 		humanPointsArrOfArr.push([x, y]);
-		// 	}
-		// }
 		const all_points_serialized = [...this.#Points.store.entries()].map(([key, value]) => ({ key, value: value.Serialize() }));
 
 		//Web Worker calculation of density clustering
-		const data = await this.#RunAIWorker(worker => {
+		const { results } = await this.#RunAIWorker(worker => {
 			worker.postMessage({
 				operation: "CLUSTERING_AND_CONCAVEMAN",
 				method: aiParams.clusteringMethod,
@@ -3152,7 +3135,8 @@ class InkBallGame {
 		});
 
 		let rand_color, fragment, createRectForVisualsFunction = () => { /* dummy filler func*/ },
-			createPolylineForVisualsFunction = () => { /* dummy filler func*/ };
+			createPolylineForVisualsFunction = () => { /* dummy filler func*/ },
+			pointMarkerForVisualsFunction = () => { /* dummy filler func*/ };
 		if (visuals) {
 			fragment = this.#SvgVml.BeginBatchFragment();
 			createRectForVisualsFunction = (i, j, width, height) => {
@@ -3161,63 +3145,81 @@ class InkBallGame {
 					this.#SvgVml.CreateRect(i, j, width, height, rand_color);
 			};
 			createPolylineForVisualsFunction = (pointsStr, color) => {
-				return fragment ?
+				const poly_line = fragment ?
 					fragment.CreatePolyline(pointsStr, color) :
 					this.#SvgVml.CreatePolyline(pointsStr, color);
+
+				poly_line.SetID(-1);
+
+				return poly_line;
+			};
+			pointMarkerForVisualsFunction = (point, randColor) => {
+				point.SetStrokeColor(randColor); //set color to some random color and visually "pop"
+				point.StrokeWeight(0.45); //
+				point.SetZIndex(100);
+				point.setAttribute("r", 2 / this.#iGridSpacingX);
 			};
 		}
 
 		//for each cluster, process it's point group
 		//and create a convex hull around it, then display it
-		if (data.results?.length > 0) {
+		if (results?.length > 0) {
 			//loading all human lines up front and pass into below "looped" function calls
 			const allLines = (await this.#Lines.all())/* .filter(line => line.GetFillColor() === humanPointColor) */;
 
-			for (const { convex_hull, /* interceptedPoints, */surrounding_path, clustered_point_coords, rects2Draw } of data.results) {
-				const rand_color = RandomColor(); //random color for each points
+			//Print results to console in visually nice form
+			LocalLog({
+				clusteringMethod: aiParams.clusteringMethod,
+				numberOfClusters: aiParams.numberOfClusters,
+				neighborhoodRadius: aiParams.neighborhoodRadius,
+				minPointsPerCluster: aiParams.minPointsPerCluster,
 
-				if (visuals) {
-					for (const { x, y } of clustered_point_coords) {
-						const pt = this.#Points.get(y * this.#iGridWidth + x); //get point from points store
-						if (pt) {
-							pt.SetStrokeColor(rand_color); //set color to some random color and visually "pop"
-							pt.StrokeWeight(0.45); //
-							pt.SetZIndex(100);
-							pt.setAttribute("r", 2 / this.#iGridSpacingX);
-						}
-					}
-				}
+				CLUSTERING_AND_CONCAVEMAN: results.map(found => {
+					rand_color = found.randomColor; //random color for each points
+					
+					return {
+						clustered_point_coords: found.clustered_point_coords.map(({ x, y }) => {
+							const pt = this.#Points.get(y * this.#iGridWidth + x); //get point from points store
+							if (pt) {
+								pointMarkerForVisualsFunction(pt, rand_color);
+								return pt;
+							}
+							else return null;
+						}),
+						convex_hull: found.convex_hull.map(({ x, y }) => {
+							return this.#Points.get(y * this.#iGridWidth + x);
+						}),
+						interceptedPoints: found?.interceptedPoints?.map(({ x, y }) => {
+							return this.#Points.get(y * this.#iGridWidth + x);
+						}) || [],
+						surrounding_path: found.surrounding_path.map(([x, y]) => {
+							return this.#Points.get(y * this.#iGridWidth + x);
+						}),
+						rects2Draw: found.rects2Draw.map(({ i, j, width, height }) => {
+							return createRectForVisualsFunction(i, j, width, height);
+						}),
+						poly_line: createPolylineForVisualsFunction(
+							found.convex_hull.reduce((acc, { x, y }) => acc + `${x},${y} `, '').trimEnd(),
+							found.randomColor),
 
-				if (convex_hull?.length > 0) {
-					LocalLog(`Planned path points #${convex_hull?.length} around bounding box points(${surrounding_path.length}): ${surrounding_path.reduce((acc, [x, y]) => acc + `${x},${y} `, '').trimEnd()}`);
+						plan: (`Planned path points(#${found.convex_hull?.length}) around bounding box points(${found.surrounding_path.length}): ${found.surrounding_path.reduce((acc, [x, y]) => acc + `${x},${y} `, '').trimEnd()}`),
 
-					const poly_points = convex_hull.reduce((acc, { x, y }) => acc + `${x},${y} `, '').trimEnd();
-					if (visuals) {
-						rects2Draw.forEach(({ i, j, width, height }) => {
-							createRectForVisualsFunction(i, j, width, height);
-						});
+						randomColor: found.randomColor
+					};
+				})
+			});
 
-						const poly_line = createPolylineForVisualsFunction(poly_points, 'green');
-						poly_line.SetID(-1);
-
-						LocalLog(poly_line);
-					} else
-						LocalLog(`<polyline points='${poly_points}'></polyline>`);
-				}
-			}
 			if (visuals)
 				fragment?.EndBatchFragment();
-			// LocalLog(fragment.CreateRect(wrapping_bbox.minX, wrapping_bbox.minY, wrapping_bbox.width, wrapping_bbox.height, 'rgb(128,128,128,128)'));
-
 
 			resultLoop:
-			for (const { convex_hull, interceptedPoints/*, surrounding_path, rects2Draw */ } of data.results) {
+			for (const { convex_hull, interceptedPoints/*, surrounding_path, rects2Draw */, randomColor } of results) {
 				//take ALL x,y pairs from convex hull and check if they are not already placed on the board
 				//and if it is outside all paths
 				//if point is already placed on the board, check its color if not, prepare for placing it
 				for (const { x, y } of convex_hull) {
 					if (!(x >= 0 && x < this.#iGridWidth && y >= 0 && y < this.#iGridHeight)) {
-						LocalLog(`Convex hull point (${x},${y}) %cout of bounds;`, "color: orange;font-weight: bold", 'will not try to surround.');
+						LocalLog(`Convex hull point (${x},${y}) %cout of bounds;`, `color: ${randomColor};font-weight: bold`, 'will not try to surround.');
 						continue resultLoop;
 					}
 
@@ -3232,29 +3234,29 @@ class InkBallGame {
 							} else if (checkResult.offenderPoints.some(op => op.x === x && op.y === y) === true) {
 								//allow for points that lay on edge of path, not inside
 								//point ok! outside all paths, not human, placed on the board
-								LocalLog(`Point (${x},${y}) is %con the edge of a path, allowed!`, "color: green;font-weight: bold");
+								LocalLog(`Point %c(${x},${y}) %cis on the edge of a path, allowed!`, `color: ${randomColor};font-weight: bold`, "color: green;font-weight: bold");
 							} else {
-								LocalLog(`Point (${x},${y}) is %cnot outside all paths!`, "color: orange;font-weight: bold");
+								LocalLog(`Point %c(${x},${y}) %cis not outside all paths!`, `color: ${randomColor};font-weight: bold`, "color: red;font-weight: bold");
 								continue resultLoop; //bad point found
 							}
 							//point ok! outside all paths, not human, placed on the board
 						} else {
-							LocalLog(`Point (${x},${y}) is %cbreaking the predicted path, %cbad color!`, "color: orange;font-weight: bold", "color: red;font-weight: bold");
+							LocalLog(`Point %c(${x},${y}) %cis breaking the predicted path, bad color!`, `color: ${randomColor};font-weight: bold`, "color: red;font-weight: bold");
 							continue resultLoop; //bad point found
 						}
 					}
 					else if (IsPointOutsideAllPaths(x, y, allLines)) {
 						//point ok! outside all paths, not human, placed on the board
 					} else {
-						LocalLog(`Point (${x},${y}) is %c not outside all paths!`, "color: orange;font-weight: bold");
+						LocalLog(`Point %c(${x},${y}) %cis not outside all paths!`, `color: ${randomColor};font-weight: bold`, "color: red;font-weight: bold");
 						continue resultLoop; //bad point found
 					}
 
 					//else point is not placed on the board, so it is ok for placing it
 				}
-				if (!interceptedPoints || interceptedPoints?.length === 0) {
-					continue resultLoop; //it seems, there is not enough points surrounded 
-				}
+				// if (!interceptedPoints || interceptedPoints?.length === 0) {
+				// 	continue resultLoop; //it seems, there is not enough points surrounded 
+				// }
 
 				for (const { x, y } of convex_hull) {
 					const point = this.#Points.get(y * this.#iGridWidth + x);
@@ -3263,19 +3265,19 @@ class InkBallGame {
 					//and if it is outside all paths - if so, return it as next AI move because the path is still not closed
 					if (point === undefined) {
 						const return_point = new InkBallPointViewModel(this.#iGameID, -1/*player*/, x, y, StatusEnum.POINT_FREE_BLUE, 0);
-						LocalLog(`Returning point (${x},${y}) as AI generated next point`);
+						LocalLog(`Returning point (${x},${y}) as %cAI generated next point`, `color: ${randomColor};font-weight: bold`);
 
 						return return_point; //return point as next AI move
 					}
 				}
 				//if all points from convex hull are already placed on the board, return path as next AI move
+				const path = convex_hull.reduce((acc, { x, y }) => acc + `${x},${y} `, '').trimEnd();
 				const return_path = new InkBallPathViewModel(0, this.#iGameID, -1/*player*/,
-					convex_hull.reduce((acc, { x, y }) => acc + `${x},${y} `, '').trimEnd(),
-					interceptedPoints
+					path, interceptedPoints
 						// .filter(({ point }) => point.GetStatus() === StatusEnum.POINT_FREE_RED)
 						.reduce((acc, { x, y }) => (acc + `${x},${y} `), '').trimEnd()
 				);
-				LocalLog({ info: `Planned as AI generated next, possible path:`, path: return_path });
+				LocalLog(`Planned as AI generated next, %cpossible path: (${path})`, `color: ${randomColor};font-weight: bold`);
 
 				return return_path; //return path as next AI move
 			}
@@ -4517,77 +4519,77 @@ class InkBallGame {
 	 * @param {Array<string>} humanPointColors colors of human points to skip
 	 * @returns {Array<[number,number]>} array of points forming surrounding path
 	 */
-/* 
-	#CalculateWrappingPathFromDividedBoundingBoxes(pointCoords, createRectForVisualsFunc, humanPointColors) {
-
-		//0. create bounding box around points wrapping all points in cluster
-		const wrapping_bbox = AABB.fromPoints(pointCoords);
-		wrapping_bbox.expand(1, 0, 0, this.#iGridHeight - 1, this.#iGridWidth - 1);//expand it a bit by 1 unit in all directions -> enlarge it
-
-		// //draw bounding box for visualization
-		// LocalLog(`wrapping_bbox: ${JSON.stringify(wrapping_bbox)}`);
-
-		// createRectForVisualsFunc(wrapping_bbox.minX, wrapping_bbox.minY,
-		// 	wrapping_bbox.maxX - wrapping_bbox.minX, wrapping_bbox.maxY - wrapping_bbox.minY);
-
-
-
-		//1. Convert candidate_path to a Map to ensure uniqueness by x,y and to avoid duplicates
-		//this hold points of prepared surrounding path
-		const candidate_path = new Map();
-		//2. devide wrapping_bbox into 1x1 unit bbox and gather matching points
-		for (let j = wrapping_bbox.minY; j < wrapping_bbox.maxY; j++) {
-			for (let i = wrapping_bbox.minX; i < wrapping_bbox.maxX; i++) {
-
-				const current_unit_bbox = [
-					// { x: i, y: j, ind: 0 },
-					{ x: i + 1, y: j, ind: 1 },
-					{ x: i, y: j + 1, ind: 2 },
-					{ x: i + 1, y: j + 1, ind: 3 }
-				];
-
-				//3. check if any created bbox point contains any of the points in point_coords (cluster points)
-				const contains_oponent_cluster_point = current_unit_bbox.filter(({ x, y }) => {
-					// if (!(x >= 0 && x < this.#iGridWidth && y >= 0 && y < this.#iGridHeight)) {
-					// 	// LocalLog(`Out-of-bounds point (${x},${y}) 1`);
-					// 	return false;
-					// } else
-					return pointCoords.some(pt => pt.x === x && pt.y === y);
-				});
-				if (contains_oponent_cluster_point.length > 0) {
-					//4. if so, create a rectangle around it 1x1 unit fir visualization
-					createRectForVisualsFunc(i, j, 1, 1);
-					//5. i,j and i+1, j+1 are dimensions of the bounding box
-					// 	 find which points of it are NOT included in point_coords
-					// 	 3 points of the rectangle
-					for (const { x, y, ind } of current_unit_bbox) {
+	/* 
+		#CalculateWrappingPathFromDividedBoundingBoxes(pointCoords, createRectForVisualsFunc, humanPointColors) {
+	
+			//0. create bounding box around points wrapping all points in cluster
+			const wrapping_bbox = AABB.fromPoints(pointCoords);
+			wrapping_bbox.expand(1, 0, 0, this.#iGridHeight - 1, this.#iGridWidth - 1);//expand it a bit by 1 unit in all directions -> enlarge it
+	
+			// //draw bounding box for visualization
+			// LocalLog(`wrapping_bbox: ${JSON.stringify(wrapping_bbox)}`);
+	
+			// createRectForVisualsFunc(wrapping_bbox.minX, wrapping_bbox.minY,
+			// 	wrapping_bbox.maxX - wrapping_bbox.minX, wrapping_bbox.maxY - wrapping_bbox.minY);
+	
+	
+	
+			//1. Convert candidate_path to a Map to ensure uniqueness by x,y and to avoid duplicates
+			//this hold points of prepared surrounding path
+			const candidate_path = new Map();
+			//2. devide wrapping_bbox into 1x1 unit bbox and gather matching points
+			for (let j = wrapping_bbox.minY; j < wrapping_bbox.maxY; j++) {
+				for (let i = wrapping_bbox.minX; i < wrapping_bbox.maxX; i++) {
+	
+					const current_unit_bbox = [
+						// { x: i, y: j, ind: 0 },
+						{ x: i + 1, y: j, ind: 1 },
+						{ x: i, y: j + 1, ind: 2 },
+						{ x: i + 1, y: j + 1, ind: 3 }
+					];
+	
+					//3. check if any created bbox point contains any of the points in point_coords (cluster points)
+					const contains_oponent_cluster_point = current_unit_bbox.filter(({ x, y }) => {
 						// if (!(x >= 0 && x < this.#iGridWidth && y >= 0 && y < this.#iGridHeight)) {
-						// 	// LocalLog(`Out-of-bounds point (${x},${y}) 2`);
-						// 	continue;
-						// }
-
-						//6. not included in point_coords (not from cluster points), so they should be around
-						// 	 cluster points, or inside
-						const point = this.#Points.get(y * this.#iGridWidth + x);
-						if (point !== undefined && humanPointColors.includes(point.GetFillColor()))
-							continue; //skip human points
-
-						if (!contains_oponent_cluster_point.some(q => q.ind !== ind && q.x === x && q.y === y)
-							//no duplicates from already added points
-							&& !candidate_path.has(`${x},${y}`)) {
-							//7. add point to candidate path map
-							candidate_path.set(`${x},${y}`, [x, y]);
+						// 	// LocalLog(`Out-of-bounds point (${x},${y}) 1`);
+						// 	return false;
+						// } else
+						return pointCoords.some(pt => pt.x === x && pt.y === y);
+					});
+					if (contains_oponent_cluster_point.length > 0) {
+						//4. if so, create a rectangle around it 1x1 unit fir visualization
+						createRectForVisualsFunc(i, j, 1, 1);
+						//5. i,j and i+1, j+1 are dimensions of the bounding box
+						// 	 find which points of it are NOT included in point_coords
+						// 	 3 points of the rectangle
+						for (const { x, y, ind } of current_unit_bbox) {
+							// if (!(x >= 0 && x < this.#iGridWidth && y >= 0 && y < this.#iGridHeight)) {
+							// 	// LocalLog(`Out-of-bounds point (${x},${y}) 2`);
+							// 	continue;
+							// }
+	
+							//6. not included in point_coords (not from cluster points), so they should be around
+							// 	 cluster points, or inside
+							const point = this.#Points.get(y * this.#iGridWidth + x);
+							if (point !== undefined && humanPointColors.includes(point.GetFillColor()))
+								continue; //skip human points
+	
+							if (!contains_oponent_cluster_point.some(q => q.ind !== ind && q.x === x && q.y === y)
+								//no duplicates from already added points
+								&& !candidate_path.has(`${x},${y}`)) {
+								//7. add point to candidate path map
+								candidate_path.set(`${x},${y}`, [x, y]);
+							}
 						}
 					}
 				}
 			}
+	
+			//8. convert candidate_path_map to array of points
+			const surrounding_path = [...candidate_path.values()];
+			return surrounding_path;
 		}
-
-		//8. convert candidate_path_map to array of points
-		const surrounding_path = [...candidate_path.values()];
-		return surrounding_path;
-	}
-*/
+	*/
 	async #rAFCallBack(timeStamp) {
 		if (this.#rAF_StartTimeStamp === null) this.#rAF_StartTimeStamp = timeStamp;
 		const elapsed = timeStamp - this.#rAF_StartTimeStamp;

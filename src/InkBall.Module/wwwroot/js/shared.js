@@ -143,6 +143,16 @@ function IsPointOutsideAllPaths(x, y, allLines) {
 	return true;
 }
 
+/**
+ * Returns generated random color
+ * @returns {string} random color
+ */
+function RandomColor() {
+	//return 'var(--bs-orange)';
+	// return '#' + Math.floor(Math.random() * 16777215).toString(16);
+	return '#' + ((1 << 24) * Math.random() | 0).toString(16).padStart(6, "0");
+}
+
 //////////////////////////////////////////////////////
 // SVG-VML mini graphic library 
 // ==========================================
@@ -1820,5 +1830,5 @@ class AABB {
 export {
 	SvgVml, StatusEnum, pnpoly, LocalLog, LocalError, LocalWarning, LocalAlert,
 	hasDuplicates, sortPointsClockwise, Sleep, IsPointOutsideAllPaths,
-	GameStateStore, AABB
+	GameStateStore, AABB, RandomColor
 };
