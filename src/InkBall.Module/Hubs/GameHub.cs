@@ -40,7 +40,7 @@ namespace InkBall.Module.Hubs
 
 	public interface IGameServer
 	{
-		Task<InkBallPointViewModel> ClientToServerPoint(InkBallPointViewModel point);
+		Task<DateTime?> ClientToServerPoint(InkBallPointViewModel point);
 
 		Task<IDtoMsg> ClientToServerPath(InkBallPathViewModel path);
 
@@ -391,7 +391,7 @@ namespace InkBall.Module.Hubs
 
 		#region IGameServer implementation
 
-		public async Task<InkBallPointViewModel> ClientToServerPoint(InkBallPointViewModel point)
+		public async Task<DateTime?> ClientToServerPoint(InkBallPointViewModel point)
 		{
 			CancellationToken token = this.Context.ConnectionAborted;
 
@@ -475,7 +475,7 @@ namespace InkBall.Module.Hubs
 				if (!ThisGame.CpuOponent)
 					await Clients.User(OtherUserIdentifier).ServerToClientPoint(new_point);
 
-				return new_point;
+				return /* new_point */new_point.TimeStamp;
 			}
 			catch (Exception ex)
 			{
@@ -759,9 +759,7 @@ namespace InkBall.Module.Hubs
 			try
 			{
 				var packed = await _dbContext.LoadPointsAndPathsAsync(gameID, token, true);
-				string points = CommonPoint.GetPointsAsJavaScriptArrayForSignalR(packed.Points);
-				string paths = InkBallPath.GetPathsAsJavaScriptArrayForSignalR(packed.Paths);
-				var dto = new PlayerPointsAndPathsDTO(points, paths);
+				var dto = new PlayerPointsAndPathsDTO(packed.Points, packed.Paths, ThisPlayer);
 
 				return dto;
 			}

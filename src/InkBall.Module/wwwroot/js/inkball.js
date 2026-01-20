@@ -219,10 +219,29 @@ class PlayerPointsAndPathsDTO extends DtoMsg {
 
 	get Kind() { return CommandKindEnum.POINTS_AND_PATHS; }
 
-	static Deserialize(ppDTO) {
+	static UnMinimizePoints(points, iPlayerID, iOtherPlayerId) {
+		//Un-Minimize amount of data transported on the wire through SignalR or on the page: status field
+		const DataUnMinimizerStatus = (status) => status - 3;
+
+		//Un-Minimize amount of data transported on the wire through SignalR or on the page: player id field
+		const DataUnMinimizerPlayerId = (playerId) => playerId === 1 ? iPlayerID : iOtherPlayerId;
+
+		const res = points.map(([x, y, Status, iPlayerId]) => ({
+			x,
+			y,
+			Status: DataUnMinimizerStatus(Status),
+			iPlayerId: DataUnMinimizerPlayerId(iPlayerId)
+		}));
+		return res;
+	}
+
+	static Deserialize(ppDTO, iPlayerID, iOtherPlayerId) {
 		const serialized = `{ "Points": ${ppDTO.Points || ppDTO.points}, "Paths": ${ppDTO.Paths || ppDTO.paths} }`;
 		const path_and_point = JSON.parse(serialized);
-		return path_and_point;
+
+		const points = PlayerPointsAndPathsDTO.UnMinimizePoints(path_and_point.Points, iPlayerID, iOtherPlayerId);
+
+		return { Points: points, Paths: path_and_point.Paths };
 	}
 }
 
@@ -746,7 +765,7 @@ class InkBallGame {
 			const ppDTO = await this.#SignalRConnection.invoke("GetPlayerPointsAndPaths", this.#bViewOnly, this.#iGameID);
 			//LocalLog(ppDTO);
 
-			const path_and_point = PlayerPointsAndPathsDTO.Deserialize(ppDTO);
+			const path_and_point = PlayerPointsAndPathsDTO.Deserialize(ppDTO, this.#iPlayerID, this.#iOtherPlayerId);
 			if (path_and_point.Points !== undefined)
 				await this.#SetAllPoints(path_and_point.Points);
 			if (path_and_point.Paths !== undefined)
@@ -1355,17 +1374,12 @@ class InkBallGame {
 	}
 
 	async #SetAllPoints(points) {
-		//Un-Minimize amount of data transported on the wire through SignalR or on the page: status field
-		const DataUnMinimizerStatus = (status) => status - 3;
-
-		//Un-Minimize amount of data transported on the wire through SignalR or on the page: player id field
-		const DataUnMinimizerPlayerId = (playerId) => playerId - 1;
 
 		try {
 			await this.#Points.BeginBulkStorage();
 
-			for (const [x, y, Status, iPlayerId] of points) {
-				await this.#SetPoint(x, y, DataUnMinimizerStatus(Status), DataUnMinimizerPlayerId(iPlayerId));
+			for (const { x, y, Status, iPlayerId } of points) {
+				await this.#SetPoint(x, y, Status, iPlayerId);
 			}
 		}
 		finally {
@@ -1580,8 +1594,10 @@ class InkBallGame {
 				this.#bHandlingEvent = true;
 
 				try {
-					const point = await this.#SignalRConnection.invoke("ClientToServerPoint", payload);
-					await this.#ReceivedPointProcessing(point);
+					const timestamp = await this.#SignalRConnection.invoke("ClientToServerPoint", payload);
+					payload.TimeStamp = typeof timestamp === 'string' ? 
+					new Date(timestamp) : timestamp;
+					await this.#ReceivedPointProcessing(payload);
 				} catch (err) {
 					LocalError(err.toString());
 					if (revertFunction !== undefined)
@@ -3176,7 +3192,7 @@ class InkBallGame {
 
 				CLUSTERING_AND_CONCAVEMAN: results.map(found => {
 					rand_color = found.randomColor; //random color for each points
-					
+
 					return {
 						clustered_point_coords: found.clustered_point_coords.map(({ x, y }) => {
 							const pt = this.#Points.get(y * this.#iGridWidth + x); //get point from points store
@@ -3667,7 +3683,7 @@ class InkBallGame {
 
 		if (gameOptions.PointsAsJavaScriptArray !== null) {
 			await game.StartSignalRConnection(false);
-			await game.#SetAllPoints(gameOptions.PointsAsJavaScriptArray);
+			await game.#SetAllPoints(PlayerPointsAndPathsDTO.UnMinimizePoints(gameOptions.PointsAsJavaScriptArray, iPlayerID, iOtherPlayerID));
 			await game.#SetAllPaths(gameOptions.PathsAsJavaScriptArray);
 		}
 		else {

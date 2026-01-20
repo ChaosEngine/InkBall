@@ -27,12 +27,12 @@ namespace InkBall.Module.Pages
 
 		public HtmlString PointsAsJavaScriptArray
 		{
-			get { return new HtmlString(CommonPoint.GetPointsAsJavaScriptArrayForPage(PlayerPointsAndPaths.Points)); }
+			get { return new HtmlString(PlayerPointsAndPathsDTO.GetPointsAsJavaScriptArrayForPage(PlayerPointsAndPaths.Points, base.Player)); }
 		}
 
 		public HtmlString PathsAsJavaScriptArray
 		{
-			get { return new HtmlString(InkBallPath.GetPathsAsJavaScriptArrayForPage(PlayerPointsAndPaths.Paths)); }
+			get { return new HtmlString(PlayerPointsAndPathsDTO.GetPathsAsJavaScriptArrayForPage(PlayerPointsAndPaths.Paths)); }
 		}
 
 		public bool IsReadonly { get; private set; }
@@ -76,7 +76,7 @@ namespace InkBall.Module.Pages
 			this.IsReadonly = false;
 
 #if !LOAD_POINTS_AND_PATHS_FROM_SIGNALR
-			PlayerPointsAndPaths = await _dbContext.LoadPointsAndPathsAsync(Game.iId, token, true);
+			PlayerPointsAndPaths = await _dbContext.LoadPointsAndPathsAsync(ActiveGame.iId, token, true);
 #endif
 			return Page();
 		}
@@ -123,7 +123,7 @@ namespace InkBall.Module.Pages
 			this.IsReadonly = true;
 
 #if !LOAD_POINTS_AND_PATHS_FROM_SIGNALR
-			PlayerPointsAndPaths = await _dbContext.LoadPointsAndPathsAsync(Game.iId, token, true);
+			PlayerPointsAndPaths = await _dbContext.LoadPointsAndPathsAsync(ActiveGame.iId, token, true);
 #endif
 			return Page();
 		}
