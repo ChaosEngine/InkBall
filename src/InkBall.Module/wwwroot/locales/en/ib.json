@@ -73,7 +73,6 @@
 		"testDFS2": "DFS 2",
 		"floodFill": "Flood fill",
 		"aStar": "A-Star",
-		"aiSurrPredict": "AI surrounding predictions",
 		"placeRed": "Place Red",
 		"placeBlue": "Place Blue",
 		"message2Send": "Message to send",
@@ -130,10 +129,17 @@
 		"othPlConn": "Other player {{usr}} connected 😁",
 		"othPlDisc": "Other player {{usr}} disconnected 😢",
 		"AI": {
+			"surrPredict": "AI surrounding predictions",
 			"clustFirstClick": "!!!First you need to click some point with mouse to pick the color!!!",
 			"groupPtsFirst": "!!!First you need to click 'blue' starting point with mouse!!!",
 			"dfs2First": "!!!First you need to click starting point with mouse!!!",
-			"aStarFirst": "!!!First you need to click two (starting and ending) points with mouse!!!"
+			"aStarFirst": "!!!First you need to click two (starting and ending) points with mouse!!!",
+			"difficult": {
+				"easy": "Easy",
+				"medium": "Medium",
+				"hard": "Hard",
+				"title": "AI difficulty level selection"
+			}
 		}
 	},
 	"highscores": {

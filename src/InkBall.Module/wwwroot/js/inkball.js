@@ -575,7 +575,6 @@ class InkBallGame {
 	#iPlayerID;
 	#iOtherPlayerId;
 	// #iDelayBetweenMultiCaptures;
-	// #iTooLong2Duration;
 	// #iSlowdownLevel;
 	#iGridWidth;
 	#iGridHeight;
@@ -657,11 +656,10 @@ class InkBallGame {
 	 * @param {boolean} bIsPlayerActive is this player active now
 	 * @param {boolean} bViewOnly only viewing the game no interaction
 	 * @param {number} pathAfterPointDrawAllowanceSecAmount is number of seconds, a player is allowed to start drawing path after putting point
-	 * //@param {number} iTooLong2Duration too long wait duration
 	 */
 	constructor(iGameID, iPlayerID, iOtherPlayerID, sHubName, loggingLevel, hubProtocol, transportType, serverTimeoutInMilliseconds,
 		gameType, bIsPlayingWithRed = true, bIsThisPlayer1 = true, bIsPlayerActive = true, bViewOnly = false,
-		pathAfterPointDrawAllowanceSecAmount = 60/* , iTooLong2Duration = 125 */) {
+		pathAfterPointDrawAllowanceSecAmount = 60) {
 		this.#iGameID = iGameID;
 		this.#iPlayerID = iPlayerID;
 		this.#iOtherPlayerId = iOtherPlayerID;
@@ -677,7 +675,6 @@ class InkBallGame {
 		// this.#bIsWon = false;
 		this.#bPointsAndPathsLoaded = false;
 		// this.#iDelayBetweenMultiCaptures = 4000;
-		// this.#iTooLong2Duration = iTooLong2Duration;
 		this.#Timer = null;
 		this.#ReconnectTimer = null;
 		// this.#WaitStartTime = null;
@@ -685,7 +682,7 @@ class InkBallGame {
 			countdownSeconds: pathAfterPointDrawAllowanceSecAmount,
 			labelSelector: "#debug2",
 			initialStart: true,
-			countdownReachedHandler: this.CountDownReachedHandler.bind(this)
+			countdownReachedHandler: this.#CountDownReachedHandler.bind(this)
 		};
 		// this.#iSlowdownLevel = 0;
 		this.#iGridWidth = 0;
@@ -904,7 +901,7 @@ class InkBallGame {
 	 * @param {boolean} loadPointsAndPathsFromSignalR load points and path through SignalR
 	 * @returns {Promise} promise resolving when connected
 	 */
-	async StartSignalRConnection(loadPointsAndPathsFromSignalR) {
+	async #StartSignalRConnection(loadPointsAndPathsFromSignalR) {
 		if (this.#SignalRConnection === null) return Promise.reject(new Error(localizeMessage('err.signalrNull', "signalr conn is null")));
 		if (false === this.#bPointsAndPathsLoaded)
 			this.#bPointsAndPathsLoaded = !loadPointsAndPathsFromSignalR;
@@ -1595,8 +1592,8 @@ class InkBallGame {
 
 				try {
 					const timestamp = await this.#SignalRConnection.invoke("ClientToServerPoint", payload);
-					payload.TimeStamp = typeof timestamp === 'string' ? 
-					new Date(timestamp) : timestamp;
+					payload.TimeStamp = typeof timestamp === 'string' ?
+						new Date(timestamp) : timestamp;
 					await this.#ReceivedPointProcessing(payload);
 				} catch (err) {
 					LocalError(err.toString());
@@ -1669,7 +1666,7 @@ class InkBallGame {
 	 * Callback handler for time to execute when reaching zero
 	 * @param {HTMLElement} label element showing timer text
 	 */
-	CountDownReachedHandler(label) {
+	#CountDownReachedHandler(label) {
 		if (label)
 			label.textContent = '';
 		//this.#NotifyBrowser('Time is running out', 'make a move');
@@ -2406,7 +2403,7 @@ class InkBallGame {
 	 * Debug function
 	 * @param {string} sSelector2Set selector where to display output
 	 */
-	async CountPointsDebug(sSelector2Set) {
+	async #CountPointsDebug(sSelector2Set) {
 		if (localizeSelector) {
 			const tags = [
 				{
@@ -3383,14 +3380,11 @@ class InkBallGame {
 	 * @param {string} version is semVer string of main module (for IndexedDb DB version)
 	 * @param {Array} ddlTestActions array of test actions button ids
 	 * @param {Array<string>} arrServiceModeControls controls of service menu or null
-	 * //@param {number} iTooLong2Duration how long waiting is too long
+	 * @param {Array<string>} arrDifficultySelectors controls of AI difficulty selectors or null
 	 */
-	async PrepareDrawing(sScreen, sPlayer1Name, sPlayer2Name, sGameStatus, sSurrenderButton, sCancelPath, sPause, sStopAndDraw,
-		sMsgInputSel, sMsgListSel, sMsgSendButtonSel, sLastMoveGameTimeStamp, useIndexedDbStore, version, ddlTestActions,
-		arrServiceModeControls/* , iTooLong2Duration = 125 */) {
+	async #PrepareDrawing(sScreen, sPlayer1Name, sPlayer2Name, sGameStatus, sSurrenderButton, sCancelPath, sPause, sStopAndDraw, sMsgInputSel, sMsgListSel, sMsgSendButtonSel, sLastMoveGameTimeStamp, useIndexedDbStore, version, ddlTestActions, arrServiceModeControls, arrDifficultySelectors) {
 		// this.#bIsWon = false;
 		// this.#iDelayBetweenMultiCaptures = 4000;
-		// this.#iTooLong2Duration = iTooLong2Duration;
 		this.#Timer = null;
 		// this.#WaitStartTime = null;
 		// this.#iSlowdownLevel = 0;
@@ -3450,7 +3444,6 @@ class InkBallGame {
 		this.#rAF_FrameID = null;
 		this.#workingCyclePolyLine = null;
 		this.#cyclesFound = [];
-		this.#AIMethod = null;
 		///////CpuGame variables end//////
 
 		this.#SvgVml = new SvgVml();
@@ -3490,12 +3483,15 @@ class InkBallGame {
 			this.#CancelPath.onclick = this.#OnCancelClick.bind(this);
 			this.#StopAndDraw.onclick = this.#OnStopAndDraw.bind(this);
 			if (false === this.#bIsCPUGame) {
+				//Human game, not AI
 				document.querySelector(this.#sMsgInputSel).disabled = '';
 
 				this.#MessagesRingBufferStore = new MessagesRingBufferStore(window.localStorage, this);
 				this.#MessagesRingBufferStore.RestoreMessages(this.#sMsgListSel, this.#iPlayerID, this.#iOtherPlayerId, this.#bIsPlayingWithRed, this.#Player1Name, this.#Player2Name);
 			}
 			else {
+				//AI game or CPU game
+
 				//Service Menu
 				if (document.querySelector(arrServiceModeControls[0]) !== null) {
 					// document.getElementById('testArea').classList.remove("d-none");
@@ -3522,6 +3518,68 @@ class InkBallGame {
 					document.querySelector(arrServiceModeControls[1]).onclick = this.#OnTestServiceModeClick.bind(this);
 					document.querySelector(arrServiceModeControls[2]).onclick = this.#OnTestServiceModeClick.bind(this);
 				}
+
+				//Difficulty level selectors
+				if (arrDifficultySelectors && arrDifficultySelectors.length === 3) {
+					//get all 3 selectors from #id: easy, medium, hard
+					const easy = document.querySelector(arrDifficultySelectors[0]),
+						medium = document.querySelector(arrDifficultySelectors[1]),
+						hard = document.querySelector(arrDifficultySelectors[2]);
+
+					//load AI params from local_storage
+					let aiParams = this.#LoadAIParamsFromStore(window.localStorage);
+
+					//implement on change on all of those selectors
+					const onChangeDifficulty = (event) => {
+						if (event.target === easy && easy.checked === true) {
+							//easy selected
+							medium.checked = hard.checked = false;
+							aiParams = this.#LoadAIParamsFromStore(window.localStorage);
+							aiParams = { ...aiParams, minPointsPerCluster: 3 };
+							this.#SaveAIParamsToStore(aiParams, window.localStorage);//save params to local_storage
+						}
+						else if (event.target === medium && medium.checked === true) {
+							//medium selected
+							easy.checked = hard.checked = false;
+							aiParams = this.#LoadAIParamsFromStore(window.localStorage);
+							aiParams = { ...aiParams, minPointsPerCluster: 2 };
+							this.#SaveAIParamsToStore(aiParams, window.localStorage);//save params to local_storage
+						}
+						else if (event.target === hard && hard.checked === true) {
+							//hard selected
+							easy.checked = medium.checked = false;
+							aiParams = this.#LoadAIParamsFromStore(window.localStorage);
+							aiParams = { ...aiParams, minPointsPerCluster: 1 };
+							this.#SaveAIParamsToStore(aiParams, window.localStorage);//save params to local_storage
+						}
+					};
+					easy.onchange = medium.onchange = hard.onchange = onChangeDifficulty;
+
+
+					//set initial state from local_storage
+					const savedDifficulty = (aiParams.minPointsPerCluster || 2);
+					if (savedDifficulty === 3) {
+						medium.checked = hard.checked = false;
+						easy.checked = true;
+					}
+					else if (savedDifficulty === 2) {
+						easy.checked = hard.checked = false;
+						medium.checked = true;
+					}
+					else if (savedDifficulty === 1) {
+						easy.checked = medium.checked = false;
+						hard.checked = true;
+					}
+					else {
+						//default to medium
+						easy.checked = hard.checked = false;
+						medium.checked = true;
+					}
+				}
+
+
+				document.querySelector(this.#sMsgInputSel).disabled = 'disabled';
+				//chat functionality is not needed in CPU game, so we can
 
 				//disable or even delete chat functionality, coz we're not going to chat with CPU bot
 				//const chatSection = document.querySelector(this.#sMsgListSel).parentElement;
@@ -3677,20 +3735,22 @@ class InkBallGame {
 			signalR.HttpTransportType.None, servTimeoutMillis,
 			gameType, bPlayingWithRed, bIsThisPlayer1, bPlayerActive, isReadonly, pathAfterPointDrawAllowanceSecAmount
 		);
-		await game.PrepareDrawing('#screen', '#Player1Name', '#Player2Name', '#gameStatus', '#SurrenderButton', '#CancelPath', '#Pause', '#StopAndDraw',
-			'#messageInput', '#messagesList', '#sendButton', sLastMoveTimeStampUtcIso, gameOptions.PointsAsJavaScriptArray === null, version,
-			['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints', '#TestFindSurroundablePoints', '#TestDFS2', '#FloodFill', '#AStar', '#AISurrPredict'], ['#serviceMenu', '#cbSrvMnuRed', '#cbSrvMnuBlue']);
+		await game.#PrepareDrawing('#screen', '#Player1Name', '#Player2Name', '#gameStatus', '#SurrenderButton',
+			'#CancelPath', '#Pause', '#StopAndDraw', '#messageInput', '#messagesList', '#sendButton',
+			sLastMoveTimeStampUtcIso, gameOptions.PointsAsJavaScriptArray === null, version,
+			['#TestBuildGraph', '#TestConcaveman', '#TestMarkAllCycles', '#TestGroupPoints', '#TestFindSurroundablePoints', '#TestDFS2', '#FloodFill', '#AStar', '#AISurrPredict'],
+			['#serviceMenu', '#cbSrvMnuRed', '#cbSrvMnuBlue'], ['#radEasy', '#radMedium', '#radHard']);
 
 		if (gameOptions.PointsAsJavaScriptArray !== null) {
-			await game.StartSignalRConnection(false);
+			await game.#StartSignalRConnection(false);
 			await game.#SetAllPoints(PlayerPointsAndPathsDTO.UnMinimizePoints(gameOptions.PointsAsJavaScriptArray, iPlayerID, iOtherPlayerID));
 			await game.#SetAllPaths(gameOptions.PathsAsJavaScriptArray);
 		}
 		else {
-			await game.StartSignalRConnection(true);
+			await game.#StartSignalRConnection(true);
 		}
 		//alert('a QQ');
-		await game.CountPointsDebug("#debug2");
+		await game.#CountPointsDebug("#debug2");
 
 		//delete window.gameOptions;
 		window.game = game;

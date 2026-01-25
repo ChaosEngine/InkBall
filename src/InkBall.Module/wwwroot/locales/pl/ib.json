@@ -73,7 +73,6 @@
 		"testDFS2": "DFS 2",
 		"floodFill": "Wypełnienie metodą rozlewania",
 		"aStar": "A-Star",
-		"aiSurrPredict": "Predykcje otaczania AI",
 		"placeRed": "Postaw czerwony",
 		"placeBlue": "Postaw niebieski",
 		"message2Send": "Wiadomość do wysłania",
@@ -130,10 +129,17 @@
 		"othPlConn": "Inny gracz {{usr}} połączony 😁",
 		"othPlDisc": "Inny gracz {{usr}} rozłączony 😢",
 		"AI": {
+			"surrPredict": "Predykcje otaczania AI",
 			"clustFirstClick": "!!!Najpierw musisz kliknąć myszką w jakimś punkcie, aby wybrać kolor!!!",
 			"groupPtsFirst": "!!!Najpierw musisz kliknąć 'niebieski' punkt startowy myszą!!!",
 			"dfs2First": "!!!Najpierw musisz kliknąć myszą punkt początkowy!!!",
-			"aStarFirst": "!!!Najpierw musisz kliknąć myszką dwa punkty (początkowy i końcowy)!!!"
+			"aStarFirst": "!!!Najpierw musisz kliknąć myszką dwa punkty (początkowy i końcowy)!!!",
+			"difficult": {
+				"easy": "Łatwy",
+				"medium": "Średni",
+				"hard": "Trudny",
+				"title": "Wybór poziomu trudności AI"
+			}
 		}
 	},
 	"highscores": {

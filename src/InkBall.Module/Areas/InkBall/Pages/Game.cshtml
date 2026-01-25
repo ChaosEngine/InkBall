@@ -47,6 +47,14 @@
 			<a id='Pause' href='GamesList' class="btn btn-outline-primary" data-i18n='ib:game.pause'>pause</a>
 			<button id='SurrenderButton' type='submit' name='action' value="@surrender_win_cancel_name" class='btn btn-outline-primary' disabled data-i18n='ib:game.surrender'>surrender</button>
 		</div>
+		<div id="difficulty" class="col-xs-6 col-sm-auto btn-group h-100 p-0 ms-0 me-2" role="group" aria-label="AI difficulty level" title="AI difficulty level" data-i18n='[aria-label]ib:game.AI.difficult.title;[title]ib:game.AI.difficult.title'>
+			<input type="radio" class="btn-check" name="aiDiff" id="radEasy" autocomplete="off">
+			<label class="btn btn-outline-success" for="radEasy" data-i18n='ib:game.AI.difficult.easy'>Easy</label>
+			<input type="radio" class="btn-check" name="aiDiff" id="radMedium" autocomplete="off">
+			<label class="btn btn-outline-warning" for="radMedium" data-i18n='ib:game.AI.difficult.medium'>Medium</label>
+			<input type="radio" class="btn-check" name="aiDiff" id="radHard" autocomplete="off">
+			<label class="btn btn-outline-danger" for="radHard" data-i18n='ib:game.AI.difficult.hard'>Hard</label>
+		</div>
 		<div class="col-xs-6 col-sm-auto ps-0">
 			<button id="StopAndDraw" type="button" class='btn btn-warning' disabled data-i18n='ib:game.stopAndDraw'>Stop and Draw</button>
 			<button id="CancelPath" type="button" class='btn btn-primary' disabled data-i18n='ib:game.cancelPath'>Cancel path</button>
@@ -68,7 +76,7 @@
 					<li><a class="dropdown-item" href="#" id="TestDFS2" data-i18n='ib:game.testDFS2'>DFS 2</a></li>
 					<li><a class="dropdown-item" href="#" id="FloodFill" data-i18n='ib:game.floodFill'>Flood fill</a></li>
 					<li><a class="dropdown-item" href="#" id="AStar" data-i18n='ib:game.aStar'>A-Star</a></li>
-					<li><a class="dropdown-item fw-semibold" href="#" id="AISurrPredict" data-i18n='ib:game.aiSurrPredict'>AI surrounding predictions</a></li>
+					<li><a class="dropdown-item fw-semibold" href="#" id="AISurrPredict" data-i18n='ib:game.AI.surrPredict'>AI surrounding predictions</a></li>
 				</ul>
 			</div>
 			

@@ -65,6 +65,9 @@ p.inkgame {
 .inkgame ul#messagesList li span.red {
   background-color: rgba(255, 69, 0, 0.3098039216);
 }
+.inkgame #difficulty {
+  background-color: var(--bs-body-bg);
+}
 
 circle[data-status=POINT_FREE_RED] {
   fill: var(--redish);
