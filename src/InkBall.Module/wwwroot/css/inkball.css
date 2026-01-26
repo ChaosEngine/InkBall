@@ -11,7 +11,7 @@ p.inkgame {
   margin-bottom: 0.3em;
 }
 
-.inkgame.container:has(div[data-otherplayerid="-1"]) {
+.inkgame.container[data-otherplayerid="-1"] {
   background: var(--aibckgrnd) center;
 }
 .inkgame div#status span {
@@ -136,10 +136,6 @@ polyline {
   height: 64em;
   max-width: 64em;
   max-height: 64em;
-}
-
-.msgchat[data-otherplayerid="-1"], .msgchat[data-otherplayerid=""] {
-  display: none;
 }
 
 /**********inkgames(list)*********/

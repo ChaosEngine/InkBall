@@ -60,7 +60,7 @@ p.inkgame {
 }
 
 .inkgame {
-	&.container:has(div[data-otherplayerid="-1"]) {
+	&.container[data-otherplayerid="-1"] {
 		background: var(--aibckgrnd) center;
 	}
 	
@@ -206,10 +206,6 @@ polyline {
 // 	@include irregularBoard('.boardsize', 64, 64, 'none', 'gray', 'white');
 
 @include board('.boardsize', 64, 64);
-
-.msgchat[data-otherplayerid="-1"], .msgchat[data-otherplayerid=""] {
-	display: none;
-}
 
 /**********inkgames(list)*********/
 .inkgames {

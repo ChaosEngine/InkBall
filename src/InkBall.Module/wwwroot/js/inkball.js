@@ -963,7 +963,7 @@ class InkBallGame {
 			this.#iOtherPlayerId = iOtherPlayerId;
 			const sMsg = PlayerJoiningCommand.Format(join);
 
-			document.querySelector('.msgchat').dataset.otherplayerid = this.#iOtherPlayerId;
+			document.querySelector('.container.inkgame').dataset.otherplayerid = this.#iOtherPlayerId;
 
 			const li = document.createElement("li");
 			const strong = document.createElement("strong");
@@ -3578,7 +3578,7 @@ class InkBallGame {
 				}
 
 
-				document.querySelector(this.#sMsgInputSel).disabled = 'disabled';
+				// document.querySelector(this.#sMsgInputSel).disabled = 'disabled';
 				//chat functionality is not needed in CPU game, so we can
 
 				//disable or even delete chat functionality, coz we're not going to chat with CPU bot
@@ -3715,7 +3715,7 @@ class InkBallGame {
 		document.getElementById('gameID').textContent = iGameID;
 		document.querySelector(".container.inkgame form > input[type='hidden'][name='GameID']").value = iGameID;
 		const iPlayerID = gameOptions.iPlayerID;
-		const iOtherPlayerID = parseInt(document.querySelector('.msgchat').dataset.otherplayerid) || null;
+		const iOtherPlayerID = parseInt(document.querySelector('.container.inkgame').dataset.otherplayerid) || null;
 		gameOptions.iOtherPlayerID = iOtherPlayerID;
 		document.getElementById('playerID').textContent = iPlayerID;
 		const bPlayingWithRed = gameOptions.bPlayingWithRed;
