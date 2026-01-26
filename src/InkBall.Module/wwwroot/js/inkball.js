@@ -4758,48 +4758,175 @@ function HomeOnLoad(modelMessage, bIsCurrentGameOk, logoutPath, loginPath, regis
 	const bIsLoggedIn = userName !== '' ? true : false;
 
 	const form = document.querySelector(".inkhome form");
-	let innerForm = '';
+
 	if (bIsLoggedIn) {
 		if (bIsCurrentGameOk) {
-			//continue
-			innerForm += "<a href='Game' class='btn btn-primary btn-lg rounded-top' data-i18n='ib:home.continue'>Continue</a>";
+			//continue - Create Continue link
+			const continueLink = document.createElement('a');
+			continueLink.href = 'Game';
+			continueLink.classList.add('btn', 'btn-primary', 'btn-lg', 'rounded-top');
+			continueLink.dataset.i18n = 'ib:home.continue';
+			continueLink.textContent = 'Continue';
+			form.appendChild(continueLink);
 		}
 		else {
-			//new game
-			innerForm +=
-				`<button type='submit' name='action' value='New game' class='btn btn-primary btn-lg rounded-top' data-i18n='ib:home.newGame'>New game</button>
-<div class='w-100'><select name='GameType' id='GameType' class='form-select' required>
-<option value='' selected='selected' data-i18n='ib:home.chooseGameType'>Choose game type</option>
-<optgroup label='Game types' data-i18n='[label]ib:home.gameTypes.name'>
-<option value='0' data-i18n='ib:home.gameTypes.firstCapture'>First capture wins</option>
-<option value='1' data-i18n='ib:home.gameTypes.first5Captures'>First 5 captures wins</option>
-<option value='2' data-i18n='ib:home.gameTypes.first5Paths'>First 5 paths wins</option>
-<option value='3' data-i18n='ib:home.gameTypes.advantageOf5'>Advantage of 5 paths wins</option>
-</optgroup>
-</select>
-<div class='invalid-feedback' data-i18n='ib:home.chooseGameType'>Invalid game type</div></div>
+			//new game - Create New Game button
+			const newGameBtn = document.createElement('button');
+			newGameBtn.type = 'submit';
+			newGameBtn.name = 'action';
+			newGameBtn.value = 'New game';
+			newGameBtn.classList.add('btn', 'btn-primary', 'btn-lg', 'rounded-top');
+			newGameBtn.dataset.i18n = 'ib:home.newGame';
+			newGameBtn.textContent = 'New game';
+			form.appendChild(newGameBtn);
 
-<div class='w-100'><select name='BoardSize' id='BoardSize' class='form-select' required>
-<option value='' selected='selected' data-i18n='ib:home.boardSize.chooseBoardSize'>Choose board size</option>
-<optgroup label='Board sizes' data-i18n='[label]ib:home.boardSize.boardSizes'>
-<option value='20'>20 x 26</option>
-<option value='40'>40 x 52</option>
-<option value='64'>64 x 64</option>
-</optgroup>
-</select>
-<div class='invalid-feedback' data-i18n='ib:home.boardSize.chooseBoardSize'>Invalid board size</div></div>
+			// Create GameType select
+			const gameTypeDiv = document.createElement('div');
+			gameTypeDiv.classList.add('w-100');
 
-<div class='form-check form-switch w-100'>
-<input type='checkbox' class='form-check-input form-control-input' name='CpuOponent' id='CpuOponent' />
-<label class='form-check-label' for='CpuOponent' data-i18n='ib:home.playAgainstCPU'>Play against CPU</label>
-</div>`;
+			const gameTypeSelect = document.createElement('select');
+			gameTypeSelect.name = 'GameType';
+			gameTypeSelect.id = 'GameType';
+			gameTypeSelect.classList.add('form-select');
+			gameTypeSelect.required = true;
+
+			const gameTypeDefault = document.createElement('option');
+			gameTypeDefault.value = '';
+			gameTypeDefault.selected = true;
+			gameTypeDefault.dataset.i18n = 'ib:home.chooseGameType';
+			gameTypeDefault.textContent = 'Choose game type';
+			gameTypeSelect.appendChild(gameTypeDefault);
+
+			const gameTypeOptgroup = document.createElement('optgroup');
+			gameTypeOptgroup.label = 'Game types';
+			gameTypeOptgroup.dataset.i18n = '[label]ib:home.gameTypes.name';
+
+			const gameTypeOptions = [
+				{ value: '0', i18n: 'ib:home.gameTypes.firstCapture', text: 'First capture wins' },
+				{ value: '1', i18n: 'ib:home.gameTypes.first5Captures', text: 'First 5 captures wins' },
+				{ value: '2', i18n: 'ib:home.gameTypes.first5Paths', text: 'First 5 paths wins' },
+				{ value: '3', i18n: 'ib:home.gameTypes.advantageOf5', text: 'Advantage of 5 paths wins' }
+			];
+
+			gameTypeOptions.forEach(opt => {
+				const option = document.createElement('option');
+				option.value = opt.value;
+				option.dataset.i18n = opt.i18n;
+				option.textContent = opt.text;
+				gameTypeOptgroup.appendChild(option);
+			});
+
+			gameTypeSelect.appendChild(gameTypeOptgroup);
+
+			const gameTypeError = document.createElement('div');
+			gameTypeError.classList.add('invalid-feedback');
+			gameTypeError.dataset.i18n = 'ib:home.chooseGameType';
+			gameTypeError.textContent = 'Invalid game type';
+
+			gameTypeDiv.appendChild(gameTypeSelect);
+			gameTypeDiv.appendChild(gameTypeError);
+			form.appendChild(gameTypeDiv);
+
+			// Create BoardSize select
+			const boardSizeDiv = document.createElement('div');
+			boardSizeDiv.classList.add('w-100');
+
+			const boardSizeSelect = document.createElement('select');
+			boardSizeSelect.name = 'BoardSize';
+			boardSizeSelect.id = 'BoardSize';
+			boardSizeSelect.classList.add('form-select');
+			boardSizeSelect.required = true;
+
+			const boardSizeDefault = document.createElement('option');
+			boardSizeDefault.value = '';
+			boardSizeDefault.selected = true;
+			boardSizeDefault.dataset.i18n = 'ib:home.boardSize.chooseBoardSize';
+			boardSizeDefault.textContent = 'Choose board size';
+			boardSizeSelect.appendChild(boardSizeDefault);
+
+			const boardSizeOptgroup = document.createElement('optgroup');
+			boardSizeOptgroup.label = 'Board sizes';
+			boardSizeOptgroup.dataset.i18n = '[label]ib:home.boardSize.boardSizes';
+
+			const boardSizeOptions = [
+				{ value: '20', text: '20 x 26' },
+				{ value: '40', text: '40 x 52' },
+				{ value: '64', text: '64 x 64' }
+			];
+
+			boardSizeOptions.forEach(opt => {
+				const option = document.createElement('option');
+				option.value = opt.value;
+				option.textContent = opt.text;
+				boardSizeOptgroup.appendChild(option);
+			});
+
+			boardSizeSelect.appendChild(boardSizeOptgroup);
+
+			const boardSizeError = document.createElement('div');
+			boardSizeError.classList.add('invalid-feedback');
+			boardSizeError.dataset.i18n = 'ib:home.boardSize.chooseBoardSize';
+			boardSizeError.textContent = 'Invalid board size';
+
+			boardSizeDiv.appendChild(boardSizeSelect);
+			boardSizeDiv.appendChild(boardSizeError);
+			form.appendChild(boardSizeDiv);
+
+			// Create CPU Opponent checkbox
+			const cpuDiv = document.createElement('div');
+			cpuDiv.classList.add('form-check', 'form-switch', 'w-100');
+
+			const cpuCheckbox = document.createElement('input');
+			cpuCheckbox.type = 'checkbox';
+			cpuCheckbox.classList.add('form-check-input', 'form-control-input');
+			cpuCheckbox.name = 'CpuOponent';
+			cpuCheckbox.id = 'CpuOponent';
+
+			const cpuLabel = document.createElement('label');
+			cpuLabel.classList.add('form-check-label');
+			cpuLabel.setAttribute('for', 'CpuOponent');
+			cpuLabel.dataset.i18n = 'ib:home.playAgainstCPU';
+			cpuLabel.textContent = 'Play against CPU';
+
+			cpuDiv.appendChild(cpuCheckbox);
+			cpuDiv.appendChild(cpuLabel);
+			form.appendChild(cpuDiv);
 		}
 
-		innerForm +=
-			`<a href='GamesList' class='btn btn-primary' data-i18n='ib:home.gamesList'>Games list</a>
-<a href='Highscores' class='btn btn-primary' data-i18n='ib:home.best'>Best</a>
-<a href='Rules' class='btn btn-primary' data-i18n='ib:home.gameRules'>Game rules</a>
-${(logoutPath ? "<button type='submit' name='action' value='Logout' class='btn btn-warning rounded-bottom' formnovalidate='formnovalidate' data-i18n='ib:home.logout'>Logout</button>" : "")}`;
+		// Create common navigation links for logged in users
+		const gamesListLink = document.createElement('a');
+		gamesListLink.href = 'GamesList';
+		gamesListLink.classList.add('btn', 'btn-primary');
+		gamesListLink.dataset.i18n = 'ib:home.gamesList';
+		gamesListLink.textContent = 'Games list';
+		form.appendChild(gamesListLink);
+
+		const highscoresLink = document.createElement('a');
+		highscoresLink.href = 'Highscores';
+		highscoresLink.classList.add('btn', 'btn-primary');
+		highscoresLink.dataset.i18n = 'ib:home.best';
+		highscoresLink.textContent = 'Best';
+		form.appendChild(highscoresLink);
+
+		const rulesLink = document.createElement('a');
+		rulesLink.href = 'Rules';
+		rulesLink.classList.add('btn', 'btn-primary');
+		rulesLink.dataset.i18n = 'ib:home.gameRules';
+		rulesLink.textContent = 'Game rules';
+		form.appendChild(rulesLink);
+
+		// Create logout button if available
+		if (logoutPath) {
+			const logoutBtn = document.createElement('button');
+			logoutBtn.type = 'submit';
+			logoutBtn.name = 'action';
+			logoutBtn.value = 'Logout';
+			logoutBtn.classList.add('btn', 'btn-warning', 'rounded-bottom');
+			logoutBtn.setAttribute('formnovalidate', 'formnovalidate');
+			logoutBtn.dataset.i18n = 'ib:home.logout';
+			logoutBtn.textContent = 'Logout';
+			form.appendChild(logoutBtn);
+		}
 	}
 	else {
 		//not logged or bad
@@ -4808,12 +4935,34 @@ ${(logoutPath ? "<button type='submit' name='action' value='Logout' class='btn b
 		inkhome.textContent = 'You are not logged in ... or allowed 😅';
 		inkhome.dataset.i18n = 'ib:home.notLoggedIn';
 
-		innerForm +=
-			"<a href='Rules' class='btn btn-primary rounded-top' data-i18n='ib:home.gameRules'>Game rules</a>" +
-			(loginPath ? `<a href='${sanitizeUrl(loginPath)}' class='btn btn-primary' data-i18n='ib:home.login'>Login</a>` : "") +
-			(registerPath ? `<a href='${sanitizeUrl(registerPath)}' class='btn btn-primary rounded-bottom' data-i18n='ib:home.register'>Register</a>` : "");
+		// Create Rules link
+		const rulesLink = document.createElement('a');
+		rulesLink.href = 'Rules';
+		rulesLink.classList.add('btn', 'btn-primary', 'rounded-top');
+		rulesLink.dataset.i18n = 'ib:home.gameRules';
+		rulesLink.textContent = 'Game rules';
+		form.appendChild(rulesLink);
+
+		// Create Login link if available
+		if (loginPath) {
+			const loginLink = document.createElement('a');
+			loginLink.href = sanitizeUrl(loginPath);
+			loginLink.classList.add('btn', 'btn-primary');
+			loginLink.dataset.i18n = 'ib:home.login';
+			loginLink.textContent = 'Login';
+			form.appendChild(loginLink);
+		}
+
+		// Create Register link if available
+		if (registerPath) {
+			const registerLink = document.createElement('a');
+			registerLink.href = sanitizeUrl(registerPath);
+			registerLink.classList.add('btn', 'btn-primary', 'rounded-bottom');
+			registerLink.dataset.i18n = 'ib:home.register';
+			registerLink.textContent = 'Register';
+			form.appendChild(registerLink);
+		}
 	}
-	form.innerHTML += innerForm;
 }
 
 /**
