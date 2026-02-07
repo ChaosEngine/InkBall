@@ -1386,7 +1386,7 @@ class InkBallGame {
 
 	async #SetPath(packed, bIsRed, bBelong2ThisPlayer, iPathId = 0) {
 		const sPoints = packed.split(" ");
-		let sDelimiter = "", sPathPoints = "", p = null, x, y,
+		let sDelimiter = "", sPathPoints = "", p, x, y,
 			status = StatusEnum.POINT_STARTING;
 		for (const pair of sPoints) {
 			[x, y] = pair.split(",");
@@ -1421,7 +1421,7 @@ class InkBallGame {
 
 	async #CreateScreenPathFromIndexedDb(packed, sColor, iPathId) {
 		const sPoints = packed.split(" ");
-		let sDelimiter = "", sPathPoints = "", p = null, x, y,
+		let sDelimiter = "", sPathPoints = "", p, x, y,
 			status = StatusEnum.POINT_STARTING;
 		for (const pair of sPoints) {
 			[x, y] = pair.split(",");
@@ -3513,7 +3513,7 @@ class InkBallGame {
 					if (ddlTestActions.length > i)
 						document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestAStar.bind(this);
 					if (ddlTestActions.length > i)
-						document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestClustering.bind(this);
+						document.querySelector(ddlTestActions[i]).onclick = this.#OnTestClustering.bind(this);
 
 					document.querySelector(arrServiceModeControls[1]).onclick = this.#OnTestServiceModeClick.bind(this);
 					document.querySelector(arrServiceModeControls[2]).onclick = this.#OnTestServiceModeClick.bind(this);

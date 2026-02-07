@@ -174,8 +174,7 @@ namespace InkBall.Module
 			// 		{
 			// 			//https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Embedder-Policy
 			// 			//https://web.dev/coop-coep/
-			// 			ctx.Context.Response.Headers.Append("Cross-Origin-Embedder-Policy", "require-corp");
-			// 			ctx.Context.Response.Headers.Append("Cross-Origin-Opener-Policy", "same-origin");
+			// 			ProcessCorpHeadersForInkBall(ctx.Context.Response);
 			// 		}
 			// 	};
 			// }
@@ -270,6 +269,16 @@ namespace InkBall.Module
 			endpoints.MapHub<Hubs.GameHub>(path + Hubs.GameHub.HubName);
 		}
 
+		/// <summary>
+		/// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Embedder-Policy
+		///	https://web.dev/coop-coep/				
+		/// </summary>
+		/// <param name="response">Http response</param>
+		internal static void ProcessGameHeaders(HttpResponse response)
+		{
+			// response.Headers.Append("Cross-Origin-Embedder-Policy", "require-corp");
+			// response.Headers.Append("Cross-Origin-Opener-Policy", "same-origin");
+		}
 
 		public static IApplicationBuilder UseStaticFilesForInkBall(this IApplicationBuilder builder, string contentRootPath)
 		{
@@ -279,18 +288,14 @@ namespace InkBall.Module
 			builder.UseStaticFiles(new StaticFileOptions
 			{
 				FileProvider = new PhysicalFileProvider(contentRootPath),
-				// RequestPath = "/IB",
-				OnPrepareResponse = (ctx) =>
+				/* OnPrepareResponse = (ctx) =>
 				{
 					var path = ctx.Context.Request.Path.Value;
 					if (path.StartsWith("/js/AIWorker"))
 					{
-						//https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Embedder-Policy
-						//https://web.dev/coop-coep/
-						ctx.Context.Response.Headers.Append("Cross-Origin-Embedder-Policy", "require-corp");
-						ctx.Context.Response.Headers.Append("Cross-Origin-Opener-Policy", "same-origin");
+						ProcessGameHeaders(ctx.Context.Response);
 					}
-				}
+				} */
 			});
 
 			return builder;

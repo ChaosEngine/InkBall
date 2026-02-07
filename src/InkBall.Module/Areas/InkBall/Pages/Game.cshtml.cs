@@ -59,8 +59,7 @@ namespace InkBall.Module.Pages
 				GameHub.WebSocketAllowedOrigins.AddOrUpdate(Request.Host.Host);
 
 			//https://developer.chrome.com/blog/enabling-shared-array-buffer/
-			Response.Headers.Append("Cross-Origin-Embedder-Policy", "require-corp");
-			Response.Headers.Append("Cross-Origin-Opener-Policy", "same-origin");
+			CommonUIServiceCollectionExtensions.ProcessGameHeaders(Response);
 
 			var token = HttpContext.RequestAborted;
 
@@ -94,8 +93,7 @@ namespace InkBall.Module.Pages
 				GameHub.WebSocketAllowedOrigins.AddOrUpdate(Request.Host.Host);
 
 			//https://developer.chrome.com/blog/enabling-shared-array-buffer/
-			Response.Headers.Append("Cross-Origin-Embedder-Policy", "require-corp");
-			Response.Headers.Append("Cross-Origin-Opener-Policy", "same-origin");
+			CommonUIServiceCollectionExtensions.ProcessGameHeaders(Response);
 
 
 			if (!ModelState.IsValid)//model.GameID <= 0
