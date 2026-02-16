@@ -901,7 +901,7 @@ class InkBallGame {
 	 * @param {boolean} loadPointsAndPathsFromSignalR load points and path through SignalR
 	 * @returns {Promise} promise resolving when connected
 	 */
-	async #StartSignalRConnection(loadPointsAndPathsFromSignalR) {
+	async #SetupSignalRConnection(loadPointsAndPathsFromSignalR) {
 		if (this.#SignalRConnection === null) return Promise.reject(new Error(localizeMessage('err.signalrNull', "signalr conn is null")));
 		if (false === this.#bPointsAndPathsLoaded)
 			this.#bPointsAndPathsLoaded = !loadPointsAndPathsFromSignalR;
@@ -3703,10 +3703,10 @@ class InkBallGame {
 	}
 
 	/**
-	 * On load handler of maine game page
+	 * On load handler of main game page
 	 * @param {object} gameOptions options object passed from page with various settings and configs
 	 */
-	static async OnGameLoad(gameOptions) {
+	static async GameOnLoad(gameOptions) {
 		const isMsgpackDefined = window.msgpack5 !== undefined;
 		// const gameOptions = window.gameOptions;
 
@@ -3742,12 +3742,12 @@ class InkBallGame {
 			['#serviceMenu', '#cbSrvMnuRed', '#cbSrvMnuBlue'], ['#radEasy', '#radMedium', '#radHard']);
 
 		if (gameOptions.PointsAsJavaScriptArray !== null) {
-			await game.#StartSignalRConnection(false);
+			await game.#SetupSignalRConnection(false);
 			await game.#SetAllPoints(PlayerPointsAndPathsDTO.UnMinimizePoints(gameOptions.PointsAsJavaScriptArray, iPlayerID, iOtherPlayerID));
 			await game.#SetAllPaths(gameOptions.PathsAsJavaScriptArray);
 		}
 		else {
-			await game.#StartSignalRConnection(true);
+			await game.#SetupSignalRConnection(true);
 		}
 		//alert('a QQ');
 		await game.#CountPointsDebug("#debug2");

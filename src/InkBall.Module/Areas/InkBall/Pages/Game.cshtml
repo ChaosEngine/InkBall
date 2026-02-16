@@ -139,7 +139,7 @@
 	window.addEventListener('DOMContentLoaded', InkBallGame.OnGameDOMContentLoaded);
 	
 	window.addEventListener('load', async () => {
-		await InkBallGame.OnGameLoad({
+		await InkBallGame.GameOnLoad({
 			inkBallHubName: '@hubName',
 			iGameID: @Model.ActiveGame.iId,
 			iPlayerID: @Model.Player.iId,
