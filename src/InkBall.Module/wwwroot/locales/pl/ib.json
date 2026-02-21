@@ -23,7 +23,8 @@
 			"chooseBoardSize": "Wybierz rozmiar planszy",
 			"boardSizes": "Rozmiary planszy"
 		},
-		"playAgainstCPU": "Graj przeciwko CPU"
+		"playAgainstCPU": "Graj przeciwko CPU",
+		"video": "Wideo z rozgrywki"
 	},
 	"list": {
 		"title": "Lista gier",

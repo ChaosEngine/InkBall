@@ -23,7 +23,8 @@
 			"chooseBoardSize": "Choose board size",
 			"boardSizes": "Board sizes"
 		},
-		"playAgainstCPU": "Play against CPU"
+		"playAgainstCPU": "Play against CPU",
+		"video": "Game play video"
 	},
 	"list": {
 		"title": "Games list",
