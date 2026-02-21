@@ -145,7 +145,9 @@ namespace InkBall.IntegrationTests
 		}
 
 		[Theory]
-		[InlineData("InkBall/Home", "<picture aria-label=\"home screen image\">")]
+		[InlineData("InkBall/Home","""
+				<video src="https://khdfgwsg62.ufs.sh/f/nEF5ACUOfURTm3f745MMvDKLr0VsFzW2aJAEyTQ4Z8XRuHSd"
+			""")]
 		[InlineData("InkBall/Rules", "<li data-i18n='ib:rules.li00'>Player put dots on the grid one after another</li>")]
 		public async Task Pages_Anonymous(string page, string contentToCheck)
 		{
