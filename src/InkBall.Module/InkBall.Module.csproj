@@ -59,7 +59,7 @@
   </ItemGroup>
 -->
   <PropertyGroup>
-    <DefaultItemExcludes>$(DefaultItemExcludes);wwwroot\css\*.scss;wwwroot\img\grid*;wwwroot\js\grid*</DefaultItemExcludes>
+    <DefaultItemExcludes>$(DefaultItemExcludes);wwwroot\css\*.scss;wwwroot\img\grid*;wwwroot\img\*.mp4;wwwroot\js\grid*</DefaultItemExcludes>
   </PropertyGroup>
 
 </Project>
