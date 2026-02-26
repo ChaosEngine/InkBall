@@ -604,6 +604,9 @@ class InkBallGame {
 	#sMsgInputSel;
 	#sMsgSendButtonSel;
 	#sMsgListSel;
+	#MsgInput;
+	#MsgSendButton;
+	#MsgList;
 	#CancelPath;
 	#StopAndDraw;
 	#bMouseDown;
@@ -635,7 +638,6 @@ class InkBallGame {
 	#COLOR_OWNED_BLUE;
 	#DRAWING_PATH_COLOR;
 	#iConnErrCount;
-	#iExponentialBackOffMillis;
 	// #GameType;
 	#CursorPos;
 	#SvgVml;
@@ -666,7 +668,6 @@ class InkBallGame {
 		this.#bIsCPUGame = this.#iOtherPlayerId === -1;
 		// this.#GameType = GameTypeEnum[gameType];
 		this.#iConnErrCount = 0;
-		this.#iExponentialBackOffMillis = 2000;
 		this.#COLOR_RED = 'var(--redish)';
 		this.#COLOR_BLUE = 'var(--bluish)';
 		this.#COLOR_OWNED_RED = 'var(--owned_by_red)';
@@ -707,6 +708,9 @@ class InkBallGame {
 		this.#sMsgInputSel = null;
 		this.#sMsgSendButtonSel = null;
 		this.#sMsgListSel = null;
+		this.#MsgInput = null;
+		this.#MsgSendButton = null;
+		this.#MsgList = null;
 		this.#CancelPath = null;
 		this.#StopAndDraw = null;
 		this.#bMouseDown = false;
@@ -738,21 +742,47 @@ class InkBallGame {
 				transport: transportType,
 				accessTokenFactory: () => `iGameID=${this.#iGameID}&iPlayerID=${this.#iPlayerID}`
 			})
+			.withAutomaticReconnect({
+				nextRetryDelayInMilliseconds: retryContext => {
+					this.#iConnErrCount++;
+					if (retryContext.elapsedMilliseconds < 20_000) {
+						// If we've been reconnecting for less than 20 seconds so far,
+						// wait between 0 and 5 seconds before the next reconnect attempt.
+						return Math.random() * 5_000;
+					} else {
+						// If we've been reconnecting for more than 20 seconds so far, reconnect with lower frequency.
+						return Math.random() * 10_000;
+					}
+				}
+			})
 			.withHubProtocol(hubProtocol)
 			.configureLogging(loggingLevel)
 			.build();
 		this.#SignalRConnection.serverTimeoutInMilliseconds = serverTimeoutInMilliseconds;
+
+		this.#SignalRConnection.onreconnecting((err) => {
+			if (err !== null && err !== undefined)
+				LocalError(err);
+
+			if (this.#Screen !== null)
+				this.#Screen.style.cursor = "not-allowed";
+		});
+
+		this.#SignalRConnection.onreconnected(() => {
+			LocalLog(`connected; iConnErrCount = ${this.#iConnErrCount}`);
+
+			this.#iConnErrCount = 0;
+			if (this.#Screen !== null)
+				this.#Screen.style.cursor = this.#bIsPlayerActive ? "crosshair" : "wait";
+		});
 
 
 		this.#SignalRConnection.onclose(async (err) => {
 			if (err !== null && err !== undefined) {
 				LocalError(err);
 
-				this.#Screen.style.cursor = "not-allowed";
-				this.#iConnErrCount++;
-				setTimeout(() => this.#Connect(), 4000 +
-					(this.#iExponentialBackOffMillis * Math.max(this.#iConnErrCount, 5))//exponential back-off
-				);
+				if (this.#Screen !== null)
+					this.#Screen.style.cursor = "not-allowed";
 			}
 		});
 	}
@@ -780,7 +810,7 @@ class InkBallGame {
 		try {
 			await this.#SignalRConnection.start();
 			this.#iConnErrCount = 0;
-			LocalLog('connected; iConnErrCount = ' + this.#iConnErrCount);
+			LocalLog(`connected; iConnErrCount = ${this.#iConnErrCount}`);
 
 			if (this.#bViewOnly === false) {
 				if (sessionStorage.getItem("ApplicationUserSettings") === null) {
@@ -814,13 +844,11 @@ class InkBallGame {
 				this.#StartCPUCalculation();
 		}
 		catch (err) {
-			LocalError(err + '; iConnErrCount = ' + this.#iConnErrCount);
+			LocalError(`${err}; iConnErrCount = ${this.#iConnErrCount}`);
 
 			this.#Screen.style.cursor = "not-allowed";
 			this.#iConnErrCount++;
-			setTimeout(() => this.#Connect(), 4000 +
-				(this.#iExponentialBackOffMillis * Math.max(this.#iConnErrCount, 5))//exponential back-off
-			);
+			throw err;
 		}
 	}
 
@@ -915,7 +943,7 @@ class InkBallGame {
 					const li = document.createElement("li");
 					li.textContent = encodedMsg;
 					li.style = "font-style:italic";
-					document.querySelector(this.#sMsgListSel).appendChild(li);
+					this.#MsgList?.appendChild(li);
 				}
 
 				this.#NotifyBrowser(localizeMessage('game.newPoint', 'New Point'), encodedMsg);
@@ -935,7 +963,7 @@ class InkBallGame {
 						const li = document.createElement("li");
 						li.textContent = encodedMsg;
 						li.style = "font-style:italic";
-						document.querySelector(this.#sMsgListSel).appendChild(li);
+						this.#MsgList?.appendChild(li);
 					}
 
 					this.#NotifyBrowser(localizeMessage('game.newPath', 'New Path'), encodedMsg);
@@ -948,7 +976,7 @@ class InkBallGame {
 
 				let li = document.createElement("li");
 				li.textContent = encodedMsg;
-				document.querySelector(this.#sMsgListSel).appendChild(li);
+				this.#MsgList?.appendChild(li);
 
 				await this.#ReceivedWinProcessing(win);
 				this.#NotifyBrowser(localizeMessage('game.weHaveWinner', 'We have a winner'), encodedMsg);
@@ -970,7 +998,7 @@ class InkBallGame {
 			strong.classList.add('text-primary');
 			// strong.textContent = sMsg;
 			li.appendChild(strong);
-			document.querySelector(this.#sMsgListSel).appendChild(li);
+			this.#MsgList?.appendChild(li);
 
 			const encodedMsg = sMsg.split(';');
 			if (localizeSelector) {
@@ -1013,7 +1041,7 @@ class InkBallGame {
 			const strong = document.createElement("strong");
 			strong.classList.add('text-warning');
 			li.appendChild(strong);
-			document.querySelector(this.#sMsgListSel).appendChild(li);
+			this.#MsgList?.appendChild(li);
 
 			const user = this.#bIsPlayingWithRed ? this.#Player2Name.textContent : this.#Player1Name.textContent;
 			let title;
@@ -1045,7 +1073,7 @@ class InkBallGame {
 		this.#SignalRConnection.on("ServerToClientPlayerWin", async (win) => {
 			const encodedMsg = WinCommand.Format(win);
 
-			const msg_lst = document.querySelector(this.#sMsgListSel);
+			const msg_lst = this.#MsgList;
 			if (msg_lst !== null) {
 				const li = document.createElement("li");
 				const strong = document.createElement("strong");
@@ -1085,7 +1113,7 @@ class InkBallGame {
 					strong.classList.add('text-warning');
 					if (localizeSelector) {
 						li.appendChild(strong);
-						document.querySelector(this.#sMsgListSel).appendChild(li);
+						this.#MsgList?.appendChild(li);
 						strong.dataset.i18n = 'ib:game.othPlDisc';
 						strong.dataset.i18nOptions = `{ "usr": "${usr}" }`;
 
@@ -1096,7 +1124,7 @@ class InkBallGame {
 					else {
 						strong.textContent = encodedMsg;
 						li.appendChild(strong);
-						document.querySelector(this.#sMsgListSel).appendChild(li);
+						this.#MsgList?.appendChild(li);
 					}
 
 					this.#NotifyBrowser(localizeMessage('game.usrDisc', 'User disconnected'), encodedMsg);
@@ -1121,7 +1149,7 @@ class InkBallGame {
 				strong.classList.add('text-primary');
 				if (localizeSelector) {
 					li.appendChild(strong);
-					document.querySelector(this.#sMsgListSel).appendChild(li);
+					this.#MsgList?.appendChild(li);
 					strong.dataset.i18n = 'ib:game.othPlConn';
 					strong.dataset.i18nOptions = `{ "usr": "${usr}" }`;
 
@@ -1132,7 +1160,7 @@ class InkBallGame {
 				else {
 					strong.textContent = encodedMsg;
 					li.appendChild(strong);
-					document.querySelector(this.#sMsgListSel).appendChild(li);
+					this.#MsgList?.appendChild(li);
 				}
 
 				this.#NotifyBrowser(localizeMessage('game.usrCon', 'User connected'), encodedMsg);
@@ -1151,16 +1179,16 @@ class InkBallGame {
 			strong.classList.add('text-info');
 			strong.textContent = encodedMsg;
 			li.appendChild(strong);
-			document.querySelector(this.#sMsgListSel).appendChild(li);
+			this.#MsgList?.appendChild(li);
 
 			this.#NotifyBrowser(localizeMessageOpts('game.usrStrtDraw', { user }, `User ${user} started drawing new path`), encodedMsg);
 		});
 
 		if (false === this.#bIsCPUGame) {
-			document.querySelector(this.#sMsgSendButtonSel).addEventListener("click", async (event) => {
+			this.#MsgSendButton?.addEventListener("click", async (event) => {
 				event.preventDefault();
 
-				const encodedMsg = document.querySelector(this.#sMsgInputSel).value.trim();
+				const encodedMsg = this.#MsgInput?.value.trim();
 				if (encodedMsg === '') return;
 
 				let ping = new PingCommand(encodedMsg);
@@ -1170,12 +1198,12 @@ class InkBallGame {
 			}, false);
 
 			// Execute a function when the user releases a key on the keyboard
-			document.querySelector(this.#sMsgInputSel).addEventListener("keyup", (event) => {
+			this.#MsgInput?.addEventListener("keyup", (event) => {
 				event.preventDefault();// Cancel the default action, if needed
 
 				if (event.keyCode === 13) {// Number 13 is the "Enter" key on the keyboard
 					// Trigger the button element with a click
-					document.querySelector(this.#sMsgSendButtonSel).click();
+					this.#MsgSendButton?.click();
 				}
 			}, false);
 		}
@@ -1375,9 +1403,8 @@ class InkBallGame {
 		try {
 			await this.#Points.BeginBulkStorage();
 
-			for (const { x, y, Status, iPlayerId } of points) {
-				await this.#SetPoint(x, y, Status, iPlayerId);
-			}
+			const ops = points.map(({ x, y, Status, iPlayerId }) => this.#SetPoint(x, y, Status, iPlayerId));
+			await Promise.all(ops);
 		}
 		finally {
 			await this.#Points.EndBulkStorage();
@@ -1629,8 +1656,10 @@ class InkBallGame {
 			case CommandKindEnum.PING:
 				try {
 					await this.#SignalRConnection.invoke("ClientToServerPing", payload);
-					document.querySelector(this.#sMsgInputSel).value = '';
-					document.querySelector(this.#sMsgSendButtonSel).disabled = 'disabled';
+					if (this.#MsgInput)
+						this.#MsgInput.value = '';
+					if (this.#MsgSendButton)
+						this.#MsgSendButton.disabled = true;
 
 					const msg = payload.Message;
 					this.#MessagesRingBufferStore.Append(msg, true, this.#sMsgListSel, this.#bIsPlayingWithRed,
@@ -1743,6 +1772,7 @@ class InkBallGame {
 			const points = owned.split(" ");
 			const point_status = (this.#sDotColor === this.#COLOR_RED ? StatusEnum.POINT_OWNED_BY_RED : StatusEnum.POINT_OWNED_BY_BLUE);
 			const sOwnedCol = (this.#sDotColor === this.#COLOR_RED ? this.#COLOR_OWNED_RED : this.#COLOR_OWNED_BLUE);
+			const pointSetOps = [];
 			for (const packed of points) {
 				let [x, y] = packed.split(",");
 				x = parseInt(x), y = parseInt(y);
@@ -1751,9 +1781,10 @@ class InkBallGame {
 					p.SetStatus(point_status);
 					p.SetFillColor(sOwnedCol);
 					// p.SetStrokeColor(sOwnedCol);
-					await this.#Points.set(y * this.#iGridWidth + x, p);//update the point with new state,col etc.
+					pointSetOps.push(this.#Points.set(y * this.#iGridWidth + x, p));//update the point with new state,col etc.
 				}
 			}
+			await Promise.all(pointSetOps);
 
 
 			this.#bIsPlayerActive = true;
@@ -1783,6 +1814,7 @@ class InkBallGame {
 			points = owned.split(" ");
 			const point_status = (this.#sDotColor === this.#COLOR_RED ? StatusEnum.POINT_OWNED_BY_RED : StatusEnum.POINT_OWNED_BY_BLUE);
 			const sOwnedCol = (this.#sDotColor === this.#COLOR_RED ? this.#COLOR_OWNED_RED : this.#COLOR_OWNED_BLUE);
+			const pointSetOps = [];
 			for (const packed of points) {
 				let [x, y] = packed.split(",");
 				x = parseInt(x), y = parseInt(y);
@@ -1791,9 +1823,10 @@ class InkBallGame {
 					p.SetStatus(point_status);
 					p.SetFillColor(sOwnedCol);
 					// p.SetStrokeColor(sOwnedCol);
-					await this.#Points.set(y * this.#iGridWidth + x, p);//update the point with new state,col etc.
+					pointSetOps.push(this.#Points.set(y * this.#iGridWidth + x, p));//update the point with new state,col etc.
 				}
 			}
+			await Promise.all(pointSetOps);
 
 
 			this.#bIsPlayerActive = false;
@@ -3410,6 +3443,9 @@ class InkBallGame {
 		this.#sMsgInputSel = sMsgInputSel;
 		this.#sMsgListSel = sMsgListSel;
 		this.#sMsgSendButtonSel = sMsgSendButtonSel;
+		this.#MsgInput = document.querySelector(this.#sMsgInputSel);
+		this.#MsgList = document.querySelector(this.#sMsgListSel);
+		this.#MsgSendButton = document.querySelector(this.#sMsgSendButtonSel);
 		this.#Screen = document.querySelector(sScreen);
 		if (!this.#Screen) {
 			if (localizeSelector)
@@ -3484,7 +3520,8 @@ class InkBallGame {
 			this.#StopAndDraw.onclick = this.#OnStopAndDraw.bind(this);
 			if (false === this.#bIsCPUGame) {
 				//Human game, not AI
-				document.querySelector(this.#sMsgInputSel).disabled = '';
+				if (this.#MsgInput)
+					this.#MsgInput.disabled = false;
 
 				this.#MessagesRingBufferStore = new MessagesRingBufferStore(window.localStorage, this);
 				this.#MessagesRingBufferStore.RestoreMessages(this.#sMsgListSel, this.#iPlayerID, this.#iOtherPlayerId, this.#bIsPlayingWithRed, this.#Player1Name, this.#Player2Name);
