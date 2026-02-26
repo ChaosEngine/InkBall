@@ -1186,9 +1186,9 @@ class InkBallGame {
 	/**
 	 * Stops SignalR connection in graceful way
 	 */
-	StopSignalRConnection() {
+	async StopSignalRConnection() {
 		if (this.#SignalRConnection !== null) {
-			this.#SignalRConnection.stop();
+			await this.#SignalRConnection.stop();
 
 			//cleanup
 			if (this.#ReconnectTimer)
@@ -3759,9 +3759,9 @@ class InkBallGame {
 	/**
 	 * Before unload page handler
 	 */
-	static OnBeforeUnload() {
+	static async OnBeforeUnload() {
 		if (window.game)
-			window.game.StopSignalRConnection();
+			await window.game.StopSignalRConnection();
 	}
 
 
