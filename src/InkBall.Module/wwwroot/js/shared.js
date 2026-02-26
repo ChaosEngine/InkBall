@@ -153,6 +153,228 @@ function RandomColor() {
 	return '#' + ((1 << 24) * Math.random() | 0).toString(16).padStart(6, "0");
 }
 
+const StatusEnumToStringMap = Object.freeze(
+	Object.fromEntries(Object.entries(StatusEnum).map(([key, value]) => [value, key]))
+);
+
+/**
+ * Convert numerical StatusEnum to string
+ * @param {number} enumVal to convert
+ * @returns {string} string representation
+ */
+function StatusEnumToString(enumVal) {
+	const enumStr = StatusEnumToStringMap[enumVal];
+	if (enumStr === undefined)
+		throw new Error("bad status enum value");
+
+	return enumStr;
+}
+
+/**
+ * Convert string representation to numerical StatusEnum
+ * @param {string} enumStr string representation
+ * @returns {number} numeric StatusEnum
+ */
+function StringToStatusEnum(enumStr) {
+	if (typeof enumStr !== "string")
+		throw new Error("bad status enum string");
+
+	const enumVal = StatusEnum[enumStr.toUpperCase()];
+	if (enumVal === undefined)
+		throw new Error("bad status enum string");
+
+	return enumVal;
+}
+
+const SVG_NS = "http://www.w3.org/2000/svg";
+let svgElementPrototypesInitialized = false;
+
+function ensureSvgFallbackElementCtor(typeName) {
+	if (typeof self[typeName] !== "undefined")
+		return;
+
+	self[typeName] = function () {
+		this.attributes = new Map();
+	};
+
+	self[typeName].prototype.setAttribute = function (key, val) {
+		this.attributes.set(key, val);
+	};
+	self[typeName].prototype.getAttribute = function (key) {
+		return this.attributes.get(key);
+	};
+	self[typeName].prototype.removeAttribute = function (key) {
+		this.attributes.delete(key);
+	};
+}
+
+function ensureSvgPolyfills() {
+	/////////////// Pollyfills start ///////////////
+	ensureSvgFallbackElementCtor("SVGCircleElement");
+	ensureSvgFallbackElementCtor("SVGPolylineElement");
+	ensureSvgFallbackElementCtor("SVGRectElement");
+	/////////////// Pollyfills end ///////////////
+}
+
+function ensureSvgElementPrototypes() {
+	if (svgElementPrototypesInitialized)
+		return;
+
+	ensureSvgPolyfills();
+
+	Object.assign(SVGCircleElement.prototype, {
+		move: function (x, y/* , radius = undefined */) {
+			this.setAttribute("cx", x);
+			this.setAttribute("cy", y);
+			// if (radius)
+			// 	this.setAttribute("r", radius);
+		},
+		GetStrokeColor: function () { return this.getAttribute("stroke"); },
+		SetStrokeColor: function (col) { this.setAttribute("stroke", col); },
+		GetPosition: function () {
+			if (typeof (this.cachedPosition) === 'undefined') {
+				this.cachedPosition = { x: parseInt(this.getAttribute("cx")), y: parseInt(this.getAttribute("cy")) };
+			}
+			return this.cachedPosition;
+		},
+		GetFillColor: function () {
+			if (typeof (this.cachedFillColor) === 'undefined') {
+				this.cachedFillColor = this.getAttribute("fill");
+			}
+			return this.cachedFillColor;
+		},
+		SetFillColor: function (col) {
+			this.cachedFillColor = col;
+			this.setAttribute("fill", col);
+		},
+		GetStatus: function () {
+			if (typeof (this.cachedStatus) === 'undefined') {
+				this.cachedStatus = StringToStatusEnum(this.getAttribute("data-status"));
+			}
+			return this.cachedStatus;
+		},
+		SetStatus: function (iStatus, saveOldPoint = false) {
+			if (saveOldPoint) {
+				const old_status = StringToStatusEnum(this.getAttribute("data-status"));
+				this.cachedStatus = iStatus;
+				this.setAttribute("data-status", StatusEnumToString(this.cachedStatus));
+				if (old_status !== StatusEnum.POINT_FREE && old_status !== iStatus)
+					this.setAttribute("data-old-status", StatusEnumToString(old_status));
+			}
+			else {
+				this.cachedStatus = iStatus;
+				this.setAttribute("data-status", StatusEnumToString(iStatus));
+			}
+		},
+		RevertOldStatus: function () {
+			const old_status = this.getAttribute("data-old-status");
+			if (old_status) {
+				this.removeAttribute("data-old-status");
+				this.setAttribute("data-status", old_status);
+				this.cachedStatus = StringToStatusEnum(old_status);
+				return this.cachedStatus;
+			}
+			return -1;
+		},
+		GetZIndex: function () { return this.getAttribute("z-index"); },
+		SetZIndex: function (val) { this.setAttribute("z-index", val); },
+		Hide: function () { this.setAttribute("visibility", 'hidden'); },
+		Show: function () { this.setAttribute("visibility", 'visible'); },
+		StrokeWeight: function (sw) { this.setAttribute("stroke-width", sw); },
+		Serialize: function () {
+			const { x, y } = this.GetPosition();
+			const Status = this.GetStatus();
+			const Color = this.GetFillColor();
+			return { x, y, Status, Color };
+		}
+	});
+
+	Object.assign(SVGPolylineElement.prototype, {
+		AppendPoints: function (x, y, diff = 1) {
+			const pts_str = this.getAttribute("points");
+			const pts = pts_str.split(" ");
+
+			if (pts.length <= 1 || true === hasDuplicates(pts))
+				return false;
+
+			const arr = pts.at(-1).split(",");//obtain last point coords
+			if (arr.length !== 2)
+				return false;
+
+			const last_x = parseInt(arr[0]), last_y = parseInt(arr[1]);
+			x = parseInt(x);
+			y = parseInt(y);
+			if (!(Math.abs(last_x - x) <= diff && Math.abs(last_y - y) <= diff))
+				return false;
+
+			this.setAttribute("points", pts_str + ` ${x},${y}`);
+			return true;
+		},
+		RemoveLastPoint: function () {
+			const new_points = this.getAttribute("points").replace(/(\s\d+,\d+)$/, "");
+			this.setAttribute("points", new_points);
+			return new_points;
+		},
+		ContainsPoint: function (x, y) {
+			// const regex = new RegExp(`${x},${y}`, 'g');
+			// const cnt = (this.getAttribute("points").match(regex) || []).length;
+			// return cnt;
+
+			const str_ = this.getAttribute("points");
+			const subStr = `${x},${y}`;
+
+			//https://stackoverflow.com/a/74282605/4429828
+			let occurrence_count = 0;
+			let pos = -subStr.length;
+			while ((pos = str_.indexOf(subStr, pos + subStr.length)) > -1) {
+				occurrence_count++;
+			}
+			return occurrence_count;
+		},
+		GetPointsString: function () {
+			return this.getAttribute("points");
+		},
+		GetPointsArray: function () {
+			//format is:
+			//x0,y0 x1,y1 x2,y2
+			//
+			if (typeof (this.cachedPoints) === 'undefined') {
+				this.cachedPoints = this.getAttribute("points").split(" ").map(function (pt) {
+					const [x, y] = pt.split(',');
+					return { x: parseInt(x), y: parseInt(y) };
+				});
+			}
+			return this.cachedPoints;
+		},
+		SetPoints: function (sPoints) {
+			this.setAttribute("points", sPoints);
+		},
+		GetIsClosed: function () {
+			const pts = this.getAttribute("points").split(" ");
+			return pts[0] === pts.at(-1);
+		},
+		GetLength: function () {
+			return this.getAttribute("points").split(" ").length;
+		},
+		SetWidthAndColor: function (sw, col) {
+			this.setAttribute("stroke", col);
+			this.setAttribute("fill", col);
+			this.setAttribute("stroke-width", sw);
+		},
+		GetID: function () { return parseInt(this.getAttribute("data-id")); },
+		SetID: function (iID) { this.setAttribute("data-id", iID); },
+		GetFillColor: function () { return this.getAttribute("fill"); },
+		Serialize: function () {
+			const id = this.GetID();
+			const color = this.GetFillColor();
+			const pts = this.GetPointsString();
+			return { iId: id, Color: color, PointsAsString: pts };
+		}
+	});
+
+	svgElementPrototypesInitialized = true;
+}
+
 //////////////////////////////////////////////////////
 // SVG-VML mini graphic library 
 // ==========================================
@@ -169,7 +391,7 @@ class SvgVml {
 	#cont;
 
 	constructor() {
-		const svgNS = "http://www.w3.org/2000/svg";
+		const svgNS = SVG_NS;
 		let svgAvailable = false, svgAntialias = undefined;
 		let documentCreateElementNS_SVG, documentCreateElementNS_Element;
 		this.#cont = null;
@@ -215,37 +437,7 @@ class SvgVml {
 					}
 				};
 			};
-			/////////////// Pollyfills start ///////////////
-			self.SVGCircleElement = function () {
-				this.attributes = new Map();
-			};
-			SVGCircleElement.prototype.setAttribute = function (key, val) {
-				this.attributes.set(key, val);
-			};
-			SVGCircleElement.prototype.getAttribute = function (key) {
-				return this.attributes.get(key);
-			};
-			SVGCircleElement.prototype.removeAttribute = function (key) {
-				this.attributes.delete(key);
-			};
-
-			self.SVGPolylineElement = function () {
-				this.attributes = new Map();
-			};
-			SVGPolylineElement.prototype.setAttribute = function (key, val) {
-				this.attributes.set(key, val);
-			};
-			SVGPolylineElement.prototype.getAttribute = function (key) {
-				return this.attributes.get(key);
-			};
-			SVGPolylineElement.prototype.removeAttribute = function (key) {
-				this.attributes.delete(key);
-			};
-
-			self.SVGRectElement = function () {
-				this.attributes = new Map();
-			};
-			/////////////// Pollyfills end ///////////////
+			ensureSvgPolyfills();
 
 			documentCreateElementNS_Element = function (elementName) {
 				switch (elementName) {
@@ -262,151 +454,7 @@ class SvgVml {
 			};
 		}
 
-		SVGCircleElement.prototype.move = function (x, y/* , radius = undefined */) {
-			this.setAttribute("cx", x);
-			this.setAttribute("cy", y);
-			// if (radius)
-			// 	this.setAttribute("r", radius);
-		};
-		SVGCircleElement.prototype.GetStrokeColor = function () { return this.getAttribute("stroke"); };
-		SVGCircleElement.prototype.SetStrokeColor = function (col) { this.setAttribute("stroke", col); };
-		SVGCircleElement.prototype.GetPosition = function () {
-			if (typeof (this.cachedPosition) === 'undefined') {
-				this.cachedPosition = { x: parseInt(this.getAttribute("cx")), y: parseInt(this.getAttribute("cy")) };
-			}
-			return this.cachedPosition;
-		};
-		SVGCircleElement.prototype.GetFillColor = function () {
-			if (typeof (this.cachedFillColor) === 'undefined') {
-				this.cachedFillColor = this.getAttribute("fill");
-			}
-			return this.cachedFillColor;
-		};
-		SVGCircleElement.prototype.SetFillColor = function (col) {
-			this.cachedFillColor = col;
-			this.setAttribute("fill", col);
-		};
-		SVGCircleElement.prototype.GetStatus = function () {
-			if (typeof (this.cachedStatus) === 'undefined') {
-				this.cachedStatus = StringToStatusEnum(this.getAttribute("data-status"));
-			}
-			return this.cachedStatus;
-		};
-		SVGCircleElement.prototype.SetStatus = function (iStatus, saveOldPoint = false) {
-			if (saveOldPoint) {
-				const old_status = StringToStatusEnum(this.getAttribute("data-status"));
-				this.cachedStatus = iStatus;
-				this.setAttribute("data-status", StatusEnumToString(this.cachedStatus));
-				if (old_status !== StatusEnum.POINT_FREE && old_status !== iStatus)
-					this.setAttribute("data-old-status", StatusEnumToString(old_status));
-			}
-			else {
-				this.cachedStatus = iStatus;
-				this.setAttribute("data-status", StatusEnumToString(iStatus));
-			}
-		};
-		SVGCircleElement.prototype.RevertOldStatus = function () {
-			const old_status = this.getAttribute("data-old-status");
-			if (old_status) {
-				this.removeAttribute("data-old-status");
-				this.setAttribute("data-status", old_status);
-				this.cachedStatus = StringToStatusEnum(old_status);
-				return this.cachedStatus;
-			}
-			return -1;
-		};
-		SVGCircleElement.prototype.GetZIndex = function () { return this.getAttribute("z-index"); };
-		SVGCircleElement.prototype.SetZIndex = function (val) { this.setAttribute("z-index", val); };
-		SVGCircleElement.prototype.Hide = function () { this.setAttribute("visibility", 'hidden'); };
-		SVGCircleElement.prototype.Show = function () { this.setAttribute("visibility", 'visible'); };
-		SVGCircleElement.prototype.StrokeWeight = function (sw) { this.setAttribute("stroke-width", sw); };
-		SVGCircleElement.prototype.Serialize = function () {
-			const { x, y } = this.GetPosition();
-			const Status = this.GetStatus();
-			const Color = this.GetFillColor();
-			return { x, y, Status, Color };
-		};
-
-		SVGPolylineElement.prototype.AppendPoints = function (x, y, diff = 1) {
-			const pts_str = this.getAttribute("points");
-			const pts = pts_str.split(" ");
-
-			if (pts.length <= 1 || true === hasDuplicates(pts))
-				return false;
-
-			const arr = pts.at(-1).split(",");//obtain last point coords
-			if (arr.length !== 2)
-				return false;
-
-			const last_x = parseInt(arr[0]), last_y = parseInt(arr[1]);
-			x = parseInt(x);
-			y = parseInt(y);
-			if (!(Math.abs(last_x - x) <= diff && Math.abs(last_y - y) <= diff))
-				return false;
-
-			this.setAttribute("points", pts_str + ` ${x},${y}`);
-			return true;
-		};
-		SVGPolylineElement.prototype.RemoveLastPoint = function () {
-			const new_points = this.getAttribute("points").replace(/(\s\d+,\d+)$/, "");
-			this.setAttribute("points", new_points);
-			return new_points;
-		};
-		SVGPolylineElement.prototype.ContainsPoint = function (x, y) {
-			// const regex = new RegExp(`${x},${y}`, 'g');
-			// const cnt = (this.getAttribute("points").match(regex) || []).length;
-			// return cnt;
-
-			const str_ = this.getAttribute("points");
-			const subStr = `${x},${y}`;
-
-			//https://stackoverflow.com/a/74282605/4429828
-			let occurrence_count = 0;
-			let pos = -subStr.length;
-			while ((pos = str_.indexOf(subStr, pos + subStr.length)) > -1) {
-				occurrence_count++;
-			}
-			return occurrence_count;
-		};
-		SVGPolylineElement.prototype.GetPointsString = function () {
-			return this.getAttribute("points");
-		};
-		SVGPolylineElement.prototype.GetPointsArray = function () {
-			//format is:
-			//x0,y0 x1,y1 x2,y2
-			//
-			if (typeof (this.cachedPoints) === 'undefined') {
-				this.cachedPoints = this.getAttribute("points").split(" ").map(function (pt) {
-					const [x, y] = pt.split(',');
-					return { x: parseInt(x), y: parseInt(y) };
-				});
-			}
-			return this.cachedPoints;
-		};
-		SVGPolylineElement.prototype.SetPoints = function (sPoints) {
-			this.setAttribute("points", sPoints);
-		};
-		SVGPolylineElement.prototype.GetIsClosed = function () {
-			const pts = this.getAttribute("points").split(" ");
-			return pts[0] === pts.at(-1);
-		};
-		SVGPolylineElement.prototype.GetLength = function () {
-			return this.getAttribute("points").split(" ").length;
-		};
-		SVGPolylineElement.prototype.SetWidthAndColor = function (sw, col) {
-			this.setAttribute("stroke", col);
-			this.setAttribute("fill", col);
-			this.setAttribute("stroke-width", sw);
-		};
-		SVGPolylineElement.prototype.GetID = function () { return parseInt(this.getAttribute("data-id")); };
-		SVGPolylineElement.prototype.SetID = function (iID) { this.setAttribute("data-id", iID); };
-		SVGPolylineElement.prototype.GetFillColor = function () { return this.getAttribute("fill"); };
-		SVGPolylineElement.prototype.Serialize = function () {
-			const id = this.GetID();
-			const color = this.GetFillColor();
-			const pts = this.GetPointsString();
-			return { iId: id, Color: color, PointsAsString: pts };
-		};
+		ensureSvgElementPrototypes();
 
 		this.Init = function (contextElement, iWidth, iHeight, { iGridWidth, iGridHeight }, antialias) {
 			this.#cont = documentCreateElementNS_SVG(contextElement);
@@ -525,58 +573,6 @@ class SvgVml {
 			};
 		};
 
-		/**
-		 * Convert numerical StatusEnum to string
-		 * @param {number} enumVal to convert
-		 * @returns {string} string representation
-		 */
-		const StatusEnumToString = function (enumVal) {
-			switch (enumVal) {
-				case StatusEnum.POINT_FREE_RED:
-					return Object.keys(StatusEnum)[0];
-				case StatusEnum.POINT_FREE_BLUE:
-					return Object.keys(StatusEnum)[1];
-				case StatusEnum.POINT_FREE:
-					return Object.keys(StatusEnum)[2];
-				case StatusEnum.POINT_STARTING:
-					return Object.keys(StatusEnum)[3];
-				case StatusEnum.POINT_IN_PATH:
-					return Object.keys(StatusEnum)[4];
-				case StatusEnum.POINT_OWNED_BY_RED:
-					return Object.keys(StatusEnum)[5];
-				case StatusEnum.POINT_OWNED_BY_BLUE:
-					return Object.keys(StatusEnum)[6];
-				default:
-					throw new Error('bad status enum value');
-			}
-		};
-
-		const allStatusesAsString = Object.keys(StatusEnum);
-		/**
-		 * Convert string representation to numerical StatusEnum
-		 * @param {string} enumStr string representation
-		 * @returns {number} numeric StatusEnum
-		 */
-		const StringToStatusEnum = function (enumStr) {
-			switch (enumStr.toUpperCase()) {
-				case allStatusesAsString[0]:
-					return StatusEnum.POINT_FREE_RED;
-				case allStatusesAsString[1]:
-					return StatusEnum.POINT_FREE_BLUE;
-				case allStatusesAsString[2]:
-					return StatusEnum.POINT_FREE;
-				case allStatusesAsString[3]:
-					return StatusEnum.POINT_STARTING;
-				case allStatusesAsString[4]:
-					return StatusEnum.POINT_IN_PATH;
-				case allStatusesAsString[5]:
-					return StatusEnum.POINT_OWNED_BY_RED;
-				case allStatusesAsString[6]:
-					return StatusEnum.POINT_OWNED_BY_BLUE;
-				default:
-					throw new Error('bad status enum string');
-			}
-		};
 	}
 
 	/**
@@ -707,16 +703,10 @@ class GameStateStore {
 	#sMsgThisEngineDoesntKnowHowToCloneABlob;
 
 	constructor(useIndexedDb, pointCreationCallbackFn = null, pathCreationCallbackFn = null, getGameStateFn = null, version = "") {
-		if (useIndexedDb) {
-			if (!('indexedDB' in self)) {
-				LocalLog("This browser doesn't support IndexedDB");
-				useIndexedDb = false;
-			}
-			else
-				useIndexedDb = true;
-		}
-		else
-			useIndexedDb = false;
+		const canUseIndexedDb = ('indexedDB' in self);
+		if (useIndexedDb && !canUseIndexedDb)
+			LocalLog("This browser doesn't support IndexedDB");
+		useIndexedDb = (useIndexedDb === true && canUseIndexedDb === true);
 
 		/////////inner class definitions start/////////
 		/////////https://stackoverflow.com/questions/28784375/nested-es6-classes/////////
@@ -991,12 +981,11 @@ class GameStateStore {
 			// Use a long long for this value (don't use a float)
 			if (!version || version === "" || version.length <= 0)
 				this.#DB_VERSION = null;
-			else {
+			else
 				this.#DB_VERSION = parseInt(version.split('.').reduce((acc, val) => {
 					val = parseInt(val);
 					return acc * 10 + (isNaN(val) ? 0 : val);
 				}, 0)) - 1010/*initial module versioning start number*/ + 4/*initial indexDB start number*/;
-			}
 
 			this.#PointStore = new IDBPointStoreDefinition(this, pointCreationCallbackFn, getGameStateFn);
 			this.#PathStore = new IDBPathStoreDefinition(this, pathCreationCallbackFn, getGameStateFn);
@@ -1092,52 +1081,31 @@ class GameStateStore {
 		return tx.objectStore(storeName);
 	}
 
-	async #ClearAllStores() {
-		const clearObjectStore = async (storeName) => {
-			return new Promise((resolve, reject) => {
-				const store = this.#GetObjectStore(storeName, 'readwrite');
-				const req = store.clear();
-				req.onsuccess = function () {
-					resolve();
-				};
-				req.onerror = function (evt) {
-					LocalError("clearObjectStore:", evt.target.errorCode);
+	#RequestToPromise(req, onSuccess, onError) {
+		return new Promise((resolve, reject) => {
+			req.onsuccess = (event) => resolve(onSuccess ? onSuccess(event) : undefined);
+			req.onerror = (event) => {
+				if (onError)
+					onError(event, reject);
+				else
 					reject();
-				};
-			});
-		};
-
-		await Promise.all([
-			clearObjectStore(this.#DB_POINT_STORE),
-			clearObjectStore(this.#DB_PATH_STORE),
-			clearObjectStore(this.#DB_STATE_STORE)
-		]);
-	}
-
-	/**
-	 * @param {number} key is calculated index of point y * width + x, probably not useful
-	 * @returns {Promise} returning promise with point
-	 */
-	async GetPoint(key) {
-		return new Promise((resolve, reject) => {
-			const store = this.#GetObjectStore(this.#DB_POINT_STORE, 'readonly');
-			const req = store.get(key);
-			req.onerror = function (event) {
-				reject(new Error('GetPoint => ' + event));
-			};
-			req.onsuccess = function (event) {
-				resolve(event.target.result);
 			};
 		});
 	}
 
-	/**
-	 * Retrieves all points from the object store.
-	 * @returns {Promise<Array>} A promise that resolves to an array of all points.
-	 */
-	async GetAllPoints() {
+	async #GetByKey(storeName, key, errorPrefix) {
+		const store = this.#GetObjectStore(storeName, 'readonly');
+		const req = store.get(key);
+		return this.#RequestToPromise(
+			req,
+			(event) => event.target.result,
+			(event, reject) => reject(new Error(`${errorPrefix} => ${event}`))
+		);
+	}
+
+	async #GetAllFromStore(storeName, errorPrefix) {
+		const store = this.#GetObjectStore(storeName, 'readonly');
 		return new Promise((resolve, reject) => {
-			const store = this.#GetObjectStore(this.#DB_POINT_STORE, 'readonly');
 			const bucket = [];
 			const req = store.openCursor();
 			req.onsuccess = function (event) {
@@ -1150,162 +1118,58 @@ class GameStateStore {
 					resolve(bucket);
 			};
 			req.onerror = function (event) {
-				reject(new Error('GetAllPoints => ' + event));
+				reject(new Error(`${errorPrefix} => ${event}`));
 			};
 		});
 	}
 
-	/**
-	 * Gets state object from store
-	 * @param {string} key state key
-	 * @returns {Promise<object>} state object returned from store
-	 */
-	async GetState(key) {
-		return new Promise((resolve, reject) => {
-			const store = this.#GetObjectStore(this.#DB_STATE_STORE, 'readonly');
-			const req = store.get(key);
-			req.onerror = function (event) {
-				reject(new Error('GetState => ' + event));
-			};
-			req.onsuccess = function (event) {
-				resolve(event.target.result);
-			};
-		});
+	async #WriteToStore(storeName, operation, value, key, errorMessage) {
+		const store = this.#GetObjectStore(storeName, 'readwrite');
+		let req;
+		try {
+			req = (key === undefined) ? store[operation](value) : store[operation](value, key);
+		} catch (e) {
+			if (e.name === 'DataCloneError')
+				LocalError(this.#sMsgThisEngineDoesntKnowHowToCloneABlob);
+			throw e;
+		}
+
+		return this.#RequestToPromise(
+			req,
+			() => undefined,
+			(event, reject) => {
+				LocalError(errorMessage, event.target?.error);
+				reject();
+			}
+		);
 	}
 
-	/**
-	 * @param {number} key is path Id
-	 * @returns {Promise} returning promise with path
-	 */
-	async GetPath(key) {
-		return new Promise((resolve, reject) => {
-			const store = this.#GetObjectStore(this.#DB_PATH_STORE, 'readonly');
-			const req = store.get(key);
-			req.onerror = function (event) {
-				reject(new Error('GetPath => ' + event));
-			};
-			req.onsuccess = function (event) {
-				resolve(event.target.result);
-			};
-		});
-	}
-
-	/**
-	 * Gets all paths from store
-	 * @returns {Promise} resolved promise with all paths array
-	 */
-	async GetAllPaths() {
-		return new Promise((resolve, reject) => {
-			const store = this.#GetObjectStore(this.#DB_PATH_STORE, 'readonly');
-			const bucket = [];
-			const req = store.openCursor();
-			req.onsuccess = function (event) {
-				const cursor = event.target.result;
-				if (cursor) {
-					bucket.push(cursor.value);
-					cursor.continue();
-				}
-				else
-					resolve(bucket);
-			};
-			req.onerror = function (event) {
-				reject(new Error('GetAllPaths => ' + event));
-			};
-		});
-	}
-
-	/**
-	 * @param {number} key is calculated index of point y * width + x, probably not useful
-	 * @param {object} val is serialized, thin circle
-	 * @returns {Promise} resolved promise after storing
-	 */
-	async StorePoint(key, val) {
-		if (this.#bulkStores !== null && this.#bulkStores.has(this.#DB_POINT_STORE)) {
-			if (this.pointBulkBuffer === null)
-				this.pointBulkBuffer = new Map();
-			this.pointBulkBuffer.set(key, val);
+	async #WriteWithBulkSupport(storeName, bulkBufferName, key, value, operation, errorMessage) {
+		if (this.#bulkStores !== null && this.#bulkStores.has(storeName)) {
+			if (this[bulkBufferName] === null)
+				this[bulkBufferName] = new Map();
+			this[bulkBufferName].set(key, value);
 			return Promise.resolve();
 		}
 
-		return new Promise((resolve, reject) => {
-			const store = this.#GetObjectStore(this.#DB_POINT_STORE, 'readwrite');
-			let req;
-			try {
-				// if (typeof (val.Idx) === 'undefined')
-				// 	val.Idx = key;
-				req = store.add(val/* , key */);//earlier was 'add'
-			} catch (e) {
-				if (e.name === 'DataCloneError')
-					LocalError(this.#sMsgThisEngineDoesntKnowHowToCloneABlob);
-				throw e;
-			}
-			req.onsuccess = function () {
-				resolve();
-			};
-			req.onerror = function () {
-				LocalError("StorePoint error", this.error);
-				reject();
-			};
-		});
+		return await this.#WriteToStore(storeName, operation, value, undefined, errorMessage);
 	}
 
-	/**
-	 * @param {number} key is calculated index of point y * width + x, probably not useful
-	 * @param {object} val is serialized, thin circle
-	 * @returns {Promise} resolved promise after updating
-	 */
-	async UpdatePoint(key, val) {
-		if (this.#bulkStores !== null && this.#bulkStores.has(this.#DB_POINT_STORE)) {
-			if (this.pointBulkBuffer === null)
-				this.pointBulkBuffer = new Map();
-			this.pointBulkBuffer.set(key, val);
-			return Promise.resolve();
-		}
-
-		return new Promise((resolve, reject) => {
-			const store = this.#GetObjectStore(this.#DB_POINT_STORE, 'readwrite');
-			let req;
-			try {
-				// if (typeof (val.Idx) === 'undefined')
-				// 	val.Idx = key;
-				req = store.put(val/* , key */);//earlier was 'add'
-			} catch (e) {
-				if (e.name === 'DataCloneError')
-					LocalError(this.#sMsgThisEngineDoesntKnowHowToCloneABlob);
-				throw e;
-			}
-			req.onsuccess = function () {
-				resolve();
-			};
-			req.onerror = function () {
-				LocalError("UpdatePoint error", this.error);
-				reject();
-			};
-		});
-	}
-
-	/**
-	 * Store all points array to IDBStore
-	 * @param {Array<object>} values of points
-	 * @returns {Promise} resolved promise
-	 */
-	async StoreAllPoints(values = null) {
+	async #StoreAllBufferedValues(storeName, bufferName, values = null) {
 		if (!values)
-			values = this.pointBulkBuffer;
+			values = this[bufferName];
 
 		if (!values || this.#bulkStores === null)
 			return Promise.reject();
 
 		return new Promise((resolve, reject) => {
-			const store = this.#GetObjectStore(this.#DB_POINT_STORE, 'readwrite');
+			const store = this.#GetObjectStore(storeName, 'readwrite');
 			try {
 				values.forEach(function (val/* , key */) {
-					// if (typeof (val.Idx) === 'undefined')
-					// 	val.Idx = key;
 					store.add(val/* , key */);
 				});
 
-				this.pointBulkBuffer = null;
+				this[bufferName] = null;
 				resolve();
 			} catch (e) {
 				LocalError(this.#sMsgThisEngineDoesntKnowHowToCloneABlob);
@@ -1314,29 +1178,98 @@ class GameStateStore {
 		});
 	}
 
+	async #ClearStore(storeName) {
+		const store = this.#GetObjectStore(storeName, 'readwrite');
+		const req = store.clear();
+		return this.#RequestToPromise(req, () => undefined, function (evt, reject) {
+			LocalError("clearObjectStore:", evt.target.errorCode);
+			reject();
+		});
+	}
+
+	async #ClearAllStores() {
+		await Promise.all([
+			this.#ClearStore(this.#DB_POINT_STORE),
+			this.#ClearStore(this.#DB_PATH_STORE),
+			this.#ClearStore(this.#DB_STATE_STORE)
+		]);
+	}
+
+	/**
+	 * @param {number} key is calculated index of point y * width + x, probably not useful
+	 * @returns {Promise} returning promise with point
+	 */
+	async GetPoint(key) {
+		return await this.#GetByKey(this.#DB_POINT_STORE, key, 'GetPoint');
+	}
+
+	/**
+	 * Retrieves all points from the object store.
+	 * @returns {Promise<Array>} A promise that resolves to an array of all points.
+	 */
+	async GetAllPoints() {
+		return await this.#GetAllFromStore(this.#DB_POINT_STORE, 'GetAllPoints');
+	}
+
+	/**
+	 * Gets state object from store
+	 * @param {string} key state key
+	 * @returns {Promise<object>} state object returned from store
+	 */
+	async GetState(key) {
+		return await this.#GetByKey(this.#DB_STATE_STORE, key, 'GetState');
+	}
+
+	/**
+	 * @param {number} key is path Id
+	 * @returns {Promise} returning promise with path
+	 */
+	async GetPath(key) {
+		return await this.#GetByKey(this.#DB_PATH_STORE, key, 'GetPath');
+	}
+
+	/**
+	 * Gets all paths from store
+	 * @returns {Promise} resolved promise with all paths array
+	 */
+	async GetAllPaths() {
+		return await this.#GetAllFromStore(this.#DB_PATH_STORE, 'GetAllPaths');
+	}
+
+	/**
+	 * @param {number} key is calculated index of point y * width + x, probably not useful
+	 * @param {object} val is serialized, thin circle
+	 * @returns {Promise} resolved promise after storing
+	 */
+	async StorePoint(key, val) {
+		return await this.#WriteWithBulkSupport(this.#DB_POINT_STORE, 'pointBulkBuffer', key, val, 'add', 'StorePoint error');
+	}
+
+	/**
+	 * @param {number} key is calculated index of point y * width + x, probably not useful
+	 * @param {object} val is serialized, thin circle
+	 * @returns {Promise} resolved promise after updating
+	 */
+	async UpdatePoint(key, val) {
+		return await this.#WriteWithBulkSupport(this.#DB_POINT_STORE, 'pointBulkBuffer', key, val, 'put', 'UpdatePoint error');
+	}
+
+	/**
+	 * Store all points array to IDBStore
+	 * @param {Array<object>} values of points
+	 * @returns {Promise} resolved promise
+	 */
+	async StoreAllPoints(values = null) {
+		return await this.#StoreAllBufferedValues(this.#DB_POINT_STORE, 'pointBulkBuffer', values);
+	}
+
 	/**
 	 * @param {number} key is GameID
 	 * @param {object} gameState is InkBallGame state object
+	 * @returns {Promise} resolved promise after storing state
 	 */
 	async #StoreState(key, gameState) {
-		return new Promise((resolve, reject) => {
-			const store = this.#GetObjectStore(this.#DB_STATE_STORE, 'readwrite');
-			let req;
-			try {
-				req = store.add(gameState, key);
-			} catch (e) {
-				if (e.name === 'DataCloneError')
-					LocalError(this.#sMsgThisEngineDoesntKnowHowToCloneABlob);
-				throw e;
-			}
-			req.onsuccess = function () {
-				resolve();
-			};
-			req.onerror = function () {
-				LocalError("StoreState error", this.error);
-				reject();
-			};
-		});
+		return await this.#WriteToStore(this.#DB_STATE_STORE, 'add', gameState, key, 'StoreState error');
 	}
 
 	/**
@@ -1346,24 +1279,7 @@ class GameStateStore {
 	 * @returns {Promise} resolved promise after storing
 	 */
 	async UpdateState(key, gameState) {
-		return new Promise((resolve, reject) => {
-			const store = this.#GetObjectStore(this.#DB_STATE_STORE, 'readwrite');
-			let req;
-			try {
-				req = store.put(gameState, key);
-			} catch (e) {
-				if (e.name === 'DataCloneError')
-					LocalError(this.#sMsgThisEngineDoesntKnowHowToCloneABlob);
-				throw e;
-			}
-			req.onsuccess = function () {
-				resolve();
-			};
-			req.onerror = function () {
-				LocalError("UpdateState error", this.error);
-				reject();
-			};
-		});
+		return await this.#WriteToStore(this.#DB_STATE_STORE, 'put', gameState, key, 'UpdateState error');
 	}
 
 	/**
@@ -1372,31 +1288,7 @@ class GameStateStore {
 	 * @returns {Promise} resolved promise after storing path
 	 */
 	async StorePath(key, val) {
-		if (this.#bulkStores !== null && this.#bulkStores.has(this.#DB_PATH_STORE)) {
-			if (this.pathBulkBuffer === null)
-				this.pathBulkBuffer = new Map();
-			this.pathBulkBuffer.set(key, val);
-			return Promise.resolve();
-		}
-
-		return new Promise((resolve, reject) => {
-			const store = this.#GetObjectStore(this.#DB_PATH_STORE, 'readwrite');
-			let req;
-			try {
-				req = store.add(val/*, key*/);
-			} catch (e) {
-				if (e.name === 'DataCloneError')
-					LocalError(this.#sMsgThisEngineDoesntKnowHowToCloneABlob);
-				throw e;
-			}
-			req.onsuccess = function () {
-				resolve();
-			};
-			req.onerror = function () {
-				LocalError("StorePath error", this.error);
-				reject();
-			};
-		});
+		return await this.#WriteWithBulkSupport(this.#DB_PATH_STORE, 'pathBulkBuffer', key, val, 'add', 'StorePath error');
 	}
 
 	/**
@@ -1405,27 +1297,7 @@ class GameStateStore {
 	 * @returns {Promise} resolved promise
 	 */
 	async StoreAllPaths(values = null) {
-		if (!values)
-			values = this.pathBulkBuffer;
-
-		if (!values || this.#bulkStores === null)
-			return Promise.reject();
-
-		return new Promise((resolve, reject) => {
-			const store = this.#GetObjectStore(this.#DB_PATH_STORE, 'readwrite');
-			try {
-				// eslint-disable-next-line no-unused-vars
-				values.forEach(function (v, key) {
-					store.add(v/*, key*/);
-				});
-
-				this.pathBulkBuffer = null;
-				resolve();
-			} catch (e) {
-				LocalError(this.#sMsgThisEngineDoesntKnowHowToCloneABlob);
-				reject(e);
-			}
-		});
+		return await this.#StoreAllBufferedValues(this.#DB_PATH_STORE, 'pathBulkBuffer', values);
 	}
 
 	/**
