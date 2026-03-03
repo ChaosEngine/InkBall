@@ -6,14 +6,36 @@ import * as clustering from "density-clustering";
 //globals loaded only once hopefully
 let SvgVml, StatusEnum, LocalLog, LocalError, sortPointsClockwise, pnpoly, IsPointOutsideAllPaths, AABB, RandomColor;
 
+async function EnsureSharedLoaded() {
+	if (SvgVml !== undefined)
+		return;
+
+	const isMinified = location.hostname !== "localhost";
+
+	({ SvgVml, StatusEnum, LocalLog, LocalError, sortPointsClockwise, pnpoly, IsPointOutsideAllPaths, AABB, RandomColor } = await import(/* webpackIgnore: true */`./shared${isMinified ? '.min' : ''}.js`));
+}
+
+function CreateSvgVml(boardSize) {
+	const svgVml = new SvgVml();
+	svgVml.Init(null, null, null, boardSize);
+	return svgVml;
+}
+
+function DeserializePointMap(svgVml, pointsKv) {
+	const points = new Map();
+	pointsKv.forEach(({ key, value }) => {
+		points.set(key, svgVml.DeserializeOval(value));
+	});
+	return points;
+}
+
+function DeserializePolylines(svgVml, paths) {
+	return paths.map(pa => svgVml.DeserializePolyline(pa));
+}
+
 // This is the entry point for our worker
 addEventListener('message', async function (e) {
-
-	if (SvgVml === undefined) {
-		const isMinified = location.hostname !== "localhost";
-
-		({ SvgVml, StatusEnum, LocalLog, LocalError, sortPointsClockwise, pnpoly, IsPointOutsideAllPaths, AABB, RandomColor } = await import(/* webpackIgnore: true */`./shared${isMinified ? '.min' : ''}.js`));
-	}
+	await EnsureSharedLoaded();
 
 
 	const params = e.data;
@@ -22,19 +44,15 @@ addEventListener('message', async function (e) {
 	switch (operation) {
 		case "BUILD_GRAPH":
 			{
-				const svgVml = new SvgVml();
-				svgVml.Init(null, null, null, params.boardSize);
+				const svgVml = CreateSvgVml(params.boardSize);
 
 				//debugger;
-				const lines = params.paths.map(pa => svgVml.DeserializePolyline(pa));
-				const points = new Map();
-				params.points.forEach(({ key, value }) => {
-					points.set(key, svgVml.DeserializeOval(value));
-				});
+				const lines = DeserializePolylines(svgVml, params.paths);
+				const points = DeserializePointMap(svgVml, params.points);
 
 				LocalLog(`lines.count = ${lines.length}, points.count = ${points.size}`);
 
-				const ai = new GraphAI(params.boardSize.iGridWidth, params.boardSize.iGridHeight, points);
+				const ai = new GraphAI(StatusEnum, params.boardSize.iGridWidth, params.boardSize.iGridHeight, points);
 				const graph = await ai.BuildGraph({
 					freePointStatus: StatusEnum.POINT_FREE_BLUE
 					//, cpufillCol: 'var(--bluish)', 
@@ -50,14 +68,10 @@ addEventListener('message', async function (e) {
 				switch (params.subOperation) {
 					case "BY_POINTS":
 						{
-							const svgVml = new SvgVml();
-							svgVml.Init(null, null, null, params.boardSize);
+							const svgVml = CreateSvgVml(params.boardSize);
 
-							const points = new Map();
-							params.points.forEach((pt) => {
-								points.set(pt.key, svgVml.DeserializeOval(pt.value));
-							});
-							const ai = new GraphAI(params.boardSize.iGridWidth, params.boardSize.iGridHeight, points);
+							const points = DeserializePointMap(svgVml, params.points);
+							const ai = new GraphAI(StatusEnum, params.boardSize.iGridWidth, params.boardSize.iGridHeight, points);
 							const clicked_status = params.clickedPointStatus;
 							const graph = await ai.BuildGraph({
 								freePointStatus: clicked_status
@@ -106,37 +120,32 @@ addEventListener('message', async function (e) {
 			}
 			break;
 
-		case "MARK_ALL_CYCLES":
-			{
-				const svgVml = new SvgVml();
-				svgVml.Init(null, null, null, params.boardSize);
+		/* case "MARK_ALL_CYCLES":
+		{
+			const svgVml = CreateSvgVml(params.boardSize);
 
-				const lines = params.paths.map(pa => svgVml.DeserializePolyline(pa));
-				const points = new Map();
-				params.points.forEach((pt) => {
-					points.set(pt.key, svgVml.DeserializeOval(pt.value));
-				});
-				const ai = new GraphAI(params.state.iGridWidth, params.state.iGridHeight, points);
-				const graph = await ai.BuildGraph({
-					freePointStatus: StatusEnum.POINT_FREE_BLUE
-					//, cpufillCol: params.colorBlue,
-				});
-				const result = await ai.MarkAllCycles(graph, params.colorRed, lines);
+			const lines = DeserializePolylines(svgVml, params.paths);
+			const points = DeserializePointMap(svgVml, params.points);
+			const ai = new GraphAI(StatusEnum, params.state.iGridWidth, params.state.iGridHeight, points);
+			const graph = await ai.BuildGraph({
+				freePointStatus: StatusEnum.POINT_FREE_BLUE
+				//, cpufillCol: params.colorBlue,
+			});
+			const result = await ai.MarkAllCycles(graph, params.colorRed, lines);
 
 
-				postMessage({
-					operation,
-					cycles: result.cycles,
-					free_human_player_points: result.free_human_player_points,
-					cyclenumber: result.cyclenumber
-				});
-			}
-			break;
+			postMessage({
+				operation,
+				cycles: result.cycles,
+				free_human_player_points: result.free_human_player_points,
+				cyclenumber: result.cyclenumber
+			});
+		}
+		break;*/
 
 		case "FIND_SURROUNDABLE_POINTS":
 			{
-				const svgVml = new SvgVml();
-				svgVml.Init(null, null, null, params.boardSize);
+				const svgVml = CreateSvgVml(params.boardSize);
 
 				const allLines = params.allLines.map(pa => svgVml.DeserializePolyline(pa));
 				const all_points = params.allPoints.map(pt => svgVml.DeserializeOval(pt));
@@ -242,8 +251,7 @@ addEventListener('message', async function (e) {
 
 		case "CLUSTERING_AND_CONCAVEMAN":
 			{
-				const svgVml = new SvgVml();
-				svgVml.Init(null, null, null, params.boardSize);
+				const svgVml = CreateSvgVml(params.boardSize);
 
 				//clustering first
 				const { method, numberOfClusters, neighborhoodRadius, minPointsPerCluster,
@@ -251,10 +259,7 @@ addEventListener('message', async function (e) {
 					visuals
 				} = params;
 
-				const allPoints = new Map();
-				params.allPoints.forEach(pt => {
-					allPoints.set(pt.key, svgVml.DeserializeOval(pt.value));
-				});
+				const allPoints = DeserializePointMap(svgVml, params.allPoints);
 				const humanPointsArrOfArr = [];
 
 				for (const pt of allPoints.values()) {
@@ -351,11 +356,8 @@ function AstarPathFind(graphDiagonal, fromY, fromX, toY, toX) {
 
 	const resultWithDiagonalsInvertedXY = astar.search(graphDiagonal, from, to, { heuristic: astar.heuristics.diagonal });
 
-	const resultWithDiagonals = resultWithDiagonalsInvertedXY.map(obj => ({
-		...obj,
-		x: obj.y,
-		y: obj.x
-	}));
+	//invert x,y back to normal coordinates and convert to array for next use
+	const resultWithDiagonals = resultWithDiagonalsInvertedXY.map(obj => ([obj.y, obj.x]));
 
 	return resultWithDiagonals;
 }
@@ -387,6 +389,8 @@ function CalculateWrappingPathFromDividedBoundingBoxes(allPoints, iGridHeight, i
 	//1. Convert candidate_path to a Map to ensure uniqueness by x,y and to avoid duplicates
 	//this hold points of prepared surrounding path
 	const candidate_path = new Map();
+	const pointCoordsSet = new Set(pointCoords.map(pt => `${pt.x},${pt.y}`));
+	const humanColorSet = new Set(humanPointColors);
 	//2. devide wrapping_bbox into 1x1 unit bbox and gather matching points
 	for (let j = wrapping_bbox.minY; j < wrapping_bbox.maxY; j++) {
 		for (let i = wrapping_bbox.minX; i < wrapping_bbox.maxX; i++) {
@@ -404,7 +408,7 @@ function CalculateWrappingPathFromDividedBoundingBoxes(allPoints, iGridHeight, i
 				// 	// LocalLog(`Out-of-bounds point (${x},${y}) 1`);
 				// 	return false;
 				// } else
-				return pointCoords.some(pt => pt.x === x && pt.y === y);
+				return pointCoordsSet.has(`${x},${y}`);
 			});
 			if (contains_oponent_cluster_point.length > 0) {
 				//4. if so, create a rectangle around it 1x1 unit fir visualization
@@ -421,7 +425,7 @@ function CalculateWrappingPathFromDividedBoundingBoxes(allPoints, iGridHeight, i
 					//6. not included in point_coords (not from cluster points), so they should be around
 					// 	 cluster points, or inside
 					const point = allPoints.get(y * iGridWidth + x);
-					if (point !== undefined && humanPointColors.includes(point.GetFillColor()))
+					if (point !== undefined && humanColorSet.has(point.GetFillColor()))
 						continue; //skip human points
 
 					if (!contains_oponent_cluster_point.some(q => q.ind !== ind && q.x === x && q.y === y)
@@ -491,6 +495,113 @@ function CalculateClustering(operation, method, dataset, numberOfClusters, neigh
 let g_graphDiagonal = null;//global graph for A* usage in concaveman validation
 
 /**
+ * Ensure A* graph for concaveman repair is initialized
+ * @param {number} iGridHeight grid height
+ * @param {number} iGridWidth grid width
+ * @param {Array<[number,number]>} humanPoints human player points to avoid
+ */
+function EnsureAstarGridInitialized(iGridHeight, iGridWidth, humanPoints) {
+	if (g_graphDiagonal !== null)
+		return;
+
+	// Initialize arr with 1s
+	const grid = Array.from({ length: iGridHeight }, () => Array(iGridWidth).fill(1));
+
+	// Mark human points as not accessible/obstacles, inverted x,y coords -> y,x
+	for (const [x, y] of humanPoints) grid[y][x] = 0;
+
+	g_graphDiagonal = new AStarGraph(grid, { diagonal: true });
+}
+
+/**
+ * Fix non continuous points in concaveman result
+ * @param {Array<[number,number]>} convex_hull concaveman points
+ * @param {Array<[number,number]>} humanPoints human player points to avoid
+ * @param {number} iGridHeight grid height
+ * @param {number} iGridWidth grid width
+ * @param {string} randomColor color for logging
+ * @param {number} maxFixAttempts maximum attempts to fix
+ * @returns {{convex_hull:Array<[number,number]>,numOfNonContinuous:number}} fixed hull and number of continuity fixes
+ */
+function FixNonContinuousHull(convex_hull, humanPoints, iGridHeight, iGridWidth, randomColor, maxFixAttempts) {
+	let numOfNonContinuous = 0;
+	do {
+		const continuous_result = ArePointsContinuous(convex_hull);
+		if (!continuous_result.result) {
+			numOfNonContinuous++;
+			LocalLog(`Concaveman result is not continuous, please check your input points. offenderIndex: %c${continuous_result.offenderIndex}, offender: %c${continuous_result.offender}`, 'color:orange;font-weight:bold', `color: ${randomColor}; font-weight:bold`);
+
+			const prev = convex_hull.at(continuous_result.offenderIndex - 1);
+			const curr = convex_hull.at(continuous_result.offenderIndex);
+
+			EnsureAstarGridInitialized(iGridHeight, iGridWidth, humanPoints);
+
+			// Call ASTAR to find missing points between prev and curr
+			const missing = AstarPathFind(g_graphDiagonal, prev[1], prev[0], curr[1], curr[0]);
+
+			convex_hull = convex_hull.slice(0, continuous_result.offenderIndex)
+				.concat(missing)
+				.concat(convex_hull.slice(continuous_result.offenderIndex + 1));
+
+			LocalLog(`Concaveman result fixed by adding ${missing.length} points between %c${prev} and ${curr}, %cmissing: ${missing.map(pt => pt.join(",")).join(" ")}`, `color:${randomColor}; font-weight:bold`, 'color:red;font-weight:bold');
+		} else {
+			break;
+		}
+	} while ((--maxFixAttempts) > 0);
+
+	return { convex_hull, numOfNonContinuous };
+}
+
+/**
+ * Remove duplicated points from concaveman result
+ * @param {Array<[number,number]>} convex_hull concaveman points
+ * @param {number} maxFixAttempts maximum attempts to fix
+ * @returns {{convex_hull:Array<[number,number]>,numOfDuplicatesFixed:number}} fixed hull and number of duplicate fixes
+ */
+function FixDuplicatedHullPoints(convex_hull, maxFixAttempts) {
+	let numOfDuplicatesFixed = 0;
+	do {
+		const duplicated_point_result = FindDuplicatedPoint(convex_hull, 1);
+		if (duplicated_point_result !== null) {
+			convex_hull.splice(
+				duplicated_point_result.firstIndex,
+				duplicated_point_result.secondIndex - duplicated_point_result.firstIndex
+			);
+			numOfDuplicatesFixed++;
+		} else {
+			break;
+		}
+	} while ((--maxFixAttempts) > 0);
+
+	return { convex_hull, numOfDuplicatesFixed };
+}
+
+/**
+ * Count points from original cluster intercepted by convex hull
+ * @param {Array<[number,number]>} convex_hull concaveman points
+ * @param {Array<{x:number,y:number}>} interceptingPoints original cluster points
+ * @param {string} randomColor color for logging
+ * @returns {{convex_hull:Array<{x:number,y:number}>,surrounded_points:Array<{x:number,y:number}>|null}} converted hull and intercepted points
+ */
+function CountInterceptedPoints(convex_hull, interceptingPoints, randomColor) {
+	let surrounded_points = [];
+	convex_hull = convex_hull.map(([x, y]) => ({ x, y }));
+	for (const pt of interceptingPoints) {
+		//check if point is inside convex hull polygon
+		if (true === pnpoly(convex_hull, pt.x, pt.y))
+			surrounded_points.push(pt);
+	}
+	//...if > 10% of points from original cluster are inside convex hull, we have a good candidate
+	if (surrounded_points.length < Math.ceil(interceptingPoints.length * 0.1)) {
+		LocalLog(`Only ${surrounded_points.length} points inside convex hull out of ${interceptingPoints.length} in cluster, %cneed more than ${Math.ceil(interceptingPoints.length * 0.1)}!`, `color: ${randomColor};font-weight: bold`);
+
+		surrounded_points = null;
+	}
+
+	return { convex_hull, surrounded_points };
+}
+
+/**
  * Calculate concaveman polygon and validate it
  * @param {number} concavity concavity parameter for concaveman
  * @param {number} lengthThreshold length threshold parameter for concaveman
@@ -512,68 +623,9 @@ function CalculateConcavemanAndValidate(concavity, lengthThreshold,
 	if (vertices.length > 0) {
 
 		convex_hull = concaveman(vertices, concavity ?? 2.0, lengthThreshold ?? 0.0);
-		let fixAttemptsLeft = maxFixAttempts;
-		do {
-			const continuous_result = ArePointsContinuous(convex_hull);
-			if (!continuous_result.result) {
-				numOfNonContinuous++;
-				LocalLog(`Concaveman result is not continuous, please check your input points. offenderIndex: %c${continuous_result.offenderIndex}, offender: %c${continuous_result.offender}`, 'color:orange;font-weight:bold', `color: ${randomColor}; font-weight:bold`);
-
-				const prev = convex_hull.at(continuous_result.offenderIndex - 1);
-				const curr = convex_hull.at(continuous_result.offenderIndex);
-
-				if (g_graphDiagonal === null) {
-					// Initialize arr with 1s
-					const grid = Array.from({ length: iGridHeight }, () => Array(iGridWidth).fill(1));
-
-					// Mark human points as not accessible/obstacles, inverted x,y coords -> y,x
-					for (const [x, y] of humanPoints) grid[y][x] = 0;
-
-					g_graphDiagonal = new AStarGraph(grid, { diagonal: true });
-				}
-
-				// Call ASTAR to find missing points between prev and curr
-				const missing = AstarPathFind(g_graphDiagonal, prev[1], prev[0], curr[1], curr[0])
-					.map(({ x, y }) => [x, y]);
-
-				convex_hull = convex_hull.slice(0, continuous_result.offenderIndex)
-					.concat(missing)
-					.concat(convex_hull.slice(continuous_result.offenderIndex + 1));
-
-				LocalLog(`Concaveman result fixed by adding ${missing.length} points between %c${prev} and ${curr}, %cmissing: ${missing.map(pt => pt.join(",")).join(" ")}`, `color:${randomColor}; font-weight:bold`, 'color:red;font-weight:bold');
-			} else {
-				break;
-			}
-		} while ((--fixAttemptsLeft) > 0);
-
-		fixAttemptsLeft = maxFixAttempts;
-		do {
-			const duplicated_point_result = FindDuplicatedPoint(convex_hull, 1);
-			if (duplicated_point_result !== null) {
-				convex_hull.splice(
-					duplicated_point_result.firstIndex,
-					duplicated_point_result.secondIndex - duplicated_point_result.firstIndex
-				);
-				numOfDuplicatesFixed++;
-			} else {
-				break;
-			}
-		} while ((--fixAttemptsLeft) > 0);
-
-		//now count how many points from original cluster are inside the convex hull polygon...
-		surrounded_points = [];
-		convex_hull = convex_hull.map(([x, y]) => ({ x, y }));
-		for (const pt of interceptingPoints) {
-			//check if point is inside convex hull polygon
-			if (true === pnpoly(convex_hull, pt.x, pt.y))
-				surrounded_points.push(pt);
-		}
-		//...if > 10% of points from original cluster are inside convex hull, we have a good candidate
-		if (surrounded_points.length < Math.ceil(interceptingPoints.length * 0.1)) {
-			LocalLog(`Only ${surrounded_points.length} points inside convex hull out of ${interceptingPoints.length} in cluster, %cneed more than ${Math.ceil(interceptingPoints.length * 0.1)}!`, `color: ${randomColor};font-weight: bold`);
-
-			surrounded_points = null;
-		}
+		({ convex_hull, numOfNonContinuous } = FixNonContinuousHull(convex_hull, humanPoints, iGridHeight, iGridWidth, randomColor, maxFixAttempts));
+		({ convex_hull, numOfDuplicatesFixed } = FixDuplicatedHullPoints(convex_hull, maxFixAttempts));
+		({ convex_hull, surrounded_points } = CountInterceptedPoints(convex_hull, interceptingPoints, randomColor));
 	}
 
 	return { convex_hull, interceptedPoints: surrounded_points, numOfNonContinuous, numOfDuplicatesFixed };

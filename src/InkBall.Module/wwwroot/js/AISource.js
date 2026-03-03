@@ -3,7 +3,7 @@ import concaveman from "concaveman";
 // import { StatusEnum, sortPointsClockwise, IsPointOutsideAllPaths, /*LocalLog, Sleep, pnpoly*/ } from "./shared.js";
 
 //globals loaded only once hopefully
-let StatusEnum, sortPointsClockwise, IsPointOutsideAllPaths/*, LocalLog, Sleep, pnpoly*/;
+let StatusEnum/*, sortPointsClockwise, IsPointOutsideAllPaths, LocalLog, Sleep, pnpoly*/;
 
 /**
  * AI operations class
@@ -15,21 +15,24 @@ class GraphAI {
 	#POINT_STARTING;
 	#POINT_IN_PATH;
 
-	constructor(iGridWidth, iGridHeight, pointStore) {
+	constructor(parentStatusEnum, iGridWidth, iGridHeight, pointStore) {
+		StatusEnum = parentStatusEnum;
 		this.#iGridWidth = iGridWidth;
 		this.#iGridHeight = iGridHeight;
 		this.#Points = pointStore;
+		this.#POINT_STARTING = StatusEnum.POINT_STARTING;
+		this.#POINT_IN_PATH = StatusEnum.POINT_IN_PATH;
 	}
 
-	async #Init() {
-		if (StatusEnum === undefined) {
+	// async #Init() {
+	// 	if (StatusEnum === undefined) {
 
-			({ StatusEnum, sortPointsClockwise, IsPointOutsideAllPaths } = await import(/* webpackIgnore: true */`./shared${location.hostname !== "localhost" ? '.min' : ''}.js`));
+	// 		({ StatusEnum/* , sortPointsClockwise, IsPointOutsideAllPaths  */} = await import(/* webpackIgnore: true */`./shared${location.hostname !== "localhost" ? '.min' : ''}.js`));
 
-			this.#POINT_STARTING = StatusEnum.POINT_STARTING;
-			this.#POINT_IN_PATH = StatusEnum.POINT_IN_PATH;
-		}
-	}
+	// 		this.#POINT_STARTING = StatusEnum.POINT_STARTING;
+	// 		this.#POINT_IN_PATH = StatusEnum.POINT_IN_PATH;
+	// 	}
+	// }
 
 	/**
 	 * Building graph of connected vertices and edges
@@ -42,9 +45,7 @@ class GraphAI {
 		//, cpuFillColor = 'var(--bluish)'
 		//, visuals = false
 	} = {}) {
-		await this.#Init();
-
-
+		// await this.#Init();
 
 		const graph_points = new Map(), graph_edges = new Map();
 
@@ -97,7 +98,6 @@ class GraphAI {
 		for (const point of all_points) {
 			if (point && isPointOKForPath(good_point_status_arr, point) === true) {
 				const { x, y } = point.GetPosition();
-				//TODO: await all below promises
 				//east
 				addPointsAndEdgesToGraph(point, x + 1, y, x, y);
 				//west
@@ -130,13 +130,14 @@ class GraphAI {
 	 * @param {object} lines - line array
 	 * @returns {Array} of cycles
 	 */
-	async MarkAllCycles(graph, sHumanColor, lines) {
-		await this.#Init();
+	/* async MarkAllCycles(graph, sHumanColor, lines) {
+		// await this.#Init();
 
 
 
 		const vertices = graph.vertices;
 		const N = vertices.length;
+		const vertexIndexMap = new Map(vertices.map((v, i) => [v, i])); // avoid O(N) indexOf in DFS
 		let cycles = new Array(N);
 		// mark with unique numbers
 		const mark = new Array(N);
@@ -184,9 +185,9 @@ class GraphAI {
 
 				// simple dfs on graph
 				for (const adj of vertex.adjacents) {
-					const v = vertices.indexOf(adj);
+					const v = vertexIndexMap.get(adj);
 					// if it has not been visited previously
-					if (v === par[u])
+					if (v === undefined || v === par[u])
 						continue;
 
 					await dfs_cycle(v, u);
@@ -288,7 +289,8 @@ class GraphAI {
 					//});
 				}
 			}
-			/*return tab;*/return { cycles, free_human_player_points, cyclenumber };
+			//return tab;
+			return { cycles, free_human_player_points, cyclenumber };
 		};
 
 		// store the numbers of cycle
@@ -301,7 +303,7 @@ class GraphAI {
 
 		// function to print the cycles
 		return await printCycles(edges, mark);
-	}
+	} */
 }
 
 
@@ -311,7 +313,7 @@ class GraphAI {
  * @returns {boolean} true if all points are continuous, false otherwise
  */
 function ArePointsContinuous(pointsArr) {
-	const length = pointsArr.length;
+	const length = pointsArr?.length ?? 0;
 	//check if points is array of {x, y} objects or array of arrays with two elements
 	//checking only first element
 	if (!Array.isArray(pointsArr) || length < 1)

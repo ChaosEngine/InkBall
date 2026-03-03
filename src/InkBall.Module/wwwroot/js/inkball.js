@@ -3171,7 +3171,7 @@ class InkBallGame {
 			//serialize points as string: "x0,y0 x1,y1 x2,y2"
 			//
 			// const pts = pointsArr.map((pt) => `${pt.x},${pt.y}`).join(' ');
-			const pts = pointsArr.reduce((acc, { x, y }) => acc + `${x},${y} `, '').trimEnd();
+			const pts = pointsArr.reduce((acc, [x, y]) => acc + `${x},${y} `, '').trimEnd();
 
 			//if not existing, create new...
 			if (this.#workingCyclePolyLine === null) {
@@ -4165,6 +4165,7 @@ class InkBallGame {
 	async #MarkAllCycles(graph, sHumanColor) {
 		const vertices = graph.vertices;
 		const N = vertices.length, PARTIALLY_VISITED = 1, COMPLETELY_VISITED = 2;
+		const vertexIndexMap = new Map(vertices.map((v, i) => [v, i])); // avoid O(N) indexOf in DFS
 		let cycles = new Array(N);
 		// mark with unique numbers
 		const mark = new Array(N);
@@ -4219,9 +4220,9 @@ class InkBallGame {
 
 				// simple dfs on graph
 				for (const adj of vertex.adjacents) {
-					const v = vertices.indexOf(adj);
+					const v = vertexIndexMap.get(adj);
 					// if it has not been visited previously
-					if (v === par[u])
+					if (v === undefined || v === par[u])
 						continue;
 
 					await dfs_cycle(v, u);
