@@ -176,7 +176,7 @@ namespace InkBall.Module.Hubs
 			var claimsPrincipal = this.Context.User;
 			var thisUserIdentifier = ThisUserIdentifier;
 
-			// if (ThisGame == null || ThisPlayer == null)
+			if (ThisGame == null || ThisPlayer == null)
 			{
 				(InkBallGame game, InkBallPlayer this_Player) = await GetGameAndThisPlayer(claimsPrincipal, thisUserIdentifier,
 					ThisGameID.Value, ThisPlayerID.Value, token);
@@ -186,9 +186,13 @@ namespace InkBall.Module.Hubs
 
 			if (ThisGame == null || ThisPlayer == null) return;
 
+			// bIsPlayer1 is connection-specific transient state; restore it on each call
+			// because ThisGame entity can be shared/tracked across hubs in tests/runtime.
+			ThisGame.bIsPlayer1 = ThisGame.iPlayer1Id == ThisPlayer.iId;
+
 			ThisUserName = ThisPlayer.UserName;
 
-			// if (OtherPlayer == null || OtherUserIdentifier == null)
+			if (OtherPlayer == null || OtherUserIdentifier == null)
 			{
 				(InkBallPlayer other_Player, string other_UserIdentifier) = GetOtherPlayer(ThisGame, thisUserIdentifier, ThisPlayer);
 				OtherPlayer = other_Player;

@@ -896,9 +896,16 @@ namespace InkBall.Tests
                 Assert.Equal(InkBallGame.WinStatusEnum.RED_WINS, ((WinCommand)winMessagingStatus).Status);
                 Assert.Equal(1, ((WinCommand)winMessagingStatus).WinningPlayerId);
 
+                // hub_P2 has ThisGame/ThisPlayer cached from OnConnectedAsync; use a fresh instance
+                // so LoadGameAndPlayerStructures re-queries the DB and finds the game no longer active.
+                using var hub_P2_postWin = new GameHub(db, Setup.Logger)
+                {
+                    Clients = mockHubCallerClients.Object,
+                    Context = mockHubCallerContext_P2.Object
+                };
                 var exception = await Assert.ThrowsAsync<NoGameArgumentNullException>(async () =>
                 {
-                    await hub_P2.ClientToServerPath(new InkBallPathViewModel
+                    await hub_P2_postWin.ClientToServerPath(new InkBallPathViewModel
                     {
                         iGameId = 1,
                         iPlayerId = 2,
