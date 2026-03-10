@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System;
 using System.Text;
 using System.Text.Json.Serialization;
 using MessagePack;
@@ -241,5 +242,31 @@ namespace InkBall.Module.Model
 			return builder.ToString();
 		}
 
+	}
+
+	[MessagePackObject(true)]
+	public sealed class CpuMoveBatchRequest
+	{
+		public InkBallPointViewModel HumanPoint { get; set; }
+
+		public InkBallPointViewModel CpuPoint { get; set; }
+
+		public InkBallPathViewModel CpuPath { get; set; }
+	}
+
+	[MessagePackObject(true)]
+	public sealed class CpuMoveBatchResponse
+	{
+		public DateTime? HumanPointTimeStamp { get; set; }
+
+		public InkBallPointViewModel CpuPoint { get; set; }
+
+		public InkBallPathViewModel CpuPath { get; set; }
+
+		public WinCommand CpuWin { get; set; }
+
+		public bool CpuMoveApplied { get; set; }
+
+		public string CpuMoveError { get; set; }
 	}
 }

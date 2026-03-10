@@ -722,6 +722,7 @@ class InkBallGame {
 	// #GameType;
 	#CursorPos;
 	#SvgVml;
+	#bBatchingCpuMove;
 
 	/**
 	 * InkBallGame constructor
@@ -796,6 +797,7 @@ class InkBallGame {
 		this.#StopAndDraw = null;
 		this.#bMouseDown = false;
 		this.#bHandlingEvent = false;
+		this.#bBatchingCpuMove = false;
 		this.#bDrawLines = !true;
 		// this.#sMessage = '';
 		this.#bIsPlayingWithRed = bIsPlayingWithRed;
@@ -1687,6 +1689,105 @@ class InkBallGame {
 	}
 
 	/**
+	 * Calculate CPU move based on selected AI method, fallback to random move if no move found through main method
+	 * @param {InkBallPointViewModel} lastHumanPoint last human point to calculate CPU move based on it (if needed by method)
+	 * @returns {object} CPU move payload (point or path)
+	 */
+	async #GetCpuMovePayload(lastHumanPoint = null) {
+		let point;
+		switch (this.#AIMethod) {
+			case 'centroid':
+				{
+					point = await this.#CalculateCPUCentroid(lastHumanPoint);
+					if (point === null)
+						point = await this.#FindRandomCPUPoint(lastHumanPoint);
+				}
+				break;
+			case 'nearest':
+				{
+					point = await this.#FindNearestCPUPoint(lastHumanPoint);
+					if (point === null)
+						point = await this.#FindRandomCPUPoint(lastHumanPoint);
+				}
+				break;
+			case 'surrounding':
+				{
+					const aiParams = this.#LoadAIParamsFromStore(window.localStorage);
+					point = await this.#GetSurroundingPoints(this.#COLOR_RED, aiParams, false, lastHumanPoint);
+					if (point === null)
+						point = await this.#FindRandomCPUPoint(lastHumanPoint);
+				}
+				break;
+			default:
+				point = await this.#FindRandomCPUPoint(lastHumanPoint);
+				break;
+		}
+
+		return point;
+	}
+
+	async #SendPointWithCpuMoveBatch(humanPoint, revertFunction = undefined) {
+		LocalLog(InkBallPointViewModel.Format(localizeMessage('game.somePlayer', 'some player'), humanPoint));
+		this.#bHandlingEvent = true;
+
+		try {
+			const cpuPayload = await this.#GetCpuMovePayload(humanPoint);
+			const request = {
+				HumanPoint: humanPoint,
+				CpuPoint: null,
+				CpuPath: null
+			};
+
+			if (cpuPayload && cpuPayload.Kind === CommandKindEnum.POINT)
+				request.CpuPoint = cpuPayload;
+			else if (cpuPayload && cpuPayload.Kind === CommandKindEnum.PATH)
+				request.CpuPath = cpuPayload;
+
+			const dto = await this.#SignalRConnection.invoke("ClientToServerPointWithCpuMove", request);
+
+			this.#bBatchingCpuMove = true;
+			try {
+				const humanTimeStamp = dto.HumanPointTimeStamp !== undefined ? dto.HumanPointTimeStamp : dto.humanPointTimeStamp;
+				if (humanTimeStamp !== undefined && humanTimeStamp !== null) {
+					humanPoint.TimeStamp = typeof humanTimeStamp === 'string' ?
+						new Date(humanTimeStamp) : humanTimeStamp;
+				}
+
+				await this.#ReceivedPointProcessing(humanPoint);
+
+				const cpuMoveApplied = dto.CpuMoveApplied !== undefined ? dto.CpuMoveApplied : dto.cpuMoveApplied;
+				if (cpuMoveApplied === true) {
+					const cpuPoint = dto.CpuPoint || dto.cpuPoint;
+					const cpuPath = dto.CpuPath || dto.cpuPath;
+					const cpuWin = dto.CpuWin || dto.cpuWin;
+
+					if (cpuPoint)
+						await this.#ReceivedPointProcessing(cpuPoint);
+					else if (cpuWin)
+						await this.#ReceivedWinProcessing(cpuWin);
+					else if (cpuPath)
+						await this.#ReceivedPathProcessing(cpuPath);
+				}
+				else {
+					const cpuMoveError = dto.CpuMoveError || dto.cpuMoveError;
+					if (cpuMoveError)
+						LocalError(cpuMoveError);
+
+					if (true === this.#bIsCPUGame && !this.#bIsPlayerActive)
+						this.#StartCPUCalculation();
+				}
+			}
+			finally {
+				this.#bBatchingCpuMove = false;
+			}
+		} catch (err) {
+			LocalError(err.toString());
+			if (revertFunction !== undefined)
+				revertFunction();
+		}
+	}
+
+	/**
 	 * Send data through signalR
 	 * @param {object} payload transferrableObject (DTO)
 	 * @param {() => void} revertFunction on-error revert/rollback function
@@ -1831,7 +1932,7 @@ class InkBallGame {
 			else
 				this.#Timer = new CountdownTimer(this.#TimerOpts);
 
-			if (true === this.#bIsCPUGame && !this.#bIsPlayerActive)
+			if (true === this.#bIsCPUGame && !this.#bIsPlayerActive && this.#bBatchingCpuMove === false)
 				this.#StartCPUCalculation();
 		}
 		this.#bHandlingEvent = false;
@@ -1917,7 +2018,7 @@ class InkBallGame {
 
 			this.#StopAndDraw.disabled = this.#CancelPath.disabled = 'disabled';
 
-			if (true === this.#bIsCPUGame && !this.#bIsPlayerActive)
+			if (true === this.#bIsCPUGame && !this.#bIsPlayerActive && this.#bBatchingCpuMove === false)
 				this.#StartCPUCalculation();
 		}
 		if (!this.#bDrawLines) {
@@ -2249,10 +2350,19 @@ class InkBallGame {
 			}
 
 			this.#rAF_FrameID = null;
-			await this.#SendData(this.#CreatePutPointRequest(loc_x, loc_y), () => {
-				this.#bMouseDown = false;
-				this.#bHandlingEvent = false;
-			});
+			const pointCmd = this.#CreatePutPointRequest(loc_x, loc_y);
+			if (this.#bIsCPUGame) {
+				await this.#SendPointWithCpuMoveBatch(pointCmd, () => {
+					this.#bMouseDown = false;
+					this.#bHandlingEvent = false;
+				});
+			}
+			else {
+				await this.#SendData(pointCmd, () => {
+					this.#bMouseDown = false;
+					this.#bHandlingEvent = false;
+				});
+			}
 		}
 		else {
 			//lines
@@ -3219,9 +3329,10 @@ class InkBallGame {
 	 * @param {string} humanPointColor - color of points to find
 	 * @param {object} aiParams - AI parameters for clustering
 	 * @param {boolean} [visuals] - if true, will create visual representation of clusters, defaults to false
+	 * @param {InkBallPointViewModel} [lastHumanPoint] - last human put point, defaults to null
 	 * @returns {Promise<Array>} - array of clusters found, each cluster is an object with points and convex hull
 	 */
-	async #GetSurroundingPoints(humanPointColor, aiParams, visuals = false) {
+	async #GetSurroundingPoints(humanPointColor, aiParams, visuals = false, lastHumanPoint = null) {
 		const humanPointStatuses = humanPointColor === this.#COLOR_RED
 			?
 			[StatusEnum.POINT_FREE_RED
@@ -3237,6 +3348,12 @@ class InkBallGame {
 			];
 
 		const all_points_serialized = [...this.#Points.store.entries()].map(([key, value]) => ({ key, value: value.Serialize() }));
+		//lastHumanPoint is previously put human player point that needs to be added artificially
+		if (lastHumanPoint !== null) {
+			const serialized = { x: lastHumanPoint.iX, y: lastHumanPoint.iY, Status: lastHumanPoint.Status, Color: humanPointColor };
+
+			all_points_serialized.push({ key: lastHumanPoint.iY * this.#iGridWidth + lastHumanPoint.iX, value: serialized });
+		}
 
 		//Web Worker calculation of density clustering
 		const { results } = await this.#RunAIWorker(worker => {
@@ -3510,6 +3627,7 @@ class InkBallGame {
 		// this.#iPosY = 0;
 		this.#bMouseDown = false;
 		this.#bHandlingEvent = false;
+		this.#bBatchingCpuMove = false;
 		this.#bDrawLines = !true;
 		// this.#sMessage = '';
 		this.#sDotColor = this.#bIsPlayingWithRed ? this.#COLOR_RED : this.#COLOR_BLUE;
@@ -3900,7 +4018,7 @@ class InkBallGame {
 		return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
 	}
 
-	async #FindRandomCPUPoint() {
+	async #FindRandomCPUPoint(lastHumanPoint = null) {
 		let max_random_pick_amount = 100, x, y;
 		//loading all line up front and pass into below "looped" function calls
 		const allLines = await this.#Lines.all();//TODO: async for
@@ -3908,7 +4026,10 @@ class InkBallGame {
 			x = this.#GetRandomInt(0, this.#iGridWidth);
 			y = this.#GetRandomInt(0, this.#iGridHeight);
 
-			if (!(await this.#Points.has(y * this.#iGridWidth + x)) && IsPointOutsideAllPaths(x, y, allLines)) {
+			if (!(await this.#Points.has(y * this.#iGridWidth + x)) &&
+				(lastHumanPoint?.iX !== x || lastHumanPoint?.iY !== y) && //excluded point should not be returned as CPU move
+				IsPointOutsideAllPaths(x, y, allLines)
+			) {
 				break;
 			}
 		}
@@ -3917,10 +4038,16 @@ class InkBallGame {
 		return cmd;
 	}
 
-	async #CalculateCPUCentroid() {
+	async #CalculateCPUCentroid(lastHumanPoint = null) {
 		let centroidX = 0, centroidY = 0, count = 0, x, y;
 		const sHumanColor = this.#COLOR_RED;
 
+		//human last added point that we should also consider it for centroid calculation
+		if (lastHumanPoint !== null) {
+			const x = lastHumanPoint.iX, y = lastHumanPoint.iY;
+			centroidX += x; centroidY += y;
+			count++;
+		}
 		for (const pt of await this.#Points.values()) {
 			if (pt !== undefined && pt.GetFillColor() === sHumanColor && pt.GetStatus() === StatusEnum.POINT_FREE_RED) {
 				const { x, y } = pt.GetPosition();
@@ -3944,6 +4071,7 @@ class InkBallGame {
 		while (++random_pick_amount_cnter <= 50) {
 			random_picked_points.add(`${x}_${y}`);
 			if (false === (await this.#Points.has(y * this.#iGridWidth + x)) &&
+				lastHumanPoint?.iX !== x && lastHumanPoint?.iY !== y && //excluded point should not be returned as CPU move
 				true === IsPointOutsideAllPaths(x, y, allLines)) {
 				log_str += (`checking centroid coords ${x}_${y} succeed\n`);
 				break;
@@ -3970,7 +4098,7 @@ class InkBallGame {
 		return pt;
 	}
 
-	async #FindNearestCPUPoint() {
+	async #FindNearestCPUPoint(lastHumanPoint = null) {
 		if (this.#iLastX >= 0 && this.#iLastY >= 0) {
 			let x = this.#iLastX, y = this.#iLastY;
 			let log_str = "";
@@ -3982,6 +4110,7 @@ class InkBallGame {
 			while (++random_pick_amount_cnter <= 50) {
 				random_picked_points.add(`${x}_${y}`);
 				if (false === (await this.#Points.has(y * this.#iGridWidth + x)) &&
+					lastHumanPoint?.iX !== x && lastHumanPoint?.iY !== y && //excluded point should not be returned as CPU move
 					true === IsPointOutsideAllPaths(x, y, allLines)) {
 					log_str += (`checking nearest coords ${x}_${y} succeed\n`);
 					break;
@@ -4785,32 +4914,7 @@ class InkBallGame {
 		if (this.#rAF_StartTimeStamp === null) this.#rAF_StartTimeStamp = timeStamp;
 		const elapsed = timeStamp - this.#rAF_StartTimeStamp;
 
-
-		let point = null;
-		switch (this.#AIMethod) {
-			case 'centroid':
-				{
-					point = await this.#CalculateCPUCentroid();
-					if (point === null)
-						point = await this.#FindRandomCPUPoint();
-				}
-				break;
-			case 'nearest':
-				{
-					point = await this.#FindNearestCPUPoint();
-					if (point === null)
-						point = await this.#FindRandomCPUPoint();
-				}
-				break;
-			case 'surrounding':
-				{
-					const aiParams = this.#LoadAIParamsFromStore(window.localStorage);
-					point = await this.#GetSurroundingPoints(this.#COLOR_RED, aiParams, false/*visuals*/);
-					if (point === null)
-						point = await this.#FindRandomCPUPoint();
-				}
-				break;
-		}
+		const point = await this.#GetCpuMovePayload();
 
 		if (point === null) {
 			if (elapsed < 2000)
