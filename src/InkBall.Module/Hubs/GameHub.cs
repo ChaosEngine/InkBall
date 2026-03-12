@@ -456,33 +456,42 @@ namespace InkBall.Module.Hubs
 				};
 				InkBallPointViewModel new_point;
 
-				using (var trans = await _dbContext.Database.BeginTransactionAsync(token))
+				var currentTransaction = _dbContext.Database.CurrentTransaction;
+				var ownsTransaction = currentTransaction == null;
+				if (ownsTransaction)
+					currentTransaction = await _dbContext.Database.BeginTransactionAsync(token);
+
+				try
 				{
-					try
+					await _dbContext.InkBallPoint.AddAsync(db_point, token);
+					ThisGame.bIsPlayer1Active = !ThisGame.bIsPlayer1Active;
+
+					new_point = new InkBallPointViewModel(db_point);
+					if (!db_point_player.IsCpuPlayer)
 					{
-						await _dbContext.InkBallPoint.AddAsync(db_point, token);
-						ThisGame.bIsPlayer1Active = !ThisGame.bIsPlayer1Active;
-
-						new_point = new InkBallPointViewModel(db_point);
-						if (!db_point_player.IsCpuPlayer)
-						{
-							string last_move = new_point.SerializeThin();
-							db_point_player.sLastMoveCode = last_move;
-						}
-
-						//#if DEBUG
-						//						throw new Exception($"FAKE EXCEPTION {new_point}");
-						//#endif
-						await _dbContext.SaveChangesAsync(token);
-
-						await trans.CommitAsync(token);
+						string last_move = new_point.SerializeThin();
+						db_point_player.sLastMoveCode = last_move;
 					}
-					catch (Exception ex)
-					{
-						await trans.RollbackAsync(token);
-						_logger.LogError(ex, nameof(ClientToServerPoint));
-						throw;
-					}
+
+					//#if DEBUG
+					//						throw new Exception($"FAKE EXCEPTION {new_point}");
+					//#endif
+					await _dbContext.SaveChangesAsync(token);
+
+					if (ownsTransaction)
+						await currentTransaction.CommitAsync(token);
+				}
+				catch (Exception ex)
+				{
+					if (ownsTransaction)
+						await currentTransaction.RollbackAsync(token);
+					_logger.LogError(ex, nameof(ClientToServerPoint));
+					throw;
+				}
+				finally
+				{
+					if (ownsTransaction)
+						await currentTransaction.DisposeAsync();
 				}
 				new_point.TimeStamp = ThisGame.TimeStamp.ToUniversalTime();
 
@@ -598,57 +607,67 @@ namespace InkBall.Module.Hubs
 				if (!db_path_player.IsCpuPlayer)
 					db_path_player.sLastMoveCode = last_move;
 
-				using (var trans = await _dbContext.Database.BeginTransactionAsync(token))
+				var currentTransaction = _dbContext.Database.CurrentTransaction;
+				var ownsTransaction = currentTransaction == null;
+				if (ownsTransaction)
+					currentTransaction = await _dbContext.Database.BeginTransactionAsync(token);
+
+				try
 				{
-					try
+					await _dbContext.InkBallPath.AddAsync(db_path, token);
+
+					await _dbContext.SaveChangesAsync(token);
+					// #if DEBUG
+					// 						var saved_pts = await _dbContext.LoadPointsAndPathsAsync(ThisGameID.Value, token);
+					// 						var restored_from_db = saved_pts.Paths.LastOrDefault();
+					// 						var str = InkBallPath.GetPathsAsJavaScriptArrayForPage(saved_pts.Paths);
+					// 						throw new Exception($"FAKE EXCEPTION org pts:[{path.PointsAsString}], restored pts:[{str}], owned:[{path.OwnedPointsAsString}]");
+					// #endif
+
+					var statisticalPointAndPathCounter = new StatisticalPointAndPathCounter(_dbContext, ThisGame.iId,
+						ThisPlayer.iId, OtherPlayer.iId, ref owning_color, ref other_owning_color, ref token);
+
+					IDtoMsg dto;
+					var win_status = await ThisGame.Check4Win(statisticalPointAndPathCounter, path);
+					if (win_status != InkBallGame.WinStatusEnum.NO_WIN)
 					{
-						await _dbContext.InkBallPath.AddAsync(db_path, token);
+						int? winningPlayerID = await _dbContext.HandleWinStatusAsync(win_status, ThisGame, token);
 
-						await _dbContext.SaveChangesAsync(token);
-						// #if DEBUG
-						// 						var saved_pts = await _dbContext.LoadPointsAndPathsAsync(ThisGameID.Value, token);
-						// 						var restored_from_db = saved_pts.Paths.LastOrDefault();
-						// 						var str = InkBallPath.GetPathsAsJavaScriptArrayForPage(saved_pts.Paths);
-						// 						throw new Exception($"FAKE EXCEPTION org pts:[{path.PointsAsString}], restored pts:[{str}], owned:[{path.OwnedPointsAsString}]");
-						// #endif
+						var win = new WinCommand(win_status, winningPlayerID.GetValueOrDefault(0),
+							$"Bravo {(win_status == InkBallGame.WinStatusEnum.GREEN_WINS ? "green" : "red")}!");
+						path.TimeStamp = ThisGame.TimeStamp.ToUniversalTime();
+						win.Path = path;
 
-						var statisticalPointAndPathCounter = new StatisticalPointAndPathCounter(_dbContext, ThisGame.iId,
-							ThisPlayer.iId, OtherPlayer.iId, ref owning_color, ref other_owning_color, ref token);
-
-						IDtoMsg dto;
-						var win_status = await ThisGame.Check4Win(statisticalPointAndPathCounter, path);
-						if (win_status != InkBallGame.WinStatusEnum.NO_WIN)
-						{
-							int? winningPlayerID = await _dbContext.HandleWinStatusAsync(win_status, ThisGame, token);
-
-							var win = new WinCommand(win_status, winningPlayerID.GetValueOrDefault(0),
-								$"Bravo {(win_status == InkBallGame.WinStatusEnum.GREEN_WINS ? "green" : "red")}!");
-							path.TimeStamp = ThisGame.TimeStamp.ToUniversalTime();
-							win.Path = path;
-
-							dto = win;
-							await Clients.User(OtherUserIdentifier).ServerToClientPlayerWin(win);
-						}
-						else
-						{
-							path = new InkBallPathViewModel(db_path, path.PointsAsString, path.OwnedPointsAsString);
-							path.TimeStamp = ThisGame.TimeStamp.ToUniversalTime();
-							dto = path;
-							if (!ThisGame.CpuOponent)
-								await Clients.User(OtherUserIdentifier).ServerToClientPath(path);
-						}
-
-						await trans.CommitAsync(token);
-
-						return dto;
+						dto = win;
+						await Clients.User(OtherUserIdentifier).ServerToClientPlayerWin(win);
 					}
-					catch (Exception ex)
+					else
 					{
-						await trans.RollbackAsync(token);
-						_logger.LogError(ex, nameof(ClientToServerPath));
-						throw;
+						path = new InkBallPathViewModel(db_path, path.PointsAsString, path.OwnedPointsAsString);
+						path.TimeStamp = ThisGame.TimeStamp.ToUniversalTime();
+						dto = path;
+						if (!ThisGame.CpuOponent)
+							await Clients.User(OtherUserIdentifier).ServerToClientPath(path);
 					}
-				}//trans end
+
+					if (ownsTransaction)
+						await currentTransaction.CommitAsync(token);
+
+					return dto;
+				}
+				catch (Exception ex)
+				{
+					if (ownsTransaction)
+						await currentTransaction.RollbackAsync(token);
+					_logger.LogError(ex, nameof(ClientToServerPath));
+					throw;
+				}
+				finally
+				{
+					if (ownsTransaction)
+						await currentTransaction.DisposeAsync();
+				}
+				//trans end
 			}
 			catch (Exception ex)
 			{
@@ -685,56 +704,67 @@ namespace InkBall.Module.Hubs
 			if (request.CpuPath != null && request.CpuPath.iPlayerId != -1)
 				throw new ArgumentException("cpu path must belong to CPU player", nameof(request.CpuPath));
 
-			var response = new CpuMoveBatchResponse
-			{
-				HumanPointTimeStamp = await ClientToServerPoint(request.HumanPoint)
-			};
+			var ownsTransaction = _dbContext.Database.CurrentTransaction == null;
+			var transaction = _dbContext.Database.CurrentTransaction;
+			if (ownsTransaction)
+				transaction = await _dbContext.Database.BeginTransactionAsync(token);
 
-			if (request.CpuPoint == null && request.CpuPath == null)
-				return response;
-
+			var response = new CpuMoveBatchResponse();
 			try
 			{
-				if (request.CpuPoint != null)
+				response.HumanPointTimeStamp = await ClientToServerPoint(request.HumanPoint);
+
+				try
 				{
-					var cpuTs = await ClientToServerPoint(request.CpuPoint);
-					response.CpuPoint = new InkBallPointViewModel(request.CpuPoint)
+					if (request.CpuPoint != null)
 					{
-						TimeStamp = cpuTs
-					};
-					response.CpuMoveApplied = true;
+						var cpuTs = await ClientToServerPoint(request.CpuPoint);
+						response.CpuPoint = request.CpuPoint;
+						response.CpuPoint.TimeStamp = cpuTs;
+					}
+					else if (request.CpuPath != null)
+					{
+						var dto = await ClientToServerPath(request.CpuPath);
+						if (dto is InkBallPathViewModel path)
+						{
+							response.CpuPath = path;
+						}
+						else if (dto is WinCommand win)
+						{
+							response.CpuWin = win;
+							response.CpuPath = win.Path;
+						}
+						else
+						{
+							response.CpuMoveError = "Unsupported CPU move response kind";
+						}
+					}
 				}
-				else if (request.CpuPath != null)
+				catch (Exception ex)
 				{
-					var dto = await ClientToServerPath(request.CpuPath);
-					if (dto is InkBallPathViewModel path)
-					{
-						response.CpuPath = path;
-						response.CpuMoveApplied = true;
-					}
-					else if (dto is WinCommand win)
-					{
-						response.CpuWin = win;
-						response.CpuPath = win.Path;
-						response.CpuMoveApplied = true;
-					}
-					else
-					{
-						response.CpuMoveApplied = false;
-						response.CpuMoveError = "Unsupported CPU move response kind";
-					}
+					response.CpuMoveError = ex.Message;
+					_logger.LogWarning(ex, nameof(ClientToServerPointWithCpuMove));
 				}
+
+				if (ownsTransaction)
+					await transaction.CommitAsync(token);
 			}
 			catch (Exception ex)
 			{
-				response.CpuMoveApplied = false;
-				response.CpuMoveError = ex.Message;
-				_logger.LogWarning(ex, nameof(ClientToServerPointWithCpuMove));
+				if (ownsTransaction)
+					await transaction.RollbackAsync(token);
+				_logger.LogError(ex, nameof(ClientToServerPointWithCpuMove));
+				throw;
+			}
+			finally
+			{
+				if (ownsTransaction)
+					await transaction.DisposeAsync();
 			}
 
 			return response;
 		}
-	
+
 		public async Task ClientToServerPing(PingCommand ping)
 		{
 			CancellationToken token = this.Context.ConnectionAborted;

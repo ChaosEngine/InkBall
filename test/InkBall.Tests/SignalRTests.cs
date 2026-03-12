@@ -1880,7 +1880,6 @@ new []{/*id=714*/4/*x*/, 8/*y*/, 3/*val*/, 4/*playerID*/},
 
                 Assert.NotNull(response);
                 Assert.NotNull(response.HumanPointTimeStamp);
-                Assert.True(response.CpuMoveApplied);
                 Assert.Null(response.CpuMoveError);
                 Assert.NotNull(response.CpuPoint);
                 Assert.NotNull(response.CpuPoint.TimeStamp);
@@ -1947,7 +1946,6 @@ new []{/*id=714*/4/*x*/, 8/*y*/, 3/*val*/, 4/*playerID*/},
 
                 Assert.NotNull(response);
                 Assert.NotNull(response.HumanPointTimeStamp);
-                Assert.False(response.CpuMoveApplied);
                 Assert.NotNull(response.CpuMoveError);
                 Assert.Null(response.CpuPoint);
 
@@ -2010,7 +2008,6 @@ new []{/*id=714*/4/*x*/, 8/*y*/, 3/*val*/, 4/*playerID*/},
 
                 Assert.NotNull(response);
                 Assert.NotNull(response.HumanPointTimeStamp);
-                Assert.False(response.CpuMoveApplied);
                 Assert.NotNull(response.CpuMoveError);
                 Assert.Contains("point already placed", response.CpuMoveError);
                 Assert.Null(response.CpuPoint);

@@ -1166,6 +1166,7 @@ class InkBallGame {
 				msg_lst.appendChild(li);
 			}
 
+			this.#bBatchingCpuMove = true;//block any incoming messages until win processing is done, to avoid race conditions and sending new CPU actions
 			await this.#ReceivedPathProcessing(win.Path || win.path);
 
 			await this.#ReceivedWinProcessing(win);
@@ -1688,47 +1689,10 @@ class InkBallGame {
 		return cmd;
 	}
 
-	/**
-	 * Calculate CPU move based on selected AI method, fallback to random move if no move found through main method
-	 * @param {InkBallPointViewModel} lastHumanPoint last human point to calculate CPU move based on it (if needed by method)
-	 * @returns {object} CPU move payload (point or path)
-	 */
-	async #GetCpuMovePayload(lastHumanPoint = null) {
-		let point;
-		switch (this.#AIMethod) {
-			case 'centroid':
-				{
-					point = await this.#CalculateCPUCentroid(lastHumanPoint);
-					if (point === null)
-						point = await this.#FindRandomCPUPoint(lastHumanPoint);
-				}
-				break;
-			case 'nearest':
-				{
-					point = await this.#FindNearestCPUPoint(lastHumanPoint);
-					if (point === null)
-						point = await this.#FindRandomCPUPoint(lastHumanPoint);
-				}
-				break;
-			case 'surrounding':
-				{
-					const aiParams = this.#LoadAIParamsFromStore(window.localStorage);
-					point = await this.#GetSurroundingPoints(this.#COLOR_RED, aiParams, false, lastHumanPoint);
-					if (point === null)
-						point = await this.#FindRandomCPUPoint(lastHumanPoint);
-				}
-				break;
-			default:
-				point = await this.#FindRandomCPUPoint(lastHumanPoint);
-				break;
-		}
-
-		return point;
-	}
-
 	async #SendPointWithCpuMoveBatch(humanPoint, revertFunction = undefined) {
 		LocalLog(InkBallPointViewModel.Format(localizeMessage('game.somePlayer', 'some player'), humanPoint));
 		this.#bHandlingEvent = true;
+		this.#Screen.style.cursor = "wait";
 
 		try {
 			const cpuPayload = await this.#GetCpuMovePayload(humanPoint);
@@ -1747,7 +1711,7 @@ class InkBallGame {
 
 			this.#bBatchingCpuMove = true;
 			try {
-				const humanTimeStamp = dto.HumanPointTimeStamp !== undefined ? dto.HumanPointTimeStamp : dto.humanPointTimeStamp;
+				const humanTimeStamp = dto.HumanPointTimeStamp || dto.humanPointTimeStamp;
 				if (humanTimeStamp !== undefined && humanTimeStamp !== null) {
 					humanPoint.TimeStamp = typeof humanTimeStamp === 'string' ?
 						new Date(humanTimeStamp) : humanTimeStamp;
@@ -1755,8 +1719,8 @@ class InkBallGame {
 
 				await this.#ReceivedPointProcessing(humanPoint);
 
-				const cpuMoveApplied = dto.CpuMoveApplied !== undefined ? dto.CpuMoveApplied : dto.cpuMoveApplied;
-				if (cpuMoveApplied === true) {
+				const cpuMoveError = dto.CpuMoveError || dto.cpuMoveError;
+				if (!cpuMoveError) {
 					const cpuPoint = dto.CpuPoint || dto.cpuPoint;
 					const cpuPath = dto.CpuPath || dto.cpuPath;
 					const cpuWin = dto.CpuWin || dto.cpuWin;
@@ -1769,9 +1733,7 @@ class InkBallGame {
 						await this.#ReceivedPathProcessing(cpuPath);
 				}
 				else {
-					const cpuMoveError = dto.CpuMoveError || dto.cpuMoveError;
-					if (cpuMoveError)
-						LocalError(cpuMoveError);
+					LocalError(cpuMoveError);
 
 					if (true === this.#bIsCPUGame && !this.#bIsPlayerActive)
 						this.#StartCPUCalculation();
@@ -2053,112 +2015,6 @@ class InkBallGame {
 			});
 		}
 	}
-
-	/*
-	#Check4Win(playerPaths, otherPlayerPaths, playerPoints, otherPlayerPoints) {
-		let owned_status, count;
-		switch (this.#GameType) {
-			case GameTypeEnum.FIRST_CAPTURE:
-				if (playerPaths.length > 0) {
-					if (this.#bIsPlayingWithRed)
-						return WinStatusEnum.RED_WINS;
-					else
-						return WinStatusEnum.GREEN_WINS;
-				}
-				if (otherPlayerPaths.length > 0) {
-					if (this.#bIsPlayingWithRed)
-						return WinStatusEnum.GREEN_WINS;
-					else
-						return WinStatusEnum.RED_WINS;
-				}
-				return WinStatusEnum.NO_WIN;//continue game
-
-			case GameTypeEnum.FIRST_5_CAPTURES:
-				owned_status = this.#bIsPlayingWithRed ? StatusEnum.POINT_OWNED_BY_BLUE : StatusEnum.POINT_OWNED_BY_RED;
-				count = otherPlayerPoints.filter(function (p) {
-					return p.iEnclosingPathId !== null && p.GetStatus() === owned_status;
-				}).length;
-				if (count >= 5) {
-					if (this.#bIsPlayingWithRed)
-						return WinStatusEnum.GREEN_WINS;
-					else
-						return WinStatusEnum.RED_WINS;
-				}
-				owned_status = this.#bIsPlayingWithRed ? StatusEnum.POINT_OWNED_BY_RED : StatusEnum.POINT_OWNED_BY_BLUE;
-				count = playerPoints.filter(function (p) {
-					return p.iEnclosingPathId !== null && p.GetStatus() === owned_status;
-				}).length;
-				if (count >= 5) {
-					if (this.#bIsPlayingWithRed)
-						return WinStatusEnum.RED_WINS;
-					else
-						return WinStatusEnum.GREEN_WINS;
-				}
-				return WinStatusEnum.NO_WIN;//continue game
-
-			case GameTypeEnum.FIRST_5_PATHS:
-				if (otherPlayerPaths.length >= 5) {
-					if (this.#bIsPlayingWithRed)
-						return WinStatusEnum.GREEN_WINS;
-					else
-						return WinStatusEnum.RED_WINS;
-				}
-				if (playerPaths.length >= 5) {
-					if (this.#bIsPlayingWithRed)
-						return WinStatusEnum.RED_WINS;
-					else
-						return WinStatusEnum.GREEN_WINS;
-				}
-				return WinStatusEnum.NO_WIN;//continue game
-
-			case GameTypeEnum.FIRST_5_ADVANTAGE_PATHS:
-				{
-					const diff = playerPaths.length - otherPlayerPaths.length;
-					if (diff >= 5) {
-						if (this.#bIsPlayingWithRed)
-							return WinStatusEnum.RED_WINS;
-						else
-							return WinStatusEnum.GREEN_WINS;
-					}
-					else if (diff <= -5) {
-						if (this.#bIsPlayingWithRed)
-							return WinStatusEnum.GREEN_WINS;
-						else
-							return WinStatusEnum.RED_WINS;
-					}
-				}
-				return WinStatusEnum.NO_WIN;//continue game
-
-			default:
-				throw new Error(localizeMessage('err.wrongGameType', "Wrong game type"));
-		}
-	}
-	*/
-
-	/* #ShowStatus(sMessage = '') {
-		if (this.#Player2Name.textContent === '???') {
-			if (this.#bIsPlayerActive)
-				this.#GameStatus.style.color = this.#COLOR_RED;
-			else
-				this.#GameStatus.style.color = this.#COLOR_BLUE;
-		}
-		else if (this.#bIsPlayerActive) {
-			if (this.#bIsPlayingWithRed)
-				this.#GameStatus.style.color = this.#COLOR_RED;
-			else
-				this.#GameStatus.style.color = this.#COLOR_BLUE;
-		}
-		else {
-			if (this.#bIsPlayingWithRed)
-				this.#GameStatus.style.color = this.#COLOR_BLUE;
-			else
-				this.#GameStatus.style.color = this.#COLOR_RED;
-		}
-		if (sMessage !== null && sMessage !== '')
-			this.#Debug(sMessage);
-		else
-			this.#Debug('');
-	} */
 
 	#ShowStatusI18n(msgKey, fallbackMsg) {
 		if (this.#Player2Name.textContent === '???') {
@@ -4832,84 +4688,45 @@ class InkBallGame {
 		}
 	}
 
+
 	/**
-	 * Calculate wrapping path around given points using divided bounding boxes method
-	 * @param {Array<{x: number, y: number}>} pointCoords array of points to wrap around
-	 * @param {(worker: Worker) => void} createRectForVisualsFunc optional function to create rectangle around points for visualization
-	 * @param {Array<string>} humanPointColors colors of human points to skip
-	 * @returns {Array<[number,number]>} array of points forming surrounding path
+	 * Calculate CPU move based on selected AI method, fallback to random move if no move found through main method
+	 * @param {InkBallPointViewModel} lastHumanPoint last human point to calculate CPU move based on it (if needed by method)
+	 * @returns {object} CPU move payload (point or path)
 	 */
-	/* 
-		#CalculateWrappingPathFromDividedBoundingBoxes(pointCoords, createRectForVisualsFunc, humanPointColors) {
-	
-			//0. create bounding box around points wrapping all points in cluster
-			const wrapping_bbox = AABB.fromPoints(pointCoords);
-			wrapping_bbox.expand(1, 0, 0, this.#iGridHeight - 1, this.#iGridWidth - 1);//expand it a bit by 1 unit in all directions -> enlarge it
-	
-			// //draw bounding box for visualization
-			// LocalLog(`wrapping_bbox: ${JSON.stringify(wrapping_bbox)}`);
-	
-			// createRectForVisualsFunc(wrapping_bbox.minX, wrapping_bbox.minY,
-			// 	wrapping_bbox.maxX - wrapping_bbox.minX, wrapping_bbox.maxY - wrapping_bbox.minY);
-	
-	
-	
-			//1. Convert candidate_path to a Map to ensure uniqueness by x,y and to avoid duplicates
-			//this hold points of prepared surrounding path
-			const candidate_path = new Map();
-			//2. devide wrapping_bbox into 1x1 unit bbox and gather matching points
-			for (let j = wrapping_bbox.minY; j < wrapping_bbox.maxY; j++) {
-				for (let i = wrapping_bbox.minX; i < wrapping_bbox.maxX; i++) {
-	
-					const current_unit_bbox = [
-						// { x: i, y: j, ind: 0 },
-						{ x: i + 1, y: j, ind: 1 },
-						{ x: i, y: j + 1, ind: 2 },
-						{ x: i + 1, y: j + 1, ind: 3 }
-					];
-	
-					//3. check if any created bbox point contains any of the points in point_coords (cluster points)
-					const contains_oponent_cluster_point = current_unit_bbox.filter(({ x, y }) => {
-						// if (!(x >= 0 && x < this.#iGridWidth && y >= 0 && y < this.#iGridHeight)) {
-						// 	// LocalLog(`Out-of-bounds point (${x},${y}) 1`);
-						// 	return false;
-						// } else
-						return pointCoords.some(pt => pt.x === x && pt.y === y);
-					});
-					if (contains_oponent_cluster_point.length > 0) {
-						//4. if so, create a rectangle around it 1x1 unit fir visualization
-						createRectForVisualsFunc(i, j, 1, 1);
-						//5. i,j and i+1, j+1 are dimensions of the bounding box
-						// 	 find which points of it are NOT included in point_coords
-						// 	 3 points of the rectangle
-						for (const { x, y, ind } of current_unit_bbox) {
-							// if (!(x >= 0 && x < this.#iGridWidth && y >= 0 && y < this.#iGridHeight)) {
-							// 	// LocalLog(`Out-of-bounds point (${x},${y}) 2`);
-							// 	continue;
-							// }
-	
-							//6. not included in point_coords (not from cluster points), so they should be around
-							// 	 cluster points, or inside
-							const point = this.#Points.get(y * this.#iGridWidth + x);
-							if (point !== undefined && humanPointColors.includes(point.GetFillColor()))
-								continue; //skip human points
-	
-							if (!contains_oponent_cluster_point.some(q => q.ind !== ind && q.x === x && q.y === y)
-								//no duplicates from already added points
-								&& !candidate_path.has(`${x},${y}`)) {
-								//7. add point to candidate path map
-								candidate_path.set(`${x},${y}`, [x, y]);
-							}
-						}
-					}
+	async #GetCpuMovePayload(lastHumanPoint = null) {
+		let point;
+		switch (this.#AIMethod) {
+			case 'centroid':
+				{
+					point = await this.#CalculateCPUCentroid(lastHumanPoint);
+					if (point === null)
+						point = await this.#FindRandomCPUPoint(lastHumanPoint);
 				}
-			}
-	
-			//8. convert candidate_path_map to array of points
-			const surrounding_path = [...candidate_path.values()];
-			return surrounding_path;
+				break;
+			case 'nearest':
+				{
+					point = await this.#FindNearestCPUPoint(lastHumanPoint);
+					if (point === null)
+						point = await this.#FindRandomCPUPoint(lastHumanPoint);
+				}
+				break;
+			case 'surrounding':
+				{
+					const aiParams = this.#LoadAIParamsFromStore(window.localStorage);
+					point = await this.#GetSurroundingPoints(this.#COLOR_RED, aiParams, false, lastHumanPoint);
+					if (point === null)
+						point = await this.#FindRandomCPUPoint(lastHumanPoint);
+				}
+				break;
+			default:
+				point = await this.#FindRandomCPUPoint(lastHumanPoint);
+				break;
 		}
-	*/
+
+		return point;
+	}
+
 	async #rAFCallBack(timeStamp) {
 		if (this.#rAF_StartTimeStamp === null) this.#rAF_StartTimeStamp = timeStamp;
 		const elapsed = timeStamp - this.#rAF_StartTimeStamp;

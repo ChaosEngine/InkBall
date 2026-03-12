@@ -265,8 +265,6 @@ namespace InkBall.Module.Model
 
 		public WinCommand CpuWin { get; set; }
 
-		public bool CpuMoveApplied { get; set; }
-
-		public string CpuMoveError { get; set; }
+		public string CpuMoveError { get; set; } = null;
 	}
 }
