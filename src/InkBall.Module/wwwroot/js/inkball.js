@@ -1914,8 +1914,8 @@ class InkBallGame {
 				(this.#sDotColor === this.#COLOR_RED ? true : false), false, path.iId/*real DB id*/);
 
 			const points = owned.split(" ");
-			const point_status = (this.#sDotColor === this.#COLOR_RED ? StatusEnum.POINT_OWNED_BY_RED : StatusEnum.POINT_OWNED_BY_BLUE);
-			const sOwnedCol = (this.#sDotColor === this.#COLOR_RED ? this.#COLOR_OWNED_RED : this.#COLOR_OWNED_BLUE);
+			const point_status = !this.#bIsCPUGame ? (this.#sDotColor === this.#COLOR_RED ? StatusEnum.POINT_OWNED_BY_BLUE : StatusEnum.POINT_OWNED_BY_RED) : StatusEnum.POINT_OWNED_BY_BLUE;
+			const sOwnedCol = !this.#bIsCPUGame ? (this.#sDotColor === this.#COLOR_RED ? this.#COLOR_OWNED_BLUE : this.#COLOR_OWNED_RED) : this.#COLOR_OWNED_BLUE;
 			const pointSetOps = [];
 			for (const packed of points) {
 				let [x, y] = packed.split(",");
@@ -1956,8 +1956,8 @@ class InkBallGame {
 
 			const owned = path.OwnedPointsAsString || path.ownedPointsAsString;
 			points = owned.split(" ");
-			const point_status = (this.#sDotColor === this.#COLOR_RED ? StatusEnum.POINT_OWNED_BY_RED : StatusEnum.POINT_OWNED_BY_BLUE);
-			const sOwnedCol = (this.#sDotColor === this.#COLOR_RED ? this.#COLOR_OWNED_RED : this.#COLOR_OWNED_BLUE);
+			const point_status = !this.#bIsCPUGame ? (this.#sDotColor === this.#COLOR_RED ? StatusEnum.POINT_OWNED_BY_RED : StatusEnum.POINT_OWNED_BY_BLUE) : StatusEnum.POINT_OWNED_BY_RED;
+			const sOwnedCol = !this.#bIsCPUGame ? (this.#sDotColor === this.#COLOR_RED ? this.#COLOR_OWNED_RED : this.#COLOR_OWNED_BLUE) : this.#COLOR_OWNED_RED;
 			const pointSetOps = [];
 			for (const packed of points) {
 				let [x, y] = packed.split(",");
@@ -3223,9 +3223,7 @@ class InkBallGame {
 
 				allPoints: all_points_serialized,
 				humanPointStatuses,
-				humanPointColor,
-				COLOR_OWNED_RED: this.#COLOR_OWNED_RED,
-				COLOR_OWNED_BLUE: this.#COLOR_OWNED_BLUE,
+				humanPointColors: [humanPointColor, this.#COLOR_OWNED_RED, this.#COLOR_OWNED_BLUE],
 
 				concavity: aiParams.concavity,
 				lengthThreshold: aiParams.lengthThreshold,

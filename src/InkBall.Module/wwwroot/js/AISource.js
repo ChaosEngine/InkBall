@@ -310,7 +310,7 @@ class GraphAI {
 /**
  * Checks if points are continuous
  * @param {Array<{x,y}>|Array<Array>} pointsArr array of objects with x and y properties, or array of arrays with two elements
- * @returns {boolean} true if all points are continuous, false otherwise
+ * @returns {{result:boolean, offenderIndex?:number, offender?:object|Array}} continuity status with optional offending point details
  */
 function ArePointsContinuous(pointsArr) {
 	const length = pointsArr?.length ?? 0;
@@ -335,8 +335,10 @@ function ArePointsContinuous(pointsArr) {
 		const prev = pointsArr[i - 1];
 		const dx = Math.abs(calcDX(curr, prev));
 		const dy = Math.abs(calcDY(curr, prev));
+		const chebyshevDistance = Math.max(dx, dy);
 
-		if (Math.max(dx, dy) > 1)
+		// 8-neighborhood continuity: each next point must be at most one cell away.
+		if (chebyshevDistance > 1)
 			return { result: false, offenderIndex: i, offender: curr }; // Not continuous
 	}
 

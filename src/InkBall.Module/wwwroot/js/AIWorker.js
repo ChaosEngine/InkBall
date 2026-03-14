@@ -255,15 +255,14 @@ addEventListener('message', async function (e) {
 
 				//clustering first
 				const { method, numberOfClusters, neighborhoodRadius, minPointsPerCluster,
-					humanPointStatuses, humanPointColor, COLOR_OWNED_RED, COLOR_OWNED_BLUE,
-					visuals
+					humanPointStatuses, humanPointColors, visuals
 				} = params;
 
 				const allPoints = DeserializePointMap(svgVml, params.allPoints);
 				const humanPointsArrOfArr = [];
 
 				for (const pt of allPoints.values()) {
-					if (pt !== undefined && pt.GetFillColor() === humanPointColor && humanPointStatuses.includes(pt.GetStatus())) {
+					if (pt !== undefined && humanPointColors.includes(pt.GetFillColor()) && humanPointStatuses.includes(pt.GetStatus())) {
 						const { x, y } = pt.GetPosition();
 						//density clustering algorithm needs array of array of points only
 						humanPointsArrOfArr.push([x, y]);
@@ -277,7 +276,7 @@ addEventListener('message', async function (e) {
 				//for each cluster, process it's point group
 				//and create a convex hull around it, then display it
 				let results = [];
-				g_graphDiagonal = null; //reset grid for Astar usage
+				g_graphDiagonal = null; g_blockedPoints = null; //reset grid for A* usage and other vars
 				if (clusters?.length > 0) {
 					const { concavity, lengthThreshold, boardSize } = params;
 					const { iGridHeight, iGridWidth } = boardSize;
@@ -308,7 +307,7 @@ addEventListener('message', async function (e) {
 							: () => { /* dummy filler func*/ };
 						const surrounding_path = CalculateWrappingPathFromDividedBoundingBoxes(
 							allPoints, iGridHeight, iGridWidth, clustered_point_coords, createRectForVisualsFunction,
-							[humanPointColor, COLOR_OWNED_RED, COLOR_OWNED_BLUE]
+							humanPointColors
 						);
 
 						//9. calculate concaveman around those points
@@ -360,6 +359,70 @@ function AstarPathFind(graphDiagonal, fromY, fromX, toY, toX) {
 	const resultWithDiagonals = resultWithDiagonalsInvertedXY.map(obj => ([obj.y, obj.x]));
 
 	return resultWithDiagonals;
+}
+
+/**
+ * Build integer raster line between two points (Bresenham)
+ * @param {number} x0 from X
+ * @param {number} y0 from Y
+ * @param {number} x1 to X
+ * @param {number} y1 to Y
+ * @returns {Array<[number,number]>} inclusive points from start to end
+ */
+function BresenhamLine(x0, y0, x1, y1) {
+	const points = [];
+	let x = x0;
+	let y = y0;
+	const dx = Math.abs(x1 - x0);
+	const dy = Math.abs(y1 - y0);
+	const sx = x0 < x1 ? 1 : -1;
+	const sy = y0 < y1 ? 1 : -1;
+	let err = dx - dy;
+
+	while (true) {
+		points.push([x, y]);
+		if (x === x1 && y === y1)
+			break;
+
+		const e2 = 2 * err;
+		if (e2 > -dy) {
+			err -= dy;
+			x += sx;
+		}
+		if (e2 < dx) {
+			err += dx;
+			y += sy;
+		}
+	}
+
+	return points;
+}
+
+/**
+ * Try cheap direct interpolation between two points.
+ * Returns null when path is blocked or out of bounds.
+ * @param {[number,number]} prev start [x,y]
+ * @param {[number,number]} curr end [x,y]
+ * @param {Array<[number,number]>} humanPoints human player points to avoid
+ * @param {number} iGridHeight grid height
+ * @param {number} iGridWidth grid width
+ * @returns {Array<[number,number]>|null} points excluding start, including end
+ */
+function TryDirectLineRepair(prev, curr, humanPoints, iGridHeight, iGridWidth) {
+	g_blockedPoints ??= new Set(humanPoints.map(([x, y]) => `${x},${y}`));
+
+	const directLine = BresenhamLine(prev[0], prev[1], curr[0], curr[1]);
+	
+	for (let i = 1; i < directLine.length; i++) {
+		const [x, y] = directLine[i];
+
+		if (!(x >= 0 && x < iGridWidth && y >= 0 && y < iGridHeight))
+			return null;
+		if (g_blockedPoints.has(`${x},${y}`))
+			return null;
+	}
+
+	return directLine.slice(1);
 }
 
 /**
@@ -448,7 +511,7 @@ function CalculateWrappingPathFromDividedBoundingBoxes(allPoints, iGridHeight, i
  * Get clusters from dataset
  * @param {string} operation operation name
  * @param {string} method clustering method
- * @param {Array<Array<number>>} dataset dataset to cluster
+ * @param {Array<[number,number]>} dataset dataset to cluster
  * @param {number} numberOfClusters number of clusters for KMEANS
  * @param {number} neighborhoodRadius neighborhood radius for OPTICS/DBSCAN
  * @param {number} minPointsPerCluster minimum points per cluster for OPTICS/DBSCAN
@@ -493,6 +556,7 @@ function CalculateClustering(operation, method, dataset, numberOfClusters, neigh
 }
 
 let g_graphDiagonal = null;//global graph for A* usage in concaveman validation
+let g_blockedPoints = null;//global blocked points for A* usage in concaveman validation, encoded as x,y in a Set for O(1) access
 
 /**
  * Ensure A* graph for concaveman repair is initialized
@@ -533,11 +597,18 @@ function FixNonContinuousHull(convex_hull, humanPoints, iGridHeight, iGridWidth,
 
 			const prev = convex_hull.at(continuous_result.offenderIndex - 1);
 			const curr = convex_hull.at(continuous_result.offenderIndex);
+			let missing = TryDirectLineRepair(prev, curr, humanPoints, iGridHeight, iGridWidth);
+			if (missing === null) {
+				EnsureAstarGridInitialized(iGridHeight, iGridWidth, humanPoints);
 
-			EnsureAstarGridInitialized(iGridHeight, iGridWidth, humanPoints);
+				// Fallback to A* when direct interpolation is blocked.
+				missing = AstarPathFind(g_graphDiagonal, prev[1], prev[0], curr[1], curr[0]);
+			}
 
-			// Call ASTAR to find missing points between prev and curr
-			const missing = AstarPathFind(g_graphDiagonal, prev[1], prev[0], curr[1], curr[0]);
+			if (missing.length === 0) {
+				LocalLog(`Concaveman result could not be fixed between %c${prev} and ${curr}; leaving remaining hull as-is.`, `color:${randomColor}; font-weight:bold`);
+				break;
+			}
 
 			convex_hull = convex_hull.slice(0, continuous_result.offenderIndex)
 				.concat(missing)
