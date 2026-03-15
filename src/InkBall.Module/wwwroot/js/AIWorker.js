@@ -231,7 +231,7 @@ addEventListener('message', async function (e) {
 
 				const graphDiagonal = new AStarGraph(arr, { diagonal: true });
 
-				const resultWithDiagonals = AstarPathFind(graphDiagonal, start.y, start.x, end.y, end.x);
+				const resultWithDiagonals = AstarPathFind(graphDiagonal, [start.x, start.y], [end.x, end.y]);
 				LocalLog(resultWithDiagonals);
 
 				postMessage({ operation, resultWithDiagonals });
@@ -260,9 +260,10 @@ addEventListener('message', async function (e) {
 
 				const allPoints = DeserializePointMap(svgVml, params.allPoints);
 				const humanPointsArrOfArr = [];
+				const humanColorSet = new Set(humanPointColors);
 
 				for (const pt of allPoints.values()) {
-					if (pt !== undefined && humanPointColors.includes(pt.GetFillColor()) && humanPointStatuses.includes(pt.GetStatus())) {
+					if (pt !== undefined && humanColorSet.has(pt.GetFillColor()) && humanPointStatuses.includes(pt.GetStatus())) {
 						const { x, y } = pt.GetPosition();
 						//density clustering algorithm needs array of array of points only
 						humanPointsArrOfArr.push([x, y]);
@@ -307,7 +308,7 @@ addEventListener('message', async function (e) {
 							: () => { /* dummy filler func*/ };
 						const surrounding_path = CalculateWrappingPathFromDividedBoundingBoxes(
 							allPoints, iGridHeight, iGridWidth, clustered_point_coords, createRectForVisualsFunction,
-							humanPointColors
+							humanColorSet
 						);
 
 						//9. calculate concaveman around those points
@@ -316,7 +317,7 @@ addEventListener('message', async function (e) {
 
 
 						//10. get points of convex hull and create a polyline around it
-						if (convex_hull?.length > 0 && interceptedPoints !== null && interceptedPoints.length > 0) {
+						if (convex_hull?.length > 0 && interceptedPoints?.length > 0) {
 							results.push({ convex_hull, interceptedPoints, surrounding_path, numOfNonContinuous, numOfDuplicatesFixed, rects2Draw, clustered_point_coords, randomColor }); //add points in cluster to array of clusters
 
 							// LocalLog(`Planned path points #${results.length} around bounding box points(${surrounding_path.length}): ${surrounding_path.reduce((acc, [x, y]) => acc + `${x},${y} `, '').trimEnd()}`);
@@ -341,13 +342,11 @@ addEventListener('message', async function (e) {
 /**
  * Find path using A* with diagonal movement
  * @param {AStarGraph} graphDiagonal A* graph with diagonal movement allowed
- * @param {number} fromY start Y
- * @param {number} fromX start X
- * @param {number} toY target Y
- * @param {number} toX target X
+ * @param {[number,number]} from start [x,y]
+ * @param {[number,number]} to target [x,y]
  * @returns {Array<{x:number,y:number}>} path found
  */
-function AstarPathFind(graphDiagonal, fromY, fromX, toY, toX) {
+function AstarPathFind(graphDiagonal, [fromX, fromY], [toX, toY]) {
 	// const graphDiagonal = new AStarGraph(arr, { diagonal: true });
 
 	const from = graphDiagonal.grid[fromY][fromX];
@@ -362,27 +361,32 @@ function AstarPathFind(graphDiagonal, fromY, fromX, toY, toX) {
 }
 
 /**
- * Build integer raster line between two points (Bresenham)
- * @param {number} x0 from X
- * @param {number} y0 from Y
- * @param {number} x1 to X
- * @param {number} y1 to Y
- * @returns {Array<[number,number]>} inclusive points from start to end
+ * Try cheap direct interpolation between two points using Bresenham's line algorithm, which is efficient and works well for grid-based paths, to fix non continuous hull points before falling back to more expensive A* path finding.
+ * Returns null when path is blocked or out of bounds.
+ * @param {[number,number]} prev start [x,y]
+ * @param {[number,number]} curr end [x,y]
+ * @param {Array<[number,number]>} humanPoints human player points to avoid
+ * @returns {Array<[number,number]>|null} points excluding start, including end
  */
-function BresenhamLine(x0, y0, x1, y1) {
+function TryDirectLineRepair([fromX, fromY], [toX, toY], humanPoints) {
+	g_blockedPoints ??= new Set(humanPoints.map(([x, y]) => `${x},${y}`));
+
 	const points = [];
-	let x = x0;
-	let y = y0;
-	const dx = Math.abs(x1 - x0);
-	const dy = Math.abs(y1 - y0);
-	const sx = x0 < x1 ? 1 : -1;
-	const sy = y0 < y1 ? 1 : -1;
+	let x = fromX;
+	let y = fromY;
+	const dx = Math.abs(toX - x);
+	const dy = Math.abs(toY - y);
+	const sx = x < toX ? 1 : -1;
+	const sy = y < toY ? 1 : -1;
 	let err = dx - dy;
 
 	while (true) {
-		points.push([x, y]);
-		if (x === x1 && y === y1)
-			break;
+		//check if point is out of bounds or blocked by human player point, if so, return null to indicate direct line repair failed
+		if (g_blockedPoints.has(`${x},${y}`))
+			return null;
+
+		if (x === toX && y === toY)//ending condition, include end point in path
+			return points;
 
 		const e2 = 2 * err;
 		if (e2 > -dy) {
@@ -393,36 +397,10 @@ function BresenhamLine(x0, y0, x1, y1) {
 			err += dx;
 			y += sy;
 		}
+
+		points.push([x, y]);
 	}
 
-	return points;
-}
-
-/**
- * Try cheap direct interpolation between two points.
- * Returns null when path is blocked or out of bounds.
- * @param {[number,number]} prev start [x,y]
- * @param {[number,number]} curr end [x,y]
- * @param {Array<[number,number]>} humanPoints human player points to avoid
- * @param {number} iGridHeight grid height
- * @param {number} iGridWidth grid width
- * @returns {Array<[number,number]>|null} points excluding start, including end
- */
-function TryDirectLineRepair(prev, curr, humanPoints, iGridHeight, iGridWidth) {
-	g_blockedPoints ??= new Set(humanPoints.map(([x, y]) => `${x},${y}`));
-
-	const directLine = BresenhamLine(prev[0], prev[1], curr[0], curr[1]);
-	
-	for (let i = 1; i < directLine.length; i++) {
-		const [x, y] = directLine[i];
-
-		if (!(x >= 0 && x < iGridWidth && y >= 0 && y < iGridHeight))
-			return null;
-		if (g_blockedPoints.has(`${x},${y}`))
-			return null;
-	}
-
-	return directLine.slice(1);
 }
 
 /**
@@ -432,10 +410,10 @@ function TryDirectLineRepair(prev, curr, humanPoints, iGridHeight, iGridWidth) {
  * @param {number} iGridWidth width
  * @param {Array<{x:number,y:number}>} pointCoords points for surrounding
  * @param {(i:number,j:number,width:number,height:number) => void} createRectForVisualsFunc gathering rects for visualization
- * @param {Array<string>} humanPointColors colors representing human points
+ * @param {Set<string>} humanColorSet colors Set representing human points
  * @returns {Array<[number,number]>} surrounding path points
  */
-function CalculateWrappingPathFromDividedBoundingBoxes(allPoints, iGridHeight, iGridWidth, pointCoords, createRectForVisualsFunc, humanPointColors) {
+function CalculateWrappingPathFromDividedBoundingBoxes(allPoints, iGridHeight, iGridWidth, pointCoords, createRectForVisualsFunc, humanColorSet) {
 
 	//0. create bounding box around points wrapping all points in cluster
 	const wrapping_bbox = AABB.fromPoints(pointCoords);
@@ -452,9 +430,8 @@ function CalculateWrappingPathFromDividedBoundingBoxes(allPoints, iGridHeight, i
 	//1. Convert candidate_path to a Map to ensure uniqueness by x,y and to avoid duplicates
 	//this hold points of prepared surrounding path
 	const candidate_path = new Map();
-	const pointCoordsSet = new Set(pointCoords.map(pt => `${pt.x},${pt.y}`));
-	const humanColorSet = new Set(humanPointColors);
-	//2. devide wrapping_bbox into 1x1 unit bbox and gather matching points
+	const pointCoordsSet = new Set(pointCoords.map(pt => `${pt.x},${pt.y}`));//TODO: possibly use g_blockedPoints Set for O(1) access if it will be used in multiple places, but for now it's only used here and pointCoordsSet is more relevant to this function, so we keep it local
+	//2. divide wrapping_bbox into 1x1 unit bbox and gather matching points
 	for (let j = wrapping_bbox.minY; j < wrapping_bbox.maxY; j++) {
 		for (let i = wrapping_bbox.minX; i < wrapping_bbox.maxX; i++) {
 
@@ -597,12 +574,12 @@ function FixNonContinuousHull(convex_hull, humanPoints, iGridHeight, iGridWidth,
 
 			const prev = convex_hull.at(continuous_result.offenderIndex - 1);
 			const curr = convex_hull.at(continuous_result.offenderIndex);
-			let missing = TryDirectLineRepair(prev, curr, humanPoints, iGridHeight, iGridWidth);
+			let missing = TryDirectLineRepair(prev, curr, humanPoints);
 			if (missing === null) {
 				EnsureAstarGridInitialized(iGridHeight, iGridWidth, humanPoints);
 
 				// Fallback to A* when direct interpolation is blocked.
-				missing = AstarPathFind(g_graphDiagonal, prev[1], prev[0], curr[1], curr[0]);
+				missing = AstarPathFind(g_graphDiagonal, prev, curr);
 			}
 
 			if (missing.length === 0) {
@@ -630,19 +607,19 @@ function FixNonContinuousHull(convex_hull, humanPoints, iGridHeight, iGridWidth,
  * @returns {{convex_hull:Array<[number,number]>,numOfDuplicatesFixed:number}} fixed hull and number of duplicate fixes
  */
 function FixDuplicatedHullPoints(convex_hull, maxFixAttempts) {
-	let numOfDuplicatesFixed = 0;
-	do {
-		const duplicated_point_result = FindDuplicatedPoint(convex_hull, 1);
-		if (duplicated_point_result !== null) {
-			convex_hull.splice(
-				duplicated_point_result.firstIndex,
-				duplicated_point_result.secondIndex - duplicated_point_result.firstIndex
-			);
-			numOfDuplicatesFixed++;
-		} else {
-			break;
-		}
-	} while ((--maxFixAttempts) > 0);
+	let numOfDuplicatesFixed = 0, duplicated_point_result;
+
+	while (
+		(maxFixAttempts--) > 0 &&
+		(duplicated_point_result = FindDuplicatedPoint(convex_hull, 1)) !== null
+	) {
+		convex_hull.splice(
+			duplicated_point_result.firstIndex,
+			duplicated_point_result.secondIndex - duplicated_point_result.firstIndex
+		);
+
+		numOfDuplicatesFixed++;
+	}
 
 	return { convex_hull, numOfDuplicatesFixed };
 }
@@ -652,19 +629,32 @@ function FixDuplicatedHullPoints(convex_hull, maxFixAttempts) {
  * @param {Array<[number,number]>} convex_hull concaveman points
  * @param {Array<{x:number,y:number}>} interceptingPoints original cluster points
  * @param {string} randomColor color for logging
+ * @param {number} desiredInterceptedPercentage minimal desired percentage of points to be intercepted
  * @returns {{convex_hull:Array<{x:number,y:number}>,surrounded_points:Array<{x:number,y:number}>|null}} converted hull and intercepted points
  */
-function CountInterceptedPoints(convex_hull, interceptingPoints, randomColor) {
+function CountInterceptedPoints(convex_hull, interceptingPoints, randomColor, desiredInterceptedPercentage = 0.1) {
 	let surrounded_points = [];
 	convex_hull = convex_hull.map(([x, y]) => ({ x, y }));
-	for (const pt of interceptingPoints) {
+
+	//precalculate desired number of points to be intercepted
+	const minInterceptedCount = Math.ceil(interceptingPoints.length * desiredInterceptedPercentage);
+
+	for (let rev_i = interceptingPoints.length - 1; rev_i >= 0; rev_i--) {
+		const pt = interceptingPoints[rev_i];
 		//check if point is inside convex hull polygon
-		if (true === pnpoly(convex_hull, pt.x, pt.y))
+		if (true === pnpoly(convex_hull, pt.x, pt.y)) {
 			surrounded_points.push(pt);
+		}
+		//calculate remaining point checks needed to reach desired percentage, if remaining points to check is less
+		//than needed to reach desired percentage, break early
+		else if (rev_i <= (minInterceptedCount - surrounded_points.length)) {
+			break;
+		}
 	}
-	//...if > 10% of points from original cluster are inside convex hull, we have a good candidate
-	if (surrounded_points.length < Math.ceil(interceptingPoints.length * 0.1)) {
-		LocalLog(`Only ${surrounded_points.length} points inside convex hull out of ${interceptingPoints.length} in cluster, %cneed more than ${Math.ceil(interceptingPoints.length * 0.1)}!`, `color: ${randomColor};font-weight: bold`);
+
+	//...if > desiredInterceptedPercentage of points from original cluster are inside convex hull, we have a good candidate, else discard it by setting surrounded_points to null, so it won't be used for visuals or path creation, but we keep convex hull for debugging and analysis of why it failed
+	if (surrounded_points.length < minInterceptedCount) {
+		LocalLog(`Only ${surrounded_points.length} points inside convex hull out of ${interceptingPoints.length} in cluster, %cneed more than ${minInterceptedCount}!`, `color: ${randomColor};font-weight: bold`);
 
 		surrounded_points = null;
 	}
