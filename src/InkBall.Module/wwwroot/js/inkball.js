@@ -3223,7 +3223,7 @@ class InkBallGame {
 
 				allPoints: all_points_serialized,
 				humanPointStatuses,
-				humanPointColors: [humanPointColor, this.#COLOR_OWNED_RED, this.#COLOR_OWNED_BLUE],
+				blockedPointColors: [/* humanPointColor, */this.#COLOR_OWNED_RED, this.#COLOR_OWNED_BLUE],
 
 				concavity: aiParams.concavity,
 				lengthThreshold: aiParams.lengthThreshold,
@@ -3536,8 +3536,8 @@ class InkBallGame {
 		///////CpuGame variables end//////
 
 		this.#SvgVml = new SvgVml();
-		if (!this.#SvgVml.Init(this.#Screen, svg_width_x_height, svg_width_x_height,
-			{ iGridWidth: this.#iGridWidth, iGridHeight: this.#iGridHeight })) {
+		if (!this.#SvgVml.Init({ iGridWidth: this.#iGridWidth, iGridHeight: this.#iGridHeight },
+			this.#Screen, svg_width_x_height, svg_width_x_height)) {
 			if (localizeSelector)
 				LocalAlert(localizeMessage('err.noSVG', 'SVG is not supported! 😢'), localizeMessage('err.err!', 'Error!'));
 			else
