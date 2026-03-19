@@ -826,6 +826,8 @@ export {
 	DeserializePolylines,
 	AstarPathFind,
 	CalculateClustering,
+	CalculateWrappingPathFromDividedBoundingBoxes,
+	CalculateConcavemanAndValidate,
 	FixDuplicatedHullPoints,
 	CountInterceptedPoints,
 	__setSharedDepsForTests,
