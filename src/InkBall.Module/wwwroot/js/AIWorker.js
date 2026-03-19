@@ -4,13 +4,14 @@ import { astar, Graph as AStarGraph } from "javascript-astar";
 import * as clustering from "density-clustering";
 
 //globals loaded only once hopefully
-let SvgVml, StatusEnum, LocalLog, LocalError, sortPointsClockwise, pnpoly, IsPointOutsideAllPaths, RandomColor;
+let SvgVml, StatusEnum, sortPointsClockwise, pnpoly, IsPointOutsideAllPaths, RandomColor;
+let LocalLog = () => { }, LocalError = () => { };
 
 async function EnsureSharedLoaded() {
 	if (SvgVml !== undefined)
 		return;
 
-	const isMinified = location.hostname !== "localhost";
+	const isMinified = (typeof location !== "undefined" && location.hostname !== "localhost");
 
 	({ SvgVml, StatusEnum, LocalLog, LocalError, sortPointsClockwise, pnpoly, IsPointOutsideAllPaths, RandomColor } = await import(/* webpackIgnore: true */`./shared${isMinified ? '.min' : ''}.js`));
 }
@@ -45,13 +46,17 @@ function DeserializePolylines(svgVml, paths) {
 	return paths.map(pa => svgVml.DeserializePolyline(pa));
 }
 
-// This is the entry point for our worker
-addEventListener('message', async function (e) {
-	await EnsureSharedLoaded();
-
-
-	const params = e.data;
+/**
+ * Execute a single worker operation and return the payload.
+ * Used by worker message events and tests.
+ * @param {object} params worker operation payload
+ * @returns {Promise<object|undefined>} operation result payload
+ */
+async function HandleWorkerOperation(params) {
 	const { operation } = params;
+
+	if (operation !== "CLUSTERING" && operation !== "ASTAR")
+		await EnsureSharedLoaded();
 
 	switch (operation) {
 		case "BUILD_GRAPH":
@@ -71,9 +76,9 @@ addEventListener('message', async function (e) {
 				});
 				//LocalLog(graph);
 
-				postMessage({ operation, params: graph });
+				return { operation, params: graph };
 			}
-			break;
+
 
 		case "CONCAVEMAN":
 			{
@@ -102,9 +107,8 @@ addEventListener('message', async function (e) {
 								cw_sorted_verts = sortPointsClockwise(mapped_verts);
 							}
 
-							postMessage({ operation, convex_hull, cw_sorted_verts });
+							return { operation, convex_hull, cw_sorted_verts };
 						}
-						break;
 					case "BY_COORDS":
 						{
 							const { concavity, lengthThreshold,
@@ -116,21 +120,20 @@ addEventListener('message', async function (e) {
 									new Map(interceptingPoints.map(pt => [pt.y * iGridWidth + pt.x, pt])),
 									iGridHeight, iGridWidth, RandomColor());
 
-							postMessage({
+							return {
 								operation,
 								convex_hull,
 								interceptedPoints,
 								numOfNonContinuous,
 								numOfDuplicatesFixed
-							});
+							};
 						}
-						break;
 
 					default:
 						throw new Error(`unknown params.subOperation = ${params.subOperation}`);
 				}
 			}
-			break;
+
 
 		/* case "MARK_ALL_CYCLES":
 		{
@@ -233,9 +236,9 @@ addEventListener('message', async function (e) {
 					}
 				}
 
-				postMessage({ operation, results });
+				return { operation, results };
 			}
-			break;
+
 
 		case "ASTAR":
 			{
@@ -246,9 +249,9 @@ addEventListener('message', async function (e) {
 				const resultWithDiagonals = AstarPathFind(graphDiagonal, [start.x, start.y], [end.x, end.y]);
 				LocalLog(resultWithDiagonals);
 
-				postMessage({ operation, resultWithDiagonals });
+				return { operation, resultWithDiagonals };
 			}
-			break;
+
 
 		case "CLUSTERING":
 			{
@@ -257,9 +260,9 @@ addEventListener('message', async function (e) {
 				const clusteringResult = CalculateClustering(operation, method, dataset,
 					numberOfClusters, neighborhoodRadius, minPointsPerCluster);
 
-				postMessage(clusteringResult);
+				return clusteringResult;
 			}
-			break;
+
 
 		case "CLUSTERING_AND_CONCAVEMAN":
 			{
@@ -320,7 +323,7 @@ addEventListener('message', async function (e) {
 						const createRectForVisualsFunction = visuals
 							? (i, j, width, height) => { rects2Draw.push({ i, j, width, height }); }
 							: () => { /* dummy filler func*/ };
-							
+
 						const surrounding_path = CalculateWrappingPathFromDividedBoundingBoxes(
 							g_allPoints, iGridHeight, iGridWidth, clustered_point_coords, humanPointStatuses,
 							wrapping_bbox, createRectForVisualsFunction
@@ -343,15 +346,24 @@ addEventListener('message', async function (e) {
 					}
 					// LocalLog({ clusteringMethod: method, clusterPoints: results });
 				}
-				postMessage({ operation, results });
+				return { operation, results };
 			}
-			break;
+
 
 		default:
 			LocalError(`unknown operation = ${operation}`);
-			break;
+			return undefined;
 	}
-});
+}
+
+// This is the entry point for our worker
+if (typeof addEventListener === "function") {
+	addEventListener("message", async function (e) {
+		const result = await HandleWorkerOperation(e.data);
+		if (result !== undefined)
+			postMessage(result);
+	});
+}
 
 /**
  * Find path using A* with diagonal movement
@@ -431,6 +443,69 @@ function TryDirectLineRepair([fromX, fromY], [toX, toY], humanPoints, blockedCol
  */
 function CalculateWrappingPathFromDividedBoundingBoxes(allPoints, iGridHeight, iGridWidth, pointCoordsMap, humanPointStatuses, wrappingBBox, createRectForVisualsFunc) {
 
+	if (pointCoordsMap.size === 1) {
+		const { x, y } = [...pointCoordsMap.values()][0];
+		return [
+			[x - 1, y],
+			[x + 1, y],
+			[x, y + 1],
+			[x, y - 1]
+		];
+	}
+	else if (pointCoordsMap.size === 2) {
+		//get those two points coordinates from map values
+		const vals = [...pointCoordsMap.values()];
+		const { x: x1, y: y1 } = vals[0], { x: x2, y: y2 } = vals[1];
+
+		//detect those two points orientation against each other: vertical, horizontal or diagonal, and return surrounding points accordingly
+		if (x1 === x2) {
+			//vertical
+			return [
+				[x1 - 1, y1],
+				[x1 - 1, y2],
+				// [x1 + 1, y1],
+				[x1 + 1, y2],
+				[x1, y1 - 1],
+				[x1, y2 + 1]
+			]; //use Set to avoid duplicates when points are adjacent diagonally, then convert back to array
+		} else if (y1 === y2) {
+			//horizontal
+			return [
+				[x1, y1 - 1],
+				[x2, y2 - 1],
+				// [x1, y1 + 1],
+				[x2, y2 + 1],
+				[x1 - 1, y1],
+				[x2 + 1, y2]
+			]; //use Set to avoid duplicates when points are adjacent diagonally, then convert back to array
+		} else {
+			//diagonal
+
+			//detect diagonal orientation (top-left to bottom-right or top-right to bottom-left) and return surrounding points accordingly
+			if ((x1 < x2 && y1 < y2) || (x1 > x2 && y1 > y2)) {
+				// top-left to bottom-right
+				return [
+					[x1 - 1, y1],
+					[x1, y1 - 1],
+					// [x2 - 1, y2],
+					[x2, y2 - 1],
+					[x2, y2 + 1],
+					[x2 + 1, y2]
+				]; //use Set to avoid duplicates when points are adjacent diagonally, then convert back to array
+			} else if ((x1 > x2 && y1 < y2) || (x1 < x2 && y1 > y2)) {
+				// top-right to bottom-left
+				return [
+					[x1 - 1, y1],
+					[x1, y1 - 1],
+					// [x1 + 1, y1 + 1],
+					[x1, y1 + 1],
+					[x2, y2 - 1],
+					[x2 + 1, y2]
+				]; //use Set to avoid duplicates when points are adjacent diagonally, then convert back to array
+			}
+		}
+	}
+
 	//0. create bounding box around points wrapping all points in cluster
 	// const wrapping_bbox = new AABB(minX, minY, maxX, maxY);
 	wrappingBBox.expand(1, 0, 0, iGridHeight - 1, iGridWidth - 1);//expand it a bit by 1 unit in all directions -> enlarge it
@@ -459,7 +534,7 @@ function CalculateWrappingPathFromDividedBoundingBoxes(allPoints, iGridHeight, i
 				return pointCoordsMap.has(y * iGridWidth + x);
 			});
 			if (contains_oponent_cluster_point.length > 0) {
-				//4. if so, create a rectangle around it 1x1 unit fir visualization
+				//4. if so, create a rectangle around it 1x1 unit for visualization
 				createRectForVisualsFunc(i, j, 1, 1);
 				//5. i,j and i+1, j+1 are dimensions of the bounding box
 				// 	 find which points of it are NOT included in point_coords
@@ -719,4 +794,40 @@ function CalculateConcavemanAndValidate(concavity, lengthThreshold,
 	return { convex_hull, interceptedPoints: surrounded_points, numOfNonContinuous, numOfDuplicatesFixed };
 }
 
+/**
+ * Inject shared module dependencies in tests to avoid dynamic imports.
+ * @param {object} deps dependency overrides
+ */
+function __setSharedDepsForTests(deps = {}) {
+	if (deps.SvgVml !== undefined) SvgVml = deps.SvgVml;
+	if (deps.StatusEnum !== undefined) StatusEnum = deps.StatusEnum;
+	if (deps.LocalLog !== undefined) LocalLog = deps.LocalLog;
+	if (deps.LocalError !== undefined) LocalError = deps.LocalError;
+	if (deps.sortPointsClockwise !== undefined) sortPointsClockwise = deps.sortPointsClockwise;
+	if (deps.pnpoly !== undefined) pnpoly = deps.pnpoly;
+	if (deps.IsPointOutsideAllPaths !== undefined) IsPointOutsideAllPaths = deps.IsPointOutsideAllPaths;
+	if (deps.RandomColor !== undefined) RandomColor = deps.RandomColor;
+}
+
+/**
+ * Reset mutable worker globals between tests.
+ */
+function __resetWorkerGlobalsForTests() {
+	g_allPoints = null;
+	g_graphDiagonal = null;
+	g_blockedPoints = null;
+}
+
 // LocalLog('Worker loaded');
+
+export {
+	HandleWorkerOperation,
+	DeserializePointMap,
+	DeserializePolylines,
+	AstarPathFind,
+	CalculateClustering,
+	FixDuplicatedHullPoints,
+	CountInterceptedPoints,
+	__setSharedDepsForTests,
+	__resetWorkerGlobalsForTests
+};
