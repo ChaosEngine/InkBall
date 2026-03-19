@@ -320,7 +320,7 @@ addEventListener('message', async function (e) {
 						const createRectForVisualsFunction = visuals
 							? (i, j, width, height) => { rects2Draw.push({ i, j, width, height }); }
 							: () => { /* dummy filler func*/ };
-							
+
 						const surrounding_path = CalculateWrappingPathFromDividedBoundingBoxes(
 							g_allPoints, iGridHeight, iGridWidth, clustered_point_coords, humanPointStatuses,
 							wrapping_bbox, createRectForVisualsFunction
@@ -431,6 +431,69 @@ function TryDirectLineRepair([fromX, fromY], [toX, toY], humanPoints, blockedCol
  */
 function CalculateWrappingPathFromDividedBoundingBoxes(allPoints, iGridHeight, iGridWidth, pointCoordsMap, humanPointStatuses, wrappingBBox, createRectForVisualsFunc) {
 
+	if (pointCoordsMap.size === 1) {
+		const { x, y } = [...pointCoordsMap.values()][0];
+		return [
+			[x - 1, y],
+			[x + 1, y],
+			[x, y + 1],
+			[x, y - 1]
+		];
+	}
+	else if (pointCoordsMap.size === 2) {
+		//get those two points coordinates from map values
+		const vals = [...pointCoordsMap.values()];
+		const { x: x1, y: y1 } = vals[0], { x: x2, y: y2 } = vals[1];
+
+		//detect those two points orientation against each other: vertical, horizontal or diagonal, and return surrounding points accordingly
+		if (x1 === x2) {
+			//vertical
+			return [
+				[x1 - 1, y1],
+				[x1 - 1, y2],
+				// [x1 + 1, y1],
+				[x1 + 1, y2],
+				[x1, y1 - 1],
+				[x1, y2 + 1]
+			]; //use Set to avoid duplicates when points are adjacent diagonally, then convert back to array
+		} else if (y1 === y2) {
+			//horizontal
+			return [
+				[x1, y1 - 1],
+				[x2, y2 - 1],
+				// [x1, y1 + 1],
+				[x2, y2 + 1],
+				[x1 - 1, y1],
+				[x2 + 1, y2]
+			]; //use Set to avoid duplicates when points are adjacent diagonally, then convert back to array
+		} else {
+			//diagonal
+
+			//detect diagonal orientation (top-left to bottom-right or top-right to bottom-left) and return surrounding points accordingly
+			if ((x1 < x2 && y1 < y2) || (x1 > x2 && y1 > y2)) {
+				// top-left to bottom-right
+				return [
+					[x1 - 1, y1],
+					[x1, y1 - 1],
+					// [x2 - 1, y2],
+					[x2, y2 - 1],
+					[x2, y2 + 1],
+					[x2 + 1, y2]
+				]; //use Set to avoid duplicates when points are adjacent diagonally, then convert back to array
+			} else if ((x1 > x2 && y1 < y2) || (x1 < x2 && y1 > y2)) {
+				// top-right to bottom-left
+				return [
+					[x1 - 1, y1],
+					[x1, y1 - 1],
+					// [x1 + 1, y1 + 1],
+					[x1, y1 + 1],
+					[x2, y2 - 1],
+					[x2 + 1, y2]
+				]; //use Set to avoid duplicates when points are adjacent diagonally, then convert back to array
+			}
+		}
+	}
+
 	//0. create bounding box around points wrapping all points in cluster
 	// const wrapping_bbox = new AABB(minX, minY, maxX, maxY);
 	wrappingBBox.expand(1, 0, 0, iGridHeight - 1, iGridWidth - 1);//expand it a bit by 1 unit in all directions -> enlarge it
@@ -459,7 +522,7 @@ function CalculateWrappingPathFromDividedBoundingBoxes(allPoints, iGridHeight, i
 				return pointCoordsMap.has(y * iGridWidth + x);
 			});
 			if (contains_oponent_cluster_point.length > 0) {
-				//4. if so, create a rectangle around it 1x1 unit fir visualization
+				//4. if so, create a rectangle around it 1x1 unit for visualization
 				createRectForVisualsFunc(i, j, 1, 1);
 				//5. i,j and i+1, j+1 are dimensions of the bounding box
 				// 	 find which points of it are NOT included in point_coords
