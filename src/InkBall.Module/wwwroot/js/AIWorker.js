@@ -458,8 +458,7 @@ function CalculateWrappingPathFromDividedBoundingBoxes(allPoints, iGridHeight, i
 		const { x: x1, y: y1 } = vals[0], { x: x2, y: y2 } = vals[1];
 
 		//detect those two points orientation against each other: vertical, horizontal or diagonal, and return surrounding points accordingly
-		if (x1 === x2) {
-			//vertical
+		if (x1 === x2) { //vertical
 			return [
 				[x1 - 1, y1],
 				[x1 - 1, y2],
@@ -468,8 +467,7 @@ function CalculateWrappingPathFromDividedBoundingBoxes(allPoints, iGridHeight, i
 				[x1, y1 - 1],
 				[x1, y2 + 1]
 			]; //use Set to avoid duplicates when points are adjacent diagonally, then convert back to array
-		} else if (y1 === y2) {
-			//horizontal
+		} else if (y1 === y2) { //horizontal
 			return [
 				[x1, y1 - 1],
 				[x2, y2 - 1],
@@ -478,12 +476,9 @@ function CalculateWrappingPathFromDividedBoundingBoxes(allPoints, iGridHeight, i
 				[x1 - 1, y1],
 				[x2 + 1, y2]
 			]; //use Set to avoid duplicates when points are adjacent diagonally, then convert back to array
-		} else {
-			//diagonal
-
+		} else { //diagonal
 			//detect diagonal orientation (top-left to bottom-right or top-right to bottom-left) and return surrounding points accordingly
-			if ((x1 < x2 && y1 < y2) || (x1 > x2 && y1 > y2)) {
-				// top-left to bottom-right
+			if ((x1 < x2 && y1 < y2) || (x1 > x2 && y1 > y2)) { // top-left to bottom-right
 				return [
 					[x1 - 1, y1],
 					[x1, y1 - 1],
@@ -492,8 +487,7 @@ function CalculateWrappingPathFromDividedBoundingBoxes(allPoints, iGridHeight, i
 					[x2, y2 + 1],
 					[x2 + 1, y2]
 				]; //use Set to avoid duplicates when points are adjacent diagonally, then convert back to array
-			} else if ((x1 > x2 && y1 < y2) || (x1 < x2 && y1 > y2)) {
-				// top-right to bottom-left
+			} else /* if ((x1 > x2 && y1 < y2) || (x1 < x2 && y1 > y2)) */ { // top-right to bottom-left
 				return [
 					[x1 - 1, y1],
 					[x1, y1 - 1],
