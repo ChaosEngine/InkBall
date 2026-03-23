@@ -3,24 +3,40 @@ import { describe, expect, test } from "bun:test";
 import { StatusEnum } from "../../src/InkBall.Module/wwwroot/js/shared.js";
 
 
+function createInlineWorkerUrl() {
+	const aiWorkerModuleUrl = new URL("../../src/InkBall.Module/wwwroot/js/AIWorker.js", import.meta.url);
+
+	const workerSource = `if (typeof self.location === "undefined") {
+	self.location = { hostname: "localhost" };
+}
+
+await import(${JSON.stringify(aiWorkerModuleUrl.href)});
+`;
+	return URL.createObjectURL(new Blob([workerSource], { type: "text/javascript" }));
+}
+
+
 function runWorkerOperation(payload: Record<string, unknown>) {
 	return new Promise<Record<string, unknown>>((resolve, reject) => {
-		const workerUrl = new URL("./aiworker.entry.js", import.meta.url);
+		const workerUrl = createInlineWorkerUrl();
 		const worker = new Worker(workerUrl, { type: "module" });
 
 		const timer = setTimeout(() => {
+			URL.revokeObjectURL(workerUrl);
 			worker.terminate();
 			reject(new Error("AIWorker test timeout"));
 		}, 10_000);
 
 		worker.onmessage = (event) => {
 			clearTimeout(timer);
+			URL.revokeObjectURL(workerUrl);
 			worker.terminate();
 			resolve(event.data);
 		};
 
 		worker.onerror = (event) => {
 			clearTimeout(timer);
+			URL.revokeObjectURL(workerUrl);
 			worker.terminate();
 			reject(new Error(event.message || "Worker error"));
 		};
@@ -30,6 +46,7 @@ function runWorkerOperation(payload: Record<string, unknown>) {
 }
 
 describe("AIWorker black-box operations", () => {
+
 	test("CLUSTERING KMEANS returns clusters", async () => {
 		const result = await runWorkerOperation({
 			operation: "CLUSTERING",
@@ -176,4 +193,5 @@ describe("AIWorker black-box operations", () => {
 		expect(fourth.interceptedPoints).toEqual([{ x: 8, y: 16 }, { x: 9, y: 15 }, { x: 10, y: 14 }]);
 		expect(fourth.convex_hull).toEqual([{ x: 10, y: 13 }, { x: 9, y: 14 }, { x: 8, y: 15 }, { x: 7, y: 16 }, { x: 7, y: 17 }, { x: 8, y: 17 }, { x: 9, y: 16 }, { x: 10, y: 15 }, { x: 11, y: 14 }, { x: 11, y: 13 }, { x: 10, y: 13 }]);
 	});
+
 });
