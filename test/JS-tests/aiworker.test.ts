@@ -3,24 +3,40 @@ import { describe, expect, test } from "bun:test";
 import { StatusEnum } from "../../src/InkBall.Module/wwwroot/js/shared.js";
 
 
+function createInlineWorkerUrl() {
+	const aiWorkerModuleUrl = new URL("../../src/InkBall.Module/wwwroot/js/AIWorker.js", import.meta.url);
+
+	const workerSource = `if (typeof self.location === "undefined") {
+	self.location = { hostname: "localhost" };
+}
+
+await import(${JSON.stringify(aiWorkerModuleUrl.href)});
+`;
+	return URL.createObjectURL(new Blob([workerSource], { type: "text/javascript" }));
+}
+
+
 function runWorkerOperation(payload: Record<string, unknown>) {
 	return new Promise<Record<string, unknown>>((resolve, reject) => {
-		const workerUrl = new URL("./aiworker.entry.js", import.meta.url);
+		const workerUrl = createInlineWorkerUrl();
 		const worker = new Worker(workerUrl, { type: "module" });
 
 		const timer = setTimeout(() => {
+			URL.revokeObjectURL(workerUrl);
 			worker.terminate();
 			reject(new Error("AIWorker test timeout"));
-		}, 10000);
+		}, 10_000);
 
 		worker.onmessage = (event) => {
 			clearTimeout(timer);
+			URL.revokeObjectURL(workerUrl);
 			worker.terminate();
 			resolve(event.data);
 		};
 
 		worker.onerror = (event) => {
 			clearTimeout(timer);
+			URL.revokeObjectURL(workerUrl);
 			worker.terminate();
 			reject(new Error(event.message || "Worker error"));
 		};
@@ -30,6 +46,7 @@ function runWorkerOperation(payload: Record<string, unknown>) {
 }
 
 describe("AIWorker black-box operations", () => {
+
 	test("CLUSTERING KMEANS returns clusters", async () => {
 		const result = await runWorkerOperation({
 			operation: "CLUSTERING",
@@ -128,12 +145,12 @@ describe("AIWorker black-box operations", () => {
 
 
 
-		const result = await runWorkerOperation({
+		const out = await runWorkerOperation({
 			operation: "CLUSTERING_AND_CONCAVEMAN",
 			method: "DBSCAN",
 			numberOfClusters: 1,
 			neighborhoodRadius: 2,
-			minPointsPerCluster: 1,
+			minPointsPerCluster: 1,//level: HARD
 			allPoints: points.map(pt => ({ key: pt.y * iGridWidth + pt.x, value: pt })),
 			humanPointStatuses: [StatusEnum.POINT_FREE_RED],
 			blockedPointColors: ["#DC143C", "#8A2BE2"],
@@ -143,16 +160,38 @@ describe("AIWorker black-box operations", () => {
 			visuals: true
 		});
 
-		expect(result.operation).toBe("CLUSTERING_AND_CONCAVEMAN");
-		expect(Array.isArray(result.results)).toBe(true);
-		expect(result.results.length).toBeGreaterThan(0);
+		expect(out.operation).toBe("CLUSTERING_AND_CONCAVEMAN");
+		expect(Array.isArray(out.results)).toBe(true);
+		expect(out.results.length).toBeGreaterThan(8);
 
-		const first = result.results[0];
+		const first = out.results[0];
 		expect(Array.isArray(first.clustered_point_coords)).toBe(true);
 		expect(Array.isArray(first.convex_hull)).toBe(true);
 		expect(Array.isArray(first.interceptedPoints)).toBe(true);
+		let { x, y } = first.interceptedPoints[0];
+		expect(typeof x).toBe("number");
+		expect(typeof y).toBe("number");
+		expect(x).toBe(17);
+		expect(y).toBe(29);
+
 		expect(Array.isArray(first.surrounding_path)).toBe(true);
 		expect(Array.isArray(first.rects2Draw)).toBe(true);
 		expect(typeof first.randomColor).toBe("string");
+
+		expect(Array.isArray(first.convex_hull)).toBe(true);
+		expect(first.convex_hull).toEqual([{ x: 17, y: 28 }, { x: 16, y: 29 }, { x: 17, y: 30 }, { x: 18, y: 29 }, { x: 17, y: 28 }]);
+
+		const third = out.results.find(res => res.interceptedPoints.some(pt => pt.x === 19 && pt.y === 7));
+		expect(third).toBeDefined();
+		expect(Array.isArray(third.interceptedPoints)).toBe(true);
+		expect(third.interceptedPoints).toEqual([{ x: 19, y: 7 }, { x: 20, y: 6 }]);
+		expect(third.convex_hull).toEqual([{ x: 20, y: 5 }, { x: 19, y: 6 }, { x: 18, y: 7 }, { x: 19, y: 8 }, { x: 20, y: 7 }, { x: 21, y: 6 }, { x: 20, y: 5 }]);
+
+		const fourth = out.results.find(res => res.interceptedPoints.some(pt => pt.x === 8 && pt.y === 16));
+		expect(fourth).toBeDefined();
+		expect(Array.isArray(fourth.interceptedPoints)).toBe(true);
+		expect(fourth.interceptedPoints).toEqual([{ x: 8, y: 16 }, { x: 9, y: 15 }, { x: 10, y: 14 }]);
+		expect(fourth.convex_hull).toEqual([{ x: 10, y: 13 }, { x: 9, y: 14 }, { x: 8, y: 15 }, { x: 7, y: 16 }, { x: 7, y: 17 }, { x: 8, y: 17 }, { x: 9, y: 16 }, { x: 10, y: 15 }, { x: 11, y: 14 }, { x: 11, y: 13 }, { x: 10, y: 13 }]);
 	});
+
 });
