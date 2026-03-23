@@ -1,5 +1,7 @@
 // @ts-nocheck
 import { describe, expect, test } from "bun:test";
+import { StatusEnum } from "../../src/InkBall.Module/wwwroot/js/shared.js";
+
 
 function runWorkerOperation(payload: Record<string, unknown>) {
 	return new Promise<Record<string, unknown>>((resolve, reject) => {
@@ -9,7 +11,7 @@ function runWorkerOperation(payload: Record<string, unknown>) {
 		const timer = setTimeout(() => {
 			worker.terminate();
 			reject(new Error("AIWorker test timeout"));
-		}, 10000);
+		}, 10_000);
 
 		worker.onmessage = (event) => {
 			clearTimeout(timer);
@@ -99,36 +101,79 @@ describe("AIWorker black-box operations", () => {
 	});
 
 	test("CLUSTERING_AND_CONCAVEMAN returns inkball contract shape", async () => {
-		const result = await runWorkerOperation({
+		const iGridWidth = 40, iGridHeight = 52;
+		const points = [
+			{ x: 8, y: 16, Status: StatusEnum.POINT_FREE_RED, Color: "red" },
+			{ x: 9, y: 15, Status: StatusEnum.POINT_FREE_RED, Color: "red" },
+			{ x: 10, y: 14, Status: StatusEnum.POINT_FREE_RED, Color: "red" },
+			{ x: 14, y: 23, Status: StatusEnum.POINT_FREE_RED, Color: "red" },
+			{ x: 15, y: 24, Status: StatusEnum.POINT_FREE_RED, Color: "red" },
+			{ x: 16, y: 25, Status: StatusEnum.POINT_FREE_RED, Color: "red" },
+			{ x: 17, y: 29, Status: StatusEnum.POINT_FREE_RED, Color: "red" },
+			{ x: 19, y: 7, Status: StatusEnum.POINT_FREE_RED, Color: "red" },
+			{ x: 20, y: 6, Status: StatusEnum.POINT_FREE_RED, Color: "red" },
+			{ x: 21, y: 25, Status: StatusEnum.POINT_FREE_RED, Color: "red" },
+			{ x: 22, y: 25, Status: StatusEnum.POINT_FREE_RED, Color: "red" },
+			{ x: 23, y: 25, Status: StatusEnum.POINT_FREE_RED, Color: "red" },
+			{ x: 24, y: 13, Status: StatusEnum.POINT_FREE_RED, Color: "red" },
+			{ x: 25, y: 13, Status: StatusEnum.POINT_FREE_RED, Color: "red" },
+			{ x: 29, y: 18, Status: StatusEnum.POINT_FREE_RED, Color: "red" },
+			{ x: 30, y: 19, Status: StatusEnum.POINT_FREE_RED, Color: "red" },
+			{ x: 35, y: 10, Status: StatusEnum.POINT_FREE_RED, Color: "red" },
+			{ x: 35, y: 11, Status: StatusEnum.POINT_FREE_RED, Color: "red" },
+			{ x: 35, y: 21, Status: StatusEnum.POINT_FREE_RED, Color: "red" },
+			{ x: 35, y: 22, Status: StatusEnum.POINT_FREE_RED, Color: "red" },
+			{ x: 35, y: 23, Status: StatusEnum.POINT_FREE_RED, Color: "red" },
+		];
+
+
+
+		const out = await runWorkerOperation({
 			operation: "CLUSTERING_AND_CONCAVEMAN",
-			method: "KMEANS",
-			numberOfClusters: 2,
+			method: "DBSCAN",
+			numberOfClusters: 1,
 			neighborhoodRadius: 2,
-			minPointsPerCluster: 2,
-			allPoints: [
-				{ key: 6, value: { x: 1, y: 1, Status: -3, Color: "#f66" } },
-				{ key: 7, value: { x: 2, y: 1, Status: -3, Color: "#f66" } },
-				{ key: 11, value: { x: 1, y: 2, Status: -3, Color: "#f66" } },
-				{ key: 12, value: { x: 2, y: 2, Status: -3, Color: "#f66" } }
-			],
-			humanPointStatuses: [-3],
-			blockedPointColors: ["#111", "#222"],
-			concavity: 2.0,
-			lengthThreshold: 0.0,
-			boardSize: { iGridWidth: 5, iGridHeight: 5 },
+			minPointsPerCluster: 1,//level: HARD
+			allPoints: points.map(pt => ({ key: pt.y * iGridWidth + pt.x, value: pt })),
+			humanPointStatuses: [StatusEnum.POINT_FREE_RED],
+			blockedPointColors: ["#DC143C", "#8A2BE2"],
+			concavity: 1,
+			lengthThreshold: 0,
+			boardSize: { iGridWidth, iGridHeight },
 			visuals: true
 		});
 
-		expect(result.operation).toBe("CLUSTERING_AND_CONCAVEMAN");
-		expect(Array.isArray(result.results)).toBe(true);
-		expect(result.results.length).toBeGreaterThan(0);
+		expect(out.operation).toBe("CLUSTERING_AND_CONCAVEMAN");
+		expect(Array.isArray(out.results)).toBe(true);
+		expect(out.results.length).toBeGreaterThan(8);
 
-		const first = result.results[0];
+		const first = out.results[0];
 		expect(Array.isArray(first.clustered_point_coords)).toBe(true);
 		expect(Array.isArray(first.convex_hull)).toBe(true);
 		expect(Array.isArray(first.interceptedPoints)).toBe(true);
+		let { x, y } = first.interceptedPoints[0];
+		expect(typeof x).toBe("number");
+		expect(typeof y).toBe("number");
+		expect(x).toBe(17);
+		expect(y).toBe(29);
+
 		expect(Array.isArray(first.surrounding_path)).toBe(true);
 		expect(Array.isArray(first.rects2Draw)).toBe(true);
 		expect(typeof first.randomColor).toBe("string");
+
+		expect(Array.isArray(first.convex_hull)).toBe(true);
+		expect(first.convex_hull).toEqual([{ x: 17, y: 28 }, { x: 16, y: 29 }, { x: 17, y: 30 }, { x: 18, y: 29 }, { x: 17, y: 28 }]);
+
+		const third = out.results.find(res => res.interceptedPoints.some(pt => pt.x === 19 && pt.y === 7));
+		expect(third).toBeDefined();
+		expect(Array.isArray(third.interceptedPoints)).toBe(true);
+		expect(third.interceptedPoints).toEqual([{ x: 19, y: 7 }, { x: 20, y: 6 }]);
+		expect(third.convex_hull).toEqual([{ x: 20, y: 5 }, { x: 19, y: 6 }, { x: 18, y: 7 }, { x: 19, y: 8 }, { x: 20, y: 7 }, { x: 21, y: 6 }, { x: 20, y: 5 }]);
+
+		const fourth = out.results.find(res => res.interceptedPoints.some(pt => pt.x === 8 && pt.y === 16));
+		expect(fourth).toBeDefined();
+		expect(Array.isArray(fourth.interceptedPoints)).toBe(true);
+		expect(fourth.interceptedPoints).toEqual([{ x: 8, y: 16 }, { x: 9, y: 15 }, { x: 10, y: 14 }]);
+		expect(fourth.convex_hull).toEqual([{ x: 10, y: 13 }, { x: 9, y: 14 }, { x: 8, y: 15 }, { x: 7, y: 16 }, { x: 7, y: 17 }, { x: 8, y: 17 }, { x: 9, y: 16 }, { x: 10, y: 15 }, { x: 11, y: 14 }, { x: 11, y: 13 }, { x: 10, y: 13 }]);
 	});
 });
