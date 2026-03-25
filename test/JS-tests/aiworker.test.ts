@@ -1,6 +1,67 @@
-// @ts-nocheck
 import { describe, expect, test } from "bun:test";
 import { StatusEnum } from "../../src/InkBall.Module/wwwroot/js/shared.js";
+
+type CoordTuple = [number, number];
+type Point2D = { x: number; y: number };
+
+type GridPoint = {
+	x: number;
+	y: number;
+	Status: number;
+	Color: string;
+};
+
+type IndexedGridPoint = {
+	key: number;
+	value: GridPoint;
+};
+
+type ClusteringAndConcavemanResultItem = {
+	clustered_point_coords: CoordTuple[];
+	convex_hull: Point2D[];
+	interceptedPoints: Point2D[];
+	surrounding_path: Point2D[];
+	rects2Draw: unknown[];
+	randomColor: string;
+};
+
+type WorkerResponseBase = {
+	operation: string;
+	[key: string]: unknown;
+};
+
+type ClusteringResponse = WorkerResponseBase & {
+	operation: "CLUSTERING";
+	method: "DBSCAN" | "KMEANS";
+	clusters: unknown[];
+};
+
+type AstarResponse = WorkerResponseBase & {
+	operation: "ASTAR";
+	resultWithDiagonals: CoordTuple[];
+};
+
+type BuildGraphResponse = WorkerResponseBase & {
+	operation: "BUILD_GRAPH";
+	params: {
+		vertices: unknown[];
+		edges: unknown[];
+	};
+};
+
+type ConcavemanResponse = WorkerResponseBase & {
+	operation: "CONCAVEMAN";
+	convex_hull: Point2D[];
+	numOfNonContinuous: number;
+	numOfDuplicatesFixed: number;
+};
+
+type ClusteringAndConcavemanResponse = WorkerResponseBase & {
+	operation: "CLUSTERING_AND_CONCAVEMAN";
+	results: ClusteringAndConcavemanResultItem[];
+};
+
+type WorkerRequest = Record<string, unknown>;
 
 
 function createInlineWorkerUrl() {
@@ -16,8 +77,8 @@ await import(${JSON.stringify(aiWorkerModuleUrl.href)});
 }
 
 
-function runWorkerOperation(payload: Record<string, unknown>) {
-	return new Promise<Record<string, unknown>>((resolve, reject) => {
+function runWorkerOperation<TResponse extends WorkerResponseBase>(payload: WorkerRequest): Promise<TResponse> {
+	return new Promise<TResponse>((resolve, reject) => {
 		const workerUrl = createInlineWorkerUrl();
 		const worker = new Worker(workerUrl, { type: "module" });
 
@@ -27,14 +88,14 @@ function runWorkerOperation(payload: Record<string, unknown>) {
 			reject(new Error("AIWorker test timeout"));
 		}, 10_000);
 
-		worker.onmessage = (event) => {
+		worker.onmessage = (event: MessageEvent<TResponse>) => {
 			clearTimeout(timer);
 			URL.revokeObjectURL(workerUrl);
 			worker.terminate();
 			resolve(event.data);
 		};
 
-		worker.onerror = (event) => {
+		worker.onerror = (event: ErrorEvent) => {
 			clearTimeout(timer);
 			URL.revokeObjectURL(workerUrl);
 			worker.terminate();
@@ -48,10 +109,10 @@ function runWorkerOperation(payload: Record<string, unknown>) {
 describe("AIWorker black-box operations", () => {
 
 	test("CLUSTERING DBSCAN returns clusters", async () => {
-		const result = await runWorkerOperation({
+		const result = await runWorkerOperation<ClusteringResponse>({
 			operation: "CLUSTERING",
 			method: "DBSCAN",
-			dataset: [[0, 0], [0, 1], [10, 10], [11, 10]],
+			dataset: [[0, 0], [0, 1], [10, 10], [11, 10]] as CoordTuple[],
 			numberOfClusters: 2,
 			neighborhoodRadius: 2,
 			minPointsPerCluster: 2
@@ -65,8 +126,8 @@ describe("AIWorker black-box operations", () => {
 
 	test("CLUSTERING with large dataset and multiple clusters", async () => {
 		// Generate 300 points in 5 distinct clusters
-		const dataset = [];
-		const clusters = [
+		const dataset: CoordTuple[] = [];
+		const clusters: CoordTuple[] = [
 			[0, 0], [50, 0], [100, 0], [50, 50], [0, 50]
 		];
 		clusters.forEach(([cx, cy]) => {
@@ -77,7 +138,7 @@ describe("AIWorker black-box operations", () => {
 			}
 		});
 
-		const result = await runWorkerOperation({
+		const result = await runWorkerOperation<ClusteringResponse>({
 			operation: "CLUSTERING",
 			method: "DBSCAN",
 			dataset,
@@ -92,7 +153,7 @@ describe("AIWorker black-box operations", () => {
 	});
 
 	test("CLUSTERING KMEANS with specific cluster count", async () => {
-		const dataset = [];
+		const dataset: CoordTuple[] = [];
 		// Create 3 well-separated clusters
 		for (let c = 0; c < 3; c++) {
 			for (let i = 0; i < 30; i++) {
@@ -100,7 +161,7 @@ describe("AIWorker black-box operations", () => {
 			}
 		}
 
-		const result = await runWorkerOperation({
+		const result = await runWorkerOperation<ClusteringResponse>({
 			operation: "CLUSTERING",
 			method: "KMEANS",
 			dataset,
@@ -114,7 +175,7 @@ describe("AIWorker black-box operations", () => {
 	});
 
 	test("ASTAR returns a path ending at target", async () => {
-		const result = await runWorkerOperation({
+		const result = await runWorkerOperation<AstarResponse>({
 			operation: "ASTAR",
 			arr: [
 				[1, 1, 1, 1],
@@ -134,14 +195,14 @@ describe("AIWorker black-box operations", () => {
 
 	test("ASTAR navigates complex maze", async () => {
 		// Create a complex maze
-		const maze = Array.from({ length: 20 }, () => Array(20).fill(1));
+		const maze: number[][] = Array.from({ length: 20 }, () => Array(20).fill(1));
 		// Clear a winding path
-		const path = [[1, 1], [1, 2], [1, 3], [2, 3], [3, 3], [3, 2], [4, 2], [5, 2], [5, 3], [5, 4]];
+		const path: CoordTuple[] = [[1, 1], [1, 2], [1, 3], [2, 3], [3, 3], [3, 2], [4, 2], [5, 2], [5, 3], [5, 4]];
 		path.forEach(([x, y]) => {
 			maze[y][x] = 0;
 		});
 
-		const result = await runWorkerOperation({
+		const result = await runWorkerOperation<AstarResponse>({
 			operation: "ASTAR",
 			arr: maze,
 			start: { x: 1, y: 1 },
@@ -157,10 +218,10 @@ describe("AIWorker black-box operations", () => {
 
 	test("ASTAR with unreachable target returns empty or error", async () => {
 		// Completely blocked maze
-		const maze = Array.from({ length: 5 }, () => Array(5).fill(1));
+		const maze: number[][] = Array.from({ length: 5 }, () => Array(5).fill(1));
 		maze[2][2] = 0; // Only target is open
 
-		const result = await runWorkerOperation({
+		const result = await runWorkerOperation<AstarResponse>({
 			operation: "ASTAR",
 			arr: maze,
 			start: { x: 0, y: 0 },
@@ -173,11 +234,11 @@ describe("AIWorker black-box operations", () => {
 	});
 
 	test("ASTAR with adjacent start and end", async () => {
-		const maze = Array.from({ length: 3 }, () => Array(3).fill(1));
+		const maze: number[][] = Array.from({ length: 3 }, () => Array(3).fill(1));
 		maze[1][1] = 0;
 		maze[1][2] = 0;
 
-		const result = await runWorkerOperation({
+		const result = await runWorkerOperation<AstarResponse>({
 			operation: "ASTAR",
 			arr: maze,
 			start: { x: 1, y: 1 },
@@ -190,7 +251,7 @@ describe("AIWorker black-box operations", () => {
 	});
 
 	test("BUILD_GRAPH returns graph payload", async () => {
-		const result = await runWorkerOperation({
+		const result = await runWorkerOperation<BuildGraphResponse>({
 			operation: "BUILD_GRAPH",
 			boardSize: { iGridWidth: 3, iGridHeight: 3 },
 			paths: [],
@@ -208,7 +269,7 @@ describe("AIWorker black-box operations", () => {
 	});
 
 	test("BUILD_GRAPH with larger grid and mixed point types", async () => {
-		const points = [];
+		const points: IndexedGridPoint[] = [];
 		let key = 0;
 
 		// Create 10x10 grid with mixed point types
@@ -222,7 +283,7 @@ describe("AIWorker black-box operations", () => {
 			}
 		}
 
-		const result = await runWorkerOperation({
+		const result = await runWorkerOperation<BuildGraphResponse>({
 			operation: "BUILD_GRAPH",
 			boardSize: { iGridWidth: 10, iGridHeight: 10 },
 			paths: [],
@@ -235,7 +296,7 @@ describe("AIWorker black-box operations", () => {
 	});
 
 	test("CONCAVEMAN BY_COORDS returns shape expected by consumer", async () => {
-		const result = await runWorkerOperation({
+		const result = await runWorkerOperation<ConcavemanResponse>({
 			operation: "CONCAVEMAN",
 			subOperation: "BY_COORDS",
 			concavity: 2.0,
@@ -255,7 +316,7 @@ describe("AIWorker black-box operations", () => {
 
 	test("CLUSTERING_AND_CONCAVEMAN returns inkball contract shape", async () => {
 		const iGridWidth = 40, iGridHeight = 52;
-		const points = [
+		const points: GridPoint[] = [
 			{ x: 8, y: 16, Status: StatusEnum.POINT_FREE_RED, Color: "red" },
 			{ x: 9, y: 15, Status: StatusEnum.POINT_FREE_RED, Color: "red" },
 			{ x: 10, y: 14, Status: StatusEnum.POINT_FREE_RED, Color: "red" },
@@ -281,7 +342,7 @@ describe("AIWorker black-box operations", () => {
 
 
 
-		const out = await runWorkerOperation({
+		const out = await runWorkerOperation<ClusteringAndConcavemanResponse>({
 			operation: "CLUSTERING_AND_CONCAVEMAN",
 			method: "DBSCAN",
 			numberOfClusters: 1,
@@ -317,14 +378,16 @@ describe("AIWorker black-box operations", () => {
 		expect(Array.isArray(first.convex_hull)).toBe(true);
 		expect(first.convex_hull).toEqual([{ x: 17, y: 28 }, { x: 16, y: 29 }, { x: 17, y: 30 }, { x: 18, y: 29 }, { x: 17, y: 28 }]);
 
-		const third = out.results.find(res => res.interceptedPoints.some(pt => pt.x === 19 && pt.y === 7));
+		const third = out.results.find((res: ClusteringAndConcavemanResultItem) => res.interceptedPoints.some((pt: Point2D) => pt.x === 19 && pt.y === 7));
 		expect(third).toBeDefined();
+		if (!third) throw new Error("Expected third result item");
 		expect(Array.isArray(third.interceptedPoints)).toBe(true);
 		expect(third.interceptedPoints).toEqual([{ x: 19, y: 7 }, { x: 20, y: 6 }]);
 		expect(third.convex_hull).toEqual([{ x: 20, y: 5 }, { x: 19, y: 6 }, { x: 18, y: 7 }, { x: 19, y: 8 }, { x: 20, y: 7 }, { x: 21, y: 6 }, { x: 20, y: 5 }]);
 
-		const fourth = out.results.find(res => res.interceptedPoints.some(pt => pt.x === 8 && pt.y === 16));
+		const fourth = out.results.find((res: ClusteringAndConcavemanResultItem) => res.interceptedPoints.some((pt: Point2D) => pt.x === 8 && pt.y === 16));
 		expect(fourth).toBeDefined();
+		if (!fourth) throw new Error("Expected fourth result item");
 		expect(Array.isArray(fourth.interceptedPoints)).toBe(true);
 		expect(fourth.interceptedPoints).toEqual([{ x: 8, y: 16 }, { x: 9, y: 15 }, { x: 10, y: 14 }]);
 		expect(fourth.convex_hull).toEqual([{ x: 10, y: 13 }, { x: 9, y: 14 }, { x: 8, y: 15 }, { x: 7, y: 16 }, { x: 7, y: 17 }, { x: 8, y: 17 }, { x: 9, y: 16 }, { x: 10, y: 15 }, { x: 11, y: 14 }, { x: 11, y: 13 }, { x: 10, y: 13 }]);
@@ -332,10 +395,10 @@ describe("AIWorker black-box operations", () => {
 
 	test("CLUSTERING_AND_CONCAVEMAN with multiple scattered clusters", async () => {
 		const iGridWidth = 100, iGridHeight = 100;
-		const points = [];
+		const points: GridPoint[] = [];
 
 		// Create 5 distinct clusters
-		const clusterCenters = [[20, 20], [80, 20], [50, 50], [20, 80], [80, 80]];
+		const clusterCenters: CoordTuple[] = [[20, 20], [80, 20], [50, 50], [20, 80], [80, 80]];
 		clusterCenters.forEach(([cx, cy]) => {
 			for (let i = 0; i < 15; i++) {
 				const angle = Math.random() * Math.PI * 2;
@@ -350,7 +413,7 @@ describe("AIWorker black-box operations", () => {
 			}
 		});
 
-		const out = await runWorkerOperation({
+		const out = await runWorkerOperation<ClusteringAndConcavemanResponse>({
 			operation: "CLUSTERING_AND_CONCAVEMAN",
 			method: "DBSCAN",
 			numberOfClusters: 5,
@@ -368,7 +431,7 @@ describe("AIWorker black-box operations", () => {
 		expect(out.operation).toBe("CLUSTERING_AND_CONCAVEMAN");
 		expect(Array.isArray(out.results)).toBe(true);
 		expect(out.results.length).toBeGreaterThan(0);
-		out.results.forEach(result => {
+		out.results.forEach((result: ClusteringAndConcavemanResultItem) => {
 			expect(Array.isArray(result.clustered_point_coords)).toBe(true);
 			expect(Array.isArray(result.convex_hull)).toBe(true);
 			expect(Array.isArray(result.interceptedPoints)).toBe(true);
@@ -378,7 +441,7 @@ describe("AIWorker black-box operations", () => {
 
 	test("CLUSTERING_AND_CONCAVEMAN with dense cluster and sparse points", async () => {
 		const iGridWidth = 60, iGridHeight = 60;
-		const points = [];
+		const points: GridPoint[] = [];
 
 		// Dense cluster in center
 		for (let i = 0; i < 40; i++) {
@@ -400,7 +463,7 @@ describe("AIWorker black-box operations", () => {
 			});
 		}
 
-		const out = await runWorkerOperation({
+		const out = await runWorkerOperation<ClusteringAndConcavemanResponse>({
 			operation: "CLUSTERING_AND_CONCAVEMAN",
 			method: "DBSCAN",
 			numberOfClusters: 2,
@@ -417,7 +480,7 @@ describe("AIWorker black-box operations", () => {
 
 		expect(out.operation).toBe("CLUSTERING_AND_CONCAVEMAN");
 		expect(Array.isArray(out.results)).toBe(true);
-		out.results.forEach(result => {
+		out.results.forEach((result: ClusteringAndConcavemanResultItem) => {
 			expect(result.randomColor).toMatch(/^#[0-9a-f]{6}$/i);
 			expect(Array.isArray(result.rects2Draw)).toBe(true);
 		});
@@ -425,7 +488,7 @@ describe("AIWorker black-box operations", () => {
 
 	test("CLUSTERING_AND_CONCAVEMAN with single large cluster", async () => {
 		const iGridWidth = 50, iGridHeight = 50;
-		const points = [];
+		const points: GridPoint[] = [];
 
 		// Create one large diffuse cluster
 		for (let i = 0; i < 80; i++) {
@@ -437,7 +500,7 @@ describe("AIWorker black-box operations", () => {
 			});
 		}
 
-		const out = await runWorkerOperation({
+		const out = await runWorkerOperation<ClusteringAndConcavemanResponse>({
 			operation: "CLUSTERING_AND_CONCAVEMAN",
 			method: "DBSCAN",
 			numberOfClusters: 1,
@@ -455,7 +518,7 @@ describe("AIWorker black-box operations", () => {
 		expect(out.operation).toBe("CLUSTERING_AND_CONCAVEMAN");
 		expect(Array.isArray(out.results)).toBe(true);
 		// With diffuse points and high radius, likely to get fewer large clusters
-		out.results.forEach(result => {
+		out.results.forEach((result: ClusteringAndConcavemanResultItem) => {
 			expect(result.clustered_point_coords.length).toBeGreaterThan(0);
 			expect(result.convex_hull.length).toBeGreaterThan(2);
 		});

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { describe, expect, test } from "bun:test";
 import {
 	StatusEnum,
@@ -11,6 +10,33 @@ import {
 	SvgVml,
 	GameStateStore
 } from "../../src/InkBall.Module/wwwroot/js/shared.js";
+
+type Point2D = { x: number; y: number };
+type PointWithAngle = Point2D & { angle?: number };
+type LineLike = { GetPointsArray: () => Point2D[] };
+
+interface DeserializedOval {
+	GetPosition: () => Point2D;
+	GetStatus: () => number;
+	GetFillColor: () => string;
+}
+
+interface DeserializedPolyline {
+	GetID: () => number;
+	GetPointsArray: () => Point2D[];
+}
+
+interface PointStore {
+	set: (key: number, value: Point2D) => Promise<void>;
+	has: (key: number) => Promise<boolean>;
+	get: (key: number) => Point2D | undefined;
+	count: () => Promise<number>;
+}
+
+interface PathStore {
+	push: (value: { id: number; pts: string }) => Promise<void>;
+	count: () => Promise<number>;
+}
 
 describe("shared.js exports", () => {
 	test("StatusEnum contains expected values", () => {
@@ -32,26 +58,26 @@ describe("shared.js exports", () => {
 	});
 
 	test("pnpoly detects inside/outside points", () => {
-		const triangle = [{ x: 0, y: 0 }, { x: 10, y: 0 }, { x: 5, y: 10 }];
+		const triangle: Point2D[] = [{ x: 0, y: 0 }, { x: 10, y: 0 }, { x: 5, y: 10 }];
 		expect(pnpoly(triangle, 5, 5)).toBe(true);
 		expect(pnpoly(triangle, -1, -1)).toBe(false);
 	});
 
 	test("sortPointsClockwise sorts points and annotates angles", () => {
-		const points = [
+		const points: Point2D[] = [
 			{ x: 0, y: 1 },
 			{ x: 1, y: 0 },
 			{ x: 0, y: -1 },
 			{ x: -1, y: 0 }
 		];
 
-		const sorted = sortPointsClockwise(points);
+		const sorted = sortPointsClockwise(points) as PointWithAngle[];
 		expect(sorted).toHaveLength(4);
 		expect(sorted.every(p => typeof p.angle === "number")).toBe(true);
 	});
 
 	test("IsPointOutsideAllPaths works with line-like objects", () => {
-		const line = {
+		const line: LineLike = {
 			GetPointsArray: () => [
 				{ x: 19, y: 18 },//
 				{ x: 20, y: 17 },//
@@ -79,27 +105,27 @@ describe("shared.js exports", () => {
 	});
 
 	test("SvgVml can deserialize basic primitives", () => {
-		if (typeof globalThis.self === "undefined") {
-			(globalThis as typeof globalThis & { self: typeof globalThis }).self = globalThis;
-		}
+		// if (typeof globalThis.self === "undefined")
+		// 	(globalThis as typeof globalThis & { self: typeof globalThis }).self = globalThis;
+		
 
 		const svg = new SvgVml();
 		svg.Init({ iGridWidth: 10, iGridHeight: 10 });
 
-		const oval = svg.DeserializeOval({ x: 2, y: 3, Status: StatusEnum.POINT_FREE_BLUE, Color: "#112233" });
+		const oval = svg.DeserializeOval({ x: 2, y: 3, Status: StatusEnum.POINT_FREE_BLUE, Color: "#112233" }) as unknown as DeserializedOval;
 		expect(oval.GetPosition()).toEqual({ x: 2, y: 3 });
 		expect(oval.GetStatus()).toBe(StatusEnum.POINT_FREE_BLUE);
 		expect(oval.GetFillColor()).toBe("#112233");
 
-		const poly = svg.DeserializePolyline({ iId: 7, Color: "#abcdef", PointsAsString: "1,1 2,2" });
+		const poly = svg.DeserializePolyline({ iId: 7, Color: "#abcdef", PointsAsString: "1,1 2,2" }) as unknown as DeserializedPolyline;
 		expect(poly.GetID()).toBe(7);
 		expect(poly.GetPointsArray()).toEqual([{ x: 1, y: 1 }, { x: 2, y: 2 }]);
 	});
 
 	test("GameStateStore exports in-memory point/path stores", async () => {
 		const stateStore = new GameStateStore(false);
-		const points = stateStore.GetPointStore();
-		const paths = stateStore.GetPathStore();
+		const points = stateStore.GetPointStore() as PointStore;
+		const paths = stateStore.GetPathStore() as PathStore;
 
 		await points.set(1, { x: 1, y: 1 });
 		expect(await points.has(1)).toBe(true);
@@ -138,7 +164,7 @@ describe("shared.js exports", () => {
 	});
 
 	test("hasDuplicates with complex mixed types", () => {
-		const mixed = [
+		const mixed: Array<{ id: number } | number[] | string | number | undefined> = [
 			{ id: 1 },
 			[1, 2],
 			"string1",
@@ -152,7 +178,7 @@ describe("shared.js exports", () => {
 
 	test("pnpoly with complex concave polygon", () => {
 		// Star-like polygon
-		const star = [
+		const star: Point2D[] = [
 			{ x: 50, y: 0 },
 			{ x: 61, y: 35 },
 			{ x: 98, y: 35 },
@@ -170,12 +196,12 @@ describe("shared.js exports", () => {
 	});
 
 	test("sortPointsClockwise with large point set", () => {
-		const points = [];
+		const points: Point2D[] = [];
 		for (let i = 0; i < 360; i += 10) {
 			const rad = (i * Math.PI) / 180;
 			points.push({ x: Math.cos(rad) * 100, y: Math.sin(rad) * 100 });
 		}
-		const sorted = sortPointsClockwise(points);
+		const sorted = sortPointsClockwise(points) as PointWithAngle[];
 		expect(sorted.length).toBe(points.length);
 		expect(sorted.every(p => typeof p.angle === "number")).toBe(true);
 		// Check angles are sorted
@@ -187,7 +213,7 @@ describe("shared.js exports", () => {
 	});
 
 	test("IsPointOutsideAllPaths with multiple complex paths", () => {
-		const lines = [
+		const lines: LineLike[] = [
 			{
 				GetPointsArray: () => [
 					{ x: 0, y: 0 }, { x: 10, y: 10 },
@@ -226,9 +252,9 @@ describe("shared.js exports", () => {
 
 	test("GameStateStore supports concurrent operations", async () => {
 		const stateStore = new GameStateStore(false);
-		const points = stateStore.GetPointStore();
+		const points = stateStore.GetPointStore() as PointStore;
 
-		const promises = [];
+		const promises: Array<Promise<void>> = [];
 		for (let i = 0; i < 100; i++) {
 			promises.push(points.set(i, { x: i, y: i * 2 }));
 		}
@@ -241,7 +267,7 @@ describe("shared.js exports", () => {
 
 	test("GameStateStore path operations", async () => {
 		const stateStore = new GameStateStore(false);
-		const paths = stateStore.GetPathStore();
+		const paths = stateStore.GetPathStore() as PathStore;
 
 		await paths.push({ id: 1, pts: "1,1 2,2 3,3" });
 		await paths.push({ id: 2, pts: "4,4 5,5 6,6" });
@@ -253,7 +279,7 @@ describe("shared.js exports", () => {
 		const svg = new SvgVml();
 		svg.Init({ iGridWidth: 100, iGridHeight: 100 });
 
-		const ovals = [];
+		const ovals: DeserializedOval[] = [];
 		for (let i = -2; i <= 2; i++) {
 			ovals.push(
 				svg.DeserializeOval({
@@ -261,7 +287,7 @@ describe("shared.js exports", () => {
 					y: 50 + i * 5,
 					Status: StatusEnum.POINT_FREE_BLUE,
 					Color: "#" + (Math.random() * 0xFFFFFF << 0).toString(16).padStart(6, "0")
-				})
+				}) as unknown as DeserializedOval
 			);
 		}
 
