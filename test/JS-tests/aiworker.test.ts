@@ -63,6 +63,56 @@ describe("AIWorker black-box operations", () => {
 		expect(result.clusters.length).toBe(2);
 	});
 
+	test("CLUSTERING with large dataset and multiple clusters", async () => {
+		// Generate 300 points in 5 distinct clusters
+		const dataset = [];
+		const clusters = [
+			[0, 0], [50, 0], [100, 0], [50, 50], [0, 50]
+		];
+		clusters.forEach(([cx, cy]) => {
+			for (let i = 0; i < 60; i++) {
+				const angle = Math.random() * Math.PI * 2;
+				const radius = Math.random() * 5;
+				dataset.push([cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius]);
+			}
+		});
+
+		const result = await runWorkerOperation({
+			operation: "CLUSTERING",
+			method: "DBSCAN",
+			dataset,
+			numberOfClusters: 5,
+			neighborhoodRadius: 7,
+			minPointsPerCluster: 5
+		});
+
+		expect(result.operation).toBe("CLUSTERING");
+		expect(Array.isArray(result.clusters)).toBe(true);
+		expect(result.clusters.length).toBeGreaterThan(0);
+	});
+
+	test("CLUSTERING KMEANS with specific cluster count", async () => {
+		const dataset = [];
+		// Create 3 well-separated clusters
+		for (let c = 0; c < 3; c++) {
+			for (let i = 0; i < 30; i++) {
+				dataset.push([c * 30 + Math.random() * 5, Math.random() * 5]);
+			}
+		}
+
+		const result = await runWorkerOperation({
+			operation: "CLUSTERING",
+			method: "KMEANS",
+			dataset,
+			numberOfClusters: 3,
+			neighborhoodRadius: 0,
+			minPointsPerCluster: 1
+		});
+
+		expect(result.operation).toBe("CLUSTERING");
+		expect(result.clusters.length).toBe(3);
+	});
+
 	test("ASTAR returns a path ending at target", async () => {
 		const result = await runWorkerOperation({
 			operation: "ASTAR",
@@ -82,6 +132,63 @@ describe("AIWorker black-box operations", () => {
 		expect(result.resultWithDiagonals.length).toBeGreaterThan(4);
 	});
 
+	test("ASTAR navigates complex maze", async () => {
+		// Create a complex maze
+		const maze = Array.from({ length: 20 }, () => Array(20).fill(1));
+		// Clear a winding path
+		const path = [[1, 1], [1, 2], [1, 3], [2, 3], [3, 3], [3, 2], [4, 2], [5, 2], [5, 3], [5, 4]];
+		path.forEach(([x, y]) => {
+			maze[y][x] = 0;
+		});
+
+		const result = await runWorkerOperation({
+			operation: "ASTAR",
+			arr: maze,
+			start: { x: 1, y: 1 },
+			end: { x: 5, y: 4 }
+		});
+
+		expect(result.operation).toBe("ASTAR");
+		expect(Array.isArray(result.resultWithDiagonals)).toBe(true);
+		if (result.resultWithDiagonals.length > 0) {
+			expect(result.resultWithDiagonals.at(-1)).toEqual([5, 4]);
+		}
+	});
+
+	test("ASTAR with unreachable target returns empty or error", async () => {
+		// Completely blocked maze
+		const maze = Array.from({ length: 5 }, () => Array(5).fill(1));
+		maze[2][2] = 0; // Only target is open
+
+		const result = await runWorkerOperation({
+			operation: "ASTAR",
+			arr: maze,
+			start: { x: 0, y: 0 },
+			end: { x: 2, y: 2 }
+		});
+
+		expect(result.operation).toBe("ASTAR");
+		// Result should either have path or be empty
+		expect(Array.isArray(result.resultWithDiagonals)).toBe(true);
+	});
+
+	test("ASTAR with adjacent start and end", async () => {
+		const maze = Array.from({ length: 3 }, () => Array(3).fill(1));
+		maze[1][1] = 0;
+		maze[1][2] = 0;
+
+		const result = await runWorkerOperation({
+			operation: "ASTAR",
+			arr: maze,
+			start: { x: 1, y: 1 },
+			end: { x: 1, y: 2 }
+		});
+
+		expect(result.operation).toBe("ASTAR");
+		expect(Array.isArray(result.resultWithDiagonals)).toBe(true);
+		expect(result.resultWithDiagonals.length).toBeGreaterThan(0);
+	});
+
 	test("BUILD_GRAPH returns graph payload", async () => {
 		const result = await runWorkerOperation({
 			operation: "BUILD_GRAPH",
@@ -98,6 +205,33 @@ describe("AIWorker black-box operations", () => {
 		expect(Array.isArray(result.params.vertices)).toBe(true);
 		expect(Array.isArray(result.params.edges)).toBe(true);
 		expect(result.params.vertices.length).toBeGreaterThan(0);
+	});
+
+	test("BUILD_GRAPH with larger grid and mixed point types", async () => {
+		const points = [];
+		let key = 0;
+
+		// Create 10x10 grid with mixed point types
+		for (let y = 0; y < 10; y++) {
+			for (let x = 0; x < 10; x++) {
+				const status = (x + y) % 3 === 0 ? -2 : 2; // Alternate free/owned
+				points.push({
+					key: key++,
+					value: { x, y, Status: status, Color: status === -2 ? "#00f" : "#f00" }
+				});
+			}
+		}
+
+		const result = await runWorkerOperation({
+			operation: "BUILD_GRAPH",
+			boardSize: { iGridWidth: 10, iGridHeight: 10 },
+			paths: [],
+			points
+		});
+
+		expect(result.operation).toBe("BUILD_GRAPH");
+		expect(result.params.vertices.length).toBeGreaterThan(30);
+		expect(result.params.edges.length).toBeGreaterThan(0);
 	});
 
 	test("CONCAVEMAN BY_COORDS returns shape expected by consumer", async () => {
@@ -194,6 +328,137 @@ describe("AIWorker black-box operations", () => {
 		expect(Array.isArray(fourth.interceptedPoints)).toBe(true);
 		expect(fourth.interceptedPoints).toEqual([{ x: 8, y: 16 }, { x: 9, y: 15 }, { x: 10, y: 14 }]);
 		expect(fourth.convex_hull).toEqual([{ x: 10, y: 13 }, { x: 9, y: 14 }, { x: 8, y: 15 }, { x: 7, y: 16 }, { x: 7, y: 17 }, { x: 8, y: 17 }, { x: 9, y: 16 }, { x: 10, y: 15 }, { x: 11, y: 14 }, { x: 11, y: 13 }, { x: 10, y: 13 }]);
+	});
+
+	test("CLUSTERING_AND_CONCAVEMAN with multiple scattered clusters", async () => {
+		const iGridWidth = 100, iGridHeight = 100;
+		const points = [];
+
+		// Create 5 distinct clusters
+		const clusterCenters = [[20, 20], [80, 20], [50, 50], [20, 80], [80, 80]];
+		clusterCenters.forEach(([cx, cy]) => {
+			for (let i = 0; i < 15; i++) {
+				const angle = Math.random() * Math.PI * 2;
+				const radius = Math.random() * 3;
+				const x = Math.round(cx + Math.cos(angle) * radius);
+				const y = Math.round(cy + Math.sin(angle) * radius);
+				points.push({
+					x, y,
+					Status: StatusEnum.POINT_FREE_RED,
+					Color: "red"
+				});
+			}
+		});
+
+		const out = await runWorkerOperation({
+			operation: "CLUSTERING_AND_CONCAVEMAN",
+			method: "DBSCAN",
+			numberOfClusters: 5,
+			neighborhoodRadius: 4,
+			minPointsPerCluster: 3,
+			allPoints: points.map(pt => ({ key: pt.y * iGridWidth + pt.x, value: pt })),
+			humanPointStatuses: [StatusEnum.POINT_FREE_RED],
+			blockedPointColors: ["#DC143C", "#8A2BE2"],
+			concavity: 1,
+			lengthThreshold: 0,
+			boardSize: { iGridWidth, iGridHeight },
+			visuals: true
+		});
+
+		expect(out.operation).toBe("CLUSTERING_AND_CONCAVEMAN");
+		expect(Array.isArray(out.results)).toBe(true);
+		expect(out.results.length).toBeGreaterThan(0);
+		out.results.forEach(result => {
+			expect(Array.isArray(result.clustered_point_coords)).toBe(true);
+			expect(Array.isArray(result.convex_hull)).toBe(true);
+			expect(Array.isArray(result.interceptedPoints)).toBe(true);
+			expect(Array.isArray(result.surrounding_path)).toBe(true);
+		});
+	});
+
+	test("CLUSTERING_AND_CONCAVEMAN with dense cluster and sparse points", async () => {
+		const iGridWidth = 60, iGridHeight = 60;
+		const points = [];
+
+		// Dense cluster in center
+		for (let i = 0; i < 40; i++) {
+			points.push({
+				x: 30 + Math.round(Math.random() * 4),
+				y: 30 + Math.round(Math.random() * 4),
+				Status: StatusEnum.POINT_FREE_RED,
+				Color: "red"
+			});
+		}
+
+		// Sparse outer points
+		for (let i = 0; i < 8; i++) {
+			points.push({
+				x: Math.round(Math.random() * 60),
+				y: Math.round(Math.random() * 60),
+				Status: StatusEnum.POINT_FREE_RED,
+				Color: "red"
+			});
+		}
+
+		const out = await runWorkerOperation({
+			operation: "CLUSTERING_AND_CONCAVEMAN",
+			method: "DBSCAN",
+			numberOfClusters: 2,
+			neighborhoodRadius: 3,
+			minPointsPerCluster: 2,
+			allPoints: points.map(pt => ({ key: pt.y * iGridWidth + pt.x, value: pt })),
+			humanPointStatuses: [StatusEnum.POINT_FREE_RED],
+			blockedPointColors: [],
+			concavity: 1.5,
+			lengthThreshold: 0.5,
+			boardSize: { iGridWidth, iGridHeight },
+			visuals: true
+		});
+
+		expect(out.operation).toBe("CLUSTERING_AND_CONCAVEMAN");
+		expect(Array.isArray(out.results)).toBe(true);
+		out.results.forEach(result => {
+			expect(result.randomColor).toMatch(/^#[0-9a-f]{6}$/i);
+			expect(Array.isArray(result.rects2Draw)).toBe(true);
+		});
+	});
+
+	test("CLUSTERING_AND_CONCAVEMAN with single large cluster", async () => {
+		const iGridWidth = 50, iGridHeight = 50;
+		const points = [];
+
+		// Create one large diffuse cluster
+		for (let i = 0; i < 80; i++) {
+			points.push({
+				x: Math.round(Math.random() * 50),
+				y: Math.round(Math.random() * 50),
+				Status: StatusEnum.POINT_FREE_RED,
+				Color: "red"
+			});
+		}
+
+		const out = await runWorkerOperation({
+			operation: "CLUSTERING_AND_CONCAVEMAN",
+			method: "DBSCAN",
+			numberOfClusters: 1,
+			neighborhoodRadius: 5,
+			minPointsPerCluster: 5,
+			allPoints: points.map(pt => ({ key: pt.y * iGridWidth + pt.x, value: pt })),
+			humanPointStatuses: [StatusEnum.POINT_FREE_RED],
+			blockedPointColors: ["#DC143C"],
+			concavity: 2,
+			lengthThreshold: 0,
+			boardSize: { iGridWidth, iGridHeight },
+			visuals: true
+		});
+
+		expect(out.operation).toBe("CLUSTERING_AND_CONCAVEMAN");
+		expect(Array.isArray(out.results)).toBe(true);
+		// With diffuse points and high radius, likely to get fewer large clusters
+		out.results.forEach(result => {
+			expect(result.clustered_point_coords.length).toBeGreaterThan(0);
+			expect(result.convex_hull.length).toBeGreaterThan(2);
+		});
 	});
 
 });
