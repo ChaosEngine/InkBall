@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { HomeOnLoad, InkBallGame, ListOnLoad } from "../../src/InkBall.Module/wwwroot/js/inkball.js";
