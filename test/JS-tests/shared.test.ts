@@ -27,6 +27,8 @@ describe("shared.js exports", () => {
 		expect(hasDuplicates([])).toBe(false);
 		expect(hasDuplicates([1, 2, 1])).toBe(true);
 		expect(hasDuplicates([{ x: 1 }, { x: 1 }])).toBe(false);
+		expect(hasDuplicates(["1_2", "2_1", "3_2", "5_6"])).toBe(false);
+		expect(hasDuplicates(["1_2", "2_1", "3_2", "2_1"])).toBe(true);
 	});
 
 	test("pnpoly detects inside/outside points", () => {
@@ -51,15 +53,18 @@ describe("shared.js exports", () => {
 	test("IsPointOutsideAllPaths works with line-like objects", () => {
 		const line = {
 			GetPointsArray: () => [
-				{ x: 0, y: 0 },
-				{ x: 4, y: 0 },
-				{ x: 4, y: 4 },
-				{ x: 0, y: 4 }
+				{ x: 19, y: 18 },//
+				{ x: 20, y: 17 },//
+				{ x: 20, y: 19 },//       
+				{ x: 21, y: 16 },//      X --- X 
+				{ x: 21, y: 18 },//    X     X
+				{ x: 22, y: 17 },//  X --- X
+				{ x: 21, y: 16 },//
 			]
 		};
 
-		expect(IsPointOutsideAllPaths(2, 2, [line])).toBe(false);
-		expect(IsPointOutsideAllPaths(9, 9, [line])).toBe(true);
+		expect(IsPointOutsideAllPaths(21, 17, [line])).toBe(false);
+		expect(IsPointOutsideAllPaths(21, 25, [line])).toBe(true);
 	});
 
 	test("Sleep resolves asynchronously", async () => {
@@ -103,4 +108,13 @@ describe("shared.js exports", () => {
 		await paths.push({ id: 1, pts: "1,1 2,2" });
 		expect(await paths.count()).toBe(1);
 	});
+
+	test("SvgVml test if IsPointInCircle works correctly", () => {
+		const svg = new SvgVml();
+		const inside = 1, outside = -1, circleCenter = { x: 15, y: 15 }, radius = 2;
+
+		expect(svg.IsPointInCircle(/*test point*/{ x: 15 + 1, y: 15 + 0 }, circleCenter, radius)).toBe(inside);
+		expect(svg.IsPointInCircle(/*test point*/{ x: 15 + 4, y: 15 + 4 }, circleCenter, radius)).toBe(outside);
+	});
+
 });

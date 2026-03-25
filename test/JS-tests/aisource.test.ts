@@ -23,8 +23,9 @@ describe("AISource.js exports", () => {
 	});
 
 	test("LerpMissingPoints returns interpolated points including destination", () => {
-		const result = LerpMissingPoints([0, 0], [2, 0], () => true);
-		expect(result).toEqual([[1, 0], [2, 0]]);
+		const anyPointIsGood = () => true;
+		const result = LerpMissingPoints([0, 0], [4, 2], anyPointIsGood);
+		expect(result).toEqual([[1, 0], [2, 1], [3, 1], [4, 2]]);
 	});
 
 	test("AABB updateMinMax and expand maintain bounds", () => {

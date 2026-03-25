@@ -47,10 +47,10 @@ function runWorkerOperation(payload: Record<string, unknown>) {
 
 describe("AIWorker black-box operations", () => {
 
-	test("CLUSTERING KMEANS returns clusters", async () => {
+	test("CLUSTERING DBSCAN returns clusters", async () => {
 		const result = await runWorkerOperation({
 			operation: "CLUSTERING",
-			method: "KMEANS",
+			method: "DBSCAN",
 			dataset: [[0, 0], [0, 1], [10, 10], [11, 10]],
 			numberOfClusters: 2,
 			neighborhoodRadius: 2,
@@ -58,7 +58,7 @@ describe("AIWorker black-box operations", () => {
 		});
 
 		expect(result.operation).toBe("CLUSTERING");
-		expect(result.method).toBe("KMEANS");
+		expect(result.method).toBe("DBSCAN");
 		expect(Array.isArray(result.clusters)).toBe(true);
 		expect(result.clusters.length).toBe(2);
 	});
@@ -67,17 +67,19 @@ describe("AIWorker black-box operations", () => {
 		const result = await runWorkerOperation({
 			operation: "ASTAR",
 			arr: [
-				[1, 1, 1],
-				[1, 0, 1],
-				[1, 1, 1]
+				[1, 1, 1, 1],
+				[1, 0, 0, 1],
+				[1, 0, 0, 1],
+				[1, 1, 1, 1]
 			],
 			start: { x: 0, y: 0 },
-			end: { x: 2, y: 2 }
+			end: { x: 3, y: 3 }
 		});
 
 		expect(result.operation).toBe("ASTAR");
 		expect(Array.isArray(result.resultWithDiagonals)).toBe(true);
-		expect(result.resultWithDiagonals.at(-1)).toEqual([2, 2]);
+		expect(result.resultWithDiagonals.at(-1)).toEqual([3, 3]);
+		expect(result.resultWithDiagonals.length).toBeGreaterThan(4);
 	});
 
 	test("BUILD_GRAPH returns graph payload", async () => {
