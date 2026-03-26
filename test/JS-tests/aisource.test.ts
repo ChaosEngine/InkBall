@@ -205,12 +205,13 @@ describe("AISource.js exports - AABB", () => {
 });
 
 describe("AISource.js exports - GraphAI", () => {
+	const makePoint = (x: number, y: number, status: number): PointLike => ({
+		GetPosition: () => ({ x, y }),
+		GetStatus: () => status,
+		adjacents: [] as Array<unknown>
+	});
+
 	test("BuildGraph creates adjacency graph for free points", async () => {
-		const makePoint = (x: number, y: number, status: number): PointLike => ({
-			GetPosition: () => ({ x, y }),
-			GetStatus: () => status,
-			adjacents: [] as Array<unknown>
-		});
 
 		const p00 = makePoint(0, 0, StatusEnum.POINT_FREE_BLUE);
 		const p10 = makePoint(1, 0, StatusEnum.POINT_FREE_BLUE);
@@ -230,12 +231,6 @@ describe("AISource.js exports - GraphAI", () => {
 	});
 
 	test("BuildGraph handles large grid with mixed statuses", async () => {
-		const makePoint = (x: number, y: number, status: number): PointLike => ({
-			GetPosition: () => ({ x, y }),
-			GetStatus: () => status,
-			adjacents: [] as Array<unknown>
-		});
-
 		const points = new Map<number, PointLike>();
 		let idx = 0;
 
@@ -256,12 +251,6 @@ describe("AISource.js exports - GraphAI", () => {
 	});
 
 	test("BuildGraph handles all free points", async () => {
-		const makePoint = (x: number, y: number, status: number): PointLike => ({
-			GetPosition: () => ({ x, y }),
-			GetStatus: () => status,
-			adjacents: [] as Array<unknown>
-		});
-
 		const points = new Map<number, PointLike>();
 		let idx = 0;
 
@@ -280,12 +269,6 @@ describe("AISource.js exports - GraphAI", () => {
 	});
 
 	test("BuildGraph isolates blocked regions", async () => {
-		const makePoint = (x: number, y: number, status: number): PointLike => ({
-			GetPosition: () => ({ x, y }),
-			GetStatus: () => status,
-			adjacents: [] as Array<unknown>
-		});
-
 		const points = new Map<number, PointLike>();
 		let idx = 0;
 
@@ -322,9 +305,9 @@ describe("AISource.js exports - concaveman", () => {
 		const hull2 = concaveman(points, 3.0, 0.0) as CoordTuple[];
 		const hull3 = concaveman(points, 10.0, 0.0) as CoordTuple[];
 
-		expect(hull1.length).toBeGreaterThan(0);
-		expect(hull2.length).toBeGreaterThan(0);
-		expect(hull3.length).toBeGreaterThan(0);
+		expect(hull1.length).toBeGreaterThan(1);
+		expect(hull2.length).toBeGreaterThan(1);
+		expect(hull3.length).toBeGreaterThan(1);
 	});
 
 	test("handles large point clouds (circular)", () => {
@@ -345,14 +328,14 @@ describe("AISource.js exports - concaveman", () => {
 		] as [number, number][];
 		
 		const hull = concaveman(points, 2.0, 0.0) as CoordTuple[];
-		expect(hull.length).toBeGreaterThan(0);
+		expect(hull.length).toBeGreaterThan(1);
 		expect(hull[0]).toBeDefined();
 	});
 
 	test("handles collapsed shapes", () => {
 		const points = [[0, 0], [1, 0], [2, 0], [1, 1]] as [number, number][];
 		const hull = concaveman(points, 2.0, 0.0) as CoordTuple[];
-		expect(hull.length).toBeGreaterThan(0);
+		expect(hull.length).toBeGreaterThan(1);
 	});
 
 	test("handles length threshold parameter", () => {
@@ -360,7 +343,7 @@ describe("AISource.js exports - concaveman", () => {
 		const hull1 = concaveman(points, 2.0, 0.0) as CoordTuple[];
 		const hull2 = concaveman(points, 2.0, 5.0) as CoordTuple[]; // Larger threshold
 		
-		expect(hull1.length).toBeGreaterThan(0);
-		expect(hull2.length).toBeGreaterThan(0);
+		expect(hull1.length).toBeGreaterThan(2);
+		expect(hull2.length).toBeGreaterThan(2);
 	});
 });

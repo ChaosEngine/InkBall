@@ -149,7 +149,7 @@ describe("AIWorker black-box operations", () => {
 
 		expect(result.operation).toBe("CLUSTERING");
 		expect(Array.isArray(result.clusters)).toBe(true);
-		expect(result.clusters.length).toBeGreaterThan(0);
+		expect(result.clusters.length).toBeGreaterThan(4);
 	});
 
 	test("CLUSTERING KMEANS with specific cluster count", async () => {
@@ -430,7 +430,7 @@ describe("AIWorker black-box operations", () => {
 
 		expect(out.operation).toBe("CLUSTERING_AND_CONCAVEMAN");
 		expect(Array.isArray(out.results)).toBe(true);
-		expect(out.results.length).toBeGreaterThan(0);
+		expect(out.results.length).toBeGreaterThan(4);
 		out.results.forEach((result: ClusteringAndConcavemanResultItem) => {
 			expect(Array.isArray(result.clustered_point_coords)).toBe(true);
 			expect(Array.isArray(result.convex_hull)).toBe(true);
@@ -519,7 +519,7 @@ describe("AIWorker black-box operations", () => {
 		expect(Array.isArray(out.results)).toBe(true);
 		// With diffuse points and high radius, likely to get fewer large clusters
 		out.results.forEach((result: ClusteringAndConcavemanResultItem) => {
-			expect(result.clustered_point_coords.length).toBeGreaterThan(0);
+			expect(result.clustered_point_coords.length).toBeGreaterThan(2);
 			expect(result.convex_hull.length).toBeGreaterThan(2);
 		});
 	});
