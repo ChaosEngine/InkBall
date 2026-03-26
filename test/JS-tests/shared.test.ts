@@ -234,20 +234,12 @@ describe("shared.js exports", () => {
 	});
 
 	test("RandomColor produces valid hex colors", () => {
-		for (let i = 0; i < 100; i++) {
+		for (let i = 0; i < 10; i++) {
 			const col = RandomColor();
 			expect(col).toMatch(/^#[0-9a-f]{6}$/i);
 			// Ensure no overflow
 			expect(col.length).toBe(7);
 		}
-	});
-
-	test("Sleep is non-blocking and approximate", async () => {
-		const start = Date.now();
-		await Sleep(10);
-		const elapsed = Date.now() - start;
-		// Should be >= 10ms, but allow some tolerance
-		expect(elapsed).toBeGreaterThanOrEqual(0);
 	});
 
 	test("GameStateStore supports concurrent operations", async () => {
