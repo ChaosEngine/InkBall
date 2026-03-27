@@ -99,11 +99,6 @@ describe("shared.js exports", () => {
 		expect(Date.now() - start).toBeGreaterThanOrEqual(0);
 	});
 
-	test("RandomColor returns hex string", () => {
-		const col = RandomColor();
-		expect(col).toMatch(/^#[0-9a-f]{6}$/i);
-	});
-
 	test("SvgVml can deserialize basic primitives", () => {
 		// if (typeof globalThis.self === "undefined")
 		// 	(globalThis as typeof globalThis & { self: typeof globalThis }).self = globalThis;

@@ -63,6 +63,16 @@ type ClusteringAndConcavemanResponse = WorkerResponseBase & {
 
 type WorkerRequest = Record<string, unknown>;
 
+function randomInt(maxExclusive: number): number {
+	return Math.floor(Math.random() * maxExclusive);
+}
+
+function clampToBoard(value: number, maxExclusive: number): number {
+	if (value < 0) return 0;
+	if (value >= maxExclusive) return maxExclusive - 1;
+	return value;
+}
+
 
 function createInlineWorkerUrl() {
 	const aiWorkerModuleUrl = new URL("../../src/InkBall.Module/wwwroot/js/AIWorker.js", import.meta.url);
@@ -403,8 +413,8 @@ describe("AIWorker black-box operations", () => {
 			for (let i = 0; i < 15; i++) {
 				const angle = Math.random() * Math.PI * 2;
 				const radius = Math.random() * 3;
-				const x = Math.round(cx + Math.cos(angle) * radius);
-				const y = Math.round(cy + Math.sin(angle) * radius);
+				const x = clampToBoard(Math.round(cx + Math.cos(angle) * radius), iGridWidth);
+				const y = clampToBoard(Math.round(cy + Math.sin(angle) * radius), iGridHeight);
 				points.push({
 					x, y,
 					Status: StatusEnum.POINT_FREE_RED,
@@ -446,8 +456,9 @@ describe("AIWorker black-box operations", () => {
 		// Dense cluster in center
 		for (let i = 0; i < 40; i++) {
 			points.push({
-				x: 30 + Math.round(Math.random() * 4),
-				y: 30 + Math.round(Math.random() * 4),
+				//here
+				x: clampToBoard(30 + Math.round(Math.random() * 4), iGridWidth),
+				y: clampToBoard(30 + Math.round(Math.random() * 4), iGridHeight),
 				Status: StatusEnum.POINT_FREE_RED,
 				Color: "red"
 			});
@@ -456,8 +467,8 @@ describe("AIWorker black-box operations", () => {
 		// Sparse outer points
 		for (let i = 0; i < 8; i++) {
 			points.push({
-				x: Math.round(Math.random() * 60),
-				y: Math.round(Math.random() * 60),
+				x: randomInt(iGridWidth),
+				y: randomInt(iGridHeight),
 				Status: StatusEnum.POINT_FREE_RED,
 				Color: "red"
 			});
@@ -493,8 +504,8 @@ describe("AIWorker black-box operations", () => {
 		// Create one large diffuse cluster
 		for (let i = 0; i < 20; i++) {
 			points.push({
-				x: Math.round(Math.random() * 50),
-				y: Math.round(Math.random() * 50),
+				x: randomInt(iGridWidth),
+				y: randomInt(iGridHeight),
 				Status: StatusEnum.POINT_FREE_RED,
 				Color: "red"
 			});
