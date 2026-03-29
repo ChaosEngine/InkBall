@@ -3311,15 +3311,11 @@ class InkBallGame {
 				fragment?.EndBatchFragment();
 
 			resultLoop:
-			for (const { convex_hull, interceptedPoints/*, surrounding_path, rects2Draw */, randomColor } of results) {
+			for (const { convex_hull, interceptedPoints, randomColor } of results) {
 				//take ALL x,y pairs from convex hull and check if they are not already placed on the board
 				//and if it is outside all paths
 				//if point is already placed on the board, check its color if not, prepare for placing it
 				for (const { x, y } of convex_hull) {
-					if (!(x >= 0 && x < this.#iGridWidth && y >= 0 && y < this.#iGridHeight)) {
-						LocalLog(`Convex hull point (${x},${y}) %cout of bounds;`, `color: ${randomColor};font-weight: bold`, 'will not try to surround.');
-						continue resultLoop;
-					}
 
 					const point = this.#Points.get(y * this.#iGridWidth + x);
 					if (point !== undefined) {
@@ -3352,9 +3348,6 @@ class InkBallGame {
 
 					//else point is not placed on the board, so it is ok for placing it
 				}
-				// if (!interceptedPoints || interceptedPoints?.length === 0) {
-				// 	continue resultLoop; //it seems, there is not enough points surrounded 
-				// }
 
 				for (const { x, y } of convex_hull) {
 					const point = this.#Points.get(y * this.#iGridWidth + x);

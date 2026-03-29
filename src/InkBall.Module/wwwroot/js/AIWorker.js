@@ -341,7 +341,6 @@ addEventListener('message', async function (e) {
 						}
 
 					}
-					// LocalLog({ clusteringMethod: method, clusterPoints: results });
 				}
 				postMessage({ operation, results });
 			}
@@ -708,15 +707,25 @@ function FixDuplicatedHullPoints(convex_hull, maxFixAttempts) {
 }
 
 /**
- * Count points from original cluster intercepted by convex hull
+ * Count points from original cluster intercepted by convex hull but do bounds check for early discard of invalid hulls
  * @param {Array<[number,number]>} convex_hull concaveman points
  * @param {Map} interceptingPointsMap original cluster points
  * @param {string} randomColor color for logging
+ * @param {number} iGridWidth grid width
+ * @param {number} iGridHeight grid height
  * @param {number} desiredInterceptedPercentage minimal desired percentage of points to be intercepted
  * @returns {{convex_hull:Array<{x:number,y:number}>,surrounded_points:Array<{x:number,y:number}>|null}} converted hull and intercepted points
  */
-function CountInterceptedPoints(convex_hull, interceptingPointsMap, randomColor, desiredInterceptedPercentage = 0.1) {
-	convex_hull = convex_hull.map(([x, y]) => ({ x, y }));
+function CountInterceptedPointsAndDoBoundsCheck(convex_hull, interceptingPointsMap, randomColor, iGridWidth, iGridHeight, desiredInterceptedPercentage = 0.1) {
+	const mapped = [];
+	for (const [x, y] of convex_hull) {
+		if (!(x >= 0 && x < iGridWidth && y >= 0 && y < iGridHeight)) {
+			LocalLog(`Convex hull point (${x},${y}) %cout of bounds;`, `color: ${randomColor};font-weight: bold`, 'will not try to surround.');
+			return { convex_hull, surrounded_points: null };
+		}
+		mapped.push({ x, y });
+	}
+	convex_hull = mapped;
 
 	//precalculate desired number of points to be intercepted
 	const minInterceptedCount = Math.ceil(interceptingPointsMap.size * desiredInterceptedPercentage);
@@ -770,7 +779,7 @@ function CalculateConcavemanAndValidate(concavity, lengthThreshold,
 		convex_hull = concaveman(vertices, concavity ?? 2.0, lengthThreshold ?? 0.0);
 		({ convex_hull, numOfNonContinuous } = FixNonContinuousHull(convex_hull, humanPoints, iGridHeight, iGridWidth, randomColor, blockedColorSet, maxFixAttempts));
 		({ convex_hull, numOfDuplicatesFixed } = FixDuplicatedHullPoints(convex_hull, maxFixAttempts));
-		({ convex_hull, surrounded_points } = CountInterceptedPoints(convex_hull, interceptingPointsMap, randomColor));
+		({ convex_hull, surrounded_points } = CountInterceptedPointsAndDoBoundsCheck(convex_hull, interceptingPointsMap, randomColor, iGridWidth, iGridHeight));
 	}
 
 	return { convex_hull, interceptedPoints: surrounded_points, numOfNonContinuous, numOfDuplicatesFixed };
