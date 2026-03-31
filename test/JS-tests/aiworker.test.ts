@@ -80,7 +80,7 @@ function createInlineWorkerUrl() {
 	const workerSource = `if (typeof self.location === "undefined") {
 	self.location = { hostname: "localhost" };
 }
-
+console.log = () => {}; // Suppress worker logs during tests
 await import(${JSON.stringify(aiWorkerModuleUrl.href)});
 `;
 	return URL.createObjectURL(new Blob([workerSource], { type: "text/javascript" }));
