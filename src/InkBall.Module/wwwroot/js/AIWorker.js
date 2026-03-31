@@ -528,15 +528,16 @@ function CalculateWrappingPathFromDividedBoundingBoxes(allPoints, iGridHeight, i
 
 					//6. not included in point_coords (not from cluster points), so they should be around
 					// 	 cluster points, or inside
-					const point = allPoints.get(y * iGridWidth + x);
+					const key = y * iGridWidth + x;
+					const point = allPoints.get(key);
 					if (point !== undefined && humanPointStatuses.includes(point.GetStatus()))
 						continue; //skip human points
 
 					if (!contains_oponent_cluster_point.some(q => q.ind !== ind && q.x === x && q.y === y)
 						//no duplicates from already added points
-						&& !candidate_path.has(y * iGridWidth + x)) {
+						&& !candidate_path.has(key)) {
 						//7. add point to candidate path map
-						candidate_path.set(y * iGridWidth + x, [x, y]);
+						candidate_path.set(key, [x, y]);
 					}
 				}
 			}
@@ -544,7 +545,7 @@ function CalculateWrappingPathFromDividedBoundingBoxes(allPoints, iGridHeight, i
 	}
 
 	//8. convert candidate_path_map to array of points
-	const surrounding_path = [...candidate_path.values()];
+	const surrounding_path = Array.from(candidate_path.values());
 	return surrounding_path;
 }
 
