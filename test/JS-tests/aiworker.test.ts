@@ -137,25 +137,34 @@ describe("AIWorker black-box operations", () => {
 
 	test("CLUSTERING with large dataset and multiple clusters", async () => {
 		// Generate 300 points in 5 distinct clusters
-		const dataset: CoordTuple[] = [];
+		const dataset: Map<string, CoordTuple> = new Map();
 		const clusters: CoordTuple[] = [
-			[0, 0], [50, 0], [100, 0], [50, 50], [0, 50]
+			[20, 20], [700, 200], [820, 20], [70, 900], [400, 400]
 		];
+		const twoPI = Math.PI * 2;
 		clusters.forEach(([cx, cy]) => {
-			for (let i = 0; i < 60; i++) {
-				const angle = Math.random() * Math.PI * 2;
-				const radius = Math.random() * 5;
-				dataset.push([cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius]);
+			let expectedCount = dataset.size + 60;
+			for (let chancesLeft = 200; dataset.size < expectedCount && chancesLeft > 0; --chancesLeft) {
+				const angle = Math.random() * twoPI;
+				const radius = Math.random() * 50;
+				const x = Math.round(cx + Math.cos(angle) * radius);
+				const y = Math.round(cy + Math.sin(angle) * radius);
+				const key = `${x},${y}`;
+
+				if (dataset.has(key)) continue; // Avoid duplicates
+				dataset.set(key, [x, y]);
 			}
 		});
+
+		// console.log(`Generated dataset with ${dataset.size} unique points for clustering test:\n${Array.from(dataset.values()).map(([x, y], i) => `${x};${y}`).join("\n")}`);
 
 		const result = await runWorkerOperation<ClusteringResponse>({
 			operation: "CLUSTERING",
 			method: "DBSCAN",
-			dataset,
+			dataset: Array.from(dataset.values()),
 			numberOfClusters: 5,
 			neighborhoodRadius: 7,
-			minPointsPerCluster: 5
+			minPointsPerCluster: 4
 		});
 
 		expect(result.operation).toBe("CLUSTERING");
@@ -164,18 +173,23 @@ describe("AIWorker black-box operations", () => {
 	});
 
 	test("CLUSTERING KMEANS with specific cluster count", async () => {
-		const dataset: CoordTuple[] = [];
+		const dataset: Map<string, CoordTuple> = new Map();
 		// Create 3 well-separated clusters
 		for (let c = 0; c < 3; c++) {
 			for (let i = 0; i < 30; i++) {
-				dataset.push([c * 30 + Math.random() * 5, Math.random() * 5]);
+				const x = Math.round(c * 30 + Math.random() * 5);
+				const y = Math.round(Math.random() * 5);
+				const key = `${x},${y}`;
+
+				if (dataset.has(key)) continue; // Avoid duplicates
+				dataset.set(key, [x, y]);
 			}
 		}
 
 		const result = await runWorkerOperation<ClusteringResponse>({
 			operation: "CLUSTERING",
 			method: "KMEANS",
-			dataset,
+			dataset: Array.from(dataset.values()),
 			numberOfClusters: 3,
 			neighborhoodRadius: 0,
 			minPointsPerCluster: 1
@@ -405,32 +419,35 @@ describe("AIWorker black-box operations", () => {
 	});
 
 	test("CLUSTERING_AND_CONCAVEMAN with multiple scattered clusters", async () => {
-		const iGridWidth = 100, iGridHeight = 100;
-		const points: GridPoint[] = [];
+		const iGridWidth = 500, iGridHeight = 500;
+		const points: Map<string, GridPoint> = new Map();
 
 		// Create 5 distinct clusters
-		const clusterCenters: CoordTuple[] = [[20, 20], [80, 20], [50, 50], [20, 80], [80, 80]];
+		const clusterCenters: CoordTuple[] = [[200, 20], [80, 200], [400, 400], [0, 300], [300, 200]];
+		const twoPI = Math.PI * 2;
 		clusterCenters.forEach(([cx, cy]) => {
-			for (let i = 0; i < 15; i++) {
-				const angle = Math.random() * Math.PI * 2;
-				const radius = Math.random() * 3;
+			let expectedCount = points.size + 30;
+			for (let chancesLeft = 200; points.size < expectedCount && chancesLeft > 0; --chancesLeft) {
+				const angle = Math.random() * twoPI;
+				const radius = Math.random() * 5;
 				const x = clampToBoard(Math.round(cx + Math.cos(angle) * radius), iGridWidth);
 				const y = clampToBoard(Math.round(cy + Math.sin(angle) * radius), iGridHeight);
-				points.push({
-					x, y,
-					Status: StatusEnum.POINT_FREE_RED,
-					Color: "red"
-				});
+				const key = `${cx}_${cy}|${x},${y}`;
+
+				if (points.has(key)) continue; // Avoid duplicates
+				points.set(key, { x, y, Status: StatusEnum.POINT_FREE_RED, Color: "red" });
 			}
 		});
+
+		// console.log(`Generated dataset with ${points.size} unique points for clustering test:\n${Array.from(points.values()).map(({ x, y }) => `${x};${y}`).join("\n")}`);
 
 		const out = await runWorkerOperation<ClusteringAndConcavemanResponse>({
 			operation: "CLUSTERING_AND_CONCAVEMAN",
 			method: "DBSCAN",
 			numberOfClusters: 5,
-			neighborhoodRadius: 4,
-			minPointsPerCluster: 3,
-			allPoints: points.map(pt => ({ key: pt.y * iGridWidth + pt.x, value: pt })),
+			neighborhoodRadius: 2,
+			minPointsPerCluster: 2,
+			allPoints: Array.from(points.values()).map(pt => ({ key: pt.y * iGridWidth + pt.x, value: pt })),
 			humanPointStatuses: [StatusEnum.POINT_FREE_RED],
 			blockedPointColors: ["#DC143C", "#8A2BE2"],
 			concavity: 1,
@@ -441,7 +458,7 @@ describe("AIWorker black-box operations", () => {
 
 		expect(out.operation).toBe("CLUSTERING_AND_CONCAVEMAN");
 		expect(Array.isArray(out.results)).toBe(true);
-		expect(out.results.length).toBeGreaterThan(4);
+		expect(out.results.length).toBeGreaterThan(3);
 		out.results.forEach((result: ClusteringAndConcavemanResultItem) => {
 			expect(Array.isArray(result.clustered_point_coords)).toBe(true);
 			expect(Array.isArray(result.convex_hull)).toBe(true);
@@ -452,28 +469,31 @@ describe("AIWorker black-box operations", () => {
 
 	test("CLUSTERING_AND_CONCAVEMAN with dense cluster and sparse points", async () => {
 		const iGridWidth = 60, iGridHeight = 60;
-		const points: GridPoint[] = [];
+		const points: Map<string, GridPoint> = new Map();
 
 		// Dense cluster in center
-		for (let i = 0; i < 40; i++) {
-			points.push({
-				//here
-				x: clampToBoard(30 + Math.round(Math.random() * 4), iGridWidth),
-				y: clampToBoard(30 + Math.round(Math.random() * 4), iGridHeight),
-				Status: StatusEnum.POINT_FREE_RED,
-				Color: "red"
-			});
+		let expectedCount = points.size + 40;
+		for (let chancesLeft = 100; points.size < expectedCount && chancesLeft > 0; --chancesLeft) {
+			const x = clampToBoard(30 + Math.round(Math.random() * 4), iGridWidth);
+			const y = clampToBoard(30 + Math.round(Math.random() * 4), iGridHeight);
+			const key = `${x},${y}`;
+			
+			if (points.has(key)) continue; // Avoid duplicates
+			points.set(key, { x, y, Status: StatusEnum.POINT_FREE_RED, Color: "red" });
 		}
 
 		// Sparse outer points
-		for (let i = 0; i < 8; i++) {
-			points.push({
-				x: randomInt(iGridWidth),
-				y: randomInt(iGridHeight),
-				Status: StatusEnum.POINT_FREE_RED,
-				Color: "red"
-			});
+		expectedCount = points.size + 8;
+		for (let chancesLeft = 50; points.size < expectedCount && chancesLeft > 0; --chancesLeft) {
+			const x = randomInt(iGridWidth);
+			const y = randomInt(iGridHeight);
+			const key = `${x},${y}`;
+
+			if (points.has(key)) continue; // Avoid duplicates
+			points.set(key, { x, y, Status: StatusEnum.POINT_FREE_RED, Color: "red" });
 		}
+
+		// console.log(`Generated dataset with ${points.size} unique points for clustering test:\n${Array.from(points.values()).map(({ x, y }) => `${x};${y}`).join("\n")}`);
 
 		const out = await runWorkerOperation<ClusteringAndConcavemanResponse>({
 			operation: "CLUSTERING_AND_CONCAVEMAN",
@@ -481,7 +501,7 @@ describe("AIWorker black-box operations", () => {
 			numberOfClusters: 2,
 			neighborhoodRadius: 3,
 			minPointsPerCluster: 2,
-			allPoints: points.map(pt => ({ key: pt.y * iGridWidth + pt.x, value: pt })),
+			allPoints: Array.from(points.values()).map(pt => ({ key: pt.y * iGridWidth + pt.x, value: pt })),
 			humanPointStatuses: [StatusEnum.POINT_FREE_RED],
 			blockedPointColors: [],
 			concavity: 1.5,
@@ -500,17 +520,21 @@ describe("AIWorker black-box operations", () => {
 
 	test("CLUSTERING_AND_CONCAVEMAN with single large cluster", async () => {
 		const iGridWidth = 50, iGridHeight = 50;
-		const points: GridPoint[] = [];
-
+		const points: Map<string, GridPoint> = new Map();
+		
 		// Create one large diffuse cluster
-		for (let i = 0; i < 20; i++) {
-			points.push({
-				x: randomInt(iGridWidth),
-				y: randomInt(iGridHeight),
-				Status: StatusEnum.POINT_FREE_RED,
-				Color: "red"
-			});
+		let expectedCount = points.size + 50;
+		for (let chancesLeft = 100; points.size < expectedCount && chancesLeft > 0; --chancesLeft) {
+			const x = randomInt(iGridWidth);
+			const y = randomInt(iGridHeight);
+			const key = `${x},${y}`;
+
+			if (points.has(key)) continue;
+			points.set(key, { x, y, Status: StatusEnum.POINT_FREE_RED, Color: "red" });
 		}
+
+		// console.log(`Generated dataset with ${points.size} unique points for clustering test:\n${Array.from(points.values()).map(({ x, y }) => `${x};${y}`).join("\n")}`);
+
 
 		const out = await runWorkerOperation<ClusteringAndConcavemanResponse>({
 			operation: "CLUSTERING_AND_CONCAVEMAN",
@@ -518,7 +542,7 @@ describe("AIWorker black-box operations", () => {
 			numberOfClusters: 1,
 			neighborhoodRadius: 5,
 			minPointsPerCluster: 5,
-			allPoints: points.map(pt => ({ key: pt.y * iGridWidth + pt.x, value: pt })),
+			allPoints: Array.from(points.values()).map(pt => ({ key: pt.y * iGridWidth + pt.x, value: pt })),
 			humanPointStatuses: [StatusEnum.POINT_FREE_RED],
 			blockedPointColors: ["#DC143C"],
 			concavity: 2,

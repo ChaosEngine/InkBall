@@ -126,7 +126,7 @@ describe("AISource.js exports - LerpMissingPoints", () => {
 		const anyPointIsGood = () => true;
 		const vertical = LerpMissingPoints([5, 0], [5, 10], anyPointIsGood) as CoordTuple[];
 		const horizontal = LerpMissingPoints([0, 7], [10, 7], anyPointIsGood) as CoordTuple[];
-		
+
 		expect(vertical.length).toBeGreaterThan(5);
 		expect(horizontal.length).toBeGreaterThan(5);
 		expect(vertical[vertical.length - 1]).toEqual([5, 10]);
@@ -313,10 +313,12 @@ describe("AISource.js exports - concaveman", () => {
 
 	test("handles large point clouds (circular)", () => {
 		const points = [] as [number, number][];
+		const twoPI = Math.PI * 2;
+		const twoPIDiv200 = twoPI / 200;
 		for (let i = 0; i < 200; i++) {
-			const angle = (i / 200) * Math.PI * 2;
+			const angle = i * twoPIDiv200;
 			const radius = 50 + Math.random() * 10;
-			points.push([Math.cos(angle) * radius, Math.sin(angle) * radius]);
+			points.push([Math.round(Math.cos(angle) * radius), Math.round(Math.sin(angle) * radius)]);
 		}
 		const hull = concaveman(points, 2.0, 0.0) as CoordTuple[];
 		expect(hull.length).toBeGreaterThan(3);
@@ -327,7 +329,7 @@ describe("AISource.js exports - concaveman", () => {
 			[0, 0], [100, 0], [100, 100], [0, 100],
 			[50, 50], [25, 25], [75, 75], [25, 75], [75, 25]
 		] as [number, number][];
-		
+
 		const hull = concaveman(points, 2.0, 0.0) as CoordTuple[];
 		expect(hull.length).toBeGreaterThan(1);
 		expect(hull[0]).toBeDefined();
@@ -343,7 +345,7 @@ describe("AISource.js exports - concaveman", () => {
 		const points = [[0, 0], [1, 0], [2, 1], [1, 2], [0, 1]] as [number, number][];
 		const hull1 = concaveman(points, 2.0, 0.0) as CoordTuple[];
 		const hull2 = concaveman(points, 2.0, 5.0) as CoordTuple[]; // Larger threshold
-		
+
 		expect(hull1.length).toBeGreaterThan(2);
 		expect(hull2.length).toBeGreaterThan(2);
 	});
