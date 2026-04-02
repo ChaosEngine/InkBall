@@ -1,3 +1,4 @@
+/// <reference types="bun-types" />
 import { describe, expect, test } from "bun:test";
 import { AABB, ArePointsContinuous, FindDuplicatedPoint, GraphAI, LerpMissingPoints, concaveman } from "../../src/InkBall.Module/wwwroot/js/AISource.js";
 import { StatusEnum } from "../../src/InkBall.Module/wwwroot/js/shared.js";
