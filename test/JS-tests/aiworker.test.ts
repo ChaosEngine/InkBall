@@ -477,7 +477,7 @@ describe("AIWorker black-box operations", () => {
 			const x = clampToBoard(30 + Math.round(Math.random() * 4), iGridWidth);
 			const y = clampToBoard(30 + Math.round(Math.random() * 4), iGridHeight);
 			const key = `${x},${y}`;
-			
+
 			if (points.has(key)) continue; // Avoid duplicates
 			points.set(key, { x, y, Status: StatusEnum.POINT_FREE_RED, Color: "red" });
 		}
@@ -521,7 +521,7 @@ describe("AIWorker black-box operations", () => {
 	test("CLUSTERING_AND_CONCAVEMAN with single large cluster", async () => {
 		const iGridWidth = 50, iGridHeight = 50;
 		const points: Map<string, GridPoint> = new Map();
-		
+
 		// Create one large diffuse cluster
 		let expectedCount = points.size + 50;
 		for (let chancesLeft = 100; points.size < expectedCount && chancesLeft > 0; --chancesLeft) {
@@ -558,6 +558,125 @@ describe("AIWorker black-box operations", () => {
 			expect(result.clustered_point_coords.length).toBeGreaterThan(2);
 			expect(result.convex_hull.length).toBeGreaterThan(2);
 		});
+	});
+
+
+	test("CLUSTERING_AND_CONCAVEMAN board edge points: surrounding paths stay within board bounds", async () => {
+		const iGridWidth = 20, iGridHeight = 20, pointFreeRedStatus = StatusEnum.POINT_FREE_RED, red = "red";
+
+		// Strategy: place 4-point clusters ONE unit away from each board edge so that
+		// CalculateWrappingPathFromDividedBoundingBoxes' wrappingBBox.expand() grows
+		// the bbox right up to (but not past) the boundary.  Without the clamping inside
+		// expand(), surrounding-path candidates would have negative or >= gridSize coords.
+		//
+		// Additionally, 2-point pairs sitting ON the exact edge exercise the unclamped
+		// "size === 2" early-return code path in CalculateWrappingPathFromDividedBoundingBoxes.
+		// Those clusters emit OOB vertices that CountInterceptedPointsAndDoBoundsCheck must
+		// detect and discard (surrounded_points = null) so they never appear in results.
+		const edgePoints: GridPoint[] = [
+			// Near top-left corner - bbox expands to touch x=0 AND y=0
+			{ x: 1, y: 1, Status: pointFreeRedStatus, Color: red },
+			{ x: 2, y: 1, Status: pointFreeRedStatus, Color: red },
+			{ x: 1, y: 2, Status: pointFreeRedStatus, Color: red },
+			{ x: 2, y: 2, Status: pointFreeRedStatus, Color: red },
+			// Near top-right corner - bbox expands to touch x=W-1 AND y=0
+			{ x: 17, y: 1, Status: pointFreeRedStatus, Color: red },
+			{ x: 18, y: 1, Status: pointFreeRedStatus, Color: red },
+			{ x: 17, y: 2, Status: pointFreeRedStatus, Color: red },
+			{ x: 18, y: 2, Status: pointFreeRedStatus, Color: red },
+			// Near bottom-left corner - bbox expands to touch x=0 AND y=H-1
+			{ x: 1, y: 17, Status: pointFreeRedStatus, Color: red },
+			{ x: 2, y: 17, Status: pointFreeRedStatus, Color: red },
+			{ x: 1, y: 18, Status: pointFreeRedStatus, Color: red },
+			{ x: 2, y: 18, Status: pointFreeRedStatus, Color: red },
+			// Near bottom-right corner - bbox expands to touch x=W-1 AND y=H-1
+			{ x: 17, y: 17, Status: pointFreeRedStatus, Color: red },
+			{ x: 18, y: 17, Status: pointFreeRedStatus, Color: red },
+			{ x: 17, y: 18, Status: pointFreeRedStatus, Color: red },
+			{ x: 18, y: 18, Status: pointFreeRedStatus, Color: red },
+			// Near top edge mid - bbox expands to touch y=0
+			{ x: 9, y: 1, Status: pointFreeRedStatus, Color: red },
+			{ x: 10, y: 1, Status: pointFreeRedStatus, Color: red },
+			{ x: 9, y: 2, Status: pointFreeRedStatus, Color: red },
+			{ x: 10, y: 2, Status: pointFreeRedStatus, Color: red },
+			// Near left edge mid - bbox expands to touch x=0
+			{ x: 1, y: 9, Status: pointFreeRedStatus, Color: red },
+			{ x: 2, y: 9, Status: pointFreeRedStatus, Color: red },
+			{ x: 1, y: 10, Status: pointFreeRedStatus, Color: red },
+			{ x: 2, y: 10, Status: pointFreeRedStatus, Color: red },
+			// Near right edge mid - bbox expands to touch x=W-1
+			{ x: 17, y: 9, Status: pointFreeRedStatus, Color: red },
+			{ x: 18, y: 9, Status: pointFreeRedStatus, Color: red },
+			{ x: 17, y: 10, Status: pointFreeRedStatus, Color: red },
+			{ x: 18, y: 10, Status: pointFreeRedStatus, Color: red },
+			// Near bottom edge mid - bbox expands to touch y=H-1
+			{ x: 9, y: 17, Status: pointFreeRedStatus, Color: red },
+			{ x: 10, y: 17, Status: pointFreeRedStatus, Color: red },
+			{ x: 9, y: 18, Status: pointFreeRedStatus, Color: red },
+			{ x: 10, y: 18, Status: pointFreeRedStatus, Color: red },
+			// 2-point vertical pair ON the left edge (x=0) - triggers the unclamped
+			// size===2 early-return which emits [x-1,y] = [-1,y] (OOB).
+			// CountInterceptedPointsAndDoBoundsCheck must catch this and discard the cluster
+			// so it does NOT appear in results with negative coordinates.
+			{ x: 0, y: 5, Status: pointFreeRedStatus, Color: red },
+			{ x: 0, y: 6, Status: pointFreeRedStatus, Color: red },
+			// 2-point horizontal pair ON the top edge (y=0) - same OOB-discard scenario
+			{ x: 5, y: 0, Status: pointFreeRedStatus, Color: red },
+			{ x: 6, y: 0, Status: pointFreeRedStatus, Color: red },
+		];
+
+		const { results, operation } = await runWorkerOperation<ClusteringAndConcavemanResponse>({
+			operation: "CLUSTERING_AND_CONCAVEMAN",
+			method: "DBSCAN",
+			numberOfClusters: 8,
+			neighborhoodRadius: 2,
+			minPointsPerCluster: 2,
+			allPoints: edgePoints.map(pt => ({ key: pt.y * iGridWidth + pt.x, value: pt })),
+			humanPointStatuses: [pointFreeRedStatus],
+			blockedPointColors: ["#DC143C", "#8A2BE2"],
+			concavity: 1,
+			lengthThreshold: 0,
+			boardSize: { iGridWidth, iGridHeight },
+			visuals: false
+		});
+
+		expect(operation).toBe("CLUSTERING_AND_CONCAVEMAN");
+		expect(Array.isArray(results)).toBe(true);
+		// The 8 near-edge 4-point clusters must produce at least some valid results;
+		// the 2-point OOB pairs must be silently discarded (not crash, not appear here)
+		expect(results.length).toBeGreaterThan(0);
+
+		// Core assertion: no coordinate in any returned result may fall outside the board
+		for (const { convex_hull, interceptedPoints, surrounding_path, clustered_point_coords } of results) {
+			// convex_hull is Point2D[] (objects after CountInterceptedPointsAndDoBoundsCheck)
+			for (const { x, y } of convex_hull) {
+				expect(x, `convex_hull x=${x} out of [0,${iGridWidth})`).toBeGreaterThanOrEqual(0);
+				expect(x, `convex_hull x=${x} out of [0,${iGridWidth})`).toBeLessThan(iGridWidth);
+				expect(y, `convex_hull y=${y} out of [0,${iGridHeight})`).toBeGreaterThanOrEqual(0);
+				expect(y, `convex_hull y=${y} out of [0,${iGridHeight})`).toBeLessThan(iGridHeight);
+			}
+			// interceptedPoints is Point2D[] (original cluster points with x/y)
+			for (const { x, y } of interceptedPoints) {
+				expect(x, `interceptedPoints x=${x} out of [0,${iGridWidth})`).toBeGreaterThanOrEqual(0);
+				expect(x, `interceptedPoints x=${x} out of [0,${iGridWidth})`).toBeLessThan(iGridWidth);
+				expect(y, `interceptedPoints y=${y} out of [0,${iGridHeight})`).toBeGreaterThanOrEqual(0);
+				expect(y, `interceptedPoints y=${y} out of [0,${iGridHeight})`).toBeLessThan(iGridHeight);
+			}
+			// surrounding_path is [x,y] CoordTuple[] at runtime (despite Point2D[] in TypeScript type)
+			for (const [x, y] of surrounding_path as unknown as CoordTuple[]) {
+				expect(x, `surrounding_path x=${x} out of [0,${iGridWidth})`).toBeGreaterThanOrEqual(0);
+				expect(x, `surrounding_path x=${x} out of [0,${iGridWidth})`).toBeLessThan(iGridWidth);
+				expect(y, `surrounding_path y=${y} out of [0,${iGridHeight})`).toBeGreaterThanOrEqual(0);
+				expect(y, `surrounding_path y=${y} out of [0,${iGridHeight})`).toBeLessThan(iGridHeight);
+			}
+			// clustered_point_coords is {x,y}[] at runtime (despite CoordTuple[] in TypeScript type)
+			for (const { x, y } of clustered_point_coords as unknown as Point2D[]) {
+				expect(x, `clustered_point_coords x=${x} out of [0,${iGridWidth})`).toBeGreaterThanOrEqual(0);
+				expect(x, `clustered_point_coords x=${x} out of [0,${iGridWidth})`).toBeLessThan(iGridWidth);
+				expect(y, `clustered_point_coords y=${y} out of [0,${iGridHeight})`).toBeGreaterThanOrEqual(0);
+				expect(y, `clustered_point_coords y=${y} out of [0,${iGridHeight})`).toBeLessThan(iGridHeight);
+			}
+		}
 	});
 
 });
