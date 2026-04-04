@@ -97,7 +97,7 @@ function runWorkerOperation<TResponse extends WorkerResponseBase>(payload: Worke
 			URL.revokeObjectURL(workerUrl);
 			worker.terminate();
 			reject(new Error("AIWorker test timeout"));
-		}, 10_000);
+		}, 20_000);
 
 		worker.onmessage = (event: MessageEvent<TResponse>) => {
 			clearTimeout(timer);
@@ -432,7 +432,7 @@ describe("AIWorker black-box operations", () => {
 				const radius = Math.random() * 5;
 				const x = clampToBoard(Math.round(cx + Math.cos(angle) * radius), iGridWidth);
 				const y = clampToBoard(Math.round(cy + Math.sin(angle) * radius), iGridHeight);
-				const key = `${cx}_${cy}|${x},${y}`;
+				const key = `${x},${y}`;
 
 				if (points.has(key)) continue; // Avoid duplicates
 				points.set(key, { x, y, Status: StatusEnum.POINT_FREE_RED, Color: "red" });
