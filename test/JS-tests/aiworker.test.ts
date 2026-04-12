@@ -569,6 +569,184 @@ describe("AI Web Worker", () => {
 		});
 	});
 
+	test("CLUSTERING_AND_CONCAVEMAN handles real board state with existing closed paths", async () => {
+		// Points and polylines extracted from an actual game SVG snapshot (boardsize-40x52).
+		const iGridWidth = 40, iGridHeight = 52;
+		const red = "#ff0000", blue = "#0000ff", ownedByRed = "#DC143C", ownedByBlue = "#8A2BE2";
+
+		// Free red points – the AI (blue) is trying to surround these.
+		const freeRedPoints: GridPoint[] = [
+			{ x: 14, y: 19, Status: StatusEnum.POINT_FREE_RED, Color: red },
+			{ x: 14, y: 20, Status: StatusEnum.POINT_FREE_RED, Color: red },
+			{ x: 14, y: 21, Status: StatusEnum.POINT_FREE_RED, Color: red },
+			{ x: 15, y: 19, Status: StatusEnum.POINT_FREE_RED, Color: red },
+			{ x: 16, y: 19, Status: StatusEnum.POINT_FREE_RED, Color: red },
+			{ x: 17, y: 19, Status: StatusEnum.POINT_FREE_RED, Color: red },
+			{ x: 17, y: 20, Status: StatusEnum.POINT_FREE_RED, Color: red },
+			{ x: 17, y: 21, Status: StatusEnum.POINT_FREE_RED, Color: red },
+			{ x: 17, y: 22, Status: StatusEnum.POINT_FREE_RED, Color: red },
+			{ x: 17, y: 23, Status: StatusEnum.POINT_FREE_RED, Color: red },
+			{ x: 17, y: 24, Status: StatusEnum.POINT_FREE_RED, Color: red },
+			{ x: 17, y: 25, Status: StatusEnum.POINT_FREE_RED, Color: red },
+			{ x: 17, y: 26, Status: StatusEnum.POINT_FREE_RED, Color: red },
+			{ x: 17, y: 27, Status: StatusEnum.POINT_FREE_RED, Color: red },
+			{ x: 17, y: 28, Status: StatusEnum.POINT_FREE_RED, Color: red },
+			{ x: 18, y: 19, Status: StatusEnum.POINT_FREE_RED, Color: red },
+			{ x: 18, y: 28, Status: StatusEnum.POINT_FREE_RED, Color: red },
+			{ x: 19, y: 19, Status: StatusEnum.POINT_FREE_RED, Color: red },
+			{ x: 19, y: 27, Status: StatusEnum.POINT_FREE_RED, Color: red },
+			{ x: 20, y: 18, Status: StatusEnum.POINT_FREE_RED, Color: red },
+			{ x: 20, y: 22, Status: StatusEnum.POINT_FREE_RED, Color: red },
+			{ x: 20, y: 27, Status: StatusEnum.POINT_FREE_RED, Color: red },
+			{ x: 21, y: 18, Status: StatusEnum.POINT_FREE_RED, Color: red },
+			{ x: 21, y: 27, Status: StatusEnum.POINT_FREE_RED, Color: red },
+			{ x: 22, y: 17, Status: StatusEnum.POINT_FREE_RED, Color: red },
+			{ x: 22, y: 24, Status: StatusEnum.POINT_FREE_RED, Color: red },
+			{ x: 22, y: 25, Status: StatusEnum.POINT_FREE_RED, Color: red },
+			{ x: 22, y: 27, Status: StatusEnum.POINT_FREE_RED, Color: red },
+			{ x: 23, y: 17, Status: StatusEnum.POINT_FREE_RED, Color: red },
+			{ x: 23, y: 18, Status: StatusEnum.POINT_FREE_RED, Color: red },
+			{ x: 23, y: 19, Status: StatusEnum.POINT_FREE_RED, Color: red },
+			{ x: 23, y: 25, Status: StatusEnum.POINT_FREE_RED, Color: red },
+			{ x: 23, y: 27, Status: StatusEnum.POINT_FREE_RED, Color: red },
+			{ x: 24, y: 22, Status: StatusEnum.POINT_FREE_RED, Color: red },
+			{ x: 24, y: 26, Status: StatusEnum.POINT_FREE_RED, Color: red },
+			{ x: 24, y: 27, Status: StatusEnum.POINT_FREE_RED, Color: red },
+		];
+
+		// Free blue points present on the board.
+		const freeBluePoints: GridPoint[] = [
+			{ x: 13, y: 19, Status: StatusEnum.POINT_FREE_BLUE, Color: blue },
+			{ x: 13, y: 20, Status: StatusEnum.POINT_FREE_BLUE, Color: blue },
+			{ x: 13, y: 21, Status: StatusEnum.POINT_FREE_BLUE, Color: blue },
+			{ x: 13, y: 22, Status: StatusEnum.POINT_FREE_BLUE, Color: blue },
+			{ x: 14, y: 18, Status: StatusEnum.POINT_FREE_BLUE, Color: blue },
+			{ x: 14, y: 22, Status: StatusEnum.POINT_FREE_BLUE, Color: blue },
+			{ x: 15, y: 20, Status: StatusEnum.POINT_FREE_BLUE, Color: blue },
+			{ x: 15, y: 21, Status: StatusEnum.POINT_FREE_BLUE, Color: blue },
+			{ x: 16, y: 20, Status: StatusEnum.POINT_FREE_BLUE, Color: blue },
+			{ x: 16, y: 21, Status: StatusEnum.POINT_FREE_BLUE, Color: blue },
+			{ x: 16, y: 22, Status: StatusEnum.POINT_FREE_BLUE, Color: blue },
+			{ x: 16, y: 23, Status: StatusEnum.POINT_FREE_BLUE, Color: blue },
+			{ x: 16, y: 24, Status: StatusEnum.POINT_FREE_BLUE, Color: blue },
+			{ x: 16, y: 25, Status: StatusEnum.POINT_FREE_BLUE, Color: blue },
+			{ x: 16, y: 26, Status: StatusEnum.POINT_FREE_BLUE, Color: blue },
+			{ x: 16, y: 27, Status: StatusEnum.POINT_FREE_BLUE, Color: blue },
+			{ x: 16, y: 28, Status: StatusEnum.POINT_FREE_BLUE, Color: blue },
+			{ x: 16, y: 29, Status: StatusEnum.POINT_FREE_BLUE, Color: blue },
+			{ x: 17, y: 29, Status: StatusEnum.POINT_FREE_BLUE, Color: blue },
+			{ x: 18, y: 29, Status: StatusEnum.POINT_FREE_BLUE, Color: blue },
+			{ x: 19, y: 28, Status: StatusEnum.POINT_FREE_BLUE, Color: blue },
+			{ x: 20, y: 28, Status: StatusEnum.POINT_FREE_BLUE, Color: blue },
+			{ x: 21, y: 21, Status: StatusEnum.POINT_FREE_BLUE, Color: blue },
+			{ x: 21, y: 28, Status: StatusEnum.POINT_FREE_BLUE, Color: blue },
+			{ x: 22, y: 20, Status: StatusEnum.POINT_FREE_BLUE, Color: blue },
+			{ x: 22, y: 28, Status: StatusEnum.POINT_FREE_BLUE, Color: blue },
+			{ x: 23, y: 28, Status: StatusEnum.POINT_FREE_BLUE, Color: blue },
+			{ x: 24, y: 24, Status: StatusEnum.POINT_FREE_BLUE, Color: blue },
+			{ x: 24, y: 25, Status: StatusEnum.POINT_FREE_BLUE, Color: blue },
+			{ x: 24, y: 28, Status: StatusEnum.POINT_FREE_BLUE, Color: blue },
+			{ x: 25, y: 25, Status: StatusEnum.POINT_FREE_BLUE, Color: blue },
+			{ x: 25, y: 26, Status: StatusEnum.POINT_FREE_BLUE, Color: blue },
+			{ x: 25, y: 27, Status: StatusEnum.POINT_FREE_BLUE, Color: blue },
+		];
+
+		// Blue closed path vertices (polyline id=11989: "18,13 17,14 18,15 19,15 20,14 19,13 18,13").
+		const bluePathPoints: GridPoint[] = [
+			{ x: 18, y: 13, Status: StatusEnum.POINT_IN_PATH, Color: blue },
+			{ x: 17, y: 14, Status: StatusEnum.POINT_IN_PATH, Color: blue },
+			{ x: 18, y: 15, Status: StatusEnum.POINT_IN_PATH, Color: blue },
+			{ x: 19, y: 15, Status: StatusEnum.POINT_IN_PATH, Color: blue },
+			{ x: 20, y: 14, Status: StatusEnum.POINT_IN_PATH, Color: blue },
+			{ x: 19, y: 13, Status: StatusEnum.POINT_IN_PATH, Color: blue },
+		];
+
+		// Red closed path vertices (polyline id=11990: "22,21 21,22 22,23 23,22 22,21").
+		const redPathPoints: GridPoint[] = [
+			{ x: 22, y: 21, Status: StatusEnum.POINT_IN_PATH, Color: red },
+			{ x: 21, y: 22, Status: StatusEnum.POINT_IN_PATH, Color: red },
+			{ x: 22, y: 23, Status: StatusEnum.POINT_IN_PATH, Color: red },
+			{ x: 23, y: 22, Status: StatusEnum.POINT_IN_PATH, Color: red },
+		];
+
+		// Owned points enclosed by the respective closed paths.
+		const ownedBluePoints: GridPoint[] = [
+			{ x: 18, y: 14, Status: StatusEnum.POINT_OWNED_BY_BLUE, Color: ownedByBlue },
+			{ x: 19, y: 14, Status: StatusEnum.POINT_OWNED_BY_BLUE, Color: ownedByBlue },
+		];
+		const ownedRedPoints: GridPoint[] = [
+			{ x: 22, y: 22, Status: StatusEnum.POINT_OWNED_BY_RED, Color: ownedByRed },
+		];
+
+		const allPoints = [
+			...freeRedPoints, ...freeBluePoints,
+			...bluePathPoints, ...redPathPoints,
+			...ownedBluePoints, ...ownedRedPoints,
+		];
+
+		// Both polylines from the SVG snapshot.
+		const allLines = [
+			{ iId: 11989, Color: blue, PointsAsString: "18,13 17,14 18,15 19,15 20,14 19,13 18,13" },
+			{ iId: 11990, Color: red, PointsAsString: "22,21 21,22 22,23 23,22 22,21" },
+		];
+
+		const out = await runWorkerOperation<ClusteringAndConcavemanResponse>({
+			operation: "CLUSTERING_AND_CONCAVEMAN",
+			method: "DBSCAN",
+			numberOfClusters: 3,
+			neighborhoodRadius: 2,
+			minPointsPerCluster: 2,
+			allPoints: allPoints.map(pt => ({ key: pt.y * iGridWidth + pt.x, value: pt })),
+			allLines,
+			humanPointInfo: {
+				color: red,
+				statuses: [StatusEnum.POINT_FREE_RED],
+			},
+			blockedPointInfo: {
+				colors: [blue, ownedByBlue, ownedByRed],
+				statuses: [StatusEnum.POINT_OWNED_BY_RED, StatusEnum.POINT_OWNED_BY_BLUE, StatusEnum.POINT_IN_PATH],
+			},
+			concavity: 1,
+			lengthThreshold: 0,
+			boardSize: { iGridWidth, iGridHeight },
+			visuals: false,
+		});
+
+		expect(out.operation).toBe("CLUSTERING_AND_CONCAVEMAN");
+		expect(Array.isArray(out.results)).toBe(true);
+		expect(out.results.length).toBeGreaterThan(0);
+
+		// Non-free points (owned / in-path) must never appear as interception targets.
+		const nonFreeKeys = new Set([
+			...bluePathPoints, ...redPathPoints, ...ownedBluePoints, ...ownedRedPoints,
+		].map(pt => `${pt.x},${pt.y}`));
+		const freeRedKeys = new Set(freeRedPoints.map(pt => `${pt.x},${pt.y}`));
+
+		let totalIntercepted = 0;
+		for (const { convex_hull, interceptedPoints } of out.results) {
+			expect(Array.isArray(convex_hull)).toBe(true);
+			expect(convex_hull.length).toBeGreaterThan(2);
+			for (const { x, y } of convex_hull) {
+				expect(Number.isFinite(x)).toBe(true);
+				expect(Number.isFinite(y)).toBe(true);
+				expect(x).toBeGreaterThanOrEqual(0);
+				expect(x).toBeLessThan(iGridWidth);
+				expect(y).toBeGreaterThanOrEqual(0);
+				expect(y).toBeLessThan(iGridHeight);
+			}
+
+			for (const { x, y } of interceptedPoints) {
+				const key = `${x},${y}`;
+				// Owned or in-path points must never be intercepted.
+				expect(nonFreeKeys.has(key)).toBe(false);
+				if (freeRedKeys.has(key)) totalIntercepted++;
+			}
+		}
+
+		// The dense red cluster at x=17, y=19–28 guarantees several captured red points.
+		expect(totalIntercepted).toBeGreaterThan(3);
+	});
+
 
 	test("CLUSTERING_AND_CONCAVEMAN board edge points: surrounding paths stay within board bounds", async () => {
 		const iGridWidth = 20, iGridHeight = 20, pointFreeRedStatus = StatusEnum.POINT_FREE_RED, red = "red";
