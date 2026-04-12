@@ -2541,23 +2541,23 @@ class InkBallGame {
 		}
 	}
 
-	/**
-	 * Checks if point is outside all created lines, returning failing path and status
-	 * @param {number} x point coordinate
-	 * @param {number} y point coordinate
-	 * @param {Array} allLines array
-	 * @returns {{outside: boolean, offenderPoints: Array<{x, y}>|null}} - object with isOutside boolean and offenderPath object or null
-	 */
-	#IsPointOutsideAllPathsEx(x, y, allLines) {
-		for (const line of allLines) {
-			const points = line.GetPointsArray();
+	// /**
+	//  * Checks if point is outside all created lines, returning failing path and status
+	//  * @param {number} x point coordinate
+	//  * @param {number} y point coordinate
+	//  * @param {Array} allLines array
+	//  * @returns {{outside: boolean, offenderPoints: Array<{x, y}>|null}} - object with isOutside boolean and offenderPath object or null
+	//  */
+	// #IsPointOutsideAllPathsEx(x, y, allLines) {
+	// 	for (const line of allLines) {
+	// 		const points = line.GetPointsArray();
 
-			if (false !== pnpoly(points, x, y))
-				return { outside: false, offenderPoints: points };
-		}
+	// 		if (false !== pnpoly(points, x, y))
+	// 			return { outside: false, offenderPoints: points };
+	// 	}
 
-		return { outside: true, offenderPoints: [] };
-	}
+	// 	return { outside: true, offenderPoints: [] };
+	// }
 
 	#LoadAIParamsFromStore(store) {
 		const fromStore = JSON.parse(store.getItem("AIOpts")) || {};
@@ -3201,7 +3201,10 @@ class InkBallGame {
 				// ,StatusEnum.POINT_STARTING
 				// ,StatusEnum.POINT_IN_PATH
 				// ,StatusEnum.POINT_OWNED_BY_BLUE
-			];
+			],
+			blockedColors = [this.#COLOR_OWNED_RED, this.#COLOR_OWNED_BLUE],
+			blockedPointStatuses = [StatusEnum.POINT_OWNED_BY_RED, StatusEnum.POINT_OWNED_BY_BLUE, StatusEnum.POINT_IN_PATH];
+
 
 		const all_points_serialized = [...this.#Points.store.entries()].map(([key, value]) => ({ key, value: value.Serialize() }));
 		//lastHumanPoint is previously put human player point that needs to be added artificially
@@ -3210,6 +3213,7 @@ class InkBallGame {
 
 			all_points_serialized.push({ key: lastHumanPoint.iY * this.#iGridWidth + lastHumanPoint.iX, value: serialized });
 		}
+		const serialized_paths = this.#Lines.store.map(pa => pa.Serialize());
 
 		//Web Worker calculation of density clustering
 		const { results } = await this.#RunAIWorker(worker => {
@@ -3222,8 +3226,9 @@ class InkBallGame {
 				minPointsPerCluster: aiParams.minPointsPerCluster,
 
 				allPoints: all_points_serialized,
-				humanPointStatuses,
-				blockedPointColors: [/* humanPointColor, */this.#COLOR_OWNED_RED, this.#COLOR_OWNED_BLUE],
+				allLines: serialized_paths,
+				humanPointInfo: { color: humanPointColor, statuses: humanPointStatuses },
+				blockedPointInfo: { colors: blockedColors, statuses: blockedPointStatuses },
 
 				concavity: aiParams.concavity,
 				lengthThreshold: aiParams.lengthThreshold,
@@ -3263,7 +3268,7 @@ class InkBallGame {
 		//and create a convex hull around it, then display it
 		if (results?.length > 0) {
 			//loading all human lines up front and pass into below "looped" function calls
-			const allLines = (await this.#Lines.all())/* .filter(line => line.GetFillColor() === humanPointColor) */;
+			// const allLines = await this.#Lines.all();
 
 			//Print results to console in visually nice form
 			LocalLog({
@@ -3310,44 +3315,45 @@ class InkBallGame {
 			if (visuals)
 				fragment?.EndBatchFragment();
 
-			resultLoop:
+			// resultLoop:
 			for (const { convex_hull, interceptedPoints, randomColor } of results) {
-				//take ALL x,y pairs from convex hull and check if they are not already placed on the board
-				//and if it is outside all paths
-				//if point is already placed on the board, check its color if not, prepare for placing it
-				for (const { x, y } of convex_hull) {
 
-					const point = this.#Points.get(y * this.#iGridWidth + x);
-					if (point !== undefined) {
-						//take point from convex hull and check if it is not already placed on the board as human point
-						//and if it is outside all paths - if so, return it as next AI move coz path is still not closed
-						if (point.GetFillColor() !== humanPointColor) {
-							const checkResult = this.#IsPointOutsideAllPathsEx(x, y, allLines);
-							if (checkResult.outside === true) {
-								//point ok! outside all paths, not human, placed on the board
-							} else if (checkResult.offenderPoints.some(op => op.x === x && op.y === y) === true) {
-								//allow for points that lay on edge of path, not inside
-								//point ok! outside all paths, not human, placed on the board
-								LocalLog(`Point %c(${x},${y}) %cis on the edge of a path, allowed!`, `color: ${randomColor};font-weight: bold`, "color: green;font-weight: bold");
-							} else {
-								LocalLog(`Point %c(${x},${y}) %cis not outside all paths!`, `color: ${randomColor};font-weight: bold`, "color: red;font-weight: bold");
-								continue resultLoop; //bad point found
-							}
-							//point ok! outside all paths, not human, placed on the board
-						} else {
-							LocalLog(`Point %c(${x},${y}) %cis breaking the predicted path, bad color!`, `color: ${randomColor};font-weight: bold`, "color: red;font-weight: bold");
-							continue resultLoop; //bad point found
-						}
-					}
-					else if (IsPointOutsideAllPaths(x, y, allLines)) {
-						//point ok! outside all paths, not human, placed on the board
-					} else {
-						LocalLog(`Point %c(${x},${y}) %cis not outside all paths!`, `color: ${randomColor};font-weight: bold`, "color: red;font-weight: bold");
-						continue resultLoop; //bad point found
-					}
+				// //take ALL x,y pairs from convex hull and check if they are not already placed on the board
+				// //and if it is outside all paths
+				// //if point is already placed on the board, check its color if not, prepare for placing it
+				// for (const { x, y } of convex_hull) {
 
-					//else point is not placed on the board, so it is ok for placing it
-				}
+				// 	const point = this.#Points.get(y * this.#iGridWidth + x);
+				// 	if (point !== undefined) {
+				// 		//take point from convex hull and check if it is not already placed on the board as human point
+				// 		//and if it is outside all paths - if so, return it as next AI move coz path is still not closed
+				// 		if (point.GetFillColor() !== humanPointColor) {
+				// 			const checkResult = this.#IsPointOutsideAllPathsEx(x, y, allLines);
+				// 			if (checkResult.outside === true) {
+				// 				//point ok! outside all paths, not human, placed on the board
+				// 			} else if (checkResult.offenderPoints.some(op => op.x === x && op.y === y) === true) {
+				// 				//allow for points that lay on edge of path, not inside
+				// 				//point ok! outside all paths, not human, placed on the board
+				// 				LocalLog(`Point %c(${x},${y}) %cis on the edge of a path, allowed!`, `color: ${randomColor};font-weight: bold`, "color: green;font-weight: bold");
+				// 			} else {
+				// 				LocalLog(`Point %c(${x},${y}) %cis not outside all paths!`, `color: ${randomColor};font-weight: bold`, "color: red;font-weight: bold");
+				// 				continue resultLoop; //bad point found
+				// 			}
+				// 			//point ok! outside all paths, not human, placed on the board
+				// 		} else {
+				// 			LocalLog(`Point %c(${x},${y}) %cis breaking the predicted path, bad color!`, `color: ${randomColor};font-weight: bold`, "color: red;font-weight: bold");
+				// 			continue resultLoop; //bad point found
+				// 		}
+				// 	}
+				// 	else if (IsPointOutsideAllPaths(x, y, allLines)) {
+				// 		//point ok! outside all paths, not human, placed on the board
+				// 	} else {
+				// 		LocalLog(`Point %c(${x},${y}) %cis not outside all paths!`, `color: ${randomColor};font-weight: bold`, "color: red;font-weight: bold");
+				// 		continue resultLoop; //bad point found
+				// 	}
+
+				// 	//else point is not placed on the board, so it is ok for placing it
+				// }
 
 				for (const { x, y } of convex_hull) {
 					const point = this.#Points.get(y * this.#iGridWidth + x);

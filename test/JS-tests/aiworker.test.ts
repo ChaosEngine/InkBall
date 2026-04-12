@@ -117,7 +117,7 @@ function runWorkerOperation<TResponse extends WorkerResponseBase>(payload: Worke
 	});
 }
 
-describe("AIWorker black-box operations", () => {
+describe("AI Web Worker", () => {
 
 	test("CLUSTERING DBSCAN returns clusters", async () => {
 		const result = await runWorkerOperation<ClusteringResponse>({
@@ -320,25 +320,6 @@ describe("AIWorker black-box operations", () => {
 		expect(result.params.edges.length).toBeGreaterThan(0);
 	});
 
-	test("CONCAVEMAN BY_COORDS returns shape expected by consumer", async () => {
-		const result = await runWorkerOperation<ConcavemanResponse>({
-			operation: "CONCAVEMAN",
-			subOperation: "BY_COORDS",
-			concavity: 2.0,
-			lengthThreshold: 0.0,
-			points: [[0, 0], [1, 0], [1, 1], [0, 1]],
-			humanPoints: [],
-			interceptingPoints: [{ x: 0, y: 0 }, { x: 1, y: 1 }],
-			iGridHeight: 5,
-			iGridWidth: 5
-		});
-
-		expect(result.operation).toBe("CONCAVEMAN");
-		expect(Array.isArray(result.convex_hull)).toBe(true);
-		expect(typeof result.numOfNonContinuous).toBe("number");
-		expect(typeof result.numOfDuplicatesFixed).toBe("number");
-	});
-
 	test("CLUSTERING_AND_CONCAVEMAN returns inkball contract shape", async () => {
 		const iGridWidth = 40, iGridHeight = 52;
 		const points: GridPoint[] = [
@@ -374,8 +355,15 @@ describe("AIWorker black-box operations", () => {
 			neighborhoodRadius: 2,
 			minPointsPerCluster: 1,//level: HARD
 			allPoints: points.map(pt => ({ key: pt.y * iGridWidth + pt.x, value: pt })),
-			humanPointStatuses: [StatusEnum.POINT_FREE_RED],
-			blockedPointColors: ["#DC143C", "#8A2BE2"],
+			allLines: [], // Not needed for this test, but included to match expected payload shape
+			humanPointInfo: {
+				color: 'red',
+				statuses: [StatusEnum.POINT_FREE_RED]
+			},
+			blockedPointInfo: {
+				colors: ["#DC143C", "#8A2BE2"],
+				statuses: [StatusEnum.POINT_OWNED_BY_RED, StatusEnum.POINT_OWNED_BY_BLUE, StatusEnum.POINT_IN_PATH]
+			},
 			concavity: 1,
 			lengthThreshold: 0,
 			boardSize: { iGridWidth, iGridHeight },
@@ -448,8 +436,15 @@ describe("AIWorker black-box operations", () => {
 			neighborhoodRadius: 2,
 			minPointsPerCluster: 2,
 			allPoints: Array.from(points.values()).map(pt => ({ key: pt.y * iGridWidth + pt.x, value: pt })),
-			humanPointStatuses: [StatusEnum.POINT_FREE_RED],
-			blockedPointColors: ["#DC143C", "#8A2BE2"],
+			allLines: [], // No paths for this test
+			humanPointInfo: {
+				color: 'red',
+				statuses: [StatusEnum.POINT_FREE_RED]
+			},
+			blockedPointInfo: {
+				colors: ["#DC143C", "#8A2BE2"],
+				statuses: [StatusEnum.POINT_OWNED_BY_RED, StatusEnum.POINT_OWNED_BY_BLUE, StatusEnum.POINT_IN_PATH]
+			},
 			concavity: 1,
 			lengthThreshold: 0,
 			boardSize: { iGridWidth, iGridHeight },
@@ -502,8 +497,15 @@ describe("AIWorker black-box operations", () => {
 			neighborhoodRadius: 3,
 			minPointsPerCluster: 2,
 			allPoints: Array.from(points.values()).map(pt => ({ key: pt.y * iGridWidth + pt.x, value: pt })),
-			humanPointStatuses: [StatusEnum.POINT_FREE_RED],
-			blockedPointColors: [],
+			allLines: [], // No paths for this test
+			humanPointInfo: {
+				color: 'red',
+				statuses: [StatusEnum.POINT_FREE_RED]
+			},
+			blockedPointInfo: {
+				colors: ["#DC143C", "#8A2BE2"],
+				statuses: [StatusEnum.POINT_OWNED_BY_RED, StatusEnum.POINT_OWNED_BY_BLUE, StatusEnum.POINT_IN_PATH]
+			},
 			concavity: 1.5,
 			lengthThreshold: 0.5,
 			boardSize: { iGridWidth, iGridHeight },
@@ -543,8 +545,15 @@ describe("AIWorker black-box operations", () => {
 			neighborhoodRadius: 5,
 			minPointsPerCluster: 5,
 			allPoints: Array.from(points.values()).map(pt => ({ key: pt.y * iGridWidth + pt.x, value: pt })),
-			humanPointStatuses: [StatusEnum.POINT_FREE_RED],
-			blockedPointColors: ["#DC143C"],
+			allLines: [], // No paths for this test
+			humanPointInfo: {
+				color: 'red',
+				statuses: [StatusEnum.POINT_FREE_RED]
+			},
+			blockedPointInfo: {
+				colors: ["#DC143C"],
+				statuses: [StatusEnum.POINT_OWNED_BY_RED, StatusEnum.POINT_OWNED_BY_BLUE, StatusEnum.POINT_IN_PATH]
+			},
 			concavity: 2,
 			lengthThreshold: 0,
 			boardSize: { iGridWidth, iGridHeight },
@@ -632,8 +641,15 @@ describe("AIWorker black-box operations", () => {
 			neighborhoodRadius: 2,
 			minPointsPerCluster: 2,
 			allPoints: edgePoints.map(pt => ({ key: pt.y * iGridWidth + pt.x, value: pt })),
-			humanPointStatuses: [pointFreeRedStatus],
-			blockedPointColors: ["#DC143C", "#8A2BE2"],
+			allLines: [], // No paths for this test
+			humanPointInfo: {
+				color: red,
+				statuses: [pointFreeRedStatus]
+			},
+			blockedPointInfo: {
+				colors: ["#DC143C", "#8A2BE2"],
+				statuses: [StatusEnum.POINT_OWNED_BY_RED, StatusEnum.POINT_OWNED_BY_BLUE, StatusEnum.POINT_IN_PATH]
+			},
 			concavity: 1,
 			lengthThreshold: 0,
 			boardSize: { iGridWidth, iGridHeight },

@@ -222,6 +222,8 @@ function ensureSvgElementPrototypes() {
 
 	ensureSvgPolyfills();
 
+	// SVGCircleElement prototype extensions
+	// https://developer.mozilla.org/en-US/docs/Web/SVG/Element/circle
 	Object.assign(SVGCircleElement.prototype, {
 		move: function (x, y/* , radius = undefined */) {
 			this.setAttribute("cx", x);
@@ -289,6 +291,8 @@ function ensureSvgElementPrototypes() {
 		}
 	});
 
+	// SVGPolylineElement prototype extensions
+	// https://developer.mozilla.org/en-US/docs/Web/SVG/Element/polyline
 	Object.assign(SVGPolylineElement.prototype, {
 		AppendPoints: function (x, y, diff = 1) {
 			const pts_str = this.getAttribute("points");
@@ -365,10 +369,10 @@ function ensureSvgElementPrototypes() {
 		SetID: function (iID) { this.setAttribute("data-id", iID); },
 		GetFillColor: function () { return this.getAttribute("fill"); },
 		Serialize: function () {
-			const id = this.GetID();
-			const color = this.GetFillColor();
-			const pts = this.GetPointsString();
-			return { iId: id, Color: color, PointsAsString: pts };
+			const iId = this.GetID();
+			const Color = this.GetFillColor();
+			const PointsAsString = this.GetPointsString();
+			return { iId, Color, PointsAsString };
 		}
 	});
 
