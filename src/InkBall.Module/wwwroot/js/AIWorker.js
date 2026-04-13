@@ -9,6 +9,7 @@ let SvgVml, StatusEnum, LocalLog, LocalError, sortPointsClockwise, pnpoly, IsPoi
 let g_allPoints = null;//global all points map for A* usage in concaveman validation, key is y*iGridWidth + x, value is point object
 let g_graphDiagonal = null;//global graph for A* usage in concaveman validation
 let g_blockedPoints = null;//global blocked points for A* usage in concaveman validation, encoded as y*iGridWidth + x in a Set for O(1) access
+let g_allLines = null;//global all lines for concaveman validation
 
 async function EnsureSharedLoaded() {
 	if (SvgVml !== undefined)
@@ -274,7 +275,7 @@ addEventListener('message', async function (e) {
 				} = params;
 
 				g_allPoints = DeserializePointMap(svgVml, params.allPoints || []);
-				const allLines = DeserializePolylines(svgVml, params.allLines || []);
+				g_allLines = DeserializePolylines(svgVml, params.allLines || []);
 				const humanPointsArrOfArr = [];
 				// const blockedColorSet = new Set(blockedPointColors);
 
@@ -333,49 +334,11 @@ addEventListener('message', async function (e) {
 
 						//9. calculate concaveman around those points
 						const { convex_hull, interceptedPoints, numOfNonContinuous, numOfDuplicatesFixed } =
-							CalculateConcavemanAndValidate(concavity, lengthThreshold, surrounding_path, humanPointsArrOfArr, clustered_point_coords, iGridHeight, iGridWidth, randomColor, blockedPointInfo);
+							CalculateConcavemanAndValidate(concavity, lengthThreshold, surrounding_path, humanPointsArrOfArr, clustered_point_coords, iGridHeight, iGridWidth, randomColor, humanPointInfo, blockedPointInfo);
 
 
-						//10. get points of convex hull and create a polyline around it
+						//10. get points of convex hull and create a polyline around it, 'coz all validations passed, we have a winner - cluster of points that can be surrounded by CPU player, and path to do it with visuals if needed
 						if (convex_hull?.length > 0 && interceptedPoints?.length > 0) {
-							//take ALL x,y pairs from convex hull and check if they are not already placed on the board
-							//and if it is outside all paths
-							//if point is already placed on the board, check its color if not, prepare for placing it
-							for (const { x, y } of convex_hull) {
-								const point = g_allPoints.get(y * iGridWidth + x);
-
-								if (point !== undefined) {
-									//take point from convex hull and check if it is not already placed on the board as human point
-									//and if it is outside all paths - if so, return it as next AI move coz path is still not closed
-									if (point.GetFillColor() !== humanPointInfo.color) {
-										const checkResult = IsPointOutsideAllPathsEx(x, y, allLines);
-										if (checkResult.outside === true) {
-											//point ok! outside all paths, not human, placed on the board
-										} else if (checkResult.offenderPoints.some(op => op.x === x && op.y === y) === true) {
-											//allow for points that lay on edge of path, not inside
-											//point ok! outside all paths, not human, placed on the board
-											LocalLog(`Point %c(${x},${y}) %cis on the edge of a path, allowed!`, `color: ${randomColor};font-weight: bold`, "color: green;font-weight: bold");
-										} else {
-											LocalLog(`Point %c(${x},${y}) %cis not outside all paths!`, `color: ${randomColor};font-weight: bold`, "color: red;font-weight: bold");
-											continue clusterLoop; //bad point found
-										}
-										//point ok! outside all paths, not human, placed on the board
-									} else {
-										LocalLog(`Point %c(${x},${y}) %cis breaking the predicted path, bad color!`, `color: ${randomColor};font-weight: bold`, "color: red;font-weight: bold");
-										continue clusterLoop; //bad point found
-									}
-								}
-								else if (IsPointOutsideAllPaths(x, y, allLines)) {
-									//point ok! outside all paths, not human, placed on the board
-								} else {
-									LocalLog(`Point %c(${x},${y}) %cis not outside all paths!`, `color: ${randomColor};font-weight: bold`, "color: red;font-weight: bold");
-									continue clusterLoop; //bad point found
-								}
-
-								//else point is not placed on the board, so it is ok for placing it
-							}
-
-
 							results.push({
 								convex_hull, interceptedPoints, surrounding_path, numOfNonContinuous, numOfDuplicatesFixed, rects2Draw,
 								clustered_point_coords: [...clustered_point_coords.values()],
@@ -768,16 +731,17 @@ function FixDuplicatedHullPoints(convex_hull, maxFixAttempts) {
 }
 
 /**
- * Count points from original cluster intercepted by convex hull but do bounds check for early discard of invalid hulls
+ * Validate concaveman result by checking if hull points are within bounds and not blocking existing paths, and count how many original cluster points it intercepts, ensuring it meets the desired percentage threshold. Returns null for hull if it fails validation.
  * @param {Array<[number,number]>} convex_hull concaveman points
  * @param {Map} interceptingPointsMap original cluster points
  * @param {string} randomColor color for logging
  * @param {number} iGridWidth grid width
  * @param {number} iGridHeight grid height
+ * @param {object} humanPointInfo object containing human point color and statuses
  * @param {number} desiredInterceptedPercentage minimal desired percentage of points to be intercepted
  * @returns {{convex_hull:Array<{x:number,y:number}>,surrounded_points:Array<{x:number,y:number}>|null}} converted hull and intercepted points
  */
-function CountInterceptedPointsAndDoBoundsCheck(convex_hull, interceptingPointsMap, randomColor, iGridWidth, iGridHeight, desiredInterceptedPercentage = 0.1) {
+function ValidateConvexHullDoBoundsCheckAndCountIntercepted(convex_hull, interceptingPointsMap, randomColor, iGridWidth, iGridHeight, humanPointInfo, desiredInterceptedPercentage = 0.1) {
 	if (!convex_hull) return { convex_hull, surrounded_points: null };
 
 	const mapped = [];
@@ -786,6 +750,48 @@ function CountInterceptedPointsAndDoBoundsCheck(convex_hull, interceptingPointsM
 			LocalLog(`Convex hull point (${x},${y}) %cout of bounds;`, `color: ${randomColor};font-weight: bold`, 'will not try to surround.');
 			return { convex_hull, surrounded_points: null };
 		}
+
+
+
+		//
+		// for all x,y pairs from convex hull and check if they are not already placed on the board
+		// and if it is outside all paths
+		// if point is already placed on the board, check its color if not, prepare for placing it,
+		// else exit early with null surrounded_points to indicate bad hull
+		// this is early check to discard bad hulls that are not surrounding cluster points properly and would create invalid paths, so we don't waste time calculating how many points they intercept from original cluster if they are already bad by being placed on the board or inside existing paths
+		const point = g_allPoints.get(y * iGridWidth + x);
+		if (point !== undefined) {
+			//take point from convex hull and check if it is not already placed on the board as human point
+			//and if it is outside all paths - if so, return it as next AI move coz path is still not closed
+			if (point.GetFillColor() !== humanPointInfo.color) {
+				const checkResult = IsPointOutsideAllPathsEx(x, y, g_allLines);
+				if (checkResult.outside === true) {
+					//point ok! outside all paths, not human, placed on the board
+				} else if (checkResult.offenderPoints.some(op => op.x === x && op.y === y) === true) {
+					//allow for points that lay on edge of path, not inside
+					//point ok! outside all paths, not human, placed on the board
+					LocalLog(`Point %c(${x},${y}) %cis on the edge of a path, allowed!`, `color: ${randomColor};font-weight: bold`, "color: green;font-weight: bold");
+				} else {
+					LocalLog(`Point %c(${x},${y}) %cis not outside all paths!`, `color: ${randomColor};font-weight: bold`, "color: red;font-weight: bold");
+					return { convex_hull: null, surrounded_points: null }; //bad point found
+				}
+				//point ok! outside all paths, not human, placed on the board
+			} else {
+				LocalLog(`Point %c(${x},${y}) %cis breaking the predicted path, bad color!`, `color: ${randomColor};font-weight: bold`, "color: red;font-weight: bold");
+				return { convex_hull: null, surrounded_points: null }; //bad point found
+			}
+		}
+		else if (IsPointOutsideAllPaths(x, y, g_allLines)) {
+			//point ok! outside all paths, not human, placed on the board
+		} else {
+			LocalLog(`Point %c(${x},${y}) %cis not outside all paths!`, `color: ${randomColor};font-weight: bold`, "color: red;font-weight: bold");
+			return { convex_hull: null, surrounded_points: null }; //bad point found
+		}
+		//
+		//else point is not placed on the board, so it is ok for placing it, continue with processing
+		//
+
+
 		mapped.push({ x, y });
 	}
 	convex_hull = mapped;
@@ -827,13 +833,14 @@ function CountInterceptedPointsAndDoBoundsCheck(convex_hull, interceptingPointsM
  * @param {number} iGridHeight grid height
  * @param {number} iGridWidth grid width
  * @param {string} randomColor color for logging
+ * @param {object} humanPointInfo object containing human point color and statuses
  * @param {object} blockedPointInfo object containing blocked point colors and statuses
  * @param {number} maxFixAttempts maximum attempts to fix concaveman result
  * @returns {object} concaveman result with validation
  */
 function CalculateConcavemanAndValidate(concavity, lengthThreshold,
 	vertices, humanPoints, interceptingPointsMap,
-	iGridHeight, iGridWidth, randomColor, blockedPointInfo, maxFixAttempts = 150) {
+	iGridHeight, iGridWidth, randomColor, humanPointInfo, blockedPointInfo, maxFixAttempts = 150) {
 
 	let convex_hull = null, surrounded_points, numOfNonContinuous = 0, numOfDuplicatesFixed = 0;
 
@@ -842,7 +849,7 @@ function CalculateConcavemanAndValidate(concavity, lengthThreshold,
 		convex_hull = concaveman(vertices, concavity ?? 2.0, lengthThreshold ?? 0.0);
 		({ convex_hull, numOfNonContinuous } = FixNonContinuousHull(convex_hull, humanPoints, iGridHeight, iGridWidth, randomColor, blockedPointInfo, maxFixAttempts));
 		({ convex_hull, numOfDuplicatesFixed } = FixDuplicatedHullPoints(convex_hull, maxFixAttempts));
-		({ convex_hull, surrounded_points } = CountInterceptedPointsAndDoBoundsCheck(convex_hull, interceptingPointsMap, randomColor, iGridWidth, iGridHeight));
+		({ convex_hull, surrounded_points } = ValidateConvexHullDoBoundsCheckAndCountIntercepted(convex_hull, interceptingPointsMap, randomColor, iGridWidth, iGridHeight, humanPointInfo));
 	}
 
 	return { convex_hull, interceptedPoints: surrounded_points, numOfNonContinuous, numOfDuplicatesFixed };
