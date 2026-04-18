@@ -124,7 +124,6 @@ namespace InkBall.IntegrationTests
 		[InlineData("css/inkball.css")]
 		[InlineData("css/inkball.min.css")]
 		[InlineData("img/homescreen.webp")]
-		[InlineData("img/homescreen.jpg")]
 		[InlineData("locales/en/ib.min.json")]
 		[InlineData("locales/pl/ib.min.json")]
 		public async Task StaticAssets(string asset)

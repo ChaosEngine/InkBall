@@ -24,7 +24,7 @@
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.6" />
-    <!-- <PackageReference Include="Microsoft.Extensions.Identity.Stores" Vedrsion="10.0.0-rc.2.25502.107" /> -->
+    <!-- <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="10.0.0-rc.2.25502.107" /> -->
     <!-- <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="10.0.0-rc.2.25502.107" /> -->
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.6" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" Condition="$(DefineConstants.Contains('INCLUDE_POSTGRES'))" />
@@ -59,7 +59,7 @@
   </ItemGroup>
 -->
   <PropertyGroup>
-    <DefaultItemExcludes>$(DefaultItemExcludes);wwwroot\css\*.scss;wwwroot\img\grid*;wwwroot\img\*.mp4;wwwroot\js\grid*</DefaultItemExcludes>
+    <DefaultItemExcludes>$(DefaultItemExcludes);wwwroot\css\*.scss;wwwroot\img\*.jpg;wwwroot\img\*.mp4;wwwroot\img\*.svg</DefaultItemExcludes>
   </PropertyGroup>
 
 </Project>
