@@ -416,7 +416,6 @@ function AstarPathFind(graphDiagonal, [fromX, fromY], [toX, toY]) {
 }
 
 function EnsureBlockedPointsInitialized(humanPoints, blockedPointInfo, iGridWidth) {
-	// g_blockedPoints ??= new Set(humanPoints.map(([x, y]) => `${x},${y}`));
 	if (g_blockedPoints !== null) return;
 
 	g_blockedPoints = new Map(
@@ -464,7 +463,7 @@ function TryDirectLineRepair([fromX, fromY], [toX, toY], humanPoints, blockedPoi
 		if (x === toX && y === toY)//ending condition, include end point in path
 			return points;
 
-		const e2 = 2 * err;
+		const e2 = err << 1;//2 * err;
 		if (e2 > -dy) {
 			err -= dy;
 			x += sx;
@@ -798,7 +797,7 @@ function ValidateConvexHullDoBoundsCheckAndCountIntercepted(convex_hull, interce
 
 	//precalculate desired number of points to be intercepted
 	const minInterceptedCount = Math.ceil(interceptingPointsMap.size * desiredInterceptedPercentage);
-	let surrounded_points = [], rev_i = interceptingPointsMap.size - 1; //reverse index
+	let surrounded_points = [], rev_i = interceptingPointsMap.size; //reverse index
 
 	for (const pt of interceptingPointsMap.values()) {
 		//check if point is inside convex hull polygon

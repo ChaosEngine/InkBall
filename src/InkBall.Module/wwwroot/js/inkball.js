@@ -975,12 +975,13 @@ class InkBallGame {
 			return false;
 		}
 		else {
+			const homescreenIconUrl = '../img/homescreen.webp';
 			// check if permission is already granted
 			if (Notification.permission === 'granted') {
 				// show notification here
 				new Notification(title, {
 					body: body,
-					icon: '../img/homescreen.webp'
+					icon: homescreenIconUrl
 				});
 				return true;
 			}
@@ -991,7 +992,7 @@ class InkBallGame {
 						// show notification here
 						new Notification(title, {
 							body: body,
-							icon: '../img/homescreen.webp'
+							icon: homescreenIconUrl
 						});
 						return true;
 					}
