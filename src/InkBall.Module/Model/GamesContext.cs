@@ -61,6 +61,7 @@ namespace InkBall.Module.Model
 					return sqliteColumnType ?? "datetime('now','localtime')";
 
 				case "pomelo.entityframeworkcore.mysql":
+				case "microting.entityframeworkcore.mysql":
 				case "mysql":
 					return mysqlColumnType ?? "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP";
 
@@ -94,6 +95,7 @@ namespace InkBall.Module.Model
 
 				case "microsoft.entityframeworkcore.sqlite":
 				case "pomelo.entityframeworkcore.mysql":
+				case "microting.entityframeworkcore.mysql":
 				case "npgsql.entityframeworkcore.postgresql":
 				case "oracle.entityframeworkcore":
 					return null;
@@ -117,6 +119,7 @@ namespace InkBall.Module.Model
 					return sqlServerColumnType ?? "datetime2";
 
 				case "pomelo.entityframeworkcore.mysql":
+				case "microting.entityframeworkcore.mysql":
 				case "mysql":
 					return mysqlColumnType ?? "timestamp";
 
@@ -151,6 +154,7 @@ namespace InkBall.Module.Model
 					return sqliteColumnType ?? "TEXT";
 
 				case "pomelo.entityframeworkcore.mysql":
+				case "microting.entityframeworkcore.mysql":
 				case "mysql":
 					return mysqlColumnType ?? "json";
 
@@ -185,6 +189,7 @@ namespace InkBall.Module.Model
 					return sqliteColumnType ?? "char";
 
 				case "pomelo.entityframeworkcore.mysql":
+				case "microting.entityframeworkcore.mysql":
 				case "mysql":
 					return mysqlColumnType ?? "char";
 
@@ -219,6 +224,7 @@ namespace InkBall.Module.Model
 					return sqliteColumnType ?? "INTEGER";
 
 				case "pomelo.entityframeworkcore.mysql":
+				case "microting.entityframeworkcore.mysql":
 				case "mysql":
 					return mysqlColumnType ?? "int";
 
@@ -253,6 +259,7 @@ namespace InkBall.Module.Model
 					return sqliteColumnType ?? null;
 
 				case "pomelo.entityframeworkcore.mysql":
+				case "microting.entityframeworkcore.mysql":
 				case "mysql":
 					return mysqlColumnType ?? null;
 

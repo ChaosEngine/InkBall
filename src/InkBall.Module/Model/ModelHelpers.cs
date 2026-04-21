@@ -159,6 +159,7 @@ CREATE OR REPLACE TRIGGER ""{tableName}_update_{timeStampColumnName}_Trigger"" B
 					break;
 
 				case "Pomelo.EntityFrameworkCore.MySql":
+				case "Microting.EntityFrameworkCore.MySql":
 				default:
 					break;
 			}
@@ -210,6 +211,7 @@ END;";
 					break;
 
 				case "Pomelo.EntityFrameworkCore.MySql":
+				case "Microting.EntityFrameworkCore.MySql":
 				default:
 					break;
 			}
