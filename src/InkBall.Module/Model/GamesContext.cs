@@ -60,9 +60,9 @@ namespace InkBall.Module.Model
 				case "sqlite":
 					return sqliteColumnType ?? "datetime('now','localtime')";
 
-				case "pomelo.entityframeworkcore.mysql":
 				case "microting.entityframeworkcore.mysql":
 				case "mysql":
+				case "pomelo.entityframeworkcore.mysql":
 					return mysqlColumnType ?? "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP";
 
 				case "npgsql.entityframeworkcore.postgresql":
@@ -94,10 +94,10 @@ namespace InkBall.Module.Model
 					return null;
 
 				case "microsoft.entityframeworkcore.sqlite":
-				case "pomelo.entityframeworkcore.mysql":
 				case "microting.entityframeworkcore.mysql":
 				case "npgsql.entityframeworkcore.postgresql":
 				case "oracle.entityframeworkcore":
+				case "pomelo.entityframeworkcore.mysql":
 					return null;
 
 				default:
@@ -118,9 +118,9 @@ namespace InkBall.Module.Model
 				case "sqlserver":
 					return sqlServerColumnType ?? "datetime2";
 
-				case "pomelo.entityframeworkcore.mysql":
 				case "microting.entityframeworkcore.mysql":
 				case "mysql":
+				case "pomelo.entityframeworkcore.mysql":
 					return mysqlColumnType ?? "timestamp";
 
 				case "microsoft.entityframeworkcore.sqlite":
@@ -153,9 +153,9 @@ namespace InkBall.Module.Model
 				case "sqlite":
 					return sqliteColumnType ?? "TEXT";
 
-				case "pomelo.entityframeworkcore.mysql":
 				case "microting.entityframeworkcore.mysql":
 				case "mysql":
+				case "pomelo.entityframeworkcore.mysql":
 					return mysqlColumnType ?? "json";
 
 				case "npgsql.entityframeworkcore.postgresql":
@@ -188,9 +188,9 @@ namespace InkBall.Module.Model
 				case "sqlite":
 					return sqliteColumnType ?? "char";
 
-				case "pomelo.entityframeworkcore.mysql":
 				case "microting.entityframeworkcore.mysql":
 				case "mysql":
+				case "pomelo.entityframeworkcore.mysql":
 					return mysqlColumnType ?? "char";
 
 				case "npgsql.entityframeworkcore.postgresql":
@@ -223,9 +223,9 @@ namespace InkBall.Module.Model
 				case "sqlite":
 					return sqliteColumnType ?? "INTEGER";
 
-				case "pomelo.entityframeworkcore.mysql":
 				case "microting.entityframeworkcore.mysql":
 				case "mysql":
+				case "pomelo.entityframeworkcore.mysql":
 					return mysqlColumnType ?? "int";
 
 				case "npgsql.entityframeworkcore.postgresql":
@@ -258,9 +258,9 @@ namespace InkBall.Module.Model
 				case "sqlite":
 					return sqliteColumnType ?? null;
 
-				case "pomelo.entityframeworkcore.mysql":
 				case "microting.entityframeworkcore.mysql":
 				case "mysql":
+				case "pomelo.entityframeworkcore.mysql":
 					return mysqlColumnType ?? null;
 
 				case "npgsql.entityframeworkcore.postgresql":

@@ -158,8 +158,8 @@ CREATE OR REPLACE TRIGGER ""{tableName}_update_{timeStampColumnName}_Trigger"" B
 					migrationBuilder.Sql(command);
 					break;
 
-				case "Pomelo.EntityFrameworkCore.MySql":
 				case "Microting.EntityFrameworkCore.MySql":
+				case "Pomelo.EntityFrameworkCore.MySql":
 				default:
 					break;
 			}
@@ -210,8 +210,8 @@ END;";
 					migrationBuilder.Sql(command);
 					break;
 
-				case "Pomelo.EntityFrameworkCore.MySql":
 				case "Microting.EntityFrameworkCore.MySql":
+				case "Pomelo.EntityFrameworkCore.MySql":
 				default:
 					break;
 			}
