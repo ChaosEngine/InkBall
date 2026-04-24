@@ -2683,10 +2683,10 @@ class InkBallGame {
 
 	/**
 	 * Worker entry point - async version
-	 * @param {(worker: Worker) => void} setupFunction - init params callback to be given a worker as 1st param
+	 * @param {object} posteMessageObj - object to be given to a worker as 1st param
 	 * @returns {Promise<object>} - promise with data from worker
 	 */
-	async #RunAIWorker(setupFunction) {
+	async #RunAIWorker(posteMessageObj) {
 		return new Promise((resolve, reject) => {
 			this.#Worker = this.#Worker ?? new Worker('../js/AIWorker.Bundle.js?v=' + IBversionHash
 				, { type: 'module' }
@@ -2718,8 +2718,8 @@ class InkBallGame {
 				// }
 			};
 
-			if (setupFunction)
-				setupFunction(this.#Worker);
+			if (posteMessageObj)
+				this.#Worker.postMessage(posteMessageObj);
 		});//promise end
 	}
 
@@ -2728,17 +2728,15 @@ class InkBallGame {
 		//// Main thread UI implementation
 		// LocalLog(await this.#BuildGraph());
 
-		// Web worker background implementation
-		const data = await this.#RunAIWorker((worker) => {
-			const serialized_points = Array.from(this.#Points.store.entries()).map(([key, value]) => ({ key, value: value.Serialize() }));
-			const serialized_paths = this.#Lines.store.map(pa => pa.Serialize());
+		const serialized_points = Array.from(this.#Points.store.entries()).map(([key, value]) => ({ key, value: value.Serialize() }));
+		const serialized_paths = this.#Lines.store.map(pa => pa.Serialize());
 
-			worker.postMessage({
-				operation: "BUILD_GRAPH",
-				boardSize: { iGridWidth: this.#iGridWidth, iGridHeight: this.#iGridHeight },
-				points: serialized_points,
-				paths: serialized_paths
-			});
+		// Web worker background implementation
+		const data = await this.#RunAIWorker({
+			operation: "BUILD_GRAPH",
+			boardSize: { iGridWidth: this.#iGridWidth, iGridHeight: this.#iGridHeight },
+			points: serialized_points,
+			paths: serialized_paths
 		});
 		LocalLog('Message received from worker:');
 		LocalLog(data);
@@ -2756,25 +2754,23 @@ class InkBallGame {
 			return;
 		}
 
-		const data = await this.#RunAIWorker((worker) => {
-			const serialized_points = this.#cyclesFound?.length > 0 ?
-				this.#cyclesFound.map(pt => {
-					const ser = pt.Serialize();
-					return { key: ser.y * this.#iGridWidth + ser.x, value: ser };
-				})
-				:
-				[...this.#Points.store.entries()].map(([key, value]) => ({ key, value: value.Serialize() }));
-			//const serialized_paths = this.#Lines.store.map(pa => pa.Serialize());
+		const serialized_points = this.#cyclesFound?.length > 0 ?
+			this.#cyclesFound.map(pt => {
+				const ser = pt.Serialize();
+				return { key: ser.y * this.#iGridWidth + ser.x, value: ser };
+			})
+			:
+			[...this.#Points.store.entries()].map(([key, value]) => ({ key, value: value.Serialize() }));
+		//const serialized_paths = this.#Lines.store.map(pa => pa.Serialize());
 
-			worker.postMessage({
-				operation: "CONCAVEMAN",
-				subOperation: "BY_POINTS",
-				boardSize: { iGridWidth: this.#iGridWidth, iGridHeight: this.#iGridHeight },
-				points: serialized_points,
-				clickedPointStatus: clicked_point_status,
-				concavity: runParams.concavity,
-				lengthThreshold: runParams.lengthThreshold
-			});
+		const data = await this.#RunAIWorker({
+			operation: "CONCAVEMAN",
+			subOperation: "BY_POINTS",
+			boardSize: { iGridWidth: this.#iGridWidth, iGridHeight: this.#iGridHeight },
+			points: serialized_points,
+			clickedPointStatus: clicked_point_status,
+			concavity: runParams.concavity,
+			lengthThreshold: runParams.lengthThreshold
 		});
 		this.#SaveAIParamsToStore(runParams, window.localStorage);
 
@@ -2807,34 +2803,30 @@ class InkBallGame {
 
 	async #OnTestMarkAllCycles(event) {
 		event.preventDefault();
-		// const data = await this.#RunAIWorker((worker) => {
 		// 	const serialized_points = Array.from(this.#Points.store.entries()).map(([key, value]) => ({ key, value: value.Serialize() }));
 		// 	const serialized_paths = this.#Lines.store.map(pa => pa.Serialize());
 
-		// 	worker.postMessage({
+		// const data = await this.#RunAIWorker({
 		// 		operation: "BUILD_GRAPH",
 		// 		boardSize: { iGridWidth: this.#iGridWidth, iGridHeight: this.#iGridHeight },
 		// 		state: this.#GetGameStateForIndexedDb(),
 		// 		points: serialized_points,
 		// 		paths: serialized_paths
-		// 	});
 		// });
 
 		LocalLog(await this.#MarkAllCycles(await this.#BuildGraph(), this.#COLOR_RED));
 
-		// const data = await this.#RunAIWorker((worker) => {
 		// 	const serialized_points = Array.from(this.#Points.store.entries()).map(([key, value]) =>
 		// 		({ key, value: value.Serialize() }));
 		// 	const serialized_paths = this.#Lines.store.map(pa => pa.Serialize());
 
-		// 	worker.postMessage({
+		// const data = await this.#RunAIWorker({
 		// 		operation: "MARK_ALL_CYCLES",
 		// 		boardSize: { iGridWidth: this.#iGridWidth, iGridHeight: this.#iGridHeight },
 		// 		state: this.#GetGameStateForIndexedDb(),
 		// 		points: serialized_points,
 		// 		paths: serialized_paths,
 		// 		colorRed: this.#COLOR_RED,
-		// 	});
 		// });
 
 		// if (data.cycles && data.free_human_player_points && data.free_human_player_points.length > 0) {
@@ -3045,16 +3037,14 @@ class InkBallGame {
 		const pt = this.#Points.get(this.#iMouseY * this.#iGridWidth + this.#iMouseX);
 		const working_points = pt !== undefined ? [pt.Serialize()] : all_points;
 
-		const data = await this.#RunAIWorker((worker) => {
-			worker.postMessage({
-				operation: "FIND_SURROUNDABLE_POINTS",
-				boardSize: { iGridWidth: this.#iGridWidth, iGridHeight: this.#iGridHeight },
-				sHumanColor: sHumanColor,
-				sCPUColor: sCPUColor,
-				allPoints: all_points,
-				workingPoints: working_points,
-				allLines: allLines
-			});
+		const data = await this.#RunAIWorker({
+			operation: "FIND_SURROUNDABLE_POINTS",
+			boardSize: { iGridWidth: this.#iGridWidth, iGridHeight: this.#iGridHeight },
+			sHumanColor: sHumanColor,
+			sCPUColor: sCPUColor,
+			allPoints: all_points,
+			workingPoints: working_points,
+			allLines: allLines
 		});
 
 		if (data?.results?.length > 0) {
@@ -3167,13 +3157,11 @@ class InkBallGame {
 		}
 
 		//Web Worker calc
-		const data = await this.#RunAIWorker((worker) => {
-			worker.postMessage({
-				operation: "ASTAR",
-				arr,
-				start: { y: this.#iLastY, x: this.#iLastX },
-				end: { y: this.#iLastLastY, x: this.#iLastLastX }
-			});
+		const data = await this.#RunAIWorker({
+			operation: "ASTAR",
+			arr,
+			start: { y: this.#iLastY, x: this.#iLastX },
+			end: { y: this.#iLastLastY, x: this.#iLastLastX }
 		});
 
 		if (data.resultWithDiagonals.length > 0)
@@ -3217,25 +3205,23 @@ class InkBallGame {
 		const serialized_paths = this.#Lines.store.map(pa => pa.Serialize());
 
 		//Web Worker calculation of density clustering
-		const { results } = await this.#RunAIWorker(worker => {
-			worker.postMessage({
-				operation: "CLUSTERING_AND_CONCAVEMAN",
-				method: aiParams.clusteringMethod,
-				//take params saved in local_storage
-				numberOfClusters: aiParams.numberOfClusters,
-				neighborhoodRadius: aiParams.neighborhoodRadius,
-				minPointsPerCluster: aiParams.minPointsPerCluster,
+		const { results } = await this.#RunAIWorker({
+			operation: "CLUSTERING_AND_CONCAVEMAN",
+			method: aiParams.clusteringMethod,
+			//take params saved in local_storage
+			numberOfClusters: aiParams.numberOfClusters,
+			neighborhoodRadius: aiParams.neighborhoodRadius,
+			minPointsPerCluster: aiParams.minPointsPerCluster,
 
-				allPoints: all_points_serialized,
-				allLines: serialized_paths,
-				humanPointInfo: { color: humanPointColor, statuses: humanPointStatuses },
-				blockedPointInfo: { colors: blockedColors, statuses: blockedPointStatuses },
+			allPoints: all_points_serialized,
+			allLines: serialized_paths,
+			humanPointInfo: { color: humanPointColor, statuses: humanPointStatuses },
+			blockedPointInfo: { colors: blockedColors, statuses: blockedPointStatuses },
 
-				concavity: aiParams.concavity,
-				lengthThreshold: aiParams.lengthThreshold,
-				boardSize: { iGridWidth: this.#iGridWidth, iGridHeight: this.#iGridHeight },
-				visuals
-			});
+			concavity: aiParams.concavity,
+			lengthThreshold: aiParams.lengthThreshold,
+			boardSize: { iGridWidth: this.#iGridWidth, iGridHeight: this.#iGridHeight },
+			visuals
 		});
 
 		let rand_color, fragment, createRectForVisualsFunction = () => { /* dummy filler func*/ },
