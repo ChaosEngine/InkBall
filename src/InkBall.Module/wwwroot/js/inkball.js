@@ -2765,7 +2765,6 @@ class InkBallGame {
 
 		const data = await this.#RunAIWorker({
 			operation: "CONCAVEMAN",
-			subOperation: "BY_POINTS",
 			boardSize: { iGridWidth: this.#iGridWidth, iGridHeight: this.#iGridHeight },
 			points: serialized_points,
 			clickedPointStatus: clicked_point_status,

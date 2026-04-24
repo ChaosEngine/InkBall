@@ -11,7 +11,7 @@ let g_graphDiagonal = null;//global graph for A* usage in concaveman validation
 let g_blockedPoints = null;//global blocked points for A* usage in concaveman validation, encoded as y*iGridWidth + x in a Set for O(1) access
 let g_allLines = null;//global all lines for concaveman validation
 
-async function EnsureSharedLoaded() {
+async function EnsureSharedDependenciesLoaded() {
 	if (SvgVml !== undefined)
 		return;
 
@@ -52,7 +52,7 @@ function DeserializePolylines(svgVml, paths) {
 
 // This is the entry point for our worker
 addEventListener('message', async function (e) {
-	await EnsureSharedLoaded();
+	await EnsureSharedDependenciesLoaded();
 
 
 	const params = e.data;
@@ -61,7 +61,8 @@ addEventListener('message', async function (e) {
 	switch (operation) {
 		case "BUILD_GRAPH":
 			{
-				const svgVml = CreateSvgVml(params.boardSize);
+				const { boardSize } = params;
+				const svgVml = CreateSvgVml(boardSize);
 
 				//debugger;
 				const lines = DeserializePolylines(svgVml, params.paths);
@@ -69,7 +70,7 @@ addEventListener('message', async function (e) {
 
 				LocalLog(`lines.count = ${lines.length}, points.count = ${points.size}`);
 
-				const ai = new GraphAI(StatusEnum, params.boardSize.iGridWidth, params.boardSize.iGridHeight, points);
+				const ai = new GraphAI(StatusEnum, boardSize.iGridWidth, boardSize.iGridHeight, points);
 				const graph = await ai.BuildGraph({
 					freePointStatus: StatusEnum.POINT_FREE_BLUE
 					//, cpufillCol: 'var(--bluish)', 
@@ -82,68 +83,41 @@ addEventListener('message', async function (e) {
 
 		case "CONCAVEMAN":
 			{
-				switch (params.subOperation) {
-					case "BY_POINTS":
-						{
-							const svgVml = CreateSvgVml(params.boardSize);
+				const { boardSize } = params;
+				const svgVml = CreateSvgVml(boardSize);
 
-							const points = DeserializePointMap(svgVml, params.points);
-							const ai = new GraphAI(StatusEnum, params.boardSize.iGridWidth, params.boardSize.iGridHeight, points);
-							const clicked_status = params.clickedPointStatus;
-							const graph = await ai.BuildGraph({
-								freePointStatus: clicked_status
-								//, cpufillCol: clicked_status === StatusEnum.POINT_FREE_RED ? 'var(--redish)' : 'var(--bluish)',
-							});
-							const vertices = graph.vertices.map(function (pt) {
-								const { x, y } = pt.GetPosition();
-								return [x, y];
-							});
+				const points = DeserializePointMap(svgVml, params.points);
+				const ai = new GraphAI(StatusEnum, boardSize.iGridWidth, boardSize.iGridHeight, points);
+				const clicked_status = params.clickedPointStatus;
+				const graph = await ai.BuildGraph({
+					freePointStatus: clicked_status
+					//, cpufillCol: clicked_status === StatusEnum.POINT_FREE_RED ? 'var(--redish)' : 'var(--bluish)',
+				});
+				const vertices = graph.vertices.map(function (pt) {
+					const { x, y } = pt.GetPosition();
+					return [x, y];
+				});
 
-							let convex_hull = null, cw_sorted_verts;
-							if (vertices.length > 0) {
-								convex_hull = concaveman(vertices, params.concavity ?? 2.0, params.lengthThreshold ?? 0.0);
+				let convex_hull = null, cw_sorted_verts;
+				if (vertices.length > 0) {
+					convex_hull = concaveman(vertices, params.concavity ?? 2.0, params.lengthThreshold ?? 0.0);
 
-								const mapped_verts = convex_hull.map(([x, y]) => ({ x, y }));
-								cw_sorted_verts = sortPointsClockwise(mapped_verts);
-							}
-
-							postMessage({ operation, convex_hull, cw_sorted_verts });
-						}
-						break;
-					/* case "BY_COORDS":
-						{
-							const { concavity, lengthThreshold,
-								points, humanPoints, interceptingPoints,
-								iGridHeight, iGridWidth } = params;
-
-							const { convex_hull, interceptedPoints, numOfNonContinuous, numOfDuplicatesFixed } =
-								CalculateConcavemanAndValidate(concavity, lengthThreshold, points, humanPoints,
-									new Map(interceptingPoints.map(pt => [pt.y * iGridWidth + pt.x, pt])),
-									iGridHeight, iGridWidth, RandomColor());
-
-							postMessage({
-								operation,
-								convex_hull,
-								interceptedPoints,
-								numOfNonContinuous,
-								numOfDuplicatesFixed
-							});
-						}
-						break; */
-
-					default:
-						throw new Error(`unknown params.subOperation = ${params.subOperation}`);
+					const mapped_verts = convex_hull.map(([x, y]) => ({ x, y }));
+					cw_sorted_verts = sortPointsClockwise(mapped_verts);
 				}
+
+				postMessage({ operation, convex_hull, cw_sorted_verts });
 			}
 			break;
 
 		/* case "MARK_ALL_CYCLES":
 		{
-			const svgVml = CreateSvgVml(params.boardSize);
+			const {boardSize} = params;
+			const svgVml = CreateSvgVml(boardSize);
 
 			const lines = DeserializePolylines(svgVml, params.paths);
 			const points = DeserializePointMap(svgVml, params.points);
-			const ai = new GraphAI(StatusEnum, params.state.iGridWidth, params.state.iGridHeight, points);
+			const ai = new GraphAI(StatusEnum, boardSize.iGridWidth, boardSize.iGridHeight, points);
 			const graph = await ai.BuildGraph({
 				freePointStatus: StatusEnum.POINT_FREE_BLUE
 				//, cpufillCol: params.colorBlue,
