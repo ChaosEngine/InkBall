@@ -6,7 +6,7 @@ import {
 	pnpoly,
 	sortPointsClockwise,
 	IsPointOutsideAllPaths,
-	Sleep,
+	sleep,
 	RandomColor,
 	SvgVml,
 	GameStateStore
@@ -94,9 +94,9 @@ describe("shared.js exports", () => {
 		expect(IsPointOutsideAllPaths(21, 25, [line])).toBe(true);
 	});
 
-	test("Sleep resolves asynchronously", async () => {
+	test("sleep resolves asynchronously", async () => {
 		const start = Date.now();
-		await Sleep(5);
+		await sleep(5);
 		expect(Date.now() - start).toBeGreaterThanOrEqual(0);
 	});
 

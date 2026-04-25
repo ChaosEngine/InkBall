@@ -1,7 +1,7 @@
 /*global signalR, i18next*/
 "use strict";
 
-let LocalAlert, LocalLog, LocalError, /* LocalWarning, AABB,*/ StatusEnum, hasDuplicates, pnpoly, GameStateStore, SvgVml, IsPointOutsideAllPaths, sortPointsClockwise, Sleep, RandomColor, IBversionHash, localizeSelector;
+let LocalAlert, LocalLog, LocalError, /* LocalWarning, AABB,*/ StatusEnum, hasDuplicates, pnpoly, GameStateStore, SvgVml, IsPointOutsideAllPaths, sortPointsClockwise, sleep, RandomColor, IBversionHash, localizeSelector;
 
 /******** funcs-n-classes ********/
 /**
@@ -575,7 +575,7 @@ async function importAllModulesAsync(/* gameOptions */) {
 		GameStateStore,
 		IsPointOutsideAllPaths,
 		sortPointsClockwise,
-		Sleep,
+		sleep,
 		RandomColor
 	} = isMinified
 			? await import(/* webpackChunkName: "shared.Min" */'./shared.min.js?v=' + IBversionHash)
@@ -2795,7 +2795,7 @@ class InkBallGame {
 					pt.SetZIndex(100);
 					pt.setAttribute("r", 6 / this.#iGridSpacingX);
 				}
-				await Sleep(50);
+				await sleep(50);
 			}
 		}
 	}
@@ -2868,7 +2868,7 @@ class InkBallGame {
 		// 					pt.SetFillColor(rand_color);
 		// 					pt.setAttribute("r", 6 / this.#iGridSpacingX);
 		// 				}
-		// 				await Sleep(50);
+		// 				await sleep(50);
 		// 			}
 
 		// 			//find for all free_human_player_points which cycle might intercept it (surrounds)
@@ -3138,7 +3138,7 @@ class InkBallGame {
 				this.#workingCyclePolyLine.SetPoints(pts);
 
 			if (sleepMillisecs > 0)
-				await Sleep(sleepMillisecs);
+				await sleep(sleepMillisecs);
 		};
 
 		const arr = new Array(this.#iGridHeight);
@@ -4154,7 +4154,7 @@ class InkBallGame {
 			visible_vertex.StrokeWeight(0.2);
 			visible_vertex.setAttribute("r", 6 / this.#iGridSpacingX);
 
-			await Sleep(sleepTimeMs);
+			await sleep(sleepTimeMs);
 		};
 
 		const dfs_cycle = async (u, p) => {
@@ -4262,7 +4262,7 @@ class InkBallGame {
 							pt.StrokeWeight(0.2);
 							pt.setAttribute("r", 6 / this.#iGridSpacingX);
 						}
-						await Sleep(50);
+						await sleep(50);
 					}
 
 					//find for all free_human_player_points which cycle might intercept it (surrounds)
@@ -4360,7 +4360,7 @@ class InkBallGame {
 			this.#workingCyclePolyLine.SetPoints(pts);
 
 		if (sleepMillisecs > 0)
-			await Sleep(sleepMillisecs);
+			await sleep(sleepMillisecs);
 	}
 
 	/**

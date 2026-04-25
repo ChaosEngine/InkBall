@@ -1,4 +1,3 @@
-/*eslint no-unused-vars: ["error", { "varsIgnorePattern": "$" }]*/
 /*global myAlert*/
 "use strict";
 
@@ -94,7 +93,7 @@ function hasDuplicates(array) {
  * @param {number} ms - The number of milliseconds to sleep.
  * @returns {Promise<void>} A promise that resolves after the specified time has passed.
  */
-function Sleep(ms) {
+function sleep(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
@@ -1056,6 +1055,7 @@ class GameStateStore {
 				if (store_list.includes(this.#DB_STATE_STORE))
 					loc_db.deleteObjectStore(this.#DB_STATE_STORE);
 
+				// eslint-disable-next-line no-unused-vars
 				const point_store = loc_db.createObjectStore(
 					this.#DB_POINT_STORE, { keyPath: /* 'Idx' */['x', 'y'], autoIncrement: false });
 				//point_store.createIndex('Status', 'Status', { unique: false });
@@ -1427,6 +1427,6 @@ class GameStateStore {
 
 export {
 	SvgVml, StatusEnum, pnpoly, LocalLog, LocalError, LocalWarning, LocalAlert,
-	hasDuplicates, sortPointsClockwise, Sleep, IsPointOutsideAllPaths,
+	hasDuplicates, sortPointsClockwise, sleep, IsPointOutsideAllPaths,
 	GameStateStore, RandomColor
 };

@@ -1,9 +1,9 @@
 import concaveman from "concaveman";
 // import decomp from "poly-decomp";
-// import { StatusEnum, sortPointsClockwise, IsPointOutsideAllPaths, /*LocalLog, Sleep, pnpoly*/ } from "./shared.js";
+// import { StatusEnum, sortPointsClockwise, IsPointOutsideAllPaths, /*LocalLog, sleep, pnpoly*/ } from "./shared.js";
 
 //globals loaded only once hopefully
-let StatusEnum/*, sortPointsClockwise, IsPointOutsideAllPaths, LocalLog, Sleep, pnpoly*/;
+let StatusEnum/*, sortPointsClockwise, IsPointOutsideAllPaths, LocalLog, sleep, pnpoly*/;
 
 /**
  * AI operations class
@@ -180,7 +180,7 @@ class GraphAI {
 				//vertex.SetStrokeColor('black');
 				//vertex.SetFillColor('black');
 				////vertex.setAttribute("r", "6");
-				//await Sleep(10);
+				//await sleep(10);
 
 
 				// simple dfs on graph
@@ -256,7 +256,7 @@ class GraphAI {
 					//		pt.SetFillColor(rand_color);
 					//		pt.setAttribute("r", "6");
 					//	}
-					//	await Sleep(50);
+					//	await sleep(50);
 					//}
 
 					//find for all free_human_player_points which cycle might intercept it (surrounds)
