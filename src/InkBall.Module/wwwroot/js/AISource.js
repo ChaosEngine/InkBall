@@ -1,6 +1,4 @@
 import concaveman from "concaveman";
-// import decomp from "poly-decomp";
-// import { StatusEnum, sortPointsClockwise, IsPointOutsideAllPaths, /*LocalLog, sleep, pnpoly*/ } from "./shared.js";
 
 //globals loaded only once hopefully
 let StatusEnum/*, sortPointsClockwise, IsPointOutsideAllPaths, LocalLog, sleep, pnpoly*/;
@@ -24,16 +22,6 @@ class GraphAI {
 		this.#POINT_IN_PATH = StatusEnum.POINT_IN_PATH;
 	}
 
-	// async #Init() {
-	// 	if (StatusEnum === undefined) {
-
-	// 		({ StatusEnum/* , sortPointsClockwise, IsPointOutsideAllPaths  */} = await import(/* webpackIgnore: true */`./shared${location.hostname !== "localhost" ? '.min' : ''}.js`));
-
-	// 		this.#POINT_STARTING = StatusEnum.POINT_STARTING;
-	// 		this.#POINT_IN_PATH = StatusEnum.POINT_IN_PATH;
-	// 	}
-	// }
-
 	/**
 	 * Building graph of connected vertices and edges
 	 * @param {object} [param0] Optional object:
@@ -45,8 +33,6 @@ class GraphAI {
 		//, cpuFillColor = 'var(--bluish)'
 		//, visuals = false
 	} = {}) {
-		// await this.#Init();
-
 		const graph_points = new Map(), graph_edges = new Map();
 
 		const isPointOKForPath = function (allowedPoints, pt) {
@@ -131,7 +117,6 @@ class GraphAI {
 	 * @returns {Array} of cycles
 	 */
 	/* async MarkAllCycles(graph, sHumanColor, lines) {
-		// await this.#Init();
 
 
 
@@ -644,8 +629,8 @@ function ArePointsContinuous(pointsArr) {
  */
 function FindDuplicatedPoint(pointsArr, startIndex = 0) {
 	const getPointKeyFn = Array.isArray(pointsArr[0])
-		? (point) => `${point[0]},${point[1]}`
-		: (point) => `${point.x},${point.y}`;
+		? ([x, y]) => `${x},${y}`
+		: ({ x, y }) => `${x},${y}`;
 
 	for (const pointMap = new Map(), length = pointsArr.length; startIndex < length; startIndex++) {
 		const point = pointsArr[startIndex];

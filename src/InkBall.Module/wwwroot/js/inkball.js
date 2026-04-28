@@ -2055,11 +2055,8 @@ class InkBallGame {
 		}
 
 		const cursor = this.#SvgVml.ToCursorPoint(event.clientX, event.clientY);
-		let x = cursor.x + 0.5;
-		let y = cursor.y + 0.5;
-
-		x = parseInt(x);
-		y = parseInt(y);
+		let x = parseInt(cursor.x + 0.5);
+		let y = parseInt(cursor.y + 0.5);
 
 		//out of bounds point - not allowed
 		if (x >= this.#iGridWidth || y >= this.#iGridHeight) {
@@ -2173,11 +2170,9 @@ class InkBallGame {
 			return;
 
 		const cursor = this.#SvgVml.ToCursorPoint(event.clientX, event.clientY);
-		let x = cursor.x + 0.5;
-		let y = cursor.y + 0.5;
+		let x = this.#iMouseX = parseInt(cursor.x + 0.5);
+		let y = this.#iMouseY = parseInt(cursor.y + 0.5);
 
-		x = this.#iMouseX = parseInt(x);
-		y = this.#iMouseY = parseInt(y);
 
 		//out of bounds point - not allowed
 		if (x >= this.#iGridWidth || y >= this.#iGridHeight) {
@@ -2191,11 +2186,9 @@ class InkBallGame {
 		this.#bMouseDown = true;
 		if (!this.#bDrawLines) {
 			//points
-			this.#iLastX = x;
-			this.#iLastY = y;
+			const loc_x = this.#iLastX = x;
+			const loc_y = this.#iLastY = y;
 
-			const loc_x = x;
-			const loc_y = y;
 
 			if (await this.#Points.has(loc_y * this.#iGridWidth + loc_x)) {
 				this.#DebugI18n('err.ptAlreadExist', 'Wrong point - already existing');
@@ -2324,11 +2317,9 @@ class InkBallGame {
 		}
 
 		const cursor = this.#SvgVml.ToCursorPoint(event.clientX, event.clientY);
-		let x = cursor.x + 0.5;
-		let y = cursor.y + 0.5;
+		let x = parseInt(cursor.x + 0.5);
+		let y = parseInt(cursor.y + 0.5);
 
-		x = parseInt(x);
-		y = parseInt(y);
 
 		//out of bounds point - not allowed
 		if (x >= this.#iGridWidth || y >= this.#iGridHeight) {
@@ -2700,22 +2691,7 @@ class InkBallGame {
 
 			this.#Worker.onmessage = function (e) {
 				const data = e.data;
-				// switch (data.operation) {
-				// case "BUILD_GRAPH":
-				// case "CONCAVEMAN":
-				// case "MARK_ALL_CYCLES":
-				// case "FIND_SURROUNDABLE_POINTS":
-				// case "ASTAR":
-				// case "CLUSTERING":
-				// //worker.terminate();
 				resolve(data);
-				// break;
-				// default:
-				// 	LocalError(`unknown params.operation = ${data.operation}`);
-				// 	//worker.terminate();
-				// 	reject(new Error(`unknown params.operation = ${data.operation}`));
-				// 	break;
-				// }
 			};
 
 			if (posteMessageObj)
@@ -3453,22 +3429,15 @@ class InkBallGame {
 	 * @param {Array<string>} arrDifficultySelectors controls of AI difficulty selectors or null
 	 */
 	async #PrepareDrawing(sScreen, sPlayer1Name, sPlayer2Name, sGameStatus, sSurrenderButton, sCancelPath, sPause, sStopAndDraw, sMsgInputSel, sMsgListSel, sMsgSendButtonSel, sLastMoveGameTimeStamp, useIndexedDbStore, version, ddlTestActions, arrServiceModeControls, arrDifficultySelectors) {
-		// this.#bIsWon = false;
-		// this.#iDelayBetweenMultiCaptures = 4000;
 		this.#Timer = null;
-		// this.#WaitStartTime = null;
-		// this.#iSlowdownLevel = 0;
 		this.#iLastX = -1;
 		this.#iLastY = -1;
 		this.#iMouseX = 0;
 		this.#iMouseY = 0;
-		// this.#iPosX = 0;
-		// this.#iPosY = 0;
 		this.#bMouseDown = false;
 		this.#bHandlingEvent = false;
 		this.#bBatchingCpuMove = false;
 		this.#bDrawLines = !true;
-		// this.#sMessage = '';
 		this.#sDotColor = this.#bIsPlayingWithRed ? this.#COLOR_RED : this.#COLOR_BLUE;
 		this.#Line = null;
 		this.#spDebug = document.getElementById('debug0');
@@ -3492,8 +3461,6 @@ class InkBallGame {
 				LocalAlert("no board", "Error!");
 			return;
 		}
-		// this.#iPosX = this.#Screen.offsetLeft;
-		// this.#iPosY = this.#Screen.offsetTop;
 
 		let [iGridWidth, iGridHeight] = [...this.#Screen.classList].find(x => x.startsWith('boardsize')).split('-')[1].split('x');
 		this.#iGridWidth = parseInt(iGridWidth);
@@ -3507,8 +3474,6 @@ class InkBallGame {
 			svg_width_x_height = "100%";
 		}
 		this.#iGridSpacingX = Math.ceil(iClientWidth / this.#iGridWidth);
-		// this.#iGridSpacingY = Math.ceil(iClientHeight / this.#iGridHeight);
-		//this.#PointRadius = (4 / this.#iGridSpacingX);
 		this.#LineStrokeWidth = (3 / this.#iGridSpacingX);
 
 		this.#sLastMoveGameTimeStamp = sLastMoveGameTimeStamp;
@@ -3541,9 +3506,8 @@ class InkBallGame {
 		if (this.#bViewOnly === false) {
 
 			if (this.#MouseCursorOval === null) {
-				this.#MouseCursorOval = this.#SvgVml.CreateOval(/* this.#PointRadius */);
+				this.#MouseCursorOval = this.#SvgVml.CreateOval();
 				this.#MouseCursorOval.SetFillColor(this.#sDotColor);
-				// this.#MouseCursorOval.SetStrokeColor(this.#sDotColor);
 				this.#MouseCursorOval.SetZIndex(-1);
 				this.#MouseCursorOval.Hide();
 				this.#MouseCursorOval.setAttribute("data-status", "MOUSE_POINTER");
@@ -3569,7 +3533,6 @@ class InkBallGame {
 
 				//Service Menu
 				if (document.querySelector(arrServiceModeControls[0]) !== null) {
-					// document.getElementById('testArea').classList.remove("d-none");
 					let i = 0;
 					if (ddlTestActions.length > i)
 						document.querySelector(ddlTestActions[i++]).onclick = this.#OnTestBuildCurrentGraph.bind(this);
@@ -3883,8 +3846,7 @@ class InkBallGame {
 
 		//human last added point that we should also consider it for centroid calculation
 		if (lastHumanPoint !== null) {
-			const x = lastHumanPoint.iX, y = lastHumanPoint.iY;
-			centroidX += x; centroidY += y;
+			centroidX += lastHumanPoint.iX; centroidY += lastHumanPoint.iY;
 			count++;
 		}
 		for (const pt of await this.#Points.values()) {
@@ -3979,55 +3941,54 @@ class InkBallGame {
 		return null;
 	}
 
-	// Returns true if the graph contains a cycle, else false. 
-	// eslint-disable-next-line no-unused-private-class-members
-	#IsGraphCyclic(graph) {
-		const vertices = graph.vertices;
+	// // Returns true if the graph contains a cycle, else false. 
+	// #IsGraphCyclic(graph) {
+	// 	const vertices = graph.vertices;
 
-		const isCyclicUtil = (v, parent) => {
-			// Mark the current node as visited 
-			v.visited = true;
+	// 	const isCyclicUtil = (v, parent) => {
+	// 		// Mark the current node as visited 
+	// 		v.visited = true;
 
-			// Recur for all the vertices  
-			// adjacent to this vertex
-			for (let i of v.adjacents) {
-				// If an adjacent is not visited,  
-				// then recur for that adjacent 
-				if (!i.visited) {
-					if (isCyclicUtil(i, v))
-						return true;
-				}
+	// 		// Recur for all the vertices  
+	// 		// adjacent to this vertex
+	// 		for (let i of v.adjacents) {
+	// 			// If an adjacent is not visited,  
+	// 			// then recur for that adjacent 
+	// 			if (!i.visited) {
+	// 				if (isCyclicUtil(i, v))
+	// 					return true;
+	// 			}
 
-				// If an adjacent is visited and  
-				// not parent of current vertex, 
-				// then there is a cycle. 
-				else if (i !== parent) {
-					const { x, y } = i.GetPosition();
+	// 			// If an adjacent is visited and  
+	// 			// not parent of current vertex, 
+	// 			// then there is a cycle. 
+	// 			else if (i !== parent) {
+	// 				const { x, y } = i.GetPosition();
 
-					LocalLog(`cycle found at ${x},${y}`);
-					return true;
-				}
-			}
-			return false;
-		};
+	// 				LocalLog(`cycle found at ${x},${y}`);
+	// 				return true;
+	// 			}
+	// 		}
+	// 		return false;
+	// 	};
 
-		// Mark all the vertices as not visited  
-		// and not part of recursion stack 
-		for (let i = 0; i < vertices.length; i++) {
-			vertices[i].visited = false;
-		}
+	// 	// Mark all the vertices as not visited  
+	// 	// and not part of recursion stack 
+	// 	for (let i = 0; i < vertices.length; i++) {
+	// 		vertices[i].visited = false;
+	// 	}
 
-		// Call the recursive helper function  
-		// to detect cycle in different DFS trees 
-		for (let u = 0; u < vertices.length; u++) {
-			// Don't recur for u if already visited 
-			if (!vertices[u].visited)
-				if (isCyclicUtil(vertices[u], -1))
-					return true;
-		}
+	// 	// Call the recursive helper function  
+	// 	// to detect cycle in different DFS trees 
+	// 	for (let u = 0; u < vertices.length; u++) {
+	// 		// Don't recur for u if already visited 
+	// 		if (!vertices[u].visited)
+	// 			if (isCyclicUtil(vertices[u], -1))
+	// 				return true;
+	// 	}
 
-		return false;
-	}
+	// 	return false;
+	// }
 
 	/**
 	 * Building graph of connected vertices and edges
@@ -4501,7 +4462,7 @@ class InkBallGame {
 			}
 		}
 
-		const [east, west, north, south, north_west, north_east, south_west, south_east] = await Promise.all([
+		const [east, west, north, south, north_west, north_east, south_west, south_east] = [
 			this.#Points.get(y * this.#iGridWidth + x + 1),
 			this.#Points.get(y * this.#iGridWidth + x - 1),
 			this.#Points.get((y - 1) * this.#iGridWidth + x),
@@ -4510,7 +4471,7 @@ class InkBallGame {
 			this.#Points.get((y - 1) * this.#iGridWidth + x + 1),
 			this.#Points.get((y + 1) * this.#iGridWidth + x - 1),
 			this.#Points.get((y + 1) * this.#iGridWidth + x + 1)
-		]);
+		];
 
 		await this.#GroupPointsRecurse(currPointsArr, east);
 		await this.#GroupPointsRecurse(currPointsArr, west);
