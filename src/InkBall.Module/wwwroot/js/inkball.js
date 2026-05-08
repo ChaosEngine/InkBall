@@ -90,7 +90,7 @@ class InkBallPointViewModel extends DtoMsg {
 		}
 
 		// return `${sUser} places ${msg}) point`;
-		return localizeMessageOpts('game.usrXPoint', { sUser, msg }, `${sUser} places ${msg}) point`);
+		return localizeMessage('game.usrXPoint', `${sUser} places ${msg}) point`, { sUser, msg });
 	}
 }
 
@@ -111,7 +111,7 @@ class InkBallPathViewModel extends DtoMsg {
 		let msg = `(${path.PointsAsString || path.pointsAsString}) [${path.OwnedPointsAsString || path.ownedPointsAsString}]`;
 
 		// return `${sUser} places ${msg} path`;
-		return localizeMessageOpts('game.usrXPath', { sUser, msg }, `${sUser} places ${msg} path`);
+		return localizeMessage('game.usrXPath', `${sUser} places ${msg} path`, { sUser, msg });
 	}
 }
 
@@ -192,7 +192,7 @@ class WinCommand extends DtoMsg {
 				break;
 		}
 
-		return localizeMessageOpts('game.andWinner', { msg }, 'And the winner is... ' + msg);
+		return localizeMessage('game.andWinner', 'And the winner is... ' + msg, { msg });
 	}
 }
 
@@ -205,8 +205,7 @@ class StopAndDrawCommand extends DtoMsg {
 
 	static Format(otherUser) {
 		// return 'User ' + otherUser + ' started to draw path';
-		return localizeMessageOpts('game.usrStartedPath', { other: otherUser },
-			'User ' + otherUser + ' started to draw path');
+		return localizeMessage('game.usrStartedPath', `User ${otherUser} started to draw path`, { otherUser });
 	}
 }
 
@@ -611,25 +610,16 @@ self.onmessage = async function (e) {
  * local localization of leys/messages agnostic to i18n availability
  * @param {string} locKey i18n localization key
  * @param {string} locFallbackMsg fallback message if i18n is not available
+ * @param {object} opts optional i18n attribute-options object to replace in message
  * @returns {string} message to use
  */
-function localizeMessage(locKey, locFallbackMsg) {
-	if (localizeSelector)
-		return i18next.t('ib:' + locKey);
-	else
-		return locFallbackMsg;
-}
-
-/**
- * local localization of leys/messages agnostic to i18n availability
- * @param {string} locKey i18n localization key
- * @param {object} opts i18n attribute-options object
- * @param {string} locFallbackMsg fallback message if i18n is not available
- * @returns {string} message to use
- */
-function localizeMessageOpts(locKey, opts, locFallbackMsg) {
-	if (localizeSelector)
-		return i18next.t('ib:' + locKey, opts);
+function localizeMessage(locKey, locFallbackMsg, opts = null) {
+	if (localizeSelector) {
+		if (!opts)
+			return i18next.t('ib:' + locKey);
+		else
+			return i18next.t('ib:' + locKey, opts);
+	}
 	else
 		return locFallbackMsg;
 }
@@ -645,7 +635,7 @@ function sanitizeUrl(url) {
 		return parsedUrl.href; // Return the sanitized URL
 	} catch {
 		LocalError("Invalid URL: " + url);
-		return null; // Return null or a safe fallback if the URL is invalid
+		return '#'; // Return null or a safe fallback if the URL is invalid
 	}
 }
 
@@ -1137,7 +1127,7 @@ class InkBallGame {
 				localizeSelector(this.#sMsgListSel);
 
 				title = localizeMessage('game.gameIntrpt!', 'Game interrupted!');
-				encodedMsg = encodedMsg === '' ? title : localizeMessageOpts(`game.${i18l_key}`, { "usr": user }, `Player ${user} surrenders`);
+				encodedMsg = encodedMsg === '' ? title : localizeMessage(`game.${i18l_key}`, `Player ${user} surrenders`, { "usr": user });
 			}
 			else {
 				strong.textContent = sMsg;
@@ -1202,9 +1192,9 @@ class InkBallGame {
 						strong.dataset.i18n = 'ib:game.othPlDisc';
 						strong.dataset.i18nOptions = `{ "usr": "${usr}" }`;
 
-						encodedMsg = localizeMessageOpts('game.othPlDisc', { "usr": usr }, 'User disconnected'),
+						encodedMsg = localizeMessage('game.othPlDisc', `Other player ${usr} disconnected 😢`, { "usr": usr });
 
-							localizeSelector(this.#sMsgListSel);
+						localizeSelector(this.#sMsgListSel);
 					}
 					else {
 						strong.textContent = encodedMsg;
@@ -1238,9 +1228,9 @@ class InkBallGame {
 					strong.dataset.i18n = 'ib:game.othPlConn';
 					strong.dataset.i18nOptions = `{ "usr": "${usr}" }`;
 
-					encodedMsg = localizeMessageOpts('game.othPlConn', { "usr": usr }, 'User connected'),
+					encodedMsg = localizeMessage('game.othPlConn', `Other player ${usr} connected 😁`, { "usr": usr });
 
-						localizeSelector(this.#sMsgListSel);
+					localizeSelector(this.#sMsgListSel);
 				}
 				else {
 					strong.textContent = encodedMsg;
@@ -1266,7 +1256,7 @@ class InkBallGame {
 			li.appendChild(strong);
 			this.#MsgList?.appendChild(li);
 
-			this.#NotifyBrowser(localizeMessageOpts('game.usrStrtDraw', { user }, `User ${user} started drawing new path`), encodedMsg);
+			this.#NotifyBrowser(localizeMessage('game.usrStrtDraw', `User ${user} started drawing new path`, { user }), encodedMsg);
 		});
 
 		if (false === this.#bIsCPUGame) {
@@ -1276,7 +1266,7 @@ class InkBallGame {
 				const encodedMsg = this.#MsgInput?.value.trim();
 				if (encodedMsg === '') return;
 
-				let ping = new PingCommand(encodedMsg);
+				const ping = new PingCommand(encodedMsg);
 
 				await this.#SendData(ping);
 
@@ -1360,11 +1350,8 @@ class InkBallGame {
 		if (await this.#Points.has(iY * this.#iGridWidth + iX))
 			return;
 
-		const x = iX;
-		const y = iY;
-
 		const oval = this.#SvgVml.CreateOval(/* this.#PointRadius */);
-		oval.move(x, y);
+		oval.move(iX, iY);
 
 		let color;
 		switch (iStatus) {
@@ -1434,11 +1421,9 @@ class InkBallGame {
 	 * @returns {object} created oval/circle
 	 */
 	#CreateScreenPointFromIndexedDb(iX, iY, iStatus, sColor) {
-		const x = iX;
-		const y = iY;
 
 		const oval = this.#SvgVml.CreateOval(/* this.#PointRadius */);
-		oval.move(x, y);
+		oval.move(iX, iY);
 
 		let color;
 		switch (iStatus) {
@@ -4072,6 +4057,7 @@ class InkBallGame {
 				addPointsAndEdgesToGraph(point, x + 1, (y + 1), x, y);
 			}
 		}
+
 		//return graph
 		return {
 			vertices: Array.from(graph_points.values()),
