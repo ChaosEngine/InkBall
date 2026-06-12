@@ -64,8 +64,15 @@
 	background-image: svg-url($svg);
 }
 
-//  Helper function to replace characters in a string
+// Helper function to replace characters in a string
+// Taken/Stolen from https://gist.github.com/delphinpro/6e048196bbdfdfee07b1fb5c9ea4caef
+//after https://sass-lang.com/documentation/breaking-changes/if-function/ changes
 @function str-replace($string, $search, $replace: '') {
-	$index: string.index($string, $search);
-	@return if($index, string.slice($string, 1, $index - 1) + $replace + str-replace(string.slice($string, $index + string.length($search)), $search, $replace), $string);
+  $index: string.index($string, $search);
+
+  @if $index {
+    @return string.slice($string, 1, $index - 1) + $replace + str-replace(string.slice($string, $index + string.length($search)), $search, $replace);
+  }
+
+  @return $string;
 }

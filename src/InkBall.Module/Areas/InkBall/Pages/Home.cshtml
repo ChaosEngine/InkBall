@@ -14,15 +14,12 @@
 	<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 </div>
 
-<div class="container inkhome">
+<div class="container inkhome" data-otherplayerid="@Model.ActiveGame?.GetOtherPlayer()?.iId">
 	<div class="row" role="group" aria-label="Game menu">
 		<form method='post' class="col-sm-12 col-md-4 order-last order-md-first btn-group-vertical p-1 was-validated">
 		</form>
 		<div class="col-sm-12 col-md-auto p-1">
-			<picture aria-label="home screen image">
-				<source type="image/webp" srcset="../img/homescreen.webp" />
-				<img src="../img/homescreen.jpg" alt="home screen" aria-label="home screen image" class="img-fluid" />
-			</picture>
+			<video src="https://khdfgwsg62.ufs.sh/f/nEF5ACUOfURTm3f745MMvDKLr0VsFzW2aJAEyTQ4Z8XRuHSd" class="img-fluid rounded-1" style="object-fit:contain" playsinline controls preload="metadata" aria-label="Game play video" title="Game play video" data-i18n='[aria-label]ib:home.video;[title]ib:home.video'></video>
 		</div>
 	</div>
 </div>
@@ -32,7 +29,7 @@
 
 	HomeOnLoad(
 		'@Model.Message',
-		JSON.parse('@(Model.Game != null ? true : false)'.toLowerCase()),
+		JSON.parse('@(Model.ActiveGame != null ? true : false)'.toLowerCase()),
 		'@commonUIConfigureOptions.Value.LogoutPath',
 		'@commonUIConfigureOptions.Value.LoginPath',
 		'@commonUIConfigureOptions.Value.RegisterPath'

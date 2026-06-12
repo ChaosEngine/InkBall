@@ -27,12 +27,12 @@ namespace InkBall.Module.Pages
 
 		public HtmlString PointsAsJavaScriptArray
 		{
-			get { return new HtmlString(CommonPoint.GetPointsAsJavaScriptArrayForPage(PlayerPointsAndPaths.Points)); }
+			get { return new HtmlString(PlayerPointsAndPathsDTO.GetPointsAsJavaScriptArrayForPage(PlayerPointsAndPaths.Points, base.Player)); }
 		}
 
 		public HtmlString PathsAsJavaScriptArray
 		{
-			get { return new HtmlString(InkBallPath.GetPathsAsJavaScriptArrayForPage(PlayerPointsAndPaths.Paths)); }
+			get { return new HtmlString(PlayerPointsAndPathsDTO.GetPathsAsJavaScriptArrayForPage(PlayerPointsAndPaths.Paths)); }
 		}
 
 		public bool IsReadonly { get; private set; }
@@ -59,14 +59,13 @@ namespace InkBall.Module.Pages
 				GameHub.WebSocketAllowedOrigins.AddOrUpdate(Request.Host.Host);
 
 			//https://developer.chrome.com/blog/enabling-shared-array-buffer/
-			Response.Headers.Append("Cross-Origin-Embedder-Policy", "require-corp");
-			Response.Headers.Append("Cross-Origin-Opener-Policy", "same-origin");
+			CommonUIServiceCollectionExtensions.ProcessGameHeaders(Response);
 
 			var token = HttpContext.RequestAborted;
 
 			await base.LoadUserPlayerAndGameAsync(token);
 
-			if (Game == null)
+			if (ActiveGame == null)
 			{
 				Message = "No active game for you;noActiveGame";
 
@@ -76,7 +75,7 @@ namespace InkBall.Module.Pages
 			this.IsReadonly = false;
 
 #if !LOAD_POINTS_AND_PATHS_FROM_SIGNALR
-			PlayerPointsAndPaths = await _dbContext.LoadPointsAndPathsAsync(Game.iId, token, true);
+			PlayerPointsAndPaths = await _dbContext.LoadPointsAndPathsAsync(ActiveGame.iId, token, true);
 #endif
 			return Page();
 		}
@@ -94,8 +93,7 @@ namespace InkBall.Module.Pages
 				GameHub.WebSocketAllowedOrigins.AddOrUpdate(Request.Host.Host);
 
 			//https://developer.chrome.com/blog/enabling-shared-array-buffer/
-			Response.Headers.Append("Cross-Origin-Embedder-Policy", "require-corp");
-			Response.Headers.Append("Cross-Origin-Opener-Policy", "same-origin");
+			CommonUIServiceCollectionExtensions.ProcessGameHeaders(Response);
 
 
 			if (!ModelState.IsValid)//model.GameID <= 0
@@ -107,23 +105,23 @@ namespace InkBall.Module.Pages
 
 			var token = HttpContext.RequestAborted;
 
-			Game = await _dbContext.GetGameFromDatabaseAsync(model.GameID, true, token);
+			ActiveGame = await _dbContext.GetGameFromDatabaseAsync(model.GameID, true, token);
 
-			if (Game == null ||
+			if (ActiveGame == null ||
 				!int.TryParse(User.FindFirstValue(nameof(InkBalPlayerId)), out var inkBallPlayerId) || inkBallPlayerId <= 0 ||
-				Game?.iPlayer1Id == inkBallPlayerId || Game?.iPlayer2Id == inkBallPlayerId)
+				ActiveGame?.iPlayer1Id == inkBallPlayerId || ActiveGame?.iPlayer2Id == inkBallPlayerId)
 			{
 				Message = "View only: It is your game, or bad GameID;viewOnlyYourGame";
 
 				return RedirectToPage(HomeModel.ASPX);
 			}
 			if (Player == null)
-				Player = Game.Player1;
+				Player = ActiveGame.Player1;
 
 			this.IsReadonly = true;
 
 #if !LOAD_POINTS_AND_PATHS_FROM_SIGNALR
-			PlayerPointsAndPaths = await _dbContext.LoadPointsAndPathsAsync(Game.iId, token, true);
+			PlayerPointsAndPaths = await _dbContext.LoadPointsAndPathsAsync(ActiveGame.iId, token, true);
 #endif
 			return Page();
 		}

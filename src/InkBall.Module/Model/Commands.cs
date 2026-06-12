@@ -1,4 +1,7 @@
 using System.Collections.Generic;
+using System;
+using System.Text;
+using System.Text.Json.Serialization;
 using MessagePack;
 
 namespace InkBall.Module.Model
@@ -134,15 +137,134 @@ namespace InkBall.Module.Model
 
 		public string Paths { get; }
 
-		public PlayerPointsAndPathsDTO(string points, string paths)
+		public PlayerPointsAndPathsDTO()
 		{
-			this.Points = points;
-			this.Paths = paths;
 		}
 
+		public PlayerPointsAndPathsDTO(IEnumerable<InkBallPoint> points, IEnumerable<InkBallPath> paths,
+			InkBallPlayer thisPlayer)
+		{
+			this.Points = GetPointsAsJavaScriptArrayForSignalR(points, thisPlayer);
+			this.Paths = GetPathsAsJavaScriptArrayForSignalR(paths);
+		}
+
+		[JsonIgnore]
+		[IgnoreMember]
 		public CommandKindEnum Kind
 		{
 			get { return CommandKindEnum.POINTS_AND_PATHS; }
 		}
+
+
+		/// <summary>
+		/// Minimize amount of data transported on the wire through SignalR or on the page: status field
+		/// </summary>
+		/// <param name="status">int value of status</param>
+		/// <returns>minimized integer</returns>
+		internal static int DataMinimizerStatus(int status) => status + 3;
+
+		/// <summary>
+		/// Minimize amount of data transported on the wire through SignalR or on the page: player id field
+		/// </summary>
+		/// <param name="playerId"></param>
+		/// <returns>minimized int status</returns>
+		internal static int DataMinimizerPlayerId(int playerId, InkBallPlayer thisPlayer) =>
+			playerId == thisPlayer.iId ? 1 : 0;
+
+		internal static string GetPointsAsJavaScriptArrayForPage(
+			IEnumerable<InkBallPoint> points, InkBallPlayer thisPlayer)
+		{
+			StringBuilder builder = new StringBuilder("[", 300);
+
+			string comma = string.Empty;
+			foreach (var p in points)
+			{
+#if DEBUG
+				builder.AppendFormat("{4}[{0}/*x*/,{1}/*y*/,{2}/*val*/,{3}/*playerID*/]",
+					p.iX, p.iY, DataMinimizerStatus((int)p.Status), DataMinimizerPlayerId(p.iPlayerId, thisPlayer), comma);
+#else
+				builder.AppendFormat("{4}[{0},{1},{2},{3}]",
+					p.iX, p.iY, DataMinimizerStatus((int)p.Status), DataMinimizerPlayerId(p.iPlayerId, thisPlayer), comma);
+#endif
+				comma = ",\r";
+			}
+			builder.Append(']');
+
+			return builder.ToString();
+		}
+
+		static string GetPointsAsJavaScriptArrayForSignalR(IEnumerable<CommonPoint> points, InkBallPlayer thisPlayer)
+		{
+			StringBuilder builder = new StringBuilder("[", 300);
+			string comma = string.Empty;
+			foreach (var p in points)
+			{
+				builder.AppendFormat("{4}[{0},{1},{2},{3}]",
+					p.iX,
+					p.iY,
+					DataMinimizerStatus((int)p.Status),
+					DataMinimizerPlayerId(p.iPlayerId, thisPlayer),
+					comma);
+				comma = ",";
+			}
+			builder.Append(']');
+
+			return builder.ToString();
+		}
+
+		internal static string GetPathsAsJavaScriptArrayForPage(IEnumerable<InkBallPath> paths)
+		{
+			StringBuilder builder = new StringBuilder("[", 300);
+			string comma = "";
+			foreach (var path in paths)
+			{
+				builder.Append(comma).Append(path.PointsAsString);
+
+				comma = ",\r";
+			}
+			builder.Append(']');
+
+			return builder.ToString();
+		}
+
+		static string GetPathsAsJavaScriptArrayForSignalR(IEnumerable<InkBallPath> paths)
+		{
+			StringBuilder builder = new StringBuilder("[", 300);
+			string comma = "";
+			foreach (var path in paths)
+			{
+				builder.Append(comma).Append(path.PointsAsString);
+
+				comma = ",";
+			}
+			builder.Append(']');
+
+			return builder.ToString();
+		}
+
+	}
+
+	[MessagePackObject(true)]
+	public sealed class CpuMoveBatchRequest
+	{
+		public InkBallPointViewModel HumanPoint { get; set; }
+
+		public InkBallPointViewModel CpuPoint { get; set; }
+
+		public InkBallPathViewModel CpuPath { get; set; }
+	}
+
+	[MessagePackObject(true)]
+	public sealed class CpuMoveBatchResponse
+	{
+		public DateTime? HumanPointTimeStamp { get; set; }
+
+		public InkBallPointViewModel CpuPoint { get; set; }
+
+		public InkBallPathViewModel CpuPath { get; set; }
+
+		public WinCommand CpuWin { get; set; }
+
+		public string CpuMoveError { get; set; } = null;
 	}
 }

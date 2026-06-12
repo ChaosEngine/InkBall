@@ -8,7 +8,7 @@
 
     HtmlHelpers.RenderHeaderSection(this, Url, commonUIConfigureOptions);
 
-	var bIsCurrentGameOk = Model.Game != null;
+	var bIsCurrentGameOk = Model.ActiveGame != null;
 }
 
 <div class="alert alert-dismissible fade show d-none inkgames" role="alert">
@@ -61,7 +61,7 @@
 									<td class='gtd'>
 										@if (bIsMyOwnGame)
 										{
-											<a href='Game' class='btn btn-outline-primary' data-i18n='ib:home.continue'>Continue</a>
+											<a href='Game' class='btn btn-outline-primary' data-otherplayerid="@game.GetPlayer2()?.iId" data-i18n='ib:home.continue'>Continue</a>
 										}
 										else if (!bIsCurrentGameOk)
 										{
@@ -78,7 +78,7 @@
 									<td class='gtd'>
 										@if (bIsMyOwnGame)
 										{
-											<a href='Game' class="btn btn-outline-primary" data-i18n='ib:home.continue'>Continue</a>
+											<a href='Game' class="btn btn-outline-primary" data-otherplayerid="@game.GetPlayer2()?.iId" data-i18n='ib:home.continue'>Continue</a>
 										}
 										else if (!bIsCurrentGameOk && bCanViewOtherPlayerGames)
 										{

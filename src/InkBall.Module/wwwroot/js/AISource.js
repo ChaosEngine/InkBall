@@ -1,9 +1,7 @@
 import concaveman from "concaveman";
-// import decomp from "poly-decomp";
-// import { StatusEnum, sortPointsClockwise, IsPointOutsideAllPaths, /*LocalLog, Sleep, pnpoly*/ } from "./shared.js";
 
 //globals loaded only once hopefully
-let StatusEnum, sortPointsClockwise, IsPointOutsideAllPaths/*, LocalLog, Sleep, pnpoly*/;
+let StatusEnum/*, sortPointsClockwise, IsPointOutsideAllPaths, LocalLog, sleep, pnpoly*/;
 
 /**
  * AI operations class
@@ -15,20 +13,13 @@ class GraphAI {
 	#POINT_STARTING;
 	#POINT_IN_PATH;
 
-	constructor(iGridWidth, iGridHeight, pointStore) {
+	constructor(parentStatusEnum, iGridWidth, iGridHeight, pointStore) {
+		StatusEnum = parentStatusEnum;
 		this.#iGridWidth = iGridWidth;
 		this.#iGridHeight = iGridHeight;
 		this.#Points = pointStore;
-	}
-
-	async #Init() {
-		if (StatusEnum === undefined) {
-
-			({ StatusEnum, sortPointsClockwise, IsPointOutsideAllPaths } = await import(/* webpackIgnore: true */`./shared${location.hostname !== "localhost" ? '.min' : ''}.js`));
-
-			this.#POINT_STARTING = StatusEnum.POINT_STARTING;
-			this.#POINT_IN_PATH = StatusEnum.POINT_IN_PATH;
-		}
+		this.#POINT_STARTING = StatusEnum.POINT_STARTING;
+		this.#POINT_IN_PATH = StatusEnum.POINT_IN_PATH;
 	}
 
 	/**
@@ -42,10 +33,6 @@ class GraphAI {
 		//, cpuFillColor = 'var(--bluish)'
 		//, visuals = false
 	} = {}) {
-		await this.#Init();
-
-
-
 		const graph_points = new Map(), graph_edges = new Map();
 
 		const isPointOKForPath = function (allowedPoints, pt) {
@@ -57,9 +44,9 @@ class GraphAI {
 		};
 
 		const freePointStatusArr = [freePointStatus];
-		const addPointsAndEdgesToGraph = async (point, to_x, to_y, x, y) => {
+		const addPointsAndEdgesToGraph = (point, to_x, to_y, x, y) => {
 			if (to_x >= 0 && to_x < this.#iGridWidth && to_y >= 0 && to_y < this.#iGridHeight) {
-				const next = await this.#Points.get(to_y * this.#iGridWidth + to_x);
+				const next = this.#Points.get(to_y * this.#iGridWidth + to_x);
 				if (next && isPointOKForPath(freePointStatusArr, next) === true) {
 
 					const point_hash = `${x},${y}`;
@@ -97,23 +84,22 @@ class GraphAI {
 		for (const point of all_points) {
 			if (point && isPointOKForPath(good_point_status_arr, point) === true) {
 				const { x, y } = point.GetPosition();
-				//TODO: await all below promises
 				//east
-				await addPointsAndEdgesToGraph(point, x + 1, y, x, y);
+				addPointsAndEdgesToGraph(point, x + 1, y, x, y);
 				//west
-				await addPointsAndEdgesToGraph(point, x - 1, y, x, y);
+				addPointsAndEdgesToGraph(point, x - 1, y, x, y);
 				//north
-				await addPointsAndEdgesToGraph(point, x, (y - 1), x, y);
+				addPointsAndEdgesToGraph(point, x, (y - 1), x, y);
 				//south
-				await addPointsAndEdgesToGraph(point, x, (y + 1), x, y);
+				addPointsAndEdgesToGraph(point, x, (y + 1), x, y);
 				//north_west
-				await addPointsAndEdgesToGraph(point, x - 1, (y - 1), x, y);
+				addPointsAndEdgesToGraph(point, x - 1, (y - 1), x, y);
 				//north_east
-				await addPointsAndEdgesToGraph(point, x + 1, (y - 1), x, y);
+				addPointsAndEdgesToGraph(point, x + 1, (y - 1), x, y);
 				//south_west
-				await addPointsAndEdgesToGraph(point, x - 1, (y + 1), x, y);
+				addPointsAndEdgesToGraph(point, x - 1, (y + 1), x, y);
 				//south_east
-				await addPointsAndEdgesToGraph(point, x + 1, (y + 1), x, y);
+				addPointsAndEdgesToGraph(point, x + 1, (y + 1), x, y);
 			}
 		}
 		//return graph
@@ -130,13 +116,13 @@ class GraphAI {
 	 * @param {object} lines - line array
 	 * @returns {Array} of cycles
 	 */
-	async MarkAllCycles(graph, sHumanColor, lines) {
-		await this.#Init();
+	/* async MarkAllCycles(graph, sHumanColor, lines) {
 
 
 
 		const vertices = graph.vertices;
 		const N = vertices.length;
+		const vertexIndexMap = new Map(vertices.map((v, i) => [v, i])); // avoid O(N) indexOf in DFS
 		let cycles = new Array(N);
 		// mark with unique numbers
 		const mark = new Array(N);
@@ -179,14 +165,14 @@ class GraphAI {
 				//vertex.SetStrokeColor('black');
 				//vertex.SetFillColor('black');
 				////vertex.setAttribute("r", "6");
-				//await Sleep(10);
+				//await sleep(10);
 
 
 				// simple dfs on graph
 				for (const adj of vertex.adjacents) {
-					const v = vertices.indexOf(adj);
+					const v = vertexIndexMap.get(adj);
 					// if it has not been visited previously
-					if (v === par[u])
+					if (v === undefined || v === par[u])
 						continue;
 
 					await dfs_cycle(v, u);
@@ -255,7 +241,7 @@ class GraphAI {
 					//		pt.SetFillColor(rand_color);
 					//		pt.setAttribute("r", "6");
 					//	}
-					//	await Sleep(50);
+					//	await sleep(50);
 					//}
 
 					//find for all free_human_player_points which cycle might intercept it (surrounds)
@@ -288,7 +274,8 @@ class GraphAI {
 					//});
 				}
 			}
-			/*return tab;*/return { cycles, free_human_player_points, cyclenumber };
+			//return tab;
+			return { cycles, free_human_player_points, cyclenumber };
 		};
 
 		// store the numbers of cycle
@@ -301,43 +288,361 @@ class GraphAI {
 
 		// function to print the cycles
 		return await printCycles(edges, mark);
+	} */
+}
+
+/**
+ * Axis-Aligned Bounding Box (AABB) class.
+ * Represents a rectangle defined by its minimum and maximum x and y coordinates.
+ */
+class AABB {
+	/**
+	 * Creates an Axis-Aligned Bounding Box.
+	 * @param {number} minX - The minimum x-coordinate. defaults to Infinity for easy expansion.
+	 * @param {number} minY - The minimum y-coordinate. defaults to Infinity for easy expansion.
+	 * @param {number} maxX - The maximum x-coordinate. defaults to -Infinity for easy expansion.
+	 * @param {number} maxY - The maximum y-coordinate. defaults to -Infinity for easy expansion.
+	 */
+	constructor(minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity) {
+		this.minX = minX;
+		this.minY = minY;
+		this.maxX = maxX;
+		this.maxY = maxY;
 	}
+
+	// /**
+	//  * Creates an AABB that encloses all given points.
+	//  * Points should be objects with 'x' and 'y' properties (e.g., {x: number, y: number}).
+	//  * @param {Array<{x: number, y: number}>} points - An array of points.
+	//  * @returns {AABB} A new AABB instance, or null if no points are provided.
+	//  */
+	// static fromPoints(points) {
+	// 	if (!points || points.length === 0) {
+	// 		return null; // Or throw an error, or return a default AABB
+	// 	}
+
+	// 	let minX = points[0].x;
+	// 	let minY = points[0].y;
+	// 	let maxX = minX;
+	// 	let maxY = minY;
+
+	// 	for (let i = 1; i < points.length; i++) {
+	// 		const p = points[i];
+	// 		if (p.x < minX) minX = p.x;
+	// 		if (p.y < minY) minY = p.y;
+	// 		if (p.x > maxX) maxX = p.x;
+	// 		if (p.y > maxY) maxY = p.y;
+	// 	}
+	// 	return new AABB(minX, minY, maxX, maxY);
+	// }
+
+	/**
+	 * Expands the AABB by a given delta in x and y directions.
+	 * This method does modify the original AABB.
+	 * @param {number} delta - The amount to expand in the x and y direction.
+	 * @param {number} minHeight - Minimum height constraint.
+	 * @param {number} minWidth - Minimum width constraint.
+	 * @param {number} maxHeight - Maximum height constraint.
+	 * @param {number} maxWidth - Maximum width constraint.
+	 */
+	expand(delta, minHeight, minWidth, maxHeight, maxWidth) {
+
+		this.minX = Math.min(Math.max(this.minX - delta, minWidth), maxWidth);
+		this.minY = Math.min(Math.max(this.minY - delta, minHeight), maxHeight);
+
+		this.maxX = Math.max(Math.min(this.maxX + delta, maxWidth), minWidth);
+		this.maxY = Math.max(Math.min(this.maxY + delta, maxHeight), minHeight);
+	}
+
+	/**
+	 * Updates the AABB min/max coordinates to include a new point (x, y).
+	 * This method modifies the original AABB.
+	 * @param {number} x - The x-coordinate of the point to include.
+	 * @param {number} y - The y-coordinate of the point to include.
+	 */
+	updateMinMax(x, y) {
+		if (x < this.minX) this.minX = x;
+		if (y < this.minY) this.minY = y;
+		if (x > this.maxX) this.maxX = x;
+		if (y > this.maxY) this.maxY = y;
+	}
+
+	// /**
+	//  * Returns a new AABB that is expanded to include the given point.
+	//  * @param {number} x - The x-coordinate of the point.
+	//  * @param {number} y - The y-coordinate of the point.
+	//  * @returns {AABB} A new, expanded AABB instance.
+	//  */
+	// expandToIncludePoint(x, y) {
+	// 	return new AABB(
+	// 		Math.min(this.minX, x),
+	// 		Math.min(this.minY, y),
+	// 		Math.max(this.maxX, x),
+	// 		Math.max(this.maxY, y)
+	// 	);
+	// }
+
+	// /**
+	//  * Creates an AABB from a top-left corner (x, y), width, and height.
+	//  * @param {number} x - The x-coordinate of the top-left corner.
+	//  * @param {number} y - The y-coordinate of the top-left corner.
+	//  * @param {number} width - The width of the AABB.
+	//  * @param {number} height - The height of the AABB.
+	//  * @returns {AABB} A new AABB instance.
+	//  */
+	// static fromXYWidthHeight(x, y, width, height) {
+	// 	if (width < 0 || height < 0) {
+	// 		LocalError("AABB.fromXYWidthHeight: Width and height should be non-negative.");
+	// 		return new AABB(x, y, x, y); // Degenerate AABB
+	// 	}
+	// 	return new AABB(x, y, x + width, y + height);
+	// }
+
+	// /**
+	//  * Creates an AABB from a center point and dimensions (width, height).
+	//  * @param {number} centerX - The x-coordinate of the center.
+	//  * @param {number} centerY - The y-coordinate of the center.
+	//  * @param {number} width - The width of the AABB.
+	//  * @param {number} height - The height of the AABB.
+	//  * @returns {AABB} A new AABB instance.
+	//  */
+	// static fromCenterSize(centerX, centerY, width, height) {
+	// 	if (width < 0 || height < 0) {
+	// 		LocalError("AABB.fromCenterSize: Width and height should be non-negative.");
+	// 		return new AABB(centerX, centerY, centerX, centerY); // Degenerate AABB
+	// 	}
+	// 	const halfWidth = width / 2;
+	// 	const halfHeight = height / 2;
+	// 	return new AABB(
+	// 		centerX - halfWidth,
+	// 		centerY - halfHeight,
+	// 		centerX + halfWidth,
+	// 		centerY + halfHeight
+	// 	);
+	// }
+
+	// /**
+	//  * Gets the width of the AABB.
+	//  * @returns {number} The width of the AABB.
+	//  */
+	// get width() {
+	// 	return this.maxX - this.minX;
+	// }
+
+	// /**
+	//  * Gets the height of the AABB.
+	//  * @returns {number} The height of the AABB.
+	//  */
+	// get height() {
+	// 	return this.maxY - this.minY;
+	// }
+
+	// /**
+	//  * Gets the x-coordinate of the center of the AABB.
+	//  * @returns {number} The x-coordinate of the center.
+	//  */
+	// get centerX() {
+	// 	return this.minX + this.width / 2;
+	// }
+
+	// /**
+	//  * Gets the y-coordinate of the center of the AABB.
+	//  * @returns {number} The y-coordinate of the center.
+	//  */
+	// get centerY() {
+	// 	return this.minY + this.height / 2;
+	// }
+
+	// /**
+	//  * Checks if this AABB is valid (min coordinates are less than or equal to max coordinates).
+	//  * @returns {boolean} True if valid, false otherwise.
+	//  */
+	// isValid() {
+	// 	return this.minX <= this.maxX && this.minY <= this.maxY;
+	// }
+
+	// /**
+	//  * Checks if this AABB intersects with another AABB.
+	//  * @param {AABB} other - The other AABB to check against.
+	//  * @returns {boolean} True if they intersect, false otherwise.
+	//  */
+	// intersects(other) {
+	// 	if (!other || !(other instanceof AABB)) return false;
+	// 	return (
+	// 		this.minX < other.maxX &&
+	// 		this.maxX > other.minX &&
+	// 		this.minY < other.maxY &&
+	// 		this.maxY > other.minY
+	// 	);
+	// }
+
+	// /**
+	//  * Checks if a point (x, y) is contained within this AABB (inclusive of edges).
+	//  * @param {number} x - The x-coordinate of the point.
+	//  * @param {number} y - The y-coordinate of the point.
+	//  * @returns {boolean} True if the point is contained, false otherwise.
+	//  */
+	// containsPoint(x, y) {
+	// 	return (
+	// 		x >= this.minX &&
+	// 		x <= this.maxX &&
+	// 		y >= this.minY &&
+	// 		y <= this.maxY
+	// 	);
+	// }
+
+	// /**
+	//  * Checks if another AABB is fully contained within this AABB.
+	//  * @param {AABB} other - The other AABB.
+	//  * @returns {boolean} True if the other AABB is fully contained, false otherwise.
+	//  */
+	// containsAABB(other) {
+	// 	if (!other || !(other instanceof AABB)) return false;
+	// 	return (
+	// 		this.minX <= other.minX &&
+	// 		this.minY <= other.minY &&
+	// 		this.maxX >= other.maxX &&
+	// 		this.maxY >= other.maxY
+	// 	);
+	// }
+
+	// /**
+	//  * Returns a new AABB that is the union of this AABB and another AABB.
+	//  * The union is the smallest AABB that contains both.
+	//  * @param {AABB} other - The other AABB.
+	//  * @returns {AABB} A new AABB instance representing the union.
+	//  */
+	// union(other) {
+	// 	if (!other || !(other instanceof AABB)) return this.clone(); // Or throw error
+	// 	return new AABB(
+	// 		Math.min(this.minX, other.minX),
+	// 		Math.min(this.minY, other.minY),
+	// 		Math.max(this.maxX, other.maxX),
+	// 		Math.max(this.maxY, other.maxY)
+	// 	);
+	// }
+
+	// /**
+	//  * Returns a new AABB that is the intersection of this AABB and another AABB.
+	//  * If they do not intersect, returns null.
+	//  * @param {AABB} other - The other AABB.
+	//  * @returns {AABB|null} A new AABB instance representing the intersection, or null.
+	//  */
+	// intersection(other) {
+	// 	if (!other || !(other instanceof AABB) || !this.intersects(other)) {
+	// 		return null;
+	// 	}
+	// 	return new AABB(
+	// 		Math.max(this.minX, other.minX),
+	// 		Math.max(this.minY, other.minY),
+	// 		Math.min(this.maxX, other.maxX),
+	// 		Math.min(this.maxY, other.maxY)
+	// 	);
+	// }
+	//
+	// /**
+	//  * Returns a new AABB that is expanded to include another AABB (same as union).
+	//  * @param {AABB} other - The other AABB.
+	//  * @returns {AABB} A new, expanded AABB instance.
+	//  */
+	// expandToIncludeAABB(other) {
+	// 	return this.union(other);
+	// }
+
+	// /**
+	//  * Creates a new AABB instance with the same dimensions and position.
+	//  * @returns {AABB} A new AABB instance.
+	//  */
+	// clone() {
+	// 	return new AABB(this.minX, this.minY, this.maxX, this.maxY);
+	// }
+
+	// /**
+	//  * Moves the AABB by a given delta x and delta y.
+	//  * Returns a new, moved AABB instance.
+	//  * @param {number} dx - The change in x.
+	//  * @param {number} dy - The change in y.
+	//  * @returns {AABB} A new AABB instance at the new position.
+	//  */
+	// translate(dx, dy) {
+	// 	return new AABB(
+	// 		this.minX + dx,
+	// 		this.minY + dy,
+	// 		this.maxX + dx,
+	// 		this.maxY + dy
+	// 	);
+	// }
+
+	// /**
+	//  * Returns a string representation of the AABB.
+	//  * @returns {string} String representation of the AABB.
+	//  */
+	// toString() {
+	// 	return `AABB(minX: ${this.minX}, minY: ${this.minY}, maxX: ${this.maxX}, maxY: ${this.maxY}, width: ${this.width}, height: ${this.height})`;
+	// }
 }
 
 
 /**
  * Checks if points are continuous
  * @param {Array<{x,y}>|Array<Array>} pointsArr array of objects with x and y properties, or array of arrays with two elements
- * @returns {boolean} true if all points are continuous, false otherwise
+ * @returns {{result:boolean, offenderIndex?:number, offender?:object|Array}} continuity status with optional offending point details
  */
 function ArePointsContinuous(pointsArr) {
+	const length = pointsArr?.length ?? 0;
 	//check if points is array of {x, y} objects or array of arrays with two elements
 	//checking only first element
-	if (!Array.isArray(pointsArr) || pointsArr.length < 1)
+	if (!Array.isArray(pointsArr) || length < 1)
 		throw new Error("Invalid points array. Expected an array of objects with x and y properties.");
 
 	let calcDX, calcDY;
 	// Check if points are in {x, y} format or [x, y] format
 	if (Array.isArray(pointsArr[0]) || !('x' in pointsArr[0]) || !('y' in pointsArr[0])) {
-		calcDX = (prev, curr) => Math.abs(prev[0] - curr[0]);
-		calcDY = (prev, curr) => Math.abs(prev[1] - curr[1]);
+		calcDX = (prev, curr) => prev[0] - curr[0];
+		calcDY = (prev, curr) => prev[1] - curr[1];
 	} else {
-		calcDX = (prev, curr) => Math.abs(prev.x - curr.x);
-		calcDY = (prev, curr) => Math.abs(prev.y - curr.y);
+		calcDX = (prev, curr) => prev.x - curr.x;
+		calcDY = (prev, curr) => prev.y - curr.y;
 	}
 
 	// Check if all points are continuous
-	for (let i = 1; i < pointsArr.length; i++) {
+	for (let i = 1; i < length; i++) {
 		const curr = pointsArr[i];
 		const prev = pointsArr[i - 1];
-		const dx = calcDX(curr, prev);
-		const dy = calcDY(curr, prev);
+		const dx = Math.abs(calcDX(curr, prev));
+		const dy = Math.abs(calcDY(curr, prev));
+		const chebyshevDistance = Math.max(dx, dy);
 
-		if (Math.max(dx, dy) > 1)
+		// 8-neighborhood continuity: each next point must be at most one cell away.
+		if (chebyshevDistance > 1)
 			return { result: false, offenderIndex: i, offender: curr }; // Not continuous
 	}
 
 	return { result: true }; // All points are continuous
+}
+
+/**
+ * Finds duplicated point in an array of points, starting from a given index.
+ * @param {Array<{x,y}>|Array<Array>} pointsArr array of objects with x and y properties, or array of arrays with two elements
+ * @param {number} [startIndex] - Index to start searching from
+ * @returns {{secondIndex: number, point: {x,y}|Array, firstIndex: number}|null} object with index, point, and firstIndex if duplicate found, null otherwise
+ */
+function FindDuplicatedPoint(pointsArr, startIndex = 0) {
+	const getPointKeyFn = Array.isArray(pointsArr[0])
+		? ([x, y]) => `${x},${y}`
+		: ({ x, y }) => `${x},${y}`;
+
+	for (const pointMap = new Map(), length = pointsArr.length; startIndex < length; startIndex++) {
+		const point = pointsArr[startIndex];
+		const key = getPointKeyFn(point);
+		const val = pointMap.get(key);
+		if (val !== undefined)
+			return { secondIndex: startIndex, firstIndex: val, point };
+
+		pointMap.set(key, startIndex);
+	}
+
+	return null; // No duplicates found
 }
 
 /**
@@ -409,4 +714,4 @@ function LerpMissingPoints(prev, curr, isPointOk) {
 }
 */
 
-export { concaveman, GraphAI, ArePointsContinuous, LerpMissingPoints };
+export { concaveman, GraphAI, ArePointsContinuous, LerpMissingPoints, FindDuplicatedPoint, AABB };

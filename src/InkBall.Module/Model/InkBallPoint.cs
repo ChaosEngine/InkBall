@@ -149,6 +149,8 @@ namespace InkBall.Module.Model
 		{
 		}
 
+		[JsonIgnore]
+		[IgnoreMember]
 		public CommandKindEnum Kind
 		{
 			get { return CommandKindEnum.POINT; }
@@ -170,27 +172,7 @@ namespace InkBall.Module.Model
 			return !(left.Equals(right));
 		}
 
-		public static string GetPointsAsJavaScriptArrayForPage(IEnumerable<InkBallPoint> points)
-		{
-			StringBuilder builder = new StringBuilder("[", 300);
-
-			string comma = string.Empty;
-			foreach (var p in points)
-			{
-#if DEBUG
-				builder.AppendFormat("{4}[{0}/*x*/,{1}/*y*/,{2}/*val*/,{3}/*playerID*/]",
-					p.iX, p.iY, DataMinimizerStatus((int)p.Status), DataMinimizerPlayerId(p.iPlayerId), comma);
-#else
-				builder.AppendFormat("{4}[{0},{1},{2},{3}]",
-					p.iX, p.iY, DataMinimizerStatus((int)p.Status), DataMinimizerPlayerId(p.iPlayerId), comma);
-#endif
-				comma = ",\r";
-			}
-			builder.Append(']');
-
-			return builder.ToString();
-		}
-
+		/*
 		public static string GetPointsAsJavaScriptArrayForSignalR(IEnumerable<CommonPoint> points)
 		{
 			StringBuilder builder = new StringBuilder("[", 300);
@@ -233,6 +215,7 @@ namespace InkBall.Module.Model
 		/// <param name="playerId">expanded player id</param>
 		/// <returns>expanded int status</returns>
 		public static int UnDataMinimizerPlayerId(int playerId) => playerId - 1;
+		*/
 	}
 
 	public partial class InkBallPoint : CommonPoint, IPoint

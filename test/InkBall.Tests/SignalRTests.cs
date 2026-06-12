@@ -56,6 +56,22 @@ namespace InkBall.Tests
             }
         }
 
+
+
+		/// <summary>
+		/// Un-Minimize amount of data transported on the wire through SignalR or on the page: status field
+		/// </summary>
+		/// <param name="status">int value of status expanded</param>
+		/// <returns>expanded integer</returns>
+		internal static int UnDataMinimizerStatus(int status) => status - 3;
+		
+		/// <summary>
+		/// Un-Minimize amount of data transported on the wire through SignalR or on the page: player id field
+		/// </summary>
+		/// <param name="playerId">expanded player id</param>
+		/// <returns>expanded int status</returns>
+		internal static int UnDataMinimizerPlayerId(int playerId, int thisPlayerId, int otherPlayerId) => playerId == 1 ? thisPlayerId : otherPlayerId;
+
         #endregion Helpers
 
         public SignalRTests() : base()
@@ -143,6 +159,56 @@ namespace InkBall.Tests
             }
         }
 
+        async Task<InkBallGame> CreateCpuGameForBatchTests(GamesContext db, int gameId, string externalUserIdentifier, CancellationToken token)
+        {
+            var maxPlayerId = await db.InkBallPlayer
+                .Where(p => p.iId > 0)
+                .Select(p => (int?)p.iId)
+                .MaxAsync(token);
+            int player1Id = maxPlayerId.GetValueOrDefault(0) + 1;
+
+            var cpuPlayer = await db.InkBallPlayer.FirstOrDefaultAsync(p => p.iId == -1, token);
+            if (cpuPlayer == null)
+            {
+                cpuPlayer = new InkBallPlayer
+                {
+                    iId = -1,
+                    sLastMoveCode = "{}",
+                    UserName = InkBallPlayer.CPUOponentPlayerName,
+                    iPrivileges = 0,
+                    sExternalId = null
+                };
+                await db.AddAsync(cpuPlayer, token);
+            }
+
+            var game = new InkBallGame
+            {
+                iId = gameId,
+                CreateTime = InkBallGame.CreateTimeInitialValue,
+                GameState = InkBallGame.GameStateEnum.ACTIVE,
+                GameType = InkBallGame.GameTypeEnum.FIRST_CAPTURE,
+                Player1 = new InkBallPlayer
+                {
+                    iId = player1Id,
+                    sLastMoveCode = "{}",
+                    UserName = "cpu_test_p1",
+                    iPrivileges = 0,
+                    sExternalId = externalUserIdentifier
+                },
+                iPlayer1Id = player1Id,
+                Player2 = cpuPlayer,
+                iPlayer2Id = cpuPlayer.iId,
+                iBoardWidth = 20,
+                iBoardHeight = 26,
+                bIsPlayer1Active = true
+            };
+
+            await db.AddAsync(game, token);
+            await db.SaveChangesAsync(token);
+
+            return game;
+        }
+
         [Fact]
         public async Task ClientToServer_ValidBehavior()
         {
@@ -186,7 +252,7 @@ namespace InkBall.Tests
                 await hub_P1.ClientToServerPing(new PingCommand("I like motorcycles"));
                 await hub_P1.ClientToServerPing(new PingCommand("Me too"));
 
-                var responded_point_P1 = await hub_P1.ClientToServerPoint(new InkBallPointViewModel
+                var responded_point_P1_TimeStamp = await hub_P1.ClientToServerPoint(new InkBallPointViewModel
                 {
                     iX = 7,
                     iY = 7,
@@ -194,7 +260,7 @@ namespace InkBall.Tests
                     iGameId = 1,
                     iPlayerId = 1
                 });
-                var responded_point_P2 = await hub_P2.ClientToServerPoint(new InkBallPointViewModel
+                var responded_point_P2_TimeStamp = await hub_P2.ClientToServerPoint(new InkBallPointViewModel
                 {
                     iX = 8,
                     iY = 8,
@@ -205,8 +271,8 @@ namespace InkBall.Tests
 
 
                 //Assert
-                Assert.NotNull(responded_point_P1.TimeStamp);
-                Assert.NotNull(responded_point_P2.TimeStamp);
+                Assert.NotNull(responded_point_P1_TimeStamp);
+                Assert.NotNull(responded_point_P2_TimeStamp);
                 mockHubCallerContext_P1.Verify(clients => clients.Features, Times.Once);
                 mockHubCallerContext_P2.Verify(clients => clients.Features, Times.Once);
 
@@ -261,7 +327,7 @@ namespace InkBall.Tests
                         Status = InkBallPoint.StatusEnum.POINT_FREE_BLUE,
                     });
                 }
-                var pt = await hub_P1.ClientToServerPoint(new InkBallPointViewModel
+                var pt_Timestamp = await hub_P1.ClientToServerPoint(new InkBallPointViewModel
                 {
                     iGameId = 1,
                     iPlayerId = 1,
@@ -269,8 +335,8 @@ namespace InkBall.Tests
                     iY = p2_owned[0, 1],
                     Status = InkBallPoint.StatusEnum.POINT_FREE_RED,
                 });
-                Assert.NotNull(pt.TimeStamp);
-                pt = await hub_P2.ClientToServerPoint(new InkBallPointViewModel
+                Assert.NotNull(pt_Timestamp);
+                pt_Timestamp = await hub_P2.ClientToServerPoint(new InkBallPointViewModel
                 {
                     iGameId = 1,
                     iPlayerId = 2,
@@ -278,7 +344,7 @@ namespace InkBall.Tests
                     iY = p1_owned[0, 1],
                     Status = InkBallPoint.StatusEnum.POINT_FREE_BLUE,
                 });
-                Assert.NotNull(pt.TimeStamp);
+                Assert.NotNull(pt_Timestamp);
 
                 //Assert
                 var dto = await hub_P1.ClientToServerPath(new InkBallPathViewModel
@@ -312,7 +378,7 @@ namespace InkBall.Tests
 
             using (var db = new GamesContext(Setup.DbOpts))
             {
-                //neccessary mocks
+                //necessary mocks
                 var mockGameClient = new Mock<IGameClient>();
                 mockGameClient.Setup(c => c.ServerToClientPath(It.IsAny<InkBallPathViewModel>())).Returns(Task.FromResult(0));
                 mockGameClient.Setup(c => c.ServerToClientPing(It.IsAny<PingCommand>())).Returns(Task.FromResult(0));
@@ -343,7 +409,7 @@ namespace InkBall.Tests
                 await hub_P1.OnConnectedAsync();
                 await hub_P2.OnConnectedAsync();
 
-                var responded_point_P1 = await hub_P1.ClientToServerPoint(new InkBallPointViewModel
+                var responded_point_P1_TimeStamp = await hub_P1.ClientToServerPoint(new InkBallPointViewModel
                 {
                     iX = 7,
                     iY = 7,
@@ -351,7 +417,7 @@ namespace InkBall.Tests
                     iGameId = 1,
                     iPlayerId = 1
                 });
-                var responded_point_P2 = await hub_P2.ClientToServerPoint(new InkBallPointViewModel
+                var responded_point_P2_TimeStamp = await hub_P2.ClientToServerPoint(new InkBallPointViewModel
                 {
                     iX = 8,
                     iY = 8,
@@ -361,8 +427,8 @@ namespace InkBall.Tests
                 });
 
                 //Assert
-                Assert.NotNull(responded_point_P1.TimeStamp);
-                Assert.NotNull(responded_point_P2.TimeStamp);
+                Assert.NotNull(responded_point_P1_TimeStamp);
+                Assert.NotNull(responded_point_P2_TimeStamp);
 
                 var points_and_paths = await db.LoadPointsAndPathsAsync(1, token);
                 Assert.NotNull(points_and_paths.Points.FirstOrDefault(p => p.iX == 7 && p.iY == 7));
@@ -395,7 +461,7 @@ namespace InkBall.Tests
                     });
                 }
                 await Task.Delay(TimeSpan.FromMicroseconds(200));//wait before next action
-                var pt = await hub_P1.ClientToServerPoint(new InkBallPointViewModel
+                var pt_Timestamp = await hub_P1.ClientToServerPoint(new InkBallPointViewModel
                 {
                     iGameId = 1,
                     iPlayerId = 1,
@@ -403,11 +469,11 @@ namespace InkBall.Tests
                     iY = p2_owned[0, 1],
                     Status = InkBallPoint.StatusEnum.POINT_FREE_RED,
                 });
-                Assert.NotNull(pt.TimeStamp);
+                Assert.NotNull(pt_Timestamp);
                 //verify last action timestamp it not from previous action
                 var utc_now = DateTime.UtcNow;
-				Assert.Equal(utc_now, pt.TimeStamp.Value, TimeSpan.FromSeconds(1));
-                pt = await hub_P2.ClientToServerPoint(new InkBallPointViewModel
+                Assert.Equal(utc_now, pt_Timestamp.Value, TimeSpan.FromSeconds(1));
+                pt_Timestamp = await hub_P2.ClientToServerPoint(new InkBallPointViewModel
                 {
                     iGameId = 1,
                     iPlayerId = 2,
@@ -415,7 +481,7 @@ namespace InkBall.Tests
                     iY = p1_owned[0, 1],
                     Status = InkBallPoint.StatusEnum.POINT_FREE_BLUE,
                 });
-                Assert.NotNull(pt.TimeStamp);
+                Assert.NotNull(pt_Timestamp);
 
                 //Act
                 await Task.Delay(TimeSpan.FromMilliseconds(200));//wait before next action
@@ -430,7 +496,7 @@ namespace InkBall.Tests
                 Assert.IsType<InkBallPathViewModel>(dto);
                 Assert.NotNull(((InkBallPathViewModel)dto).TimeStamp);
                 utc_now = DateTime.UtcNow;
-				Assert.Equal(utc_now, ((InkBallPathViewModel)dto).TimeStamp.Value, TimeSpan.FromSeconds(1));
+                Assert.Equal(utc_now, ((InkBallPathViewModel)dto).TimeStamp.Value, TimeSpan.FromSeconds(1));
             }
         }
 
@@ -475,7 +541,7 @@ namespace InkBall.Tests
                 await hub_P2.OnConnectedAsync();
 
                 int count0 = await db.InkBallPoint.CountAsync(p => p.iGameId == 1, token);
-                var responded_point_P1 = await hub_P1.ClientToServerPoint(new InkBallPointViewModel
+                var responded_point_P1_TimeStamp = await hub_P1.ClientToServerPoint(new InkBallPointViewModel
                 {
                     iX = 7,
                     iY = 7,
@@ -485,7 +551,7 @@ namespace InkBall.Tests
                 });
                 int count1 = await db.InkBallPoint.CountAsync(p => p.iGameId == 1, token);
                 Assert.Equal(count0 + 1, count1);
-                var responded_point_P2 = await hub_P2.ClientToServerPoint(new InkBallPointViewModel
+                var responded_point_P2_TimeStamp = await hub_P2.ClientToServerPoint(new InkBallPointViewModel
                 {
                     iX = 8,
                     iY = 8,
@@ -498,8 +564,8 @@ namespace InkBall.Tests
 
 
                 //Assert
-                Assert.NotNull(responded_point_P1.TimeStamp);
-                Assert.NotNull(responded_point_P2.TimeStamp);
+                Assert.NotNull(responded_point_P1_TimeStamp);
+                Assert.NotNull(responded_point_P2_TimeStamp);
                 mockHubCallerContext_P1.Verify(clients => clients.Features, Times.Once);
                 mockHubCallerContext_P2.Verify(clients => clients.Features, Times.Once);
 
@@ -830,9 +896,16 @@ namespace InkBall.Tests
                 Assert.Equal(InkBallGame.WinStatusEnum.RED_WINS, ((WinCommand)winMessagingStatus).Status);
                 Assert.Equal(1, ((WinCommand)winMessagingStatus).WinningPlayerId);
 
+                // hub_P2 has ThisGame/ThisPlayer cached from OnConnectedAsync; use a fresh instance
+                // so LoadGameAndPlayerStructures re-queries the DB and finds the game no longer active.
+                using var hub_P2_postWin = new GameHub(db, Setup.Logger)
+                {
+                    Clients = mockHubCallerClients.Object,
+                    Context = mockHubCallerContext_P2.Object
+                };
                 var exception = await Assert.ThrowsAsync<NoGameArgumentNullException>(async () =>
                 {
-                    await hub_P2.ClientToServerPath(new InkBallPathViewModel
+                    await hub_P2_postWin.ClientToServerPath(new InkBallPathViewModel
                     {
                         iGameId = 1,
                         iPlayerId = 2,
@@ -906,6 +979,46 @@ namespace InkBall.Tests
                 mockGameClient.Verify(client => client.ServerToClientOtherPlayerDisconnected(It.Is<string>(msg =>
                    msg == $"Other player {hub_P2.ThisPlayer.UserName} disconnected 😢;{hub_P2.ThisPlayer.UserName}"
                    )), Times.Once);
+            }
+        }
+
+
+        [Fact]
+        public async Task PlayerCanHaveOnlyOneActiveGame()
+        {
+            //Arrange
+            var token = base.CancellationToken;
+
+            //Start from creating a user
+            //Arrange
+            await CreateInitialUsers(new[] { "xxxxx", "yyyyy" }, token);
+
+            using (var db = new GamesContext(Setup.DbOpts))
+            {
+                //Create game for user and assume everything is ready, player, connecting structures, order of moves etc.
+                //Arrange
+                //Act
+                var new_game = await db.CreateNewGameFromExternalUserIDAsync("xxxxx",
+                    InkBallGame.GameTypeEnum.FIRST_CAPTURE, 16, 20, 26, false, token);
+                //Assert
+                Assert.NotNull(new_game);
+                Assert.NotNull(new_game.Player1);
+                Assert.Equal("xxxxx", new_game.Player1.sExternalId);
+
+                var exception = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                {
+                    var create_duplicated_game = await db.CreateNewGameFromExternalUserIDAsync("xxxxx",
+                        InkBallGame.GameTypeEnum.FIRST_CAPTURE, 16, 20, 26, false, token);
+                });
+                Assert.Contains("Could not create new game", exception.Message);
+
+                
+                var exception1 = await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                {
+                    var no_user_game = await db.CreateNewGameFromExternalUserIDAsync("",
+                        InkBallGame.GameTypeEnum.FIRST_CAPTURE, 16, 20, 26, false, token);
+                });
+                Assert.Contains("Player external user ID is null or empty", exception1.Message);
             }
         }
 
@@ -1138,27 +1251,27 @@ namespace InkBall.Tests
                 Assert.NotNull(json_points);
                 Assert.NotNull(json_paths);
                 Assert.True(json_points.All(pt =>
-                    CommonPoint.UnDataMinimizerPlayerId(pt.iPlayerId) == 1 || CommonPoint.UnDataMinimizerPlayerId(pt.iPlayerId) == 2));
+                    UnDataMinimizerPlayerId(pt.iPlayerId, 1, 2) == 1 || UnDataMinimizerPlayerId(pt.iPlayerId, 1, 2) == 2));
                 Assert.True(json_paths.All(pa => /*pa.iGameId == 1 &&*/ (pa.iPlayerId == 1 || pa.iPlayerId == 2)));
 
                 //Assert
                 Assert.All(Enumerable.Range(0, p1_pts.GetLength(0)), (rank) =>
                 {
-                    Assert.Single(json_points, q => CommonPoint.UnDataMinimizerPlayerId(q.iPlayerId) == 1 &&
+                    Assert.Single(json_points, q => UnDataMinimizerPlayerId(q.iPlayerId, 1, 2) == 1 &&
                         q.iX == p1_pts[rank, 0] && q.iY == p1_pts[rank, 1]);
-                    Assert.Single(json_points, q => CommonPoint.UnDataMinimizerPlayerId(q.iPlayerId) == 2 &&
+                    Assert.Single(json_points, q => UnDataMinimizerPlayerId(q.iPlayerId, 1, 2) == 2 &&
                         q.iX == p2_pts[rank, 0] && q.iY == p2_pts[rank, 1]);
                 });
                 Assert.Contains(json_points, pt => Enum.IsDefined(typeof(InkBallPoint.StatusEnum), pt.Status) == false);
                 Assert.All(json_points, pt =>
                 {
-                    Assert.True(Enum.IsDefined(typeof(InkBallPoint.StatusEnum), CommonPoint.UnDataMinimizerStatus(pt.Status)));
+                    Assert.True(Enum.IsDefined(typeof(InkBallPoint.StatusEnum), UnDataMinimizerStatus(pt.Status)));
                 });
                 Assert.Contains(json_points, pt =>
-                    CommonPoint.UnDataMinimizerStatus(pt.Status) == 2 || CommonPoint.UnDataMinimizerStatus(pt.Status) == 3);
+                    UnDataMinimizerStatus(pt.Status) == 2 || UnDataMinimizerStatus(pt.Status) == 3);
 
                 //Assert
-                Assert.Single(json_paths, q => q.iPlayerId == 1 &&// q.iGameId == 1 &&
+                Assert.Single(json_paths, q => UnDataMinimizerPlayerId(q.iPlayerId, 1, 2) == 1 &&// q.iGameId == 1 &&
 
                     q.PointsAsString == Enumerable.Range(0, p1_pts.GetLength(0))
                     .Select(rank => $"{p1_pts[rank, 0]},{p1_pts[rank, 1]}")
@@ -1183,12 +1296,12 @@ namespace InkBall.Tests
                 var points_n_paths = await db.LoadPointsAndPathsAsync(1, token);
 
                 var json_points1 = JsonSerializer.Serialize(JsonSerializer.Deserialize<TempPoint[]>(
-                    CommonPoint.GetPointsAsJavaScriptArrayForPage(points_n_paths.Points),
+                    PlayerPointsAndPathsDTO.GetPointsAsJavaScriptArrayForPage(points_n_paths.Points, new InkBallPlayer{iId = 1}),
                     new JsonSerializerOptions { ReadCommentHandling = JsonCommentHandling.Skip, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, AllowTrailingCommas = true }),
                     new JsonSerializerOptions { ReadCommentHandling = JsonCommentHandling.Skip, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, AllowTrailingCommas = true });
 
                 var json_paths1 = JsonSerializer.Serialize(JsonSerializer.Deserialize<InkBallPathViewModel[]>(
-                    InkBallPath.GetPathsAsJavaScriptArrayForPage(points_n_paths.Paths),
+                    PlayerPointsAndPathsDTO.GetPathsAsJavaScriptArrayForPage(points_n_paths.Paths),
                     new JsonSerializerOptions { ReadCommentHandling = JsonCommentHandling.Skip, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault, AllowTrailingCommas = true }),
                     new JsonSerializerOptions { ReadCommentHandling = JsonCommentHandling.Skip, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault, AllowTrailingCommas = true });
 
@@ -1714,11 +1827,196 @@ new []{/*id=714*/4/*x*/, 8/*y*/, 3/*val*/, 4/*playerID*/},
             }//end using
         }//end method
 
-        //[Fact]
-        //public void SignalR_ClientToServer_CPUOponent()
-        //{
-        //    //TODO: implement this someday :-)
-        //}
+        [Fact]
+        public async Task ClientToServerPointWithCpuMove_PointAndPoint_Succeeds()
+        {
+            var token = base.CancellationToken;
+
+            using (var db = new GamesContext(Setup.DbOpts))
+            {
+                var game = await CreateCpuGameForBatchTests(db, 501, "cpu_user_batch_1", token);
+
+                var mockGameClient = new Mock<IGameClient>();
+                mockGameClient.Setup(c => c.ServerToClientPath(It.IsAny<InkBallPathViewModel>())).Returns(Task.FromResult(0));
+                mockGameClient.Setup(c => c.ServerToClientPing(It.IsAny<PingCommand>())).Returns(Task.FromResult(0));
+                mockGameClient.Setup(c => c.ServerToClientPlayerJoin(It.IsAny<PlayerJoiningCommand>())).Returns(Task.FromResult(0));
+                mockGameClient.Setup(c => c.ServerToClientPlayerSurrender(It.IsAny<PlayerSurrenderingCommand>())).Returns(Task.FromResult(0));
+                mockGameClient.Setup(c => c.ServerToClientPlayerWin(It.IsAny<WinCommand>())).Returns(Task.FromResult(0));
+                mockGameClient.Setup(c => c.ServerToClientPoint(It.IsAny<InkBallPointViewModel>())).Returns(Task.FromResult(0));
+
+                var mockHubCallerClients = new Mock<IHubCallerClients<IGameClient>>();
+                mockHubCallerClients.Setup(c => c.Client(It.IsAny<string>())).Returns(mockGameClient.Object);
+                mockHubCallerClients.Setup(c => c.User(It.IsAny<string>())).Returns(mockGameClient.Object);
+
+                var mockHubCallerContext = GetMockHubCallerContext(gameID: game.iId, playerID: game.Player1.iId, externalUserIdentifier: game.Player1.sExternalId);
+
+                using var hub = new GameHub(db, Setup.Logger)
+                {
+                    Clients = mockHubCallerClients.Object,
+                    Context = mockHubCallerContext.Object
+                };
+
+                await hub.OnConnectedAsync();
+
+                var response = await hub.ClientToServerPointWithCpuMove(new CpuMoveBatchRequest
+                {
+                    HumanPoint = new InkBallPointViewModel
+                    {
+                        iGameId = game.iId,
+                        iPlayerId = game.Player1.iId,
+                        iX = 3,
+                        iY = 3,
+                        Status = InkBallPoint.StatusEnum.POINT_FREE_RED
+                    },
+                    CpuPoint = new InkBallPointViewModel
+                    {
+                        iGameId = game.iId,
+                        iPlayerId = -1,
+                        iX = 4,
+                        iY = 4,
+                        Status = InkBallPoint.StatusEnum.POINT_FREE_BLUE
+                    }
+                });
+
+                Assert.NotNull(response);
+                Assert.NotNull(response.HumanPointTimeStamp);
+                Assert.Null(response.CpuMoveError);
+                Assert.NotNull(response.CpuPoint);
+                Assert.NotNull(response.CpuPoint.TimeStamp);
+                Assert.Equal(-1, response.CpuPoint.iPlayerId);
+
+                var points = await db.InkBallPoint.Where(p => p.iGameId == game.iId).ToListAsync(token);
+                Assert.Equal(2, points.Count);
+                Assert.Contains(points, p => p.iPlayerId == game.Player1.iId && p.iX == 3 && p.iY == 3);
+                Assert.Contains(points, p => p.iPlayerId == -1 && p.iX == 4 && p.iY == 4);
+            }
+        }
+
+        [Fact]
+        public async Task ClientToServerPointWithCpuMove_CpuPointInvalid_PartialSuccess()
+        {
+            var token = base.CancellationToken;
+
+            using (var db = new GamesContext(Setup.DbOpts))
+            {
+                var game = await CreateCpuGameForBatchTests(db, 502, "cpu_user_batch_2", token);
+
+                var mockGameClient = new Mock<IGameClient>();
+                mockGameClient.Setup(c => c.ServerToClientPath(It.IsAny<InkBallPathViewModel>())).Returns(Task.FromResult(0));
+                mockGameClient.Setup(c => c.ServerToClientPing(It.IsAny<PingCommand>())).Returns(Task.FromResult(0));
+                mockGameClient.Setup(c => c.ServerToClientPlayerJoin(It.IsAny<PlayerJoiningCommand>())).Returns(Task.FromResult(0));
+                mockGameClient.Setup(c => c.ServerToClientPlayerSurrender(It.IsAny<PlayerSurrenderingCommand>())).Returns(Task.FromResult(0));
+                mockGameClient.Setup(c => c.ServerToClientPlayerWin(It.IsAny<WinCommand>())).Returns(Task.FromResult(0));
+                mockGameClient.Setup(c => c.ServerToClientPoint(It.IsAny<InkBallPointViewModel>())).Returns(Task.FromResult(0));
+
+                var mockHubCallerClients = new Mock<IHubCallerClients<IGameClient>>();
+                mockHubCallerClients.Setup(c => c.Client(It.IsAny<string>())).Returns(mockGameClient.Object);
+                mockHubCallerClients.Setup(c => c.User(It.IsAny<string>())).Returns(mockGameClient.Object);
+
+                var mockHubCallerContext = GetMockHubCallerContext(gameID: game.iId, playerID: game.Player1.iId, externalUserIdentifier: game.Player1.sExternalId);
+
+                using var hub = new GameHub(db, Setup.Logger)
+                {
+                    Clients = mockHubCallerClients.Object,
+                    Context = mockHubCallerContext.Object
+                };
+
+                await hub.OnConnectedAsync();
+
+                var response = await hub.ClientToServerPointWithCpuMove(new CpuMoveBatchRequest
+                {
+                    HumanPoint = new InkBallPointViewModel
+                    {
+                        iGameId = game.iId,
+                        iPlayerId = game.Player1.iId,
+                        iX = 6,
+                        iY = 6,
+                        Status = InkBallPoint.StatusEnum.POINT_FREE_RED
+                    },
+                    CpuPoint = new InkBallPointViewModel
+                    {
+                        iGameId = game.iId,
+                        iPlayerId = -1,
+                        iX = 7,
+                        iY = 7,
+                        // Invalid for CPU turn right after red move, expected blue
+                        Status = InkBallPoint.StatusEnum.POINT_FREE_RED
+                    }
+                });
+
+                Assert.NotNull(response);
+                Assert.NotNull(response.HumanPointTimeStamp);
+                Assert.NotNull(response.CpuMoveError);
+                Assert.Null(response.CpuPoint);
+
+                var points = await db.InkBallPoint.Where(p => p.iGameId == game.iId).ToListAsync(token);
+                Assert.Single(points);
+                Assert.Contains(points, p => p.iPlayerId == game.Player1.iId && p.iX == 6 && p.iY == 6);
+            }
+        }
+
+        [Fact]
+        public async Task ClientToServerPointWithCpuMove_CpuPointDuplicatesHumanPoint_PartialSuccess()
+        {
+            var token = base.CancellationToken;
+
+            using (var db = new GamesContext(Setup.DbOpts))
+            {
+                var game = await CreateCpuGameForBatchTests(db, 503, "cpu_user_batch_3", token);
+
+                var mockGameClient = new Mock<IGameClient>();
+                mockGameClient.Setup(c => c.ServerToClientPath(It.IsAny<InkBallPathViewModel>())).Returns(Task.FromResult(0));
+                mockGameClient.Setup(c => c.ServerToClientPing(It.IsAny<PingCommand>())).Returns(Task.FromResult(0));
+                mockGameClient.Setup(c => c.ServerToClientPlayerJoin(It.IsAny<PlayerJoiningCommand>())).Returns(Task.FromResult(0));
+                mockGameClient.Setup(c => c.ServerToClientPlayerSurrender(It.IsAny<PlayerSurrenderingCommand>())).Returns(Task.FromResult(0));
+                mockGameClient.Setup(c => c.ServerToClientPlayerWin(It.IsAny<WinCommand>())).Returns(Task.FromResult(0));
+                mockGameClient.Setup(c => c.ServerToClientPoint(It.IsAny<InkBallPointViewModel>())).Returns(Task.FromResult(0));
+
+                var mockHubCallerClients = new Mock<IHubCallerClients<IGameClient>>();
+                mockHubCallerClients.Setup(c => c.Client(It.IsAny<string>())).Returns(mockGameClient.Object);
+                mockHubCallerClients.Setup(c => c.User(It.IsAny<string>())).Returns(mockGameClient.Object);
+
+                var mockHubCallerContext = GetMockHubCallerContext(gameID: game.iId, playerID: game.Player1.iId, externalUserIdentifier: game.Player1.sExternalId);
+
+                using var hub = new GameHub(db, Setup.Logger)
+                {
+                    Clients = mockHubCallerClients.Object,
+                    Context = mockHubCallerContext.Object
+                };
+
+                await hub.OnConnectedAsync();
+
+                var response = await hub.ClientToServerPointWithCpuMove(new CpuMoveBatchRequest
+                {
+                    HumanPoint = new InkBallPointViewModel
+                    {
+                        iGameId = game.iId,
+                        iPlayerId = game.Player1.iId,
+                        iX = 10,
+                        iY = 10,
+                        Status = InkBallPoint.StatusEnum.POINT_FREE_RED
+                    },
+                    CpuPoint = new InkBallPointViewModel
+                    {
+                        iGameId = game.iId,
+                        iPlayerId = -1,
+                        iX = 10,
+                        iY = 10,
+                        Status = InkBallPoint.StatusEnum.POINT_FREE_BLUE
+                    }
+                });
+
+                Assert.NotNull(response);
+                Assert.NotNull(response.HumanPointTimeStamp);
+                Assert.NotNull(response.CpuMoveError);
+                Assert.Contains("point already placed", response.CpuMoveError);
+                Assert.Null(response.CpuPoint);
+
+                var points = await db.InkBallPoint.Where(p => p.iGameId == game.iId).ToListAsync(token);
+                Assert.Single(points);
+                Assert.Contains(points, p => p.iPlayerId == game.Player1.iId && p.iX == 10 && p.iY == 10);
+            }
+        }
 
     }//end class
 }
