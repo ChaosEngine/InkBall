@@ -205,7 +205,7 @@ class StopAndDrawCommand extends DtoMsg {
 
 	static Format(otherUser) {
 		// return 'User ' + otherUser + ' started to draw path';
-		return localizeMessage('game.usrStartedPath', `User ${otherUser} started to draw path`, { otherUser });
+		return localizeMessage('game.usrStartedPath', `User ${otherUser} started to draw path`, { other: otherUser });
 	}
 }
 
