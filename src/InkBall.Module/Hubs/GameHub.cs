@@ -4,6 +4,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
@@ -13,6 +16,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -461,7 +465,18 @@ namespace InkBall.Module.Hubs
 			if (path == null || path.iId <= 0)
 				return;
 
-			PopulatePathPointsCollection(path);
+			// Avoid mutating tracked EF entities with synthetic cache-only points.
+			var cachePath = _dbContext.Entry(path).State == EntityState.Detached
+				? path
+				: new InkBallPath
+				{
+					iId = path.iId,
+					iGameId = path.iGameId,
+					iPlayerId = path.iPlayerId,
+					PointsAsString = path.PointsAsString
+				};
+
+			PopulatePathPointsCollection(cachePath);
 
 			var cacheEntry = _pathCache.GetOrCreate(GetGamePathsCacheKey(gameID), cache =>
 			{
@@ -472,9 +487,9 @@ namespace InkBall.Module.Hubs
 			await cacheEntry.Gate.WaitAsync(token);
 			try
 			{
-				cacheEntry.PathsById[path.iId] = path;
-				if (path.iId > cacheEntry.MaxPathId)
-					cacheEntry.MaxPathId = path.iId;
+				cacheEntry.PathsById[cachePath.iId] = cachePath;
+				if (cachePath.iId > cacheEntry.MaxPathId)
+					cacheEntry.MaxPathId = cachePath.iId;
 			}
 			finally
 			{
@@ -485,6 +500,72 @@ namespace InkBall.Module.Hubs
 		private void EvictGamePathsCache(int gameID)
 		{
 			_pathCache.Remove(GetGamePathsCacheKey(gameID));
+		}
+
+		private async Task BulkUpdatePathPointsAsync(int gameID, int enclosingPathID,
+			IReadOnlyCollection<(int X, int Y, InkBallPoint.StatusEnum Status)> pointUpdates,
+			CancellationToken token)
+		{
+			if (pointUpdates == null || pointUpdates.Count == 0)
+				return;
+
+			var entityType = _dbContext.Model.FindEntityType(typeof(InkBallPoint))
+				?? throw new InvalidOperationException($"Entity metadata missing for {nameof(InkBallPoint)}");
+			var tableName = entityType.GetTableName()
+				?? throw new InvalidOperationException($"Table name missing for {nameof(InkBallPoint)}");
+			var schema = entityType.GetSchema();
+			var tableIdentifier = StoreObjectIdentifier.Table(tableName, schema);
+
+			var sqlGenerationHelper = _dbContext.GetService<ISqlGenerationHelper>();
+			var tableSql = sqlGenerationHelper.DelimitIdentifier(tableName, schema);
+
+			string ResolveColumn(string propertyName)
+			{
+				var property = entityType.FindProperty(propertyName)
+					?? throw new InvalidOperationException($"Property metadata missing for {propertyName}");
+				var columnName = property.GetColumnName(tableIdentifier)
+					?? throw new InvalidOperationException($"Column mapping missing for {propertyName}");
+				return sqlGenerationHelper.DelimitIdentifier(columnName);
+			}
+
+			var statusCol = ResolveColumn(nameof(InkBallPoint.Status));
+			var enclosingPathCol = ResolveColumn(nameof(InkBallPoint.iEnclosingPathId));
+			var gameIdCol = ResolveColumn(nameof(InkBallPoint.iGameId));
+			var xCol = ResolveColumn(nameof(InkBallPoint.iX));
+			var yCol = ResolveColumn(nameof(InkBallPoint.iY));
+
+			var args = new List<object>();
+			int AddArg(object value)
+			{
+				args.Add(value);
+				return args.Count - 1;
+			}
+
+			var gameIdArg = AddArg(gameID);
+			var pathIdArg = AddArg(enclosingPathID);
+
+			var statusCases = new List<string>(pointUpdates.Count);
+			var enclosingCases = new List<string>(pointUpdates.Count);
+			var wherePredicates = new List<string>(pointUpdates.Count);
+
+			foreach (var update in pointUpdates)
+			{
+				var xArg = AddArg(update.X);
+				var yArg = AddArg(update.Y);
+				var statusArg = AddArg(update.Status);
+
+				statusCases.Add($"WHEN {xCol} = {{{xArg}}} AND {yCol} = {{{yArg}}} THEN {{{statusArg}}}");
+				enclosingCases.Add($"WHEN {xCol} = {{{xArg}}} AND {yCol} = {{{yArg}}} THEN {{{pathIdArg}}}");
+				wherePredicates.Add($"({xCol} = {{{xArg}}} AND {yCol} = {{{yArg}}})");
+			}
+
+			var sql = new StringBuilder();
+			sql.AppendLine($"UPDATE {tableSql}");
+			sql.AppendLine($"SET {statusCol} = CASE {string.Join(" ", statusCases)} ELSE {statusCol} END,");
+			sql.AppendLine($"    {enclosingPathCol} = CASE {string.Join(" ", enclosingCases)} ELSE {enclosingPathCol} END");
+			sql.AppendLine($"WHERE {gameIdCol} = {{{gameIdArg}}} AND ({string.Join(" OR ", wherePredicates)})");
+
+			await _dbContext.Database.ExecuteSqlRawAsync(sql.ToString(), args.ToArray(), token);
 		}
 
 		internal static string GetGamePathsCacheKey(int gameID) => $"{nameof(GameHub)}:game-paths:{gameID}";
@@ -665,7 +746,7 @@ namespace InkBall.Module.Hubs
 				}
 				var db_path_player = ThisPlayer.iId == path.iPlayerId ? ThisPlayer : OtherPlayer;
 				var other_player_db = db_path_player.IsCpuPlayer ? ThisPlayer : OtherPlayer;
-				var all_placed_points_fromDB = await (from p in _dbContext.InkBallPoint
+				var all_placed_points_fromDB = await (from p in _dbContext.InkBallPoint.AsNoTracking()
 													  where p.iGameId == ThisGame.iId &&
 													  (
 														  (p.iEnclosingPathId == null && new[] { current_player_color, other_player_color }.Contains(p.Status)) ||
@@ -673,6 +754,8 @@ namespace InkBall.Module.Hubs
 													  )
 													  select p).Cast<IPoint>()
 													  .ToDictionaryAsync(pip => pip, _simpleCoordsPointComparer, token);
+
+				var batchedPointUpdates = new Dictionary<(int X, int Y), InkBallPoint.StatusEnum>();
 
 				var db_path = new InkBallPath
 				{
@@ -698,9 +781,8 @@ namespace InkBall.Module.Hubs
 						throw new ArgumentOutOfRangeException($"point not in path [{pop}]");
 					}
 
-					found.Status = status;
+					batchedPointUpdates[(found.iX, found.iY)] = status;
 					status = InkBallPoint.StatusEnum.POINT_IN_PATH;
-					found.EnclosingPath = db_path;
 				}
 
 				if (!isDelayedPathDrawn)
@@ -719,8 +801,7 @@ namespace InkBall.Module.Hubs
 						throw new ArgumentOutOfRangeException($"owning point not found [{op}]");
 					}
 
-					found.Status = owning_color;
-					found.EnclosingPath = db_path;
+					batchedPointUpdates[(found.iX, found.iY)] = owning_color;
 				}
 				string last_move = path.SerializeThin();
 				db_path.PointsAsString = last_move;
@@ -737,6 +818,10 @@ namespace InkBall.Module.Hubs
 					await _dbContext.InkBallPath.AddAsync(db_path, token);
 
 					await _dbContext.SaveChangesAsync(token);
+
+					await BulkUpdatePathPointsAsync(path.iGameId, db_path.iId,
+						batchedPointUpdates.Select(kvp => (kvp.Key.X, kvp.Key.Y, kvp.Value)).ToList(),
+						token);
 
 					// #if DEBUG
 					// 						var saved_pts = await _dbContext.LoadPointsAndPathsAsync(ThisGameID.Value, token);
