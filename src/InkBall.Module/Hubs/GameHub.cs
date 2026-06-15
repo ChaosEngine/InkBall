@@ -4,10 +4,12 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using Microsoft.Net.Http.Headers;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
@@ -372,11 +374,129 @@ namespace InkBall.Module.Hubs
 			}
 		}
 
+		#region Path caching
+
+		const int SlidingExpirationMinutes = 30;
+		const int AbsoluteExpirationHours = 3;
+
+		internal sealed class GamePathsCacheEntry
+		{
+			public SemaphoreSlim Gate { get; } = new SemaphoreSlim(1, 1);
+
+			public Dictionary<int, InkBallPath> PathsById { get; } = new Dictionary<int, InkBallPath>();
+
+			public int MaxPathId { get; set; }
+		}
+
+		private readonly IMemoryCache _pathCache;
+
+		private static void PopulatePathPointsCollection(InkBallPath path)
+		{
+			if (path == null || path.InkBallPoints?.Count > 0)
+				return;
+
+			var fromJson = JsonSerializer.Deserialize(path.PointsAsString, InkBallPathViewModel_Context.Default.InkBallPathViewModel);
+			if (fromJson?.InkBallPoints == null)
+				return;
+
+			path.InkBallPoints = fromJson
+				.InkBallPoints
+				.Select(c => new InkBallPoint
+				{
+					iX = c.iX,
+					iY = c.iY,
+					Status = c.Status,
+					iEnclosingPathId = path.iId
+				})
+				.ToList();
+		}
+
+		private async Task<IReadOnlyCollection<InkBallPath>> GetCachedGamePathsAsync(int gameID, CancellationToken token)
+		{
+			var cacheEntry = _pathCache.GetOrCreate(GetGamePathsCacheKey(gameID), cache =>
+			{
+				cache.SetSlidingExpiration(TimeSpan.FromMinutes(SlidingExpirationMinutes));
+				cache.SetAbsoluteExpiration(TimeSpan.FromHours(AbsoluteExpirationHours));
+				return new GamePathsCacheEntry();
+			});
+
+			await cacheEntry.Gate.WaitAsync(token);
+			try
+			{
+				if (cacheEntry.PathsById.Count == 0)
+				{
+					var loadedPaths = await _dbContext.GetPathsFromDatabaseAsync(gameID, false, true, token);
+					foreach (var path in loadedPaths)
+					{
+						cacheEntry.PathsById[path.iId] = path;
+						if (path.iId > cacheEntry.MaxPathId)
+							cacheEntry.MaxPathId = path.iId;
+					}
+				}
+				else
+				{
+					var newerPaths = await _dbContext.InkBallPath
+						.AsNoTracking()
+						.Where(pa => pa.iGameId == gameID && pa.iId > cacheEntry.MaxPathId)
+						.ToListAsync(token);
+					foreach (var path in newerPaths)
+					{
+						PopulatePathPointsCollection(path);
+						cacheEntry.PathsById[path.iId] = path;
+						if (path.iId > cacheEntry.MaxPathId)
+							cacheEntry.MaxPathId = path.iId;
+					}
+				}
+
+				return cacheEntry.PathsById.Values.ToList();
+			}
+			finally
+			{
+				cacheEntry.Gate.Release();
+			}
+		}
+
+		private async Task CacheNewlyCreatedPathAsync(int gameID, InkBallPath path, CancellationToken token)
+		{
+			if (path == null || path.iId <= 0)
+				return;
+
+			PopulatePathPointsCollection(path);
+
+			var cacheEntry = _pathCache.GetOrCreate(GetGamePathsCacheKey(gameID), cache =>
+			{
+				cache.SetSlidingExpiration(TimeSpan.FromMinutes(SlidingExpirationMinutes));
+				cache.SetAbsoluteExpiration(TimeSpan.FromHours(AbsoluteExpirationHours));
+				return new GamePathsCacheEntry();
+			});
+			await cacheEntry.Gate.WaitAsync(token);
+			try
+			{
+				cacheEntry.PathsById[path.iId] = path;
+				if (path.iId > cacheEntry.MaxPathId)
+					cacheEntry.MaxPathId = path.iId;
+			}
+			finally
+			{
+				cacheEntry.Gate.Release();
+			}
+		}
+
+		private void EvictGamePathsCache(int gameID)
+		{
+			_pathCache.Remove(GetGamePathsCacheKey(gameID));
+		}
+
+		internal static string GetGamePathsCacheKey(int gameID) => $"{nameof(GameHub)}:game-paths:{gameID}";
+
+		#endregion Path caching
+
 		#endregion Private methods
 
-		public GameHub(GamesContext dbContext, ILogger<GameHub> logger)
+		public GameHub(GamesContext dbContext, ILogger<GameHub> logger, IMemoryCache memoryCache = null)
 		{
 			_dbContext = dbContext;
+			_pathCache = memoryCache ?? new MemoryCache(new MemoryCacheOptions());
 			_logger = logger;
 		}
 
@@ -440,7 +560,7 @@ namespace InkBall.Module.Hubs
 				if (already_placed)
 					throw new ArgumentException($"point already placed ({point})");
 
-				var game_paths = await _dbContext.GetPathsFromDatabaseAsync(point.iGameId, false, true, token);
+				var game_paths = await GetCachedGamePathsAsync(point.iGameId, token);
 				if (game_paths.Any(pa => pa.IsPointInsidePath(point)))
 					throw new ArgumentException("point inside path");
 
@@ -617,6 +737,7 @@ namespace InkBall.Module.Hubs
 					await _dbContext.InkBallPath.AddAsync(db_path, token);
 
 					await _dbContext.SaveChangesAsync(token);
+
 					// #if DEBUG
 					// 						var saved_pts = await _dbContext.LoadPointsAndPathsAsync(ThisGameID.Value, token);
 					// 						var restored_from_db = saved_pts.Paths.LastOrDefault();
@@ -653,12 +774,17 @@ namespace InkBall.Module.Hubs
 					if (ownsTransaction)
 						await currentTransaction.CommitAsync(token);
 
+					await CacheNewlyCreatedPathAsync(path.iGameId, db_path, token);
+					if (win_status != InkBallGame.WinStatusEnum.NO_WIN)
+						EvictGamePathsCache(path.iGameId);
+
 					return dto;
 				}
 				catch (Exception ex)
 				{
 					if (ownsTransaction)
 						await currentTransaction.RollbackAsync(token);
+					EvictGamePathsCache(path.iGameId);
 					_logger.LogError(ex, nameof(ClientToServerPath));
 					throw;
 				}

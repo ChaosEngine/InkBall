@@ -78,6 +78,49 @@ namespace InkBall.Tests
         {
         }
 
+        [Fact]
+        public async Task ClientToServerPoint_PopulatesSharedGamePathCache()
+        {
+            var token = base.CancellationToken;
+
+            await CreateComplexGameHierarchy(token, InkBallGame.GameTypeEnum.FIRST_5_PATHS);
+
+            using (var db = new GamesContext(Setup.DbOpts))
+            {
+                var mockGameClient = new Mock<IGameClient>();
+                mockGameClient.Setup(c => c.ServerToClientPath(It.IsAny<InkBallPathViewModel>())).Returns(Task.FromResult(0));
+                mockGameClient.Setup(c => c.ServerToClientPing(It.IsAny<PingCommand>())).Returns(Task.FromResult(0));
+                mockGameClient.Setup(c => c.ServerToClientPlayerJoin(It.IsAny<PlayerJoiningCommand>())).Returns(Task.FromResult(0));
+                mockGameClient.Setup(c => c.ServerToClientPlayerSurrender(It.IsAny<PlayerSurrenderingCommand>())).Returns(Task.FromResult(0));
+                mockGameClient.Setup(c => c.ServerToClientPlayerWin(It.IsAny<WinCommand>())).Returns(Task.FromResult(0));
+                mockGameClient.Setup(c => c.ServerToClientPoint(It.IsAny<InkBallPointViewModel>())).Returns(Task.FromResult(0));
+
+                var mockHubCallerClients = new Mock<IHubCallerClients<IGameClient>>();
+                mockHubCallerClients.Setup(c => c.Client(It.IsAny<string>())).Returns(mockGameClient.Object);
+                mockHubCallerClients.Setup(c => c.User(It.IsAny<string>())).Returns(mockGameClient.Object);
+
+                var mockHubCallerContext = GetMockHubCallerContext(gameID: 1, playerID: 1, externalUserIdentifier: "xxxxx");
+
+                using var hub = new GameHub(db, Setup.Logger, Setup.Cache)
+                {
+                    Clients = mockHubCallerClients.Object,
+                    Context = mockHubCallerContext.Object
+                };
+
+                await hub.OnConnectedAsync();
+                await hub.ClientToServerPoint(new InkBallPointViewModel
+                {
+                    iX = 7,
+                    iY = 7,
+                    Status = InkBallPoint.StatusEnum.POINT_FREE_RED,
+                    iGameId = 1,
+                    iPlayerId = 1,
+                });
+
+                Assert.True(Setup.Cache.TryGetValue("GameHub:game-paths:1", out _));
+            }
+        }
+
         Mock<HubCallerContext> GetMockHubCallerContext(int gameID, int playerID, /*int userID, */string externalUserIdentifier)
         {
             var httpContextMock = new Moq.Mock<HttpContext>();

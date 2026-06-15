@@ -10,6 +10,7 @@ using InkBall.Module.Hubs;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Identity;
 using System.Diagnostics.CodeAnalysis;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace InkBall.Module.Pages
 {
@@ -20,14 +21,16 @@ namespace InkBall.Module.Pages
 
 		private readonly IHubContext<GameHub, IGameClient> _inkballHubContext;
 		private readonly IOptions<InkBallOptions> _commonUIConfigureOptions;
-
+		private readonly IMemoryCache _pathCache;
 
 		public HomeModel(GamesContext dbContext, ILogger<HomeModel> logger,
 			IHubContext<Hubs.GameHub, Hubs.IGameClient> inkballHubContext,
-			IOptions<InkBallOptions> commonUIConfigureOptions) : base(dbContext, logger)
+			IOptions<InkBallOptions> commonUIConfigureOptions,
+			IMemoryCache pathCache) : base(dbContext, logger)
 		{
 			_inkballHubContext = inkballHubContext;
 			_commonUIConfigureOptions = commonUIConfigureOptions;
+			_pathCache = pathCache;
 		}
 
 		public async Task OnGet()
@@ -37,7 +40,7 @@ namespace InkBall.Module.Pages
 			// Message = "start1ng info end0";
 		}
 
-        [RequiresUnreferencedCode("Contains dynamic reflection savvy code")]
+		[RequiresUnreferencedCode("Contains dynamic reflection savvy code")]
 		public async Task<IActionResult> OnPostAsync(string action, string gameType, InkBallGame.BoardSizeEnum boardSize,
 			string cpuOponent)
 		{
@@ -186,8 +189,11 @@ namespace InkBall.Module.Pages
 												if (!string.IsNullOrEmpty(recipient_id_looser.Item1))
 												{
 													await _inkballHubContext.Clients.User(recipient_id_looser.Item1).ServerToClientPlayerSurrender(
-														new PlayerSurrenderingCommand(recipient_id_looser.Item2.GetValueOrDefault(0), true,
-														$"Player {recipient_id_looser.Item3 ?? ""} logged out;plaXLoggedOut"));
+														new PlayerSurrenderingCommand(
+															recipient_id_looser.Item2.GetValueOrDefault(0), true,
+															$"Player {recipient_id_looser.Item3 ?? ""} logged out;plaXLoggedOut"
+														)
+													);
 												}
 											}
 											catch (Exception ex)
@@ -200,6 +206,19 @@ namespace InkBall.Module.Pages
 									}
 
 									await trans.CommitAsync(token);
+
+									if (_pathCache.TryGetValue(GameHub.GetGamePathsCacheKey(ActiveGame.iId), out GameHub.GamePathsCacheEntry cacheEntry))
+									{
+										await cacheEntry.Gate.WaitAsync(token);
+										try
+										{
+											_pathCache.Remove(GameHub.GetGamePathsCacheKey(ActiveGame.iId));
+										}
+										finally
+										{
+											cacheEntry.Gate.Release();
+										}
+									}
 								}
 								catch (Exception ex)
 								{
