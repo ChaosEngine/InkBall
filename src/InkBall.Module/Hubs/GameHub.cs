@@ -518,6 +518,7 @@ namespace InkBall.Module.Hubs
 
 			var sqlGenerationHelper = _dbContext.GetService<ISqlGenerationHelper>();
 			var tableSql = sqlGenerationHelper.DelimitIdentifier(tableName, schema);
+			string Param(int argIndex) => sqlGenerationHelper.GenerateParameterNamePlaceholder($"p{argIndex}");
 
 			string ResolveColumn(string propertyName)
 			{
@@ -554,16 +555,16 @@ namespace InkBall.Module.Hubs
 				var yArg = AddArg(update.Y);
 				var statusArg = AddArg(update.Status);
 
-				statusCases.Add($"WHEN {xCol} = @p{xArg} AND {yCol} = @p{yArg} THEN @p{statusArg}");
-				enclosingCases.Add($"WHEN {xCol} = @p{xArg} AND {yCol} = @p{yArg} THEN @p{pathIdArg}");
-				wherePredicates.Add($"({xCol} = @p{xArg} AND {yCol} = @p{yArg})");
+				statusCases.Add($"WHEN {xCol} = {Param(xArg)} AND {yCol} = {Param(yArg)} THEN {Param(statusArg)}");
+				enclosingCases.Add($"WHEN {xCol} = {Param(xArg)} AND {yCol} = {Param(yArg)} THEN {Param(pathIdArg)}");
+				wherePredicates.Add($"({xCol} = {Param(xArg)} AND {yCol} = {Param(yArg)})");
 			}
 
 			var sql = new StringBuilder(200);
 			sql.AppendLine($"UPDATE {tableSql}");
 			sql.AppendLine($"SET {statusCol} = CASE {string.Join(" ", statusCases)} ELSE {statusCol} END,");
 			sql.AppendLine($"    {enclosingPathCol} = CASE {string.Join(" ", enclosingCases)} ELSE {enclosingPathCol} END");
-			sql.AppendLine($"WHERE {gameIdCol} = @p{gameIdArg} AND ({string.Join(" OR ", wherePredicates)})");
+			sql.AppendLine($"WHERE {gameIdCol} = {Param(gameIdArg)} AND ({string.Join(" OR ", wherePredicates)})");
 
 			await _dbContext.Database.ExecuteSqlRawAsync(sql.ToString(), args.ToArray(), token);
 		}
