@@ -554,16 +554,16 @@ namespace InkBall.Module.Hubs
 				var yArg = AddArg(update.Y);
 				var statusArg = AddArg(update.Status);
 
-				statusCases.Add($"WHEN {xCol} = {{{xArg}}} AND {yCol} = {{{yArg}}} THEN {{{statusArg}}}");
-				enclosingCases.Add($"WHEN {xCol} = {{{xArg}}} AND {yCol} = {{{yArg}}} THEN {{{pathIdArg}}}");
-				wherePredicates.Add($"({xCol} = {{{xArg}}} AND {yCol} = {{{yArg}}})");
+				statusCases.Add($"WHEN {xCol} = @p{xArg} AND {yCol} = @p{yArg} THEN @p{statusArg}");
+				enclosingCases.Add($"WHEN {xCol} = @p{xArg} AND {yCol} = @p{yArg} THEN @p{pathIdArg}");
+				wherePredicates.Add($"({xCol} = @p{xArg} AND {yCol} = @p{yArg})");
 			}
 
-			var sql = new StringBuilder();
+			var sql = new StringBuilder(200);
 			sql.AppendLine($"UPDATE {tableSql}");
 			sql.AppendLine($"SET {statusCol} = CASE {string.Join(" ", statusCases)} ELSE {statusCol} END,");
 			sql.AppendLine($"    {enclosingPathCol} = CASE {string.Join(" ", enclosingCases)} ELSE {enclosingPathCol} END");
-			sql.AppendLine($"WHERE {gameIdCol} = {{{gameIdArg}}} AND ({string.Join(" OR ", wherePredicates)})");
+			sql.AppendLine($"WHERE {gameIdCol} = @p{gameIdArg} AND ({string.Join(" OR ", wherePredicates)})");
 
 			await _dbContext.Database.ExecuteSqlRawAsync(sql.ToString(), args.ToArray(), token);
 		}
