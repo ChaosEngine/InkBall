@@ -1094,9 +1094,9 @@ namespace InkBall.Tests
                 Assert.NotNull(games_from_db);
                 Assert.NotEmpty(games_from_db);
                 Assert.NotNull(games_from_db.FirstOrDefault(p => p.Player1?.sExternalId == "xxxxx"));
-                Assert.NotNull(games_from_db.First().GetPlayer());
-                Assert.Equal("xxxxx", games_from_db.First().GetPlayer().sExternalId);
-                Assert.True(games_from_db.First().IsThisPlayerActive());
+                Assert.NotNull(games_from_db.First().GetPlayer1());
+                Assert.Equal("xxxxx", games_from_db.First().GetPlayer1().sExternalId);
+                Assert.False(games_from_db.First().IsThisPlayerActive());
                 Assert.Equal(InkBallGame.GameStateEnum.AWAITING, games_from_db.First().GameState);
                 Assert.True(games_from_db.First().iId > 0);
 

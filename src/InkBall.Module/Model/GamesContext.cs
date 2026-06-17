@@ -870,13 +870,38 @@ namespace InkBall.Module.Model
 
 		public async Task<IEnumerable<InkBallGame>> GetGamesForRegistrationAsSelectTableRowsAsync(CancellationToken token = default)
 		{
-
-			var query = from ig in InkBallGame
-						.Include(ip1 => ip1.Player1)
-						.Include(ip2 => ip2.Player2)
+			var query = from ig in InkBallGame.AsNoTracking()
+						// .Include(ip1 => ip1.Player1)
+						// .Include(ip2 => ip2.Player2)
 						where ActiveVisibleGameStates.Contains(ig.GameState)
 						orderby ig.iId
-						select ig;
+						select new InkBallGame
+						{
+							iId = ig.iId,
+							iPlayer1Id = ig.iPlayer1Id,
+							iPlayer2Id = ig.iPlayer2Id,
+							bIsPlayer1 = ig.bIsPlayer1,
+							bIsPlayer1Active = ig.bIsPlayer1Active,
+							GameState = ig.GameState,
+							GameType = ig.GameType,
+							// CreateTime = ig.CreateTime,
+							// TimeStamp = ig.TimeStamp,
+							
+							Player1 = new InkBallPlayer
+							{
+								iId = ig.Player1.iId,
+								UserName = ig.Player1.UserName,
+								sExternalId = ig.Player1.sExternalId,
+								// TimeStamp = ig.Player1.TimeStamp,
+							},
+							Player2 = ig.Player2 != null ? new InkBallPlayer
+							{
+								iId = ig.Player2.iId,
+								UserName = ig.Player2.UserName,
+								sExternalId = ig.Player2.sExternalId,
+								// TimeStamp = ig.Player2.TimeStamp,
+							} : null
+						};
 
 			return await query.ToArrayAsync(token);
 		}
