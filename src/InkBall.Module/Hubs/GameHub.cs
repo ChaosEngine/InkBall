@@ -15,6 +15,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
@@ -630,21 +631,26 @@ namespace InkBall.Module.Hubs
 				if (point.iPlayerId != ThisPlayer.iId && point.iPlayerId != OtherPlayer.iId)
 					throw new ArgumentException("bad Player ID");
 
-
-				var already_placed = _dbContext.InkBallPoint.Local.Any(pts =>
-									pts.iGameId == ThisGame.iId
-									&& pts.iX == point.iX && pts.iY == point.iY)
-					|| await _dbContext.InkBallPoint.AsNoTracking().AnyAsync(pts =>
-									pts.iGameId == ThisGame.iId
-									&& pts.iX == point.iX && pts.iY == point.iY,
-									token);
-				var db_point_player = ThisPlayer.iId == point.iPlayerId ? ThisPlayer : OtherPlayer;
-				if (already_placed)
+				if (_dbContext.InkBallPoint.Local.Any(pts =>
+					pts.iGameId == ThisGame.iId
+					&& pts.iX == point.iX && pts.iY == point.iY))
 					throw new ArgumentException($"point already placed ({point})");
 
 				var game_paths = await GetCachedGamePathsAsync(point.iGameId, token);
 				if (game_paths.Any(pa => pa.IsPointInsidePath(point)))
+				{
+					// Keep legacy exception precedence for invalid duplicate points that also lie in a path.
+					if (await _dbContext.InkBallPoint.AsNoTracking().AnyAsync(pts =>
+						pts.iGameId == ThisGame.iId
+						&& pts.iX == point.iX && pts.iY == point.iY,
+						token))
+					{
+						throw new ArgumentException($"point already placed ({point})");
+					}
+
 					throw new ArgumentException("point inside path");
+				}
+				var db_point_player = ThisPlayer.iId == point.iPlayerId ? ThisPlayer : OtherPlayer;
 
 				var db_point = new InkBallPoint
 				{
@@ -682,6 +688,19 @@ namespace InkBall.Module.Hubs
 
 					if (ownsTransaction)
 						await currentTransaction.CommitAsync(token);
+				}
+				catch (DbUpdateException ex) when (GamesContext.IsUniqueConstraintViolation(ex, _dbContext.Database.ProviderName))
+				{
+					if (ownsTransaction)
+						await currentTransaction.RollbackAsync(token);
+					throw new ArgumentException($"point already placed ({point})");
+				}
+				catch (InvalidOperationException ex) when (ex.Message.Contains("cannot be tracked", StringComparison.OrdinalIgnoreCase)
+					&& ex.Message.Contains("same key value", StringComparison.OrdinalIgnoreCase))
+				{
+					if (ownsTransaction)
+						await currentTransaction.RollbackAsync(token);
+					throw new ArgumentException($"point already placed ({point})");
 				}
 				catch (Exception ex)
 				{
@@ -728,7 +747,6 @@ namespace InkBall.Module.Hubs
 					throw new ArgumentException("bad path");
 				if (path.iPlayerId != ThisPlayer.iId && path.iPlayerId != OtherPlayer.iId)
 					throw new ArgumentException("bad Player ID");
-				ICollection<InkBallPointViewModel> points_on_path = path.InkBallPoints;//serialize points from path int objects
 
 				InkBallPoint.StatusEnum current_player_color, other_player_color, owning_color, other_owning_color;
 				if (ThisGame.IsThisPlayerPlayingWithRed(path))
@@ -747,16 +765,39 @@ namespace InkBall.Module.Hubs
 				}
 				var db_path_player = ThisPlayer.iId == path.iPlayerId ? ThisPlayer : OtherPlayer;
 				var other_player_db = db_path_player.IsCpuPlayer ? ThisPlayer : OtherPlayer;
-				var all_placed_points_fromDB = await (from p in _dbContext.InkBallPoint.AsNoTracking()
-													  where p.iGameId == ThisGame.iId &&
-													  (
-														  (p.iEnclosingPathId == null && new[] { current_player_color, other_player_color }.Contains(p.Status)) ||
-														  (p.iEnclosingPathId != null && _inPathColors.Contains(p.Status))
-													  )
-													  select p).Cast<IPoint>()
-													  .ToDictionaryAsync(pip => pip, _simpleCoordsPointComparer, token);
 
-				var batchedPointUpdates = new Dictionary<(int X, int Y), InkBallPoint.StatusEnum>();
+				// Collect coordinates needed for validation to reduce point load
+				ICollection<InkBallPointViewModel> points_on_path = path.InkBallPoints;//serialize points from path int objects
+				var owning_points = path.GetOwnedPoints(owning_color, other_player_db.iId);
+				var all_needed_coords = points_on_path.Union(owning_points);
+
+				var pointParam = Expression.Parameter(typeof(InkBallPoint), "p");
+				Expression coordBody = Expression.Constant(false);
+				foreach (var point in all_needed_coords)
+				{
+					var xEqual = Expression.Equal(
+						Expression.Property(pointParam, nameof(InkBallPoint.iX)),
+						Expression.Constant(point.iX));
+					var yEqual = Expression.Equal(
+						Expression.Property(pointParam, nameof(InkBallPoint.iY)),
+						Expression.Constant(point.iY));
+
+					coordBody = Expression.OrElse(coordBody, Expression.AndAlso(xEqual, yEqual));
+				}
+				var coordFilter = Expression.Lambda<Func<InkBallPoint, bool>>(coordBody, pointParam);
+
+				var all_placed_points_fromDB = await _dbContext.InkBallPoint
+					.AsNoTracking()
+					.Where(p => p.iGameId == ThisGame.iId &&
+						(
+							(p.iEnclosingPathId == null && new[] { current_player_color, other_player_color }.Contains(p.Status)) ||
+							(p.iEnclosingPathId != null && _inPathColors.Contains(p.Status))
+						))
+					.Where(coordFilter)
+					.Cast<IPoint>()
+					.ToDictionaryAsync(pip => pip, _simpleCoordsPointComparer, token);
+
+				var batchedPointUpdates = new Dictionary<(int X, int Y), InkBallPoint.StatusEnum>(all_needed_coords.Count());
 
 				var db_path = new InkBallPath
 				{
@@ -789,7 +830,6 @@ namespace InkBall.Module.Hubs
 				if (!isDelayedPathDrawn)
 					ThisGame.bIsPlayer1Active = !ThisGame.bIsPlayer1Active;
 
-				var owning_points = path.GetOwnedPoints(owning_color, other_player_db.iId);
 				foreach (var op in owning_points)
 				{
 					if (!(all_placed_points_fromDB.TryGetValue(op, out IPoint iobj) && iobj is InkBallPoint found)

@@ -18,6 +18,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Options;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 
 namespace InkBall.Module.Model
 {
@@ -278,6 +279,84 @@ namespace InkBall.Module.Model
 				default:
 					throw new NotSupportedException($"Bad DBKind name {activeProvider}");
 			}
+		}
+
+		public static bool IsUniqueConstraintViolation(DbUpdateException exception, string activeProvider)
+		{
+			if (exception == null)
+				return false;
+
+			static int? GetIntProperty(object obj, string propertyName)
+			{
+				var value = obj?.GetType().GetProperty(propertyName)?.GetValue(obj);
+				if (value == null)
+					return null;
+
+				return int.TryParse(Convert.ToString(value, CultureInfo.InvariantCulture), out int parsed)
+					? parsed
+					: null;
+			}
+
+			static string GetStringProperty(object obj, string propertyName)
+			{
+				return obj?.GetType().GetProperty(propertyName)?.GetValue(obj)?.ToString();
+			}
+
+			var provider = (activeProvider ?? string.Empty).ToLowerInvariant();
+			var baseException = exception.GetBaseException();
+			var message = (baseException?.Message ?? exception.Message ?? string.Empty).ToLowerInvariant();
+
+			if (provider.Contains("sqlite"))
+			{
+				var sqliteCode = GetIntProperty(baseException, "SqliteErrorCode");
+				var sqliteExtendedCode = GetIntProperty(baseException, "SqliteExtendedErrorCode");
+				if (sqliteCode == 19 || sqliteExtendedCode == 1555 || sqliteExtendedCode == 2067)
+					return true;
+
+				return message.Contains("unique constraint failed");
+			}
+
+			if (provider.Contains("mysql"))
+			{
+				var mysqlCode = GetIntProperty(baseException, "Number");
+				if (mysqlCode == 1062)
+					return true;
+
+				return message.Contains("duplicate entry") || message.Contains("duplicate") && message.Contains("for key");
+			}
+
+			if (provider.Contains("postgres"))
+			{
+				var sqlState = GetStringProperty(baseException, "SqlState");
+				if (string.Equals(sqlState, "23505", StringComparison.Ordinal))
+					return true;
+
+				return message.Contains("duplicate key value violates unique constraint");
+			}
+
+			if (provider.Contains("sqlserver"))
+			{
+				var sqlCode = GetIntProperty(baseException, "Number");
+				if (sqlCode == 2601 || sqlCode == 2627)
+					return true;
+
+				return message.Contains("cannot insert duplicate key")
+					|| message.Contains("violation of unique key constraint")
+					|| message.Contains("violation of primary key constraint");
+			}
+
+			if (provider.Contains("oracle"))
+			{
+				var oracleCode = GetIntProperty(baseException, "Number");
+				if (oracleCode == 1)
+					return true;
+
+				return message.Contains("ora-00001") || message.Contains("unique constraint");
+			}
+
+			return (message.Contains("unique") && message.Contains("constraint"))
+				|| message.Contains("duplicate key")
+				|| message.Contains("duplicate entry");
 		}
 
 		/*protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
