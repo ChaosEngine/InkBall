@@ -250,74 +250,42 @@ namespace InkBall.Module.Model
 				throw new ArgumentException("bad characters in path", nameof(pointsAsString));
 
 			var tokensP = new StringTokenizer(pointsAsString, _spaceSeparatorArr);
-			var collection = new HashSet<InkBallPointViewModel>();
-			InkBallPointViewModel first = null;
+			var collection = new HashSet<InkBallPointViewModel>(pointsAsString.Length / 6 + 1);
 			InkBallPoint.StatusEnum status = firstPointStatus;
-
+			bool isFirst = true;
 			int prev_x = -1, prev_y = -1;
 
-			IEnumerator<StringSegment> enumerator = tokensP.GetEnumerator();
-			enumerator.MoveNext();
-			var strP = enumerator.Current;
-
-			var tokenXY = strP.Split(_commaSeparatorArr);
-			if (tokenXY.Count() >= 2)
+			foreach (StringSegment strP in tokensP)
 			{
-				if (int.TryParse(tokenXY.ElementAt(0).Value, out int x) && int.TryParse(tokenXY.ElementAt(1).Value, out int y))
+				ReadOnlySpan<char> span = strP.AsSpan();
+				int commaIdx = span.IndexOf(',');
+				if (commaIdx < 1 || commaIdx >= span.Length - 1)
+					continue;
+
+				if (!int.TryParse(span[..commaIdx], out int x) || !int.TryParse(span[(commaIdx + 1)..], out int y))
+					continue;
+
+				if (!isFirst)
+					validateContinuityOfThePath?.Invoke(ref prev_x, ref prev_y, ref x, ref y);
+
+				prev_x = x; prev_y = y;
+				isFirst = false;
+
+				var point = new InkBallPointViewModel
 				{
-					prev_x = x; prev_y = y;
+					//iId = 0,
+					iGameId = this.iGameId,
+					iPlayerId = playerIDToSet,
+					iX = x,
+					iY = y,
+					Status = status,
+					iEnclosingPathId = 0
+				};
 
-					first = new InkBallPointViewModel
-					{
-						//iId = 0,
-						iGameId = this.iGameId,
-						iPlayerId = playerIDToSet,
-						iX = x,
-						iY = y,
-						Status = status,
-						iEnclosingPathId = 0
-					};
-					collection.Add(first);
-					status = subsequentStatuses;
-				}
-			}
+				if (!collection.Add(point))
+					throw new ArgumentException("points in path are not unique");
 
-			while (enumerator.MoveNext())
-			{
-				strP = enumerator.Current;
-				tokenXY = strP.Split(_commaSeparatorArr);
-				if (tokenXY.Count() >= 2)
-				{
-					if (int.TryParse(tokenXY.ElementAt(0).Value, out int x) && int.TryParse(tokenXY.ElementAt(1).Value, out int y))
-					{
-						validateContinuityOfThePath?.Invoke(ref prev_x, ref prev_y, ref x, ref y);
-
-						var point = new InkBallPointViewModel
-						{
-							//iId = 0,
-							iGameId = this.iGameId,
-							iPlayerId = playerIDToSet,
-							iX = x,
-							iY = y,
-							Status = status,
-							iEnclosingPathId = 0
-						};
-
-						if (!collection.Add(point))
-						{
-							// if (point == first && !((i + 1) < count))
-							// {
-							// 	var lst = collection.ToList();
-							// 	lst.Add(point);
-							// 	return lst;
-							// }
-							// else
-							throw new ArgumentException("points in path are not unique");
-						}
-
-						status = subsequentStatuses;
-					}
-				}
+				status = subsequentStatuses;
 			}
 
 			return collection;

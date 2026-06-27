@@ -562,9 +562,9 @@ namespace InkBall.Module.Hubs
 			}
 
 			var sql = new StringBuilder(200);
-			sql.AppendLine($"UPDATE {tableSql}");
-			sql.AppendLine($"SET {statusCol} = CASE {string.Join(" ", statusCases)} ELSE {statusCol} END,");
-			sql.AppendLine($"    {enclosingPathCol} = CASE {string.Join(" ", enclosingCases)} ELSE {enclosingPathCol} END");
+			sql.AppendLine($"UPDATE {tableSql} SET");
+			sql.AppendLine($"{statusCol} = CASE {string.Join(" ", statusCases)} ELSE {statusCol} END,");
+			sql.AppendLine($"{enclosingPathCol} = CASE {string.Join(" ", enclosingCases)} ELSE {enclosingPathCol} END");
 			sql.AppendLine($"WHERE {gameIdCol} = {Param(gameIdArg)} AND ({string.Join(" OR ", wherePredicates)})");
 
 			await _dbContext.Database.ExecuteSqlRawAsync(sql.ToString(), args.ToArray(), token);
@@ -794,7 +794,6 @@ namespace InkBall.Module.Hubs
 							(p.iEnclosingPathId != null && _inPathColors.Contains(p.Status))
 						))
 					.Where(coordFilter)
-					.Cast<IPoint>()
 					.ToDictionaryAsync(pip => pip, _simpleCoordsPointComparer, token);
 
 				var batchedPointUpdates = new Dictionary<(int X, int Y), InkBallPoint.StatusEnum>(all_needed_coords.Count());
@@ -812,7 +811,7 @@ namespace InkBall.Module.Hubs
 				foreach (var pop in points_on_path)
 				{
 					//TODO: check in-path-next-point from start to end with closing
-					if (!(all_placed_points_fromDB.TryGetValue(pop, out IPoint iobj) && iobj is InkBallPoint found)
+					if (!all_placed_points_fromDB.TryGetValue(pop, out InkBallPoint found)
 						|| !(found.iPlayerId == db_path_player.iId &&
 							(
 								(found.iEnclosingPathId == null && (found.Status == current_player_color || _simpleCoordsPointComparer.Equals(found, last_point_in_path))) ||
@@ -832,7 +831,7 @@ namespace InkBall.Module.Hubs
 
 				foreach (var op in owning_points)
 				{
-					if (!(all_placed_points_fromDB.TryGetValue(op, out IPoint iobj) && iobj is InkBallPoint found)
+					if (!all_placed_points_fromDB.TryGetValue(op, out InkBallPoint found)
 						|| !(found.Status == other_player_color && found.iPlayerId == other_player_db.iId))
 					{
 						throw new ArgumentOutOfRangeException($"owning point not found [{op}]");
