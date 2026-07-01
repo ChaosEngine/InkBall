@@ -76,10 +76,11 @@ namespace InkBall.Module.Model
 		protected static bool pnpoly(ICollection<Point> pathPoints, int x, int y)
 		{
 			int i, j, npol = pathPoints.Count; bool c = false;
+			IList<Point> indexedPoints = pathPoints as IList<Point> ?? pathPoints.ToArray();
 
 			for (i = 0, j = npol - 1; i < npol; j = i++)
 			{
-				Point pi = pathPoints.ElementAt(i), pj = pathPoints.ElementAt(j);
+				Point pi = indexedPoints[i], pj = indexedPoints[j];
 
 				if ((((pi.iY <= y) && (y < pj.iY)) ||
 					((pj.iY <= y) && (y < pi.iY))) &&
@@ -191,7 +192,7 @@ namespace InkBall.Module.Model
 
 		#region Fields
 
-		readonly static char[] _spaceSeparatorArr = new char[] { ' ' }, _commaSeparatorArr = new char[] { ',' };
+		readonly static char[] _spaceSeparatorArr = new char[] { ' ' };
 
 		private ICollection<InkBallPointViewModel> _inkBallPoint;
 		private ICollection<InkBallPointViewModel> _ownedPoints;
@@ -288,7 +289,7 @@ namespace InkBall.Module.Model
 				status = subsequentStatuses;
 			}
 
-			return collection;
+			return collection.ToArray();
 		}
 
 		static void EnsureContinuityOfPointsOnPath(ref int prevX, ref int prevY, ref int x, ref int y)
