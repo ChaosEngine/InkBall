@@ -76,7 +76,7 @@ function clampToBoard(value: number, maxExclusive: number): number {
 
 
 function createInlineWorkerUrl() {
-	const aiWorkerModuleUrl = new URL("../../src/InkBall.Module/wwwroot/js/AIWorker.js", import.meta.url);
+	const aiWorkerModuleUrl = new URL("../../src/InkBall.Module/wwwroot/js/AIWorker.Bundle.js", import.meta.url);
 
 	const workerSource = `if (typeof self.location === "undefined") {
 	self.location = { hostname: "localhost" };
