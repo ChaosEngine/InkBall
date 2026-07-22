@@ -393,7 +393,21 @@ namespace InkBall.Module.Hubs
 			public int MaxPathId { get; set; }
 		}
 
+		private sealed class PathPointsUpdateSqlMetadata
+		{
+			public ISqlGenerationHelper SqlGenerationHelper { get; init; }
+			public string TableSql { get; init; }
+			public string StatusColumnSql { get; init; }
+			public string EnclosingPathColumnSql { get; init; }
+			public string GameIdColumnSql { get; init; }
+			public string XColumnSql { get; init; }
+			public string YColumnSql { get; init; }
+
+			public string Param(int argIndex) => SqlGenerationHelper.GenerateParameterNamePlaceholder($"p{argIndex}");
+		}
+
 		private readonly IMemoryCache _pathCache;
+		private readonly Lazy<PathPointsUpdateSqlMetadata> _pathPointsUpdateSqlMetadata;
 
 		private static void PopulatePathPointsCollection(InkBallPath path)
 		{
@@ -503,13 +517,8 @@ namespace InkBall.Module.Hubs
 			_pathCache.Remove(GetGamePathsCacheKey(gameID));
 		}
 
-		private async Task BulkUpdatePathPointsAsync(int gameID, int enclosingPathID,
-			IReadOnlyCollection<(int X, int Y, InkBallPoint.StatusEnum Status)> pointUpdates,
-			CancellationToken token)
+		private PathPointsUpdateSqlMetadata BuildPathPointsUpdateSqlMetadata()
 		{
-			if (pointUpdates == null || pointUpdates.Count == 0)
-				return;
-
 			var entityType = _dbContext.Model.FindEntityType(typeof(InkBallPoint))
 				?? throw new InvalidOperationException($"Entity metadata missing for {nameof(InkBallPoint)}");
 			var tableName = entityType.GetTableName()
@@ -518,8 +527,6 @@ namespace InkBall.Module.Hubs
 			var tableIdentifier = StoreObjectIdentifier.Table(tableName, schema);
 
 			var sqlGenerationHelper = _dbContext.GetService<ISqlGenerationHelper>();
-			var tableSql = sqlGenerationHelper.DelimitIdentifier(tableName, schema);
-			string Param(int argIndex) => sqlGenerationHelper.GenerateParameterNamePlaceholder($"p{argIndex}");
 
 			string ResolveColumn(string propertyName)
 			{
@@ -530,11 +537,26 @@ namespace InkBall.Module.Hubs
 				return sqlGenerationHelper.DelimitIdentifier(columnName);
 			}
 
-			var statusCol = ResolveColumn(nameof(InkBallPoint.Status));
-			var enclosingPathCol = ResolveColumn(nameof(InkBallPoint.iEnclosingPathId));
-			var gameIdCol = ResolveColumn(nameof(InkBallPoint.iGameId));
-			var xCol = ResolveColumn(nameof(InkBallPoint.iX));
-			var yCol = ResolveColumn(nameof(InkBallPoint.iY));
+			return new PathPointsUpdateSqlMetadata
+			{
+				SqlGenerationHelper = sqlGenerationHelper,
+				TableSql = sqlGenerationHelper.DelimitIdentifier(tableName, schema),
+				StatusColumnSql = ResolveColumn(nameof(InkBallPoint.Status)),
+				EnclosingPathColumnSql = ResolveColumn(nameof(InkBallPoint.iEnclosingPathId)),
+				GameIdColumnSql = ResolveColumn(nameof(InkBallPoint.iGameId)),
+				XColumnSql = ResolveColumn(nameof(InkBallPoint.iX)),
+				YColumnSql = ResolveColumn(nameof(InkBallPoint.iY))
+			};
+		}
+
+		private async Task BulkUpdatePathPointsAsync(int gameID, int enclosingPathID,
+			IReadOnlyCollection<(int X, int Y, InkBallPoint.StatusEnum Status)> pointUpdates,
+			CancellationToken token)
+		{
+			if (pointUpdates == null || pointUpdates.Count == 0)
+				return;
+
+			var sqlMetadata = _pathPointsUpdateSqlMetadata.Value;
 
 			var args = new List<object>();
 			int AddArg(object value)
@@ -556,16 +578,16 @@ namespace InkBall.Module.Hubs
 				var yArg = AddArg(update.Y);
 				var statusArg = AddArg(update.Status);
 
-				statusCases.Add($"WHEN {xCol} = {Param(xArg)} AND {yCol} = {Param(yArg)} THEN {Param(statusArg)}");
-				enclosingCases.Add($"WHEN {xCol} = {Param(xArg)} AND {yCol} = {Param(yArg)} THEN {Param(pathIdArg)}");
-				wherePredicates.Add($"({xCol} = {Param(xArg)} AND {yCol} = {Param(yArg)})");
+				statusCases.Add($"WHEN {sqlMetadata.XColumnSql} = {sqlMetadata.Param(xArg)} AND {sqlMetadata.YColumnSql} = {sqlMetadata.Param(yArg)} THEN {sqlMetadata.Param(statusArg)}");
+				enclosingCases.Add($"WHEN {sqlMetadata.XColumnSql} = {sqlMetadata.Param(xArg)} AND {sqlMetadata.YColumnSql} = {sqlMetadata.Param(yArg)} THEN {sqlMetadata.Param(pathIdArg)}");
+				wherePredicates.Add($"({sqlMetadata.XColumnSql} = {sqlMetadata.Param(xArg)} AND {sqlMetadata.YColumnSql} = {sqlMetadata.Param(yArg)})");
 			}
 
 			var sql = new StringBuilder(200);
-			sql.AppendLine($"UPDATE {tableSql} SET");
-			sql.AppendLine($"{statusCol} = CASE {string.Join(" ", statusCases)} ELSE {statusCol} END,");
-			sql.AppendLine($"{enclosingPathCol} = CASE {string.Join(" ", enclosingCases)} ELSE {enclosingPathCol} END");
-			sql.AppendLine($"WHERE {gameIdCol} = {Param(gameIdArg)} AND ({string.Join(" OR ", wherePredicates)})");
+			sql.AppendLine($"UPDATE {sqlMetadata.TableSql} SET");
+			sql.AppendLine($"{sqlMetadata.StatusColumnSql} = CASE {string.Join(" ", statusCases)} ELSE {sqlMetadata.StatusColumnSql} END,");
+			sql.AppendLine($"{sqlMetadata.EnclosingPathColumnSql} = CASE {string.Join(" ", enclosingCases)} ELSE {sqlMetadata.EnclosingPathColumnSql} END");
+			sql.AppendLine($"WHERE {sqlMetadata.GameIdColumnSql} = {sqlMetadata.Param(gameIdArg)} AND ({string.Join(" OR ", wherePredicates)})");
 
 			await _dbContext.Database.ExecuteSqlRawAsync(sql.ToString(), args.ToArray(), token);
 		}
@@ -580,6 +602,7 @@ namespace InkBall.Module.Hubs
 		{
 			_dbContext = dbContext;
 			_pathCache = memoryCache ?? new MemoryCache(new MemoryCacheOptions());
+			_pathPointsUpdateSqlMetadata = new Lazy<PathPointsUpdateSqlMetadata>(BuildPathPointsUpdateSqlMetadata, LazyThreadSafetyMode.ExecutionAndPublication);
 			_logger = logger;
 		}
 
