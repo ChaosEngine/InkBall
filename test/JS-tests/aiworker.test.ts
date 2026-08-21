@@ -75,40 +75,43 @@ function clampToBoard(value: number, maxExclusive: number): number {
 }
 
 
-function createInlineWorkerUrl() {
-	const aiWorkerModuleUrl = new URL("../../src/InkBall.Module/wwwroot/js/AIWorker.Bundle.js", import.meta.url);
-
-	const workerSource = `if (typeof self.location === "undefined") {
+function createWorker() {
+	const preloadSource = `
+if (typeof self.location === "undefined") {
 	self.location = { hostname: "localhost" };
 }
 console.log = () => {}; // Suppress worker logs during tests
-await import(${JSON.stringify(aiWorkerModuleUrl.href)});
 `;
-	return URL.createObjectURL(new Blob([workerSource], { type: "text/javascript" }));
-}
 
+	return new Worker(new URL("../../src/InkBall.Module/wwwroot/js/AIWorker.Bundle.js", import.meta.url),
+		{
+			type: "module"
+			, preload: new URL("aiworker-preload.js", import.meta.url).href
+			//, preload: [URL.createObjectURL(new Blob([preloadSource], { type: "module" }))]
+		});
+}
 
 function runWorkerOperation<TResponse extends WorkerResponseBase>(payload: WorkerRequest): Promise<TResponse> {
 	return new Promise<TResponse>((resolve, reject) => {
-		const workerUrl = createInlineWorkerUrl();
-		const worker = new Worker(workerUrl, { type: "module" });
+		// const workerUrl = createInlineWorkerUrl();
+		const worker = createWorker();
 
 		const timer = setTimeout(() => {
-			URL.revokeObjectURL(workerUrl);
+			// URL.revokeObjectURL(workerUrl);
 			worker.terminate();
 			reject(new Error("AIWorker test timeout"));
 		}, 20_000);
 
 		worker.onmessage = (event: MessageEvent<TResponse>) => {
 			clearTimeout(timer);
-			URL.revokeObjectURL(workerUrl);
+			// URL.revokeObjectURL(workerUrl);
 			worker.terminate();
 			resolve(event.data);
 		};
 
 		worker.onerror = (event: ErrorEvent) => {
 			clearTimeout(timer);
-			URL.revokeObjectURL(workerUrl);
+			// URL.revokeObjectURL(workerUrl);
 			worker.terminate();
 			reject(new Error(event.message || "Worker error"));
 		};
