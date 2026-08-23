@@ -1,5 +1,5 @@
 /// <reference types="bun-types" />
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test, jest } from "bun:test";
 import {
 	StatusEnum,
 	hasDuplicates,
@@ -95,9 +95,15 @@ describe("shared.js exports", () => {
 	});
 
 	test("sleep resolves asynchronously", async () => {
+		jest.useFakeTimers();
+
 		const start = Date.now();
-		await sleep(5);
-		expect(Date.now() - start).toBeGreaterThanOrEqual(0);
+		const sleepPromise = sleep(200);
+		jest.advanceTimersByTime(200);
+		await sleepPromise;
+		expect(Date.now() - start).toBeGreaterThanOrEqual(200);
+		
+		jest.useRealTimers();
 	});
 
 	test("SvgVml can deserialize basic primitives", () => {
