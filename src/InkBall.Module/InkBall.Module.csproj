@@ -5,7 +5,7 @@
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
     <!-- <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest> -->
     <LangVersion>latest</LangVersion>
-    <Version>1.0.4</Version>
+    <Version>1.0.5</Version>
     <Configurations>Debug;Release;Oracle</Configurations>
     <!--<PublishTrimmed>true</PublishTrimmed>
     <TrimMode>partial</TrimMode>-->
@@ -23,16 +23,16 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.9" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.11" />
     <!-- <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="10.0.0-rc.2.25502.107" /> -->
     <!-- <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="10.0.0-rc.2.25502.107" /> -->
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.9" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2" Condition="$(DefineConstants.Contains('INCLUDE_POSTGRES'))" />
-    <PackageReference Include="Microting.EntityFrameworkCore.MySql" Version="10.0.8" Condition="$(DefineConstants.Contains('INCLUDE_MYSQL'))" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.9" Condition="$(DefineConstants.Contains('INCLUDE_SQLSERVER'))" />
-    <PackageReference Include="Oracle.EntityFrameworkCore" Version="10.23.26200" Condition="$(DefineConstants.Contains('INCLUDE_ORACLE'))" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="10.0.9" />
-    <PackageReference Include="MessagePack" Version="3.1.7" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.11" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" Condition="$(DefineConstants.Contains('INCLUDE_POSTGRES'))" />
+    <PackageReference Include="Microting.EntityFrameworkCore.MySql" Version="10.0.11" Condition="$(DefineConstants.Contains('INCLUDE_MYSQL'))" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.11" Condition="$(DefineConstants.Contains('INCLUDE_SQLSERVER'))" />
+    <PackageReference Include="Oracle.EntityFrameworkCore" Version="10.23.26300" Condition="$(DefineConstants.Contains('INCLUDE_ORACLE'))" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="10.0.11" />
+    <PackageReference Include="MessagePack" Version="3.1.8" />
   </ItemGroup>
 <!--
   <ItemGroup Condition="'$(Configuration)'=='Debug'">

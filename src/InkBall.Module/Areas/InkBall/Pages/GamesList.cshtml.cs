@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -20,15 +21,16 @@ namespace InkBall.Module.Pages
 		public const string ASPX = "GamesList";
 
 		private readonly IHubContext<GameHub, IGameClient> _inkballHubContext;
-
+		private readonly IMemoryCache _pathCache;
 
 		public IEnumerable<InkBallGame> GamesList { get; private set; }
 
-
 		public GamesListModel(GamesContext dbContext, ILogger<RulesModel> logger,
-			IHubContext<Hubs.GameHub, Hubs.IGameClient> inkballHubContext) : base(dbContext, logger)
+			IHubContext<Hubs.GameHub, Hubs.IGameClient> inkballHubContext,
+			IMemoryCache pathCache) : base(dbContext, logger)
 		{
 			_inkballHubContext = inkballHubContext;
+			_pathCache = pathCache;
 		}
 
 		private async Task<IEnumerable<InkBallGame>> GetGameList(CancellationToken token)
@@ -244,8 +246,11 @@ namespace InkBall.Module.Pages
 											if (!string.IsNullOrEmpty(recipient_id_looser.Item1))
 											{
 												await _inkballHubContext.Clients.User(recipient_id_looser.Item1).ServerToClientPlayerSurrender(
-													new PlayerSurrenderingCommand(recipient_id_looser.Item2.GetValueOrDefault(0),
-													true, $"Player {recipient_id_looser.Item3 ?? ""} surrenders;plaXSurrendr"));
+													new PlayerSurrenderingCommand(
+														recipient_id_looser.Item2.GetValueOrDefault(0), true,
+														$"Player {recipient_id_looser.Item3 ?? ""} surrenders;plaXSurrendr"
+													)
+												);
 											}
 										}
 										catch (Exception ex)
@@ -258,6 +263,20 @@ namespace InkBall.Module.Pages
 								}
 
 								await trans.CommitAsync(token);
+
+								if (_pathCache.TryGetValue(GameHub.GetGamePathsCacheKey(ActiveGame.iId), out GameHub.GamePathsCacheEntry cacheEntry))
+								{
+									await cacheEntry.Gate.WaitAsync(token);
+									try
+									{
+										_pathCache.Remove(GameHub.GetGamePathsCacheKey(ActiveGame.iId));
+									}
+									finally
+									{
+										cacheEntry.Gate.Release();
+									}
+								}
+
 								return RedirectToPage();
 							}
 							catch (Exception ex)

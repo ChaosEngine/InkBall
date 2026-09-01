@@ -205,7 +205,7 @@ class StopAndDrawCommand extends DtoMsg {
 
 	static Format(otherUser) {
 		// return 'User ' + otherUser + ' started to draw path';
-		return localizeMessage('game.usrStartedPath', `User ${otherUser} started to draw path`, { otherUser });
+		return localizeMessage('game.usrStartedPath', `User ${otherUser} started to draw path`, { other: otherUser });
 	}
 }
 
@@ -2407,31 +2407,33 @@ class InkBallGame {
 			if (this.#Line !== null)
 				await this.#OnCancelClick();
 			this.#bDrawLines = !this.#bDrawLines;
-			const btn = event.target;
-
-			if (localizeSelector) {
-				if (!this.#bDrawLines)
-					btn.dataset.i18n = 'ib:game.drawLine';
-				else
-					btn.dataset.i18n = 'ib:game.drawDot';
-
-				localizeSelector('#StopAndDraw');
-			} else {
-				if (!this.#bDrawLines)
-					btn.textContent = 'Draw line';
-				else
-					btn.textContent = 'Draw dot';
-			}
 
 			this.#iLastX = this.#iLastY = -1;
 			this.#Line = null;
 		} else if (this.#Line === null) {
 			//send On-Stop-And-Draw notification
 			await this.#SendData(new StopAndDrawCommand());
+
+			this.#Screen.style.cursor = "wait";
+		}
+
+		const btn = event.target;
+		if (localizeSelector) {
+			if (!this.#bDrawLines)
+				btn.dataset.i18n = 'ib:game.drawLine';
+			else
+				btn.dataset.i18n = 'ib:game.drawDot';
+
+			localizeSelector('#StopAndDraw');
+		} else {
+			if (!this.#bDrawLines)
+				btn.textContent = 'Draw line';
+			else
+				btn.textContent = 'Draw dot';
 		}
 	}
 
-	async #OnCancelClick() {
+	async #OnCancelClick(event) {
 		if (this.#bDrawLines) {
 			if (this.#Line !== null) {
 				const points = this.#Line.GetPointsArray();
@@ -2449,8 +2451,11 @@ class InkBallGame {
 			}
 			this.#iLastX = this.#iLastY = -1;
 
-			if (this.#Timer)
+			if (this.#Timer) {
 				this.#StopAndDraw.disabled = 'disabled';
+				if (event?.target)
+					this.#bIsPlayerActive = false;
+			}
 
 			this.#Debug('');
 		}
