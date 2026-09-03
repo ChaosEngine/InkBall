@@ -46,7 +46,7 @@ The module includes:
 Assets are bundled via the root `gulpfile.mjs`:
 
 ```bash
-cd .. && node gulpfile.mjs  # Rebuilds inkball.min.js and inkball.min.css
+cd .. && bun gulpfile.mjs  # Rebuilds inkball.min.js and inkball.min.css
 ```
 
 ### CSS/SCSS

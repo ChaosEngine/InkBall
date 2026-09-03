@@ -65,7 +65,7 @@ const LocalAlert = (typeof myAlert !== "undefined") ?
  */
 function pnpoly(pathPoints, x, y) {
 	const size = pathPoints.length;
-	let i, j, c = false;
+	let i, j, inside = false;
 
 	for (i = 0, j = size - 1; i < size; j = i++) {
 		const pi = pathPoints[i], pj = pathPoints[j];
@@ -74,9 +74,9 @@ function pnpoly(pathPoints, x, y) {
 			((pj.y <= y) && (y < pi.y))) &&
 			(x < (pj.x - pi.x) * (y - pi.y) / (pj.y - pi.y) + pi.x))
 
-			c = !c;
+			inside = !inside;
 	}
-	return c;
+	return inside;
 }
 
 /**
