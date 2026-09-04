@@ -107,7 +107,7 @@
 		<div class="col msgchat">
 			<ul id="messagesList" class="list-group list-group-flush pt-1"></ul>
 			<div class="input-group">
-				<input id="messageInput" type="text" class="form-control" placeholder="Message..." aria-label="Message to send" aria-describedby="sendButton" onkeyup="document.querySelector('#sendButton').disabled = this.value == ''" disabled data-i18n='[aria-label]ib:game.message2Send;[placeholder]ib:game.messageDot3' />
+				<input id="messageInput" type="text" class="form-control" placeholder="Message..." aria-label="Message to send" aria-describedby="sendButton" disabled data-i18n='[aria-label]ib:game.message2Send;[placeholder]ib:game.messageDot3' />
 				<div class="input-group-append ps-2">
 					<button id="sendButton" type="button" class="btn btn-secondary" disabled data-i18n='ib:game.sendMessage'>Send Message</button>
 				</div>
@@ -135,6 +135,17 @@
 	import { InkBallGame } from "@Url.Content(Constants.WwwIncludeInkballJS)";
 	
 	window.addEventListener('DOMContentLoaded', InkBallGame.OnGameDOMContentLoaded);
+	window.addEventListener('DOMContentLoaded', () => {
+		const messageInput = document.getElementById('messageInput');
+		const sendButton = document.getElementById('sendButton');
+		if (messageInput instanceof HTMLInputElement && sendButton instanceof HTMLButtonElement) {
+			const toggleSend = () => {
+				sendButton.disabled = messageInput.value === '';
+			};
+			messageInput.addEventListener('input', toggleSend);
+			toggleSend();
+		}
+	});
 	
 	window.addEventListener('load', async () => {
 		await InkBallGame.GameOnLoad({
