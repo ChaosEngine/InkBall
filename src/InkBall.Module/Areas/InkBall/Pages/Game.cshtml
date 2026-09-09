@@ -135,17 +135,6 @@
 	import { InkBallGame } from "@Url.Content(Constants.WwwIncludeInkballJS)";
 	
 	window.addEventListener('DOMContentLoaded', InkBallGame.OnGameDOMContentLoaded);
-	window.addEventListener('DOMContentLoaded', () => {
-		const messageInput = document.getElementById('messageInput');
-		const sendButton = document.getElementById('sendButton');
-		if (messageInput instanceof HTMLInputElement && sendButton instanceof HTMLButtonElement) {
-			const toggleSend = () => {
-				sendButton.disabled = messageInput.value === '';
-			};
-			messageInput.addEventListener('input', toggleSend);
-			toggleSend();
-		}
-	});
 	
 	window.addEventListener('load', async () => {
 		await InkBallGame.GameOnLoad({
