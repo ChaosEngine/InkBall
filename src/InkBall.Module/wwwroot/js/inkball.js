@@ -3728,6 +3728,16 @@ class InkBallGame {
 		}
 		else
 			localizeSelector = window.localize;
+
+		const messageInput = document.getElementById('messageInput');
+		const sendButton = document.getElementById('sendButton');
+		if (messageInput instanceof HTMLInputElement && sendButton instanceof HTMLButtonElement) {
+			const toggleSend = () => {
+				sendButton.disabled = messageInput.value === '';
+			};
+			messageInput.addEventListener('input', toggleSend);
+			toggleSend();
+		}
 	}
 
 	/**
