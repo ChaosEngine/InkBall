@@ -83,7 +83,7 @@ if (typeof self.location === "undefined") {
 console.log = () => {}; // Suppress worker logs during tests
 `;
 
-	return new Worker(new URL("../../src/InkBall.Module/wwwroot/js/AIWorker.Bundle.js", import.meta.url),
+	return new Worker(new URL("../../src/InkBall.Module/wwwroot/js/AIWorker.min.js", import.meta.url),
 		{
 			type: "module"
 			, preload: new URL("aiworker-preload.js", import.meta.url).href
