@@ -579,11 +579,6 @@ async function importAllModulesAsync(/* gameOptions */) {
 	} = isMinified
 			? await import(/* webpackChunkName: "shared.Min" */'./shared.min.js?v=' + IBversionHash)
 			: await import(/* webpackChunkName: "shared" */'./shared.js?v=' + IBversionHash));
-
-	// //for CPU game enable AI libs and calculations
-	// if (gameOptions.iOtherPlayerID === -1) {
-	// 	// AIBundle = await import(/* webpackChunkName: "AIDeps" */'./AIBundle.js');
-	// }
 }
 
 /* Old code
@@ -2669,7 +2664,7 @@ class InkBallGame {
 	 */
 	async #RunAIWorker(posteMessageObj) {
 		return new Promise((resolve, reject) => {
-			this.#Worker = this.#Worker ?? new Worker('../js/AIWorker.Bundle.js?v=' + IBversionHash
+			this.#Worker = this.#Worker ?? new Worker('../js/AIWorker.min.js?v=' + IBversionHash
 				, { type: 'module' }
 			);
 

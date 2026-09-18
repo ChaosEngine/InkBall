@@ -120,7 +120,7 @@ namespace InkBall.IntegrationTests
 		[InlineData("js/inkball.min.js")]
 		[InlineData("js/shared.js")]
 		[InlineData("js/shared.min.js")]
-		[InlineData("js/AIWorker.Bundle.js")]
+		[InlineData("js/AIWorker.min.js")]
 		[InlineData("css/inkball.css")]
 		[InlineData("css/inkball.min.css")]
 		[InlineData("img/homescreen.webp")]
