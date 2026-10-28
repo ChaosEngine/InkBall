@@ -3735,7 +3735,7 @@ class InkBallGame {
 	 * @param {object} gameOptions options object passed from page with various settings and configs
 	 */
 	static async GameOnLoad(gameOptions) {
-		const isMsgpackDefined = window.msgpack5 !== undefined;
+		const isMsgpackDefined = signalR.protocols.msgpack !== undefined;
 		// const gameOptions = window.gameOptions;
 
 		const inkBallHubName = gameOptions.inkBallHubName;
