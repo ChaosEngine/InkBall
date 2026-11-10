@@ -314,7 +314,7 @@ function ensureSvgElementPrototypes() {
 			return true;
 		},
 		RemoveLastPoint: function () {
-			const new_points = this.getAttribute("points").replace(/(\s\d+,\d+)$/, "");
+			const new_points = this.getAttribute("points").replace(/(\s\d+,\d+)$/, "");//remove last point
 			this.setAttribute("points", new_points);
 			return new_points;
 		},
