@@ -4635,34 +4635,24 @@ class InkBallGame {
 	 * @returns {object} CPU move payload (point or path)
 	 */
 	async #GetCpuMovePayload(lastHumanPoint = null) {
-		let point;
+		let point = null;
 		switch (this.#AIMethod) {
 			case 'centroid':
-				{
-					point = await this.#CalculateCPUCentroid(lastHumanPoint);
-					if (point === null)
-						point = await this.#FindRandomCPUPoint(lastHumanPoint);
-				}
+				point = await this.#CalculateCPUCentroid(lastHumanPoint);
 				break;
 			case 'nearest':
-				{
-					point = await this.#FindNearestCPUPoint(lastHumanPoint);
-					if (point === null)
-						point = await this.#FindRandomCPUPoint(lastHumanPoint);
-				}
+				point = await this.#FindNearestCPUPoint(lastHumanPoint);
 				break;
 			case 'surrounding':
 				{
 					const aiParams = this.#LoadAIParamsFromStore(window.localStorage);
 					point = await this.#GetSurroundingPoints(this.#COLOR_RED, aiParams, false, lastHumanPoint);
-					if (point === null)
-						point = await this.#FindRandomCPUPoint(lastHumanPoint);
 				}
 				break;
-			default:
-				point = await this.#FindRandomCPUPoint(lastHumanPoint);
-				break;
 		}
+
+		if (point === null)
+			point = await this.#FindRandomCPUPoint(lastHumanPoint);
 
 		return point;
 	}
