@@ -693,6 +693,10 @@ class InkBallGame {
 	#sLastMoveGameTimeStamp;
 	#sVersion;
 	#Worker;
+	#aiWorkerClusteringSynced;
+	#aiWorkerSyncedPointCount;
+	#aiWorkerSyncedLineCount;
+	#aiWorkerPendingPointKey;
 	#rAF_StartTimeStamp;
 	#rAF_FrameID;
 	#workingCyclePolyLine;
@@ -800,6 +804,9 @@ class InkBallGame {
 		this.#sLastMoveGameTimeStamp = null;
 		this.#sVersion = null;
 		this.#Worker = null;
+		this.#aiWorkerClusteringSynced = false;
+		this.#aiWorkerSyncedPointCount = this.#aiWorkerSyncedLineCount = 0;
+		this.#aiWorkerPendingPointKey = null;
 
 
 
@@ -2664,9 +2671,14 @@ class InkBallGame {
 	 */
 	async #RunAIWorker(posteMessageObj) {
 		return new Promise((resolve, reject) => {
-			this.#Worker = this.#Worker ?? new Worker('../js/AIWorker.min.js?v=' + IBversionHash
-				, { type: 'module' }
-			);
+			if (this.#Worker === null) {
+				this.#Worker = new Worker('../js/AIWorker.min.js?v=' + IBversionHash
+					, { type: 'module' }
+				);
+				this.#aiWorkerClusteringSynced = false;
+				this.#aiWorkerSyncedPointCount = this.#aiWorkerSyncedLineCount = 0;
+				this.#aiWorkerPendingPointKey = null;
+			}
 
 			this.#Worker.onerror = function (e) {
 				this.#Worker.terminate();
@@ -3155,34 +3167,84 @@ class InkBallGame {
 			blockedPointStatuses = [StatusEnum.POINT_OWNED_BY_RED, StatusEnum.POINT_OWNED_BY_BLUE, StatusEnum.POINT_IN_PATH];
 
 
-		const all_points_serialized = [...this.#Points.store.entries()].map(([key, value]) => ({ key, value: value.Serialize() }));
-		//lastHumanPoint is previously put human player point that needs to be added artificially
-		if (lastHumanPoint !== null) {
-			const serialized = { x: lastHumanPoint.iX, y: lastHumanPoint.iY, Status: lastHumanPoint.Status, Color: humanPointColor };
-
-			all_points_serialized.push({ key: lastHumanPoint.iY * this.#iGridWidth + lastHumanPoint.iX, value: serialized });
-		}
-		const serialized_paths = this.#Lines.store.map(pa => pa.Serialize());
-
-		//Web Worker calculation of density clustering
-		const { results } = await this.#RunAIWorker({
+		const pointsStoreSize = this.#Points.store.size;
+		const linesStoreSize = this.#Lines.store.length;
+		const workerPayload = {
 			operation: "CLUSTERING_AND_CONCAVEMAN",
 			method: aiParams.clusteringMethod,
 			//take params saved in local_storage
 			numberOfClusters: aiParams.numberOfClusters,
 			neighborhoodRadius: aiParams.neighborhoodRadius,
 			minPointsPerCluster: aiParams.minPointsPerCluster,
-
-			allPoints: all_points_serialized,
-			allLines: serialized_paths,
 			humanPointInfo: { color: humanPointColor, statuses: humanPointStatuses },
 			blockedPointInfo: { colors: blockedColors, statuses: blockedPointStatuses },
-
 			concavity: aiParams.concavity,
 			lengthThreshold: aiParams.lengthThreshold,
 			boardSize: { iGridWidth: this.#iGridWidth, iGridHeight: this.#iGridHeight },
 			visuals
-		});
+		};
+
+		if (this.#aiWorkerSyncedPointCount > pointsStoreSize || this.#aiWorkerSyncedLineCount > linesStoreSize) {
+			this.#aiWorkerClusteringSynced = false;
+			this.#aiWorkerSyncedPointCount = this.#aiWorkerSyncedLineCount = 0;
+			this.#aiWorkerPendingPointKey = null;
+		}
+
+		if (this.#aiWorkerClusteringSynced === false) {
+			const all_points_serialized = [...this.#Points.store.entries()].map(([key, value]) => ({ key, value: value.Serialize() }));
+			let pendingPointKey = null;
+
+			//lastHumanPoint is previously put human player point that needs to be added artificially
+			if (lastHumanPoint !== null) {
+				const serialized = { x: lastHumanPoint.iX, y: lastHumanPoint.iY, Status: lastHumanPoint.Status, Color: humanPointColor };
+				pendingPointKey = lastHumanPoint.iY * this.#iGridWidth + lastHumanPoint.iX;
+				all_points_serialized.push({ key: pendingPointKey, value: serialized });
+			}
+
+			workerPayload.syncMode = "FULL";
+			workerPayload.allPoints = all_points_serialized;
+			workerPayload.allLines = this.#Lines.store.map(pa => pa.Serialize());
+
+			this.#aiWorkerClusteringSynced = true;
+			this.#aiWorkerSyncedPointCount = pointsStoreSize;
+			this.#aiWorkerSyncedLineCount = linesStoreSize;
+			this.#aiWorkerPendingPointKey = pendingPointKey;
+		}
+		else {
+			workerPayload.syncMode = "DELTA";
+
+			if (this.#aiWorkerPendingPointKey !== null && this.#aiWorkerSyncedPointCount < pointsStoreSize) {
+				const entries = [...this.#Points.store.entries()];
+				const [key, _value] = entries[this.#aiWorkerSyncedPointCount];
+				if (key === this.#aiWorkerPendingPointKey) {
+					this.#aiWorkerSyncedPointCount++;
+					this.#aiWorkerPendingPointKey = null;
+				}
+			}
+
+			if (lastHumanPoint !== null) {
+				const serialized = { x: lastHumanPoint.iX, y: lastHumanPoint.iY, Status: lastHumanPoint.Status, Color: humanPointColor };
+				const key = lastHumanPoint.iY * this.#iGridWidth + lastHumanPoint.iX;
+
+				workerPayload.pointDelta = { key, value: serialized };
+				this.#aiWorkerPendingPointKey = key;
+			}
+			else if (this.#aiWorkerSyncedPointCount < pointsStoreSize) {
+				const entries = [...this.#Points.store.entries()];
+				const [key, value] = entries[this.#aiWorkerSyncedPointCount];
+
+				workerPayload.pointDelta = { key, value: value.Serialize() };
+				this.#aiWorkerSyncedPointCount++;
+			}
+
+			if (this.#aiWorkerSyncedLineCount < linesStoreSize) {
+				workerPayload.lineDelta = this.#Lines.store[this.#aiWorkerSyncedLineCount].Serialize();
+				this.#aiWorkerSyncedLineCount++;
+			}
+		}
+
+		//Web Worker calculation of density clustering
+		const { results } = await this.#RunAIWorker(workerPayload);
 
 		let rand_color, fragment, createRectForVisualsFunction = () => { /* dummy filler func*/ },
 			createPolylineForVisualsFunction = () => { /* dummy filler func*/ },

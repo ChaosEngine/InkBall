@@ -10,6 +10,7 @@ let g_allPoints = null;//global all points map for A* usage in concaveman valida
 let g_graphDiagonal = null;//global graph for A* usage in concaveman validation
 let g_blockedPoints = null;//global blocked points for A* usage in concaveman validation, encoded as y*iGridWidth + x in a Set for O(1) access
 let g_allLines = null;//global all lines for concaveman validation
+let g_allLineSignatures = null;//global set of serialized line signatures to avoid appending duplicates when syncing deltas
 
 async function EnsureSharedDependenciesLoaded() {
 	if (SvgVml !== undefined)
@@ -48,6 +49,39 @@ function DeserializePointMap(svgVml, pointsKv) {
  */
 function DeserializePolylines(svgVml, paths) {
 	return paths.map(pa => svgVml.DeserializePolyline(pa));
+}
+
+function SyncClusteringState(svgVml, params) {
+	const createLineSignature = (serializedLine) => `${serializedLine.iId}|${serializedLine.Color}|${serializedLine.PointsAsString}`;
+
+
+	const { syncMode, allPoints, allLines, pointDelta, lineDelta } = params;
+
+	if (syncMode === "FULL" || g_allPoints === null || g_allLines === null) {
+		const serializedPoints = allPoints || [];
+		const serializedLines = allLines || [];
+
+		g_allPoints = DeserializePointMap(svgVml, serializedPoints);
+		g_allLines = DeserializePolylines(svgVml, serializedLines);
+		g_allLineSignatures = new Set(serializedLines.map(createLineSignature));
+	}
+	else {	//syncMode === "DELTA"
+		if (g_allLineSignatures === null)
+			g_allLineSignatures = new Set();
+
+		if (pointDelta) {
+			const { key, value } = pointDelta;
+			g_allPoints.set(key, svgVml.DeserializeOval(value));
+		}
+
+		if (lineDelta) {
+			const signature = createLineSignature(lineDelta);
+			if (g_allLineSignatures.has(signature) === false) {
+				g_allLines.push(svgVml.DeserializePolyline(lineDelta));
+				g_allLineSignatures.add(signature);
+			}
+		}
+	}
 }
 
 // This is the entry point for our worker
@@ -248,8 +282,7 @@ addEventListener('message', async function (e) {
 					humanPointInfo, blockedPointInfo, visuals
 				} = params;
 
-				g_allPoints = DeserializePointMap(svgVml, params.allPoints || []);
-				g_allLines = DeserializePolylines(svgVml, params.allLines || []);
+				SyncClusteringState(svgVml, params);
 				const humanPointsArrOfArr = [];
 				// const blockedColorSet = new Set(blockedPointColors);
 
